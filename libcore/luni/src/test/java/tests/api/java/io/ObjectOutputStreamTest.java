@@ -17,11 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
@@ -44,9 +39,37 @@ import java.io.WriteAbortedException;
 import java.security.Permission;
 import java.util.Arrays;
 
-@TestTargetClass(ObjectOutputStream.class) 
+import tests.support.Support_ASimpleOutputStream;
+import tests.support.Support_IOTestSecurityManager;
+import tests.support.Support_OutputStream;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
+
+@TestTargetClass(
+        value = ObjectOutputStream.class,
+        untestedMethods = {
+            @TestTargetNew(
+                    method = "annotateClass",
+                    args = {Class.class},
+                    level = TestLevel.NOT_NECESSARY,
+                    notes = "According to specification, the implementation " +
+                            "does nothing."
+            ),
+            @TestTargetNew(
+                    method = "annotateProxyClass",
+                    args = {Class.class},
+                    level = TestLevel.NOT_NECESSARY,
+                    notes = "According to specification, the implementation " +
+                            "does nothing."
+            )
+        }
+) 
 public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         Serializable {
+
+    static final long serialVersionUID = 1L;
 
     java.io.File f;
 
@@ -98,26 +121,8 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         }
     }
 
-    private static class SerializationTest implements java.io.Serializable {
-        int anInt = INIT_INT_VALUE;
-
-        public SerializationTest() {
-            super();
-        }
-    }
-
-    private static class SerializationTestSubclass1 extends SerializationTest
-            implements Serializable {
-        String aString = INIT_STR_VALUE;
-
-        public SerializationTestSubclass1() {
-            super();
-            // Just to change default superclass init value
-            anInt = INIT_INT_VALUE / 2;
-        }
-    }
-
     private static class SpecTestSuperClass implements Runnable, Serializable {
+        static final long serialVersionUID = 1L;
         protected java.lang.String instVar;
 
         public void run() {
@@ -126,6 +131,8 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
 
     private static class SpecTest extends SpecTestSuperClass implements
             Cloneable, Serializable {
+        static final long serialVersionUID = 1L;
+
         public java.lang.String instVar1;
 
         public static java.lang.String staticVar1;
@@ -155,10 +162,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
 
     private static class SpecTestSubclass extends SpecTest implements
             Serializable {
+        static final long serialVersionUID = 1L;
         public transient java.lang.String transientInstVar = "transientValue";
     }
 
     private static class ReadWriteObject implements java.io.Serializable {
+        static final long serialVersionUID = 1L;
+
         public boolean calledWriteObject = false;
 
         public boolean calledReadObject = false;
@@ -227,6 +237,7 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     }
 
     private static class JustWriteObject implements java.io.Serializable {
+        static final long serialVersionUID = 1L;
         public boolean calledWriteObject = false;
 
         public JustWriteObject() {
@@ -525,6 +536,51 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         }
     }
 
+    private static class BasicObjectOutputStream extends ObjectOutputStream {
+        public boolean writeStreamHeaderCalled;
+        
+        public BasicObjectOutputStream() throws IOException, SecurityException {
+            super();
+            writeStreamHeaderCalled = false;
+        }
+        
+        public BasicObjectOutputStream(OutputStream output) throws IOException {
+            super(output);
+        }
+
+        public void drain() throws IOException {
+            super.drain();
+        }
+
+        public boolean enableReplaceObject(boolean enable) 
+                throws SecurityException {
+            return super.enableReplaceObject(enable);
+        }
+        
+        public void writeObjectOverride(Object object) throws IOException {
+            super.writeObjectOverride(object);
+        }
+
+        public void writeStreamHeader() throws IOException {
+            super.writeStreamHeader();
+            writeStreamHeaderCalled = true;
+        }
+}
+
+    private static class NoFlushTestOutputStream extends ByteArrayOutputStream {
+        public boolean flushCalled;
+        
+        public NoFlushTestOutputStream() {
+            super();
+            flushCalled = false;
+        }
+        
+        public void flush() throws IOException {
+            super.flush();
+            flushCalled = true;
+        }
+    }
+    
     protected static final String MODE_XLOAD = "xload";
 
     protected static final String MODE_XDUMP = "xdump";
@@ -544,6 +600,10 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     protected ObjectInputStream ois;
 
     protected ObjectOutputStream oos;
+    
+    protected ObjectOutputStream oos_ioe;
+    
+    protected Support_OutputStream sos;
 
     protected ByteArrayOutputStream bao;
 
@@ -552,32 +612,67 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     static final String INIT_STR_VALUE = "a string that is blortz";
 
     /**
-     * @tests java.io.ObjectOutputStream#ObjectOutputStream(java.io.OutputStream)
+     * @tests java.io.ObjectInputStream#ObjectOutputStream()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "ObjectOutputStream", 
-                                    methodArgs = {java.io.OutputStream.class})                                    
-            }
-        )        
-    public void test_ConstructorLjava_io_OutputStream() throws IOException {
-        // Test for method java.io.ObjectOutputStream(java.io.OutputStream)
-        oos.close();
-        oos = new ObjectOutputStream(new ByteArrayOutputStream());
-        oos.close();
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies the protected ObjectOutputStream() constructor.",
+        method = "ObjectOutputStream",
+        args = {}
+    )     
+    public void test_Constructor() throws IOException {
+        SecurityManager sm = System.getSecurityManager();
+        System.setSecurityManager(new Support_IOTestSecurityManager());
+        
+        try { 
+            oos = new BasicObjectOutputStream();
+            fail("SecurityException expected.");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(sm);
+        }
     }
 
     /**
      * @tests java.io.ObjectOutputStream#ObjectOutputStream(java.io.OutputStream)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Checks SecurityException. IOException & NullPointerException checking missed.",
-            targets = { @TestTarget(methodName = "ObjectOutputStream", 
-                                    methodArgs = {java.io.OutputStream.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks valid construction, NullPointerException and IOException.",
+        method = "ObjectOutputStream",
+        args = {java.io.OutputStream.class}
+    )        
+    public void test_ConstructorLjava_io_OutputStream() throws IOException {
+        oos.close();
+        oos = new ObjectOutputStream(new ByteArrayOutputStream());
+        oos.close();
+        
+        try {
+            oos = new ObjectOutputStream(null);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+        
+        Support_ASimpleOutputStream sos = new Support_ASimpleOutputStream(true);
+        try {
+            oos = new ObjectOutputStream(sos);
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.ObjectOutputStream#ObjectOutputStream(java.io.OutputStream)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks SecurityException.",
+        method = "ObjectOutputStream",
+        args = {java.io.OutputStream.class}
+    )    
     public void test_ConstructorLjava_io_OutputStream_subtest0() throws IOException {
 
         // custom security manager
@@ -645,112 +740,195 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#close()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed. See tearDown",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                                    
-            }
-        )    
-    public void test_close() {
-        // Test for method void java.io.ObjectOutputStream.close()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "close",
+        args = {}
+    )    
+    public void test_close() throws IOException {
+        int outputSize = bao.size();
+        // Writing of a primitive type should be buffered.
+        oos.writeInt(42);
+        assertTrue("Test 1: Primitive data unexpectedly written to the target stream.",
+                bao.size() == outputSize);
+        // Closing should write the buffered data to the target stream.
+        oos.close();
+        assertTrue("Test 2: Primitive data has not been written to the the target stream.",
+                bao.size() > outputSize);
+        
+        try {
+            oos_ioe.close();
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.ObjectOutputStream#drain()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "drain",
+        args = {}
+    )    
+    public void test_drain() throws IOException {
+        NoFlushTestOutputStream target = new NoFlushTestOutputStream();
+        BasicObjectOutputStream boos = new BasicObjectOutputStream(target);
+        int initialSize = target.size();
+        boolean written = false;
+        
+        boos.writeBytes("Lorem ipsum");
+        // If there is no buffer then the bytes have already been written.
+        written = (target.size() > initialSize);
+        
+        boos.drain();
+        assertTrue("Content has not been written to the target.", 
+                written || (target.size() > initialSize));
+        assertFalse("flush() has been called on the target.", 
+                target.flushCalled);
     }
 
     /**
      * @tests java.io.ObjectOutputStream#defaultWriteObject()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = { @TestTarget(methodName = "defaultWriteObject", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException can not be tested because this method" +
+                "always throws a NotActiveException if called directly.",
+        method = "defaultWriteObject",
+        args = {}
+    )    
     public void test_defaultWriteObject() throws IOException {
-        // Test for method void java.io.ObjectOutputStream.defaultWriteObject()
         try {
             oos.defaultWriteObject();
-            fail("Failed to throw NotActiveException");
+            fail("Test 1: NotActiveException expected.");
         } catch (NotActiveException e) {
-            // Correct
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.ObjectOutputStream#enableReplaceObject(boolean)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "enableReplaceObject",
+        args = {boolean.class}
+    )     
+    public void test_enableReplaceObjectB() throws IOException {
+        // Start testing without a SecurityManager.
+        BasicObjectOutputStream boos = new BasicObjectOutputStream();
+        assertFalse("Test 1: Object resolving must be disabled by default.",
+                boos.enableReplaceObject(true));
+        
+        assertTrue("Test 2: enableReplaceObject did not return the previous value.",
+                boos.enableReplaceObject(false));
+        
+        // Test 3: Check that a security exception is thrown.
+        SecurityManager sm = System.getSecurityManager();
+        System.setSecurityManager(new Support_IOTestSecurityManager());
+        try { 
+            boos.enableReplaceObject(true);
+            fail("Test 3: SecurityException expected.");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(sm);
         }
     }
 
     /**
      * @tests java.io.ObjectOutputStream#flush()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "flush", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "flush",
+        args = {}
+    )    
     public void test_flush() throws Exception {
         // Test for method void java.io.ObjectOutputStream.flush()
         int size = bao.size();
         oos.writeByte(127);
-        assertTrue("Data flushed already", bao.size() == size);
+        assertTrue("Test 1: Data already flushed.", bao.size() == size);
         oos.flush();
-        assertTrue("Failed to flush data", bao.size() > size);
-        // we don't know how many bytes are actually written for 1
-        // byte, so we test > <before>
-        oos.close();
-        oos = null;
+        assertTrue("Test 2: Failed to flush data.", bao.size() > size);
+        
+        try {
+            oos_ioe.flush();
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.ObjectOutputStream#putFields()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "putFields", 
-                                    methodArgs = {})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException can not be tested because this method" +
+                "always throws a NotActiveException if called directly.",
+        method = "putFields",
+        args = {}
+    )      
     public void test_putFields() throws Exception {
-        // Test for method java.io.ObjectOutputStream$PutField
-        // java.io.ObjectOutputStream.putFields()
-
-        SerializableTestHelper sth;
-
         /*
          * "SerializableTestHelper" is an object created for these tests with
          * two fields (Strings) and simple implementations of readObject and
          * writeObject which simply read and write the first field but not the
-         * second
+         * second one.
          */
+        SerializableTestHelper sth;
 
+        try { 
+            oos.putFields();
+            fail("Test 1: NotActiveException expected.");
+        } catch (NotActiveException e) {
+            // Expected.
+        }
+        
         oos.writeObject(new SerializableTestHelper("Gabba", "Jabba"));
         oos.flush();
         ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
         sth = (SerializableTestHelper) (ois.readObject());
-        assertEquals("readFields / writeFields failed--first field not set",
+        assertEquals("Test 2: readFields or writeFields failed; first field not set.",
                 "Gabba", sth.getText1());
-        assertNull(
-                "readFields / writeFields failed--second field should not have been set",
+        assertNull("Test 3: readFields or writeFields failed; second field should not have been set.",
                 sth.getText2());
     }
 
     /**
      * @tests java.io.ObjectOutputStream#reset()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "reset", 
-                                    methodArgs = {})                                    
-            }
-        )       
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "reset",
+        args = {}
+    )       
     public void test_reset() throws Exception {
-        // Test for method void java.io.ObjectOutputStream.reset()
         String o = "HelloWorld";
+        sos = new Support_OutputStream(200);
+        oos.close();
+        oos = new ObjectOutputStream(sos);
         oos.writeObject(o);
         oos.writeObject(o);
         oos.reset();
         oos.writeObject(o);
-        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
+        
+        sos.setThrowsException(true);
+        try {
+            oos.reset();
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        sos.setThrowsException(false);
+      
+        ois = new ObjectInputStream(new ByteArrayInputStream(sos.toByteArray()));
+        assertEquals("Test 2: Incorrect object read.", o, ois.readObject());
+        assertEquals("Test 3: Incorrect object read.", o, ois.readObject());
+        assertEquals("Test 4: Incorrect object read.", o, ois.readObject());
         ois.close();
     }
 
@@ -788,16 +966,14 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#useProtocolVersion(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "useProtocolVersion", 
-                                    methodArgs = {int.class})                                    
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException seems to be never thrown, therefore there is no such test.",
+        method = "useProtocolVersion",
+        args = {int.class}
+    )     
     public void test_useProtocolVersionI() throws Exception {
-        // Test for method void
-        // java.io.ObjectOutputStream.useProtocolVersion(int)
+        
         oos.useProtocolVersion(ObjectOutputStream.PROTOCOL_VERSION_1);
         ExternalTest t1 = new ExternalTest();
         t1.setValue("hello1");
@@ -814,13 +990,14 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#write(byte[])
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {byte[].class})                                    
-            }
-        )      
+    @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing. IOException can " +
+                    "not be checked since is never thrown (primitive data " +
+                    "is written into a self-expanding buffer).",
+            method = "write",
+            args = {byte[].class}
+    )      
     public void test_write$B() throws Exception {
         // Test for method void java.io.ObjectOutputStream.write(byte [])
         byte[] buf = new byte[10];
@@ -836,13 +1013,14 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {byte[].class, int.class, int.class})                                    
-            }
-        )       
+    @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing. IOException can " +
+                    "not be checked since is never thrown (primitive data " +
+                    "is written into a self-expanding buffer).",
+            method = "write",
+            args = {byte[].class, int.class, int.class}
+    )       
     public void test_write$BII() throws Exception {
         // Test for method void java.io.ObjectOutputStream.write(byte [], int,
         // int)
@@ -859,13 +1037,14 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#write(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {int.class})                                    
-            }
-        )       
+    @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing. IOException can " +
+                    "not be checked since is never thrown (primitive data " +
+                    "is written into a self-expanding buffer).",
+            method = "write",
+            args = {int.class}
+    )       
     public void test_writeI() throws Exception {
         // Test for method void java.io.ObjectOutputStream.write(int)
         oos.write('T');
@@ -876,51 +1055,16 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     }
 
     /**
-     * @tests java.io.ObjectOutputStream#writeBoolean(boolean)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeBoolean", 
-                                    methodArgs = {boolean.class})                                    
-            }
-        )       
-    public void test_writeBooleanZ() throws Exception {
-        // Test for method void java.io.ObjectOutputStream.writeBoolean(boolean)
-        oos.writeBoolean(true);
-        oos.close();
-        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
-        assertTrue("Wrote incorrect byte value", ois.readBoolean());
-    }
-
-    /**
-     * @tests java.io.ObjectOutputStream#writeByte(int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeByte", 
-                                    methodArgs = {int.class})                                    
-            }
-        )     
-    public void test_writeByteI() throws Exception {
-        // Test for method void java.io.ObjectOutputStream.writeByte(int)
-        oos.writeByte(127);
-        oos.close();
-        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
-        assertEquals("Wrote incorrect byte value", 127, ois.readByte());
-    }
-
-    /**
      * @tests java.io.ObjectOutputStream#writeBytes(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeBytes", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )    
+    @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing. IOException can " +
+                    "not be checked since is never thrown (primitive data " +
+                    "is written into a self-expanding buffer).",
+            method = "writeBytes",
+            args = {java.lang.String.class}
+    )    
     public void test_writeBytesLjava_lang_String() throws Exception {
         // Test for method void
         // java.io.ObjectOutputStream.writeBytes(java.lang.String)
@@ -935,33 +1079,16 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     }
 
     /**
-     * @tests java.io.ObjectOutputStream#writeChar(int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeChar", 
-                                    methodArgs = {int.class})                                    
-            }
-        )    
-    public void test_writeCharI() throws Exception {
-        // Test for method void java.io.ObjectOutputStream.writeChar(int)
-        oos.writeChar('T');
-        oos.close();
-        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
-        assertEquals("Wrote incorrect char value", 'T', ois.readChar());
-    }
-
-    /**
      * @tests java.io.ObjectOutputStream#writeChars(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeChars", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )    
+    @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing. IOException can " +
+                    "not be checked since is never thrown (primitive data " +
+                    "is written into a self-expanding buffer).",
+            method = "writeChars",
+            args = {java.lang.String.class}
+    )    
     public void test_writeCharsLjava_lang_String() throws Exception {
         // Test for method void
         // java.io.ObjectOutputStream.writeChars(java.lang.String)
@@ -980,109 +1107,14 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     }
 
     /**
-     * @tests java.io.ObjectOutputStream#writeDouble(double)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeDouble", 
-                                    methodArgs = {double.class})                                    
-            }
-        )    
-    public void test_writeDoubleD() throws Exception {
-        // Test for method void java.io.ObjectOutputStream.writeDouble(double)
-        oos.writeDouble(Double.MAX_VALUE);
-        oos.close();
-        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
-        assertTrue("Wrote incorrect double value",
-                ois.readDouble() == Double.MAX_VALUE);
-    }
-
-    /**
-     * @tests java.io.ObjectOutputStream#writeFields()
-     */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Dummy test.",
-            targets = { @TestTarget(methodName = "writeFields", 
-                                    methodArgs = {})                                    
-            }
-        )    
-    public void test_writeFields() {
-        // Test for method void java.io.ObjectOutputStream.writeFields()
-        assertTrue("Used to test", true);
-    }
-
-    /**
-     * @tests java.io.ObjectOutputStream#writeFloat(float)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeFloat", 
-                                    methodArgs = {float.class})                                    
-            }
-        )    
-    public void test_writeFloatF() throws Exception {
-        // Test for method void java.io.ObjectOutputStream.writeFloat(float)
-        oos.writeFloat(Float.MAX_VALUE);
-        oos.close();
-        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
-        assertTrue("Wrote incorrect double value",
-                ois.readFloat() == Float.MAX_VALUE);
-        ois.close();
-        ois = null;
-    }
-
-    /**
-     * @tests java.io.ObjectOutputStream#writeInt(int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeInt", 
-                                    methodArgs = {int.class})                                    
-            }
-        )    
-    public void test_writeIntI() throws Exception {
-        // Test for method void java.io.ObjectOutputStream.writeInt(int)
-        oos.writeInt(Integer.MAX_VALUE);
-        oos.close();
-        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
-        assertTrue("Wrote incorrect double value",
-                ois.readInt() == Integer.MAX_VALUE);
-        ois.close();
-    }
-
-    /**
-     * @tests java.io.ObjectOutputStream#writeLong(long)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeLong", 
-                                    methodArgs = {long.class})                                    
-            }
-        )     
-    public void test_writeLongJ() throws Exception {
-        // Test for method void java.io.ObjectOutputStream.writeLong(long)
-        oos.writeLong(Long.MAX_VALUE);
-        oos.close();
-        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
-        assertTrue("Wrote incorrect double value",
-                ois.readLong() == Long.MAX_VALUE);
-    }
-
-    /**
      * @tests java.io.ObjectOutputStream#writeObject(java.lang.Object)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "writeObject", 
-                                    methodArgs = {java.lang.Object.class})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "writeObject",
+        args = {java.lang.Object.class}
+    )      
     public void test_writeObjectLjava_lang_Object() throws Exception {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1106,13 +1138,12 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeObject(java.lang.Object)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "writeObject", 
-                                    methodArgs = {java.lang.Object.class})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "writeObject",
+        args = {java.lang.Object.class}
+    )      
     public void test_writeObject_NotSerializable() throws Exception {
         ObjectOutput out = null;
         try {
@@ -1124,33 +1155,83 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     }
 
     /**
-     * @tests java.io.ObjectOutputStream#writeShort(int)
+     * @tests java.io.ObjectOutputStream#writeObjectOverride(Object)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeShort", 
-                                    methodArgs = {int.class})                                    
-            }
-        )      
-    public void test_writeShortI() throws Exception {
-        // Test for method void java.io.ObjectOutputStream.writeShort(int)
-        oos.writeShort(127);
-        oos.close();
-        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
-        assertEquals("Wrote incorrect short value", 127, ois.readShort());
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies that writeObjectOverride() throws an IOException.",
+        method = "writeObjectOverride",
+        args = {java.lang.Object.class}
+    )     
+    public void test_writeObjectOverrideLjava_lang_Object() throws IOException {
+        BasicObjectOutputStream boos = 
+                new BasicObjectOutputStream(new ByteArrayOutputStream());
+        
+        try {
+            boos.writeObjectOverride(new Object());
+            fail("IOException expected.");
+        }
+        catch (IOException e) {
+        }
+        finally {
+            boos.close();
+        }
+    }
+        
+    /**
+     * @tests java.io.ObjectOutputStream#writeStreamHeader()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies writeStreamHeader().",
+        method = "writeStreamHeader",
+        args = {}
+    )     
+    public void test_writeStreamHeader() throws IOException {
+        BasicObjectOutputStream boos;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        short s;
+        byte[] buffer;
+
+        // Test 1: Make sure that writeStreamHeader() has been called.
+        boos = new BasicObjectOutputStream(baos);
+        try {
+            assertTrue("Test 1: writeStreamHeader() has not been called.",
+                         boos.writeStreamHeaderCalled);
+            
+            // Test 2: Check that at least four bytes have been written. 
+            buffer = baos.toByteArray();
+            assertTrue("Test 2: At least four bytes should have been written",
+                        buffer.length >= 4);
+           
+            // Test 3: Check the magic number. 
+            s = buffer[0];
+            s <<= 8;
+            s += ((short) buffer[1] & 0x00ff);
+            assertEquals("Test 3: Invalid magic number written.", 
+                        java.io.ObjectStreamConstants.STREAM_MAGIC, s);
+            
+            // Test 4: Check the stream version number. 
+            s = buffer[2];
+            s <<= 8;
+            s += ((short) buffer[3] & 0x00ff);
+            assertEquals("Invalid stream version number written.", 
+                        java.io.ObjectStreamConstants.STREAM_VERSION, s);
+        }
+        finally {
+            boos.close();
+        }
     }
 
     /**
      * @tests java.io.ObjectOutputStream#writeUTF(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeUTF", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IOException checking missed.",
+        method = "writeUTF",
+        args = {java.lang.String.class}
+    )    
     public void test_writeUTFLjava_lang_String() throws Exception {
         // Test for method void
         // java.io.ObjectOutputStream.writeUTF(java.lang.String)
@@ -1163,13 +1244,12 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeObject(java.lang.Object)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "writeObject", 
-                                    methodArgs = {java.lang.Object.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "writeObject",
+        args = {java.lang.Object.class}
+    )    
     public void test_writeObject_Exception() throws ClassNotFoundException, IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -1204,6 +1284,8 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     protected void setUp() throws Exception {
         super.setUp();
         oos = new ObjectOutputStream(bao = new ByteArrayOutputStream());
+        oos_ioe = new ObjectOutputStream(sos = new Support_OutputStream());
+        sos.setThrowsException(true);
     }
 
     /**
@@ -1215,6 +1297,11 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         if (oos != null) {
             try {
                 oos.close();
+            } catch (Exception e) {}
+        }
+        if (oos_ioe != null) {
+            try {
+                oos_ioe.close();
             } catch (Exception e) {}
         }
         if (f != null && f.exists()) {
@@ -1267,17 +1354,26 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
      * @tests java.io.ObjectOutputStream#writeObject(java.lang.Object)
      * @tests java.io.ObjectOutputStream#writeUTF(java.lang.String)
      */
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = { @TestTarget(methodName = "writeInt", 
-                                    methodArgs = {int.class}),
-                        @TestTarget(methodName = "writeObject", 
-                                            methodArgs = {java.lang.Object.class}),            
-                        @TestTarget(methodName = "writeUTF", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )  
+            notes = "",
+            method = "writeInt",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "",
+            method = "writeObject",
+            args = {java.lang.Object.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "",
+            method = "writeUTF",
+            args = {java.lang.String.class}
+        )
+    })  
     public void testMixPrimitivesAndObjects() throws Exception {
         int i = 7;
         String s1 = "string 1";
@@ -1318,13 +1414,12 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeUnshared(java.lang.Object)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "writeUnshared", 
-                                    methodArgs = {java.lang.Object.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "writeUnshared",
+        args = {java.lang.Object.class}
+    )    
     public void test_writeUnshared() throws Exception {
         //Regression for HARMONY-187
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1355,13 +1450,12 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeUnshared(java.lang.Object)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "writeUnshared", 
-                                    methodArgs = {java.lang.Object.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "writeUnshared",
+        args = {java.lang.Object.class}
+    )    
     public void test_writeUnshared2() throws Exception {
         //Regression for HARMONY-187
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1398,13 +1492,12 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#useProtocolVersion(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException & IllegalStateException checking missed.",
-            targets = { @TestTarget(methodName = "useProtocolVersion", 
-                                    methodArgs = {int.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IOException & IllegalStateException checking missed.",
+        method = "useProtocolVersion",
+        args = {int.class}
+    )    
     public void test_useProtocolVersionI_2() throws Exception {
         ObjectOutputStream oos = new ObjectOutputStream(
                 new ByteArrayOutputStream());
@@ -1424,13 +1517,12 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#replaceObject(java.lang.Object)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "replaceObject", 
-                                    methodArgs = {java.lang.Object.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "replaceObject",
+        args = {java.lang.Object.class}
+    )    
     public void test_replaceObject() throws Exception {
         //Regression for HARMONY-1429
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

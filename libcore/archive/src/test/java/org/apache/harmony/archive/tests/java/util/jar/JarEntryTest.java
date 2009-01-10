@@ -17,15 +17,16 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.CodeSigner;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -34,7 +35,7 @@ import junit.framework.TestCase;
 import tests.support.resource.Support_Resources;
 
 
-@TestTargetClass(JarEntry.class) 
+@TestTargetClass(JarEntry.class)
 public class JarEntryTest extends TestCase {
     private ZipEntry zipEntry;
 
@@ -73,37 +74,33 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#JarEntry(java.util.zip.ZipEntry)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "JarEntry",
-          methodArgs = {java.util.zip.ZipEntry.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarEntry",
+        args = {java.util.zip.ZipEntry.class}
+    )
     public void test_ConstructorLjava_util_zip_ZipEntry() {
         assertNotNull("Jar file is null", jarFile);
         zipEntry = jarFile.getEntry(entryName);
         assertNotNull("Zip entry is null", zipEntry);
         jarEntry = new JarEntry(zipEntry);
         assertNotNull("Jar entry is null", jarEntry);
-        assertEquals("Wrong entry constructed--wrong name", entryName, jarEntry.getName());
-        assertEquals("Wrong entry constructed--wrong size", 311, jarEntry.getSize());
+        assertEquals("Wrong entry constructed--wrong name", entryName, jarEntry
+                .getName());
+        assertEquals("Wrong entry constructed--wrong size", 311, jarEntry
+                .getSize());
     }
 
     /**
      * @tests java.util.jar.JarEntry#getAttributes()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getAttributes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAttributes",
+        args = {}
+    )
     public void test_getAttributes() {
         JarFile attrJar = null;
         File file = null;
@@ -117,37 +114,47 @@ public class JarEntryTest extends TestCase {
         }
         try {
             jarEntry = attrJar.getJarEntry(attEntryName);
-            assertNotNull("Should have Manifest attributes", jarEntry.getAttributes());
+            assertNotNull("Should have Manifest attributes", jarEntry
+                    .getAttributes());
         } catch (Exception e) {
             fail("Exception during 2nd test: " + e.toString());
         }
         try {
             jarEntry = attrJar.getJarEntry(attEntryName2);
-            assertNull("Shouldn't have any Manifest attributes", jarEntry.getAttributes());
+            assertNull("Shouldn't have any Manifest attributes", jarEntry
+                    .getAttributes());
             attrJar.close();
         } catch (Exception e) {
             fail("Exception during 1st test: " + e.toString());
+        }
+
+        Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
+        try {
+            attrJar = new JarFile(new File(resources, "Broken_manifest.jar"));
+            jarEntry = attrJar.getJarEntry("META-INF/");
+            jarEntry.getAttributes();
+            fail("IOException expected");
+        } catch (IOException e) {
+            // expected.
         }
     }
 
     /**
      * @tests java.util.jar.JarEntry#getCertificates()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCertificates",
-          methodArgs = {}
-        )
-    })
-    public void test_getCertificates() throws Exception{
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCertificates",
+        args = {}
+    )
+    public void test_getCertificates() throws Exception {
         zipEntry = jarFile.getEntry(entryName2);
         jarEntry = new JarEntry(zipEntry);
-        assertNull("Shouldn't have any Certificates", jarEntry.getCertificates());
-        
-        //Regression Test for HARMONY-3424
+        assertNull("Shouldn't have any Certificates", jarEntry
+                .getCertificates());
+
+        // Regression Test for HARMONY-3424
         String jarFileName = "TestCodeSigners.jar";
         Support_Resources.copyFile(resources, null, jarFileName);
         File file = new File(resources, jarFileName);
@@ -156,7 +163,7 @@ public class JarEntryTest extends TestCase {
         JarEntry jarEntry2 = jarFile.getJarEntry("Test.class");
         InputStream in = jarFile.getInputStream(jarEntry1);
         byte[] buffer = new byte[1024];
-         while(in.read(buffer)>=0);
+        while (in.read(buffer) >= 0);
         in.close();
         assertNotNull(jarEntry1.getCertificates());
         assertNotNull(jarEntry2.getCertificates());
@@ -165,15 +172,12 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#getCodeSigners()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCodeSigners",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCodeSigners",
+        args = {}
+    )
     public void test_getCodeSigners() throws IOException {
         String jarFileName = "TestCodeSigners.jar";
         Support_Resources.copyFile(resources, null, jarFileName);
@@ -187,8 +191,10 @@ public class JarEntryTest extends TestCase {
         }
         CodeSigner[] codeSigners = jarEntry.getCodeSigners();
         assertEquals(2, codeSigners.length);
-        List<?> certs_bob = codeSigners[0].getSignerCertPath().getCertificates();
-        List<?> certs_alice = codeSigners[1].getSignerCertPath().getCertificates();
+        List<?> certs_bob = codeSigners[0].getSignerCertPath()
+                .getCertificates();
+        List<?> certs_alice = codeSigners[1].getSignerCertPath()
+                .getCertificates();
         if (1 == certs_bob.size()) {
             List<?> temp = certs_bob;
             certs_bob = certs_alice;
@@ -196,7 +202,58 @@ public class JarEntryTest extends TestCase {
         }
         assertEquals(2, certs_bob.size());
         assertEquals(1, certs_alice.size());
-        assertNull("getCodeSigners() of a primitive JarEntry should return null", new JarEntry(
-                "aaa").getCodeSigners());
+        assertNull(
+                "getCodeSigners() of a primitive JarEntry should return null",
+                new JarEntry("aaa").getCodeSigners());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarEntry",
+        args = {java.lang.String.class}
+    )
+    public void test_ConstructorLjava_lang_String() {
+        assertNotNull("Jar file is null", jarFile);
+        zipEntry = jarFile.getEntry(entryName);
+        assertNotNull("Zip entry is null", zipEntry);
+        jarEntry = new JarEntry(entryName);
+        assertNotNull("Jar entry is null", jarEntry);
+        assertEquals("Wrong entry constructed--wrong name", entryName, jarEntry
+                .getName());
+        try {
+            jarEntry = new JarEntry((String) null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException ee) {
+            // expected
+        }
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < 0x10000; i++) {
+            sb.append('3');
+        }
+        try {
+            jarEntry = new JarEntry(new String(sb));
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException ee) {
+            // expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarEntry",
+        args = {java.util.jar.JarEntry.class}
+    )
+    public void test_ConstructorLjava_util_jar_JarEntry() {
+        assertNotNull("Jar file is null", jarFile);
+        JarEntry je = jarFile.getJarEntry(entryName);
+        assertNotNull("Jar entry is null", je);
+        jarEntry = new JarEntry(je);
+        assertNotNull("Jar entry is null", jarEntry);
+        assertEquals("Wrong entry constructed--wrong name", entryName, jarEntry
+                .getName());
+        assertEquals("Wrong entry constructed--wrong size", 311, jarEntry
+                .getSize());
     }
 }

@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -32,15 +32,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#BitSet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "BitSet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "BitSet",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.util.BitSet()
         BitSet bs = new BitSet();
@@ -54,15 +51,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#BitSet(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "BitSet",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "BitSet",
+        args = {int.class}
+    )
     public void test_ConstructorI() {
         // Test for method java.util.BitSet(int)
         BitSet bs = new BitSet(128);
@@ -89,15 +83,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         // Test for method java.lang.Object java.util.BitSet.clone()
         BitSet bs;
@@ -109,15 +100,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.util.BitSet.equals(java.lang.Object)
         BitSet bs;
@@ -141,15 +129,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         // Test for method int java.util.BitSet.hashCode()
         BitSet bs = (BitSet) eightbs.clone();
@@ -166,15 +151,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#clear()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {}
+    )
     public void test_clear() {
         eightbs.clear();
         for (int i = 0; i < 8; i++)
@@ -195,15 +177,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#clear(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {int.class}
+    )
     public void test_clearI() {
         // Test for method void java.util.BitSet.clear(int)
 
@@ -233,15 +212,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#clear(int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {int.class, int.class}
+    )
     public void test_clearII() {
         // Test for method void java.util.BitSet.clear(int, int)
         // pos1 and pos2 are in the same bitset element
@@ -379,15 +355,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#get(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {int.class}
+    )
     public void test_getI() {
         // Test for method boolean java.util.BitSet.get(int)
 
@@ -416,15 +389,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#get(int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {int.class, int.class}
+    )
     public void test_getII() {
         // Test for method boolean java.util.BitSet.get(int, int)
         BitSet bs, resultbs, correctbs;
@@ -525,20 +495,38 @@ public class BitSetTest extends junit.framework.TestCase {
         bs2.flip(0, 128);
         resultbs = bs2.get(0, bs.size());
         assertTrue("equality principle", bs2.equals(resultbs));
+        
+        try {
+            bs2.get(-1, 0);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            bs2.get(bs2.size()/2, 0);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            bs2.get(bs2.size()/2, -1);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.BitSet#set(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "set",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "set",
+        args = {int.class}
+    )
     public void test_setI() {
         // Test for method void java.util.BitSet.set(int)
 
@@ -580,15 +568,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#set(int, boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "set",
-          methodArgs = {int.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "set",
+        args = {int.class, boolean.class}
+    )
     public void test_setIZ() {
         // Test for method void java.util.BitSet.set(int, boolean)
         eightbs.set(5, false);
@@ -596,20 +581,24 @@ public class BitSetTest extends junit.framework.TestCase {
 
         eightbs.set(5, true);
         assertTrue("Should have set bit 5 to false", eightbs.get(5));
+        
+        try {
+            eightbs.set(-5, false);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.BitSet#set(int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "set",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "set",
+        args = {int.class, int.class}
+    )
     public void test_setII() {
         // Test for method void java.util.BitSet.set(int, int)
         // pos1 and pos2 are in the same bitset element
@@ -722,15 +711,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#set(int, int, boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "set",
-          methodArgs = {int.class, int.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "set",
+        args = {int.class, int.class, boolean.class}
+    )
     public void test_setIIZ() {
         // Test for method void java.util.BitSet.set(int, int, boolean)
         eightbs.set(3, 6, false);
@@ -741,20 +727,37 @@ public class BitSetTest extends junit.framework.TestCase {
         assertTrue("Should have set bits 3, 4, and 5 to true", eightbs.get(3)
                 && eightbs.get(4) && eightbs.get(5));
 
+        try {
+            eightbs.set(-3, 6, false);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+
+        try {
+            eightbs.set(3, -6, false);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+
+        try {
+            eightbs.set(6, 3, false);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.BitSet#flip(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "flip",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "flip",
+        args = {int.class}
+    )
     public void test_flipI() {
         // Test for method void java.util.BitSet.flip(int)
         BitSet bs = new BitSet();
@@ -828,15 +831,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#flip(int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "flip",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "flip",
+        args = {int.class, int.class}
+    )
     public void test_flipII() {
         // Test for method void java.util.BitSet.flip(int, int)
         // pos1 and pos2 are in the same bitset element
@@ -967,25 +967,30 @@ public class BitSetTest extends junit.framework.TestCase {
      * @tests java.util.BitSet#flip(int, int)
      * @tests java.util.BitSet#clear(int,int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "flip",
-          methodArgs = {int.class, int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "flip",
+            args = {int.class, int.class}
         ),
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {int.class, int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "get",
+            args = {int.class, int.class}
         ),
-        @TestTarget(
-          methodName = "set",
-          methodArgs = {int.class, int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "set",
+            args = {int.class, int.class}
         ),
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {int.class, int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "clear",
+            args = {int.class, int.class}
         )
     })
     public void test_111478() {
@@ -1013,15 +1018,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#intersects(java.util.BitSet)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "intersects",
-          methodArgs = {java.util.BitSet.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "intersects",
+        args = {java.util.BitSet.class}
+    )
     public void test_intersectsLjava_util_BitSet() {
         // Test for method boolean java.util.BitSet.intersects(java.util.BitSet)
         BitSet bs = new BitSet(500);
@@ -1098,15 +1100,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#and(java.util.BitSet)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "and",
-          methodArgs = {java.util.BitSet.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "and",
+        args = {java.util.BitSet.class}
+    )
     public void test_andLjava_util_BitSet() {
         // Test for method void java.util.BitSet.and(java.util.BitSet)
         BitSet bs = new BitSet(128);
@@ -1129,15 +1128,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#andNot(java.util.BitSet)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "andNot",
-          methodArgs = {java.util.BitSet.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "andNot",
+        args = {java.util.BitSet.class}
+    )
     public void test_andNotLjava_util_BitSet() {
         BitSet bs = (BitSet) eightbs.clone();
         bs.clear(5);
@@ -1156,15 +1152,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#or(java.util.BitSet)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "or",
-          methodArgs = {java.util.BitSet.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "or",
+        args = {java.util.BitSet.class}
+    )
     public void test_orLjava_util_BitSet() {
         // Test for method void java.util.BitSet.or(java.util.BitSet)
         BitSet bs = new BitSet(128);
@@ -1186,15 +1179,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#xor(java.util.BitSet)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "xor",
-          methodArgs = {java.util.BitSet.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "xor",
+        args = {java.util.BitSet.class}
+    )
     public void test_xorLjava_util_BitSet() {
         // Test for method void java.util.BitSet.xor(java.util.BitSet)
 
@@ -1220,15 +1210,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#size()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() {
         // Test for method int java.util.BitSet.size()
         assertEquals("Returned incorrect size", 64, eightbs.size());
@@ -1240,15 +1227,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.util.BitSet.toString()
         assertEquals("Returned incorrect string representation", "{0, 1, 2, 3, 4, 5, 6, 7}", eightbs
@@ -1261,15 +1245,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#length()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "length",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "length",
+        args = {}
+    )
     public void test_length() {
         BitSet bs = new BitSet();
         assertTrue("BitSet returned wrong length--wanted 0, got: "
@@ -1291,15 +1272,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#nextSetBit(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextSetBit",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextSetBit",
+        args = {int.class}
+    )
     public void test_nextSetBitI() {
         // Test for method int java.util.BitSet.nextSetBit()
         BitSet bs = new BitSet(500);
@@ -1381,15 +1359,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#nextClearBit(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextClearBit",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextClearBit",
+        args = {int.class}
+    )
     public void test_nextClearBitI() {
         // Test for method int java.util.BitSet.nextSetBit()
         BitSet bs = new BitSet(500);
@@ -1481,15 +1456,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#isEmpty()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isEmpty",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isEmpty",
+        args = {}
+    )
     public void test_isEmpty() {
         BitSet bs = new BitSet(500);
         assertTrue("Test: isEmpty() returned wrong value", bs.isEmpty());
@@ -1526,15 +1498,12 @@ public class BitSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.BitSet#cardinality()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "cardinality",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "cardinality",
+        args = {}
+    )
     public void test_cardinality() {
         // test for method int java.util.BitSet.cardinality()
         BitSet bs = new BitSet(500);

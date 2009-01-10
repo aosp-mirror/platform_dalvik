@@ -16,10 +16,11 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -33,6 +34,8 @@ import java.nio.channels.spi.AbstractSelectableChannel;
 import java.nio.channels.spi.SelectorProvider;
 
 import junit.framework.TestCase;
+
+import org.apache.harmony.nio.tests.java.nio.channels.spi.AbstractSelectorTest.MockSelectorProvider;
 
 /**
  * Tests for AbstractSelectableChannel 
@@ -52,17 +55,35 @@ public class AbstractSelectableChannelTest extends TestCase {
             testChannel.close();
         }
     }
+    
+    /**
+     * @tests AbstractSelectableChannel()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "AbstractSelectableChannel",
+        args = {SelectorProvider.class}
+    )
+    public void test_Constructor_LSelectorProvider() throws Exception {
+        assertSame(SelectorProvider.provider(), testChannel.provider());
+    }
 
     /**
      * @tests AbstractSelectableChannel#implCloseChannel()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implCloseChannel",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "implCloseChannel",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "implCloseSelectableChannel",
+            args = {}
         )
     })
     public void test_implClose() throws IOException {
@@ -88,15 +109,12 @@ public class AbstractSelectableChannelTest extends TestCase {
     /**
      * @tests AbstractSelectableChannel#provider()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "provider",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "provider",
+        args = {}
+    )
     public void test_provider() {
         SelectorProvider provider = testChannel.provider();
         assertSame(SelectorProvider.provider(), provider);
@@ -108,15 +126,12 @@ public class AbstractSelectableChannelTest extends TestCase {
     /**
      * @tests AbstractSelectableChannel#isBlocking()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isBlocking",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "isBlocking",
+        args = {}
+    )
     public void test_isBlocking() throws IOException {
         assertTrue(testChannel.isBlocking());
         testChannel.configureBlocking(false);
@@ -129,15 +144,12 @@ public class AbstractSelectableChannelTest extends TestCase {
      * 
      * @tests AbstractSelectableChannel#blockingLock()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "blockingLock",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "blockingLock",
+        args = {}
+    )
     public void test_blockingLock() {
         Object gotObj = testChannel.blockingLock();
         assertNotNull(gotObj);
@@ -146,16 +158,12 @@ public class AbstractSelectableChannelTest extends TestCase {
     /**
      * @tests AbstractSelectableChannel#register(Selector, int, Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "register",
-          methodArgs = {java.nio.channels.Selector.class, 
-                        int.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "register",
+        args = {java.nio.channels.Selector.class, int.class, java.lang.Object.class}
+    )
     public void test_register_LSelectorILObject() throws IOException {
         assertFalse(testChannel.isRegistered());
         Selector acceptSelector1 = SelectorProvider.provider().openSelector();
@@ -170,23 +178,19 @@ public class AbstractSelectableChannelTest extends TestCase {
         assertSame(sc, acceptKey.channel());
 
         //test that sc.register invokes Selector.register()
-        acceptKey = sc.register(acceptSelector2, SelectionKey.OP_READ, null);
-        assertNull(acceptKey);
+        sc.register(acceptSelector2, SelectionKey.OP_READ, null);
+        assertTrue(((MockAbstractSelector)acceptSelector2).isRegisterCalled);
     }
 
     /**
      * @tests AbstractSelectableChannel#register(Selector, int, Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "register",
-          methodArgs = {java.nio.channels.Selector.class, 
-                        int.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "register",
+        args = {java.nio.channels.Selector.class, int.class, java.lang.Object.class}
+    )
     public void test_register_LSelectorILObject_IllegalArgument()
             throws IOException {
         Selector acceptSelector = SelectorProvider.provider().openSelector();
@@ -279,20 +283,29 @@ public class AbstractSelectableChannelTest extends TestCase {
             // expected
         }
 
+        SelectorProvider prov1 = MockSelectorProvider.provider();
+        SelectorProvider prov2 = MockSelectorProvider.provider();
+        
+        Selector sel = prov2.openSelector();
+        
+        sc = prov1.openSocketChannel();
+        sc.configureBlocking(false);
+        try {
+            sc.register(sel, SelectionKey.OP_READ, null);
+        } catch (IllegalSelectorException e) {
+            // expected
+        }
     }
 
     /**
      * @tests AbstractSelectableChannel#keyFor(Selector)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keyFor",
-          methodArgs = {java.nio.channels.Selector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "keyFor",
+        args = {java.nio.channels.Selector.class}
+    )
     public void test_keyfor_LSelector() throws Exception {
         SocketChannel sc = SocketChannel.open();
         Object argObj = new Object();
@@ -315,15 +328,12 @@ public class AbstractSelectableChannelTest extends TestCase {
     /**
      * @tests AbstractSelectableChannel#configureBlocking(boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "configureBlocking",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "configureBlocking",
+        args = {boolean.class}
+    )
     public void test_configureBlocking_Z_IllegalBlockingMode() throws Exception {
         SocketChannel sc = SocketChannel.open();
         sc.configureBlocking(false);
@@ -344,24 +354,49 @@ public class AbstractSelectableChannelTest extends TestCase {
     /**
      * @tests AbstractSelectableChannel#configureBlocking(boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "configureBlocking",
-          methodArgs = {boolean.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "configureBlocking",
+            args = {boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "implConfigureBlocking",
+            args = {boolean.class}
         )
-    })
+    })   
     public void test_configureBlocking_Z() throws Exception {
-        MockSelectableChannel mock = new MockSelectableChannel(SelectorProvider
+        testChannel = new MockSelectableChannel(SelectorProvider
                 .provider());
-        //default blocking mode is true
-        //the implConfigureBlocking is only invoked if the given mode is different with current one
-        mock.configureBlocking(true);
-        assertFalse(mock.implConfigureBlockingCalled);
-        mock.configureBlocking(false);
-        assertTrue(mock.implConfigureBlockingCalled);
+        // default blocking mode is true. The implConfigureBlocking is only
+        // invoked if the given mode is different with current one.
+        testChannel.configureBlocking(true);
+        assertFalse(testChannel.implConfigureBlockingCalled);
+        testChannel.configureBlocking(false);
+        assertTrue(testChannel.implConfigureBlockingCalled);
+        
+        AbstractSelectableChannel channel = 
+                SelectorProvider.provider().openDatagramChannel();
+        channel.configureBlocking(false);
+        channel.register(SelectorProvider.provider().openSelector(),
+                SelectionKey.OP_READ);
+        try {
+            channel.configureBlocking(true);
+            fail("Should have thrown IllegalBlockingModeException");
+        } catch (IllegalBlockingModeException e) {
+            // expected
+        }
+        
+        testChannel.close();
+        try {
+            testChannel.configureBlocking(false);
+            fail("Should have thrown ClosedChannelException");
+        } catch (ClosedChannelException e) {
+            // expected
+        }
     }
 
     private class MockSelectableChannel extends AbstractSelectableChannel {

@@ -17,18 +17,26 @@
 
 package tests.api.java.lang.reflect;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.HashSet;
+import java.util.Set;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(Method.class) 
 public class MethodTest extends junit.framework.TestCase {
-
+    
     static class TestMethod {
         public TestMethod() {
         }
@@ -103,6 +111,20 @@ public class MethodTest extends junit.framework.TestCase {
         }
 
         public static synchronized native void pustatsynchnat();
+        
+        public void publicVoidVarargs(Object... param){}
+        public void publicVoidArray(Object[] param){}
+        
+        public void annotatedParameter(@TestAnno @Deprecated int a,
+                @Deprecated int b, int c) {
+        }
+        
+        @Deprecated
+        @TestAnno
+        public void annotatedMethod(){}
+        
+        public void hashCodeTest(int i){}
+        public void hashCodeTest(String s){}
 
         public void invokeCastTest1(byte param) {
         }
@@ -128,6 +150,14 @@ public class MethodTest extends junit.framework.TestCase {
         public void invokeCastTest1(boolean param) {
         }
     }
+    
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.PARAMETER, ElementType.METHOD})
+    public static @interface TestAnno{
+        public static final String DEFAULT_VALUE = "DEFAULT_VALUE";
+
+        String value() default DEFAULT_VALUE;
+    }
 
     abstract class AbstractTestMethod {
         public abstract void puabs();
@@ -138,19 +168,41 @@ public class MethodTest extends junit.framework.TestCase {
             return 0;
         }
     }
+    
+    static interface IBrigeTest<T>{
+        T m();
+    }
+    
+    static class BrigeTest implements IBrigeTest<String> {
+        public String m(){ return null; }
+    }
+    
+    static class ExceptionTest<T extends Exception>{
+        @SuppressWarnings("unused")
+        void exceptionTest() throws T{}
+    }
+    
+    static class GenericReturnType<T> {
+        T returnGeneric(){return null;}
+    }
+    
+    static class GenericString<T> {
+      public static final String GENERIC = 
+      "T tests.api.java.lang.reflect.MethodTest$GenericString.genericString(T)";
+        T genericString(T t) {
+            return null;
+        }
+    }
 
     /**
      * @tests java.lang.reflect.Method#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.lang.reflect.Method.equals(java.lang.Object)
@@ -178,15 +230,12 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getDeclaringClass()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDeclaringClass",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDeclaringClass",
+        args = {}
+    )
     public void test_getDeclaringClass() {
         // Test for method java.lang.Class
         // java.lang.reflect.Method.getDeclaringClass()
@@ -207,15 +256,12 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getExceptionTypes()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getExceptionTypes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getExceptionTypes",
+        args = {}
+    )
     public void test_getExceptionTypes() {
         // Test for method java.lang.Class []
         // java.lang.reflect.Method.getExceptionTypes()
@@ -240,15 +286,12 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getModifiers()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getModifiers",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getModifiers",
+        args = {}
+    )
     public void test_getModifiers() {
         // Test for method int java.lang.reflect.Method.getModifiers()
 
@@ -303,15 +346,12 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         // Test for method java.lang.String java.lang.reflect.Method.getName()
         Method mth = null;
@@ -323,19 +363,237 @@ public class MethodTest extends junit.framework.TestCase {
         assertEquals("Returned incorrect method name", 
                 "voidMethod", mth.getName());
     }
+    
+    /**
+     * @tests java.lang.reflect.Method#isVarArgs()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isVarArgs",
+        args = {}
+    )
+    public void test_isVarArgs() throws Exception {
+        Method mth = TestMethod.class.getMethod("publicVoidVarargs",
+                Object[].class);
+        assertTrue("Varargs method stated as non vararg.", mth.isVarArgs());
+
+        mth = TestMethod.class.getDeclaredMethod("publicVoidArray",
+                Object[].class);
+        assertFalse("Non varargs method stated as vararg.", mth.isVarArgs());
+    }
+    
+    /**
+     * @tests java.lang.reflect.Method#isBridge()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isBridge",
+        args = {}
+    )
+    public void test_isBridge() throws Exception {
+        Method[] declaredMethods = BrigeTest.class.getDeclaredMethods();
+        assertEquals("Bridge method not generated.", 2, declaredMethods.length);
+        boolean foundBridgeMethod = false;
+        for (Method method : declaredMethods) {
+            if (method.getReturnType().equals(Object.class)) {
+                assertTrue("Bridge method not stated as bridge.", method
+                        .isBridge());
+                foundBridgeMethod = true;
+            }
+        }
+        assertTrue("Bridge method not found.", foundBridgeMethod);
+    }
+    
+    /**
+     * @tests java.lang.reflect.Method#isSynthetic()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isSynthetic",
+        args = {}
+    )
+    public void test_isSynthetic() throws Exception {
+        Method[] declaredMethods = BrigeTest.class.getDeclaredMethods();
+        assertEquals("Synthetic method not generated.", 2,
+                declaredMethods.length);
+        boolean foundSyntheticMethod = false;
+        for (Method method : declaredMethods) {
+            if (method.getReturnType().equals(Object.class)) {
+                assertTrue("Synthetic method not stated as synthetic.", method
+                        .isSynthetic());
+                foundSyntheticMethod = true;
+            }
+        }
+        assertTrue("Synthetic method not found.", foundSyntheticMethod);
+    }
+    /**
+     * @tests java.lang.reflect.Method#getParameterAnnotations()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getParameterAnnotations",
+        args = {}
+    )
+    public void test_getParameterAnnotations() throws Exception {
+        Method method = TestMethod.class.getDeclaredMethod(
+                "annotatedParameter", new Class[] {
+                        int.class, int.class, int.class});
+        Annotation[][] annotations = method.getParameterAnnotations();
+        assertEquals(3, annotations.length);
+        assertEquals(
+                "Wrong number of annotations returned for first parameter", 2,
+                annotations[0].length);
+        Set<Class<?>> annotationSet = new HashSet<Class<?>>();
+        annotationSet.add(annotations[0][0].annotationType());
+        annotationSet.add(annotations[0][1].annotationType());
+        assertTrue("Missing TestAnno annotation", annotationSet
+                .contains(TestAnno.class));
+        assertTrue("Missing Deprecated annotation", annotationSet
+                .contains(Deprecated.class));
+        
+        assertEquals(
+                "Wrong number of annotations returned for second parameter",
+                1, annotations[1].length);
+        annotationSet = new HashSet<Class<?>>();
+        annotationSet.add(annotations[1][0].annotationType());
+        assertTrue("Missing Deprecated annotation", annotationSet
+                .contains(Deprecated.class));
+        assertEquals(
+                "Wrong number of annotations returned for third parameter", 0,
+                annotations[2].length);
+    }
+    
+    /**
+     * @tests java.lang.reflect.Method#getDeclaredAnnotations()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDeclaredAnnotations",
+        args = {}
+    )
+    public void test_getDeclaredAnnotations() throws Exception {
+        Method method = TestMethod.class.getDeclaredMethod("annotatedMethod");
+        Annotation[] declaredAnnotations = method.getDeclaredAnnotations();
+        assertEquals(2, declaredAnnotations.length);
+        
+        Set<Class<?>> annotationSet = new HashSet<Class<?>>();
+        annotationSet.add(declaredAnnotations[0].annotationType());
+        annotationSet.add(declaredAnnotations[1].annotationType());
+        assertTrue("Missing TestAnno annotation", annotationSet
+                .contains(TestAnno.class));
+        assertTrue("Missing Deprecated annotation", annotationSet
+                .contains(Deprecated.class));
+    }
+    
+    /**
+     * @tests java.lang.reflect.Method#getDefaultValue()
+     */
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Missing tests for TypeNotPresentException",
+        method = "getDefaultValue",
+        args = {}
+    )
+    public void test_getDefaultValue() throws Exception {
+        Method method = TestAnno.class.getDeclaredMethod("value");
+        assertEquals("Wrong default value returned", TestAnno.DEFAULT_VALUE,
+                method.getDefaultValue());
+    }
+    
+    /**
+     * @tests java.lang.reflect.Method#getDefaultValue()
+     */
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Missing tests for GenericSignatureFormatError,TypeNotPresentException, MalformedParameterizedTypeException",
+        method = "getGenericExceptionTypes",
+        args = {}
+    )
+    public void test_getGenericExceptionTypes() throws Exception {
+        Method method = ExceptionTest.class.getDeclaredMethod("exceptionTest");
+        Type[] genericExceptionTypes = method.getGenericExceptionTypes();
+        assertEquals(1, genericExceptionTypes.length);
+        assertTrue(genericExceptionTypes[0] instanceof TypeVariable<?>);
+        @SuppressWarnings("unchecked")
+        TypeVariable<Class<ExceptionTest<?>>> tv = 
+            (TypeVariable<Class<ExceptionTest<?>>>) genericExceptionTypes[0];
+        assertEquals("T", tv.getName());
+    }
+    
+    /**
+     * @tests java.lang.reflect.Method#getGenericReturnType()
+     */
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Missing tests for GenericSignatureFormatError,TypeNotPresentException, MalformedParameterizedTypeException",
+        method = "getGenericReturnType",
+        args = {}
+    )
+    public void test_getGenericReturnType() throws Exception {
+        Method method = GenericReturnType.class
+                .getDeclaredMethod("returnGeneric");
+        Type returnType = method.getGenericReturnType();
+        assertNotNull("getGenericReturnType returned null", returnType);
+        assertTrue(returnType instanceof TypeVariable<?>);
+        @SuppressWarnings("unchecked")
+        TypeVariable<Class<ExceptionTest<?>>> tv = 
+            (TypeVariable<Class<ExceptionTest<?>>>) returnType;
+        assertEquals("T", tv.getName());
+    }
+    
+    
+    /**
+     * @tests java.lang.reflect.Method#toGenericString()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toGenericString",
+        args = {}
+    )
+    public void test_toGenericString() throws Exception {
+        Method method = GenericString.class.getDeclaredMethod("genericString",
+                Object.class);
+        assertEquals("Wrong generic String returned", GenericString.GENERIC,
+                method.toGenericString());
+    }
+    
+    
+    
+    
+    
+    
+    /**
+     * @tests java.lang.reflect.Method#hashCode()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
+    public void test_hashCode() throws Exception {
+        Method mth0 = TestMethod.class.getMethod("hashCodeTest", String.class);
+        Method mth1 = TestMethod.class.getDeclaredMethod("hashCodeTest",
+                int.class);
+        assertEquals("Methods with same name did not return same hashCode.",
+                mth0.hashCode(), mth1.hashCode());
+    }
 
     /**
      * @tests java.lang.reflect.Method#getParameterTypes()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getParameterTypes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getParameterTypes",
+        args = {}
+    )
     public void test_getParameterTypes() {
         // Test for method java.lang.Class []
         // java.lang.reflect.Method.getParameterTypes()
@@ -390,15 +648,12 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getReturnType()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getReturnType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getReturnType",
+        args = {}
+    )
     public void test_getReturnType() {
         // Test for method java.lang.Class
         // java.lang.reflect.Method.getReturnType()
@@ -474,62 +729,33 @@ public class MethodTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.Method#invoke(java.lang.Object,
      *        java.lang.Object[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Not all exceptions are verified.",
-      targets = {
-        @TestTarget(
-          methodName = "invoke",
-          methodArgs = {java.lang.Object.class, java.lang.Object[].class}
-        )
-    })
-    public void test_invokeLjava_lang_Object$Ljava_lang_Object() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "invoke",
+        args = {java.lang.Object.class, java.lang.Object[].class}
+    )
+    public void test_invokeLjava_lang_Object$Ljava_lang_Object() throws Exception{
         // Test for method java.lang.Object
         // java.lang.reflect.Method.invoke(java.lang.Object, java.lang.Object
         // [])
-
         Class cl = TestMethod.class;
-        Method mth = null;
-        Object ret = null;
         Class[] dcl = new Class[0];
 
         // Get and invoke a static method
-        try {
-            mth = cl.getDeclaredMethod("invokeStaticTest", dcl);
-        } catch (Exception e) {
-            fail(
-                    "Unable to obtain method for invoke test: invokeStaticTest");
-        }
-        try {
-            ret = mth.invoke(null, new Object[0]);
-        } catch (Exception e) {
-            fail("Exception during invoke test : " + e.getMessage());
-        }
+        Method mth = cl.getDeclaredMethod("invokeStaticTest", dcl);
+        Object ret = mth.invoke(null, new Object[0]);
         assertEquals("Invoke returned incorrect value", 1, ((Integer) ret)
                 .intValue());
 
         // Get and invoke an instance method
-        try {
-            mth = cl.getDeclaredMethod("invokeInstanceTest", dcl);
-        } catch (Exception e) {
-            fail(
-                    "Unable to obtain method for invoke test: invokeInstanceTest");
-        }
-        try {
-            ret = mth.invoke(new TestMethod(), new Object[0]);
-        } catch (Exception e) {
-            fail("Exception during invoke test : " + e.getMessage());
-        }
+        mth = cl.getDeclaredMethod("invokeInstanceTest", dcl);
+        ret = mth.invoke(new TestMethod(), new Object[0]);
         assertEquals("Invoke returned incorrect value", 1, ((Integer) ret)
                 .intValue());
 
         // Get and attempt to invoke a private method
-        try {
-            mth = cl.getDeclaredMethod("privateInvokeTest", dcl);
-        } catch (Exception e) {
-            fail(
-                    "Unable to obtain method for invoke test: privateInvokeTest");
-        }
+        mth = cl.getDeclaredMethod("privateInvokeTest", dcl);
         try {
             ret = mth.invoke(new TestMethod(), new Object[0]);
         } catch (IllegalAccessException e) {
@@ -538,12 +764,8 @@ public class MethodTest extends junit.framework.TestCase {
             fail("Exception during invoke test : " + e.getMessage());
         }
         // Generate an IllegalArgumentException
-        try {
-            mth = cl.getDeclaredMethod("invokeInstanceTest", dcl);
-        } catch (Exception e) {
-            fail(
-                    "Unable to obtain method for invoke test: invokeInstanceTest");
-        }
+        mth = cl.getDeclaredMethod("invokeInstanceTest", dcl);
+        
         try {
             Object[] args = { Object.class };
             ret = mth.invoke(new TestMethod(), args);
@@ -554,12 +776,8 @@ public class MethodTest extends junit.framework.TestCase {
         }
 
         // Generate a NullPointerException
-        try {
-            mth = cl.getDeclaredMethod("invokeInstanceTest", dcl);
-        } catch (Exception e) {
-            fail("Unable to obtain method invokeInstanceTest for invoke test : "
-                    + e.getMessage());
-        }
+        mth = cl.getDeclaredMethod("invokeInstanceTest", dcl);
+        
         try {
             ret = mth.invoke(null, new Object[0]);
         } catch (NullPointerException e) {
@@ -569,12 +787,7 @@ public class MethodTest extends junit.framework.TestCase {
         }
 
         // Generate an InvocationTargetException
-        try {
-            mth = cl.getDeclaredMethod("invokeExceptionTest", dcl);
-        } catch (Exception e) {
-            fail("Unable to obtain method invokeExceptionTest for invoke test: "
-                    + e.getMessage());
-        }
+        mth = cl.getDeclaredMethod("invokeExceptionTest", dcl);
         try {
             ret = mth.invoke(new TestMethod(), new Object[0]);
         } catch (InvocationTargetException e) {
@@ -724,15 +937,12 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.lang.reflect.Method.toString()
         Method mth = null;

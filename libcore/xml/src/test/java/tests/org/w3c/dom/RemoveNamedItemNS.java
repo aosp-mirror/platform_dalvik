@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.NamedNodeMap;
@@ -80,15 +80,12 @@ public final class RemoveNamedItemNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException exception.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException exception.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testRemoveNamedItemNS1() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -106,15 +103,12 @@ public final class RemoveNamedItemNS extends DOMTestCase {
         newAttr = (Attr) attributes.getNamedItem("dmstc:domestic");
         assertNull("nodeRemoved", newAttr);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies DOMException with NOT_FOUND_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies DOMException with NOT_FOUND_ERR code.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testRemoveNamedItemNS2() throws Throwable {
         String namespaceURI = "http://www.usa.com";
         String localName = "domest";

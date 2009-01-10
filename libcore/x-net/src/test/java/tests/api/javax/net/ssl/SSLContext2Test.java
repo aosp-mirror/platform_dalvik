@@ -18,9 +18,9 @@
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -155,15 +155,12 @@ public class SSLContext2Test extends TestCase {
      * throws NoSuchAlgorithmException when protocol is not correct;
      * returns SSLContext object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_String() throws NoSuchAlgorithmException, 
             KeyManagementException {
         try {
@@ -202,15 +199,12 @@ public class SSLContext2Test extends TestCase {
      * throws NoSuchProviderException when provider is available;
      * returns SSLContext object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_lang_String() throws NoSuchAlgorithmException,
             NoSuchProviderException, IllegalArgumentException, 
             KeyManagementException {
@@ -276,15 +270,12 @@ public class SSLContext2Test extends TestCase {
      * throws IllegalArgumentException when provider is null;
      * returns SSLContext object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, Provider.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_security_Provider()
         throws NoSuchAlgorithmException,
         IllegalArgumentException, KeyManagementException {

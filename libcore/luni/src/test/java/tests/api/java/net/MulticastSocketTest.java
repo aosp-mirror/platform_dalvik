@@ -17,14 +17,16 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.KnownFailure; 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
 import java.net.BindException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -34,6 +36,7 @@ import java.net.NetworkInterface;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.security.Permission;
 import java.util.Enumeration;
 
 import tests.support.Support_NetworkInterface;
@@ -120,34 +123,54 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#MulticastSocket()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "MulticastSocket",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException exception checking missed.",
+        method = "MulticastSocket",
+        args = {}
+    )
     public void test_Constructor() throws IOException {
         // regression test for 497
         MulticastSocket s = new MulticastSocket();
         // regression test for Harmony-1162
         assertTrue(s.getReuseAddress());
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkListen(int port) {
+                throw new SecurityException();
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new MulticastSocket();
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } catch (IOException e) {
+            fail("IOException was thrown.");
+            e.printStackTrace();
+        } finally {
+            System.setSecurityManager(oldSm);
+        } 
     }
 
     /**
      * @tests java.net.MulticastSocket#MulticastSocket(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "MulticastSocket",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException exception checking missed.",
+        method = "MulticastSocket",
+        args = {int.class}
+    )
     public void test_ConstructorI() {
         // Test for method java.net.MulticastSocket(int)
         // Used in tests
@@ -161,23 +184,50 @@ public class MulticastSocketTest extends SocketTestCase {
         } catch (IOException e) {
             fail("duplicate binding not allowed: " + e);
         }
+        
+        
+        
         if (dup != null)
             dup.close();
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkListen(int port) {
+                throw new SecurityException();
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new MulticastSocket(1);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } catch (IOException e) {
+            fail("IOException was thrown.");
+            e.printStackTrace();
+        } finally {
+            System.setSecurityManager(oldSm);
+        } 
     }
 
     /**
      * @tests java.net.MulticastSocket#getInterface()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getInterface",
-          methodArgs = {}
-        )
-    })
-    public void _test_getInterface() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInterface",
+        args = {}
+    )
+    @KnownFailure("No interfaces if there's no debugger connected")
+    public void test_getInterface() {
         // Test for method java.net.InetAddress
         // java.net.MulticastSocket.getInterface()
         assertTrue("Used for testing.", true);
@@ -202,9 +252,8 @@ public class MulticastSocketTest extends SocketTestCase {
                             .getByName("::0").equals(mss.getInterface()));
                 } else {
                     // we expect an IPv4 ANY in this case
-                    assertTrue("inet Address returned when not set:"
-                            + mss.getInterface().toString(), InetAddress
-                            .getByName("0.0.0.0").equals(mss.getInterface()));
+                    assertNotNull("inet Address returned when not set:", 
+                            mss.getInterface());
                 }
 
                 // validate that we get the expected response when we set via
@@ -215,7 +264,8 @@ public class MulticastSocketTest extends SocketTestCase {
                             .nextElement();
                     mss.setInterface(firstAddress);
                     assertTrue(
-                            "getNetworkInterface did not return interface set by setInterface.  Expected:"
+                            "getNetworkInterface did not return interface set " +
+                            "by setInterface.  Expected:"
                                     + firstAddress + " Got:"
                                     + mss.getInterface(), firstAddress
                                     .equals(mss.getInterface()));
@@ -224,13 +274,20 @@ public class MulticastSocketTest extends SocketTestCase {
                     mss = new MulticastSocket(groupPort);
                     mss.setNetworkInterface(networkInterface1);
                     assertTrue(
-                            "getInterface did not return interface set by setNeworkInterface Expected: "
+                            "getInterface did not return interface set by " +
+                            "setNeworkInterface Expected: "
                                     + firstAddress + "Got:"
                                     + mss.getInterface(), NetworkInterface
                                     .getByInetAddress(mss.getInterface())
                                     .equals(networkInterface1));
                 }
-
+                mss.close();
+                try {
+                    mss.getInterface();
+                    fail("SocketException was not thrown.");
+                } catch(SocketException ioe) {
+                    //expected
+                }
             }
         } catch (Exception e) {
             fail("Exception during getInterface test: " + e.toString());
@@ -241,16 +298,14 @@ public class MulticastSocketTest extends SocketTestCase {
      * @throws IOException 
      * @tests java.net.MulticastSocket#getNetworkInterface()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getNetworkInterface",
-          methodArgs = {}
-        )
-    })
-    public void _test_getNetworkInterface() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getNetworkInterface",
+        args = {}
+    )
+    @KnownFailure("No interfaces if there's no debugger connected")
+    public void test_getNetworkInterface() throws IOException {
         int groupPort = Support_PortManager.getNextPortForUDP();
         if (atLeastOneInterface) {
             // validate that we get the expected response when one was not
@@ -258,7 +313,8 @@ public class MulticastSocketTest extends SocketTestCase {
             mss = new MulticastSocket(groupPort);
             NetworkInterface theInterface = mss.getNetworkInterface();
             assertNotNull(
-                    "network interface returned wrong network interface when not set:"
+                    "network interface returned wrong network interface when " +
+                    "not set:"
                             + theInterface, theInterface.getInetAddresses());
             InetAddress firstAddress = (InetAddress) theInterface
                     .getInetAddresses().nextElement();
@@ -273,26 +329,30 @@ public class MulticastSocketTest extends SocketTestCase {
                     && (preferIPv6AddressesValue != null)
                     && (preferIPv6AddressesValue.equals("true"))) {
                 assertTrue(
-                        "network interface returned wrong network interface when not set:"
+                        "network interface returned wrong network interface " +
+                        "when not set:"
                                 + theInterface, InetAddress.getByName("::0")
                                 .equals(firstAddress));
 
             } else {
                 assertTrue(
-                        "network interface returned wrong network interface when not set:"
+                        "network interface returned wrong network interface " +
+                        "when not set:"
                                 + theInterface, InetAddress
                                 .getByName("0.0.0.0").equals(firstAddress));
             }
 
             mss.setNetworkInterface(networkInterface1);
             assertTrue(
-                    "getNetworkInterface did not return interface set by setNeworkInterface",
+                    "getNetworkInterface did not return interface set by " +
+                    "setNeworkInterface",
                     networkInterface1.equals(mss.getNetworkInterface()));
 
             if (atLeastTwoInterfaces) {
                 mss.setNetworkInterface(networkInterface2);
                 assertTrue(
-                        "getNetworkInterface did not return network interface set by second setNetworkInterface call",
+                        "getNetworkInterface did not return network interface " +
+                        "set by second setNetworkInterface call",
                         networkInterface2.equals(mss.getNetworkInterface()));
             }
 
@@ -301,7 +361,8 @@ public class MulticastSocketTest extends SocketTestCase {
             if (IPV6networkInterface1 != null) {
                 mss.setNetworkInterface(IPV6networkInterface1);
                 assertTrue(
-                        "getNetworkInterface did not return interface set by setNeworkInterface",
+                        "getNetworkInterface did not return interface set " +
+                        "by setNeworkInterface",
                         IPV6networkInterface1.equals(mss.getNetworkInterface()));
             }
 
@@ -314,8 +375,17 @@ public class MulticastSocketTest extends SocketTestCase {
                 firstAddress = (InetAddress) addresses.nextElement();
                 mss.setInterface(firstAddress);
                 assertTrue(
-                        "getNetworkInterface did not return interface set by setInterface",
+                        "getNetworkInterface did not return interface set " +
+                        "by setInterface",
                         networkInterface1.equals(mss.getNetworkInterface()));
+            }
+            
+            mss.close();
+            try {
+                mss.getNetworkInterface();
+                fail("SocketException was not thrown.");
+            } catch(SocketException ioe) {
+                //expected
             }
         }
     }
@@ -323,15 +393,12 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#getTimeToLive()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getTimeToLive",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTimeToLive",
+        args = {}
+    )
     public void test_getTimeToLive() {
         try {
             mss = new MulticastSocket();
@@ -341,6 +408,13 @@ public class MulticastSocketTest extends SocketTestCase {
             mss.setTimeToLive(220);
             assertTrue("Returned incorrect 2nd TTL: " + mss.getTimeToLive(),
                     mss.getTimeToLive() == 220);
+            mss.close();
+            try {
+                mss.getTimeToLive();
+                fail("IOException was not thrown.");
+            } catch(IOException ioe) {
+                //expected
+            }
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
         } catch (Exception e) {
             handleException(e, SO_MULTICAST);
@@ -350,15 +424,12 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#getTTL()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getTTL",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTTL",
+        args = {}
+    )
     public void test_getTTL() {
         // Test for method byte java.net.MulticastSocket.getTTL()
 
@@ -367,6 +438,13 @@ public class MulticastSocketTest extends SocketTestCase {
             mss.setTTL((byte) 120);
             assertTrue("Returned incorrect TTL: " + mss.getTTL(),
                     mss.getTTL() == 120);
+            mss.close();
+            try {
+                mss.getTTL();
+                fail("IOException was not thrown.");
+            } catch(IOException ioe) {
+                //expected
+            }
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
         } catch (Exception e) {
             handleException(e, SO_MULTICAST);
@@ -376,15 +454,12 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#joinGroup(java.net.InetAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "joinGroup",
-          methodArgs = {InetAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "joinGroup",
+        args = {java.net.InetAddress.class}
+    )
     public void test_joinGroupLjava_net_InetAddress() {
         // Test for method void
         // java.net.MulticastSocket.joinGroup(java.net.InetAddress)
@@ -401,8 +476,43 @@ public class MulticastSocketTest extends SocketTestCase {
             mss = new MulticastSocket(ports[1]);
             DatagramPacket sdp = new DatagramPacket(msg.getBytes(), msg
                     .length(), group, groupPort);
+            mss.joinGroup(group);
             mss.send(sdp, (byte) 10);
             Thread.sleep(1000);
+            
+            SecurityManager sm = new SecurityManager() {
+
+                public void checkPermission(Permission perm) {
+                }
+                
+                public void checkMulticast(InetAddress maddr) {
+                    throw new SecurityException();
+                }
+            };
+
+            SecurityManager oldSm = System.getSecurityManager();
+            System.setSecurityManager(sm);
+            try {
+                mss.joinGroup(group);
+                fail("SecurityException should be thrown.");
+            } catch (SecurityException e) {
+                // expected
+            } catch (SocketException e) {
+                fail("SocketException was thrown.");
+            } catch (IOException e) {
+                fail("IOException was thrown.");
+                e.printStackTrace();
+            } finally {
+                System.setSecurityManager(oldSm);
+            } 
+            
+            mss.close();
+            try {
+                mss.joinGroup(group);
+                fail("SocketException was not thrown.");
+            } catch(SocketException ioe) {
+                //expected
+            }
         } catch (Exception e) {
             fail("Exception during joinGroup test: " + e.toString());
         }
@@ -414,22 +524,25 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @throws IOException 
      * @throws InterruptedException 
-     * @tests java.net.MulticastSocket#joinGroup(java.net.SocketAddress,java.net.NetworkInterface)
+     * @tests java.net.MulticastSocket#joinGroup(java.net.SocketAddress,
+     *                                              java.net.NetworkInterface)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "joinGroup",
-          methodArgs = {SocketAddress.class, NetworkInterface.class}
-        )
-    })
-    public void _test_joinGroupLjava_net_SocketAddressLjava_net_NetworkInterface() throws IOException, InterruptedException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "joinGroup",
+        args = {java.net.SocketAddress.class, java.net.NetworkInterface.class}
+    )
+    @KnownFailure("Needs investigation")
+    public void test_joinGroupLjava_net_SocketAddressLjava_net_NetworkInterface() 
+                                    throws IOException, InterruptedException {
         // security manager that allows us to check that we only return the
         // addresses that we should
         class mySecurityManager extends SecurityManager {
 
+            public void checkPermission(Permission perm) {
+            }
+            
             public void checkMulticast(InetAddress address) {
                 throw new SecurityException("not allowed");
             }
@@ -541,8 +654,8 @@ public class MulticastSocketTest extends SocketTestCase {
                 theInterfaces = NetworkInterface.getNetworkInterfaces();
                 while (theInterfaces.hasMoreElements()) {
 
-                    NetworkInterface thisInterface = (NetworkInterface) theInterfaces
-                            .nextElement();
+                    NetworkInterface thisInterface = (NetworkInterface) 
+                                                    theInterfaces.nextElement();
                     if ((thisInterface.getInetAddresses() != null && thisInterface
                             .getInetAddresses().hasMoreElements())
                             && (Support_NetworkInterface
@@ -610,12 +723,15 @@ public class MulticastSocketTest extends SocketTestCase {
                         Thread.sleep(1000);
                         if (thisInterface.equals(sendingInterface)) {
                             assertTrue(
-                                    "Group member did not recv data when bound on specific interface: ",
+                                    "Group member did not recv data when " +
+                                    "bound on specific interface: ",
                                     new String(server.rdp.getData(), 0,
                                             server.rdp.getLength()).equals(msg));
                         } else {
                             assertFalse(
-                                    "Group member received data on other interface when only asked for it on one interface: ",
+                                    "Group member received data on other " +
+                                    "interface when only asked for it on one " +
+                                    "interface: ",
                                     new String(server.rdp.getData(), 0,
                                             server.rdp.getLength()).equals(msg));
                         }
@@ -632,7 +748,8 @@ public class MulticastSocketTest extends SocketTestCase {
                 mss.joinGroup(groupSockAddr, networkInterface2);
                 try {
                     mss.joinGroup(groupSockAddr, networkInterface1);
-                    fail("Did not get expected exception when joining for second time on same interface");
+                    fail("Did not get expected exception when joining for " +
+                            "second time on same interface");
                 } catch (IOException e) {
                 }
             }
@@ -643,15 +760,12 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#leaveGroup(java.net.InetAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "leaveGroup",
-          methodArgs = {InetAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "leaveGroup",
+        args = {java.net.InetAddress.class}
+    )
     public void test_leaveGroupLjava_net_InetAddress() {
         // Test for method void
         // java.net.MulticastSocket.leaveGroup(java.net.InetAddress)
@@ -680,24 +794,51 @@ public class MulticastSocketTest extends SocketTestCase {
             except = true;
         }
         assertTrue("Failed to throw exception leaving non-member group", except);
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkMulticast(InetAddress maddr) {
+                throw new SecurityException();
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            mss.leaveGroup(group);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } catch (IOException e) {
+            fail("IOException was thrown.");
+            e.printStackTrace();
+        } finally {
+            System.setSecurityManager(oldSm);
+        } 
     }
 
     /**
-     * @tests java.net.MulticastSocket#leaveGroup(java.net.SocketAddress,java.net.NetworkInterface)
+     * @tests java.net.MulticastSocket#leaveGroup(java.net.SocketAddress,
+     * java.net.NetworkInterface)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "leaveGroup",
-          methodArgs = {SocketAddress.class, NetworkInterface.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "leaveGroup",
+        args = {java.net.SocketAddress.class, java.net.NetworkInterface.class}
+    )
     public void test_leaveGroupLjava_net_SocketAddressLjava_net_NetworkInterface() {
         // security manager that allows us to check that we only return the
         // addresses that we should
         class mySecurityManager extends SecurityManager {
+            
+            public void checkPermission(Permission p) {
+            }
 
             public void checkMulticast(InetAddress address) {
                 throw new SecurityException("not allowed");
@@ -727,7 +868,8 @@ public class MulticastSocketTest extends SocketTestCase {
                 group = InetAddress.getByName("255.255.255.255");
                 groupSockAddr = new InetSocketAddress(group, groupPort);
                 mss.leaveGroup(groupSockAddr, null);
-                fail("Did not get exception when group is not a multicast address");
+                fail("Did not get exception when group is not a " +
+                        "multicast address");
             } catch (IOException e) {
             }
 
@@ -739,7 +881,8 @@ public class MulticastSocketTest extends SocketTestCase {
                 group = InetAddress.getByName("224.0.0.3");
                 groupSockAddr = new InetSocketAddress(group, groupPort);
                 mss.leaveGroup(groupSockAddr, null);
-                fail("Did not get exception when joining group is not allowed");
+                fail("Did not get exception when joining group is " +
+                        "not allowed");
             } catch (SecurityException e) {
             }
             System.setSecurityManager(null);
@@ -755,7 +898,8 @@ public class MulticastSocketTest extends SocketTestCase {
                 try {
                     mss.leaveGroup(groupSockAddr, null);
                     fail(
-                            "Did not get exception when trying to leave group that was allready left");
+                            "Did not get exception when trying to leave " +
+                            "group that was allready left");
                 } catch (IOException e) {
                 }
 
@@ -765,7 +909,8 @@ public class MulticastSocketTest extends SocketTestCase {
                 try {
                     mss.leaveGroup(groupSockAddr2, networkInterface1);
                     fail(
-                            "Did not get exception when trying to leave group that was never joined");
+                            "Did not get exception when trying to leave " +
+                            "group that was never joined");
                 } catch (IOException e) {
                 }
 
@@ -775,7 +920,8 @@ public class MulticastSocketTest extends SocketTestCase {
                     try {
                         mss.leaveGroup(groupSockAddr, networkInterface2);
                         fail(
-                                "Did not get exception when trying to leave group on wrong interface joined on ["
+                                "Did not get exception when trying to leave " +
+                                "group on wrong interface joined on ["
                                         + networkInterface1
                                         + "] left on ["
                                         + networkInterface2 + "]");
@@ -785,22 +931,20 @@ public class MulticastSocketTest extends SocketTestCase {
             }
         } catch (Exception e) {
             fail("Exception during leaveGroup test: " + e.toString());
+        } finally {
+            System.setSecurityManager(null);
         }
-        System.setSecurityManager(null);
     }
 
     /**
      * @tests java.net.MulticastSocket#send(java.net.DatagramPacket, byte)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "send",
-          methodArgs = {DatagramPacket.class, byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.net.DatagramPacket.class, byte.class}
+    )
     public void test_sendLjava_net_DatagramPacketB() {
         // Test for method void
         // java.net.MulticastSocket.send(java.net.DatagramPacket, byte)
@@ -827,10 +971,54 @@ public class MulticastSocketTest extends SocketTestCase {
                 mss.close();
             } catch (Exception ex) {
             }
-            ;
+            
             return;
         }
+        
+        DatagramPacket sdp = new DatagramPacket(msg.getBytes(), msg
+                .length(), group, groupPort);
+
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkConnect(String host,
+                    int port) {
+                throw new SecurityException();
+            }
+            
+            public void checkMulticast(InetAddress maddr) {
+                throw new SecurityException();
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            mss.send(sdp);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } catch (IOException e) {
+            fail("IOException was thrown.");
+            e.printStackTrace();
+        } finally {
+            System.setSecurityManager(oldSm);
+        } 
+        
         mss.close();
+        
+        try {
+            mss.send(sdp);
+            fail("IOException should be thrown.");
+        } catch(IOException ioe) {
+            //expected
+        }
+        
         byte[] data = server.rdp.getData();
         int length = server.rdp.getLength();
         assertTrue("Failed to send data. Received " + length, new String(data,
@@ -840,16 +1028,13 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#setInterface(java.net.InetAddress)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setInterface",
-          methodArgs = {InetAddress.class}
-        )
-    })
-    public void _test_setInterfaceLjava_net_InetAddress() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setInterface",
+        args = {java.net.InetAddress.class}
+    )
+    public void test_setInterfaceLjava_net_InetAddress() {
         // Test for method void
         // java.net.MulticastSocket.setInterface(java.net.InetAddress)
         // Note that the machine is not multi-homed
@@ -859,7 +1044,7 @@ public class MulticastSocketTest extends SocketTestCase {
             mss.setInterface(InetAddress.getLocalHost());
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST_INTERFACE);
         } catch (Exception e) {
-            handleException(e, SO_MULTICAST_INTERFACE);
+            //handleException(e, SO_MULTICAST_INTERFACE);
             return;
         }
         try {
@@ -893,7 +1078,8 @@ public class MulticastSocketTest extends SocketTestCase {
             mss = new MulticastSocket();
             mss.setInterface(InetAddress.getByName("224.0.0.5"));
         } catch (UnknownHostException uhe) {
-            fail("Unable to get InetAddress by name from '224.0.0.5' addr: " + uhe.toString());
+            fail("Unable to get InetAddress by name from '224.0.0.5' addr: " 
+                    + uhe.toString());
         } catch (SocketException se) {
             // expected
         } catch (IOException ioe) {
@@ -905,18 +1091,18 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @throws IOException 
      * @throws InterruptedException 
-     * @tests java.net.MulticastSocket#setNetworkInterface(java.net.NetworkInterface)
+     * @tests java.net.MulticastSocket#setNetworkInterface(
+     *                                              java.net.NetworkInterface)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setNetworkInterface",
-          methodArgs = {NetworkInterface.class}
-        )
-    })
-    public void _test_setNetworkInterfaceLjava_net_NetworkInterface() throws IOException, InterruptedException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setNetworkInterface",
+        args = {java.net.NetworkInterface.class}
+    )
+    @KnownFailure("No interfaces if there's no debugger connected")
+    public void test_setNetworkInterfaceLjava_net_NetworkInterface() 
+                                    throws IOException, InterruptedException {
         String msg = null;
         InetAddress group = null;
         int[] ports = Support_PortManager.getNextPortsForUDP(2);
@@ -929,7 +1115,8 @@ public class MulticastSocketTest extends SocketTestCase {
             // this should through a socket exception to be compatible
             try {
                 mss.setNetworkInterface(null);
-                fail("No socket exception when we set then network interface with NULL");
+                fail("No socket exception when we set then network " +
+                        "interface with NULL");
             } catch (SocketException ex) {
             }
 
@@ -982,10 +1169,12 @@ public class MulticastSocketTest extends SocketTestCase {
                         String receivedMessage = new String(server.rdp
                                 .getData(), 0, server.rdp.getLength());
                         assertTrue(
-                                "Group member did not recv data when send on a specific interface: ",
+                                "Group member did not recv data when send on " +
+                                "a specific interface: ",
                                 receivedMessage.equals(msg));
                         assertTrue(
-                                "Datagram was not received from expected interface expected["
+                                "Datagram was not received from expected " +
+                                "interface expected["
                                         + thisInterface
                                         + "] got ["
                                         + NetworkInterface
@@ -1006,15 +1195,12 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#setTimeToLive(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setTimeToLive",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setTimeToLive",
+        args = {int.class}
+    )
     public void test_setTimeToLiveI() {
         try {
             mss = new MulticastSocket();
@@ -1024,6 +1210,14 @@ public class MulticastSocketTest extends SocketTestCase {
             mss.setTimeToLive(220);
             assertTrue("Returned incorrect 2nd TTL: " + mss.getTimeToLive(),
                     mss.getTimeToLive() == 220);
+            mss.close();
+            try {
+                mss.setTimeToLive(1);
+                fail("IOException was not thrown.");
+            }catch(IOException ioe) {
+                //expected
+            } 
+            
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
         } catch (Exception e) {
             handleException(e, SO_MULTICAST);
@@ -1033,15 +1227,12 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#setTTL(byte)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setTTL",
-          methodArgs = {byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setTTL",
+        args = {byte.class}
+    )
     public void test_setTTLB() {
         // Test for method void java.net.MulticastSocket.setTTL(byte)
         try {
@@ -1049,6 +1240,14 @@ public class MulticastSocketTest extends SocketTestCase {
             mss.setTTL((byte) 120);
             assertTrue("Failed to set TTL: " + mss.getTTL(),
                     mss.getTTL() == 120);
+            
+            mss.close();
+            try {
+                mss.setTTL((byte) 1);
+                fail("IOException was not thrown.");
+            } catch(IOException ioe) {
+                //expected
+            } 
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
         } catch (Exception e) {
             handleException(e, SO_MULTICAST);
@@ -1058,15 +1257,12 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#MulticastSocket(java.net.SocketAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "MulticastSocket",
-          methodArgs = {SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "MulticastSocket",
+        args = {java.net.SocketAddress.class}
+    )
     public void test_ConstructorLjava_net_SocketAddress() throws Exception {    
         MulticastSocket ms = new MulticastSocket((SocketAddress) null);
         assertTrue("should not be bound", !ms.isBound() && !ms.isClosed()
@@ -1102,20 +1298,46 @@ public class MulticastSocketTest extends SocketTestCase {
         InetSocketAddress addr = new InetSocketAddress("0.0.0.0", 0);
         MulticastSocket s = new MulticastSocket(addr);
         assertTrue(s.getReuseAddress()); 
+        
+        InetSocketAddress isa = new InetSocketAddress(InetAddress
+                .getLocalHost(), Support_PortManager.getNextPortForUDP());
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkListen(int port) {
+                throw new SecurityException();
+            }
+        };
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new MulticastSocket(isa);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } catch (IOException e) {
+            fail("IOException was thrown.");
+            e.printStackTrace();
+        } finally {
+            System.setSecurityManager(oldSm);
+        }  
     }
 
     /**
      * @tests java.net.MulticastSocket#getLoopbackMode()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getLoopbackMode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLoopbackMode",
+        args = {}
+    )
     public void test_getLoopbackMode() {
         try {
             MulticastSocket ms = new MulticastSocket((SocketAddress) null);
@@ -1126,6 +1348,12 @@ public class MulticastSocketTest extends SocketTestCase {
                     && !ms.isConnected());
             ms.close();
             assertTrue("should be closed", ms.isClosed());
+            try {
+                ms.getLoopbackMode();
+                fail("SocketException was not thrown.");
+            } catch(SocketException ioe) {
+                //expected
+            }
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_USELOOPBACK);
         } catch (IOException e) {
             handleException(e, SO_USELOOPBACK);
@@ -1135,15 +1363,12 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#setLoopbackMode(boolean)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "setLoopbackMode",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLoopbackMode",
+        args = {boolean.class}
+    )
     public void test_setLoopbackModeZ() {
         try {
             MulticastSocket ms = new MulticastSocket();
@@ -1153,6 +1378,14 @@ public class MulticastSocketTest extends SocketTestCase {
             assertTrue("loopback should be false", !ms.getLoopbackMode());
             ms.close();
             assertTrue("should be closed", ms.isClosed());
+            
+            try {
+                ms.setLoopbackMode(true);
+                fail("SocketException was not thrown.");
+            } catch(SocketException se) {
+                //expected
+            }
+            
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_USELOOPBACK);
         } catch (IOException e) {
             handleException(e, SO_USELOOPBACK);
@@ -1162,15 +1395,12 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#setLoopbackMode(boolean)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "SocketException checking missed",
-          targets = {
-            @TestTarget(
-              methodName = "setLoopbackMode",
-              methodArgs = {boolean.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "SocketException checking missed",
+        method = "setLoopbackMode",
+        args = {boolean.class}
+    )
     public void test_setLoopbackModeSendReceive() throws IOException{
         final String ADDRESS = "224.1.2.3";
         final int PORT = Support_PortManager.getNextPortForUDP();
@@ -1201,7 +1431,7 @@ public class MulticastSocketTest extends SocketTestCase {
             String recvMessage = new String(recvData, 0, recvDatagram
                     .getLength());
             assertEquals(message, recvMessage);
-        }finally {
+        } finally {
             if (socket != null)
                 socket.close();
         }
@@ -1211,15 +1441,13 @@ public class MulticastSocketTest extends SocketTestCase {
     /**
      * @tests java.net.MulticastSocket#setReuseAddress(boolean)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missesd. Method inherited from class java.net.DatagramSocket",
-      targets = {
-        @TestTarget(
-          methodName = "setReuseAddress",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "SocketException checking missesd. Method inherited from " +
+                "class java.net.DatagramSocket",
+        method = "setReuseAddress",
+        args = {boolean.class}
+    )
     public void test_setReuseAddressZ() {
         try {
             // test case were we set it to false
@@ -1236,7 +1464,8 @@ public class MulticastSocketTest extends SocketTestCase {
                 theSocket1.bind(theAddress);
                 theSocket2.bind(theAddress);
                 fail(
-                        "No exception when trying to connect to do duplicate socket bind with re-useaddr set to false");
+                        "No exception when trying to connect to do " +
+                        "duplicate socket bind with re-useaddr set to false");
             } catch (BindException e) {
 
             }
@@ -1258,7 +1487,9 @@ public class MulticastSocketTest extends SocketTestCase {
                 theSocket2.bind(theAddress);
             } catch (Exception e) {
                 fail(
-                        "unexpected exception when trying to connect to do duplicate socket bind with re-useaddr set to true");
+                        "unexpected exception when trying to connect " +
+                        "to do duplicate socket bind with re-useaddr set " +
+                        "to true");
             }
             if (theSocket1 != null)
                 theSocket1.close();
@@ -1277,7 +1508,8 @@ public class MulticastSocketTest extends SocketTestCase {
                 theSocket2.bind(theAddress);
             } catch (BindException e) {
                 fail(
-                        "unexpected exception when trying to connect to do duplicate socket bind with re-useaddr left as default");
+                        "unexpected exception when trying to connect to do " +
+                        "duplicate socket bind with re-useaddr left as default");
             }
             if (theSocket1 != null)
                 theSocket1.close();

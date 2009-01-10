@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -62,15 +62,12 @@ public class InvalidKeySpecExceptionTest extends TestCase {
      * Test for <code>InvalidKeySpecException()</code> constructor Assertion:
      * constructs InvalidKeySpecException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidKeySpecException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InvalidKeySpecException",
+        args = {}
+    )
     public void testInvalidKeySpecException01() {
         InvalidKeySpecException tE = new InvalidKeySpecException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -82,15 +79,12 @@ public class InvalidKeySpecExceptionTest extends TestCase {
      * Assertion: constructs InvalidKeySpecException with detail message msg.
      * Parameter <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidKeySpecException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "InvalidKeySpecException",
+        args = {java.lang.String.class}
+    )
     public void testInvalidKeySpecException02() {
         InvalidKeySpecException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -106,15 +100,12 @@ public class InvalidKeySpecExceptionTest extends TestCase {
      * Assertion: constructs InvalidKeySpecException when <code>msg</code> is
      * null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidKeySpecException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "InvalidKeySpecException",
+        args = {java.lang.String.class}
+    )
     public void testInvalidKeySpecException03() {
         String msg = null;
         InvalidKeySpecException tE = new InvalidKeySpecException(msg);
@@ -127,15 +118,12 @@ public class InvalidKeySpecExceptionTest extends TestCase {
      * Assertion: constructs InvalidKeySpecException when <code>cause</code>
      * is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidKeySpecException",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "InvalidKeySpecException",
+        args = {java.lang.Throwable.class}
+    )
     public void testInvalidKeySpecException04() {
         Throwable cause = null;
         InvalidKeySpecException tE = new InvalidKeySpecException(cause);
@@ -148,15 +136,12 @@ public class InvalidKeySpecExceptionTest extends TestCase {
      * Assertion: constructs InvalidKeySpecException when <code>cause</code>
      * is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive cases.",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidKeySpecException",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive cases.",
+        method = "InvalidKeySpecException",
+        args = {java.lang.Throwable.class}
+    )
     public void testInvalidKeySpecException05() {
         InvalidKeySpecException tE = new InvalidKeySpecException(tCause);
         if (tE.getMessage() != null) {
@@ -175,15 +160,12 @@ public class InvalidKeySpecExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidKeySpecException when
      * <code>cause</code> is null <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidKeySpecException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as parameters.",
+        method = "InvalidKeySpecException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testInvalidKeySpecException06() {
         InvalidKeySpecException tE = new InvalidKeySpecException(null, null);
         assertNull("getMessage() must return null", tE.getMessage());
@@ -195,15 +177,12 @@ public class InvalidKeySpecExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidKeySpecException when
      * <code>cause</code> is null <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a cause parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidKeySpecException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a cause parameter.",
+        method = "InvalidKeySpecException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testInvalidKeySpecException07() {
         InvalidKeySpecException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -219,15 +198,12 @@ public class InvalidKeySpecExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidKeySpecException when
      * <code>cause</code> is not null <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a message parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidKeySpecException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a message parameter.",
+        method = "InvalidKeySpecException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testInvalidKeySpecException08() {
         InvalidKeySpecException tE = new InvalidKeySpecException(null, tCause);
         if (tE.getMessage() != null) {
@@ -246,15 +222,12 @@ public class InvalidKeySpecExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidKeySpecException when
      * <code>cause</code> is not null <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidKeySpecException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "InvalidKeySpecException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testInvalidKeySpecException09() {
         InvalidKeySpecException tE;
         for (int i = 0; i < msgs.length; i++) {

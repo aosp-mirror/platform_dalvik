@@ -22,9 +22,9 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Node;
@@ -72,15 +72,12 @@ public final class NodeGetLocalName extends DOMTestCase {
     * Runs the test case.
     * @throws Throwable Any uncaught exception causes test to fail
     */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify that getLocalName method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify that getLocalName method returns null.",
+        method = "getLocalName",
+        args = {}
+    )
    public void testGetLocalName() throws Throwable {
       Document doc;
       Element element;

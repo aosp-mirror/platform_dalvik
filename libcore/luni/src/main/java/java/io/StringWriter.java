@@ -257,7 +257,7 @@ public class StringWriter extends Writer {
      *            the index of the character following the last character of the
      *            subsequence appended to the target.
      * @return this writer.
-     * @throws StringIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code start > end}, {@code start < 0}, {@code end < 0} or
      *             either {@code start} or {@code end} are greater or equal than
      *             the length of {@code csq}.

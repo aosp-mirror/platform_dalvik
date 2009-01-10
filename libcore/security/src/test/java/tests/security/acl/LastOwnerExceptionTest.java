@@ -22,9 +22,9 @@
 
 package tests.security.acl;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -41,15 +41,12 @@ public class LastOwnerExceptionTest extends TestCase {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(LastOwnerExceptionTest.class);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "LastOwnerException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "LastOwnerException",
+        args = {}
+    )
     public void testLastOwnerException() {
         assertNotNull(new LastOwnerException());
         assertNull(new LastOwnerException().getMessage());

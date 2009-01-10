@@ -22,7 +22,10 @@
 
 package org.apache.harmony.testframework.serialization;
 
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestTargetNew;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -130,6 +133,12 @@ public abstract class SerializationTest extends TestCase {
      * exceptions, and that deserialization really produces deeply cloned
      * objects.
      */
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "",
+        method = "!Serialization",
+        args = {}
+    )    
     public void testSelf() throws Throwable {
 
         if (this instanceof SerializableAssert) {
@@ -142,8 +151,15 @@ public abstract class SerializationTest extends TestCase {
 
     /**
      * Tests that data objects can be deserialized from golden files, to verify
-     * compartibility with Reference Implementation.
+     * compatibility with Reference Implementation.
      */
+    
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "",
+        method = "!Serialization",
+        args = {}
+    )
     public void testGolden() throws Throwable {
         
         verifyGolden(this, getData());

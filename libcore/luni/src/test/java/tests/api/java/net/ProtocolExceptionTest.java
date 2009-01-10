@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.ProtocolException;
 
@@ -30,15 +30,12 @@ public class ProtocolExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.ProtocolException#ProtocolException()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ProtocolException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ProtocolException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.net.ProtocolException()
         try {
@@ -54,15 +51,12 @@ public class ProtocolExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.ProtocolException#ProtocolException(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ProtocolException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ProtocolException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.net.ProtocolException(java.lang.String)
         try {

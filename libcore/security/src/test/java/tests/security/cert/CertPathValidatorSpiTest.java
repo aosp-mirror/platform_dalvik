@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -57,19 +57,19 @@ public class CertPathValidatorSpiTest extends TestCase {
      * Test for <code>CertPathValidatorSpi</code> constructor Assertion:
      * constructs CertPathValidatorSpi
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Just exception cases were tested for engineValidate",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorSpi",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "CertPathValidatorSpi",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "engineValidate",
-          methodArgs = {java.security.cert.CertPath.class, java.security.cert.CertPathParameters.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineValidate",
+            args = {java.security.cert.CertPath.class, java.security.cert.CertPathParameters.class}
         )
-
     })
     public void testCertPathValidatorSpi01() throws CertPathValidatorException,
             InvalidAlgorithmParameterException {

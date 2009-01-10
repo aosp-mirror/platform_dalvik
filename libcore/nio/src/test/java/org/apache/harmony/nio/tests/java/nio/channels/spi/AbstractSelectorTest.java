@@ -16,18 +16,23 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.io.IOException;
-import java.nio.channels.IllegalBlockingModeException;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.Pipe;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.AbstractSelectableChannel;
+import java.nio.channels.spi.AbstractSelectionKey;
 import java.nio.channels.spi.SelectorProvider;
 import java.nio.channels.spi.AbstractSelector;
+import java.util.Set;
 
 import junit.framework.TestCase;
 @TestTargetClass(AbstractSelector.class)
@@ -39,13 +44,18 @@ public class AbstractSelectorTest extends TestCase {
     /**
      * @tests AbstractSelector#provider()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "provider",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "provider",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "AbstractSelector",
+            args = {SelectorProvider.class}
         )
     })
     public void test_provider() throws IOException {
@@ -60,13 +70,18 @@ public class AbstractSelectorTest extends TestCase {
     /**
      * @tests AbstractSelector#close()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "close",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "implCloseSelector",
+            args = {}
         )
     })
     public void test_close() throws IOException {
@@ -80,18 +95,19 @@ public class AbstractSelectorTest extends TestCase {
      * 
      * @tests AbstractSelector#begin/end()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "begin",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "begin",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "end",
-          methodArgs = {}
-        )        
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "end",
+            args = {}
+        )
     })
     public void test_begin_end() throws IOException {
         MockAbstractSelector mockSelector = new MockAbstractSelector(
@@ -137,15 +153,12 @@ public class AbstractSelectorTest extends TestCase {
     /**
      * @tests AbstractSelector#isOpen()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isOpen",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isOpen",
+        args = {}
+    )
     public void test_isOpen() throws Exception {
         Selector acceptSelector = SelectorProvider.provider().openSelector();
         assertTrue(acceptSelector.isOpen());
@@ -154,73 +167,115 @@ public class AbstractSelectorTest extends TestCase {
     }
     
     /**
-     * @tests AbstractSelector#register(Selector,int)
+     * @tests AbstractSelector()
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Verifies register method from SelectableChannel " +
-                    "class.",
-            targets = {
-              @TestTarget(
-                methodName = "register",
-                methodArgs = {Selector.class, int.class}
-              )
-     })   
-    public void test_register_LSelectorI() throws Exception {
-        Selector acceptSelector = SelectorProvider.provider().openSelector();
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "AbstractSelector",
+        args = {SelectorProvider.class}
+    )
+    public void test_Constructor_LSelectorProvider() throws Exception {
+        Selector acceptSelector = new MockAbstractSelector(
+                SelectorProvider.provider());
+        assertSame(SelectorProvider.provider(), acceptSelector.provider());
+    }
+    
+    /**
+     * @tests AbstractSelector#register(AbstractSelectableChannel,int,Object)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies register method from SelectableChannel class.",
+        method = "register",
+        args = {AbstractSelectableChannel.class, int.class, java.lang.Object.class}
+    )   
+    public void test_register_LAbstractSelectableChannelIObject() 
+            throws Exception {
+        Selector acceptSelector = new MockSelectorProvider().openSelector();
         ServerSocketChannel ssc = ServerSocketChannel.open();
         ssc.configureBlocking(false);
 
         assertFalse(ssc.isRegistered());
-        SelectionKey acceptKey = ssc.register(acceptSelector,
-                SelectionKey.OP_ACCEPT);
+        ssc.register(acceptSelector, SelectionKey.OP_ACCEPT);
         assertTrue(ssc.isRegistered());
-        assertNotNull(acceptKey);
-        assertTrue(acceptSelector.keys().contains(acceptKey));
+        assertTrue(((MockAbstractSelector)acceptSelector).isRegisterCalled);
     }
 
-    /**
-     * @tests AbstractSelector#register(Selector,int)
-     */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Verifies register method from SelectableChannel " +
-                    "class.",
-            targets = {
-              @TestTarget(
-                methodName = "register",
-                methodArgs = {Selector.class, int.class}
-              )
-     })    
-    public void test_register_LSelectorI_error() throws IOException {
-        Selector acceptSelector = SelectorProvider.provider().openSelector();
-        ServerSocketChannel ssc = ServerSocketChannel.open();
-        ssc.configureBlocking(false);
-        acceptSelector.close();
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "cancelledKeys",
+        args = {}
+    )    
+    public void test_cancelledKeys() throws Exception {
+        MockSelectorProvider prov = new MockSelectorProvider();
+        Selector acceptSelector = prov.openSelector();
+        SocketChannel sc = prov.openSocketChannel();
+        sc.configureBlocking(false);
 
-        assertFalse(acceptSelector.isOpen());
-        try {
-            ssc.register(acceptSelector, SelectionKey.OP_ACCEPT);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-        assertFalse(ssc.isRegistered());
+        SelectionKey acceptKey = sc.register(acceptSelector,
+                SelectionKey.OP_READ, null);
+        acceptKey.cancel();
+        Set<SelectionKey> cKeys = 
+                ((MockAbstractSelector)acceptSelector).getCancelledKeys();
+        assertTrue(cKeys.contains(acceptKey));
+    }
 
-        acceptSelector = Selector.open();
-        ssc.configureBlocking(true);
-        try {
-            ssc.register(acceptSelector, SelectionKey.OP_ACCEPT);
-            fail("should throw IllegalBlockingModeException");
-        } catch (IllegalBlockingModeException e) {
-            // expected
-        }
-        assertFalse(ssc.isRegistered());
-        ssc.configureBlocking(false);
-        SelectionKey acceptKey = ssc.register(acceptSelector,
-                SelectionKey.OP_ACCEPT);
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "deregister",
+        args = {AbstractSelectionKey.class}
+    )
+    public void test_deregister() throws Exception {
+        MockSelectorProvider prov = new MockSelectorProvider();
+        AbstractSelector acceptSelector = prov.openSelector();
+        SocketChannel sc = prov.openSocketChannel();
+        sc.configureBlocking(false);
+
+        SelectionKey acceptKey = sc.register(acceptSelector,
+                SelectionKey.OP_READ, null);
+        assertTrue(sc.isRegistered());
         assertNotNull(acceptKey);
-        assertTrue(acceptSelector.keys().contains(acceptKey));
-        assertTrue(ssc.isRegistered());
-    }    
+        ((MockAbstractSelector)acceptSelector).mockDeregister(
+                (MockAbstractSelector.MockSelectionKey)acceptKey);
+        assertFalse(sc.isRegistered());
+    }
+
+    static class MockSelectorProvider extends SelectorProvider {
+        
+        private  MockSelectorProvider() {
+            // do nothing
+        }
+
+        @Override
+        public DatagramChannel openDatagramChannel() {
+            return null;
+        }
+
+        @Override
+        public Pipe openPipe() {
+            return null;
+        }
+
+        @Override
+        public AbstractSelector openSelector() {
+            return new MockAbstractSelector(provider());
+        }
+
+        @Override
+        public ServerSocketChannel openServerSocketChannel() {
+            return null;
+        }
+
+        @Override
+        public SocketChannel openSocketChannel() throws IOException {
+            return SocketChannel.open();
+        }
+
+        public static SelectorProvider provider() {
+            return new MockSelectorProvider();
+        }
+    }
 }

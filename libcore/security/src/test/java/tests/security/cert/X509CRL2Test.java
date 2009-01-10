@@ -17,68 +17,110 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 import junit.framework.TestCase;
 
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.Principal;
 import java.security.PublicKey;
-import java.security.SignatureException;
-import java.security.cert.CRLException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.security.cert.X509CRLEntry;
 import java.security.cert.X509Certificate;
+import java.security.cert.X509Extension;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
 
-import tests.support.resource.Support_Resources;
-
 @TestTargetClass(X509CRL.class)
 public class X509CRL2Test extends TestCase {
 
     private X509Certificate pemCert = null;
+    
+    String certificate = "-----BEGIN CERTIFICATE-----\n"
+        + "MIID0jCCAzugAwIBAgIBAjANBgkqhkiG9w0BAQQFADCBmjELMAkGA1UEBhMCVUsx\n"
+        + "EjAQBgNVBAgTCUhhbXBzaGlyZTETMBEGA1UEBxMKV2luY2hlc3RlcjETMBEGA1UE\n"
+        + "ChMKSUJNIFVLIEx0ZDEMMAoGA1UECxMDSlRDMRYwFAYDVQQDEw1QYXVsIEggQWJi\n"
+        + "b3R0MScwJQYJKoZIhvcNAQkBFhhQYXVsX0hfQWJib3R0QHVrLmlibS5jb20wHhcN\n"
+        + "MDQwNjIyMjA1MDU1WhcNMDUwNjIyMjA1MDU1WjCBmDELMAkGA1UEBhMCVUsxEjAQ\n"
+        + "BgNVBAgTCUhhbXBzaGlyZTETMBEGA1UEBxMKV2luY2hlc3RlcjETMBEGA1UEChMK\n"
+        + "SUJNIFVrIEx0ZDEMMAoGA1UECxMDSkVUMRQwEgYDVQQDEwtQYXVsIEFiYm90dDEn\n"
+        + "MCUGCSqGSIb3DQEJARYYUGF1bF9IX0FiYm90dEB1ay5pYm0uY29tMIGfMA0GCSqG\n"
+        + "SIb3DQEBAQUAA4GNADCBiQKBgQDitZBQ5d18ecNJpcnuKTraHYtqsAugoc95/L5Q\n"
+        + "28s3t1QAu2505qQR1MZaAkY7tDNyl1vPnZoym+Y06UswTrZoVYo/gPNeyWPMTsLA\n"
+        + "wzQvk5/6yhtE9ciH7B0SqYw6uSiDTbUY/zQ6qed+TsQhjlbn3PUHRjnI2P8A04cg\n"
+        + "LgYYGQIDAQABo4IBJjCCASIwCQYDVR0TBAIwADAsBglghkgBhvhCAQ0EHxYdT3Bl\n"
+        + "blNTTCBHZW5lcmF0ZWQgQ2VydGlmaWNhdGUwHQYDVR0OBBYEFPplRPs65hUfxUBs\n"
+        + "6/Taq7nN8i1UMIHHBgNVHSMEgb8wgbyAFJOMtPAwlXdZLqE7DKU6xpL6FjFtoYGg\n"
+        + "pIGdMIGaMQswCQYDVQQGEwJVSzESMBAGA1UECBMJSGFtcHNoaXJlMRMwEQYDVQQH\n"
+        + "EwpXaW5jaGVzdGVyMRMwEQYDVQQKEwpJQk0gVUsgTHRkMQwwCgYDVQQLEwNKVEMx\n"
+        + "FjAUBgNVBAMTDVBhdWwgSCBBYmJvdHQxJzAlBgkqhkiG9w0BCQEWGFBhdWxfSF9B\n"
+        + "YmJvdHRAdWsuaWJtLmNvbYIBADANBgkqhkiG9w0BAQQFAAOBgQAnQ22Jw2HUrz7c\n"
+        + "VaOap31mTikuQ/CQxpwPYiSyTJ4s99eEzn+2yAk9tIDIJpqoay/fj+OLgPUQKIAo\n"
+        + "XpRVvmHlGE7UqMKebZtSZJQzs6VoeeKFhgHmqg8eVC2AsTc4ZswJmg4wCui5AH3a\n"
+        + "oqG7PIM3LxZqXYQlZiPSZ6kCpDOWVg==\n"
+        + "-----END CERTIFICATE-----\n";
+    
+    
 
     protected void setUp() throws Exception {
-
-        InputStream is = Support_Resources
-                .getResourceStream("hyts_certificate_PEM.txt");
+        ByteArrayInputStream certArray = new ByteArrayInputStream(certificate
+                .getBytes());
 
         CertificateFactory certFact = CertificateFactory.getInstance("X509");
-        pemCert = (X509Certificate) certFact.generateCertificate(is);
+        pemCert = (X509Certificate) certFact.generateCertificate(certArray);
     }
 
     /**
      * @tests java.security.cert.X509CRL#getExtensionValue(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getExtensionValue",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getExtensionValue",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCriticalExtensionOIDs",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getNonCriticalExtensionOIDs",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "hasUnsupportedCriticalExtension",
+            args = {}
         )
     })
-    public void _test_getExtensionValueLjava_lang_String() {
+    public void test_getExtensionValueLjava_lang_String() {
+        try {
+            setUp();
+        } catch (Exception e) {
+            fail("Exception " + e + " was thrown during configaration");
+        }
         if (pemCert != null) {
             Vector<String> extensionOids = new Vector<String>();
             extensionOids.addAll(pemCert.getCriticalExtensionOIDs());
             extensionOids.addAll(pemCert.getNonCriticalExtensionOIDs());
-            Iterator i = extensionOids.iterator();
+            assertFalse(pemCert.hasUnsupportedCriticalExtension());
+            Iterator<String> i = extensionOids.iterator();
             while (i.hasNext()) {
-                String oid = (String) i.next();
+                String oid = i.next();
                 byte[] value = pemCert.getExtensionValue(oid);
                 if (value != null && value.length > 0) {
                     // check that it is an encoded as a OCTET STRING
@@ -95,28 +137,31 @@ public class X509CRL2Test extends TestCase {
     /**
      * @tests java.security.cert.X509CRL#X509CRL()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "X509CRL",
-          methodArgs = {}
-        )
-    })
-    public void _test_X509CRL() {
-        MyX509CRL crl = new MyX509CRL();
-        assertEquals("X.509", crl.getType());
+    @SuppressWarnings("cast")
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "X509CRL",
+        args = {}
+    )
+    public void test_X509CRL() {
+        try {
+            MyX509CRL crl = new MyX509CRL();
+            assertNotNull(crl);
+            assertTrue(crl instanceof X509CRL);
+        } catch (Exception e) {
+            fail("Unexpected exception for constructor");
+        }
     }
 
-    class MyX509CRL extends X509CRL {
+    class MyX509CRL extends X509CRL implements X509Extension {
 
         public MyX509CRL() {
             super();
         }
 
         @Override
-        public byte[] getEncoded() throws CRLException {
+        public byte[] getEncoded() {
             return null;
         }
 
@@ -161,7 +206,7 @@ public class X509CRL2Test extends TestCase {
         }
 
         @Override
-        public byte[] getTBSCertList() throws CRLException {
+        public byte[] getTBSCertList() {
             return null;
         }
 
@@ -176,16 +221,11 @@ public class X509CRL2Test extends TestCase {
         }
 
         @Override
-        public void verify(PublicKey key) throws CRLException,
-                NoSuchAlgorithmException, InvalidKeyException,
-                NoSuchProviderException, SignatureException {
+        public void verify(PublicKey key) {
         }
 
         @Override
-        public void verify(PublicKey key, String sigProvider)
-                throws CRLException, NoSuchAlgorithmException,
-                InvalidKeyException, NoSuchProviderException,
-                SignatureException {
+        public void verify(PublicKey key, String sigProvider) {
         }
 
         @Override

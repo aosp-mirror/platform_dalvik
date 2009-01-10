@@ -16,13 +16,20 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.AttributedCharacterIterator;
+
 
 @TestTargetClass(AttributedCharacterIterator.Attribute.class) 
 public class AttributedCharacterIteratorAttributeTest extends
@@ -62,15 +69,12 @@ public class AttributedCharacterIteratorAttributeTest extends
      *        Test of method
      *        java.text.AttributedCharacterIterator.Attribute#AttributedCharacterIterator.Attribute(java.lang.String).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Attribute",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Attribute",
+        args = {java.lang.String.class}
+    )
     public void test_Constructor() {
         try {
             new MockAttributedCharacterIteratorAttribute("test");
@@ -84,15 +88,12 @@ public class AttributedCharacterIteratorAttributeTest extends
      *        Test of method
      *        java.text.AttributedCharacterIterator.Attribute#equals(java.lang.Object).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         try {
             MockAttributedCharacterIteratorAttribute mac1 = new MockAttributedCharacterIteratorAttribute(
@@ -119,15 +120,12 @@ public class AttributedCharacterIteratorAttributeTest extends
      * @tests java.text.AttributedCharacterIterator.Attribute#getName() Test of
      *        method java.text.AttributedCharacterIterator.Attribute#getName().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         try {
             MockAttributedCharacterIteratorAttribute mac1 = new MockAttributedCharacterIteratorAttribute(
@@ -141,15 +139,14 @@ public class AttributedCharacterIteratorAttributeTest extends
     /**
      * @tests java.text.AttributedCharacterIterator.Attribute#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
+    @KnownFailure("hashCode method returns equal hash code values for " +
+            "non equal objects. This test passes on RI.")
     public void test_hashCode() {
         try {
             MockAttributedCharacterIteratorAttribute mac1 = new MockAttributedCharacterIteratorAttribute(
@@ -158,7 +155,7 @@ public class AttributedCharacterIteratorAttributeTest extends
                     "test1");
 
             assertTrue("The hash codes of same attributes are not equal", mac1
-                    .hashCode() == mac2.hashCode());
+                    .hashCode() != mac2.hashCode());
 
             MockAttributedCharacterIteratorAttribute mac3 = new MockAttributedCharacterIteratorAttribute(
                     "test2");
@@ -180,15 +177,12 @@ public class AttributedCharacterIteratorAttributeTest extends
      *        of method
      *        java.text.AttributedCharacterIterator.Attribute#readResolve().
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks InvalidObjectException.",
-      targets = {
-        @TestTarget(
-          methodName = "readResolve",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "readResolve",
+        args = {}
+    )
     public void test_readResolve() {
         MockAttributedCharacterIteratorAttribute mac1 = new MockAttributedCharacterIteratorAttribute(
                 "test");
@@ -198,21 +192,54 @@ public class AttributedCharacterIteratorAttributeTest extends
         } catch (InvalidObjectException e) {
             // expected
         }
+        
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            out = new ObjectOutputStream(bytes);
+
+            AttributedCharacterIterator.Attribute attr1, attr2;
+
+            attr1 = AttributedCharacterIterator.Attribute.LANGUAGE;
+
+            out.writeObject(attr1);
+
+            in = new ObjectInputStream(new ByteArrayInputStream(bytes
+                    .toByteArray()));
+
+            try {
+                attr2 = (AttributedCharacterIterator.Attribute) in.readObject();
+                assertSame("resolved incorrectly", attr1, attr2);
+            } catch (IllegalArgumentException e) {
+                fail("Unexpected IllegalArgumentException: " + e);
+            }
+
+        } catch (IOException e) {
+            fail("unexpected IOException" + e);
+        } catch (ClassNotFoundException e) {
+            fail("unexpected ClassNotFoundException" + e);
+        } finally {
+            try {
+                if (out != null)
+                    out.close();
+                if (in != null)
+                    in.close();
+            } catch (IOException e) {
+            }
+        }        
     }
 
     /**
      * @tests java.text.AttributedCharacterIterator.Attribute#toString() Test of
      *        method java.text.AttributedCharacterIterator.Attribute#toString().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         MockAttributedCharacterIteratorAttribute mac1 = new MockAttributedCharacterIteratorAttribute(
                 null);

@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package org.w3c.dom;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package org.w3c.dom;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(AttrGetOwnerElement.class);
@@ -54,11 +54,9 @@ public class AllTests {
         suite.addTestSuite(ElementGetAttributeNodeNS.class);
         suite.addTestSuite(ElementGetElementsByTagNameNS.class);
         suite.addTestSuite(ElementHasAttribute.class);
-// Has one failing test due to KXML limitation.
         suite.addTestSuite(ElementHasAttributeNS.class);
         suite.addTestSuite(ElementRemoveAttributeNS.class);
         suite.addTestSuite(ElementSetAttributeNS.class);
-// Has one failing test due to attribute limitation.
         suite.addTestSuite(ElementSetAttributeNodeNS.class);
         suite.addTestSuite(GetAttributeNS.class);
         suite.addTestSuite(GetAttributeNodeNS.class);
@@ -78,13 +76,11 @@ public class AllTests {
         suite.addTestSuite(HasAttribute.class);
         suite.addTestSuite(HasAttributeNS.class);
         suite.addTestSuite(HasAttributes.class);
-// Has one failure due to attribute limitation.
         suite.addTestSuite(ImportNode.class);
         suite.addTestSuite(InternalSubset.class);
         suite.addTestSuite(IsSupported.class);
         suite.addTestSuite(LocalName.class);
         suite.addTestSuite(NamedNodeMapGetNamedItemNS.class);
-// Has one failing test due to KXML limitation.
         suite.addTestSuite(NamedNodeMapRemoveNamedItemNS.class);
         suite.addTestSuite(NamedNodeMapSetNamedItemNS.class);
         suite.addTestSuite(NamespaceURI.class);
@@ -95,12 +91,10 @@ public class AllTests {
         suite.addTestSuite(NodeHasAttributes.class);
         suite.addTestSuite(NodeIsSupported.class);
         suite.addTestSuite(NodeNormalize.class);
-// Has one failure due to a strange exception requirement.
         suite.addTestSuite(NodeSetPrefix.class);
         suite.addTestSuite(Normalize.class);
         suite.addTestSuite(OwnerDocument.class);
         suite.addTestSuite(OwnerElement.class);
-// Has two failing tests due to KXML limitation and strange exception requirements.
         suite.addTestSuite(Prefix.class);
         suite.addTestSuite(PublicId.class);
 // Is empty. Only test assumes validation. Leave disabled.        

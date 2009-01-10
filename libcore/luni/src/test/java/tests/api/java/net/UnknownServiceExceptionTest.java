@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.URL;
 import java.net.UnknownServiceException;
@@ -31,15 +31,12 @@ public class UnknownServiceExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.UnknownServiceException#UnknownServiceException()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnknownServiceException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "UnknownServiceException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.net.UnknownServiceException()
         try {
@@ -56,15 +53,12 @@ public class UnknownServiceExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.UnknownServiceException#UnknownServiceException(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnknownServiceException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "UnknownServiceException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.net.UnknownServiceException(java.lang.String)
         try {

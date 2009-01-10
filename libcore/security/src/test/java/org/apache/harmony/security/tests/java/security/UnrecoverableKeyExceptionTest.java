@@ -23,8 +23,8 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.security.UnrecoverableKeyException;
@@ -61,15 +61,12 @@ public class UnrecoverableKeyExceptionTest extends TestCase {
      * Test for <code>UnrecoverableKeyException()</code> constructor
      * Assertion: constructs UnrecoverableKeyException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnrecoverableKeyException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "UnrecoverableKeyException",
+        args = {}
+    )
     public void testUnrecoverableKeyException01() {
         UnrecoverableKeyException tE = new UnrecoverableKeyException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -81,15 +78,12 @@ public class UnrecoverableKeyExceptionTest extends TestCase {
      * Assertion: constructs UnrecoverableKeyException with detail message msg.
      * Parameter <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnrecoverableKeyException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "UnrecoverableKeyException",
+        args = {java.lang.String.class}
+    )
     public void testUnrecoverableKeyException02() {
         UnrecoverableKeyException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -105,15 +99,12 @@ public class UnrecoverableKeyExceptionTest extends TestCase {
      * Assertion: constructs UnrecoverableKeyException when <code>msg</code>
      * is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnrecoverableKeyException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "UnrecoverableKeyException",
+        args = {java.lang.String.class}
+    )
     public void testUnrecoverableKeyException03() {
         String msg = null;
         UnrecoverableKeyException tE = new UnrecoverableKeyException(msg);

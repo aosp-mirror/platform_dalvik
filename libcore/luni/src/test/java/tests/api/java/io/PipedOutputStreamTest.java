@@ -17,9 +17,9 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
 
 import java.io.IOException;
@@ -40,7 +40,8 @@ public class PipedOutputStreamTest extends junit.framework.TestCase {
             try {
                 reader = new PipedInputStream(out);
             } catch (Exception e) {
-                System.out.println("Couldn't start reader");
+                System.out.println("Exception setting up reader: "
+                        + e.toString());
             }
         }
 
@@ -68,11 +69,18 @@ public class PipedOutputStreamTest extends junit.framework.TestCase {
                 reader.read(buf, 0, nbytes);
                 return new String(buf);
             } catch (IOException e) {
-                System.out.println("Exception reading info");
+                System.out.println("Exception reading ("
+                        + Thread.currentThread().getName() + "): "
+                        + e.toString());
                 return "ERROR";
             }
         }
     }
+
+    static final String testString = "Lorem ipsum dolor sit amet,\n" +
+        "consectetur adipisicing elit,\nsed do eiusmod tempor incididunt ut" +
+        "labore et dolore magna aliqua.\n";
+    static final int testLength = testString.length();
 
     Thread rt;
 
@@ -83,241 +91,258 @@ public class PipedOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedOutputStream#PipedOutputStream()
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "PipedOutputStream",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PipedOutputStream",
+        args = {}
+    )
     public void test_Constructor() {
-        // Test for method java.io.PipedOutputStream()
-        // Used in tests
+        out = new PipedOutputStream();
+        assertNotNull(out);
+        try {
+            out.close();
+        } catch (IOException e) {
+            fail("Unexpeceted IOException.");
+        }
     }
 
     /**
      * @tests java.io.PipedOutputStream#PipedOutputStream(java.io.PipedInputStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PipedOutputStream",
-          methodArgs = {java.io.PipedInputStream.class}
-        )
-    })
-    public void test_ConstructorLjava_io_PipedInputStream() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PipedOutputStream",
+        args = {java.io.PipedInputStream.class}
+    )
+    public void test_ConstructorLjava_io_PipedInputStream() throws IOException {
         // Test for method java.io.PipedOutputStream(java.io.PipedInputStream)
 
         try {
             out = new PipedOutputStream(new PipedInputStream());
             out.write('b');
         } catch (Exception e) {
-            fail("Exception during constructor test : " + e.getMessage());
+            fail("Test 1: Constructor failed: " + e.getMessage());
+        }
+        out.close();
+        
+        PipedInputStream pis = new PipedInputStream(new PipedOutputStream());
+        try {
+            out = new PipedOutputStream(pis);
+            fail("Test 2: IOException expected because the input stream is already connected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.PipedOutputStream#close()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
     public void test_close() {
-        // Test for method void java.io.PipedOutputStream.close()
+        out = new PipedOutputStream();
+        rt = new Thread(reader = new PReader(out));
+        rt.start();
         try {
-            out = new PipedOutputStream();
-            rt = new Thread(reader = new PReader(out));
-            rt.start();
             out.close();
         } catch (IOException e) {
-            fail("Exception during close : " + e.getMessage());
+            fail("Test 1: Unexpected IOException: " + e.getMessage());
         }
     }
     
     /**
      * @tests java.io.PipedOutputStream#connect(java.io.PipedInputStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.io.PipedInputStream.class}
-        )
-    })
-    public void test_connectLjava_io_PipedInputStream_Exception() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.io.PipedInputStream.class}
+    )
+    public void test_connectLjava_io_PipedInputStream() throws IOException {
         out = new PipedOutputStream();
-        out.connect(new PipedInputStream());
+        
+        try {
+            out.connect(new PipedInputStream());
+        } catch (Exception e) {
+            fail("Test 1: Unexpected exception when connecting: " + 
+                    e.getLocalizedMessage());
+        }
+
+        try {
+            out.write('B');
+        } catch (IOException e) {
+            fail("Test 2: Unexpected IOException when writing after connecting.");
+        }
+        
+        try {
+            out.connect(new PipedInputStream());
+            fail("Test 3: IOException expected when reconnecting the stream.");
+        } catch (IOException e) {
+            // Expected.
+        }
+
         try {
             out.connect(null);
-            fail("should throw NullPointerException"); //$NON-NLS-1$
+            fail("Test 4: NullPointerException expected.");
         } catch (NullPointerException e) {
-            // expected
+            // Expected.
         }
-    }
-
-    /**
-     * @tests java.io.PipedOutputStream#connect(java.io.PipedInputStream)
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.io.PipedInputStream.class}
-        )
-    })
-    public void test_connectLjava_io_PipedInputStream() {
-        // Test for method void
-        // java.io.PipedOutputStream.connect(java.io.PipedInputStream)
-        try {
-            out = new PipedOutputStream();
-            rt = new Thread(reader = new PReader(out));
-            rt.start();
-            out.connect(new PipedInputStream());
-        } catch (IOException e) {
-            // Correct
-            return;
-        }
-        fail(
-                "Failed to throw exception attempting connect on already connected stream");
-
     }
 
     /**
      * @tests java.io.PipedOutputStream#flush()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "flush",
-          methodArgs = {}
-        )
-    })
-    public void test_flush() {
-        // Test for method void java.io.PipedOutputStream.flush()
-        try {
-            out = new PipedOutputStream();
-            rt = new Thread(reader = new PReader(out));
-            rt.start();
-            out.write("HelloWorld".getBytes(), 0, 10);
-            assertTrue("Bytes written before flush", reader.available() != 0);
-            out.flush();
-            assertEquals("Wrote incorrect bytes", 
-                    "HelloWorld", reader.read(10));
-        } catch (IOException e) {
-            fail("IOException during write test : " + e.getMessage());
-        }
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "No IOException checking because it is never thrown in the source code.",
+        method = "flush",
+        args = {}
+    )
+    public void test_flush() throws Exception {
+        out = new PipedOutputStream();
+        rt = new Thread(reader = new PReader(out));
+        rt.start();
+        out.write(testString.getBytes(), 0, 10);
+        assertTrue("Test 1: Bytes have been written before flush.", reader.available() != 0);
+        out.flush();
+        assertEquals("Test 2: Flush failed. ", 
+                testString.substring(0, 10), reader.read(10));
     }
 
     /**
      * @tests java.io.PipedOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_write$BII() {
-        // Test for method void java.io.PipedOutputStream.write(byte [], int,
-        // int)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test 6 disabled due to incomplete implementation, see ticket #92.",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
+    public void test_write$BII() throws IOException {
+        out = new PipedOutputStream();
+        
         try {
-            out = new PipedOutputStream();
+            out.write(testString.getBytes(), 0, 5);
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        
+        out = new PipedOutputStream(new PipedInputStream());
+        
+        try {
+            out.write(testString.getBytes(), -1, 10);
+            fail("Test 2: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        
+        try {
+            out.write(testString.getBytes(), 0, -1);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        
+        try {
+            out.write(testString.getBytes(), 5, testString.length());
+            fail("Test 4: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        
+        out.close();
+        try {
             rt = new Thread(reader = new PReader(out));
             rt.start();
-            out.write("HelloWorld".getBytes(), 0, 10);
+            out.write(testString.getBytes(), 0, testString.length());
             out.flush();
-            assertEquals("Wrote incorrect bytes", 
-                    "HelloWorld", reader.read(10));
+            assertEquals("Test 5: Bytes read do not match the bytes written. ", 
+                         testString, reader.read(testString.length()));
         } catch (IOException e) {
-            fail("IOException during write test : " + e.getMessage());
+            fail("Test 5: Unexpected IOException: " + e.getMessage());
+        }
+
+/* Test disabled due to incomplete implementation, see ticket #92.        
+        rt.interrupt();
+        
+        try {
+            out.write(testString.getBytes(), 0, 5);
+            fail("Test 6: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+*/
+        reader.getReader().close();
+        try {
+            out.write(testString.getBytes(), 0, 5);
+            fail("Test 7: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
-    /**
-     * @tests java.io.PipedOutputStream#write(byte[], int, int)
-     * Regression for HARMONY-387
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_write$BII_2() throws IOException {
-        PipedInputStream pis = new PipedInputStream();
-        PipedOutputStream pos = null;
-        try{
-            pos = new PipedOutputStream(pis);
-            pos.write(new byte[0], -1, -1);
-            fail("IndexOutOfBoundsException expected");
-        } catch (IndexOutOfBoundsException t) {
-            assertEquals(
-                    "IndexOutOfBoundsException rather than a subclass expected",
-                    IndexOutOfBoundsException.class, t.getClass());
-        }
-    }
-
+        
     /**
      * @tests java.io.PipedOutputStream#write(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_writeI() {
-        // Test for method void java.io.PipedOutputStream.write(int)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test 3 disabled due to incomplete implementation, see ticket #92.",
+        method = "write",
+        args = {int.class}
+    )
+    public void test_writeI() throws IOException {
+        out = new PipedOutputStream();
+        
         try {
-            out = new PipedOutputStream();
-            rt = new Thread(reader = new PReader(out));
-            rt.start();
-            out.write('c');
-            out.flush();
-            assertEquals("Wrote incorrect byte", "c", reader.read(1));
+            out.write(42);
+            fail("Test 1: IOException expected.");
         } catch (IOException e) {
-            fail("IOException during write test : " + e.getMessage());
+            // Expected.
+        }
+
+        rt = new Thread(reader = new PReader(out));
+        rt.start();
+        out.write('c');
+        out.flush();
+        assertEquals("Test 2: The byte read does not match the byte written. ", 
+                     "c", reader.read(1));
+        
+/* Test disabled due to incomplete implementation, see ticket #92.        
+        rt.interrupt();
+        
+        try {
+            out.write(42);
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
+*/
+        reader.getReader().close();
+        try {
+            out.write(42);
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * Tears down the fixture, for example, close a network connection. This
      * method is called after a test is executed.
      */
-    protected void tearDown() {
+    protected void tearDown() throws Exception {
         if (rt != null)
             rt.interrupt();
+        super.tearDown();
     }
 }

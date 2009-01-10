@@ -17,8 +17,8 @@
 package tests.api.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.io.UnsupportedEncodingException;
@@ -33,7 +33,7 @@ import java.nio.charset.CodingErrorAction;
  * 
  */
 @TestTargetClass(java.nio.charset.CharsetDecoder.class)
-public class UTF16CharsetDecoderTest extends CharsetDecoderTest {
+public class UTF16CharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
     boolean bigEndian = true;
 
@@ -74,15 +74,12 @@ public class UTF16CharsetDecoderTest extends CharsetDecoderTest {
         }
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Exceptions checking missed.",
+        method = "decode",
+        args = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
+    )
     public void testMultiStepDecode() throws CharacterCodingException {
         if (!cs.name().equals("mock")) {
             decoder.onMalformedInput(CodingErrorAction.REPORT);
@@ -127,16 +124,18 @@ public class UTF16CharsetDecoderTest extends CharsetDecoderTest {
         }
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Implementation in CharsetDecoderTest.implTestDecodeByteBufferCharBufferboolean & CharsetDecoderTest.implTestDecodeByteBuffer. Exceptions cheching missed.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class}
-        ), @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Implementation in CharsetDecoderTest.implTestDecodeByteBufferCharBufferboolean & CharsetDecoderTest.implTestDecodeByteBuffer. Exceptions cheching missed.",
+            method = "decode",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Implementation in CharsetDecoderTest.implTestDecodeByteBufferCharBufferboolean & CharsetDecoderTest.implTestDecodeByteBuffer. Exceptions cheching missed.",
+            method = "decode",
+            args = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
         )
     })
     public void testLittleEndian() throws CharacterCodingException,

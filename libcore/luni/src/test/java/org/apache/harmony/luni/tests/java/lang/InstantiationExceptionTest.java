@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class InstantiationExceptionTest extends TestCase {
     /**
      * @tests java.lang.InstantiationException#InstantiationException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InstantiationException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InstantiationException",
+        args = {}
+    )
     public void test_Constructor() {
         InstantiationException e = new InstantiationException();
         assertNull(e.getMessage());
@@ -49,15 +46,12 @@ public class InstantiationExceptionTest extends TestCase {
     /**
      * @tests java.lang.InstantiationException#InstantiationException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InstantiationException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InstantiationException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         InstantiationException e = new InstantiationException("fixture");
         assertEquals("fixture", e.getMessage());

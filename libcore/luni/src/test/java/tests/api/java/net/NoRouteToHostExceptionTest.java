@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.NoRouteToHostException;
 
@@ -30,15 +30,12 @@ public class NoRouteToHostExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NoRouteToHostException#NoRouteToHostException()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoRouteToHostException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NoRouteToHostException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.net.NoRouteToHostException()
 
@@ -54,15 +51,12 @@ public class NoRouteToHostExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NoRouteToHostException#NoRouteToHostException(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoRouteToHostException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NoRouteToHostException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.net.NoRouteToHostException(java.lang.String)
         // Cannot test correctly without changing some routing tables !!

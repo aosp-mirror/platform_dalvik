@@ -16,9 +16,10 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,16 +31,14 @@ import tests.support.Support_Exec;
 @TestTargetClass(SecurityManager.class) 
 public class SecurityManager2Test extends TestCase {
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SecurityManager",
-          methodArgs = {}
-        )
-    })
-    public void _test_SecurityManager_via_SystemProperty() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SecurityManager",
+        args = {}
+    )
+    @BrokenTest("Support_Exec.execJava is not so simple to use: Harmony Test cannot be easily adapted.")
+    public void test_SecurityManager_via_SystemProperty() throws Exception {
         String[] arg = new String[] {
                 "-Djava.security.manager=" + MySecurityManager.class.getName(),
                 TestForSystemProperty.class.getName() };

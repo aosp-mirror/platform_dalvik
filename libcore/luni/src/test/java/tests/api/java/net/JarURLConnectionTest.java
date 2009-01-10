@@ -18,9 +18,8 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -31,9 +30,15 @@ import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.cert.Certificate;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -52,53 +57,161 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         String clazz = JarURLConnectionTest.class.getName();
         int p = clazz.lastIndexOf(".");
         String pack = (p == -1 ? "" : clazz.substring(0, p)).replace('.', File.separatorChar);
+       
         return JarURLConnectionTest.class.getClassLoader().getResource(pack);
+    }
+    
+    private URL createContent(String jarFile, String inFile) 
+                                                throws MalformedURLException {
+        
+        File resources = Support_Resources.createTempFolder();
+
+        Support_Resources.copyFile(resources, "net", jarFile);
+        File file = new File(resources.toString() + "/net/" + jarFile);
+        URL fUrl1 = new URL("jar:file:" + file.getPath() + "!/" + inFile);
+        
+        return fUrl1;
     }
 
     /**
      * @tests java.net.JarURLConnection#getAttributes()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getAttributes",
-          methodArgs = {}
-        )
-    })
-    public void _test_getAttributes() throws Exception{
-        URL u = new URL("jar:"
-                + BASE.toString()+"/lf.jar!/swt.dll");
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "getAttributes",
+      args = {}
+    )
+    public void test_getAttributes() throws Exception {
+        //URL u = new URL("jar:"
+        //        + BASE.toString()+"/lf.jar!/swt.dll");
+        
+        URL u = createContent("lf.jar", "swt.dll");
         juc = (JarURLConnection) u.openConnection();
-        java.util.jar.Attributes a = juc.getJarEntry().getAttributes();
+        java.util.jar.Attributes a = juc.getAttributes();
         assertEquals("Returned incorrect Attributes", "SHA MD5", a
                 .get(new java.util.jar.Attributes.Name("Digest-Algorithms")));
+        
+        //URL invURL = new URL("jar:"
+        //        + BASE.toString()+"/InvalidJar.jar!/Test.class");
+        
+        URL invURL = createContent("InvalidJar.jar", "Test.class");
+               
+        JarURLConnection juConn = (JarURLConnection) invURL.openConnection();
+        try {
+            juConn.getAttributes();
+            fail("IOException was not thrown.");
+        } catch(java.io.IOException io) {
+            //expected
+        }
+    }
+    
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "getCertificates",
+      args = {}
+    )
+    public void test_getCertificates() throws Exception {
+        
+        //URL u = new URL("jar:"
+        //        + BASE.toString()+"/TestCodeSigners.jar!/Test.class");
+        
+        URL u = createContent("TestCodeSigners.jar", "Test.class");
+        
+        juc = (JarURLConnection) u.openConnection();
+        assertNull(juc.getCertificates());
+        
+        JarEntry je = juc.getJarEntry();
+        JarFile jf = juc.getJarFile();
+        InputStream is = jf.getInputStream(je);
+        is.skip(je.getSize());
+        
+        Certificate [] certs = juc.getCertificates();
+        assertEquals(3, certs.length);
+        
+        //URL invURL = new URL("jar:"
+        //        + BASE.toString()+"/InvalidJar.jar!/Test.class");
+        
+        URL invURL = createContent("InvalidJar.jar", "Test.class");        
+        
+        JarURLConnection juConn = (JarURLConnection) invURL.openConnection();
+        try {
+            juConn.getCertificates();
+            fail("IOException was not thrown.");
+        } catch(java.io.IOException io) {
+            //expected
+        }
+    }
+    
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "getManifest",
+      args = {}
+    )
+    public void test_getManifest() throws Exception {
+        
+        String [] expected = {"plus.bmp", "swt.dll"};
+        //URL u = new URL("jar:"
+        //        + BASE.toString()+"/lf.jar!/swt.dll");
+        
+        URL u = createContent("lf.jar", "swt.dll");
+        
+        juc = (JarURLConnection) u.openConnection();
+        Manifest manifest = juc.getManifest();
+        Map<String, Attributes> attr = manifest.getEntries();
+        assertEquals(expected.length, attr.size());
+        Set<String> keys = attr.keySet();
+        String [] result = new String[expected.length];
+        keys.toArray(result);
+
+        for(int i = 0; i < result.length; i++) {
+            assertEquals(expected[i], result[i]);
+        }
+        
+        //URL invURL = new URL("jar:"
+        //        + BASE.toString()+"/InvalidJar.jar!/Test.class");
+        
+        URL invURL = createContent("InvalidJar.jar", "Test.class");
+        
+        JarURLConnection juConn = (JarURLConnection) invURL.openConnection();
+        try {
+            juConn.getManifest();
+            fail("IOException was not thrown.");
+        } catch(java.io.IOException io) {
+            //expected
+        }
     }
 
     /**
      * @throws Exception 
      * @tests java.net.JarURLConnection#getEntryName()
      */
-@TestInfo(
+    @TestTargetNew(
       level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getEntryName",
-          methodArgs = {}
-        )
-    })
-    public void _test_getEntryName() throws Exception {
-        URL u = new URL("jar:"
-                + BASE.toString()+"/lf.jar!/plus.bmp");
+      notes = "",
+      method = "getEntryName",
+      args = {}
+    )
+    public void test_getEntryName() throws Exception {
+        //URL u = new URL("jar:"
+        //        + BASE.toString()+"/lf.jar!/plus.bmp");
+        
+        URL u = createContent("lf.jar", "plus.bmp");
+        
         juc = (JarURLConnection) u.openConnection();
         assertEquals("Returned incorrect entryName", "plus.bmp", juc
                 .getEntryName());
-        u = new URL("jar:" + BASE.toString()+"/lf.jar!/");
+        
+        //u = new URL("jar:" + BASE.toString()+"/lf.jar!/");
+        
+        u = createContent("lf.jar", "");
+        
         juc = (JarURLConnection) u.openConnection();
         assertNull("Returned incorrect entryName", juc.getEntryName());
 //      Regression test for harmony-3053
+        
         URL url = new URL("jar:file:///bar.jar!/foo.jar!/Bugs/HelloWorld.class");
         assertEquals("foo.jar!/Bugs/HelloWorld.class",((JarURLConnection)url.openConnection()).getEntryName());
     }
@@ -106,42 +219,57 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.JarURLConnection#getJarEntry()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getJarEntry",
-          methodArgs = {}
-        )
-    })
-    public void _test_getJarEntry() throws Exception {
-        URL u = new URL("jar:"
-                + BASE.toString()+"/lf.jar!/plus.bmp");
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "getJarEntry",
+      args = {}
+    )
+    public void test_getJarEntry() throws Exception {
+        //URL u = new URL("jar:"
+        //        + BASE.toString()+"/lf.jar!/plus.bmp");
+        
+        URL u = createContent("lf.jar", "plus.bmp");
+        
         juc = (JarURLConnection) u.openConnection();
         assertEquals("Returned incorrect JarEntry", "plus.bmp", juc
                 .getJarEntry().getName());
-        u = new URL("jar:" + BASE.toString()+"/lf.jar!/");
+        
+        //u = new URL("jar:" + BASE.toString()+"/lf.jar!/");
+        u = createContent("lf.jar", "");
+        
         juc = (JarURLConnection) u.openConnection();
         assertNull("Returned incorrect JarEntry", juc.getJarEntry());
+        
+        //URL invURL = new URL("jar:"
+        //        + BASE.toString()+"/InvalidJar.jar!/Test.class");
+        
+        URL invURL = createContent("InvalidJar.jar", "Test.class");
+        
+        JarURLConnection juConn = (JarURLConnection) invURL.openConnection();
+        try {
+            juConn.getJarEntry();
+            fail("IOException was not thrown.");
+        } catch(java.io.IOException io) {
+            //expected
+        }
     }
 
     /**
      * @tests java.net.JarURLConnection#getJarFile()
      */
-@TestInfo(
+    @TestTargetNew(
       level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getJarFile",
-          methodArgs = {}
-        )
-    })
-    public void _test_getJarFile() throws MalformedURLException, IOException {
+      notes = "",
+      method = "getJarFile",
+      args = {}
+    )
+    public void test_getJarFile() throws MalformedURLException, IOException {
         URL url = null;
-        url = new URL("jar:"
-                + BASE.toString()+"/lf.jar!/missing");
+        //url = new URL("jar:"
+        //        + BASE.toString()+"/lf.jar!/missing");
+        
+        url = createContent("lf.jar", "missing");
 
         JarURLConnection connection = null;
         connection = (JarURLConnection) url.openConnection();
@@ -158,7 +286,20 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         } catch (IOException e) {
             // expected
         }
-
+        
+        //URL invURL = new URL("jar:"
+        //        + BASE.toString()+"/InvalidJar.jar!/Test.class");
+        
+        URL invURL = createContent("InvalidJar.jar", "Test.class");
+        
+        JarURLConnection juConn = (JarURLConnection) invURL.openConnection();
+        try {
+            juConn.getJarFile();
+            fail("IOException was not thrown.");
+        } catch(java.io.IOException io) {
+            //expected
+        }
+        
         File resources = Support_Resources.createTempFolder();
 
         Support_Resources.copyFile(resources, null, "hyts_att.jar");
@@ -171,7 +312,10 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         assertTrue("file: JarFiles not the same", jf1 == jf2);
         jf1.close();
         assertTrue("File should exist", file.exists());
-        new URL("jar:" + BASE.toString()+"/lf.jar!/");
+        
+        fUrl1 = createContent("lf.jar", "");
+        //new URL("jar:" + BASE.toString()+"/lf.jar!/");
+        
         con1 = (JarURLConnection) fUrl1.openConnection();
         jf1 = con1.getJarFile();
         con2 = (JarURLConnection) fUrl1.openConnection();
@@ -185,15 +329,12 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
      * 
      * Regression test for HARMONY-29
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "getJarFile",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.PARTIAL_COMPLETE,
+      notes = "Regression test.",
+      method = "getJarFile",
+      args = {}
+    )
     public void test_getJarFile29() throws Exception {
         File jarFile = File.createTempFile("1+2 3", "test.jar");
         jarFile.deleteOnExit();
@@ -209,15 +350,12 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
     }
     
     //Regression for HARMONY-3436
-@TestInfo(
+    @TestTargetNew(
         level = TestLevel.PARTIAL,
-        purpose = "Exceptions checking missed.",
-        targets = {
-          @TestTarget(
-            methodName = "setUseCaches",
-            methodArgs = {boolean.class}
-          )
-      })
+        notes = "Exceptions checking missed.",
+        method = "setUseCaches",
+        args = {boolean.class}
+    )
     public void test_setUseCaches() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "hyts_att.jar");
@@ -227,11 +365,10 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         JarURLConnection connection = (JarURLConnection) url.openConnection();
         connection.setUseCaches(false);
         InputStream in = connection.getInputStream();
+        in = connection.getInputStream();
         JarFile jarFile1 = connection.getJarFile();
         JarEntry jarEntry1 = connection.getJarEntry();
-        byte[] data = new byte[1024];
-        while (in.read(data) >= 0)
-            ;
+        in.read();   
         in.close();
         JarFile jarFile2 = connection.getJarFile();
         JarEntry jarEntry2 = connection.getJarEntry();
@@ -249,19 +386,21 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.JarURLConnection#getJarFileURL()
      */
-@TestInfo(
+    @TestTargetNew(
       level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getJarFileURL",
-          methodArgs = {}
-        )
-    })
-    public void _test_getJarFileURL() throws Exception {
-        URL fileURL = new URL(BASE.toString()+"/lf.jar");
-        URL u = new URL("jar:"
-                + BASE.toString()+"/lf.jar!/plus.bmp");
+      notes = "",
+      method = "getJarFileURL",
+      args = {}
+    )
+    public void test_getJarFileURL() throws Exception {
+        //URL fileURL = new URL(BASE.toString()+"/lf.jar");
+        //URL u = new URL("jar:"
+        //        + BASE.toString()+"/lf.jar!/plus.bmp");
+        
+        URL u = createContent("lf.jar", "plus.bmp");
+        
+        URL fileURL = new URL(u.getPath().substring(0, u.getPath().indexOf("!")));
+        
         juc = (JarURLConnection) u.openConnection();
         assertTrue("Returned incorrect file URL", juc.getJarFileURL().equals(
                 fileURL));
@@ -273,44 +412,55 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.JarURLConnection#getMainAttributes()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getMainAttributes",
-          methodArgs = {}
-        )
-    })
-    public void _test_getMainAttributes() throws Exception{
-        URL u = new URL("jar:"
-                + BASE.toString()+"/lf.jar!/swt.dll");
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "getMainAttributes",
+      args = {}
+    )
+    public void test_getMainAttributes() throws Exception {
+        //URL u = new URL("jar:"
+        //        + BASE.toString()+"/lf.jar!/swt.dll");
+        URL u = createContent("lf.jar", "swt.dll");
+        
         juc = (JarURLConnection) u.openConnection();
         java.util.jar.Attributes a = juc.getMainAttributes();
         assertEquals("Returned incorrect Attributes", "1.0", a
                 .get(java.util.jar.Attributes.Name.MANIFEST_VERSION));
+        
+        //URL invURL = new URL("jar:"
+        //        + BASE.toString()+"/InvalidJar.jar!/Test.class");
+        URL invURL = createContent("InvalidJar.jar", "Test.class");
+        
+        JarURLConnection juConn = (JarURLConnection) invURL.openConnection();
+        try {
+            juConn.getMainAttributes();
+            fail("IOException was not thrown.");
+        } catch(java.io.IOException io) {
+            //expected
+        }
     }
     
     /**
      * @tests java.net.JarURLConnection#getInputStream()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getInputStream",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "Test fails: IOException expected but IllegalStateException is thrown: ticket 128",
+      method = "getInputStream",
+      args = {}
+    )
     public void test_getInputStream_DeleteJarFileUsingURLConnection()
             throws Exception {
-        String jarFileName = "file.jar";
+        String jarFileName = "";
         String entry = "text.txt";
-        File file = new File(jarFileName);
-        FileOutputStream jarFile = new FileOutputStream(jarFileName);
+        String cts = System.getProperty("java.io.tmpdir");
+        File tmpDir = new File(cts);
+        File jarFile = tmpDir.createTempFile("file", ".jar", tmpDir);
+        jarFileName = jarFile.getPath();
+        FileOutputStream jarFileOutputStream = new FileOutputStream(jarFileName);
         JarOutputStream out = new JarOutputStream(new BufferedOutputStream(
-                jarFile));
+                jarFileOutputStream));
         JarEntry jarEntry = new JarEntry(entry);
         out.putNextEntry(jarEntry);
         out.write(new byte[] { 'a', 'b', 'c' });
@@ -321,13 +471,78 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         conn.setUseCaches(false);
         InputStream is = conn.getInputStream();
         is.close();
-        assertTrue(file.delete());
+        
+        assertTrue(jarFile.delete());
+        
+        /*
+        try {
+            conn.getInputStream();
+            fail("Exception was not thrown.");
+        } catch (IOException e) {
+            //ok
+        }
+        
+        */
+        
     }
 
-
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "JarURLConnection",
+      args = {java.net.URL.class}
+    )
+    public void test_Constructor() {
+        try {
+            String jarFileName = "file.jar";
+            String entry = "text.txt";
+            URL url = new URL("jar:file:" + jarFileName + "!/" + entry);
+            TestJarURLConnection jarConn = new TestJarURLConnection(url);
+            assertEquals(new URL("file:file.jar"), jarConn.getJarFileURL());
+        } catch(MalformedURLException me) {
+            fail("MalformedURLException was thrown.");
+        }
+        
+        try {
+        URL [] urls = {new URL("file:file.jar"),  
+                       new URL("http://foo.com/foo/foo.jar")}; 
+        
+        for(URL url:urls) {
+            try {
+                new TestJarURLConnection(url);
+                fail("MalformedURLException was not thrown.");
+            } catch(MalformedURLException me) {
+                //expected
+            }
+        }
+        } catch(MalformedURLException me) {
+            fail("MalformedURLException was thrown.");
+        }
+    }
+    
+    
     protected void setUp() {
     }
 
     protected void tearDown() {
     }
+    
+    class TestJarURLConnection extends JarURLConnection {
+
+        protected TestJarURLConnection(URL arg0) throws MalformedURLException {
+            super(arg0);
+        }
+
+        @Override
+        public JarFile getJarFile() throws IOException {
+            return null;
+        }
+
+        @Override
+        public void connect() throws IOException {
+          
+        }
+        
+    }
 }
+

@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package tests.api.javax.security.cert;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.api.javax.security.cert;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(CertificateEncodingExceptionTest.class);

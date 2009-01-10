@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.NoSuchProviderException;
 
@@ -61,15 +61,12 @@ public class NoSuchProviderExceptionTest extends TestCase {
      * Test for <code>NoSuchProviderException()</code> constructor Assertion:
      * constructs NoSuchProviderException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchProviderException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NoSuchProviderException",
+        args = {}
+    )
     public void testNoSuchProviderException01() {
         NoSuchProviderException tE = new NoSuchProviderException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -81,15 +78,12 @@ public class NoSuchProviderExceptionTest extends TestCase {
      * Assertion: constructs NoSuchProviderException with detail message msg.
      * Parameter <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchProviderException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchProviderException",
+        args = {java.lang.String.class}
+    )
     public void testNoSuchProviderException02() {
         NoSuchProviderException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -105,15 +99,12 @@ public class NoSuchProviderExceptionTest extends TestCase {
      * Assertion: constructs NoSuchProviderException when <code>msg</code> is
      * null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchProviderException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchProviderException",
+        args = {java.lang.String.class}
+    )
     public void testNoSuchProviderException03() {
         String msg = null;
         NoSuchProviderException tE = new NoSuchProviderException(msg);

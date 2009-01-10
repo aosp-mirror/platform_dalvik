@@ -23,9 +23,9 @@
 package tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.AllPermission;
 import java.security.BasicPermission;
@@ -55,19 +55,19 @@ public class AllPermissionTest extends TestCase {
     /**
      * Test all constructors: an object is created, name and actions are ignored
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AllPermission",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "AllPermission",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "AllPermission",
-          methodArgs = {String.class, String.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "AllPermission",
+            args = {java.lang.String.class, java.lang.String.class}
         )
-
     })
     public void testCtor()
     {
@@ -85,15 +85,12 @@ public class AllPermissionTest extends TestCase {
     }
 
     /** Any of AllPermission instances are equal and have the same hash code */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void testEquals()
     {
         AllPermission a1 = new AllPermission();
@@ -105,15 +102,12 @@ public class AllPermissionTest extends TestCase {
     }
     
     /** AllPermission implies any other permission */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Null parameter checking missed",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
     public void testImplies()
     {
         AllPermission a1 = new AllPermission();
@@ -123,15 +117,12 @@ public class AllPermissionTest extends TestCase {
     }
     
     /** newPermissionCollection() returns a new AllPermissionCollection on every invocation. */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "newPermissionCollection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newPermissionCollection",
+        args = {}
+    )
     public void testCollection()
     {
         AllPermission a1 = new AllPermission();

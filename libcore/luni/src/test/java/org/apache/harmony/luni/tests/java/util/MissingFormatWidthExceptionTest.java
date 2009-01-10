@@ -15,9 +15,9 @@
  */
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -34,16 +34,14 @@ public class MissingFormatWidthExceptionTest extends TestCase {
     /**
      * @tests java.util.MissingFormatWidthException#MissingFormatWidthException(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "MissingFormatWidthException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "MissingFormatWidthException",
+        args = {java.lang.String.class}
+    )
     public void test_missingFormatWidthException() {
+        assertNotNull(new MissingFormatWidthException("String"));
         try {
             new MissingFormatWidthException(null);
             fail("should throw NullPointerExcepiton");
@@ -55,15 +53,12 @@ public class MissingFormatWidthExceptionTest extends TestCase {
     /**
      * @tests java.util.MissingFormatWidthException#getFormatSpecifier()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFormatSpecifier",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFormatSpecifier",
+        args = {}
+    )
     public void test_getFormatSpecifier() {
         String s = "MYTESTSTRING";
         MissingFormatWidthException missingFormatWidthException = new MissingFormatWidthException(
@@ -75,15 +70,12 @@ public class MissingFormatWidthExceptionTest extends TestCase {
     /**
      * @tests java.util.MissingFormatWidthException#getMessage()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMessage",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMessage",
+        args = {}
+    )
     public void test_getMessage() {
         String s = "MYTESTSTRING";
         MissingFormatWidthException missingFormatWidthException = new MissingFormatWidthException(
@@ -111,15 +103,12 @@ public class MissingFormatWidthExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new MissingFormatWidthException(
@@ -129,15 +118,12 @@ public class MissingFormatWidthExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new MissingFormatWidthException(

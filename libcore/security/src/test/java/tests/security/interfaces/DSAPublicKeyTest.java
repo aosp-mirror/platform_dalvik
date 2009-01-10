@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 package tests.security.interfaces;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -39,16 +39,16 @@ public class DSAPublicKeyTest extends TestCase {
      *   Case 2: check with random p, q, g, x. It takes some time (up to  
      *           minute)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getY",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getY",
+        args = {}
+    )
     @SuppressWarnings("serial")
+    @KnownFailure("Incorrect value was returned for method " +
+                  "java.security.interfaces.DSAPublicKey.getY(). "+
+                  "This test is passed for RI.")
     public void test_getY() throws Exception {
         KeyPairGenerator keyGen = null;
         KeyPair keys = null;

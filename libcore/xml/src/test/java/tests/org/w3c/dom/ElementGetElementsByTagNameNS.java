@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Element;
@@ -53,15 +53,12 @@ public final class ElementGetElementsByTagNameNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "getElementsByTagNameNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "getElementsByTagNameNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetElementsByTagNameNS1() throws Throwable {
         Document doc;
         Element element;
@@ -72,15 +69,12 @@ public final class ElementGetElementsByTagNameNS extends DOMTestCase {
         assertEquals("elementgetelementsbytagnamens02", 0, elementList
                 .getLength());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "getElementsByTagNameNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "getElementsByTagNameNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetElementsByTagNameNS4() throws Throwable {
         Document doc;
         Element element;
@@ -108,15 +102,12 @@ public final class ElementGetElementsByTagNameNS extends DOMTestCase {
         assertEquals("elementgetelementsbytagnamens04_2", 3, elementList
                 .getLength());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "getElementsByTagNameNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "getElementsByTagNameNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetElementsByTagNameNS5() throws Throwable {
         Document doc;
         Element element;

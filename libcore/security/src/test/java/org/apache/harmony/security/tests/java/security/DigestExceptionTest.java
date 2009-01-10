@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.DigestException;
 
@@ -60,15 +60,12 @@ public class DigestExceptionTest extends TestCase {
      * Test for <code>DigestException()</code> constructor Assertion:
      * constructs DigestException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DigestException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DigestException",
+        args = {}
+    )
     public void testDigestException01() {
         DigestException tE = new DigestException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -80,15 +77,12 @@ public class DigestExceptionTest extends TestCase {
      * constructs DigestException with detail message msg. Parameter
      * <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies case with differents parameters (parameter is not null)",
-      targets = {
-        @TestTarget(
-          methodName = "DigestException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies case with differents parameters (parameter is not null)",
+        method = "DigestException",
+        args = {java.lang.String.class}
+    )
     public void testDigestException02() {
         DigestException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -103,15 +97,12 @@ public class DigestExceptionTest extends TestCase {
      * Test for <code>DigestException(String)</code> constructor Assertion:
      * constructs DigestException when <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies case with null parameter",
-      targets = {
-        @TestTarget(
-          methodName = "DigestException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies case with null parameter",
+        method = "DigestException",
+        args = {java.lang.String.class}
+    )
     public void testDigestException03() {
         String msg = null;
         DigestException tE = new DigestException(msg);
@@ -123,15 +114,12 @@ public class DigestExceptionTest extends TestCase {
      * Test for <code>DigestException(Throwable)</code> constructor Assertion:
      * constructs DigestException when <code>cause</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies case with null parameter",
-      targets = {
-        @TestTarget(
-          methodName = "DigestException",
-          methodArgs = {Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies case with null parameter",
+        method = "DigestException",
+        args = {java.lang.Throwable.class}
+    )
     public void testDigestException04() {
         Throwable cause = null;
         DigestException tE = new DigestException(cause);
@@ -143,15 +131,12 @@ public class DigestExceptionTest extends TestCase {
      * Test for <code>DigestException(Throwable)</code> constructor Assertion:
      * constructs DigestException when <code>cause</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies case with not null parameter",
-      targets = {
-        @TestTarget(
-          methodName = "DigestException",
-          methodArgs = {Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies case with not null parameter",
+        method = "DigestException",
+        args = {java.lang.Throwable.class}
+    )
     public void testDigestException05() {
         DigestException tE = new DigestException(tCause);
         if (tE.getMessage() != null) {
@@ -170,15 +155,12 @@ public class DigestExceptionTest extends TestCase {
      * Assertion: constructs DigestException when <code>cause</code> is null
      * <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DigestException",
-          methodArgs = {String.class, Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "DigestException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testDigestException06() {
         DigestException tE = new DigestException(null, null);
         assertNull("getMessage() must return null", tE.getMessage());
@@ -190,15 +172,12 @@ public class DigestExceptionTest extends TestCase {
      * Assertion: constructs DigestException when <code>cause</code> is null
      * <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DigestException",
-          methodArgs = {String.class, Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "DigestException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testDigestException07() {
         DigestException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -214,15 +193,12 @@ public class DigestExceptionTest extends TestCase {
      * Assertion: constructs DigestException when <code>cause</code> is not
      * null <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DigestException",
-          methodArgs = {String.class, Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "DigestException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testDigestException08() {
         DigestException tE = new DigestException(null, tCause);
         if (tE.getMessage() != null) {
@@ -241,15 +217,12 @@ public class DigestExceptionTest extends TestCase {
      * Assertion: constructs DigestException when <code>cause</code> is not
      * null <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DigestException",
-          methodArgs = {String.class, Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "DigestException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testDigestException09() {
         DigestException tE;
         for (int i = 0; i < msgs.length; i++) {

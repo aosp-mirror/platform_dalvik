@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Element;
@@ -51,16 +51,12 @@ public final class ElementHasAttribute extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies hasAttribute method with empty string " +
-            "as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttribute",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies hasAttribute method with empty string as a parameter.",
+        method = "hasAttribute",
+        args = {java.lang.String.class}
+    )
     public void testHasAttribute1() throws Throwable {
         Document doc;
         Element element;
@@ -84,15 +80,12 @@ public final class ElementHasAttribute extends DOMTestCase {
 //        state = element.hasAttribute("defaultAttr");
 //        assertTrue("elementhasattribute02", state);
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttribute",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "hasAttribute",
+        args = {java.lang.String.class}
+    )
     public void testHasAttribute3() throws Throwable {
         Document doc;
         Element element;
@@ -108,15 +101,12 @@ public final class ElementHasAttribute extends DOMTestCase {
         state = element.hasAttribute("domestic");
         assertTrue("elementhasattribute03_True", state);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttribute",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "hasAttribute",
+        args = {java.lang.String.class}
+    )
     public void testHasAttribute4() throws Throwable {
         Document doc;
         Element element;

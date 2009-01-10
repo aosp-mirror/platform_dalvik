@@ -18,9 +18,8 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -31,24 +30,209 @@ import java.net.NetworkInterface;
 import java.net.SocketAddress;
 import java.net.SocketException;
 
-@TestTargetClass(DatagramSocketImpl.class) 
+/*
+ * DatagramSocketImplFactory can be specified only once, 
+ * therefore we can't check DatagramSocketImpl functionality.
+ */
+
+@TestTargetClass(value = DatagramSocketImpl.class,
+                 untestedMethods = {
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "bind",
+                     args = {int.class, InetAddress.class}
+                 ),
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "close",
+                     args = {}
+                 ),   
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "create",
+                     args = {}
+                 ),
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "getTimeToLive",
+                     args = {}
+                 ),
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "getTTL",
+                     args = {}
+                 ),
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "join",
+                     args = {InetAddress.class}
+                 ),
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "joinGroup",
+                     args = { SocketAddress.class, NetworkInterface.class }
+                 ),  
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "leave",
+                     args = { InetAddress.class }
+                 ),
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "leaveGroup",
+                     args = { SocketAddress.class, NetworkInterface.class }
+                 ),
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "peek",
+                     args = { InetAddress.class }
+                 ),     
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "peekData",
+                     args = { DatagramPacket.class }
+                 ),    
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "receive",
+                     args = { DatagramPacket.class }
+                 ), 
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "send",
+                     args = { DatagramPacket.class }
+                 ),    
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "setTimeToLive",
+                     args = { int.class }
+                 ),     
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "setTTL",
+                     args = { byte.class }
+                 ),
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "setOption",
+                     args = { int.class, Object.class }
+                 ),
+                 @TestTargetNew(
+                     level = TestLevel.NOT_FEASIBLE,
+                     notes = "",
+                     method = "getOption",
+                     args = { int.class }
+                 )                 
+             }) 
 public class DatagramSocketImplTest extends junit.framework.TestCase {
+    
+    MockDatagramSocketImpl ds;
+    
+    public void setUp() {
+        ds = new MockDatagramSocketImpl();
+    }
+    
+    public void tearDown() {
+        ds.close();
+        ds = null;
+    }
     /**
      * @tests java.net.DatagramSocketImpl#DatagramSocketImpl()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DatagramSocketImpl",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DatagramSocketImpl",
+        args = {}
+    )
     public void test_Constructor() throws Exception {
         // regression test for Harmony-1117
         MockDatagramSocketImpl impl = new MockDatagramSocketImpl();
         assertNull(impl.getFileDescriptor());
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "SocketException is not checked.",
+        method = "connect",
+        args = {java.net.InetAddress.class, int.class}
+    )
+    public void test_connect() {
+        try {
+            InetAddress localHost = InetAddress.getLocalHost();
+            //int port = ds.getLocalPort();
+            ds.connect(localHost, 0);
+            DatagramPacket send = new DatagramPacket(new byte[10], 10,
+                    localHost, 0);
+            ds.send(send);
+        } catch (IOException e) {
+            fail("Unexpected IOException : " + e.getMessage());
+        } finally {
+            ds.close();
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "disconnect",
+        args = {}
+    )
+    public void test_disconnect() {
+        try {
+            InetAddress localHost = InetAddress.getLocalHost();
+            //int port = ds.getLocalPort();
+            ds.connect(localHost, 0);
+            DatagramPacket send = new DatagramPacket(new byte[10], 10,
+                    localHost, 0);
+            ds.send(send);
+            ds.disconnect();
+        } catch (IOException e) {
+            fail("Unexpected IOException : " + e.getMessage());
+        } finally {
+            ds.close();
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFileDescriptor",
+        args = {}
+    )
+    public void test_getFileDescriptor() {
+        assertNull(ds.getFileDescriptor());
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLocalPort",
+        args = {}
+    )
+    public void test_getLocalPort() {
+        // RI fails here. RI returns 0. the spec doesn't say what the value for
+        // an unbound DatagramSocket should be. The same difference can be seen
+        // for Socket.getLocalPort. But there the spec says that unbound
+        // Sockets return -1. And for that method also the RI returns 0 which
+        // goes against the spec.
+        assertEquals(-1, ds.getLocalPort());
     }
 }
 
@@ -60,91 +244,104 @@ class MockDatagramSocketImpl extends DatagramSocketImpl {
     }
 
     @Override
-    protected void bind(int port, InetAddress addr) throws SocketException {
+    public void bind(int port, InetAddress addr) throws SocketException {
         // empty
     }
 
     @Override
-    protected void close() {
+    public void close() {
         // empty
     }
 
     @Override
-    protected void create() throws SocketException {
+    public void create() throws SocketException {
         // empty
     }
 
-    @Override
-    public Object getOption(int optID) throws SocketException {
-        return null;
-    }
 
     @Override
-    protected byte getTTL() throws IOException {
+    public byte getTTL() throws IOException {
         return 0;
     }
 
     @Override
-    protected int getTimeToLive() throws IOException {
+    public int getTimeToLive() throws IOException {
         return 0;
     }
 
     @Override
-    protected void join(InetAddress addr) throws IOException {
+    public void join(InetAddress addr) throws IOException {
         // empty
     }
 
     @Override
-    protected void joinGroup(SocketAddress addr, NetworkInterface netInterface)
+    public void joinGroup(SocketAddress addr, NetworkInterface netInterface)
             throws IOException {
         // empty
     }
 
     @Override
-    protected void leave(InetAddress addr) throws IOException {
+    public void leave(InetAddress addr) throws IOException {
         // empty
     }
 
     @Override
-    protected void leaveGroup(SocketAddress addr, NetworkInterface netInterface)
+    public void leaveGroup(SocketAddress addr, NetworkInterface netInterface)
             throws IOException {
         // empty
     }
 
     @Override
-    protected int peek(InetAddress sender) throws IOException {
+    public int peek(InetAddress sender) throws IOException {
         return 0;
     }
 
     @Override
-    protected int peekData(DatagramPacket pack) throws IOException {
+    public int peekData(DatagramPacket pack) throws IOException {
         return 0;
     }
 
     @Override
-    protected void receive(DatagramPacket pack) throws IOException {
+    public void receive(DatagramPacket pack) throws IOException {
         // empty
     }
 
     @Override
-    protected void send(DatagramPacket pack) throws IOException {
+    public void send(DatagramPacket pack) throws IOException {
         // TODO Auto-generated method stub
 
     }
 
+
     @Override
-    public void setOption(int optID, Object val) throws SocketException {
+    public void setTTL(byte ttl) throws IOException {
         // empty
     }
 
     @Override
-    protected void setTTL(byte ttl) throws IOException {
+    public void setTimeToLive(int ttl) throws IOException {
         // empty
     }
 
-    @Override
-    protected void setTimeToLive(int ttl) throws IOException {
-        // empty
+    public Object getOption(int optID) throws SocketException {
+        // TODO Auto-generated method stub
+        return null;
     }
 
+    public void setOption(int optID, Object value) throws SocketException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void connect(InetAddress address, int port) throws SocketException {
+        super.connect(address, port);
+    }
+    
+    public void disconnect() {
+        super.disconnect();
+    }
+    
+    public int getLocalPort() {
+        return super.getLocalPort();
+    }
 }

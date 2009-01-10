@@ -18,9 +18,9 @@
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.Principal;
 import java.security.cert.Certificate;
@@ -40,38 +40,50 @@ import junit.framework.TestCase;
 @TestTargetClass(SSLSessionBindingEvent.class) 
 public class SSLSessionBindingEventTest extends TestCase {
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null parameters checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "SSLSessionBindingEvent",
-          methodArgs = {SSLSession.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SSLSessionBindingEvent",
+        args = {javax.net.ssl.SSLSession.class, java.lang.String.class}
+    )
     public final void test_ConstructorLjavax_net_ssl_SSLSessionLjava_lang_String() {
         SSLSession ses = new MySSLSession();
-        SSLSessionBindingEvent event = new SSLSessionBindingEvent(ses, "test");
-        if (!"test".equals(event.getName())) {
-            fail("incorrect name");
+        
+        try {
+            SSLSessionBindingEvent event = new SSLSessionBindingEvent(ses, "test");
+            if (!"test".equals(event.getName())) {
+                fail("incorrect name");
+            }
+            if (!event.getSession().equals(ses)) {
+                fail("incorrect session");
+            }
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
         }
-        if (!event.getSession().equals(ses)) {
-            fail("incorrect session");
+        
+        try {
+            SSLSessionBindingEvent event = new SSLSessionBindingEvent(null, "test");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+          // expected
+        }
+        
+        try {
+            SSLSessionBindingEvent event = new SSLSessionBindingEvent(ses, null);
+        } catch (IllegalArgumentException e) {
+          fail("Unexpected IllegalArgumentException: " + e);
         }
     }
 
     /**
      * @tests javax.net.ssl.SSLSessionBindingEvent#getName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         SSLSession ses = new MySSLSession();
         SSLSessionBindingEvent event = new SSLSessionBindingEvent(ses, "test");
@@ -83,15 +95,12 @@ public class SSLSessionBindingEventTest extends TestCase {
     /**
      * @tests javax.net.ssl.SSLSessionBindingEvent#getSession()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSession",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSession",
+        args = {}
+    )
     public void test_getSession() {
         SSLSession ses = new MySSLSession();
         SSLSessionBindingEvent event = new SSLSessionBindingEvent(ses, "test");

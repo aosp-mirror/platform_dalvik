@@ -16,20 +16,7 @@
 
 package tests.api.javax.xml.parsers;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,7 +24,28 @@ import java.io.InputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
+
+import junit.framework.TestCase;
+
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.EntityReference;
+import org.w3c.dom.Text;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+
+import tests.api.org.xml.sax.support.MethodLogger;
+import tests.api.org.xml.sax.support.MockHandler;
+import tests.api.org.xml.sax.support.MockResolver;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(DocumentBuilder.class) 
 public class DocumentBuilderTest extends TestCase {
@@ -133,19 +141,13 @@ public class DocumentBuilderTest extends TestCase {
         super.tearDown();
     }
 
-    /**
-     * @tests javax.xml.parsers.DocumentBuilder#DocumentBuilder()
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DocumentBuilder",
-          methodArgs = {}
-        )
-    })
-    public void test_Constructor() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DocumentBuilder",
+        args = {}
+    )
+    public void testDocumentBuilder() {
         try {
             new MockDocumentBuilder();
         } catch (Exception e) {
@@ -172,20 +174,92 @@ public class DocumentBuilderTest extends TestCase {
         }
     }
 */
-    /**
-     * @tests javax.xml.parsers.DocumentBuilder#isXIncludeAware()
-     */
-//    public void test_isXIncludeAware() {
-//        try {
-//            dbf.setXIncludeAware(true);
-//            assertTrue(dbf.newDocumentBuilder().isXIncludeAware());
-//
-//            dbf.setXIncludeAware(false);
-//            assertFalse(dbf.newDocumentBuilder().isXIncludeAware());
-//        } catch (ParserConfigurationException pce) {
-//            fail("Unexpected ParserConfigurationException " + pce.toString());
-//        }
-//    }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newDocument",
+        args = { }
+    )
+    public void testNewDocument() {
+        Document d;
+        
+        try {
+            d = dbf.newDocumentBuilder().newDocument();
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+        
+        assertNotNull(d);
+        assertNull(d.getDoctype());
+        assertNull(d.getDocumentElement());
+        assertNull(d.getNamespaceURI());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDOMImplementation",
+        args = { }
+    )
+    public void testGetImplementation() {
+        DOMImplementation d;
+        
+        try {
+            d = dbf.newDocumentBuilder().getDOMImplementation();
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+        
+        assertNotNull(d);
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isNamespaceAware",
+        args = {}
+    )
+    public void testIsNamespaceAware() {
+        try {
+            dbf.setNamespaceAware(true);
+            assertTrue(dbf.newDocumentBuilder().isNamespaceAware());
+            dbf.setNamespaceAware(false);
+            assertFalse(dbf.newDocumentBuilder().isNamespaceAware());
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "No validating parser in Android, hence not tested",
+        method = "isValidating",
+        args = {}
+    )
+    public void testIsValidating() {
+        try {
+            dbf.setValidating(false);
+            assertFalse(dbf.newDocumentBuilder().isValidating());
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "No XInclude-aware parser in Android, hence not tested",
+        method = "isXIncludeAware",
+        args = {}
+    )
+    @KnownFailure("Should handle XIncludeAware flag more gracefully")
+    public void testIsXIncludeAware() {
+        try {
+            dbf.setXIncludeAware(false);
+            assertFalse(dbf.newDocumentBuilder().isXIncludeAware());
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+    }
 
     /**
      * @tests javax.xml.parsers.DocumentBuilder#parse(java.io.File)
@@ -194,16 +268,14 @@ public class DocumentBuilderTest extends TestCase {
      * Case 3: Try to parse a non-existent file.
      * Case 4: Try to parse incorrect xml file.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.File.class}
-        )
-    })
-    public void _test_parseLjava_io_File() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parse",
+        args = {java.io.File.class}
+    )
+    @BrokenTest("Need to use XML file from correct location")
+    public void test_parseLjava_io_File() {
         File f = new File("/tmp/xml_source/simple.xml");
         // case 1: Trivial use.
         try {
@@ -263,15 +335,12 @@ public class DocumentBuilderTest extends TestCase {
      * Case 3: Try to parse a non-existent file.
      * Case 4: Try to parse incorrect xml file.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parse",
+        args = {java.io.InputStream.class}
+    )
     public void test_parseLjava_io_InputStream() {
         InputStream is = getClass().getResourceAsStream("/simple.xml");
         // case 1: Trivial use.
@@ -326,6 +395,74 @@ public class DocumentBuilderTest extends TestCase {
     }
 
     /**
+     * @tests javax.xml.parsers.DocumentBuilder#parse(java.io.InputStream)
+     * Case 1: Try to parse correct xml document.
+     * Case 2: Try to call parse() with null argument.
+     * Case 3: Try to parse a non-existent file.
+     * Case 4: Try to parse incorrect xml file.
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parse",
+        args = { InputSource.class }
+    )
+    public void testParseInputSource() {
+        InputStream stream = getClass().getResourceAsStream("/simple.xml");
+        InputSource is = new InputSource(stream);
+        
+        // case 1: Trivial use.
+        try {
+            Document d = db.parse(is);
+            assertNotNull(d);
+            // TBD getXmlEncoding() IS NOT SUPPORTED
+            // assertEquals("ISO-8859-1", d.getXmlEncoding());
+            assertEquals(2, d.getChildNodes().getLength());
+            assertEquals("#comment",
+                    d.getChildNodes().item(0).getNodeName());
+            assertEquals("breakfast_menu",
+                    d.getChildNodes().item(1).getNodeName());
+        } catch (IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch (SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
+        }
+
+        // case 2: Try to call parse with null argument
+        try {
+            db.parse((InputSource)null);
+            fail("Expected IllegalArgumentException was not thrown");
+        } catch (IllegalArgumentException iae) {
+            // expected
+        } catch (IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch (SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
+        }
+
+        // case 3: Try to parse a non-existent file
+        try {
+            db.parse(new InputSource(new FileInputStream("_")));
+            fail("Expected IOException was not thrown");
+        } catch (IOException ioe) {
+            // expected
+        } catch (SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
+        }
+
+        // case 4: Try to parse incorrect xml file
+        try {
+            is = new InputSource(getClass().getResourceAsStream("/wrong.xml"));
+            db.parse(is);
+            fail("Expected SAXException was not thrown");
+        } catch (IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch (SAXException sax) {
+            // expected
+        }
+    }
+    
+    /**
      * @tests javax.xml.parsers.DocumentBuilder#parse(java.io.InputStream,
      *     java.lang.String)
      * Case 1: Try to parse correct xml document.
@@ -333,15 +470,12 @@ public class DocumentBuilderTest extends TestCase {
      * Case 3: Try to parse a non-existent file.
      * Case 4: Try to parse incorrect xml file.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.InputStream.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parse",
+        args = {java.io.InputStream.class, java.lang.String.class}
+    )
     public void test_parseLjava_io_InputStreamLjava_lang_String() {
         InputStream is = getClass().getResourceAsStream("/systemid.xml");
         // case 1: Trivial use.
@@ -407,16 +541,14 @@ public class DocumentBuilderTest extends TestCase {
      * Case 3: Try to parse a non-existent uri.
      * Case 4: Try to parse incorrect xml file.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _test_parseLjava_lang_String() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parse",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure("Android DocumentBuilder should support File sources")
+    public void test_parseLjava_lang_String() {
         // case 1: Trivial use.
         File f = new File(getClass().getResource("/simple.xml").getFile());
         try {
@@ -469,27 +601,133 @@ public class DocumentBuilderTest extends TestCase {
         }
     }
 
-    /**
-     * @tests javax.xml.parsers.DocumentBuilder#reset()
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify that reset() method resets the DocumentBuilder " +
-            "to its original configuration.",
-      targets = {
-        @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
-        )
-    })
-    public void test_reset() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "reset",
+        args = { }
+    )
+    @KnownFailure("Android DocumentBuilder should implement reset() properly")
+    public void testReset() {
+        // Make sure EntityResolver gets reset
+        InputStream source = new ByteArrayInputStream("<a>&foo;</a>".getBytes());
+        InputStream entity = new ByteArrayInputStream("bar".getBytes());
+        
+        MockResolver resolver = new MockResolver();
+        resolver.addEntity("foo", "foo", new InputSource(entity));
+
+        Document d;
+        
         try {
-            dbf = DocumentBuilderFactory.newInstance();
             db = dbf.newDocumentBuilder();
+            db.setEntityResolver(resolver);
             db.reset();
-        } catch (ParserConfigurationException pce) {
-            fail("Unexpected ParserConfigurationException " + pce.toString());
+            d = db.parse(source);
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
         }
+        
+        Element root = (Element)d.getElementsByTagName("a").item(0);
+        assertEquals("foo", ((EntityReference)root.getFirstChild()).getNodeName());
+
+        // Make sure ErrorHandler gets reset
+        source = new ByteArrayInputStream("</a>".getBytes());
+
+        MethodLogger logger = new MethodLogger();
+        ErrorHandler handler = new MockHandler(logger);
+        
+        try {
+            db = dbf.newDocumentBuilder();
+            db.setErrorHandler(handler);
+            db.reset();
+            d = db.parse(source);
+        } catch (SAXParseException e) {
+            // Expected
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);            
+        }
+
+        assertEquals(0, logger.size());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "setErrorHandler",
+        args = { ErrorHandler.class }
+    )
+    public void testSetErrorHandler() {
+        // Ordinary case
+        InputStream source = new ByteArrayInputStream("</a>".getBytes());
+
+        MethodLogger logger = new MethodLogger();
+        ErrorHandler handler = new MockHandler(logger);
+        
+        try {
+            db = dbf.newDocumentBuilder();
+            db.setErrorHandler(handler);
+            db.parse(source);
+        } catch (SAXParseException e) {
+            // Expected, ErrorHandler does not mask exception
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);            
+        }
+
+        assertEquals("error", logger.getMethod());
+        assertTrue(logger.getArgs()[0] instanceof SAXParseException);
+        
+        // null case 
+        source = new ByteArrayInputStream("</a>".getBytes());
+
+        try {
+            db = dbf.newDocumentBuilder();
+            db.setErrorHandler(null);
+            db.parse(source);
+        } catch (SAXParseException e) {
+            // Expected
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);            
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "setEntityResolver",
+        args = { EntityResolver.class }
+    )
+    @KnownFailure("Android DocumentBuilder should support entity resolving")
+    public void testSetEntityResolver() {
+        // Ordinary case
+        InputStream source = new ByteArrayInputStream("<a>&foo;</a>".getBytes());
+        InputStream entity = new ByteArrayInputStream("bar".getBytes());
+        
+        MockResolver resolver = new MockResolver();
+        resolver.addEntity("foo", "foo", new InputSource(entity));
+
+        Document d;
+        
+        try {
+            db = dbf.newDocumentBuilder();
+            db.setEntityResolver(resolver);
+            d = db.parse(source);
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+        
+        Element root = (Element)d.getElementsByTagName("a").item(0);
+        assertEquals("bar", ((Text)root.getFirstChild()).getData());
+        
+        // null case 
+        source = new ByteArrayInputStream("<a>&foo;</a>".getBytes());
+        
+        try {
+            db = dbf.newDocumentBuilder();
+            db.setEntityResolver(null);
+            d = db.parse(source);
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+        
+        root = (Element)d.getElementsByTagName("a").item(0);
+        assertEquals("foo", ((EntityReference)root.getFirstChild()).getNodeName());
     }
 
 }

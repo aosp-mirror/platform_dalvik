@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Document;
@@ -58,15 +58,12 @@ public final class DocumentCreateElementNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS1() throws Throwable {
         Document doc;
         Element element;
@@ -91,16 +88,12 @@ public final class DocumentCreateElementNS extends DOMTestCase {
         assertEquals("documentcreateelementNS01_prefix", "XML", prefix);
         assertEquals("documentcreateelementNS01_tagName", "XML:XML", tagName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that createElementNS throws DOMException with " +
-            "INVALID_CHARACTER_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that createElementNS throws DOMException with INVALID_CHARACTER_ERR code.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS2() throws Throwable {
         Document doc;
         
@@ -119,16 +112,12 @@ public final class DocumentCreateElementNS extends DOMTestCase {
             assertTrue("documentcreateelementNS02", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that createElementNS throws DOMException with " +
-           "NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that createElementNS throws DOMException with NAMESPACE_ERR code.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS5() throws Throwable {
         Document doc;
         
@@ -147,16 +136,12 @@ public final class DocumentCreateElementNS extends DOMTestCase {
             assertTrue("documentcreateelementNS05", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that createElementNS throws DOMException with " +
-            "NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that createElementNS throws DOMException with NAMESPACE_ERR code.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS6() throws Throwable {
         Document doc;
         Document newDoc;

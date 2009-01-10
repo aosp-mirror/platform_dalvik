@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 package tests.security.interfaces;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -39,15 +39,12 @@ public class RSAPrivateCrtKeyTest extends TestCase {
      * @tests java.security.interfaces.RSAPrivateCrtKey
      * #getCrtCoefficient()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCrtCoefficient",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCrtCoefficient",
+        args = {}
+    )
     public void test_getCrtCoefficient() {
         assertEquals("invalid CRT coefficient",
                 Util.rsaCrtParam.getCrtCoefficient(), key.getCrtCoefficient());
@@ -57,15 +54,12 @@ public class RSAPrivateCrtKeyTest extends TestCase {
      * @tests java.security.interfaces.RSAPrivateCrtKey
      * #getPrimeExponentP()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrimeExponentP",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPrimeExponentP",
+        args = {}
+    )
     public void test_getPrimeExponentP() {
         assertEquals("invalid prime exponent P",
                 Util.rsaCrtParam.getPrimeExponentP(), key.getPrimeExponentP());
@@ -75,15 +69,12 @@ public class RSAPrivateCrtKeyTest extends TestCase {
      * @tests java.security.interfaces.RSAPrivateCrtKey
      * #getPrimeExponentQ()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrimeExponentQ",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPrimeExponentQ",
+        args = {}
+    )
     public void test_getPrimeExponentQ() {
         assertEquals("invalid prime exponent Q",
                 Util.rsaCrtParam.getPrimeExponentQ(), key.getPrimeExponentQ());
@@ -93,15 +84,12 @@ public class RSAPrivateCrtKeyTest extends TestCase {
      * @tests java.security.interfaces.RSAPrivateCrtKey
      * #getPrimeP()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrimeP",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPrimeP",
+        args = {}
+    )
     public void test_getPrimeP() {
         assertEquals("invalid prime P",
                 Util.rsaCrtParam.getPrimeP(), key.getPrimeP());
@@ -111,15 +99,12 @@ public class RSAPrivateCrtKeyTest extends TestCase {
      * @tests java.security.interfaces.RSAPrivateCrtKey
      * #getPrimeQ()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrimeQ",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPrimeQ",
+        args = {}
+    )
     public void test_getPrimeQ() {
         assertEquals("invalid prime Q",
                 Util.rsaCrtParam.getPrimeQ(), key.getPrimeQ());
@@ -129,15 +114,12 @@ public class RSAPrivateCrtKeyTest extends TestCase {
      * @tests java.security.interfaces.RSAPrivateCrtKey
      * #getPublicExponent()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPublicExponent",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPublicExponent",
+        args = {}
+    )
     public void test_getPublicExponent() {
         assertEquals("invalid public exponent",
                 Util.rsaCrtParam.getPublicExponent(), key.getPublicExponent());

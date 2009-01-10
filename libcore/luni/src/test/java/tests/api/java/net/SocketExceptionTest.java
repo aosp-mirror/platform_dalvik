@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.SocketException;
 
@@ -30,15 +30,12 @@ public class SocketExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.SocketException#SocketException()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SocketException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SocketException",
+        args = {}
+    )
     public void test_Constructor() {
         try {
             throw new SocketException();
@@ -53,15 +50,12 @@ public class SocketExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.SocketException#SocketException(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SocketException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SocketException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         try {
             throw new SocketException("Some error message");

@@ -23,14 +23,17 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
+import java.security.InvalidParameterException;
 import java.security.Provider;
 import java.security.Provider.Service;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.harmony.security.tests.support.RandomImpl;
 
@@ -42,15 +45,12 @@ import junit.framework.TestCase;
  */
 public class ProviderServiceTest extends TestCase {
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Service",
-          methodArgs = {Provider.class, String.class, String.class, String.class, java.util.List.class, java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Service",
+        args = {java.security.Provider.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.util.List.class, java.util.Map.class}
+    )
     public void testService() {
         Provider p = new MyProvider();
         try {
@@ -95,15 +95,12 @@ public class ProviderServiceTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAttribute",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAttribute",
+        args = {java.lang.String.class}
+    )
     public void testGetAttribute() {
         Provider p = new MyProvider();
         Provider.Service s = new Provider.Service(p, "type", "algorithm",
@@ -135,15 +132,12 @@ public class ProviderServiceTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidParameterException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "newInstance",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {java.lang.Object.class}
+    )
     public void testNewInstance() {
         Provider p = new MyProvider();
         Provider.Service s = new Provider.Service(p, "SecureRandom",
@@ -165,17 +159,15 @@ public class ProviderServiceTest extends TestCase {
             fail("No expected NoSuchAlgorithmException");
         } catch (NoSuchAlgorithmException e) {
         }
+        
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAlgorithm",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAlgorithm",
+        args = {}
+    )
     public void testGetAlgorithm() {
         Provider p = new MyProvider();
         Provider.Service s1 = new Provider.Service(p, "type", "algorithm",
@@ -188,15 +180,12 @@ public class ProviderServiceTest extends TestCase {
         assertTrue(s2.getAlgorithm().equals("algorithm"));
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getClassName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getClassName",
+        args = {}
+    )
     public void testGetClassName() {
         Provider p = new MyProvider();
         Provider.Service s1 = new Provider.Service(p, "type", "algorithm",
@@ -209,15 +198,12 @@ public class ProviderServiceTest extends TestCase {
         assertTrue(s2.getClassName().equals("tests.java.security.support.RandomImpl"));
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getProvider",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getProvider",
+        args = {}
+    )
     public void testGetProvider() {
         Provider p = new MyProvider();
         Provider.Service s1 = new Provider.Service(p, "type", "algorithm",
@@ -230,15 +216,12 @@ public class ProviderServiceTest extends TestCase {
         assertTrue(s2.getProvider() == p);
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getType",
+        args = {}
+    )
     public void testGetType() {
         Provider p = new MyProvider();
         Provider.Service s1 = new Provider.Service(p, "type", "algorithm",
@@ -251,15 +234,12 @@ public class ProviderServiceTest extends TestCase {
         assertTrue(s2.getType().equals("SecureRandom"));
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidParameterException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "supportsParameter",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "supportsParameter",
+        args = {java.lang.Object.class}
+    )
     public void testSupportsParameter() {
         Provider p = new MyProvider();
         Provider.Service s1 = new Provider.Service(p, "type", "algorithm",
@@ -268,31 +248,47 @@ public class ProviderServiceTest extends TestCase {
         assertTrue(s1.supportsParameter(new Object()));
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
-    public void _testToString() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
+    public void testToString() {
         Provider p = new MyProvider();
         Provider.Service s1 = new Provider.Service(p, "type", "algorithm",
                 "className", null, null);
-        assertTrue(s1.toString().contains("type.algorithm -> className"));
+        s1.toString();
         
         Provider.Service s2 = new Provider.Service(p, "SecureRandom",
                 "algorithm", "tests.java.security.support.RandomImpl", null,
                 null);
-        assertTrue(s2.toString().contains("SecureRandom.algorithm -> tests.java.security.support.RandomImpl"));
+        s2.toString();
     }
 
     class MyProvider extends Provider {
         MyProvider() {
             super("MyProvider", 1.0, "Provider for testing");
             put("MessageDigest.SHA-1", "SomeClassName");
+        }
+        
+    }
+    
+    class MyService extends Provider.Service {
+
+        public MyService(Provider provider, String type, String algorithm,
+                String className, List<String> aliases,
+                Map<String, String> attributes) {
+            super(provider, type, algorithm, className, aliases, attributes);
+            // TODO Auto-generated constructor stub
+        }
+        
+        @Override
+        public boolean supportsParameter(Object parameter) {
+            if (parameter.getClass() == String.class) {
+                return true;
+            }
+            return false;
         }
     }
 }

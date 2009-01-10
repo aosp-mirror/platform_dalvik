@@ -18,9 +18,9 @@
 package tests.api.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -43,15 +43,12 @@ public class DomainCombinerTest extends junit.framework.TestCase {
      * @tests java.security.DomainCombiner#combine(java.security.ProtectionDomain[],
      *        java.security.ProtectionDomain[])
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Method combine is not tested",
-      targets = {
-        @TestTarget(
-          methodName = "combine",
-          methodArgs = {ProtectionDomain[].class, ProtectionDomain[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "combine",
+        args = {java.security.ProtectionDomain[].class, java.security.ProtectionDomain[].class}
+    )
     public void test_combine$Ljava_security_ProtectionDomain$Ljava_security_ProtectionDomain() {
         final boolean[] calledDomainCombiner = new boolean[] { false, false };
 

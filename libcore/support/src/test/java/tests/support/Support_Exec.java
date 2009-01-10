@@ -109,7 +109,7 @@ public class Support_Exec extends TestCase {
             executable += File.separator;
         }
         executable += "bin" + File.separator;
-        execArgs.add(executable + "java");
+        execArgs.add(executable + "dalvikvm");
 
         // add classpath string
         if (classpath != null) {
@@ -144,8 +144,8 @@ public class Support_Exec extends TestCase {
             execArgs.add(arg);
         }
 
-        // construct command line string and print it to stdout
-        //if (displayOutput) {
+        if (displayOutput) {
+            // Construct command line string and print it to stdout.
             command = new StringBuilder(execArgs.get(0));
             for (int i = 1; i < execArgs.size(); i++) {
                 command.append(" ");
@@ -153,7 +153,7 @@ public class Support_Exec extends TestCase {
             }
             System.out.println();
             System.out.println("Exec: " + command.toString());
-        //}
+        }
 
         // execute java process
         final Process proc = Runtime.getRuntime().exec(

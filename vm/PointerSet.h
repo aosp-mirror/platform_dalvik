@@ -53,8 +53,10 @@ const void* dvmPointerSetGetEntry(const PointerSet* pSet, int i);
 /*
  * Insert a new entry into the list.  If it already exists, this returns
  * without doing anything.
+ *
+ * Returns "true" if the pointer was added.
  */
-void dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr);
+bool dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr);
 
 /*
  * Returns "true" if the element was successfully removed.

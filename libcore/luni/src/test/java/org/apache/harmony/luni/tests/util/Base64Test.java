@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.util; 
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
 
 import org.apache.harmony.luni.util.Base64;
@@ -37,15 +37,12 @@ public class Base64Test extends TestCase {
     /**
      * Checks the result on empty parameter.
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "decodeBase64",
-                  methodArgs = {java.lang.String.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "decode",
+        args = {byte[].class}
+    )    
     public static void testDecodeEmpty() throws Exception {
         // Regression for HARMONY-1513
         byte[] result = Base64.decode(new byte[0]);

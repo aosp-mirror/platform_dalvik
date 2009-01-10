@@ -18,9 +18,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.ProviderException;
 
@@ -30,15 +30,12 @@ public class ProviderException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.ProviderException#ProviderException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ProviderException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ProviderException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.security.ProviderException()
         ProviderException e = new ProviderException();
@@ -49,15 +46,12 @@ public class ProviderException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.ProviderException#ProviderException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with null/empty parameter is absent",
-      targets = {
-        @TestTarget(
-          methodName = "ProviderException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verification with null/empty parameter is absent",
+        method = "ProviderException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.ProviderException(java.lang.String)
         ProviderException e = new ProviderException("test message");

@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Element;
@@ -85,15 +85,12 @@ public final class SetAttributeNodeNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies DOMException with INUSE_ATTRIBUTE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNodeNS",
-          methodArgs = {org.w3c.dom.Attr.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies DOMException with INUSE_ATTRIBUTE_ERR code.",
+        method = "setAttributeNodeNS",
+        args = {org.w3c.dom.Attr.class}
+    )
     public void testSetAttributeNode1() throws Throwable {
         String namespaceURI = "http://www.newattr.com";
         String qualifiedName = "emp:newAttr";
@@ -160,15 +157,12 @@ public final class SetAttributeNodeNS extends DOMTestCase {
 //            assertTrue("throw_NO_MODIFICATION_ALLOWED_ERR", success);
 //        }
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNodeNS",
-          methodArgs = {org.w3c.dom.Attr.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify DOMException.",
+        method = "setAttributeNodeNS",
+        args = {org.w3c.dom.Attr.class}
+    )
     public void testSetAttributeNode3() throws Throwable {
         String namespaceURI = "http://www.newattr.com";
         String qualifiedName = "emp:newAttr";
@@ -186,15 +180,12 @@ public final class SetAttributeNodeNS extends DOMTestCase {
                 .setAttributeNodeNS(newAttr);
         assertNull("throw_Null", newAddrAttr);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNodeNS",
-          methodArgs = {org.w3c.dom.Attr.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify DOMException.",
+        method = "setAttributeNodeNS",
+        args = {org.w3c.dom.Attr.class}
+    )
     public void testSetAttributeNode4() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -212,15 +203,12 @@ public final class SetAttributeNodeNS extends DOMTestCase {
         newName = newAddrAttr.getNodeName();
         assertEquals("nodeName", "emp:domestic", newName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies DOMException with WRONG_DOCUMENT_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNodeNS",
-          methodArgs = {org.w3c.dom.Attr.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies DOMException with WRONG_DOCUMENT_ERR code.",
+        method = "setAttributeNodeNS",
+        args = {org.w3c.dom.Attr.class}
+    )
     public void testSetAttributeNode5() throws Throwable {
         String namespaceURI = "http://www.newattr.com";
         String qualifiedName = "emp:newAttr";

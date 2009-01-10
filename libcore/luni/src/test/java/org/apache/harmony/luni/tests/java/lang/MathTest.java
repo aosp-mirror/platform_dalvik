@@ -17,9 +17,10 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 @TestTargetClass(Math.class) 
@@ -51,93 +52,99 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#abs(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "abs",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "abs",
+        args = {double.class}
+    )
     public void test_absD() {
         // Test for method double java.lang.Math.abs(double)
         assertTrue("Incorrect double abs value",
                 (Math.abs(-1908.8976) == 1908.8976));
         assertTrue("Incorrect double abs value",
                 (Math.abs(1908.8976) == 1908.8976));
+        assertEquals(0.0, Math.abs(0.0));
+        assertEquals(0.0, Math.abs(-0.0));
+        assertEquals(Double.POSITIVE_INFINITY, 
+                                            Math.abs(Double.POSITIVE_INFINITY));
+        assertEquals(Double.POSITIVE_INFINITY, 
+                                            Math.abs(Double.NEGATIVE_INFINITY));
+        
+        assertEquals(Double.NaN, Math.abs(Double.NaN));        
     }
 
     /**
      * @tests java.lang.Math#abs(float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "abs",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "abs",
+        args = {float.class}
+    )
     public void test_absF() {
         // Test for method float java.lang.Math.abs(float)
         assertTrue("Incorrect float abs value",
                 (Math.abs(-1908.8976f) == 1908.8976f));
         assertTrue("Incorrect float abs value",
                 (Math.abs(1908.8976f) == 1908.8976f));
+        
+        assertEquals(0.0f, Math.abs(0.0f));
+        assertEquals(0.0f, Math.abs(-0.0f));
+        assertEquals(Float.POSITIVE_INFINITY, 
+                                            Math.abs(Float.POSITIVE_INFINITY));
+        assertEquals(Float.POSITIVE_INFINITY, 
+                                            Math.abs(Float.NEGATIVE_INFINITY));
+        
+        assertEquals(Float.NaN, Math.abs(Float.NaN));
     }
 
     /**
      * @tests java.lang.Math#abs(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "abs",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "abs",
+        args = {int.class}
+    )
     public void test_absI() {
         // Test for method int java.lang.Math.abs(int)
         assertTrue("Incorrect int abs value", (Math.abs(-1908897) == 1908897));
         assertTrue("Incorrect int abs value", (Math.abs(1908897) == 1908897));
+        
+        assertEquals(Integer.MIN_VALUE, Math.abs(Integer.MIN_VALUE));
     }
 
     /**
      * @tests java.lang.Math#abs(long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "abs",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "abs",
+        args = {long.class}
+    )
     public void test_absJ() {
         // Test for method long java.lang.Math.abs(long)
         assertTrue("Incorrect long abs value",
                 (Math.abs(-19088976000089L) == 19088976000089L));
         assertTrue("Incorrect long abs value",
                 (Math.abs(19088976000089L) == 19088976000089L));
+        
+        assertEquals(Long.MIN_VALUE, Math.abs(Long.MIN_VALUE));        
     }
 
     /**
      * @tests java.lang.Math#acos(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check NaN, and greater than 1.",
-      targets = {
-        @TestTarget(
-          methodName = "acos",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "acos",
+        args = {double.class}
+    )
     public void test_acosD() {
         // Test for method double java.lang.Math.acos(double)
         double r = Math.cos(Math.acos(ADJ / HYP));
@@ -145,20 +152,20 @@ public class MathTest extends junit.framework.TestCase {
         long t = Double.doubleToLongBits(ADJ / HYP);
         assertTrue("Returned incorrect arc cosine", lr == t || (lr + 1) == t
                 || (lr - 1) == t);
+        
+        assertEquals(Double.NaN, Math.acos(Double.MAX_VALUE));
+        assertEquals(Double.NaN, Math.acos(Double.NaN));
     }
 
     /**
      * @tests java.lang.Math#asin(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check NaN, and greater than 1, and zero.",
-      targets = {
-        @TestTarget(
-          methodName = "asin",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "asin",
+        args = {double.class}
+    )
     public void test_asinD() {
         // Test for method double java.lang.Math.asin(double)
         double r = Math.sin(Math.asin(OPP / HYP));
@@ -166,59 +173,93 @@ public class MathTest extends junit.framework.TestCase {
         long t = Double.doubleToLongBits(OPP / HYP);
         assertTrue("Returned incorrect arc sine", lr == t || (lr + 1) == t
                 || (lr - 1) == t);
+        
+        assertEquals(Double.NaN, Math.asin(Double.MAX_VALUE));
+        assertEquals(Double.NaN, Math.asin(Double.NaN));
+        assertEquals(0, Math.asin(0), 0);
+        assertEquals(-0, Math.asin(-0), 0);        
     }
 
     /**
      * @tests java.lang.Math#atan(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values: NaN and zero according to " +
-            "specification.",
-      targets = {
-        @TestTarget(
-          methodName = "atan",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "atan",
+        args = {double.class}
+    )
     public void test_atanD() {
         // Test for method double java.lang.Math.atan(double)
         double answer = Math.tan(Math.atan(1.0));
         assertTrue("Returned incorrect arc tangent: " + answer, answer <= 1.0
                 && answer >= 9.9999999999999983E-1);
+        
+        assertEquals(Double.NaN, Math.atan(Double.NaN));
+        assertEquals(0.0, Math.atan(0.0), 0.0);
+        assertEquals(-0.0, Math.atan(-0.0), 0.0);
     }
 
     /**
      * @tests java.lang.Math#atan2(double, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "atan2",
-          methodArgs = {double.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "atan2",
+        args = {double.class, double.class}
+    )
     public void test_atan2DD() {
+        double pi = 3.141592653589793;
         // Test for method double java.lang.Math.atan2(double, double)
         double answer = Math.atan(Math.tan(1.0));
         assertTrue("Returned incorrect arc tangent: " + answer, answer <= 1.0
                 && answer >= 9.9999999999999983E-1);
+        
+        assertEquals(Double.NaN, Math.atan2(Double.NaN, 1.0));
+        assertEquals(Double.NaN, Math.atan2(1.0, Double.NaN));
+        
+        assertEquals(0.0, Math.atan2(0, 1));
+        assertEquals(0.0, Math.atan2(1, Double.POSITIVE_INFINITY));
+        
+        assertEquals(-0.0, Math.atan2(-0.0, 1.0));
+        assertEquals(-0.0, Math.atan2(-1.0, Double.POSITIVE_INFINITY));
+        
+        assertEquals(pi, Math.atan2(0.0, -1.0));
+        assertEquals(pi, Math.atan2(1.0, Double.NEGATIVE_INFINITY));       
+        
+        assertEquals(-pi, Math.atan2(-0.0, -1.0));
+        assertEquals(-pi, Math.atan2(-1.0, Double.NEGATIVE_INFINITY)); 
+        
+        assertEquals(pi/2, Math.atan2(1.0, 0.0));
+        assertEquals(pi/2, Math.atan2(1.0, -0.0));
+        
+        assertEquals(pi/2, Math.atan2(Double.POSITIVE_INFINITY, 1));
+        assertEquals(pi/2, Math.atan2(Double.POSITIVE_INFINITY, -1));     
+        
+        assertEquals(-pi/2, Math.atan2(-1, 0));
+        assertEquals(-pi/2, Math.atan2(-1, -0));        
+        assertEquals(-pi/2, Math.atan2(Double.NEGATIVE_INFINITY, 1)); 
+        
+        assertEquals(pi/4, Math.atan2(Double.POSITIVE_INFINITY, 
+                                                     Double.POSITIVE_INFINITY));
+        assertEquals(3*pi/4, Math.atan2(Double.POSITIVE_INFINITY, 
+                                                     Double.NEGATIVE_INFINITY));    
+        assertEquals(-pi/4, Math.atan2(Double.NEGATIVE_INFINITY, 
+                                                     Double.POSITIVE_INFINITY)); 
+        assertEquals(-3*pi/4, Math.atan2(Double.NEGATIVE_INFINITY, 
+                                                     Double.NEGATIVE_INFINITY));        
     }
     
      /**
      * @tests java.lang.Math#cbrt(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "cbrt",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "cbrt",
+        args = {double.class}
+    )
     public void test_cbrt_D() {
         //Test for special situations
         assertTrue("Should return Double.NaN", Double.isNaN(Math
@@ -254,53 +295,59 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#ceil(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "ceil",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ceil",
+        args = {double.class}
+    )
     public void test_ceilD() {
         // Test for method double java.lang.Math.ceil(double)
                 assertEquals("Incorrect ceiling for double",
                              79, Math.ceil(78.89), 0);
         assertEquals("Incorrect ceiling for double",
                              -78, Math.ceil(-78.89), 0);
+        
+        assertEquals("Incorrect ceiling for double",
+                -78, Math.ceil(-78), 0);
+        
+        double [] args = {0.0, -0.0, Double.NaN, Double.POSITIVE_INFINITY, 
+                Double.NEGATIVE_INFINITY};
+        for(int i = 0; i < args.length; i++) {
+            assertEquals(args[i], Math.ceil(args[i]));
+        }
+        assertEquals(-0.0, Math.ceil(-0.5));
     }
 
     /**
      * @tests java.lang.Math#cos(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "cos",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "cos",
+        args = {double.class}
+    )
     public void test_cosD() {
         // Test for method double java.lang.Math.cos(double)
         assertEquals("Incorrect answer", 1.0, Math.cos(0), 0D);
         assertEquals("Incorrect answer", 0.5403023058681398, Math.cos(1), 0D);
+        double [] args = {Double.NaN, Double.POSITIVE_INFINITY, 
+                          Double.NEGATIVE_INFINITY};
+        for(int i = 0; i < args.length; i++) {
+            assertEquals(args[i], Math.ceil(args[i]));
+        }        
     }
 
     /**
      * @tests java.lang.Math#cosh(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "cosh",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "cosh",
+        args = {double.class}
+    )
     public void test_cosh_D() {
         // Test for special situations
         assertTrue(Double.isNaN(Math.cosh(Double.NaN)));
@@ -330,15 +377,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#exp(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "exp",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "exp",
+        args = {double.class}
+    )
     public void test_expD() {
         // Test for method double java.lang.Math.exp(double)
         assertTrue("Incorrect answer returned for simple power", Math.abs(Math
@@ -346,20 +390,24 @@ public class MathTest extends junit.framework.TestCase {
                 - Math.E * Math.E * Math.E * Math.E) < 0.1D);
         assertTrue("Incorrect answer returned for larger power", Math.log(Math
                 .abs(Math.exp(5.5D)) - 5.5D) < 10.0D);
+        
+        assertEquals("Incorrect returned value for NaN", 
+                                              Double.NaN, Math.exp(Double.NaN));
+        assertEquals("Incorrect returned value for positive infinity", 
+                  Double.POSITIVE_INFINITY, Math.exp(Double.POSITIVE_INFINITY));
+        assertEquals("Incorrect returned value for negative infinity", 
+                                      0, Math.exp(Double.NEGATIVE_INFINITY), 0);        
     }
     
     /**
      * @tests java.lang.Math#expm1(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "expm1",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "expm1",
+        args = {double.class}
+    )
     public void test_expm1_D() {
         // Test for special cases
         assertTrue("Should return NaN", Double.isNaN(Math.expm1(Double.NaN)));
@@ -390,35 +438,36 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#floor(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "floor",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "floor",
+        args = {double.class}
+    )
     public void test_floorD() {
         // Test for method double java.lang.Math.floor(double)
                 assertEquals("Incorrect floor for double",
                              78, Math.floor(78.89), 0);
         assertEquals("Incorrect floor for double",
                              -79, Math.floor(-78.89), 0);
+        assertEquals("Incorrect floor for integer",
+                              -78, Math.floor(-78), 0);
+        double [] args = {0, -0, Double.NaN, Double.POSITIVE_INFINITY, 
+                Double.NEGATIVE_INFINITY};
+        for(int i = 0; i < args.length; i++) {
+            assertEquals(args[i], Math.floor(args[i]));
+        }        
     }
     
     /**
      * @tests java.lang.Math#hypot(double, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "hypot",
-          methodArgs = {double.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hypot",
+        args = {double.class, double.class}
+    )
     public void test_hypot_DD() {
         // Test for special cases
         assertEquals("Should return POSITIVE_INFINITY",
@@ -457,15 +506,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#IEEEremainder(double, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "IEEEremainder",
-          methodArgs = {double.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IEEEremainder",
+        args = {double.class, double.class}
+    )
     public void test_IEEEremainderDD() {
         // Test for method double java.lang.Math.IEEEremainder(double, double)
         assertEquals("Incorrect remainder returned",
@@ -473,20 +519,28 @@ public class MathTest extends junit.framework.TestCase {
         assertTrue("Incorrect remainder returned", Math.IEEEremainder(1.32,
                 89.765) >= 1.4705063220631647E-2
                 || Math.IEEEremainder(1.32, 89.765) >= 1.4705063220631649E-2);
+        
+        assertEquals(Double.NaN, Math.IEEEremainder(Double.NaN, Double.NaN));
+        assertEquals(Double.NaN, Math.IEEEremainder(Double.NaN, 1.0));    
+        assertEquals(Double.NaN, Math.IEEEremainder(1.0, Double.NaN)); 
+
+        assertEquals(Double.NaN, Math.IEEEremainder(Double.POSITIVE_INFINITY, 1.0));     
+        assertEquals(Double.NaN, Math.IEEEremainder(Double.NEGATIVE_INFINITY, 1.0));
+        assertEquals(1.0, Math.IEEEremainder(1.0, Double.POSITIVE_INFINITY));
+        assertEquals(1.0, Math.IEEEremainder(1.0, Double.NEGATIVE_INFINITY));
+        assertEquals(Double.NaN, Math.IEEEremainder(1.0, 0.0));
+        assertEquals(Double.NaN, Math.IEEEremainder(1.0, -0.0));        
     }
 
     /**
      * @tests java.lang.Math#log(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "log",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "log",
+        args = {double.class}
+    )
     public void test_logD() {
         // Test for method double java.lang.Math.log(double)
         for (double d = 10; d >= -10; d -= 0.5) {
@@ -500,15 +554,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#log10(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "log10",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "log10",
+        args = {double.class}
+    )
     @SuppressWarnings("boxing")
     public void test_log10_D() {
         // Test for special cases
@@ -532,15 +583,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#log1p(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "log1p",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "log1p",
+        args = {double.class}
+    )
     public void test_log1p_D() {
         // Test for special cases
         assertTrue("Should return NaN", Double.isNaN(Math.log1p(Double.NaN)));
@@ -569,40 +617,38 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#max(double, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification: " +
-            "NaN, +/-0 ...",
-      targets = {
-        @TestTarget(
-          methodName = "max",
-          methodArgs = {double.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "max",
+        args = {double.class, double.class}
+    )
     public void test_maxDD() {
         // Test for method double java.lang.Math.max(double, double)
-        assertEquals("Incorrect double max value", 1908897.6000089, Math.max(-1908897.6000089,
+        assertEquals("Incorrect double max value", 1908897.6000089, 
+                Math.max(-1908897.6000089,
                 1908897.6000089), 0D);
         assertEquals("Incorrect double max value",
                 1908897.6000089, Math.max(2.0, 1908897.6000089), 0D);
         assertEquals("Incorrect double max value", -2.0, Math.max(-2.0,
                 -1908897.6000089), 0D);
 
+        assertEquals("Incorrect returned value", Double.NaN, 
+                                                Math.max(-1.0, Double.NaN));
+        assertEquals("Incorrect returned value", Double.NaN, 
+                                                Math.max(Double.NaN, -1.0));
+        assertEquals("Incorrect returned value", 0, Math.max(0, -0), 0D);          
     }
 
     /**
      * @tests java.lang.Math#max(float, float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification: " + 
-            "NaN, +/-0 ...",
-      targets = {
-        @TestTarget(
-          methodName = "max",
-          methodArgs = {float.class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "max",
+        args = {float.class, float.class}
+    )
     public void test_maxFF() {
         // Test for method float java.lang.Math.max(float, float)
         assertTrue("Incorrect float max value", Math.max(-1908897.600f,
@@ -611,21 +657,22 @@ public class MathTest extends junit.framework.TestCase {
                 Math.max(2.0f, 1908897.600f) == 1908897.600f);
         assertTrue("Incorrect float max value",
                 Math.max(-2.0f, -1908897.600f) == -2.0f);
+        assertEquals("Incorrect returned value", Float.NaN, 
+                Math.max(-1.0f, Float.NaN));
+        assertEquals("Incorrect returned value", Float.NaN, 
+                Math.max(Float.NaN, -1.0f));
+        assertEquals("Incorrect returned value", 0f, Math.max(0f, -0f));         
     }
 
     /**
      * @tests java.lang.Math#max(int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Doesn't check boundary values according to specification: " + 
-                  "NaN, +/-0 ...",
-            targets = {
-              @TestTarget(
-                methodName = "max",
-                methodArgs = {int.class, int.class}
-              )
-          })    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "max",
+        args = {int.class, int.class}
+    )    
     public void test_maxII() {
         // Test for method int java.lang.Math.max(int, int)
         assertEquals("Incorrect int max value",
@@ -638,16 +685,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#max(long, long)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Doesn't check boundary values according to specification: " + 
-                  "NaN, +/-0 ...",
-            targets = {
-              @TestTarget(
-                methodName = "max",
-                methodArgs = {int.class, int.class}
-            )
-    })        
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "max",
+        args = {long.class, long.class}
+    )        
     public void test_maxJJ() {
         // Test for method long java.lang.Math.max(long, long)
         assertEquals("Incorrect long max value", 19088976000089L, Math.max(-19088976000089L,
@@ -661,15 +704,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#min(double, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "min",
-          methodArgs = {double.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "min",
+        args = {double.class, double.class}
+    )
     public void test_minDD() {
         // Test for method double java.lang.Math.min(double, double)
         assertEquals("Incorrect double min value", -1908897.6000089, Math.min(-1908897.6000089,
@@ -678,20 +718,22 @@ public class MathTest extends junit.framework.TestCase {
                 2.0, Math.min(2.0, 1908897.6000089), 0D);
         assertEquals("Incorrect double min value", -1908897.6000089, Math.min(-2.0,
                 -1908897.6000089), 0D);
+        assertEquals("Incorrect returned value", Double.NaN, 
+                Math.min(-1.0, Double.NaN));
+        assertEquals("Incorrect returned value", Double.NaN, 
+                Math.min(Double.NaN, -1.0));
+        assertEquals("Incorrect returned value", -0.0, Math.min(0.0, -0.0));        
     }
 
     /**
      * @tests java.lang.Math#min(float, float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "min",
-          methodArgs = {float.class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "min",
+        args = {float.class, float.class}
+    )
     public void test_minFF() {
         // Test for method float java.lang.Math.min(float, float)
         assertTrue("Incorrect float min value", Math.min(-1908897.600f,
@@ -700,20 +742,22 @@ public class MathTest extends junit.framework.TestCase {
                 Math.min(2.0f, 1908897.600f) == 2.0f);
         assertTrue("Incorrect float min value",
                 Math.min(-2.0f, -1908897.600f) == -1908897.600f);
+        assertEquals("Incorrect returned value", Float.NaN, 
+                Math.min(-1.0f, Float.NaN));
+        assertEquals("Incorrect returned value", Float.NaN, 
+                Math.min(Float.NaN, -1.0f));
+        assertEquals("Incorrect returned value", -0f, Math.min(0f, -0f));        
     }
 
     /**
      * @tests java.lang.Math#min(int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "min",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "min",
+        args = {int.class, int.class}
+    )
     public void test_minII() {
         // Test for method int java.lang.Math.min(int, int)
         assertEquals("Incorrect int min value",
@@ -727,15 +771,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#min(long, long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "min",
-          methodArgs = {long.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "min",
+        args = {long.class, long.class}
+    )
     public void test_minJJ() {
         // Test for method long java.lang.Math.min(long, long)
         assertEquals("Incorrect long min value", -19088976000089L, Math.min(-19088976000089L,
@@ -749,15 +790,15 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#pow(double, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "pow",
-          methodArgs = {double.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "pow",
+        args = {double.class, double.class}
+    )
+    @KnownFailure("Math.pow(double a, double b) returns 1.0 if " +
+            "the absolute value of the first argument equals 1 and " +
+            "the second argument is infinite. It should return NaN.")         
     public void test_powDD() {
         // Test for method double java.lang.Math.pow(double, double)
         assertTrue("pow returned incorrect value",
@@ -766,20 +807,72 @@ public class MathTest extends junit.framework.TestCase {
                 Math.pow(2, -8) == 0.00390625d);
         assertEquals("Incorrect root returned1",
                              2, Math.sqrt(Math.pow(Math.sqrt(2), 4)), 0);
+        
+        assertEquals("pow returned incorrect value", 1.0, Math.pow(1, 0));
+        assertEquals("pow returned incorrect value", 2.0, Math.pow(2, 1));
+        assertEquals("pow returned incorrect value", Double.NaN, 
+                                        Math.pow(Double.MAX_VALUE, Double.NaN)); 
+        assertEquals("pow returned incorrect value", Double.NaN, 
+                                        Math.pow(Double.NaN, Double.MAX_VALUE));        
+        assertEquals("pow returned incorrect value", Double.POSITIVE_INFINITY, 
+                                       Math.pow(1.1, Double.POSITIVE_INFINITY));      
+        assertEquals("pow returned incorrect value", Double.POSITIVE_INFINITY, 
+                                       Math.pow(0.9, Double.NEGATIVE_INFINITY));   
+        
+        assertEquals("pow returned incorrect value", 0.0, 
+                                       Math.pow(1.1, Double.NEGATIVE_INFINITY));
+        assertEquals("pow returned incorrect value", 0.0, 
+                                       Math.pow(0.9, Double.POSITIVE_INFINITY));   
+        
+        assertEquals("pow returned incorrect value", Double.NaN, 
+                                         Math.pow(1.0, Double.NEGATIVE_INFINITY));
+        assertEquals("pow returned incorrect value", Double.NaN, 
+                                         Math.pow(1.0, Double.POSITIVE_INFINITY)); 
+
+        assertEquals("pow returned incorrect value", 0.0, Math.pow(0, 1));
+        assertEquals("pow returned incorrect value", 0.0, 
+                                      Math.pow(Double.POSITIVE_INFINITY, -0.1));
+        
+        assertEquals("pow returned incorrect value", Double.POSITIVE_INFINITY, 
+                                                               Math.pow(0, -1));
+        assertEquals("pow returned incorrect value", Double.POSITIVE_INFINITY, 
+                                         Math.pow(Double.POSITIVE_INFINITY, 1));
+        
+        assertEquals("pow returned incorrect value", 0.0, 
+                                                           Math.pow(-0.0, 0.9));
+        assertEquals("pow returned incorrect value", 0.0, 
+                                      Math.pow(Double.NEGATIVE_INFINITY, -0.9));
+        
+        assertEquals("pow returned incorrect value", -0.0, 
+                                                             Math.pow(-0.0, 1));
+        assertEquals("pow returned incorrect value", -0.0, 
+                                        Math.pow(Double.NEGATIVE_INFINITY, -1));  
+        
+        assertEquals("pow returned incorrect value", Double.POSITIVE_INFINITY, 
+                                                          Math.pow(-0.0, -0.9));
+        assertEquals("pow returned incorrect value", Double.POSITIVE_INFINITY, 
+                                       Math.pow(Double.NEGATIVE_INFINITY, 0.9));  
+        
+        assertEquals("pow returned incorrect value", Double.NEGATIVE_INFINITY, 
+                                                            Math.pow(-0.0, -1));
+        assertEquals("pow returned incorrect value", Double.NEGATIVE_INFINITY, 
+                                         Math.pow(Double.NEGATIVE_INFINITY, 1));   
+        
+        assertEquals("pow returned incorrect value", 0.81, Math.pow(-0.9, 2));  
+        assertEquals("pow returned incorrect value", -0.9, Math.pow(-0.9, 1)); 
+        assertEquals("pow returned incorrect value", Double.NaN, 
+                                                           Math.pow(-0.9, 0.1));
     }
 
     /**
      * @tests java.lang.Math#rint(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "rint",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "rint",
+        args = {double.class}
+    )
     public void test_rintD() {
         // Test for method double java.lang.Math.rint(double)
         assertEquals("Failed to round properly - up to odd",
@@ -795,49 +888,52 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#round(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "round",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "round",
+        args = {double.class}
+    )
     public void test_roundD() {
         // Test for method long java.lang.Math.round(double)
         assertEquals("Incorrect rounding of a float", -91, Math.round(-90.89d));
+        assertEquals("Incorrect rounding of a float", 0, 
+                                                        Math.round(Double.NaN));
+        assertEquals("Incorrect rounding of a float", Long.MIN_VALUE, 
+                                          Math.round(Double.NEGATIVE_INFINITY));
+        assertEquals("Incorrect rounding of a float", Long.MAX_VALUE, 
+                                          Math.round(Double.POSITIVE_INFINITY));        
     }
 
     /**
      * @tests java.lang.Math#round(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "round",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "round",
+        args = {float.class}
+    )
     public void test_roundF() {
         // Test for method int java.lang.Math.round(float)
         assertEquals("Incorrect rounding of a float", -91, Math.round(-90.89f));
+        assertEquals("Incorrect rounding of a float", 0, 
+                                                        Math.round(Float.NaN));
+        assertEquals("Incorrect rounding of a float", Integer.MIN_VALUE, 
+                                          Math.round(Float.NEGATIVE_INFINITY));
+        assertEquals("Incorrect rounding of a float", Integer.MAX_VALUE, 
+                                          Math.round(Float.POSITIVE_INFINITY));          
     }
     
     /**
      * @tests java.lang.Math#signum(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "signum",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "signum",
+        args = {double.class}
+    )
     public void test_signum_D() {
         assertTrue(Double.isNaN(Math.signum(Double.NaN)));
         assertTrue(Double.isNaN(Math.signum(Double.NaN)));
@@ -864,15 +960,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#signum(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "signum",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "signum",
+        args = {float.class}
+    )
     public void test_signum_F() {
         assertTrue(Float.isNaN(Math.signum(Float.NaN)));
         assertEquals(Float.floatToIntBits(0.0f), Float
@@ -898,33 +991,37 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#sin(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "sin",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sin",
+        args = {double.class}
+    )
     public void test_sinD() {
         // Test for method double java.lang.Math.sin(double)
         assertEquals("Incorrect answer", 0.0, Math.sin(0), 0D);
         assertEquals("Incorrect answer", 0.8414709848078965, Math.sin(1), 0D);
+        
+        double [] args = {Double.NaN, Double.POSITIVE_INFINITY, 
+                          Double.NEGATIVE_INFINITY};
+        for(int i = 0; i < args.length; i++) {
+            assertEquals("Incorrest returned value.", Double.NaN, 
+                                                             Math.sin(args[i]));
+        }
+        
+        assertEquals("Incorrest returned value.", 0.0, Math.sin(0.0));
+        assertEquals("Incorrest returned value.", -0.0, Math.sin(-0.0));        
     }
     
     /**
      * @tests java.lang.Math#sinh(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sinh",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sinh",
+        args = {double.class}
+    )
     public void test_sinh_D() {
         // Test for special situations
         assertTrue("Should return NaN", Double.isNaN(Math.sinh(Double.NaN)));
@@ -958,51 +1055,59 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#sqrt(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "sqrt",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sqrt",
+        args = {double.class}
+    )
     public void test_sqrtD() {
         // Test for method double java.lang.Math.sqrt(double)
-                assertEquals("Incorrect root returned2", 7, Math.sqrt(49), 0);
+        assertEquals("Incorrect root returned2", 7, Math.sqrt(49), 0);
+        assertEquals("Incorrect value is returned", Double.NaN, 
+                                                         Math.sqrt(Double.NaN));
+        assertEquals("Incorrect value is returned", Double.NaN, 
+                                                                 Math.sqrt(-1)); 
+        assertEquals("Incorrect value is returned", Double.POSITIVE_INFINITY, 
+                                           Math.sqrt(Double.POSITIVE_INFINITY));
+        assertEquals("Incorrect value is returned", 0.0, Math.sqrt(0.0));         
+        assertEquals("Incorrect value is returned", -0.0, Math.sqrt(-0.0));        
     }
 
     /**
      * @tests java.lang.Math#tan(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "tan",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "tan",
+        args = {double.class}
+    )
     public void test_tanD() {
         // Test for method double java.lang.Math.tan(double)
         assertEquals("Incorrect answer", 0.0, Math.tan(0), 0D);
         assertEquals("Incorrect answer", 1.5574077246549023, Math.tan(1), 0D);
 
+        double [] args = {Double.NaN, Double.POSITIVE_INFINITY, 
+                                                      Double.NEGATIVE_INFINITY};
+        for(int i = 0; i < args.length; i++) {
+            assertEquals("Incorrest returned value.", Double.NaN, 
+                                                   Math.tan(args[i]));
+        }
+        
+        assertEquals("Incorrest returned value.", 0.0, Math.tan(0.0));
+        assertEquals("Incorrest returned value.", -0.0, Math.tan(-0.0));        
     }
 
     /**
      * @tests java.lang.Math#tanh(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "tanh",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "tanh",
+        args = {double.class}
+    )
     public void test_tanh_D() {
         // Test for special situations
         assertTrue("Should return NaN", Double.isNaN(Math.tanh(Double.NaN)));
@@ -1031,15 +1136,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#random()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "random",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "random",
+        args = {}
+    )
     public void test_random() {
         // There isn't a place for these tests so just stick them here
         assertEquals("Wrong value E",
@@ -1057,15 +1159,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#toRadians(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toRadians",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toRadians",
+        args = {double.class}
+    )
     public void test_toRadiansD() {
         for (double d = 500; d >= 0; d -= 1.0) {
             double converted = Math.toDegrees(Math.toRadians(d));
@@ -1077,15 +1176,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#toDegrees(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toDegrees",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toDegrees",
+        args = {double.class}
+    )
     public void test_toDegreesD() {
         for (double d = 500; d >= 0; d -= 1.0) {
             double converted = Math.toRadians(Math.toDegrees(d));
@@ -1097,15 +1193,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#ulp(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ulp",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ulp",
+        args = {double.class}
+    )
     @SuppressWarnings("boxing")
     public void test_ulp_D() {
         // Test for special cases
@@ -1141,15 +1234,12 @@ public class MathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Math#ulp(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ulp",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ulp",
+        args = {float.class}
+    )
     @SuppressWarnings("boxing")
     public void test_ulp_f() {
         // Test for special cases

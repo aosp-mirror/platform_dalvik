@@ -31,7 +31,7 @@ public class AllTests
     }
 
     public static final Test suite() {
-        TestSuite suite = new TestSuite();
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite();
 
         suite.addTestSuite(tests.api.java.lang.BooleanTest.class);
         suite.addTestSuite(tests.api.java.lang.StringTest.class);

@@ -1,2624 +1,1468 @@
 /*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+ * Copyright (C) 2008 The Android Open Source Project
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
+import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.NodeChangeEvent;
 import java.util.prefs.NodeChangeListener;
 import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import junit.framework.TestCase;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-/**
- * TODO: refine this test to adapt all implementations
- * 
- */
 @TestTargetClass(AbstractPreferences.class)
 public class AbstractPreferencesTest extends TestCase {
 
     AbstractPreferences pref;
 
-    static AbstractPreferences root = null;
+    static AbstractPreferences root = (AbstractPreferences) Preferences.userRoot();
+    
+    static final String nodeName = "mock";
 
     static AbstractPreferences parent = null;
 
-    final static String longKey;
-
-    final static String longValue;
-
-    final static String longName;
-
-    MockNodeChangeListener nl;
-
-    MockPreferenceChangeListener pl;
-
-    static {
-        StringBuffer key = new StringBuffer(Preferences.MAX_KEY_LENGTH);
-        for (int i = 0; i < Preferences.MAX_KEY_LENGTH; i++) {
-            key.append('a');
-        }
-        longKey = key.toString();
-        StringBuffer value = new StringBuffer(Preferences.MAX_VALUE_LENGTH);
-        for (int i = 0; i < Preferences.MAX_VALUE_LENGTH; i++) {
-            value.append('a');
-        }
-        longValue = value.toString();
-
-        StringBuffer name = new StringBuffer(Preferences.MAX_NAME_LENGTH);
-        for (int i = 0; i < Preferences.MAX_NAME_LENGTH; i++) {
-            name.append('a');
-        }
-        longName = name.toString();
-    }
-
     protected void setUp() throws Exception {
         super.setUp();
-        root = (AbstractPreferences) Preferences.userRoot();
-        parent = (AbstractPreferences) Preferences
-                .userNodeForPackage(Preferences.class);
-        // FIXME: change here is dangerous
-        // pref = new MockAbstractPreferences((AbstractPreferences) parent,
-        // "mock");
 
-        pref = (AbstractPreferences) parent.node("mock");
+        parent = (AbstractPreferences) Preferences.userNodeForPackage(this.getClass());
+/*
+        String str[] = parent.childrenNames();
+        for (int i = 0; i < str.length; i++) {
+            System.out.print(str[i] + "  ");
+        }
+        System.out.println();
+/**/
+        pref = (AbstractPreferences) parent.node(nodeName);
     }
 
     protected void tearDown() throws Exception {
-        try {
-            if (pref instanceof MockAbstractPreferences) {
-                ((MockAbstractPreferences) pref)
-                        .setResult(MockAbstractPreferences.NORMAL);
-            }
-            pref.removeNode();
-        } catch (Exception e) {
+/*        String str[] = parent.childrenNames();
+        for (int i = 0; i < str.length; i++) {
+            System.out.print(str[i] + "  ");
         }
+        System.out.println();/**/
+        parent.removeNode();
         super.tearDown();
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AbstractPreferences",
-          methodArgs = {java.util.prefs.AbstractPreferences.class, java.lang.String.class}
-        )
-    })
-    public void testConstructor() throws BackingStoreException {
-        try {
-            pref = new MockAbstractPreferences(
-                    (AbstractPreferences) Preferences.userRoot(), "mo/ck");
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            pref = new MockAbstractPreferences(null, "mock");
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            new MockAbstractPreferences(null, " ");
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            new MockAbstractPreferences(pref, "");
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            new MockAbstractPreferences(pref, null);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        new MockAbstractPreferences(pref, " ");
-
-        Preferences p2 = new MockAbstractPreferences(null, "");
-        assertNotSame(p2, Preferences.systemRoot());
-        assertNotSame(p2, Preferences.userRoot());
-        assertFalse(p2.isUserNode());
-
-        p2 = new MockAbstractPreferences((AbstractPreferences) Preferences
-                .userRoot(), "mock");
-        assertNotSame(p2, pref);
-        p2.removeNode();
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "!Constants",
-      targets = {
-        @TestTarget(
-          methodName = "absolutePath",
-          methodArgs = {}
-        )
-    })
-    public void testProtectedFields() throws BackingStoreException {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        MockAbstractPreferences p = new MockAbstractPreferences(pref, "newNode");
-        assertFalse(p.getNewNode());
-        assertSame(p.getLock().getClass(), Object.class);
-
-        p = (MockAbstractPreferences) pref.node("child");
-        assertTrue(p.getNewNode());
-
-        p = (MockAbstractPreferences) ((MockAbstractPreferences) pref)
-                .publicChildSpi("child2");
-        assertTrue(p.getNewNode());
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
-        assertEquals("User Preference Node: " + pref.absolutePath(), pref
-                .toString());
-
-        pref = new MockAbstractPreferences((AbstractPreferences) Preferences
-                .systemRoot(), "mock");
-        assertEquals("System Preference Node: " + pref.absolutePath(), pref
-                .toString());
+        assertTrue(pref.toString().contains(nodeName));
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "absolutePath",
-          methodArgs = {}
-        )
-    })
-    public void testAbsolutePath() {
-        assertEquals("/java/util/prefs/mock", pref.absolutePath());
-
-        pref = new MockAbstractPreferences(pref, " ");
-        assertEquals("/java/util/prefs/mock/ ", pref.absolutePath());
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "childrenNames",
-          methodArgs = {}
-        )
-    })
-    public void testChildrenNames() throws BackingStoreException {
-        assertEquals(0, pref.childrenNames().length);
-
-        Preferences child1 = pref.node("child1");
-
-        pref.node("child2");
-        pref.node("child3");
-        child1.node("subchild1");
-
-        assertSame(pref, child1.parent());
-        assertEquals(3, pref.childrenNames().length);
-        assertEquals("child1", pref.childrenNames()[0]);
-        assertEquals(1, child1.childrenNames().length);
-        assertEquals("subchild1", child1.childrenNames()[0]);
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        )
-    })
-    public void testClear() throws BackingStoreException {
-        pref.put("testClearKey", "testClearValue");
-        pref.put("testClearKey1", "testClearValue1");
-        assertEquals("testClearValue", pref.get("testClearKey", null));
-        assertEquals("testClearValue1", pref.get("testClearKey1", null));
-        pref.clear();
-        assertNull(pref.get("testClearKey", null));
-        assertNull(pref.get("testClearKey1", null));
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
-    public void testGet() throws BackingStoreException {
-        assertNull(pref.get("", null));
-        assertEquals("default", pref.get("key", "default"));
-        assertNull(pref.get("key", null));
-        pref.put("testGetkey", "value");
-        assertNull(pref.get("testGetKey", null));
-        assertEquals("value", pref.get("testGetkey", null));
-
-        try {
-            pref.get(null, "abc");
-            fail();
-        } catch (NullPointerException e) {
-        }
-        pref.get("", "abc");
-        pref.get("key", null);
-        pref.get("key", "");
-        pref.putFloat("floatKey", 1.0f);
-        assertEquals("1.0", pref.get("floatKey", null));
-
-        pref.removeNode();
-        try {
-            pref.get("key", "abc");
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.get(null, "abc");
-            fail();
-        } catch (NullPointerException e) {
-        }
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getBoolean",
-          methodArgs = {java.lang.String.class, boolean.class}
-        )
-    })
-    public void testGetBoolean() {
-        try {
-            pref.getBoolean(null, false);
-            fail();
-        } catch (NullPointerException e) {
-        }
-
-        pref.put("testGetBooleanKey", "false");
-        pref.put("testGetBooleanKey2", "value");
-        assertFalse(pref.getBoolean("testGetBooleanKey", true));
-        assertTrue(pref.getBoolean("testGetBooleanKey2", true));
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "putByteArray",
-          methodArgs = {java.lang.String.class, byte[].class}
-        )
-    })
-    public void testPutByteArray() {
-        try {
-            pref.putByteArray(null, new byte[0]);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            pref.putByteArray("testPutByteArrayKey4", null);
-            fail();
-        } catch (NullPointerException e) {
-        }
-
-        pref.putByteArray(longKey, new byte[0]);
-        try {
-            pref.putByteArray(longKey + "a", new byte[0]);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        byte[] longArray = new byte[(int) (Preferences.MAX_VALUE_LENGTH * 0.74)];
-        byte[] longerArray = new byte[(int) (Preferences.MAX_VALUE_LENGTH * 0.75) + 1];
-        pref.putByteArray(longKey, longArray);
-        try {
-            pref.putByteArray(longKey, longerArray);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-
-        pref.putByteArray("testPutByteArrayKey", new byte[0]);
-        assertEquals("", pref.get("testPutByteArrayKey", null));
-        assertTrue(Arrays.equals(new byte[0], pref.getByteArray(
-                "testPutByteArrayKey", null)));
-
-        pref.putByteArray("testPutByteArrayKey3", new byte[] { 'a', 'b', 'c' });
-        assertEquals("YWJj", pref.get("testPutByteArrayKey3", null));
-        assertTrue(Arrays.equals(new byte[] { 'a', 'b', 'c' }, pref
-                .getByteArray("testPutByteArrayKey3", null)));
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getByteArray",
-          methodArgs = {java.lang.String.class, byte[].class}
-        )
-    })
-    public void testGetByteArray() throws UnsupportedEncodingException {
-        try {
-            pref.getByteArray(null, new byte[0]);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        byte[] b64Array = new byte[] { 0x59, 0x57, 0x4a, 0x6a };// BASE64
-        // encoding for
-        // "abc"
-
-        pref.put("testGetByteArrayKey", "abc=");
-        pref.put("testGetByteArrayKey2", new String(b64Array));
-        pref.put("invalidKey", "<>?");
-        // assertTrue(Arrays.equals(new byte[0], p.getByteArray(
-        // "testGetByteArrayKey", new byte[0])));
-        assertTrue(Arrays.equals(new byte[] { 105, -73 }, pref.getByteArray(
-                "testGetByteArrayKey", new byte[0])));
-        assertTrue(Arrays.equals(new byte[] { 'a', 'b', 'c' }, pref
-                .getByteArray("testGetByteArrayKey2", new byte[0])));
-        assertTrue(Arrays.equals(new byte[0], pref.getByteArray("invalidKey",
-                new byte[0])));
-
-        pref.putByteArray("testGetByteArrayKey3", b64Array);
-        pref.putByteArray("testGetByteArrayKey4", "abc".getBytes());
-        assertTrue(Arrays.equals(b64Array, pref.getByteArray(
-                "testGetByteArrayKey3", new byte[0])));
-        assertTrue(Arrays.equals("abc".getBytes(), pref.getByteArray(
-                "testGetByteArrayKey4", new byte[0])));
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getDouble",
-          methodArgs = {java.lang.String.class, double.class}
-        )
-    })
-    public void testGetDouble() {
-        try {
-            pref.getDouble(null, 0);
-            fail();
-        } catch (NullPointerException e) {
-        }
-
-        pref.put("testGetDoubleKey", "1");
-        pref.put("testGetDoubleKey2", "value");
-        pref.putDouble("testGetDoubleKey3", 1);
-        pref.putInt("testGetDoubleKey4", 1);
-        assertEquals(1.0, pref.getDouble("testGetDoubleKey", 0.0), 0);
-        assertEquals(0.0, pref.getDouble("testGetDoubleKey2", 0.0), 0);
-        assertEquals(1.0, pref.getDouble("testGetDoubleKey3", 0.0), 0);
-        assertEquals(1.0, pref.getDouble("testGetDoubleKey4", 0.0), 0);
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getFloat",
-          methodArgs = {java.lang.String.class, float.class}
-        )
-    })
-    public void testGetFloat() {
-        try {
-            pref.getFloat(null, 0f);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        pref.put("testGetFloatKey", "1");
-        pref.put("testGetFloatKey2", "value");
-        assertEquals(1f, pref.getFloat("testGetFloatKey", 0f), 0); //$NON-NLS-1$
-        assertEquals(0f, pref.getFloat("testGetFloatKey2", 0f), 0);
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getInt",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
-    public void testGetInt() {
-        try {
-            pref.getInt(null, 0);
-            fail();
-        } catch (NullPointerException e) {
-        }
-
-        pref.put("testGetIntKey", "1");
-        pref.put("testGetIntKey2", "value");
-        assertEquals(1, pref.getInt("testGetIntKey", 0));
-        assertEquals(0, pref.getInt("testGetIntKey2", 0));
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getLong",
-          methodArgs = {java.lang.String.class, long.class}
-        )
-    })
-    public void testGetLong() {
-        try {
-            pref.getLong(null, 0);
-            fail();
-        } catch (NullPointerException e) {
-        }
-
-        pref.put("testGetLongKey", "1");
-        pref.put("testGetLongKey2", "value");
-        assertEquals(1, pref.getInt("testGetLongKey", 0));
-        assertEquals(0, pref.getInt("testGetLongKey2", 0));
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isUserNode",
-          methodArgs = {}
-        )
-    })
-    public void testIsUserNode() {
-        assertTrue(pref.isUserNode());
-
-        pref = new MockAbstractPreferences((AbstractPreferences) Preferences
-                .systemRoot(), "mock");
-        assertFalse(pref.isUserNode());
-    }
-
-    // TODO, how to test the "stored defaults"
-    // TODO, how to test the multi-thread
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Exceptions checking missed. Probably todo list reasonable for functional stress test.",
-      targets = {
-        @TestTarget(
-          methodName = "keys",
-          methodArgs = {}
-        )
-    })
-    public void testKeys() throws BackingStoreException {
-        assertEquals(0, pref.keys().length);
-
-        pref.put("key0", "value");
-        pref.put("key1", "value1");
-        pref.put("key2", "value2");
-        pref.put("key3", "value3");
-
-        String[] keys = pref.keys();
-        assertEquals(4, keys.length);
-        for (int i = 0; i < keys.length; i++) {
-            assertEquals(0, keys[i].indexOf("key"));
-            assertEquals(4, keys[i].length());
-        }
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "name",
-          methodArgs = {}
-        )
-    })
-    public void testName() {
-        assertEquals("mock", pref.name());
-
-        pref = new MockAbstractPreferences(pref, " ");
-        assertEquals(" ", pref.name());
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test for keys with special symbols. No exceptions were checked.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        ), @TestTarget(
-          methodName = "keys",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
-    public void testCharCase() throws BackingStoreException {
-        assertSame(pref.node("samechild"), pref.node("samechild"));
-        assertNotSame(pref.node("sameChild"), pref.node("samechild"));
-        assertNotSame(pref.node("child"), pref.node("Child"));
-        assertNotSame(pref.node("child"), pref.node("Child"));
-        assertNotSame(pref.node("child"), pref.node(" child"));
-        String[] names = pref.childrenNames();
-        assertEquals(5, names.length);
-        for (int i = 0; i < names.length; i++) {
-            String name = names[i];
-            assertTrue("samechild".equals(name) || "sameChild".equals(name)
-                    || "child".equals(name) || "Child".equals(name)
-                    || " child".equals(name));
-        }
-
-        Preferences mock1 = pref.node("mock1");
-        mock1.put("key", "1value");
-        mock1.put("KEY", "2value");
-        mock1.put("/K/E/Y", "7value");
-        mock1.put("/K/E\\Y\\abc~@!#$%^&*(\\", "8value");
-
-        assertEquals("8value", mock1.get("/K/E\\Y\\abc~@!#$%^&*(\\", null));
-        assertNull(mock1.get("/k/e/y", null));
-        assertEquals("7value", mock1.get("/K/E/Y", null));
-        assertEquals("1value", mock1.get("key", null));
-
-        String[] keys = mock1.keys();
-        assertEquals(4, keys.length);
-        for (int i = 0; i < keys.length; i++) {
-            String key = keys[i];
-            assertTrue("key".equals(key) || "KEY".equals(key)
-                    || "/K/E/Y".equals(key)
-                    || "/K/E\\Y\\abc~@!#$%^&*(\\".equals(key));
-        }
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "node",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void testNode() throws BackingStoreException {
-        try {
-            pref.node(null);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            pref.node("/java/util/prefs/");
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            pref.node("/java//util/prefs");
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            pref.node(longName + "a");
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        assertNotNull(pref.node(longName));
-
-        assertSame(root, pref.node("/"));
-
-        Preferences prefs = pref.node("/java/util/prefs");
-        assertSame(prefs, parent);
-
-        assertSame(pref, pref.node(""));
-
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        MockAbstractPreferences child = (MockAbstractPreferences) ((MockAbstractPreferences) pref)
-                .publicChildSpi("child");
-        assertSame(child, pref.node("child"));
-
-        Preferences child2 = pref.node("child2");
-        assertSame(child2, ((MockAbstractPreferences) pref)
-                .publicChildSpi("child2"));
-
-        Preferences grandchild = pref.node("child/grandchild");
-        assertSame(grandchild, child.childSpi("grandchild"));
-        assertSame(grandchild, child.cachedChildrenImpl()[0]);
-        grandchild.removeNode();
-        assertNotSame(grandchild, pref.node("child/grandchild"));
-
-        grandchild = pref.node("child3/grandchild");
-        AbstractPreferences[] childs = ((MockAbstractPreferences) pref)
-                .cachedChildrenImpl();
-        Preferences child3 = child;
-        for (int i = 0; i < childs.length; i++) {
-            if (childs[i].name().equals("child3")) {
-                child3 = childs[i];
-                break;
-            }
-        }
-        assertSame(child3, grandchild.parent());
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "nodeExists",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void testNodeExists() throws BackingStoreException {
-        try {
-            pref.nodeExists(null);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            pref.nodeExists("/java/util/prefs/");
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            pref.nodeExists("/java//util/prefs");
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-
-        assertTrue(pref.nodeExists("/"));
-
-        assertTrue(pref.nodeExists("/java/util/prefs"));
-
-        assertTrue(pref.nodeExists(""));
-
-        assertFalse(pref.nodeExists("child"));
-        Preferences grandchild = pref.node("child/grandchild");
-        assertTrue(pref.nodeExists("child"));
-        assertTrue(pref.nodeExists("child/grandchild"));
-        grandchild.removeNode();
-        assertTrue(pref.nodeExists("child"));
-        assertFalse(pref.nodeExists("child/grandchild"));
-        assertFalse(grandchild.nodeExists(""));
-
-        assertFalse(pref.nodeExists("child2/grandchild"));
-        pref.node("child2/grandchild");
-        assertTrue(pref.nodeExists("child2/grandchild"));
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "parent",
-          methodArgs = {}
-        )
-    })
-    public void testParent() {
-        assertSame(parent, pref.parent());
-        AbstractPreferences child1 = new MockAbstractPreferences(pref, "child1");
-        assertSame(pref, child1.parent());
-        assertNull(root.parent());
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Missed check for max values: MAX_KEY_LENGTH, MAX_NAME_LENGTH, MAX_VALUE_LENGTH",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Tests putSpi indirectly",
+            method = "put",
+            args = {java.lang.String.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Tests putSpi indirectly",
+            method = "putSpi",
+            args = {java.lang.String.class, java.lang.String.class}
         )
     })
     public void testPut() throws BackingStoreException {
-        pref.put("", "emptyvalue");
-        assertEquals("emptyvalue", pref.get("", null));
-        pref.put("testPutkey", "value1");
-        assertEquals("value1", pref.get("testPutkey", null));
-        pref.put("testPutkey", "value2");
-        assertEquals("value2", pref.get("testPutkey", null));
-
-        pref.put("", "emptyvalue");
-        assertEquals("emptyvalue", pref.get("", null));
-
+        pref.put("Value", "String");
+        pref.flush();
+        
+        assertEquals("String", pref.get("Value", ":"));
+        
         try {
-            pref.put(null, "value");
-            fail();
+            pref.put(null, "Exception");
+            fail("NullPointerException expected");
         } catch (NullPointerException e) {
+            //expected
         }
-        try {
-            pref.put("key", null);
-            fail();
-        } catch (NullPointerException e) {
+        
+        int i;
+        StringBuffer sb = new StringBuffer();
+        
+        for (i = 0; i < Preferences.MAX_KEY_LENGTH + 1; i++) {
+            sb.append('c');
         }
-        pref.put(longKey, longValue);
+        
         try {
-            pref.put(longKey + 1, longValue);
-            fail();
+            pref.put(new String(sb), "Exception");
+            fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
-        }
-        try {
-            pref.put(longKey, longValue + 1);
-            fail();
-        } catch (IllegalArgumentException e) {
+            //expected
         }
 
+        sb = new StringBuffer();
+        
+        for (i = 0; i < Preferences.MAX_VALUE_LENGTH + 1; i++) {
+            sb.append('c');
+        }
+        
+        try {
+            pref.put("DoubleValue", new String(sb));
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
         pref.removeNode();
+        
         try {
-            pref.put(longKey, longValue + 1);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-
-        try {
-            pref.put(longKey, longValue);
-            fail();
+            pref.put("DoubleValue", "Exception");
+            fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
+            //expected
         }
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "putBoolean",
-          methodArgs = {java.lang.String.class, boolean.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "getSpi tested indirectly.",
+            method = "get",
+            args = {java.lang.String.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "getSpi tested indirectly.",
+            method = "getSpi",
+            args = {java.lang.String.class}
         )
     })
-    public void testPutBoolean() {
+    public void testGet() throws BackingStoreException {
+        pref.put("Value", "String");
+        pref.putDouble("DoubleValue", new Double(9.10938188e-31));
+        pref.putBoolean("BoolValue", true);
+        pref.flush();
+        
+        assertEquals("String", pref.get("Value", ":"));
+        assertEquals("true", pref.get("BoolValue", ":"));
+        assertEquals("9.10938188E-31", pref.get("DoubleValue", null));
+        
         try {
-            pref.putBoolean(null, false);
-            fail();
+            pref.get(null, "Exception");
+            fail("NullPointerException expected");
         } catch (NullPointerException e) {
+            //expected
         }
-        pref.putBoolean(longKey, false);
+        
+        pref.removeNode();
+        
         try {
-            pref.putBoolean(longKey + "a", false);
-            fail();
-        } catch (IllegalArgumentException e) {
+            pref.get("DoubleValue", "Exception");
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
         }
-        pref.putBoolean("testPutBooleanKey", false);
-        assertEquals("false", pref.get("testPutBooleanKey", null));
-        assertFalse(pref.getBoolean("testPutBooleanKey", true));
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "putDouble",
-          methodArgs = {java.lang.String.class, double.class}
-        )
-    })
-    public void testPutDouble() {
-        try {
-            pref.putDouble(null, 3);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        pref.putDouble(longKey, 3);
-        try {
-            pref.putDouble(longKey + "a", 3);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        pref.putDouble("testPutDoubleKey", 3);
-        assertEquals("3.0", pref.get("testPutDoubleKey", null));
-        assertEquals(3, pref.getDouble("testPutDoubleKey", 0), 0);
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "putFloat",
-          methodArgs = {java.lang.String.class, float.class}
-        )
-    })
-    public void testPutFloat() {
-        try {
-            pref.putFloat(null, 3f);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        pref.putFloat(longKey, 3f);
-        try {
-            pref.putFloat(longKey + "a", 3f);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        pref.putFloat("testPutFloatKey", 3f);
-        assertEquals("3.0", pref.get("testPutFloatKey", null));
-        assertEquals(3f, pref.getFloat("testPutFloatKey", 0), 0);
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "putInt",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
-    public void testPutInt() {
-        try {
-            pref.putInt(null, 3);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        pref.putInt(longKey, 3);
-        try {
-            pref.putInt(longKey + "a", 3);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        pref.putInt("testPutIntKey", 3);
-        assertEquals("3", pref.get("testPutIntKey", null));
-        assertEquals(3, pref.getInt("testPutIntKey", 0));
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "putLong",
-          methodArgs = {java.lang.String.class, long.class}
-        )
-    })
-    public void testPutLong() {
-        try {
-            pref.putLong(null, 3L);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        pref.putLong(longKey, 3L);
-        try {
-            pref.putLong(longKey + "a", 3L);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        pref.putLong("testPutLongKey", 3L);
-        assertEquals("3", pref.get("testPutLongKey", null));
-        assertEquals(3L, pref.getLong("testPutLongKey", 0));
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Indirectly checks removeSpi",
+            method = "remove",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Indirectly checks removeSpi",
+            method = "removeSpi",
+            args = {java.lang.String.class}
         )
     })
     public void testRemove() throws BackingStoreException {
-        pref.remove("key");
-
-        pref.put("key", "value");
-        assertEquals("value", pref.get("key", null));
-        pref.remove("key");
-        assertNull(pref.get("key", null));
-
-        pref.remove("key");
-
-        try {
-            pref.remove(null);
-        } catch (NullPointerException e) {
+        String[] keyArray = new String[]{"Value", "DoubleValue", "LongValue", "IntValue"};
+        pref.put(keyArray[0], "String");
+        pref.putDouble(keyArray[1], new Double(9.10938188e-31));
+        pref.putLong(keyArray[2], new Long(Long.MIN_VALUE));
+        pref.putInt(keyArray[3], 299792458);
+        pref.node("New node");
+        pref.flush();
+        
+        String[] str = pref.keys();
+        assertEquals(keyArray.length, str.length);
+        for(int i = 0; i < keyArray.length; i++) {
+            pref.remove(keyArray[i]);
+            str = pref.keys();
+            assertEquals(keyArray.length - i - 1, str.length);
         }
-
+        assertEquals(1, pref.childrenNames().length);
+        pref.remove("New node");
+        assertEquals(1, pref.childrenNames().length);
+        
         pref.removeNode();
+        
         try {
-            pref.remove("key");
-            fail();
+            pref.remove("New node");
+            fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
+            //expected
         }
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "removeNode",
-          methodArgs = {}
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {}
+    )
+    public void testClear() throws BackingStoreException {
+        AbstractPreferences ap = (AbstractPreferences) pref.node("New node");
+        pref.putInt("IntValue", 33);
+        pref.putBoolean("BoolValue", true);
+        pref.flush();
+        assertTrue(pref.getBoolean("BoolValue", false));
+        assertEquals(33, pref.getInt("IntValue", 22));
+        assertEquals(1, pref.childrenNames().length);
+        pref.clear();
+        assertFalse(pref.getBoolean("BoolValue", false));
+        assertEquals(22, pref.getInt("IntValue", 22));
+        assertEquals(1, pref.childrenNames().length);
+        
+        pref.removeNode();
+        
+        try {
+            pref.clear();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+        
+        try {
+            ap.clear();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putInt",
+        args = {java.lang.String.class, int.class}
+    )
+    public void testPutInt() throws BackingStoreException {
+        pref.putInt("IntValue", 299792458);
+        pref.flush();
+        
+        assertEquals(299792458, pref.getInt("IntValue", new Integer(1)));
+        
+        try {
+            pref.putInt(null, new Integer(1));
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        int i;
+        StringBuffer sb = new StringBuffer();
+        
+        for (i = 0; i < Preferences.MAX_KEY_LENGTH + 1; i++) {
+            sb.append('c');
+        }
+        
+        try {
+            pref.putInt(new String(sb), new Integer(1));
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.putInt("IntValue", new Integer(1));
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInt",
+        args = {java.lang.String.class, int.class}
+    )
+    public void testGetInt() throws BackingStoreException {
+        pref.put("Value", "String");
+        pref.putDouble("DoubleValue", new Double(9.10938188e-31));
+        pref.putLong("LongValue", new Long(Long.MIN_VALUE));
+        pref.putInt("IntValue", 299792458);
+        pref.flush();
+        
+        assertEquals(1, pref.getInt("Value", new Integer(1)));
+        assertEquals(1, pref.getInt("LongValue", new Integer(1)));
+        assertEquals(1, pref.getInt("DoubleValue", new Integer(1)));
+        assertEquals(299792458, pref.getInt("IntValue", new Integer(1)));
+        
+        try {
+            pref.getInt(null, new Integer(1));
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.getInt("IntValue", new Integer(1));
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putLong",
+        args = {java.lang.String.class, long.class}
+    )
+    public void testPutLong() throws BackingStoreException {
+        pref.putLong("LongValue", new Long(299792458));
+        pref.flush();
+        
+        assertEquals(299792458L, pref.getLong("LongValue", new Long(1)));
+        
+        try {
+            pref.putLong(null, new Long(1));
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        int i;
+        StringBuffer sb = new StringBuffer();
+        
+        for (i = 0; i < Preferences.MAX_KEY_LENGTH + 1; i++) {
+            sb.append('c');
+        }
+        
+        try {
+            pref.putLong(new String(sb), new Long(1));
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.putLong("LongValue", new Long(1));
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLong",
+        args = {java.lang.String.class, long.class}
+    )
+    public void testGetLong() throws BackingStoreException {
+        pref.put("Value", "String");
+        pref.putDouble("DoubleValue", new Double(9.10938188e-31));
+        pref.putLong("LongValue", new Long(Long.MIN_VALUE));
+        pref.putInt("IntValue", 299792458);
+        pref.flush();
+        
+        assertEquals(1L, pref.getLong("Value", new Long(1)));
+        assertEquals(Long.MIN_VALUE, pref.getLong("LongValue", new Long(1)));
+        assertEquals(1L, pref.getLong("DoubleValue", new Long(1)));
+        assertEquals(299792458L, pref.getLong("IntValue", new Long(1)));
+        
+        try {
+            pref.getLong(null, new Long(1));
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.getLong("LongValue", new Long(1));
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putBoolean",
+        args = {java.lang.String.class, boolean.class}
+    )
+    public void testPutBoolean() throws BackingStoreException {
+        pref.putBoolean("BoolValue", true);
+        pref.flush();
+        
+        assertTrue(pref.getBoolean("BoolValue", false));
+        
+        try {
+            pref.putBoolean(null, true);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        int i;
+        StringBuffer sb = new StringBuffer();
+        
+        for (i = 0; i < Preferences.MAX_KEY_LENGTH + 1; i++) {
+            sb.append('c');
+        }
+        
+        try {
+            pref.putBoolean(new String(sb), true);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.putBoolean("DoubleValue", true);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getBoolean",
+        args = {java.lang.String.class, boolean.class}
+    )
+    public void testGetBoolean() throws BackingStoreException {
+        pref.put("Value", "String");
+        pref.putDouble("DoubleValue", new Double(9.10938188e-31));
+        pref.putBoolean("BoolValue", true);
+        pref.flush();
+        
+        assertFalse(pref.getBoolean("Value", false));
+        assertTrue(pref.getBoolean("BoolValue", false));
+        assertFalse(pref.getBoolean("DoubleValue", false));
+        
+        try {
+            pref.getBoolean(null, true);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.getBoolean("DoubleValue", true);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putFloat",
+        args = {java.lang.String.class, float.class}
+    )
+    public void testPutFloat() throws BackingStoreException {
+        pref.putFloat("FloatValue", new Float(1.602e-19));
+        pref.flush();
+        
+        assertEquals(new Float(1.602e-19), pref.getFloat("FloatValue", new Float(0.2)));
+        
+        try {
+            pref.putFloat(null, new Float(0.1));
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        int i;
+        StringBuffer sb = new StringBuffer();
+        
+        for (i = 0; i < Preferences.MAX_KEY_LENGTH + 1; i++) {
+            sb.append('c');
+        }
+        
+        try {
+            pref.putFloat(new String(sb), new Float(0.1));
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.putFloat("FloatValue", new Float(0.1));
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFloat",
+        args = {java.lang.String.class, float.class}
+    )
+    public void testGetFloat() throws BackingStoreException {
+        pref.put("Value", "String");
+        pref.putDouble("DoubleValue", new Double(9.10938188e-31));
+        pref.putFloat("FloatValue", new Float(-0.123));
+        pref.putInt("IntValue", 299792458);
+        pref.flush();
+        
+        assertEquals(new Float(0.1), pref.getFloat("Value", new Float(0.1)));
+        assertEquals(new Float(-0.123), pref.getFloat("FloatValue", new Float(0.2)));
+        assertEquals(new Float(9.109382e-31), pref.getFloat("DoubleValue", new Float(2.14)));
+        assertEquals(new Float(2.99792448e8), pref.getFloat("IntValue", new Float(5)));
+        
+        try {
+            pref.getFloat(null, new Float(0.1));
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.getFloat("FloatValue", new Float(0.1));
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putDouble",
+        args = {java.lang.String.class, double.class}
+    )
+    public void testPutDouble() throws BackingStoreException {
+        pref.putDouble("DoubleValue", new Double(9.10938188e-31));
+        pref.flush();
+        
+        assertEquals(new Double(9.10938188e-31), pref.getDouble("DoubleValue", new Double(2.14)));
+        
+        try {
+            pref.putDouble(null, new Double(0.1));
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        int i;
+        StringBuffer sb = new StringBuffer();
+        
+        for (i = 0; i < Preferences.MAX_KEY_LENGTH + 1; i++) {
+            sb.append('c');
+        }
+        
+        try {
+            pref.putDouble(new String(sb), new Double(0.1));
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.putDouble("DoubleValue", new Double(0.1));
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDouble",
+        args = {java.lang.String.class, double.class}
+    )
+    public void testGetDouble() throws BackingStoreException {
+        pref.put("Value", "String");
+        pref.putDouble("DoubleValue", new Double(9.10938188e-31));
+        pref.putBoolean("BoolValue", true);
+        pref.putInt("IntValue", 299792458);
+        pref.flush();
+        
+        assertEquals(new Double(0.1), pref.getDouble("Value", new Double(0.1)));
+        assertEquals(new Double(0.2), pref.getDouble("BoolValue", new Double(0.2)));
+        assertEquals(new Double(9.10938188e-31), pref.getDouble("DoubleValue", new Double(2.14)));
+        assertEquals(new Double(2.99792458e8), pref.getDouble("IntValue", new Double(5)));
+        
+        try {
+            pref.getDouble(null, new Double(0.1));
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.getDouble("DoubleValue", new Double(0.1));
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putByteArray",
+        args = {java.lang.String.class, byte[].class}
+    )
+    public void testPutByteArray() throws BackingStoreException {
+        byte[] bArray = new byte[]{1, 2, 3, 4, 5};
+        byte[] array  = null;
+        int i;
+        pref.putByteArray("Array", bArray);
+        pref.flush();
+        
+        array = pref.getByteArray("Array", null);
+        assertEquals(bArray.length, array.length);
+        for(i = 0; i < bArray.length; i++) {
+            assertEquals(bArray[i], array[i]);
+        }
+        
+        try {
+            pref.putByteArray(null, bArray);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+
+        StringBuffer sb = new StringBuffer();
+        
+        for (i = 0; i < Preferences.MAX_KEY_LENGTH + 1; i++) {
+            sb.append('c');
+        }
+        
+        try {
+            pref.putByteArray(new String(sb), bArray);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        bArray = new byte[Preferences.MAX_VALUE_LENGTH * 3 / 4 + 1];
+        
+        try {
+            pref.putByteArray("Big array", bArray);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.putByteArray("Array", new byte[10]);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getByteArray",
+        args = {java.lang.String.class, byte[].class}
+    )
+    public void testGetByteArray() throws BackingStoreException {
+        byte[] bArray = new byte[]{1, 2, 3, 4, 5};
+        byte[] tmp    = new byte[]{5};
+        byte[] array  = null;
+        int i;
+        pref.put("Value", "String");
+        pref.putDouble("DoubleValue", new Double(9.10938188e-31));
+        pref.putByteArray("Array", bArray);
+        pref.flush();
+        
+        array = pref.getByteArray("Value", tmp);
+        assertEquals(tmp.length, array.length);
+        for(i = 0; i < tmp.length; i++) {
+            assertEquals(tmp[i], array[i]);
+        }
+        
+        array = pref.getByteArray("DoubleValue", tmp);
+        assertEquals(tmp.length, array.length);
+        for(i = 0; i < tmp.length; i++) {
+            assertEquals(tmp[i], array[i]);
+        }
+        
+        array = pref.getByteArray("Array", tmp);
+        assertEquals(bArray.length, array.length);
+        for(i = 0; i < bArray.length; i++) {
+            assertEquals(bArray[i], array[i]);
+        }
+        
+        try {
+            pref.getByteArray(null, tmp);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.getByteArray("Array", tmp);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "keysSpi tested indirectly",
+            method = "keys",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "keysSpi tested indirectly",
+            method = "keysSpi",
+            args = {}
+        )
+    })
+    public void testKeys() throws BackingStoreException {
+        String[] keyArray = new String[]{"Value", "DoubleValue", "BoolValue", "IntValue"};
+        String nodeStr = "New node";
+        pref.node(nodeStr);
+        pref.put(keyArray[0], "String");
+        pref.putDouble(keyArray[1], new Double(9.10938188e-31));
+        pref.putBoolean(keyArray[2], true);
+        pref.putInt(keyArray[3], 299792458);
+        pref.flush();
+        
+        String[] str = pref.keys();
+        assertEquals(keyArray.length, str.length);
+        for(int i = 0; i < str.length; i++) {
+            boolean flag = false;
+            for(int j = 0; j < keyArray.length; j++) {
+                if (str[i].compareTo(keyArray[j]) == 0) {
+                    flag = true;
+                    break;
+                }
+            }
+            assertTrue(str[i].compareTo(nodeStr) != 0);
+            assertTrue(flag);
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.keys();
+            fail("IllegalStateException expected");
+        } catch(IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "BackingStoreException can not be checked. childrenNamesSpi checked indirectly.",
+            method = "childrenNames",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "BackingStoreException can not be checked. childrenNamesSpi checked indirectly.",
+            method = "childrenNamesSpi",
+            args = {}
+        )
+    })
+    public void testChildrenNames() throws BackingStoreException {
+        AbstractPreferences first = (AbstractPreferences) pref.node("First node");
+        AbstractPreferences second = (AbstractPreferences) pref.node("Second node");
+        
+        assertEquals(2, pref.childrenNames().length);
+        assertEquals(0, first.childrenNames().length);
+        assertEquals(0, second.childrenNames().length);
+        
+        second.removeNode();
+        
+        try {
+            second.childrenNames();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+
+        pref.removeNode();
+
+        try {
+            first.childrenNames();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parent",
+        args = {}
+    )
+    public void testParent() throws BackingStoreException {
+        AbstractPreferences node = (AbstractPreferences) pref.node("First node/sub node");
+        
+        assertTrue(node.parent().name().compareTo("First node") == 0);
+
+        pref.removeNode();
+
+        try {
+            node.parent();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Indirecly checks childSpi",
+            method = "node",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Indirecly checks childSpi",
+            method = "childSpi",
+            args = {java.lang.String.class}
+        )
+    })
+    public void testNode() throws BackingStoreException {
+        AbstractPreferences first = (AbstractPreferences) pref.node("First node");
+        AbstractPreferences second = (AbstractPreferences) pref.node("Second node");
+        
+        try {
+            first.node("blabla/");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            first.node("///invalid");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        StringBuffer sb = new StringBuffer();
+        
+        for (int i = 0; i < Preferences.MAX_NAME_LENGTH; i++) {
+            sb.append('c');
+        }
+        first.node(new String(sb));
+        sb.append('c');
+        
+        try {
+            first.node(new String(sb));
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+
+        second.removeNode();
+        
+        try {
+            second.node("");
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+        pref.removeNode();
+        try {
+            first.node("");
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "getChild tested indirectly",
+            method = "nodeExists",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "getChild tested indirectly",
+            method = "getChild",
+            args = {java.lang.String.class}
+        )
+    })
+    public void testNodeExists() throws BackingStoreException {
+        AbstractPreferences ap1 = (AbstractPreferences) pref.node("First node");
+        AbstractPreferences ap2 = (AbstractPreferences) pref.node("Second node");
+        pref.putInt("IntegerValue", 33);
+        pref.putBoolean("BoolValue", true);
+        pref.flush();
+        
+        assertTrue(pref.nodeExists("First node"));
+        assertTrue(pref.nodeExists("Second node"));
+        assertFalse(pref.nodeExists("IntegerValue"));
+        assertFalse(pref.nodeExists("BoolValue"));
+        assertFalse(pref.nodeExists("Value"));
+        assertFalse(pref.nodeExists(nodeName));
+        
+        try {
+            pref.nodeExists("///invalid");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        pref.removeNode();
+        
+        try {
+            pref.nodeExists("Exception");
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "removeNode",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "removeNodeSpi",
+            args = {}
         )
     })
     public void testRemoveNode() throws BackingStoreException {
-        Preferences child = pref.node("child");
-        Preferences child1 = pref.node("child1");
-        Preferences grandchild = child.node("grandchild");
-
+        String[] nodeArray = new String[]{"First node", "Second node", "Last node"};
+        int i;
+        pref.put("Key", "String");
+        for (i = 0; i < nodeArray.length; i++) {
+            pref.node(nodeArray[i]);
+        }
+        pref.flush();
+        
+        String[] str = pref.childrenNames();
+        assertEquals(nodeArray.length, str.length);
+        for(i = 0; i < nodeArray.length; i++) {
+            pref.node(nodeArray[i]).removeNode();
+            str = pref.childrenNames();
+            assertEquals(nodeArray.length - i - 1, str.length);
+        }
+        assertEquals(1, pref.keys().length);
+        pref.node("Key").removeNode();
+        assertEquals(1, pref.keys().length);
+        
         pref.removeNode();
-
-        assertFalse(child.nodeExists(""));
-        assertFalse(child1.nodeExists(""));
-        assertFalse(grandchild.nodeExists(""));
-        assertFalse(pref.nodeExists(""));
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Also checks event flow.",
-      targets = {
-        @TestTarget(
-          methodName = "addNodeChangeListener",
-          methodArgs = {java.util.prefs.NodeChangeListener.class}
-        )
-    })
-    public void _testAddNodeChangeListener() throws BackingStoreException {
+        
         try {
-            pref.addNodeChangeListener(null);
-            fail();
-        } catch (NullPointerException e) {
+            pref.removeNode();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
         }
-
-        Preferences child1 = null;
-        Preferences child2 = null;
-        Preferences child3 = null;
-        // To get existed node doesn't create the change event
+        
         try {
-            nl = new MockNodeChangeListener();
-            pref.addNodeChangeListener(nl);
-            child1 = pref.node("mock1");
-            assertEquals(1, nl.getAdded());
-            nl.reset();
-            child2 = pref.node("mock1");
-            assertEquals(0, nl.getAdded());
-            nl.reset();
-        } finally {
-            pref.removeNodeChangeListener(nl);
-            child1.removeNode();
-        }
-        // same listener can be added twice, and must be removed twice
-        try {
-            nl = new MockNodeChangeListener();
-            pref.addNodeChangeListener(nl);
-            pref.addNodeChangeListener(nl);
-            child1 = pref.node("mock2");
-            assertEquals(2, nl.getAdded());
-            nl.reset();
-        } finally {
-            pref.removeNodeChangeListener(nl);
-            pref.removeNodeChangeListener(nl);
-            child1.removeNode();
-        }
-        // test remove event
-        try {
-            nl = new MockNodeChangeListener();
-            pref.addNodeChangeListener(nl);
-            child1 = pref.node("mock3");
-            child1.removeNode();
-            assertEquals(1, nl.getRemoved());
-            nl.reset();
-        } finally {
-            pref.removeNodeChangeListener(nl);
-        }
-        // test remove event with two listeners
-        try {
-            nl = new MockNodeChangeListener();
-            pref.addNodeChangeListener(nl);
-            pref.addNodeChangeListener(nl);
-            child1 = pref.node("mock6");
-            child1.removeNode();
-            assertEquals(2, nl.getRemoved());
-            nl.reset();
-        } finally {
-            pref.removeNodeChangeListener(nl);
-            pref.removeNodeChangeListener(nl);
-        }
-        // test add/remove indirect children, or remove several children at the
-        // same time
-        try {
-            nl = new MockNodeChangeListener();
-            child1 = pref.node("mock4");
-            child1.addNodeChangeListener(nl);
-            child2 = pref.node("mock4/mock5");
-            assertEquals(1, nl.getAdded());
-            nl.reset();
-            child3 = pref.node("mock4/mock5/mock6");
-            assertEquals(0, nl.getAdded());
-            nl.reset();
-
-            child3.removeNode();
-            assertEquals(0, nl.getRemoved());
-            nl.reset();
-
-            child3 = pref.node("mock4/mock7");
-            assertEquals(1, nl.getAdded());
-            nl.reset();
-
-            child1.removeNode();
-            assertEquals(2, nl.getRemoved());
-            nl.reset();
-        } finally {
-            try {
-                child1.removeNode();
-            } catch (Exception e) {
-            }
-        }
-
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Also checks event flow.",
-      targets = {
-        @TestTarget(
-          methodName = "addPreferenceChangeListener",
-          methodArgs = {java.util.prefs.PreferenceChangeListener.class}
-        )
-    })
-    public void _testAddPreferenceChangeListener() {
-        // TODO: start from here
-        try {
-            pref.addPreferenceChangeListener(null);
-            fail();
-        } catch (NullPointerException e) {
-        }
-
-        // To get existed node doesn't create the change event
-        try {
-            pl = new MockPreferenceChangeListener();
-            pref.addPreferenceChangeListener(pl);
-            pref.putInt("mock1", 123);
-            assertEquals(1, pl.getChanged());
-            pref.putLong("long_key", Long.MAX_VALUE);
-            assertEquals(2, pl.getChanged());
-            pl.reset();
-
-        } finally {
-            pref.removePreferenceChangeListener(pl);
-            //child1.removeNode();
-        }
-                      
-        // same listener can be added twice, and must be removed twice
-        try {
-            pl = new MockPreferenceChangeListener();
-            pref.addPreferenceChangeListener(pl);
-            pref.addPreferenceChangeListener(pl);
-            pref.putFloat("float_key", Float.MIN_VALUE);
-            assertEquals(2, pl.getChanged());
-            pl.reset();
-        } finally {
-            pref.removePreferenceChangeListener(pl);
-            pref.removePreferenceChangeListener(pl);
-
+            root.removeNode();
+            fail("UnsupportedOperationException expected");
+        } catch (UnsupportedOperationException e) {
+            //expected
         }
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "removeNodeChangeListener",
-          methodArgs = {java.util.prefs.NodeChangeListener.class}
-        )
-    })
-    public void testRemoveNodeChangeListener() {
-        try {
-            pref.removeNodeChangeListener(null);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        MockNodeChangeListener l1 = new MockNodeChangeListener();
-        MockNodeChangeListener l2 = new MockNodeChangeListener();
-        pref.addNodeChangeListener(l1);
-        pref.addNodeChangeListener(l1);
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "name",
+        args = {}
+    )
+    public void testName() {
+        AbstractPreferences first = (AbstractPreferences) pref.node("First node");
+        AbstractPreferences second = (AbstractPreferences) pref.node("Second node/sub node");
 
-        pref.removeNodeChangeListener(l1);
-        pref.removeNodeChangeListener(l1);
-        try {
-            pref.removeNodeChangeListener(l1);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            pref.removeNodeChangeListener(l2);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
+        assertTrue(first.name().compareTo("First node") == 0);
+        assertFalse(first.name().compareTo("Second node") == 0);
+        assertTrue(second.name().compareTo("sub node") == 0);
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "removePreferenceChangeListener",
-          methodArgs = {java.util.prefs.PreferenceChangeListener.class}
-        )
-    })
-    public void testRemovePreferenceChangeListener() {
-        try {
-            pref.removePreferenceChangeListener(null);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        MockPreferenceChangeListener l1 = new MockPreferenceChangeListener();
-        MockPreferenceChangeListener l2 = new MockPreferenceChangeListener();
-        pref.addPreferenceChangeListener(l1);
-        pref.addPreferenceChangeListener(l1);
-        try {
-            pref.removePreferenceChangeListener(l2);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-        pref.removePreferenceChangeListener(l1);
-        pref.removePreferenceChangeListener(l1);
-        try {
-            pref.removePreferenceChangeListener(l1);
-            fail();
-        } catch (IllegalArgumentException e) {
-        }
-
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "absolutePath",
+        args = {}
+    )
+    public void testAbsolutePath() {
+        assertEquals(parent.absolutePath() + "/" + nodeName, pref.absolutePath());
+        assertEquals(parent.absolutePath() + "/" + "new node", parent.node("new node").absolutePath());
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Exceptions checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "sync",
-          methodArgs = {}
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isUserNode",
+        args = {}
+    )
+    public void testIsUserNode() {
+        assertTrue(parent.isUserNode());
+        assertFalse(Preferences.systemRoot().isUserNode());
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Indirectly checks syncSpi",
+            method = "sync",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Indirectly checks syncSpi",
+            method = "syncSpi",
+            args = {}
         )
     })
     public void testSync() throws BackingStoreException {
-
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        p.resetSyncTimes();
-        p.sync();
-        assertEquals(1, p.getSyncTimes());
-
-        p.resetSyncTimes();
-        MockAbstractPreferences child = (MockAbstractPreferences) p
-                .node("child");
-        MockAbstractPreferences child2 = new MockAbstractPreferences(p,
-                "child2");
-        p.childs.put("child2", child2);
-        assertEquals(1, p.cachedChildrenImpl().length);
-        assertSame(child, p.cachedChildrenImpl()[0]);
-        p.sync();
-        assertEquals(1, p.getSyncTimes());
-        assertEquals(1, child.getSyncTimes());
-        assertEquals(0, child2.getSyncTimes());
-
-        p.resetSyncTimes();
-        child.resetSyncTimes();
-        child.sync();
-        assertEquals(0, p.getSyncTimes());
-        assertEquals(1, child.getSyncTimes());
-
-        p.resetSyncTimes();
-        child.resetSyncTimes();
-        MockAbstractPreferences grandson = (MockAbstractPreferences) child
-                .node("grandson");
-        child.sync();
-        assertEquals(0, p.getSyncTimes());
-        assertEquals(1, child.getSyncTimes());
-        assertEquals(1, grandson.getSyncTimes());
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "flush",
-          methodArgs = {}
-        )
-    })
-    public void testFlush() throws BackingStoreException {
+        pref.node("new node/sub node");
+        pref.sync();
         
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        p.resetFlushedTimes();
-        p.flush();
-        assertEquals(1, p.getFlushedTimes());
-
-        p.resetFlushedTimes();
-        MockAbstractPreferences child = (MockAbstractPreferences) p
-                .node("child");
-        MockAbstractPreferences child2 = new MockAbstractPreferences(p,
-                "child2");
-        p.childs.put("child2", child2);
-        assertEquals(1, p.cachedChildrenImpl().length);
-        assertSame(child, p.cachedChildrenImpl()[0]);
-        p.flush();
-        assertEquals(1, p.getFlushedTimes());
-        assertEquals(1, child.getFlushedTimes());
-        assertEquals(0, child2.getFlushedTimes());
-
-        p.resetFlushedTimes();
-        child.resetFlushedTimes();
-        child.flush();
-        assertEquals(0, p.getFlushedTimes());
-        assertEquals(1, child.getFlushedTimes());
-
-        p.resetFlushedTimes();
-        child.resetFlushedTimes();
-        MockAbstractPreferences grandson = (MockAbstractPreferences) child
-                .node("grandson");
-        child.flush();
-        assertEquals(0, p.getFlushedTimes());
-        assertEquals(1, child.getFlushedTimes());
-        assertEquals(1, grandson.getFlushedTimes());
-
-        p.resetFlushedTimes();
-        child.resetFlushedTimes();
-        grandson.resetFlushedTimes();
-        child.removeNode();
-        child.flush();
-        assertEquals(0, p.getFlushedTimes());
-        assertEquals(1, child.getFlushedTimes());
-        assertEquals(0, grandson.getFlushedTimes());
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getChild",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void testGetChild() throws BackingStoreException {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        assertNull(p.getChildImpl("child"));
-        MockAbstractPreferences child = new MockAbstractPreferences(p, "child");
-        p.childs.put("child", child);
-        assertSame(child, p.getChildImpl("child"));
-        assertNull(p.getChildImpl("child "));
-
-        assertNull(p.getChildImpl("child/grandson"));
-        child.childs.put("grandson", new MockAbstractPreferences(child,
-                "grandson"));
-        assertNull(p.getChildImpl("child/grandson"));
-
-        assertNull(p.getChildImpl(null));
-        assertNull(p.getChildImpl(""));
-        assertNull(p.getChildImpl(" "));
-        assertNull(p.getChildImpl("abc//abc"));
-        assertNull(p.getChildImpl("child/"));
-        assertNull(p.getChildImpl(longName + "a"));
-
-        child.removeNode();
-        assertNull(p.getChildImpl("child"));
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isRemoved",
-          methodArgs = {}
-        )
-    })
-    public void testIsRemoved() throws BackingStoreException {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        assertFalse(p.isRemovedImpl());
-        p.removeNode();
-        assertTrue(p.isRemovedImpl());
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "exportNode",
-          methodArgs = {java.io.OutputStream.class}
-        )
-    })
-    public void _testExportNode() throws Exception {
-        try {
-            pref.exportNode(null);
-            fail();
-        } catch (NullPointerException e) {
-            // Expected
-        }
-
-        pref.putBoolean("key", false);
-        Preferences child = pref.node("child<");
-        child.put("key2", "value2<");
-        Preferences grandson = child.node("grandson");
-        grandson.put("key3", "value3");
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        child.exportNode(out);
-
-        byte[] result = out.toString().getBytes();
-        ByteArrayInputStream in = new ByteArrayInputStream(result);
-
-                try {
-            parseXmlStream(in, true);
-                } catch (Exception ee) {
-                    fail("Exception " + ee + " does not expected");
-                }
-    }
-
-    private static Document parseXmlStream(InputStream input, boolean validating)
-            throws SAXException, IOException, ParserConfigurationException {
-        // Create a builder factory
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setValidating(validating);
-
-        // Create the builder and parse the file
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(input);
-        return doc;
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "exportSubtree",
-          methodArgs = {java.io.OutputStream.class}
-        )
-    })
-    public void _testExportSubtree() throws Exception {
-        try {
-            pref.exportSubtree(null);
-            fail();
-        } catch (NullPointerException e) {
-            // Expected
-        }
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        pref.putBoolean("key", false);
-        Preferences child = pref.node("child");
-        child.put("key2", "value2");
-        Preferences grandson = child.node("grandson");
-        grandson.put("key3", "value3");
-        child.node("grandson2");
-        Preferences grandgrandson = grandson.node("grandgrandson");
-        grandgrandson.put("key4", "value4");
-        child.exportSubtree(out);
-
-        byte[] result = out.toByteArray();
-        // System.out.println(new String(result, "utf-8"));
-        ByteArrayInputStream in = new ByteArrayInputStream(result);
-
-                try {
-            parseXmlStream(in, true);
-                } catch (Exception ee) {
-                    fail("Exception " + ee + " does not expected");
-                }
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "cachedChildren",
-          methodArgs = {}
-        )
-    })
-    public void testCachedChildren() throws Exception {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        assertEquals(0, p.cachedChildrenImpl().length);
-
-        MockAbstractPreferences child = (MockAbstractPreferences) p
-                .getChildImpl("child");
-        assertNull(child);
-
-        child = new MockAbstractPreferences(p, "child");
-        assertSame(child, p.getChildImpl("child"));
-
-        assertEquals(0, p.cachedChildrenImpl().length);
-
-        p.node("child");
-        assertSame(child, p.cachedChildrenImpl()[0]);
-
-        MockAbstractPreferences grandchild = new MockAbstractPreferences(child,
-                "grandchild");
-        assertSame(grandchild, child.getChildImpl("grandchild"));
-        assertNull(p.getChildImpl("grandchild"));
-
-        assertEquals(1, p.cachedChildrenImpl().length);
-        assertEquals(0, child.cachedChildrenImpl().length);
-
-        p.node("child/grandchild");
-        assertSame(child, p.cachedChildrenImpl()[0]);
-        assertSame(grandchild, child.cachedChildrenImpl()[0]);
-        assertEquals(1, p.cachedChildrenImpl().length);
-        assertEquals(1, child.cachedChildrenImpl().length);
-
-        p.childs.put("child2", new MockAbstractPreferences(p, "child2"));
-        p.nodeExists("child2/grandchild");
-        assertSame(child, p.cachedChildrenImpl()[0]);
-        assertSame(grandchild, child.cachedChildrenImpl()[0]);
-        assertEquals(1, p.cachedChildrenImpl().length);
-        assertEquals(1, child.cachedChildrenImpl().length);
-    }
-
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Candidate for removal.",
-      targets = {
-        @TestTarget(
-          methodName = "",
-          methodArgs = {}
-        )
-    })
-    public void testAbstractMethod() {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        ((MockAbstractPreferences) pref).protectedAbstractMethod();
-    }
-
-@TestInfo(
-          level = TestLevel.TODO,
-          purpose = "Candidate for removal.",
-          targets = {
-            @TestTarget(
-              methodName = "",
-              methodArgs = {}
-            )
-        })
-    public Object invokeNonPublicMethod(AbstractPreferences obj, String name,
-            Class[] params, Object[] paramValues) throws SecurityException,
-            NoSuchMethodException, IllegalArgumentException,
-            IllegalAccessException, InvocationTargetException {
-        Method method = obj.getClass().getMethod(name, params);
-        method.setAccessible(true);
-        return method.invoke(obj, paramValues);
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Test checks BackingStoreException",
-      targets = {
-        @TestTarget(
-          methodName = "childrenNames",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "keys",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "removeNode",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "sync",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "flush",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "exportNode",
-          methodArgs = {java.io.OutputStream.class}
-        ), @TestTarget(
-          methodName = "exportSubtree",
-          methodArgs = {java.io.OutputStream.class}
-        ), @TestTarget(
-          methodName = "getChild",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _testBackingStoreException() throws IOException,
-            BackingStoreException {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            fail();
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        p.setResult(MockAbstractPreferences.backingException);
-        try {
-            p.childrenNames();
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        p.put("exceptionkey", "value");
-        p.absolutePath();
-        p.toString();
-        assertEquals("exception default", p.get("key", "exception default"));
-        p.remove("key");
-        try {
-            p.clear();
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        p.putInt("key", 3);
-        p.getInt("key", 3);
-        p.putLong("key", 3l);
-        p.getLong("key", 3l);
-        p.putDouble("key", 3);
-        p.getDouble("key", 3);
-        p.putBoolean("key", true);
-        p.getBoolean("key", true);
-        p.putFloat("key", 3f);
-        p.getFloat("key", 3f);
-        p.putByteArray("key", new byte[0]);
-        p.getByteArray("key", new byte[0]);
-        try {
-            p.keys();
-            fail();
-        } catch (BackingStoreException e) {
-        }
-
-        try {
-            p.keys();
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        try {
-            p.childrenNames();
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        p.parent();
-        p.node("");
-        p.nodeExists("");
-        try {
-            p.removeNode();
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        p.name();
-        p.absolutePath();
-        p.isUserNode();
-        MockPreferenceChangeListener mockPreferenceChangeListener = new MockPreferenceChangeListener();
-        p.addPreferenceChangeListener(mockPreferenceChangeListener);
-        p.removePreferenceChangeListener(mockPreferenceChangeListener);
-        MockNodeChangeListener mockNodeChangeListener = new MockNodeChangeListener();
-        p.addNodeChangeListener(mockNodeChangeListener);
-        p.removeNodeChangeListener(mockNodeChangeListener);
-        p.toString();
-        try {
-            p.sync();
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        try {
-            p.flush();
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        try {
-            p.exportNode(new ByteArrayOutputStream());
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        try {
-            p.exportSubtree(new ByteArrayOutputStream());
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        p.isRemovedImpl();
-        try {
-            p.getChildImpl(null);
-            fail();
-        } catch (BackingStoreException e) {
-        }
-        p.cachedChildrenImpl();
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Test checks RuntimeException",
-      targets = {
-        @TestTarget(
-          methodName = "childrenNames",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "put",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        ), @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.String.class}
-        ), @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "putInt",
-          methodArgs = {java.lang.String.class, int.class}
-        ), @TestTarget(
-          methodName = "putLong",
-          methodArgs = {java.lang.String.class, long.class}
-        ), @TestTarget(
-          methodName = "putDouble",
-          methodArgs = {java.lang.String.class, double.class}
-        ), @TestTarget(
-          methodName = "putBoolean",
-          methodArgs = {java.lang.String.class, boolean.class}
-        ), @TestTarget(
-          methodName = "putFloat",
-          methodArgs = {java.lang.String.class, float.class}
-        ), @TestTarget(
-          methodName = "putByteArray",
-          methodArgs = {java.lang.String.class, byte[].class}
-        ), @TestTarget(
-          methodName = "keys",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "removeNode",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "sync",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "flush",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "exportNode",
-          methodArgs = {java.io.OutputStream.class}
-        ), @TestTarget(
-          methodName = "exportSubtree",
-          methodArgs = {java.io.OutputStream.class}
-        ), @TestTarget(
-          methodName = "getChild",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _testRuntimeException() throws IOException,
-            BackingStoreException {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            fail();
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        p.setResult(MockAbstractPreferences.runtimeException);
-        try {
-            p.childrenNames();
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        try {
-            p.put("exceptionkey", "value");
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.absolutePath();
-        p.toString();
-        assertEquals("exception default", p.get("key", "exception default"));
-        try {
-            p.remove("key");
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        try {
-            p.clear();
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        try {
-            p.putInt("key", 3);
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.getInt("key", 3);
-        try {
-            p.putLong("key", 3l);
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.getLong("key", 3l);
-        try {
-            p.putDouble("key", 3);
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.getDouble("key", 3);
-        try {
-            p.putBoolean("key", true);
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.getBoolean("key", true);
-        try {
-            p.putFloat("key", 3f);
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.getFloat("key", 3f);
-        try {
-            p.putByteArray("key", new byte[0]);
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.getByteArray("key", new byte[0]);
-        try {
-            p.keys();
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        try {
-            p.keys();
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        try {
-            p.childrenNames();
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.parent();
-        p.node("");
-        p.nodeExists("");
-        try {
-            p.removeNode();
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.name();
-        p.absolutePath();
-        p.isUserNode();
-        MockPreferenceChangeListener pcl = new MockPreferenceChangeListener();
-        p.addPreferenceChangeListener(pcl);
-        p.removePreferenceChangeListener(pcl);
-        MockNodeChangeListener ncl = new MockNodeChangeListener();
-        p.addNodeChangeListener(ncl);
-        p.removeNodeChangeListener(ncl);
-        p.toString();
-        try {
-            p.sync();
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        try {
-            p.flush();
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        try {
-            p.exportNode(new ByteArrayOutputStream());
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        try {
-            p.exportSubtree(new ByteArrayOutputStream());
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.isRemovedImpl();
-        try {
-            p.getChildImpl(null);
-            fail();
-        } catch (MockRuntimeException e) {
-        }
-        p.cachedChildrenImpl();
-    }
-
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test is OK, but it verifies unspecified NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "childrenNames",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "removeNode",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "getChild",
-          methodArgs = {java.lang.String.class}
-        ), @TestTarget(
-          methodName = "exportNode",
-          methodArgs = {java.io.OutputStream.class}
-        ), @TestTarget(
-          methodName = "exportSubtree",
-          methodArgs = {java.io.OutputStream.class}
-        )
-    })
-    public void _testSPIReturnNull() throws IOException, BackingStoreException {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            fail();
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        p.setResult(MockAbstractPreferences.returnNull);
-        try {
-            p.childrenNames();
-            fail();
-        } catch (NullPointerException e) {
-        }
-        p.absolutePath();
-        p.toString();
-        p.put("nullkey", "value");
-        assertEquals("null default", p.get("key", "null default"));
-        p.remove("key");
-        try {
-            p.clear();
-            fail();
-        } catch (NullPointerException e) {
-        }
-        p.putInt("key", 3);
-        p.getInt("key", 3);
-        p.putLong("key", 3l);
-        p.getLong("key", 3l);
-        p.putDouble("key", 3);
-        p.getDouble("key", 3);
-        p.putBoolean("key", true);
-        p.getBoolean("key", true);
-        p.putFloat("key", 3f);
-        p.getFloat("key", 3f);
-        p.putByteArray("key", new byte[0]);
-        p.getByteArray("key", new byte[0]);
-        p.keys();
-        try {
-            p.childrenNames();
-            fail();
-        } catch (NullPointerException e) {
-        }
-        p.parent();
-        p.node("");
-        p.nodeExists("");
-        try {
-            p.removeNode();
-            fail();
-        } catch (NullPointerException e) {
-        }
-        p.name();
-        p.absolutePath();
-        p.isUserNode();
-        MockPreferenceChangeListener mockPreferenceChangeListener = new MockPreferenceChangeListener();
-        p.addPreferenceChangeListener(mockPreferenceChangeListener);
-        p.removePreferenceChangeListener(mockPreferenceChangeListener);
-        MockNodeChangeListener mockNodeChangeListener = new MockNodeChangeListener();
-        p.addNodeChangeListener(mockNodeChangeListener);
-        p.removeNodeChangeListener(mockNodeChangeListener);
-        p.toString();
-        p.sync();
-        p.flush();
-        try {
-            p.exportNode(System.out);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.exportSubtree(System.out);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        p.isRemovedImpl();
-        try {
-            p.getChildImpl("");
-            fail();
-        } catch (NullPointerException e) {
-        }
-        p.cachedChildrenImpl();
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Test verifies IllegalStateException",
-      targets = {
-        @TestTarget(
-          methodName = "nodeExists",
-          methodArgs = {java.lang.String.class}
-        ), @TestTarget(
-          methodName = "childrenNames",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.String.class}
-        ), @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        ), @TestTarget(
-          methodName = "put",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        ), @TestTarget(
-          methodName = "getInt",
-          methodArgs = {java.lang.String.class, int.class}
-        ), @TestTarget(
-          methodName = "putInt",
-          methodArgs = {java.lang.String.class, int.class}
-        ), @TestTarget(
-          methodName = "getLong",
-          methodArgs = {java.lang.String.class, long.class}
-        ), @TestTarget(
-          methodName = "putLong",
-          methodArgs = {java.lang.String.class, long.class}
-        ), @TestTarget(
-          methodName = "putDouble",
-          methodArgs = {java.lang.String.class, double.class}
-        ), @TestTarget(
-          methodName = "getDouble",
-          methodArgs = {java.lang.String.class, double.class}
-        ), @TestTarget(
-          methodName = "putBoolean",
-          methodArgs = {java.lang.String.class, boolean.class}
-        ), @TestTarget(
-          methodName = "getBoolean",
-          methodArgs = {java.lang.String.class, boolean.class}
-        ), @TestTarget(
-          methodName = "putFloat",
-          methodArgs = {java.lang.String.class, float.class}
-        ), @TestTarget(
-          methodName = "getFloat",
-          methodArgs = {java.lang.String.class, float.class}
-        ), @TestTarget(
-          methodName = "putByteArray",
-          methodArgs = {java.lang.String.class, byte[].class}
-        ), @TestTarget(
-          methodName = "getByteArray",
-          methodArgs = {java.lang.String.class, byte[].class}
-        ), @TestTarget(
-          methodName = "keys",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "childrenNames",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "parent",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "node",
-          methodArgs = {java.lang.String.class}
-        ), @TestTarget(
-          methodName = "removeNode",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "addNodeChangeListener",
-          methodArgs = {java.util.prefs.NodeChangeListener.class}
-        ), @TestTarget(
-          methodName = "removeNodeChangeListener",
-          methodArgs = {java.util.prefs.NodeChangeListener.class}
-        ), @TestTarget(
-          methodName = "addPreferenceChangeListener",
-          methodArgs = {java.util.prefs.PreferenceChangeListener.class}
-        ), @TestTarget(
-          methodName = "removePreferenceChangeListener",
-          methodArgs = {java.util.prefs.PreferenceChangeListener.class}
-        ), @TestTarget(
-          methodName = "sync",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "exportNode",
-          methodArgs = {java.io.OutputStream.class}
-        ), @TestTarget(
-          methodName = "exportSubtree",
-          methodArgs = {java.io.OutputStream.class}
-        ), @TestTarget(
-          methodName = "getChild",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _testIllegalStateException() throws IOException,
-            BackingStoreException {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            fail();
-            return;
-        }
         pref.removeNode();
-        // after remove node, every methods, except name(), absolutePath(),
-        // isUserNode(), flush() or nodeExists(""),
-        // will throw illegal state exception
-        pref.nodeExists("");
-        pref.name();
-        pref.absolutePath();
-        pref.isUserNode();
-        pref.toString();
-        pref.flush();
-        try {
-            pref.nodeExists("child");
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.childrenNames();
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.remove(null);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.clear();
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.get("key", "null default");
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.put("nullkey", "value");
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.putInt("key", 3);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.getInt("key", 3);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.putLong("key", 3l);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.getLong("key", 3l);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.putDouble("key", 3);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.getDouble("key", 3);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.putBoolean("key", true);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.getBoolean("key", true);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.putFloat("key", 3f);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.getFloat("key", 3f);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.putByteArray("key", new byte[0]);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.getByteArray("key", new byte[0]);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.keys();
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.keys();
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.childrenNames();
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.parent();
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.node(null);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.removeNode();
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref
-                    .addPreferenceChangeListener(new MockPreferenceChangeListener());
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref
-                    .removePreferenceChangeListener(new MockPreferenceChangeListener());
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.addNodeChangeListener(new MockNodeChangeListener());
-            fail();
-        } catch (IllegalStateException e) {
-        }
-        try {
-            pref.removeNodeChangeListener(new MockNodeChangeListener());
-            fail();
-        } catch (IllegalStateException e) {
-        }
+        
         try {
             pref.sync();
-            fail();
+            fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
+            //expected
         }
+    }
+
+    class MockPreferenceChangeListener implements PreferenceChangeListener {
+        private boolean flagChange = false;
+
+        public void preferenceChange(PreferenceChangeEvent arg0) {
+            flagChange = true;
+        }
+        
+        public boolean isChanged () {
+            boolean retVal = flagChange;
+            flagChange = false;
+            return retVal;
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addPreferenceChangeListener",
+        args = {java.util.prefs.PreferenceChangeListener.class}
+    )
+    public void testAddPreferenceChangeListener() throws BackingStoreException {
+        MockPreferenceChangeListener mpcl = new MockPreferenceChangeListener();
+        parent.addPreferenceChangeListener(mpcl);
+        assertFalse(mpcl.isChanged());
+        pref.node("new node");
+        pref.flush();
+        parent.flush();
+        assertFalse(mpcl.isChanged());
+        parent.node("new node");
+        parent.flush();
+        assertFalse(mpcl.isChanged());
+        parent.putInt("IntValue", 33);
+        parent.flush();
+        parent.flush();
+        assertTrue(mpcl.isChanged());
+        assertEquals(33, parent.getInt("IntValue", 22));
+        parent.flush();
+        assertFalse(mpcl.isChanged());
+        assertEquals(22, parent.getInt("Missed Value", 22));
+        parent.flush();
+        assertFalse(mpcl.isChanged());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "removePreferenceChangeListener",
+        args = {java.util.prefs.PreferenceChangeListener.class}
+    )
+    public void testRemovePreferenceChangeListener() throws BackingStoreException {
+        MockPreferenceChangeListener mpcl = new MockPreferenceChangeListener();
+        parent.addPreferenceChangeListener(mpcl);
+        assertFalse(mpcl.isChanged());
+        parent.putInt("IntValue", 33);
+        parent.flush();
+        assertTrue(mpcl.isChanged());
+        parent.removePreferenceChangeListener(mpcl);
+        parent.putInt("IntValue", 33);
+        parent.flush();
+        assertFalse(mpcl.isChanged());
+    }
+
+    class MockNodeChangeListener implements NodeChangeListener {
+        private boolean flagAdded = false;
+        private boolean flagRemoved = false;
+
+        public void childAdded(NodeChangeEvent arg0) {
+            flagAdded = true;
+        }
+
+        public void childRemoved(NodeChangeEvent arg0) {
+            flagRemoved = true;
+        }
+        
+        public boolean isAdded() {
+            return flagAdded;
+        }
+        
+        public boolean isRemoved() {
+            return flagRemoved;
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addNodeChangeListener",
+        args = {java.util.prefs.NodeChangeListener.class}
+    )
+    public void testAddNodeChangeListener() throws BackingStoreException {
+        MockNodeChangeListener mncl = new MockNodeChangeListener();
+        parent.addNodeChangeListener(mncl);
+        pref.node("test");
+        pref.flush();
+        parent.flush();
+        assertFalse(mncl.isAdded());
+        assertFalse(mncl.isRemoved());
+        pref.removeNode();
+        parent.flush();
+        assertFalse(mncl.isAdded());
+        assertTrue(mncl.isRemoved());
+        parent.node("new node");
+        parent.flush();
+        assertTrue(mncl.isAdded());
+        assertTrue(mncl.isRemoved());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "removeNodeChangeListener",
+        args = {java.util.prefs.NodeChangeListener.class}
+    )
+    public void testRemoveNodeChangeListener() throws BackingStoreException {
+        MockNodeChangeListener mncl = new MockNodeChangeListener();
+        parent.addNodeChangeListener(mncl);
+        pref.node("test");
+        pref.flush();
+        parent.flush();
+        assertFalse(mncl.isAdded());
+        assertFalse(mncl.isRemoved());
+        parent.removeNodeChangeListener(mncl);
+        pref.removeNode();
+        parent.flush();
+        assertFalse(mncl.isAdded());
+        assertFalse(mncl.isRemoved());
+        parent.node("new node");
+        parent.flush();
+        assertFalse(mncl.isAdded());
+        assertFalse(mncl.isRemoved());
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "BackingStoreException, IOException can not be checked.",
+            method = "exportNode",
+            args = {java.io.OutputStream.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "BackingStoreException, IOException can not be checked.",
+            method = "flush",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "BackingStoreException, IOException can not be checked.",
+            method = "flushSpi",
+            args = {}
+        )
+    })
+    public void testExportNode() throws BackingStoreException, IOException, InvalidPreferencesFormatException {
+        AbstractPreferences ap = (AbstractPreferences) pref.node("New node");
+        pref.putInt("IntValue", 33);
+        pref.putBoolean("BoolValue", true);
+        pref.flush();
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        
+        pref.exportNode(baos);
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        
+        assertTrue(pref.getBoolean("BoolValue", false));
+        assertEquals(33, pref.getInt("IntValue", 22));
+        assertEquals(1, pref.childrenNames().length);
+        
+        String xmlData = new String(baos.toByteArray());
+
+        assertTrue(xmlData.contains("IntValue"));
+        assertTrue(xmlData.contains("BoolValue"));
+        assertTrue(xmlData.contains("33"));
+        assertTrue(xmlData.contains("true"));
+        
+        pref.removeNode();
+        
         try {
-            pref.exportNode(null);
-            fail();
+            pref.exportNode(new ByteArrayOutputStream());
+            fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
+            //expected
         }
+        
         try {
-            pref.exportSubtree(null);
-            fail();
+            pref.getBoolean("BoolValue", false);
+            fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
+            //expected
         }
-        if (!(pref instanceof MockAbstractPreferences)) {
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        p.isRemovedImpl();
-        p.cachedChildrenImpl();
+        pref = (AbstractPreferences) parent.node(nodeName);
+
+        pref.importPreferences(bais);
+        
+        assertTrue(pref.getBoolean("BoolValue", false));
+        assertEquals(33, pref.getInt("IntValue", 22));
+        assertEquals(0, pref.childrenNames().length);
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "BackingStoreException, IOException can not be checked.",
+            method = "exportSubtree",
+            args = {java.io.OutputStream.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "BackingStoreException, IOException can not be checked.",
+            method = "flush",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "BackingStoreException, IOException can not be checked.",
+            method = "flushSpi",
+            args = {}
+        )
+    })
+    public void testExportSubtree() throws BackingStoreException, IOException, InvalidPreferencesFormatException {
+        AbstractPreferences ap1 = (AbstractPreferences) pref.node("First node");
+        AbstractPreferences ap2 = (AbstractPreferences) pref.node("Second node");
+        pref.putInt("IntegerValue", 33);
+        pref.putBoolean("BoolValue", true);
+        pref.flush();
+
+        ap1.putInt("FirstIntValue", 11);
+        ap2.putDouble("DoubleValue", new Double(6.626e-34));
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        
+        pref.exportSubtree(baos);
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        
+        assertTrue(pref.getBoolean("BoolValue", false));
+        assertEquals(33, pref.getInt("IntegerValue", 22));
+        assertEquals(2, pref.childrenNames().length);
+        assertEquals(11, ap1.getInt("FirstIntValue", 22));
+        assertEquals(new Double(6.626e-34), ap2.getDouble("DoubleValue", new Double (3.14)));
+        
+        String xmlData = new String(baos.toByteArray());
+
+        assertTrue(xmlData.contains("IntegerValue"));
+        assertTrue(xmlData.contains("BoolValue"));
+        assertTrue(xmlData.contains("FirstIntValue"));
+        assertTrue(xmlData.contains("DoubleValue"));
+        assertTrue(xmlData.contains("33"));
+        assertTrue(xmlData.contains("true"));
+        assertTrue(xmlData.contains("11"));
+        assertTrue(xmlData.contains("6.626E-34"));
+        
+        pref.removeNode();
+        
         try {
-            p.getChildImpl(null);
-            fail();
+            pref.exportSubtree(new ByteArrayOutputStream());
+            fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
+            //expected
         }
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Test verifies NullPointerException & IllegalStateException",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        ), @TestTarget(
-          methodName = "put",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        ), @TestTarget(
-          methodName = "putInt",
-          methodArgs = {java.lang.String.class, int.class}
-        ), @TestTarget(
-          methodName = "getInt",
-          methodArgs = {java.lang.String.class, int.class}
-        ), @TestTarget(
-          methodName = "putLong",
-          methodArgs = {java.lang.String.class, long.class}
-        ), @TestTarget(
-          methodName = "getLong",
-          methodArgs = {java.lang.String.class, long.class}
-        ), @TestTarget(
-          methodName = "putBoolean",
-          methodArgs = {java.lang.String.class, boolean.class}
-        ), @TestTarget(
-          methodName = "getBoolean",
-          methodArgs = {java.lang.String.class, boolean.class}
-        ), @TestTarget(
-          methodName = "putFloat",
-          methodArgs = {java.lang.String.class, float.class}
-        ), @TestTarget(
-          methodName = "getFloat",
-          methodArgs = {java.lang.String.class, float.class}
-        ), @TestTarget(
-          methodName = "putByteArray",
-          methodArgs = {java.lang.String.class, byte[].class}
-        ), @TestTarget(
-          methodName = "getByteArray",
-          methodArgs = {java.lang.String.class, byte[].class}
-        ), @TestTarget(
-          methodName = "addNodeChangeListener",
-          methodArgs = {java.util.prefs.NodeChangeListener.class}
-        ), @TestTarget(
-          methodName = "removeNodeChangeListener",
-          methodArgs = {java.util.prefs.NodeChangeListener.class}
-        ), @TestTarget(
-          methodName = "addPreferenceChangeListener",
-          methodArgs = {java.util.prefs.PreferenceChangeListener.class}
-        ), @TestTarget(
-          methodName = "removePreferenceChangeListener",
-          methodArgs = {java.util.prefs.PreferenceChangeListener.class}
-        )
-    })
-    public void _testNullAndIllegalStateException() throws Exception {
-        if (!(pref instanceof MockAbstractPreferences)) {
-            fail();
-            return;
-        }
-        MockAbstractPreferences p = (MockAbstractPreferences) pref;
-        p.removeNode();
+        
         try {
-            p.get(null, "null default");
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.put(null, "value");
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.putInt(null, 3);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.getInt(null, 3);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.putLong(null, 3l);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.getLong(null, 3l);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.putDouble(null, 3);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.getDouble(null, 3);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.putBoolean(null, true);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.getBoolean(null, true);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.putFloat(null, 3f);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.getFloat(null, 3f);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.putByteArray(null, new byte[0]);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.getByteArray(null, new byte[0]);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.addPreferenceChangeListener(null);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.removePreferenceChangeListener(null);
-            fail();
+            pref.getBoolean("BoolValue", false);
+            fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
+            //expected
         }
-        try {
-            p.addNodeChangeListener(null);
-            fail();
-        } catch (NullPointerException e) {
-        }
-        try {
-            p.removeNodeChangeListener(null);
-            fail();
-        } catch (IllegalStateException e) {
-        }
-    }
- 
-    /**
-     * @test java.util.prefs.AbstractPreferences#childrenNamesSpi()
-     *
-     */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "childrenNamesSpi",
-          methodArgs = {}
-        )
-    })
-    public void testChildrenNamesSpi() {
-        MockAbstractPreferences p = new MockAbstractPreferences(
-                (AbstractPreferences) Preferences.userRoot(), "mock");
-        try {
-            assertEquals(0, p.childrenNamesSpi().length);
-        } catch(java.util.prefs.BackingStoreException bse) {
-            fail("java.util.prefs.BackingStoreException is thrown: " + 
-                    bse.toString());
-        }
+        pref = (AbstractPreferences) parent.node(nodeName);
+        pref.importPreferences(bais);
+
+        ap1 = (AbstractPreferences) pref.node("First node");
+        ap2 = (AbstractPreferences) pref.node("Second node");
+        
+        assertTrue(pref.getBoolean("BoolValue", false));
+        assertEquals(33, pref.getInt("IntegerValue", 22));
+        assertEquals(2, pref.childrenNames().length);
+        assertEquals(11, ap1.getInt("FirstIntValue", 22));
+        assertEquals(new Double(6.626e-34), ap2.getDouble("DoubleValue", new Double (3.14)));
     }
     
-    /**
-     * @test java.util.prefs.AbstractPreferences#childSpi()
-     *
-     */
+    class MockAbstractPreferences extends AbstractPreferences {
+        protected MockAbstractPreferences(AbstractPreferences parent, String name) {
+            super(parent, name);
+        }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "childSpi",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void testChildSpi() {
-        MockAbstractPreferences p = new MockAbstractPreferences(
-                (AbstractPreferences) Preferences.userRoot(), "mock");
-        Preferences child = p.node("mock1");
-        assertEquals(child, p.childSpi("mock1"));
-    }
-    
-    /**
-     * @test java.util.prefs.AbstractPreferences#flushSpi()
-     *
-     */
+        @Override
+        protected AbstractPreferences childSpi(String name) {
+            return null;
+        }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "flushSpi",
-          methodArgs = {}
-        )
-    })
-    public void testFlushSpi() {
-        MockAbstractPreferences p = new MockAbstractPreferences(
-                (AbstractPreferences) Preferences.userRoot(), "mock");
-        try {
-            p.flushSpi();
-        } catch(Exception e) {
-            fail("Unexpected exception was thrown: " + e.getMessage());
+        @Override
+        protected String[] childrenNamesSpi() throws BackingStoreException {
+            return null;
+        }
+
+        @Override
+        protected void flushSpi() throws BackingStoreException {
+        }
+
+        @Override
+        protected String getSpi(String key) {
+            return null;
+        }
+
+        @Override
+        protected String[] keysSpi() throws BackingStoreException {
+            return null;
+        }
+
+        @Override
+        protected void putSpi(String key, String value) {
+        }
+
+        @Override
+        protected void removeNodeSpi() throws BackingStoreException {
+        }
+
+        @Override
+        protected void removeSpi(String key) {
+        }
+
+        @Override
+        protected void syncSpi() throws BackingStoreException {
         }
     }
-    
-    /**
-     * @test java.util.prefs.AbstractPreferences#getSpi()
-     *
-     */
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSpi",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void testGetSpi() {
-        MockAbstractPreferences p = new MockAbstractPreferences(
-                (AbstractPreferences) Preferences.userRoot(), "mock");
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "AbstractPreferences",
+        args = {java.util.prefs.AbstractPreferences.class, java.lang.String.class}
+    )
+    public void testAbstractPreferences() {
+        assertNotNull(new MockAbstractPreferences(pref, "node name"));
         try {
-            assertNull(p.getSpi(""));
-            p.put("key", "default");
-            assertEquals("default", p.getSpi("key"));
-        } catch(Exception e) {
-            fail("Unexpected exception was thrown: " + e.getMessage());
+            new MockAbstractPreferences(pref, "node/name");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+
+        try {
+            new MockAbstractPreferences(null, "node");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
         }
     }
-    
-    /**
-     * @test java.util.prefs.AbstractPreferences#keysSpi()
-     *
-     */
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keysSpi",
-          methodArgs = {}
-        )
-    })
-    public void testKeysSpi() {
-        MockAbstractPreferences p = new MockAbstractPreferences(
-                (AbstractPreferences) Preferences.userRoot(), "mock");
-        try {
-            p.put("key1", "default");
-            p.putInt("key2", 123);
-            assertEquals(2, p.keysSpi().length);
-            assertEquals("key2", p.keysSpi()[0]);
-            assertEquals("key1", p.keysSpi()[1]);
-        } catch(Exception e) {
-            fail("Unexpected exception was thrown: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * @test java.util.prefs.AbstractPreferences#putSpi()
-     *
-     */
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "putSpi",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
-    public void testPutSpi() {
-        MockAbstractPreferences p = new MockAbstractPreferences(
-                (AbstractPreferences) Preferences.userRoot(), "mock");
-        try {
-            p.putSpi("key1", "default");
-            p.putSpi("key2", "123");
-            assertEquals(2, p.keysSpi().length);
-            assertEquals("key2", p.keysSpi()[0]);
-            assertEquals("key1", p.keysSpi()[1]);
-        } catch(Exception e) {
-            fail("Unexpected exception was thrown: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * @test java.util.prefs.AbstractPreferences#removeSpi()
-     *
-     */
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "removeNodeSpi",
-          methodArgs = {}
-        )
-    })
-    public void testRemoveSpi() {
-        MockAbstractPreferences p = new MockAbstractPreferences(
-                (AbstractPreferences) Preferences.userRoot(), "mock");
-        p.put("key1", "value1");
-        try {
-            p.removeSpi("key1");
-
-            assertNull(p.getSpi("key1"));
-        } catch(Exception e) {
-            fail("Unexpected exception was thrown: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * @test java.util.prefs.AbstractPreferences#syncSpi()
-     *
-     */
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "syncSpi",
-          methodArgs = {}
-        )
-    })
-    public void testSyncSpi() {
-        MockAbstractPreferences p = new MockAbstractPreferences(
-                (AbstractPreferences) Preferences.userRoot(), "mock");
-        p.put("key1", "value1");
-        try {
-            p.syncSpi();
-        } catch(Exception e) {
-            fail("Unexpected exception was thrown: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Regression for HARMONY-828
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test",
-      targets = {
-        @TestTarget(
-          methodName = "nodeExists",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void testLongPath() throws Exception {
-        assertFalse(pref
-                .nodeExists("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"));
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Tested indirectly",
+        method = "cachedChildren",
+        args = {}
+    )
+    public void testCachedChildren() throws BackingStoreException {
+        pref.node("First node");
+        pref.node("Second node");
+        
+        assertEquals(2, pref.childrenNames().length);
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "No reason to check dummy implementation",
+        method = "isRemoved",
+        args = {}
+    )
+    public void testIsRemoved() {
+    }
 }

@@ -17,9 +17,8 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.BufferOverflowException;
@@ -48,6 +47,7 @@ public class ByteBufferTest extends AbstractBufferTest {
     protected ByteBuffer buf;
 
     protected void setUp() throws Exception {
+        capacity = 10;
         buf = ByteBuffer.allocate(10);
         baseBuf = buf;
     }
@@ -62,24 +62,30 @@ public class ByteBufferTest extends AbstractBufferTest {
      * 1. case for check ByteBuffer testBuf properties
      * 2. case expected IllegalArgumentException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check backing array. Doesn't check boundary value " +
-            "of capacity.",
-      targets = {
-        @TestTarget(
-          methodName = "allocate",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "allocate",
+        args = {int.class}
+    )
     public void test_AllocateI() {
-        //    case: ByteBuffer testBuf properties is satisfy the conditions specification
+        // case: ByteBuffer testBuf properties is satisfy the conditions
+        // specification
         ByteBuffer testBuf = ByteBuffer.allocate(20);
-        assertEquals(testBuf.position(), 0);
-        assertEquals(testBuf.limit(), testBuf.capacity());
-        assertEquals(testBuf.arrayOffset(), 0);
+        assertEquals(0, testBuf.position());
+        assertNotNull(testBuf.array());
+        assertEquals(0, testBuf.arrayOffset());
+        assertEquals(20, testBuf.limit());
+        assertEquals(20, testBuf.capacity());
 
-        //    case: expected IllegalArgumentException
+        testBuf = ByteBuffer.allocate(0);
+        assertEquals(0, testBuf.position());
+        assertNotNull(testBuf.array());
+        assertEquals(0, testBuf.arrayOffset());
+        assertEquals(0, testBuf.limit());
+        assertEquals(0, testBuf.capacity());
+
+        // case: expected IllegalArgumentException
         try {
             testBuf = ByteBuffer.allocate(-20);
             fail("allocate method does not throws expected exception");
@@ -91,23 +97,40 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * test for method static ByteBuffer allocateDirect(int capacity)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check check backing array. Doesn't check boundary " +
-            "value of capacity.",
-      targets = {
-        @TestTarget(
-          methodName = "allocateDirect",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "allocateDirect",
+        args = {int.class}
+    )
     public void test_AllocateDirectI() {
-        //        case: ByteBuffer testBuf properties is satisfy the conditions specification
+        // case: ByteBuffer testBuf properties is satisfy the conditions
+        // specification
         ByteBuffer testBuf = ByteBuffer.allocateDirect(20);
-        assertEquals(testBuf.position(), 0);
-        assertEquals(testBuf.limit(), testBuf.capacity());
+        assertEquals(0, testBuf.position());
+        assertEquals(20, testBuf.limit());
+        assertEquals(20, testBuf.capacity());
 
-        //    case: expected IllegalArgumentException
+        testBuf = ByteBuffer.allocateDirect(0);
+        assertEquals(0, testBuf.position());
+        assertEquals(0, testBuf.limit());
+        assertEquals(0, testBuf.capacity());
+        
+        try {
+            testBuf.array();
+            fail("Didn't throw expected UnsupportedOperationException.");
+        } catch (UnsupportedOperationException e) {
+            //expected
+        }
+
+        try {
+            testBuf.arrayOffset();
+            fail("Didn't throw expected UnsupportedOperationException.");
+        } catch (UnsupportedOperationException e) {
+            //expected
+        }
+
+        // case: expected IllegalArgumentException
         try {
             testBuf = ByteBuffer.allocate(-20);
             fail("allocate method does not throws expected exception");
@@ -115,107 +138,59 @@ public class ByteBufferTest extends AbstractBufferTest {
             //expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "The second if/else verifies the same case.",
-      targets = {
-        @TestTarget(
-          methodName = "array",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "array",
+        args = {}
+    )
     public void testArray() {
-        if (buf.hasArray()) {
-            byte array[] = buf.array();
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
+        byte array[] = buf.array();
+        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
 
-            loadTestData1(array, buf.arrayOffset(), buf.capacity());
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
+        loadTestData1(array, buf.arrayOffset(), buf.capacity());
+        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
 
-            loadTestData2(array, buf.arrayOffset(), buf.capacity());
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
+        loadTestData2(array, buf.arrayOffset(), buf.capacity());
+        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
 
-            loadTestData1(buf);
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
+        loadTestData1(buf);
+        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
 
-            loadTestData2(buf);
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
-        } else {
-            if (buf.isReadOnly()) {
-                try {
-                    buf.array();
-                    fail("Should throw Exception"); //$NON-NLS-1$
-                } catch (UnsupportedOperationException e) {
-                    // expected
-                    // Note:can not tell when to throw 
-                    // UnsupportedOperationException
-                    // or ReadOnlyBufferException, so catch all.
-                }
-            } else {
-                try {
-                    buf.array();
-                    fail("Should throw Exception"); //$NON-NLS-1$
-                } catch (UnsupportedOperationException e) {
-                    // expected
-                }
-            }
-        }
+        loadTestData2(buf);
+        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "The second if/else verifies the same case.",
-      targets = {
-        @TestTarget(
-          methodName = "arrayOffset",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "arrayOffset",
+        args = {}
+    )
     public void testArrayOffset() {
-        if (buf.hasArray()) {
-            byte array[] = buf.array();
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
-
-            loadTestData1(array, buf.arrayOffset(), buf.capacity());
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
-
-            loadTestData2(array, buf.arrayOffset(), buf.capacity());
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
-
-            loadTestData1(buf);
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
-
-            loadTestData2(buf);
-            assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
-        } else {
-            if (buf.isReadOnly()) {
-                try {
-                    buf.arrayOffset();
-                    fail("Should throw Exception"); //$NON-NLS-1$
-                } catch (UnsupportedOperationException e) {
-                    // expected
-                    // Note:can not tell when to throw 
-                    // UnsupportedOperationException
-                    // or ReadOnlyBufferException, so catch all.
-                }
-            } else {
-                try {
-                    buf.arrayOffset();
-                    fail("Should throw Exception"); //$NON-NLS-1$
-                } catch (UnsupportedOperationException e) {
-                    // expected
-                }
-            }
+        byte array[] = buf.array();
+        for(int i = 0; i < buf.capacity(); i++) {
+            array[i] = (byte) i;
         }
+        int offset = buf.arrayOffset();
+        assertContentEquals(buf, array, offset, buf.capacity());
+
+        ByteBuffer wrapped = ByteBuffer.wrap(array, 3, array.length - 3);
+        
+        loadTestData1(array, wrapped.arrayOffset(), wrapped.capacity());
+        assertContentEquals(buf, array, offset, buf.capacity());
+
+        loadTestData2(array, wrapped.arrayOffset(), wrapped.capacity());
+        assertContentEquals(buf, array, offset, buf.capacity());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asReadOnlyBuffer",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "asReadOnlyBuffer",
+        args = {}
+    )
     public void testAsReadOnlyBuffer() {
         buf.clear();
         buf.mark();
@@ -233,21 +208,19 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         // readonly's position, mark, and limit should be independent to buf
         readonly.reset();
-        assertEquals(readonly.position(), 0);
+        assertEquals(0, readonly.position());
         readonly.clear();
         assertEquals(buf.position(), buf.limit());
         buf.reset();
-        assertEquals(buf.position(), 0);
+        assertEquals(0, buf.position());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compact",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "compact",
+        args = {}
+    )
     public void testCompact() {
         if (buf.isReadOnly()) {
             try {
@@ -265,8 +238,8 @@ public class ByteBufferTest extends AbstractBufferTest {
         loadTestData1(buf);
         ByteBuffer ret = buf.compact();
         assertSame(ret, buf);
-        assertEquals(buf.position(), buf.capacity());
-        assertEquals(buf.limit(), buf.capacity());
+        assertEquals(buf.capacity(), buf.position());
+        assertEquals(buf.capacity(), buf.limit());
         assertContentLikeTestData1(buf, 0, (byte) 0, buf.capacity());
         try {
             buf.reset();
@@ -281,7 +254,7 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.mark();
         ret = buf.compact();
         assertSame(ret, buf);
-        assertEquals(buf.position(), 0);
+        assertEquals(0, buf.position());
         assertEquals(buf.limit(), buf.capacity());
         assertContentLikeTestData1(buf, 0, (byte) 0, buf.capacity());
         try {
@@ -298,7 +271,7 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.mark();
         ret = buf.compact();
         assertSame(ret, buf);
-        assertEquals(buf.position(), 4);
+        assertEquals(4, buf.position());
         assertEquals(buf.limit(), buf.capacity());
         assertContentLikeTestData1(buf, 0, (byte) 1, 4);
         try {
@@ -308,15 +281,13 @@ public class ByteBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testCompareTo() {
         // compare to self
         assertEquals(0, buf.compareTo(buf));
@@ -344,15 +315,13 @@ public class ByteBufferTest extends AbstractBufferTest {
         
         assertTrue(ByteBuffer.wrap(new byte[21]).compareTo(ByteBuffer.allocateDirect(21)) == 0);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "duplicate",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "duplicate",
+        args = {}
+    )
     public void testDuplicate() {
         buf.clear();
         buf.mark();
@@ -370,11 +339,11 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         // duplicate's position, mark, and limit should be independent to buf
         duplicate.reset();
-        assertEquals(duplicate.position(), 0);
+        assertEquals(0, duplicate.position());
         duplicate.clear();
         assertEquals(buf.position(), buf.limit());
         buf.reset();
-        assertEquals(buf.position(), 0);
+        assertEquals(0, buf.position());
 
         // duplicate share the same content with buf
         if (!duplicate.isReadOnly()) {
@@ -384,15 +353,13 @@ public class ByteBufferTest extends AbstractBufferTest {
             assertContentEquals(buf, duplicate);
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void testEquals() {
         // equal to self
         assertTrue(buf.equals(buf));
@@ -418,19 +385,16 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for byte get()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "get",
+        args = {}
+    )
     public void testGet() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
-            assertEquals(buf.position(), i);
+            assertEquals(i, buf.position());
             assertEquals(buf.get(), buf.get(i));
         }
         try {
@@ -444,30 +408,31 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer get(byte[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "get",
+        args = {byte[].class}
+    )
     public void testGetbyteArray() {
         byte array[] = new byte[1];
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
-            assertEquals(buf.position(), i);
+            assertEquals(i, buf.position());
             ByteBuffer ret = buf.get(array);
             assertEquals(array[0], buf.get(i));
             assertSame(ret, buf);
         }
+
+        buf.get(new byte[0]);
+
         try {
             buf.get(array);
             fail("Should throw Exception"); //$NON-NLS-1$
         } catch (BufferUnderflowException e) {
             // expected
         }
+
         try {
             buf.get((byte[])null);
             fail("Should throw Exception"); //$NON-NLS-1$
@@ -479,15 +444,12 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer get(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "get",
+        args = {byte[].class, int.class, int.class}
+    )
     public void testGetbyteArrayintint() {
         buf.clear();
         byte array[] = new byte[buf.capacity()];
@@ -498,7 +460,7 @@ public class ByteBufferTest extends AbstractBufferTest {
         } catch (BufferUnderflowException e) {
             // expected
         }
-        assertEquals(buf.position(), 0);
+        assertEquals(0, buf.position());
         try {
             buf.get(array, -1, array.length);
             fail("Should throw Exception"); //$NON-NLS-1$
@@ -512,7 +474,7 @@ public class ByteBufferTest extends AbstractBufferTest {
         } catch (IndexOutOfBoundsException e) {
             // expected
         }
-        assertEquals(buf.position(), 0);
+        assertEquals(0, buf.position());
         try {
             buf.get(array, 2, -1);
             fail("Should throw Exception"); //$NON-NLS-1$
@@ -543,7 +505,7 @@ public class ByteBufferTest extends AbstractBufferTest {
         } catch (IndexOutOfBoundsException e) {
             // expected
         }
-        assertEquals(buf.position(), 0);
+        assertEquals(0, buf.position());
 
         buf.clear();
         ByteBuffer ret = buf.get(array, 0, array.length);
@@ -555,19 +517,16 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for byte get(int)
      */
-    @TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "get",
-              methodArgs = {int.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "get",
+        args = {int.class}
+    )
     public void testGetint() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
-            assertEquals(buf.position(), i);
+            assertEquals(i, buf.position());
             assertEquals(buf.get(), buf.get(i));
         }
         try {
@@ -583,48 +542,35 @@ public class ByteBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "The same verification in if/else block.",
-      targets = {
-        @TestTarget(
-          methodName = "hasArray",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "hasArray",
+        args = {}
+    )
     public void testHasArray() {
         if (buf.hasArray()) {
             assertNotNull(buf.array());
         } else {
-            if (buf.isReadOnly()) {
-                try {
-                    buf.array();
-                    fail("Should throw Exception"); //$NON-NLS-1$
-                } catch (UnsupportedOperationException e) {
-                    // expected
-                    // Note:can not tell when to throw 
-                    // UnsupportedOperationException
-                    // or ReadOnlyBufferException, so catch all.
-                }
-            } else {
-                try {
-                    buf.array();
-                    fail("Should throw Exception"); //$NON-NLS-1$
-                } catch (UnsupportedOperationException e) {
-                    // expected
-                }
+            try {
+                buf.array();
+                fail("Should throw Exception"); //$NON-NLS-1$
+            } catch (UnsupportedOperationException e) {
+                // expected
+                // Note:can not tell when to catch 
+                // UnsupportedOperationException or
+                // ReadOnlyBufferException, so catch all.
             }
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void testHashCode() {
         buf.clear();
         loadTestData1(buf);
@@ -637,9 +583,14 @@ public class ByteBufferTest extends AbstractBufferTest {
     }
     
     //for the testHashCode() method of readonly subclasses
-    protected void readOnlyHashCode() {
-        //create a new buffer initiated with some data 
-        ByteBuffer buf = ByteBuffer.allocate(BUFFER_LENGTH);
+    protected void readOnlyHashCode(boolean direct) {
+        //create a new buffer initiated with some data
+        ByteBuffer buf;
+        if (direct) {
+            buf = ByteBuffer.allocateDirect(BUFFER_LENGTH);
+        } else {
+            buf = ByteBuffer.allocate(BUFFER_LENGTH);
+        }
         loadTestData1(buf);
         buf = buf.asReadOnlyBuffer();
         buf.clear();
@@ -649,27 +600,23 @@ public class ByteBufferTest extends AbstractBufferTest {
         duplicate.position(buf.capacity()/2);
         assertTrue(buf.hashCode()!= duplicate.hashCode());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Abstract method.",
-      targets = {
-        @TestTarget(
-          methodName = "isDirect",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Abstract method.",
+        method = "isDirect",
+        args = {}
+    )
     public void testIsDirect() {
         buf.isDirect();
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "order",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "order",
+        args = {}
+    )
     public void testOrder() {
         // BIG_ENDIAN is the default byte order
         assertEquals(ByteOrder.BIG_ENDIAN, buf.order());
@@ -692,15 +639,12 @@ public class ByteBufferTest extends AbstractBufferTest {
      * test covers following usecases:
      * 1. case for check
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "order",
-          methodArgs = {java.nio.ByteOrder.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "order",
+        args = {java.nio.ByteOrder.class}
+    )
     public void test_OrderLjava_lang_ByteOrder() {
         //         BIG_ENDIAN is the default byte order
         assertEquals(ByteOrder.BIG_ENDIAN, buf.order());
@@ -721,15 +665,12 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer put(byte)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "put",
+        args = {byte.class}
+    )
     public void testPutbyte() {
         if (buf.isReadOnly()) {
             try {
@@ -744,9 +685,9 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
-            assertEquals(buf.position(), i);
+            assertEquals(i, buf.position());
             ByteBuffer ret = buf.put((byte) i);
-            assertEquals(buf.get(i), (byte) i);
+            assertEquals((byte) i, buf.get(i));
             assertSame(ret, buf);
         }
         try {
@@ -755,20 +696,24 @@ public class ByteBufferTest extends AbstractBufferTest {
         } catch (BufferOverflowException e) {
             // expected
         }
+
+        buf.rewind();
+        buf.put(Byte.MAX_VALUE);
+        assertEquals(Byte.MAX_VALUE, buf.get(0));
+        buf.rewind();
+        buf.put(Byte.MIN_VALUE);
+        assertEquals(Byte.MIN_VALUE, buf.get(0));
     }
 
     /*
      * Class under test for java.nio.ByteBuffer put(byte[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "put",
+        args = {byte[].class}
+    )
     public void testPutbyteArray() {
         byte array[] = new byte[1];
         if (buf.isReadOnly()) {
@@ -783,10 +728,10 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
-            assertEquals(buf.position(), i);
+            assertEquals(i, buf.position());
             array[0] = (byte) i;
             ByteBuffer ret = buf.put(array);
-            assertEquals(buf.get(i), (byte) i);
+            assertEquals((byte) i, buf.get(i));
             assertSame(ret, buf);
         }
         try {
@@ -806,15 +751,12 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer put(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "put",
+        args = {byte[].class, int.class, int.class}
+    )
     public void testPutbyteArrayintint() {
         buf.clear();
         byte array[] = new byte[buf.capacity()];
@@ -834,7 +776,7 @@ public class ByteBufferTest extends AbstractBufferTest {
         } catch (BufferOverflowException e) {
             // expected
         }
-        assertEquals(buf.position(), 0);
+        assertEquals(0, buf.position());
         try {
             buf.put(array, -1, array.length);
             fail("Should throw Exception"); //$NON-NLS-1$
@@ -848,7 +790,7 @@ public class ByteBufferTest extends AbstractBufferTest {
             // expected
         }
         buf.put(array, array.length, 0);
-        assertEquals(buf.position(), 0);
+        assertEquals(0, buf.position());
         try {
             buf.put(array, 0, -1);
             fail("Should throw Exception"); //$NON-NLS-1$
@@ -881,7 +823,7 @@ public class ByteBufferTest extends AbstractBufferTest {
             // expected
         }
         
-        assertEquals(buf.position(), 0);
+        assertEquals(0, buf.position());
 
         loadTestData2(array, 0, array.length);
         ByteBuffer ret = buf.put(array, 0, array.length);
@@ -893,15 +835,12 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer put(java.nio.ByteBuffer)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "put",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testPutByteBuffer() {
         ByteBuffer other = ByteBuffer.allocate(buf.capacity());
         if (buf.isReadOnly()) {
@@ -954,15 +893,12 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer put(int, byte)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {int.class, byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "put",
+        args = {int.class, byte.class}
+    )
     public void testPutintbyte() {
         if (buf.isReadOnly()) {
             try {
@@ -976,9 +912,9 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
-            assertEquals(buf.position(), 0);
+            assertEquals(0, buf.position());
             ByteBuffer ret = buf.put(i, (byte) i);
-            assertEquals(buf.get(i), (byte) i);
+            assertEquals((byte) i, buf.get(i));
             assertSame(ret, buf);
         }
         try {
@@ -993,16 +929,19 @@ public class ByteBufferTest extends AbstractBufferTest {
         } catch (IndexOutOfBoundsException e) {
             // expected
         }
+
+        buf.put(0, Byte.MAX_VALUE);
+        assertEquals(Byte.MAX_VALUE, buf.get(0));
+        buf.put(0, Byte.MIN_VALUE);
+        assertEquals(Byte.MIN_VALUE, buf.get(0));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "slice",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "slice",
+        args = {}
+    )
     public void testSlice() {
         assertTrue(buf.capacity() > SMALL_TEST_LENGTH);
         buf.position(1);
@@ -1012,9 +951,9 @@ public class ByteBufferTest extends AbstractBufferTest {
         assertEquals(buf.isReadOnly(), slice.isReadOnly());
         assertEquals(buf.isDirect(), slice.isDirect());
         assertEquals(buf.order(), slice.order());
-        assertEquals(slice.position(), 0);
-        assertEquals(slice.limit(), buf.remaining());
-        assertEquals(slice.capacity(), buf.remaining());
+        assertEquals(0, slice.position());
+        assertEquals(buf.remaining(), slice.limit());
+        assertEquals(buf.remaining(), slice.capacity());
         try {
             slice.reset();
             fail("Should throw Exception"); //$NON-NLS-1$
@@ -1027,18 +966,16 @@ public class ByteBufferTest extends AbstractBufferTest {
             loadTestData1(slice);
             assertContentLikeTestData1(buf, 1, (byte) 0, slice.capacity());
             buf.put(2, (byte) 100);
-            assertEquals(slice.get(1), 100);
+            assertEquals(100, slice.get(1));
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         String str = buf.toString();
         assertTrue(str.indexOf("Byte") >= 0 || str.indexOf("byte") >= 0);
@@ -1046,15 +983,13 @@ public class ByteBufferTest extends AbstractBufferTest {
         assertTrue(str.indexOf("" + buf.limit()) >= 0);
         assertTrue(str.indexOf("" + buf.capacity()) >= 0);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asCharBuffer",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "asCharBuffer",
+        args = {}
+    )
     public void testAsCharBuffer() {
         CharBuffer charBuffer;
         byte bytes[] = new byte[2];
@@ -1110,15 +1045,13 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asDoubleBuffer",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "asDoubleBuffer",
+        args = {}
+    )
     public void testAsDoubleBuffer() {
         DoubleBuffer doubleBuffer;
         byte bytes[] = new byte[8];
@@ -1181,15 +1114,13 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asFloatBuffer",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "asFloatBuffer",
+        args = {}
+    )
     public void testAsFloatBuffer() {
         FloatBuffer floatBuffer;
         byte bytes[] = new byte[4];
@@ -1252,15 +1183,13 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asIntBuffer",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "asIntBuffer",
+        args = {}
+    )
     public void testAsIntBuffer() {
         IntBuffer intBuffer;
         byte bytes[] = new byte[4];
@@ -1317,15 +1246,13 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asLongBuffer",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "asLongBuffer",
+        args = {}
+    )
     public void testAsLongBuffer() {
         LongBuffer longBuffer;
         byte bytes[] = new byte[8];
@@ -1382,15 +1309,13 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asShortBuffer",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "asShortBuffer",
+        args = {}
+    )
     public void testAsShortBuffer() {
         ShortBuffer shortBuffer;
         byte bytes[] = new byte[2];
@@ -1447,15 +1372,13 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getChar",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getChar",
+        args = {}
+    )
     public void testGetChar() {
         int nbytes = 2;
         byte bytes[] = new byte[nbytes];
@@ -1481,15 +1404,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getChar",
-          methodArgs = {int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getChar",
+        args = {int.class}
+    )
     public void testGetCharint() {
         int nbytes = 2;
         byte bytes[] = new byte[nbytes];
@@ -1520,15 +1441,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "putChar",
-          methodArgs = {char.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putChar",
+        args = {char.class}
+    )
     public void testPutChar() {
         if (buf.isReadOnly()) {
             try {
@@ -1565,16 +1484,21 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.rewind();
+        buf.putChar(0, Character.MAX_VALUE);
+        assertEquals(Character.MAX_VALUE, buf.getChar(0));
+        buf.rewind();
+        buf.putChar(0, Character.MIN_VALUE);
+        assertEquals(Character.MIN_VALUE, buf.getChar(0));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "putChar",
-          methodArgs = {int.class, char.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putChar",
+        args = {int.class, char.class}
+    )
     public void testPutCharint() {
         if (buf.isReadOnly()) {
             try {
@@ -1621,16 +1545,19 @@ public class ByteBufferTest extends AbstractBufferTest {
         } catch (IndexOutOfBoundsException e) {
             //expected 
         }
+
+        buf.putChar(0, Character.MAX_VALUE);
+        assertEquals(Character.MAX_VALUE, buf.getChar(0));
+        buf.putChar(0, Character.MIN_VALUE);
+        assertEquals(Character.MIN_VALUE, buf.getChar(0));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDouble",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getDouble",
+        args = {}
+    )
     public void testGetDouble() {
         int nbytes = 8;
         byte bytes[] = new byte[nbytes];
@@ -1659,15 +1586,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDouble",
-          methodArgs = {int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getDouble",
+        args = {int.class}
+    )
     public void testGetDoubleint() {
         int nbytes = 8;
         byte bytes[] = new byte[nbytes];
@@ -1707,15 +1632,13 @@ public class ByteBufferTest extends AbstractBufferTest {
             //expected 
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putDouble",
-          methodArgs = {double.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putDouble",
+        args = {double.class}
+    )
     public void testPutDouble() {
         if (buf.isReadOnly()) {
             try {
@@ -1752,16 +1675,30 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.rewind();
+        buf.putDouble(Double.MAX_VALUE);
+        assertEquals(Double.MAX_VALUE, buf.getDouble(0));
+        buf.rewind();
+        buf.putDouble(Double.MIN_VALUE);
+        assertEquals(Double.MIN_VALUE, buf.getDouble(0));
+        buf.rewind();
+        buf.putDouble(Double.NaN);
+        assertEquals(Double.NaN, buf.getDouble(0));
+        buf.rewind();
+        buf.putDouble(Double.NEGATIVE_INFINITY);
+        assertEquals(Double.NEGATIVE_INFINITY, buf.getDouble(0));
+        buf.rewind();
+        buf.putDouble(Double.POSITIVE_INFINITY);
+        assertEquals(Double.POSITIVE_INFINITY, buf.getDouble(0));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putDouble",
-          methodArgs = {int.class, double.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putDouble",
+        args = {int.class, double.class}
+    )
     public void testPutDoubleint() {
         if (buf.isReadOnly()) {
             try {
@@ -1802,16 +1739,25 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.putDouble(0, Double.MAX_VALUE);
+        assertEquals(Double.MAX_VALUE, buf.getDouble(0));
+        buf.putDouble(0, Double.MIN_VALUE);
+        assertEquals(Double.MIN_VALUE, buf.getDouble(0));
+        buf.putDouble(0, Double.NaN);
+        assertEquals(Double.NaN, buf.getDouble(0));
+        buf.putDouble(0, Double.NEGATIVE_INFINITY);
+        assertEquals(Double.NEGATIVE_INFINITY, buf.getDouble(0));
+        buf.putDouble(0, Double.POSITIVE_INFINITY);
+        assertEquals(Double.POSITIVE_INFINITY, buf.getDouble(0));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFloat",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getFloat",
+        args = {}
+    )
     public void testGetFloat() {
         int nbytes = 4;
         byte bytes[] = new byte[nbytes];
@@ -1840,15 +1786,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFloat",
-          methodArgs = {int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getFloat",
+        args = {int.class}
+    )
     public void testGetFloatint() {
         int nbytes = 4;
         byte bytes[] = new byte[nbytes];
@@ -1882,15 +1826,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putFloat",
-          methodArgs = {float.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putFloat",
+        args = {float.class}
+    )
     public void testPutFloat() {
         if (buf.isReadOnly()) {
             try {
@@ -1927,16 +1869,30 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.rewind();
+        buf.putFloat(Float.MAX_VALUE);
+        assertEquals(Float.MAX_VALUE, buf.getFloat(0));
+        buf.rewind();
+        buf.putFloat(Float.MIN_VALUE);
+        assertEquals(Float.MIN_VALUE, buf.getFloat(0));
+        buf.rewind();
+        buf.putFloat(Float.NaN);
+        assertEquals(Float.NaN, buf.getFloat(0));
+        buf.rewind();
+        buf.putFloat(Float.NEGATIVE_INFINITY);
+        assertEquals(Float.NEGATIVE_INFINITY, buf.getFloat(0));
+        buf.rewind();
+        buf.putFloat(Float.POSITIVE_INFINITY);
+        assertEquals(Float.POSITIVE_INFINITY, buf.getFloat(0));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putFloat",
-          methodArgs = {int.class, float.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putFloat",
+        args = {int.class, float.class}
+    )
     public void testPutFloatint() {
         if (buf.isReadOnly()) {
             try {
@@ -1977,16 +1933,25 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.putFloat(0, Float.MAX_VALUE);
+        assertEquals(Float.MAX_VALUE, buf.getFloat(0));
+        buf.putFloat(0, Float.MIN_VALUE);
+        assertEquals(Float.MIN_VALUE, buf.getFloat(0));
+        buf.putFloat(0, Float.NaN);
+        assertEquals(Float.NaN, buf.getFloat(0));
+        buf.putFloat(0, Float.NEGATIVE_INFINITY);
+        assertEquals(Float.NEGATIVE_INFINITY, buf.getFloat(0));
+        buf.putFloat(0, Float.POSITIVE_INFINITY);
+        assertEquals(Float.POSITIVE_INFINITY, buf.getFloat(0));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInt",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInt",
+        args = {}
+    )
     public void testGetInt() {
         int nbytes = 4;
         byte bytes[] = new byte[nbytes];
@@ -2012,15 +1977,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInt",
-          methodArgs = {int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInt",
+        args = {int.class}
+    )
     public void testGetIntint() {
         int nbytes = 4;
         byte bytes[] = new byte[nbytes];
@@ -2056,15 +2019,13 @@ public class ByteBufferTest extends AbstractBufferTest {
             //expected 
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putInt",
-          methodArgs = {int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putInt",
+        args = {int.class}
+    )
     public void testPutInt() {
         if (buf.isReadOnly()) {
             try {
@@ -2101,16 +2062,21 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.rewind();
+        buf.putInt(Integer.MAX_VALUE);
+        assertEquals(Integer.MAX_VALUE, buf.getInt(0));
+        buf.rewind();
+        buf.putInt(Integer.MIN_VALUE);
+        assertEquals(Integer.MIN_VALUE, buf.getInt(0));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putInt",
-          methodArgs = {int.class, int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putInt",
+        args = {int.class, int.class}
+    )
     public void testPutIntint() {
         if (buf.isReadOnly()) {
             try {
@@ -2151,16 +2117,19 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.putInt(0, Integer.MAX_VALUE);
+        assertEquals(Integer.MAX_VALUE, buf.getInt(0));
+        buf.putInt(0, Integer.MIN_VALUE);
+        assertEquals(Integer.MIN_VALUE, buf.getInt(0));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLong",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getLong",
+        args = {}
+    )
     public void testGetLong() {
         int nbytes = 8;
         byte bytes[] = new byte[nbytes];
@@ -2186,15 +2155,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLong",
-          methodArgs = {int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getLong",
+        args = {int.class}
+    )
     public void testGetLongint() {
         int nbytes = 8;
         byte bytes[] = new byte[nbytes];
@@ -2225,15 +2192,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putLong",
-          methodArgs = {long.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putLong",
+        args = {long.class}
+    )
     public void testPutLong() {
         if (buf.isReadOnly()) {
             try {
@@ -2270,16 +2235,21 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.rewind();
+        buf.putLong(Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, buf.getLong(0));
+        buf.rewind();
+        buf.putLong(Long.MIN_VALUE);
+        assertEquals(Long.MIN_VALUE, buf.getLong(0));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putLong",
-          methodArgs = {int.class, long.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putLong",
+        args = {int.class, long.class}
+    )
     public void testPutLongint() {
         if (buf.isReadOnly()) {
             try {
@@ -2320,16 +2290,19 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.putLong(0, Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, buf.getLong(0));
+        buf.putLong(0, Long.MIN_VALUE);
+        assertEquals(Long.MIN_VALUE, buf.getLong(0));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getShort",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getShort",
+        args = {}
+    )
     public void testGetShort() {
         int nbytes = 2;
         byte bytes[] = new byte[nbytes];
@@ -2355,15 +2328,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getShort",
-          methodArgs = {int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getShort",
+        args = {int.class}
+    )
     public void testGetShortint() {
         int nbytes = 2;
         byte bytes[] = new byte[nbytes];
@@ -2394,15 +2365,13 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putShort",
-          methodArgs = {short.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putShort",
+        args = {short.class}
+    )
     public void testPutShort() {
         if (buf.isReadOnly()) {
             try {
@@ -2439,16 +2408,21 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.rewind();
+        buf.putShort(Short.MAX_VALUE);
+        assertEquals(Short.MAX_VALUE, buf.getShort(0));
+        buf.rewind();
+        buf.putShort(Short.MIN_VALUE);
+        assertEquals(Short.MIN_VALUE, buf.getShort(0));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "putShort",
-          methodArgs = {int.class, short.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "putShort",
+        args = {int.class, short.class}
+    )
     public void testPutShortint() {
         if (buf.isReadOnly()) {
             try {
@@ -2489,21 +2463,22 @@ public class ByteBufferTest extends AbstractBufferTest {
         }
 
         buf.order(ByteOrder.BIG_ENDIAN);
+
+        buf.putShort(0, Short.MAX_VALUE);
+        assertEquals(Short.MAX_VALUE, buf.getShort(0));
+        buf.putShort(0, Short.MIN_VALUE);
+        assertEquals(Short.MIN_VALUE, buf.getShort(0));
     }
     
     /**
      * @tests java.nio.ByteBuffer.wrap(byte[],int,int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test. Verifies NullPointerException, " +
-            "IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "wrap",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test. Verifies NullPointerException, IndexOutOfBoundsException.",
+        method = "wrap",
+        args = {byte[].class, int.class, int.class}
+    )
     public void testWrappedByteBuffer_null_array() {
         // Regression for HARMONY-264
         byte array[] = null;
@@ -2526,29 +2501,26 @@ public class ByteBufferTest extends AbstractBufferTest {
      * 2. case for check equal between buf2 and byte array[]
      * 3. case for check a buf2 dependens to array[]
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "wrap",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "wrap",
+        args = {byte[].class}
+    )
     public void test_Wrap$B() {
         byte array[] = new byte[BUFFER_LENGTH];
         loadTestData1(array, 0, BUFFER_LENGTH);
         ByteBuffer buf2 = ByteBuffer.wrap(array);
 
-        //    case: ByteBuffer buf2 properties is satisfy the conditions specification
-        assertEquals(buf2.capacity(), array.length);
-        assertEquals(buf2.limit(), array.length);
-        assertEquals(buf2.position(), 0);
+        // case: ByteBuffer buf2 properties is satisfy the conditions specification
+        assertEquals(array.length, buf2.capacity());
+        assertEquals(array.length, buf2.limit());
+        assertEquals(0, buf2.position());
 
         //     case: ByteBuffer buf2 is equal to byte array[]
         assertContentEquals(buf2, array, 0, array.length);
 
-        //    case: ByteBuffer buf2 is depended to byte array[]
+        // case: ByteBuffer buf2 is depended to byte array[]
         loadTestData2(array, 0, buf.capacity());
         assertContentEquals(buf2, array, 0, array.length);
     }
@@ -2561,15 +2533,12 @@ public class ByteBufferTest extends AbstractBufferTest {
      * 3. case for check a buf2 dependens to array[]
      * 4. case expected IndexOutOfBoundsException  
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "wrap",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "wrap",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_Wrap$BII() {
         byte array[] = new byte[BUFFER_LENGTH];
         int offset = 5;
@@ -2577,16 +2546,16 @@ public class ByteBufferTest extends AbstractBufferTest {
         loadTestData1(array, 0, BUFFER_LENGTH);
         ByteBuffer buf2 = ByteBuffer.wrap(array, offset, length);
 
-        //    case: ByteBuffer buf2 properties is satisfy the conditions specification
-        assertEquals(buf2.capacity(), array.length);
-        assertEquals(buf2.position(), offset);
-        assertEquals(buf2.limit(), offset + length);
-        assertEquals(buf2.arrayOffset(), 0);
+        // case: ByteBuffer buf2 properties is satisfy the conditions specification
+        assertEquals(array.length, buf2.capacity());
+        assertEquals(offset, buf2.position());
+        assertEquals(offset + length, buf2.limit());
+        assertEquals(0, buf2.arrayOffset());
 
         //     case: ByteBuffer buf2 is equal to byte array[]
         assertContentEquals(buf2, array, 0, array.length);
 
-        //    case: ByteBuffer buf2 is depended to byte array[]
+        // case: ByteBuffer buf2 is depended to byte array[]
         loadTestData2(array, 0, buf.capacity());
         assertContentEquals(buf2, array, 0, array.length);
 
@@ -2629,7 +2598,7 @@ public class ByteBufferTest extends AbstractBufferTest {
     private void assertContentEquals(ByteBuffer buf, byte array[],
             int offset, int length) {
         for (int i = 0; i < length; i++) {
-            assertEquals(buf.get(i), array[offset + i]);
+            assertEquals(array[offset + i], buf.get(i));
         }
     }
 

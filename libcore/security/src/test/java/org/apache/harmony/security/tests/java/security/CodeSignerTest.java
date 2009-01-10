@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.CodeSigner;
 import java.security.Timestamp;
@@ -58,15 +58,12 @@ public class CodeSignerTest extends TestCase {
     /**
      * must throw NPE if signerCertPath is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Test case where parameters are not null is absent",
-      targets = {
-        @TestTarget(
-          methodName = "CodeSigner",
-          methodArgs = {CertPath.class, Timestamp.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "NPE case",
+        method = "CodeSigner",
+        args = {java.security.cert.CertPath.class, java.security.Timestamp.class}
+    )
     public void testCodeSigner_00() {
         try {
             new CodeSigner(null, ts);
@@ -79,31 +76,48 @@ public class CodeSignerTest extends TestCase {
     /**
      * timestamp can be null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Test case where timestamp is not null is absent",
-      targets = {
-        @TestTarget(
-          methodName = "CodeSigner",
-          methodArgs = {CertPath.class, Timestamp.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Null parameter timestamp checking",
+        method = "CodeSigner",
+        args = {java.security.cert.CertPath.class, java.security.Timestamp.class}
+    )
     public final void testCodeSigner_01() {
-        new CodeSigner(cpath, null);
+        try {
+            CodeSigner cs = new CodeSigner(cpath, null);
+            assertNotNull(cs);
+        } catch (Exception e) {
+            fail("Unexpected exception");
+        }
+    }
+    
+    /**
+     * Not null parameters
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CodeSigner",
+        args = {java.security.cert.CertPath.class, java.security.Timestamp.class}
+    )
+    public final void testCodeSigner_02() {
+        try {
+            CodeSigner cs = new CodeSigner(cpath, ts);
+            assertNotNull(cs);
+        } catch (Exception e) {
+            fail("Unexpected exception");
+        }
     }
 
     /**
      * Test various assertions about equals()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public final void testEqualsObject() {
         
         CodeSigner one = new CodeSigner(cpath, ts);
@@ -129,15 +143,12 @@ public class CodeSignerTest extends TestCase {
     /**
      * Tests CodeSigner.getSignerCertPath()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSignerCertPath",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSignerCertPath",
+        args = {}
+    )
     public void testGetSignerCertPath() {
         assertSame(new CodeSigner(cpath, null).getSignerCertPath(), cpath);
     }
@@ -145,15 +156,12 @@ public class CodeSignerTest extends TestCase {
     /**
      * Tests CodeSigner.getTimeStamp()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTimestamp",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTimestamp",
+        args = {}
+    )
     public void testGetTimestamp() {
         assertNull(new CodeSigner(cpath, null).getTimestamp());
         assertSame(new CodeSigner(cpath, ts).getTimestamp(), ts);
@@ -162,32 +170,29 @@ public class CodeSignerTest extends TestCase {
     /**
      * Tests CodeSigner.toString()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Need use method equals for returned string",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         assertTrue(new CodeSigner(cpath, null).toString().contains(""));
         assertTrue(new CodeSigner(cpath, ts).toString().contains(""));
+        
+        assertTrue(new CodeSigner(cpath, null).toString().contains("CodeSigner"));
+        assertTrue(new CodeSigner(cpath, ts).toString().contains(ts.toString()));
     }
 
     /**
      * Tests CodeSigner.hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void testHashCode() {
         CodeSigner cs1 = new CodeSigner(cpath, ts);
         CodeSigner cs2 = new CodeSigner(cpath, ts);

@@ -23,10 +23,12 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
+import java.security.AlgorithmParameters;
+import java.security.AlgorithmParametersSpi;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -34,6 +36,8 @@ import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.SecureRandom;
 
+import org.apache.harmony.security.tests.java.security.AlgorithmParametersTest.MyAlgorithmParameters;
+import org.apache.harmony.security.tests.java.security.AlgorithmParametersTest.myAlgP;
 import org.apache.harmony.security.tests.support.SpiEngUtils;
 
 import junit.framework.TestCase;
@@ -98,17 +102,18 @@ public class KeyPairGenerator3Test extends TestCase {
      * Assertion: KeyPairGenerator was initialized before the invocation 
      * of these methods
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "generateKeyPair",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "generateKeyPair",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "genKeyPair",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "genKeyPair",
+            args = {}
         )
     })
     public void testGenKeyPair01() throws NoSuchAlgorithmException,
@@ -137,17 +142,18 @@ public class KeyPairGenerator3Test extends TestCase {
      * methods
      * Assertion: these methods are used without previously initialization
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "generateKeyPair",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "generateKeyPair",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "genKeyPair",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "genKeyPair",
+            args = {}
         )
     })
     public void testGenKeyPair02() throws NoSuchAlgorithmException,
@@ -168,9 +174,42 @@ public class KeyPairGenerator3Test extends TestCase {
                 kp1.getPublic()));
         }
     }
+    
+    /**
+     * Test for <code>KeyPairGenerator</code> constructor 
+     * Assertion: returns KeyPairGenerator object
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "KeyPairGenerator",
+        args = {java.lang.String.class}
+    )
+    public void testKeyPairGeneratorConst() {
+        String[] alg = {null, "", "AsDfGh!#$*", "DSA", "RSA"};
+        MykeyPGen kpg;
+        
+        for (int i = 0; i < alg.length; i++) {
+            try {
+                kpg = new MykeyPGen(alg[i]);
+                assertNotNull(kpg);
+                assertTrue(kpg instanceof KeyPairGenerator);
+            } catch (Exception e){
+                fail("Exception should not be thrown");
+            }
+        }
+    }
 
     public static void main(String args[]) {
         junit.textui.TestRunner.run(KeyPairGenerator3Test.class);
     }
     
+    /**
+     * Additional class to verify KeyPairGenerator constructor
+     */
+    class MykeyPGen extends KeyPairGenerator {
+        public MykeyPGen(String alg) {
+            super(alg);
+        }
+    }
 }

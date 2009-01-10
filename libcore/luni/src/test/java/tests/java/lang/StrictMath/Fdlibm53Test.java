@@ -16,37 +16,31 @@
 
 package tests.java.lang.StrictMath;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
 @TestTargetClass(StrictMath.class) 
 public class Fdlibm53Test extends TestCase {
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Stress test.",
-      targets = {
-        @TestTarget(
-          methodName = "pow",
-          methodArgs = {double.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Stress test.",
+        method = "pow",
+        args = {double.class, double.class}
+    )
     public void test_pow() {
         assertTrue(Double.longBitsToDouble(-4610068591539890326L) == StrictMath.pow(-1.0000000000000002e+00,4.5035996273704970e+15));
         assertTrue(Double.longBitsToDouble(4601023824101950163L) == StrictMath.pow(-9.9999999999999978e-01,4.035996273704970e+15));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Stress test.",
-      targets = {
-        @TestTarget(
-          methodName = "tan",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Stress test.",
+        method = "tan",
+        args = {double.class}
+    )
     public void test_tan(){
         assertTrue(Double.longBitsToDouble(4850236541654588678L) == StrictMath.tan( 1.7765241907548024E+269));
     }

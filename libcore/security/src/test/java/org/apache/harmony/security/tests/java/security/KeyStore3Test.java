@@ -17,10 +17,13 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
+import junit.framework.TestCase;
+
+import org.apache.harmony.security.tests.java.security.AlgorithmParametersTest.MyAlgorithmParameters;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -41,7 +44,6 @@ import java.security.cert.CertificateFactory;
 import java.util.Date;
 import java.util.Enumeration;
 
-import junit.framework.TestCase;
 @TestTargetClass(KeyStore.class)
 public class KeyStore3Test extends TestCase {
     
@@ -77,29 +79,23 @@ public class KeyStore3Test extends TestCase {
         certificate = cf.generateCertificate(certArray);
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies method with null parameter only.",
-      targets = {
-        @TestTarget(
-          methodName = "load",
-          methodArgs = {java.security.KeyStore.LoadStoreParameter.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies method with null parameter only.",
+        method = "load",
+        args = {java.security.KeyStore.LoadStoreParameter.class}
+    )
     public void test_load() throws Exception {
         // No exception should be thrown out.
         mockKeyStore.load(null);
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies method with null parameter only",
-      targets = {
-        @TestTarget(
-          methodName = "store",
-          methodArgs = {java.security.KeyStore.LoadStoreParameter.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies method with null parameter only",
+        method = "store",
+        args = {java.security.KeyStore.LoadStoreParameter.class}
+    )
     public void test_store() throws Exception {
         try {
             mockKeyStore.store(null);
@@ -113,45 +109,36 @@ public class KeyStore3Test extends TestCase {
         mockKeyStore.store(null);
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies method with all null parameters only",
-      targets = {
-        @TestTarget(
-          methodName = "setKeyEntry",
-          methodArgs = {String.class, Key.class, char[].class, Certificate[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies method with all null parameters only",
+        method = "setKeyEntry",
+        args = {java.lang.String.class, java.security.Key.class, char[].class, java.security.cert.Certificate[].class}
+    )
     public void test_setKeyEntry_null() throws Exception {
         mockKeyStore.load(null, null); 
         // No exception should be thrown out.
         mockKeyStore.setKeyEntry(null, null, null, null);        
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies method with null parameters only",
-      targets = {
-        @TestTarget(
-          methodName = "setKeyEntry",
-          methodArgs = {String.class, Key.class, char[].class, Certificate[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies method with null parameters only",
+        method = "setKeyEntry",
+        args = {java.lang.String.class, java.security.Key.class, char[].class, java.security.cert.Certificate[].class}
+    )
     public void test_setKeyEntry_key_is_null() throws Exception {
         mockKeyStore.load(null, null);
         // No exception should be thrown out.
         mockKeyStore.setKeyEntry("Alias", null, null, new Certificate[]{certificate});        
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies method with null parameters",
-      targets = {
-        @TestTarget(
-          methodName = "setKeyEntry",
-          methodArgs = {String.class, Key.class, char[].class, Certificate[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies method with null parameters",
+        method = "setKeyEntry",
+        args = {java.lang.String.class, java.security.Key.class, char[].class, java.security.cert.Certificate[].class}
+    )
     public void test_setKeyEntry_key_is_private() throws Exception {
         mockKeyStore.load(null, null);
         Key key = keyPair.getPrivate();
@@ -173,15 +160,12 @@ public class KeyStore3Test extends TestCase {
         mockKeyStore.setKeyEntry("Alias", key, null, new Certificate[]{certificate});        
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies method with null parameters",
-      targets = {
-        @TestTarget(
-          methodName = "setKeyEntry",
-          methodArgs = {String.class, Key.class, char[].class, Certificate[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies method with null parameters",
+        method = "setKeyEntry",
+        args = {java.lang.String.class, java.security.Key.class, char[].class, java.security.cert.Certificate[].class}
+    )
     public void test_setKeyEntry_key_is_public() throws Exception
     {
         mockKeyStore.load(null, null);
@@ -192,15 +176,12 @@ public class KeyStore3Test extends TestCase {
         mockKeyStore.setKeyEntry("Alias3", key, null, new Certificate[]{certificate});
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies method with null parameters",
-      targets = {
-        @TestTarget(
-          methodName = "setCertificateEntry",
-          methodArgs = {String.class, Certificate.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies method with null parameters",
+        method = "setCertificateEntry",
+        args = {java.lang.String.class, java.security.cert.Certificate.class}
+    )
     public void test_setCertificateEntry_null() throws Exception {
         mockKeyStore.load(null, null);
 
@@ -211,18 +192,31 @@ public class KeyStore3Test extends TestCase {
         mockKeyStore.setCertificateEntry("Alias", null);
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies method with null parameters only",
-      targets = {
-        @TestTarget(
-          methodName = "store",
-          methodArgs = {OutputStream.class, char[].class}
-        )
-    })
-    public void _test_store_null() throws Exception {
-        mockKeyStore.load(null, null);
-        mockKeyStore.store(null, null);
+    @SuppressWarnings("cast")
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "KeyStore",
+        args = {java.security.KeyStoreSpi.class, java.security.Provider.class, java.lang.String.class}
+    )
+    public void test_KeyStore() {
+        Provider p = new MyProvider();
+        try {
+            MyKeyStore ks = new MyKeyStore(new MyKeyStoreSpi(), p, "MyKeyStore");
+            assertNotNull(ks);
+            assertTrue(ks instanceof KeyStore);
+        } catch (Exception e) {
+            fail("Exception should be not thrown");
+        }
+        
+        try {
+            MyKeyStore ks = new MyKeyStore(null, null, null);
+            assertNotNull(ks);
+            assertTrue(ks instanceof KeyStore);
+        } catch (Exception e) {
+            fail("Exception should be not thrown");
+        }
+
     }
     
     protected void setUp() throws Exception {
@@ -238,6 +232,7 @@ public class KeyStore3Test extends TestCase {
         }
     }
 
+    @SuppressWarnings("unused")
     private static class MyKeyStoreSpi extends KeyStoreSpi {
 
         public Enumeration<String> engineAliases() {
@@ -315,5 +310,18 @@ public class KeyStore3Test extends TestCase {
             return; 
         }        
     }    
+    
+    @SuppressWarnings("serial")
+    private class MyProvider extends Provider {
+        MyProvider() {
+            super("MyProvider", 1.0, "Provider for testing");
+            put("AlgorithmParameters.ABC", MyAlgorithmParameters.class
+                    .getName());
+        }
+
+        MyProvider(String name, double version, String info) {
+            super(name, version, info);
+        }
+    }
 
 }

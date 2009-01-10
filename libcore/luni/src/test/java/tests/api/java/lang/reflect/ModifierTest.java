@@ -17,9 +17,9 @@
 
 package tests.api.java.lang.reflect;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.lang.reflect.Modifier;
@@ -32,32 +32,25 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#Modifier()
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "Modifier",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "The only thing I can do",
+        method = "Modifier",
+        args = {}
+    )
     public void test_Constructor() {
-        // Test for method java.lang.reflect.Modifier()
-        // Does nothing
+        assertNotNull(new Modifier());
     }
 
     /**
      * @tests java.lang.reflect.Modifier#isAbstract(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isAbstract",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isAbstract",
+        args = {int.class}
+    )
     public void test_isAbstractI() {
         // Test for method boolean java.lang.reflect.Modifier.isAbstract(int)
         assertTrue("ABSTRACT returned false", Modifier.isAbstract(ALL_FLAGS));
@@ -70,15 +63,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isFinal(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isFinal",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isFinal",
+        args = {int.class}
+    )
     public void test_isFinalI() {
         // Test for method boolean java.lang.reflect.Modifier.isFinal(int)
         assertTrue("FINAL returned false", Modifier.isFinal(ALL_FLAGS));
@@ -90,15 +80,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isInterface(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isInterface",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isInterface",
+        args = {int.class}
+    )
     public void test_isInterfaceI() {
         // Test for method boolean java.lang.reflect.Modifier.isInterface(int)
         assertTrue("INTERFACE returned false", Modifier.isInterface(ALL_FLAGS));
@@ -111,15 +98,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isNative(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isNative",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isNative",
+        args = {int.class}
+    )
     public void test_isNativeI() {
         // Test for method boolean java.lang.reflect.Modifier.isNative(int)
         assertTrue("NATIVE returned false", Modifier.isNative(ALL_FLAGS));
@@ -131,15 +115,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isPrivate(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isPrivate",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isPrivate",
+        args = {int.class}
+    )
     public void test_isPrivateI() {
         // Test for method boolean java.lang.reflect.Modifier.isPrivate(int)
         assertTrue("PRIVATE returned false", Modifier.isPrivate(ALL_FLAGS));
@@ -152,15 +133,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isProtected(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isProtected",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isProtected",
+        args = {int.class}
+    )
     public void test_isProtectedI() {
         // Test for method boolean java.lang.reflect.Modifier.isProtected(int)
         assertTrue("PROTECTED returned false", Modifier.isProtected(ALL_FLAGS));
@@ -173,15 +151,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isPublic(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isPublic",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isPublic",
+        args = {int.class}
+    )
     public void test_isPublicI() {
         // Test for method boolean java.lang.reflect.Modifier.isPublic(int)
         assertTrue("PUBLIC returned false", Modifier.isPublic(ALL_FLAGS));
@@ -193,15 +168,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isStatic(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isStatic",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isStatic",
+        args = {int.class}
+    )
     public void test_isStaticI() {
         // Test for method boolean java.lang.reflect.Modifier.isStatic(int)
         assertTrue("STATIC returned false", Modifier.isStatic(ALL_FLAGS));
@@ -213,15 +185,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isStrict(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isStrict",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isStrict",
+        args = {int.class}
+    )
     public void test_isStrictI() {
         // Test for method boolean java.lang.reflect.Modifier.isStrict(int)
         assertTrue("STRICT returned false", Modifier.isStrict(Modifier.STRICT));
@@ -232,15 +201,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isSynchronized(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isSynchronized",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isSynchronized",
+        args = {int.class}
+    )
     public void test_isSynchronizedI() {
         // Test for method boolean
         // java.lang.reflect.Modifier.isSynchronized(int)
@@ -253,15 +219,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isTransient(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isTransient",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isTransient",
+        args = {int.class}
+    )
     public void test_isTransientI() {
         // Test for method boolean java.lang.reflect.Modifier.isTransient(int)
         assertTrue("Transient returned false", Modifier.isTransient(ALL_FLAGS));
@@ -274,15 +237,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#isVolatile(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isVolatile",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isVolatile",
+        args = {int.class}
+    )
     public void test_isVolatileI() {
         // Test for method boolean java.lang.reflect.Modifier.isVolatile(int)
         assertTrue("Volatile returned false", Modifier.isVolatile(ALL_FLAGS));
@@ -295,15 +255,12 @@ public class ModifierTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Modifier#toString(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {int.class}
+    )
     public void test_toStringI() {
         // Test for method java.lang.String
         // java.lang.reflect.Modifier.toString(int)

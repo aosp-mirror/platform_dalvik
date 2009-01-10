@@ -16,8 +16,7 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 
@@ -34,15 +33,12 @@ public class MapModeTest extends TestCase {
     /**
      * java.nio.channels.FileChannel.MapMode#PRIVATE,READONLY,READWRITE
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Verifies fields.",
-              targets = {
-                @TestTarget(
-                  methodName = "!Constants",
-                  methodArgs = {}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies fields.",
+        method = "!Constants",
+        args = {}
+    )    
     public void test_PRIVATE_READONLY_READWRITE() {
         assertNotNull(FileChannel.MapMode.PRIVATE);
         assertNotNull(FileChannel.MapMode.READ_ONLY);
@@ -59,15 +55,12 @@ public class MapModeTest extends TestCase {
     /**
      * java.nio.channels.FileChannel.MapMode#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         assertNotNull(FileChannel.MapMode.PRIVATE.toString());
         assertNotNull(FileChannel.MapMode.READ_ONLY.toString());

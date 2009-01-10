@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -34,15 +34,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer#setLength(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "setLength",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException.",
+        method = "setLength",
+        args = {int.class}
+    )
     public void test_setLengthI() {
         // Regression for HARMONY-90
         StringBuffer buffer = new StringBuffer("abcde");
@@ -57,16 +54,17 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests StringBuffer.StringBuffer(CharSequence);
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "StringBuffer",
-          methodArgs = {java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StringBuffer",
+        args = {java.lang.CharSequence.class}
+    )
     public void test_constructorLjava_lang_CharSequence() {
+        String str = "Test string";
+        StringBuffer sb = new StringBuffer((CharSequence) str);
+        assertEquals(str.length(), sb.length());
+        
         try {
             new StringBuffer((CharSequence) null);
             fail("Assert 0: NPE must be thrown.");
@@ -74,15 +72,12 @@ public class StringBufferTest extends TestCase {
         
         assertEquals("Assert 1: must equal 'abc'.", "abc", new StringBuffer((CharSequence)"abc").toString());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "trimToSize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "trimToSize",
+        args = {}
+    )
     public void test_trimToSize() {
         StringBuffer buffer = new StringBuffer(25);
         buffer.append("abc");
@@ -97,15 +92,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.append(CharSequence)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.CharSequence.class}
+    )
     public void test_appendLjava_lang_CharSequence() {
         StringBuffer sb = new StringBuffer();
         assertSame(sb, sb.append((CharSequence) "ab"));
@@ -117,19 +109,35 @@ public class StringBufferTest extends TestCase {
         assertSame(sb, sb.append((CharSequence) null));
         assertEquals("null", sb.toString());
     }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.StringBuffer.class}
+    )
+    public void test_appendLStringBuffer() {
+        StringBuffer originalSB = new StringBuffer();
+        StringBuffer sb1 = new StringBuffer("append1");
+        StringBuffer sb2 = new StringBuffer("append2");
+        originalSB.append(sb1);
+        assertEquals(sb1.toString(), originalSB.toString());
+        originalSB.append(sb2);
+        assertEquals(sb1.toString() + sb2.toString(), originalSB.toString()); 
+        originalSB.append((StringBuffer) null);
+        assertEquals(sb1.toString() + sb2.toString() + "null", 
+                                                         originalSB.toString());
+    }
 
     /**
      * @tests java.lang.StringBuffer.append(CharSequence, int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.CharSequence.class, int.class, int.class}
+    )
     @SuppressWarnings("cast")
     public void test_appendLjava_lang_CharSequenceII() {
         StringBuffer sb = new StringBuffer();
@@ -147,20 +155,24 @@ public class StringBufferTest extends TestCase {
         sb.setLength(0);
         assertSame(sb, sb.append((CharSequence) null, 0, 2));
         assertEquals("nu", sb.toString());
+        
+        try {
+            sb.append((CharSequence) "abcd", -1, 2);
+            fail("IndexOutOfBoundsException was thrown.");
+        } catch(IndexOutOfBoundsException e) {
+            //expected
+        }
     }
     
     /**
      * @tests java.lang.StringBuffer.append(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ArrayIndexOutOfBoundsException.",
+        method = "append",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_append$CII_2() {
         StringBuffer obj = new StringBuffer();
         try {
@@ -174,15 +186,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.append(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "append",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_append$CII_3() throws Exception {
         StringBuffer obj = new StringBuffer();
         try {
@@ -196,15 +205,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.insert(int, CharSequence)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, java.lang.CharSequence.class}
+    )
     public void test_insertILjava_lang_CharSequence() {
         final String fixture = "0000";
         StringBuffer sb = new StringBuffer(fixture);
@@ -247,15 +253,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.insert(int, CharSequence, int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, java.lang.CharSequence.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, java.lang.CharSequence.class, int.class, int.class}
+    )
     @SuppressWarnings("cast")
     public void test_insertILjava_lang_CharSequenceII() {
         final String fixture = "0000";
@@ -338,15 +341,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.insert(int, char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ArrayIndexOutOfBoundsException.",
+        method = "insert",
+        args = {int.class, char.class}
+    )
     public void test_insertIC() {
         StringBuffer obj = new StringBuffer();
         try {
@@ -360,15 +360,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.appendCodePoint(int)'
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "appendCodePoint",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "appendCodePoint",
+        args = {int.class}
+    )
     public void test_appendCodePointI() {
         StringBuffer sb = new StringBuffer();
         sb.appendCodePoint(0x10000);
@@ -382,15 +379,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.codePointAt(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointAt",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointAt",
+        args = {int.class}
+    )
     public void test_codePointAtI() {
         StringBuffer sb = new StringBuffer("abc");
         assertEquals('a', sb.codePointAt(0));
@@ -426,15 +420,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.codePointBefore(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointBefore",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointBefore",
+        args = {int.class}
+    )
     public void test_codePointBeforeI() {
         StringBuffer sb = new StringBuffer("abc");
         assertEquals('a', sb.codePointBefore(1));
@@ -470,15 +461,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.codePointCount(int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointCount",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointCount",
+        args = {int.class, int.class}
+    )
     public void test_codePointCountII() {
         assertEquals(1, new StringBuffer("\uD800\uDC00").codePointCount(0, 2));
         assertEquals(1, new StringBuffer("\uD800\uDC01").codePointCount(0, 2));
@@ -514,15 +502,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests java.lang.StringBuffer.getChars(int, int, char[], int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "getChars",
-          methodArgs = {int.class, int.class, char[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException, NullPointerException.",
+        method = "getChars",
+        args = {int.class, int.class, char[].class, int.class}
+    )
     public void test_getCharsII$CI() {
         StringBuffer obj = new StringBuffer();
         try {
@@ -534,20 +519,24 @@ public class StringBufferTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
             // expected
         }
+        
+        try {
+            obj.getChars(0, 0,  null, -1);
+            fail("NullPointerException is not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer.offsetByCodePoints(int, int)'
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "offsetByCodePoints",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "offsetByCodePoints",
+        args = {int.class, int.class}
+    )
     public void test_offsetByCodePointsII() {
         int result = new StringBuffer("a\uD800\uDC00b").offsetByCodePoints(0, 2);
         assertEquals(3, result);
@@ -613,15 +602,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests {@link java.lang.StringBuffer#indexOf(String, int)}
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "indexOf",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "indexOf",
+        args = {java.lang.String.class, int.class}
+    )
     @SuppressWarnings("nls")
     public void test_IndexOfStringInt() {
         final String fixture = "0123456789";
@@ -652,15 +638,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests {@link java.lang.StringBuffer#lastIndexOf(String, int)}
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "lastIndexOf",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "lastIndexOf",
+        args = {java.lang.String.class, int.class}
+    )
     @SuppressWarnings("nls")
     public void test_lastIndexOfLjava_lang_StringI() {
         final String fixture = "0123456789";
@@ -706,15 +689,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization/deserialization compatibility.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization/deserialization compatibility.",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new StringBuffer("0123456789"),
@@ -724,15 +704,12 @@ public class StringBufferTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization/deserialization compatibility.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization/deserialization compatibility.",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new StringBuffer("0123456789"),

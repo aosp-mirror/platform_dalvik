@@ -17,12 +17,11 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.IOException;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(IOException.class) 
 public class IOExceptionTest extends junit.framework.TestCase {
@@ -30,58 +29,40 @@ public class IOExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.IOException#IOException()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "IOException", 
-                                    methodArgs = {})                                    
-            }
-        )       
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IOException",
+        args = {}
+    )       
     public void test_Constructor() {
-        // Test for method java.io.IOException()
         try {
-            throw new IOException();
+            if (true) // Needed to avoid unreachable code compilation error.
+                throw new IOException();
+            fail("Test 1: IOException expected.");
         } catch (IOException e) {
-            return;
-        } catch (Exception e) {
-            fail("Exception during IOException test" + e.toString());
+            assertNull("Test 2: Null expected for exceptions constructed without a message.",
+                    e.getMessage());
         }
-        fail("Failed to generate exception");
-    }
+   }
 
     /**
      * @tests java.io.IOException#IOException(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "IOException", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IOException",
+        args = {java.lang.String.class}
+    )      
     public void test_ConstructorLjava_lang_String() {
-        // Test for method java.io.IOException(java.lang.String)
         try {
-            throw new IOException("Some error message");
+            if (true) // Needed to avoid unreachable code compilation error.
+                throw new IOException("Something went wrong.");
+            fail("Test 1: IOException expected.");
         } catch (IOException e) {
-            return;
-        } catch (Exception e) {
-            fail("Exception during IOException test" + e.toString());
+            assertEquals("Test 2: Incorrect message;",
+                    "Something went wrong.", e.getMessage());
         }
-        fail("Failed to generate exception");
-    }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
     }
 }

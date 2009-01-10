@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,9 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -31,7 +31,7 @@ import java.security.SecurityPermission;
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.security.Policy
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(java.security.Policy.class)
 public class JavaSecurityPolicyTest extends TestCase {
     
     SecurityManager old;
@@ -47,16 +47,13 @@ public class JavaSecurityPolicyTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that java.security.Policy.getPolicy() method calls " +
-            "checkPermission of security permissions.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that java.security.Policy.getPolicy() method calls checkPermission on security manager.",
+        method = "getPolicy",
+        args = {}
+    )
     public void test_getPolicy() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;
@@ -70,7 +67,6 @@ public class JavaSecurityPolicyTest extends TestCase {
                 }
                 super.checkPermission(permission);
             }
-            
         }
         TestSecurityManager s = new TestSecurityManager();
         System.setSecurityManager(s);
@@ -79,16 +75,13 @@ public class JavaSecurityPolicyTest extends TestCase {
         Policy.getPolicy();
         assertTrue("java.security.Policy.getPolicy() must call checkPermission on security permissions", s.called);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that java.security.Policy.setPolicy() method calls " +
-            "checkPermission on security permissions.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that java.security.Policy.setPolicy() method calls checkPermission on security manager.",
+        method = "setPolicy",
+        args = {java.security.Policy.class}
+    )
     public void test_setPolicy() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;
@@ -102,7 +95,6 @@ public class JavaSecurityPolicyTest extends TestCase {
                 }
                 super.checkPermission(permission);
             }
-            
         }
         
         Policy p = Policy.getPolicy();

@@ -22,12 +22,14 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.TestCase;
+
+import org.apache.harmony.security.tests.support.cert.MyCertPath;
+import org.apache.harmony.security.tests.support.cert.TestUtils;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -36,9 +38,6 @@ import java.security.cert.CertPathBuilderResult;
 import java.security.cert.PKIXCertPathBuilderResult;
 import java.security.cert.TrustAnchor;
 import java.security.spec.InvalidKeySpecException;
-
-import org.apache.harmony.security.tests.support.cert.MyCertPath;
-import org.apache.harmony.security.tests.support.cert.TestUtils;
 
 /**
  * Tests for <code>PKIXCertPathBuilderResult</code>
@@ -90,15 +89,11 @@ public class PKIXCertPathBuilderResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidKeySpecException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathBuilderResult",
-          methodArgs = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "PKIXCertPathBuilderResult",
+        args = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
+    )
     public final void testPKIXCertPathBuilderResult01()
         throws InvalidKeySpecException,
                NoSuchAlgorithmException {
@@ -122,15 +117,11 @@ public class PKIXCertPathBuilderResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidKeySpecException checking missed..",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathBuilderResult",
-          methodArgs = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "PKIXCertPathBuilderResult",
+        args = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
+    )
     public final void testPKIXCertPathBuilderResult02()
         throws InvalidKeySpecException,
                NoSuchAlgorithmException {
@@ -153,15 +144,11 @@ public class PKIXCertPathBuilderResultTest extends TestCase {
      * Assertion: <code>NullPointerException</code>
      * if certPath is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidKeySpecException checking missed..",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathBuilderResult",
-          methodArgs = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "PKIXCertPathBuilderResult",
+        args = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
+    )
     public final void testPKIXCertPathBuilderResult03() {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -186,15 +173,11 @@ public class PKIXCertPathBuilderResultTest extends TestCase {
      * Assertion: <code>NullPointerException</code>
      * if trustAnchor is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidKeySpecException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathBuilderResult",
-          methodArgs = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "PKIXCertPathBuilderResult",
+        args = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
+    )
     public final void testPKIXCertPathBuilderResult04() {
         try {
             // pass null
@@ -214,15 +197,11 @@ public class PKIXCertPathBuilderResultTest extends TestCase {
      * Assertion: <code>NullPointerException</code>
      * if publicKey is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidKeySpecException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathBuilderResult",
-          methodArgs = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "PKIXCertPathBuilderResult",
+        args = {java.security.cert.CertPath.class, java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
+    )
     public final void testPKIXCertPathBuilderResult05() {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -240,15 +219,12 @@ public class PKIXCertPathBuilderResultTest extends TestCase {
         } catch (NullPointerException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public final void test_clone() {
 
         // Regression for HARMONY-2786.
@@ -275,15 +251,12 @@ public class PKIXCertPathBuilderResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCertPath",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCertPath",
+        args = {}
+    )
     public final void testGetCertPath() throws Exception {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -309,15 +282,12 @@ public class PKIXCertPathBuilderResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString()
         throws InvalidKeySpecException,
                NoSuchAlgorithmException {

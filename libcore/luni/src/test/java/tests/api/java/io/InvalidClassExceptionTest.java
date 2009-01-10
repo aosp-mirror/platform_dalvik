@@ -17,9 +17,9 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
 import java.io.InvalidClassException;
 
@@ -29,13 +29,12 @@ public class InvalidClassExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.InvalidClassException#InvalidClassException(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "InvalidClassException", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InvalidClassException",
+        args = {java.lang.String.class}
+    )    
     public void test_ConstructorLjava_lang_String() {
         final String message = "A message";
         try {
@@ -53,14 +52,20 @@ public class InvalidClassExceptionTest extends junit.framework.TestCase {
      * @tests java.io.InvalidClassException#InvalidClassException(java.lang.String,
      *        java.lang.String)
      */
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "InvalidClassException", 
-                                    methodArgs = {java.lang.String.class,
-                                                  java.lang.String.class})                                    
-            }
-        )        
+            notes = "",
+            method = "InvalidClassException",
+            args = {java.lang.String.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getMessage",
+            args = {}
+        )
+    })        
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.io.InvalidClassException(java.lang.String,
         // java.lang.String)
@@ -78,22 +83,6 @@ public class InvalidClassExceptionTest extends junit.framework.TestCase {
             return;
         }
         fail("Failed to throw exception");
-    }
-
-    /**
-     * @tests java.io.InvalidClassException#getMessage()
-     */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Test is empty.",
-            targets = { @TestTarget(methodName = "getMessage", 
-                                    methodArgs = {})                                    
-            }
-        )    
-    public void test_getMessage() {
-        // Test for method java.lang.String
-        // java.io.InvalidClassException.getMessage()
-        // used to test
     }
 
     /**

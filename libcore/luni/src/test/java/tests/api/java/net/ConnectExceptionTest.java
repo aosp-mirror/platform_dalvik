@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.ConnectException;
 import java.net.InetAddress;
@@ -35,16 +35,18 @@ public class ConnectExceptionTest extends junit.framework.TestCase {
      * @tests java.net.ConnectException#ConnectException()
      * @tests java.net.ConnectException#ConnectException(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ConnectException",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "ConnectException",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "ConnectException",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "ConnectException",
+            args = {java.lang.String.class}
         )
     })
     public void test_Constructor() {

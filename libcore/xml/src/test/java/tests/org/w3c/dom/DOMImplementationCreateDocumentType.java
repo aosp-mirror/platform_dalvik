@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.util.ArrayList;
@@ -78,15 +78,12 @@ public final class DOMImplementationCreateDocumentType extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocumentType",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "createDocumentType",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateDocumentType1() throws Throwable {
         Document doc;
         DOMImplementation domImpl;
@@ -121,15 +118,12 @@ public final class DOMImplementationCreateDocumentType extends DOMTestCase {
             }
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocumentType",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "createDocumentType",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateDocumentType2() throws Throwable {
         Document doc;
         DOMImplementation domImpl;
@@ -167,15 +161,12 @@ public final class DOMImplementationCreateDocumentType extends DOMTestCase {
                     ownerDocument);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocumentType",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "createDocumentType",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateDocumentType4() throws Throwable {
         Document doc;
         DOMImplementation domImpl;

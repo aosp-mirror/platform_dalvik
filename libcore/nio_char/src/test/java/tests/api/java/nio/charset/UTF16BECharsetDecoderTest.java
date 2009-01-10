@@ -27,7 +27,7 @@ import java.nio.charset.Charset;
  */
 
 @TestTargetClass(java.nio.charset.CharsetDecoder.class)
-public class UTF16BECharsetDecoderTest extends CharsetDecoderTest {
+public class UTF16BECharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
     protected void setUp() throws Exception {
         cs = Charset.forName("utf-16be");

@@ -17,35 +17,30 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
+import java.io.CharConversionException;
 
-@TestTargetClass(java.io.CharConversionException.class) 
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
+@TestTargetClass(CharConversionException.class) 
 public class CharConversionExceptionTest extends junit.framework.TestCase {
 
     /**
      * @tests java.io.CharConversionException#CharConversionException()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies CharConversionException() constructor.",
-            targets = { @TestTarget(methodName = "CharConversionException", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "CharConversionException",
+        args = {}
     )     
     public void test_Constructor() {
-        // Test for method java.io.CharConversionException()
-        // Currently, there are no refs to CharConversionException so this is
-        // the best test we can do
         try {
-            if (true) // BB: getting around LF
-                throw new java.io.CharConversionException();
-            fail("Exception not thrown");
-        } catch (java.io.CharConversionException e) {
-            assertNull(
-                    "Exception defined with no message answers non-null to getMessage()",
+            if (true) // To avoid unreachable code compilation error.
+                throw new CharConversionException();
+            fail("Test 1: CharConversionException expected.");
+        } catch (CharConversionException e) {
+            assertNull("Test 2: Null expected for exceptions constructed without a message.",
                     e.getMessage());
         }
     }
@@ -53,36 +48,19 @@ public class CharConversionExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharConversionException#CharConversionException(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies CharConversionException(java.lang.String) constructor.",
-            targets = { @TestTarget(methodName = "CharConversionException", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "CharConversionException",
+        args = {java.lang.String.class}
     )     
     public void test_ConstructorLjava_lang_String() {
-        // Test for method java.io.CharConversionException(java.lang.String)
         try {
-            if (true) // getting around LF
-                throw new java.io.CharConversionException("Blah");
-            fail("Exception not thrown");
-        } catch (java.io.CharConversionException e) {
-            assertEquals("Exception defined with no message answers non-null to getMessage()",
-                    "Blah", e.getMessage());
+            if (true) // To avoid unreachable code compilation error.
+                throw new CharConversionException("Something went wrong.");
+            fail("Test 1: CharConversionException expected.");
+        } catch (CharConversionException e) {
+            assertEquals("Test 2: Incorrect message;",
+                    "Something went wrong.", e.getMessage());
         }
-    }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
     }
 }

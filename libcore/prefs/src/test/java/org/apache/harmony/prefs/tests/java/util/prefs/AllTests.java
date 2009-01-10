@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Suite for org.apache.harmony.prefs.tests.java.util.prefs");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Suite for org.apache.harmony.prefs.tests.java.util.prefs");
         // $JUnit-BEGIN$
         suite.addTestSuite(NodeChangeListenerTest.class);
         suite.addTestSuite(PreferenceChangeListenerTest.class);

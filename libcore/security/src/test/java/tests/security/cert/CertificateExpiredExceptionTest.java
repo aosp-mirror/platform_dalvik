@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -62,15 +62,12 @@ public class CertificateExpiredExceptionTest extends TestCase {
      * Test for <code>CertificateExpiredException()</code> constructor
      * Assertion: constructs CertificateExpiredException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateExpiredException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CertificateExpiredException",
+        args = {}
+    )
     public void testCertificateExpiredException01() {
         CertificateExpiredException tE = new CertificateExpiredException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -82,15 +79,12 @@ public class CertificateExpiredExceptionTest extends TestCase {
      * Assertion: constructs CertificateExpiredException with detail message
      * msg. Parameter <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateExpiredException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CertificateExpiredException",
+        args = {java.lang.String.class}
+    )
     public void testCertificateExpiredException02() {
         CertificateExpiredException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -106,15 +100,12 @@ public class CertificateExpiredExceptionTest extends TestCase {
      * Assertion: constructs CertificateExpiredException when <code>msg</code>
      * is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateExpiredException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "CertificateExpiredException",
+        args = {java.lang.String.class}
+    )
     public void testCertificateExpiredException03() {
         String msg = null;
         CertificateExpiredException tE = new CertificateExpiredException(msg);

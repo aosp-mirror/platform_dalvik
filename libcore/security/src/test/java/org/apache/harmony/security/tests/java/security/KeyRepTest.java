@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.NotSerializableException;
 import java.io.ObjectStreamException;
@@ -47,15 +47,12 @@ public class KeyRepTest extends TestCase {
         keyFactoryAlgorithm = Security.getAlgorithms("KeyFactory");
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "KeyRep",
-          methodArgs = {java.security.KeyRep.Type.class, String.class, String.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "KeyRep",
+        args = {java.security.KeyRep.Type.class, java.lang.String.class, java.lang.String.class, byte[].class}
+    )
     public final void testKeyRep01() {
         try {
             assertNotNull(new KeyRep(KeyRep.Type.SECRET, "", "", new byte[] {}));
@@ -76,15 +73,12 @@ public class KeyRepTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "KeyRep",
-          methodArgs = {java.security.KeyRep.Type.class, String.class, String.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "KeyRep",
+        args = {java.security.KeyRep.Type.class, java.lang.String.class, java.lang.String.class, byte[].class}
+    )
     public final void testKeyRep02() {
         try {
             new KeyRep(null, "", "", new byte[] {});
@@ -112,15 +106,12 @@ public class KeyRepTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "readResolve",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "readResolve",
+        args = {}
+    )
     public final void testReadResolve01() throws ObjectStreamException {
         KeyRepChild kr = new KeyRepChild(KeyRep.Type.SECRET, "", "",
                 new byte[] {});
@@ -148,15 +139,12 @@ public class KeyRepTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "readResolve",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "readResolve",
+        args = {}
+    )
     public final void testReadResolve02() throws ObjectStreamException {
         KeyRepChild kr = new KeyRepChild(KeyRep.Type.PUBLIC, "", "",
                 new byte[] {});
@@ -185,15 +173,12 @@ public class KeyRepTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "readResolve",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "readResolve",
+        args = {}
+    )
     public final void testReadResolve03() throws ObjectStreamException {
         KeyRepChild kr = new KeyRepChild(KeyRep.Type.PRIVATE, "", "",
                 new byte[] {});
@@ -222,23 +207,18 @@ public class KeyRepTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "readResolve",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "readResolve",
+        args = {}
+    )
     public final void testReadResolve04() throws ObjectStreamException {
         if (keyFactoryAlgorithm.isEmpty()) {
             System.err.println(getName()
                     + ": skipped - no KeyFactory algorithms available");
             return;
         } else {
-            System.out.println(getName() + ": available algorithms - "
-                    + keyFactoryAlgorithm);
         }
         for (Iterator<String> i = keyFactoryAlgorithm.iterator(); i.hasNext();) {
             KeyRepChild kr = new KeyRepChild(KeyRep.Type.PUBLIC, i.next(),
@@ -252,23 +232,18 @@ public class KeyRepTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "readResolve",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "readResolve",
+        args = {}
+    )
     public final void testReadResolve05() throws ObjectStreamException {
         if (keyFactoryAlgorithm.isEmpty()) {
             System.err.println(getName()
                     + ": skipped - no KeyFactory algorithms available");
             return;
         } else {
-            System.out.println(getName() + ": available algorithms - "
-                    + keyFactoryAlgorithm);
         }
         for (Iterator<String> i = keyFactoryAlgorithm.iterator(); i.hasNext();) {
             KeyRepChild kr = new KeyRepChild(KeyRep.Type.PRIVATE, i.next(),

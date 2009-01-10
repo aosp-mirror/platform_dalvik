@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,9 +17,9 @@
 package tests.java.sql;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -125,17 +125,18 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate1(). Updates all values in one
      *        column in the table
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates all values in one column in the table",
-      targets = {
-        @TestTarget(
-          methodName = "executeUpdate",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates all values in one column in the table",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates all values in one column in the table",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testUpdate1() {
@@ -163,17 +164,18 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate2(). Updates values in one
      *        column in the table using where condition in update command
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates values in one column in the table using where condition in update command",
-      targets = {
-        @TestTarget(
-          methodName = "executeUpdate",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates values in one column in the table using where condition in update command",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates values in one column in the table using where condition in update command",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testUpdate2() {
@@ -208,17 +210,18 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate3(). Updates values in a several
      *        columns in the table
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates values in a several columns in the table",
-      targets = {
-        @TestTarget(
-          methodName = "executeUpdate",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates values in a several columns in the table",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates values in a several columns in the table",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testUpdate3() {
@@ -250,18 +253,18 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate4(). Updates values in a several
      *        columns in the table using where condition in update command
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates values in a several " + 
-                  "columns in the table using where condition in update command",
-      targets = {
-        @TestTarget(
-          methodName = "executeUpdate",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates values in a several columns in the table using where condition in update command",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates values in a several columns in the table using where condition in update command",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testUpdate4() {
@@ -303,17 +306,18 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate5(). Updates values in one
      *        columns in the table using condition
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates values in one columns in the table using condition",
-      targets = {
-        @TestTarget(
-          methodName = "executeUpdate",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates values in one columns in the table using condition",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates values in one columns in the table using condition",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testUpdate5() {
@@ -354,17 +358,18 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate6(). Sets value of field2 to
      *        default
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Sets value of field2 to default",
-      targets = {
-        @TestTarget(
-          methodName = "executeUpdate",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Sets value of field2 to default",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Sets value of field2 to default",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testUpdate6() {
@@ -394,17 +399,18 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate7(). Updates records in the
      *        table using subquery in update command
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates records in the table using subquery in update command",
-      targets = {
-        @TestTarget(
-          methodName = "executeUpdate",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates records in the table using subquery in update command",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates records in the table using subquery in update command",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testUpdate7() {
@@ -440,17 +446,18 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate8(). Sets value of field2 to
      *        NULL
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Sets value of field2 to NULL",
-      targets = {
-        @TestTarget(
-          methodName = "executeUpdate",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Sets value of field2 to NULL",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Sets value of field2 to NULL",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testUpdate8() {

@@ -17,24 +17,38 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
+import java.util.IllegalFormatException;
 import java.util.Locale;
 
 import tests.support.Support_StringReader;
 import tests.support.Support_StringWriter;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(PrintWriter.class) 
 public class PrintWriterTest extends junit.framework.TestCase {
+
+    private static class MockPrintWriter extends PrintWriter {
+
+        public MockPrintWriter(OutputStream os) {
+            super(os);
+        }
+        
+        @Override
+        public void setError() {
+            super.setError();
+        }
+    }
 
     static class Bogus {
         public String toString() {
@@ -42,9 +56,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
         }
     }
 
+    private File testFile = null;
+    private String testFilePath = null;
+
     PrintWriter pw;
 
-    ByteArrayOutputStream bao;
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
     ByteArrayInputStream bai;
 
@@ -53,23 +70,21 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#PrintWriter(java.io.OutputStream)
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test does not checks specified constructor. In setUp checked PrintWriter(OutputStream, boolean)",
-      targets = {
-        @TestTarget(
-          methodName = "PrintWriter",
-          methodArgs = {java.io.OutputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PrintWriter",
+        args = {java.io.OutputStream.class}
+    )
     public void test_ConstructorLjava_io_OutputStream() {
         // Test for method java.io.PrintWriter(java.io.OutputStream)
         String s;
+        pw = new PrintWriter(baos);
         pw.println("Random Chars");
         pw.write("Hello World");
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             s = br.readLine();
             assertTrue("Incorrect string written/read: " + s, s
                     .equals("Random Chars"));
@@ -84,28 +99,25 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#PrintWriter(java.io.OutputStream, boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PrintWriter",
-          methodArgs = {java.io.OutputStream.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PrintWriter",
+        args = {java.io.OutputStream.class, boolean.class}
+    )
     public void test_ConstructorLjava_io_OutputStreamZ() {
         // Test for method java.io.PrintWriter(java.io.OutputStream, boolean)
         String s;
-        pw = new PrintWriter(bao, true);
+        pw = new PrintWriter(baos, true);
         pw.println("Random Chars");
         pw.write("Hello World");
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             s = br.readLine();
             assertTrue("Incorrect string written/read: " + s, s
                     .equals("Random Chars"));
             pw.flush();
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             s = br.readLine();
             assertTrue("Incorrect string written/read: " + s, s
                     .equals("Random Chars"));
@@ -120,15 +132,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#PrintWriter(java.io.Writer)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PrintWriter",
-          methodArgs = {java.io.Writer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PrintWriter",
+        args = {java.io.Writer.class}
+    )
     public void test_ConstructorLjava_io_Writer() {
         // Test for method java.io.PrintWriter(java.io.Writer)
         Support_StringWriter sw;
@@ -142,15 +151,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#PrintWriter(java.io.Writer, boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PrintWriter",
-          methodArgs = {java.io.Writer.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PrintWriter",
+        args = {java.io.Writer.class, boolean.class}
+    )
     public void test_ConstructorLjava_io_WriterZ() {
         // Test for method java.io.PrintWriter(java.io.Writer, boolean)
         Support_StringWriter sw;
@@ -164,105 +170,146 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#PrintWriter(java.io.File)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PrintWriter",
-          methodArgs = {java.io.File.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PrintWriter",
+        args = {java.io.File.class}
+    )
     public void test_ConstructorLjava_io_File() throws Exception {
-        File file = File.createTempFile(getClass().getName(), null);
+        PrintWriter tobj;
+
+        tobj = new PrintWriter(testFile);
+        tobj.write(1);
+        tobj.close();
+        assertEquals("output file has wrong length", 1, testFile.length());
+        tobj = new PrintWriter(testFile);
+        assertNotNull(tobj);
+        tobj.close();
+        assertEquals("output file should be empty", 0, testFile.length());
+
+        File file = new File("/invalidDirectory/Dummy");
         try {
-            PrintWriter writer = new PrintWriter(file);
-            writer.close();
-        } finally {
-            file.delete();
+            tobj = new PrintWriter(file);
+            fail("FileNotFoundException not thrown.");
+        } catch (FileNotFoundException e) {
+            // expected
         }
     }
 
     /**
      * @tests java.io.PrintWriter#PrintWriter(java.io.File, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PrintWriter",
-          methodArgs = {java.io.File.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PrintWriter",
+        args = {java.io.File.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_io_File_Ljava_lang_String() throws Exception {
-        File file = File.createTempFile(getClass().getName(), null);
+        PrintWriter tobj;
+
+        tobj = new PrintWriter(testFile, "utf-8");
+        tobj.write(1);
+        tobj.close();
+        assertEquals("output file has wrong length", 1, testFile.length());
+        tobj = new PrintWriter(testFile, "utf-8");
+        assertNotNull(tobj);
+        tobj.close();
+        assertEquals("output file should be empty", 0, testFile.length());
+
+        File file = new File("/invalidDirectory/Dummy");
         try {
-            PrintWriter writer = new PrintWriter(file, 
-                    Charset.defaultCharset().name());
-            writer.close();
-        } finally {
-            file.delete();
+            tobj = new PrintWriter(file, "utf-8");
+            fail("FileNotFoundException not thrown.");
+        } catch (FileNotFoundException e) {
+            // expected
+        }
+
+        try {
+            tobj = new PrintWriter(testFile, "invalidEncoding");
+            fail("UnsupportedEncodingException not thrown.");
+        } catch (UnsupportedEncodingException e) {
+            // expected
         }
     }
 
     /**
      * @tests java.io.PrintWriter#PrintWriter(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PrintWriter",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PrintWriter",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() throws Exception {
-        File file = File.createTempFile(getClass().getName(), null);
+        PrintWriter tobj;
+
+        tobj = new PrintWriter(testFilePath);
+        assertNotNull(tobj);
+        tobj.write(1);
+        tobj.close();
+        assertEquals("output file has wrong length", 1, testFile.length());
+        tobj = new PrintWriter(testFilePath);
+        assertNotNull(tobj);
+        tobj.close();
+        assertEquals("output file should be empty", 0, testFile.length());
+
         try {
-            PrintWriter writer = new PrintWriter(file.getPath());
-            writer.close();
-        } finally {
-            file.delete();
+            tobj = new PrintWriter("/invalidDirectory/Dummy");
+            fail("FileNotFoundException not thrown.");
+        } catch (FileNotFoundException e) {
+            // expected
         }
     }
 
     /**
      * @tests java.io.PrintWriter#PrintWriter(java.lang.String, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PrintWriter",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PrintWriter",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String_Ljava_lang_String() throws Exception {
-        File file = File.createTempFile(getClass().getName(), null);
+        PrintWriter tobj;
+
+        tobj = new PrintWriter(testFilePath, "utf-8");
+        assertNotNull(tobj);
+        tobj.write(1);
+        tobj.close();
+        assertEquals("output file has wrong length", 1, testFile.length());
+        tobj = new PrintWriter(testFilePath, "utf-8");
+        assertNotNull(tobj);
+        tobj.close();
+        assertEquals("output file should be empty", 0, testFile.length());
+
         try {
-            PrintWriter writer = new PrintWriter(file.getPath(), 
-                    Charset.defaultCharset().name());
-            writer.close();
-        } finally {
-            file.delete();
+            tobj = new PrintWriter("/invalidDirectory/", "utf-8");
+            fail("FileNotFoundException not thrown.");
+        } catch (FileNotFoundException e) {
+            // expected
+        }
+
+        try {
+            tobj = new PrintWriter(testFilePath, "invalidEncoding");
+            fail("UnsupportedEncodingException not thrown.");
+        } catch (UnsupportedEncodingException e) {
+            // expected
         }
     }
 
     /**
      * @tests java.io.PrintWriter#checkError()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "checkError",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkError",
+        args = {}
+    )
     public void test_checkError() {
         // Test for method boolean java.io.PrintWriter.checkError()
         pw.close();
@@ -271,17 +318,29 @@ public class PrintWriterTest extends junit.framework.TestCase {
     }
 
     /**
+     * @tests java.io.PrintStream#setError()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "setError",
+        args = {}
+    )
+    public void test_setError() throws Exception {
+        MockPrintWriter os = new MockPrintWriter(new ByteArrayOutputStream());
+        assertFalse("Test 1: Error flag should not be set.", os.checkError());
+        os.setError();
+        assertTrue("Test 2: Error flag should be set.", os.checkError());
+    }
+    
+    /**
      * @tests java.io.PrintWriter#close()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
     public void test_close() {
         // Test for method void java.io.PrintWriter.close()
         pw.close();
@@ -293,36 +352,30 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#flush()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "flush",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "flush",
+        args = {}
+    )
     public void test_flush() {
         // Test for method void java.io.PrintWriter.flush()
         final double dub = 490000000000.08765;
         pw.print(dub);
         pw.flush();
-        assertTrue("Failed to flush", new String(bao.toByteArray())
+        assertTrue("Failed to flush", new String(baos.toByteArray())
                 .equals(String.valueOf(dub)));
     }
 
     /**
      * @tests java.io.PrintWriter#print(char[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "print",
-          methodArgs = {char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "print",
+        args = {char[].class}
+    )
     public void test_print$C() {
         // Test for method void java.io.PrintWriter.print(char [])
         String s = null;
@@ -331,7 +384,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.print(schars);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             s = br.readLine();
         } catch (IOException e) {
             fail("IOException during test : " + e.getMessage());
@@ -351,186 +404,159 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#print(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "print",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "print",
+        args = {char.class}
+    )
     public void test_printC() {
         // Test for method void java.io.PrintWriter.print(char)
         pw.print('c');
         pw.flush();
-        assertEquals("Wrote incorrect char string", "c", new String(bao.toByteArray())
+        assertEquals("Wrote incorrect char string", "c", new String(baos.toByteArray())
                 );
     }
 
     /**
      * @tests java.io.PrintWriter#print(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "print",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "print",
+        args = {double.class}
+    )
     public void test_printD() {
         // Test for method void java.io.PrintWriter.print(double)
         final double dub = 490000000000.08765;
         pw.print(dub);
         pw.flush();
-        assertTrue("Wrote incorrect double string", new String(bao
+        assertTrue("Wrote incorrect double string", new String(baos
                 .toByteArray()).equals(String.valueOf(dub)));
     }
 
     /**
      * @tests java.io.PrintWriter#print(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "print",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "print",
+        args = {float.class}
+    )
     public void test_printF() {
         // Test for method void java.io.PrintWriter.print(float)
         final float flo = 49.08765f;
         pw.print(flo);
         pw.flush();
         assertTrue("Wrote incorrect float string",
-                new String(bao.toByteArray()).equals(String.valueOf(flo)));
+                new String(baos.toByteArray()).equals(String.valueOf(flo)));
     }
 
     /**
      * @tests java.io.PrintWriter#print(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "print",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "print",
+        args = {int.class}
+    )
     public void test_printI() {
         // Test for method void java.io.PrintWriter.print(int)
         pw.print(4908765);
         pw.flush();
-        assertEquals("Wrote incorrect int string", "4908765", new String(bao.toByteArray())
+        assertEquals("Wrote incorrect int string", "4908765", new String(baos.toByteArray())
                 );
     }
 
     /**
      * @tests java.io.PrintWriter#print(long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "print",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "print",
+        args = {long.class}
+    )
     public void test_printJ() {
         // Test for method void java.io.PrintWriter.print(long)
         pw.print(49087650000L);
         pw.flush();
-        assertEquals("Wrote incorrect long string", "49087650000", new String(bao.toByteArray())
+        assertEquals("Wrote incorrect long string", "49087650000", new String(baos.toByteArray())
                 );
     }
 
     /**
      * @tests java.io.PrintWriter#print(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "print",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "print",
+        args = {java.lang.Object.class}
+    )
     public void test_printLjava_lang_Object() {
         // Test for method void java.io.PrintWriter.print(java.lang.Object)
         pw.print((Object) null);
         pw.flush();
-        assertEquals("Did not write null", "null", new String(bao.toByteArray()));
-        bao.reset();
+        assertEquals("Did not write null", "null", new String(baos.toByteArray()));
+        baos.reset();
 
         pw.print(new Bogus());
         pw.flush();
-        assertEquals("Wrote in incorrect Object string", "Bogus", new String(bao
+        assertEquals("Wrote in incorrect Object string", "Bogus", new String(baos
                 .toByteArray()));
     }
 
     /**
      * @tests java.io.PrintWriter#print(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "print",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "print",
+        args = {java.lang.String.class}
+    )
     public void test_printLjava_lang_String() {
         // Test for method void java.io.PrintWriter.print(java.lang.String)
         pw.print((String) null);
         pw.flush();
-        assertEquals("did not write null", "null", new String(bao.toByteArray()));
-        bao.reset();
+        assertEquals("did not write null", "null", new String(baos.toByteArray()));
+        baos.reset();
 
         pw.print("Hello World");
         pw.flush();
-        assertEquals("Wrote incorrect  string", "Hello World", new String(bao.toByteArray()));
+        assertEquals("Wrote incorrect  string", "Hello World", new String(baos.toByteArray()));
     }
 
     /**
      * @tests java.io.PrintWriter#print(boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "print",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "print",
+        args = {boolean.class}
+    )
     public void test_printZ() {
         // Test for method void java.io.PrintWriter.print(boolean)
         pw.print(true);
         pw.flush();
-        assertEquals("Wrote in incorrect boolean string", "true", new String(bao
+        assertEquals("Wrote in incorrect boolean string", "true", new String(baos
                 .toByteArray()));
     }
 
     /**
      * @tests java.io.PrintWriter#println()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {}
+    )
     public void test_println() {
         // Test for method void java.io.PrintWriter.println()
         String s;
@@ -539,7 +565,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println("Bleep");
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             s = br.readLine();
             assertTrue("Wrote incorrect line: " + s, s.equals("Blarg"));
             s = br.readLine();
@@ -554,15 +580,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#println(char[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {char[].class}
+    )
     public void test_println$C() {
         // Test for method void java.io.PrintWriter.println(char [])
         String s = null;
@@ -572,7 +595,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println(schars);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             s = br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -585,15 +608,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#println(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {char.class}
+    )
     public void test_printlnC() {
         // Test for method void java.io.PrintWriter.println(char)
         String s = null;
@@ -601,7 +621,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println('c');
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             s = br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -613,15 +633,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#println(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {double.class}
+    )
     public void test_printlnD() {
         // Test for method void java.io.PrintWriter.println(double)
         String s = null;
@@ -630,7 +647,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println(dub);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -643,15 +660,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#println(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {float.class}
+    )
     public void test_printlnF() {
         // Test for method void java.io.PrintWriter.println(float)
         String s;
@@ -660,7 +674,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println(flo);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
             assertTrue("Wrote incorrect float string: " + s + " wanted: "
@@ -674,15 +688,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#println(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {int.class}
+    )
     public void test_printlnI() {
         // Test for method void java.io.PrintWriter.println(int)
         String s = null;
@@ -690,7 +701,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println(400000);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -702,15 +713,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#println(long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {long.class}
+    )
     public void test_printlnJ() {
         // Test for method void java.io.PrintWriter.println(long)
         String s = null;
@@ -718,7 +726,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println(4000000000000L);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -731,15 +739,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#println(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {java.lang.Object.class}
+    )
     public void test_printlnLjava_lang_Object() {
         // Test for method void java.io.PrintWriter.println(java.lang.Object)
         String s = null;
@@ -747,7 +752,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println(new Bogus());
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -759,15 +764,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#println(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {java.lang.String.class}
+    )
     public void test_printlnLjava_lang_String() {
         // Test for method void java.io.PrintWriter.println(java.lang.String)
         String s = null;
@@ -775,7 +777,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println("Hello World");
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -787,15 +789,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#println(boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "println",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "println",
+        args = {boolean.class}
+    )
     public void test_printlnZ() {
         // Test for method void java.io.PrintWriter.println(boolean)
         String s = null;
@@ -803,7 +802,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.println(false);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -815,15 +814,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#write(char[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {char[].class}
+    )
     public void test_write$C() {
         // Test for method void java.io.PrintWriter.write(char [])
         String s = null;
@@ -833,7 +829,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.write(schars);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -846,15 +842,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#write(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_write$CII() {
         // Test for method void java.io.PrintWriter.write(char [], int, int)
         String s = null;
@@ -864,7 +857,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.write(schars, 6, 5);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -876,15 +869,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#write(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {int.class}
+    )
     public void test_writeI() {
         // Test for method void java.io.PrintWriter.write(int)
         char[] cab = new char[3];
@@ -892,7 +882,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.write('b');
         pw.write('c');
         pw.flush();
-        bai = new ByteArrayInputStream(bao.toByteArray());
+        bai = new ByteArrayInputStream(baos.toByteArray());
         cab[0] = (char) bai.read();
         cab[1] = (char) bai.read();
         cab[2] = (char) bai.read();
@@ -904,15 +894,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#write(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.lang.String.class}
+    )
     public void test_writeLjava_lang_String() {
         // Test for method void java.io.PrintWriter.write(java.lang.String)
         String s = null;
@@ -920,7 +907,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.write("Hello World");
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -933,15 +920,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#write(java.lang.String, int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.lang.String.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.lang.String.class, int.class, int.class}
+    )
     public void test_writeLjava_lang_StringII() {
         // Test for method void java.io.PrintWriter.write(java.lang.String, int,
         // int)
@@ -950,7 +934,7 @@ public class PrintWriterTest extends junit.framework.TestCase {
         pw.write("Hello World", 6, 5);
         pw.flush();
         try {
-            br = new BufferedReader(new Support_StringReader(bao.toString()));
+            br = new BufferedReader(new Support_StringReader(baos.toString()));
             br.readLine();
             s = br.readLine();
         } catch (IOException e) {
@@ -962,15 +946,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#append(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {char.class}
+    )
     public void test_appendChar() {
     char testChar = ' ';
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -983,15 +964,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#append(CharSequence)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.CharSequence.class}
+    )
     public void test_appendCharSequence() {
         
         String testString = "My Test String";
@@ -1007,15 +985,12 @@ public class PrintWriterTest extends junit.framework.TestCase {
     /**
      *  @tests java.io.PrintWriter#append(CharSequence, int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IndexOutOfBoundsException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.CharSequence.class, int.class, int.class}
+    )
     public void test_appendCharSequenceIntInt() {
         String testString = "My Test String";
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -1023,93 +998,252 @@ public class PrintWriterTest extends junit.framework.TestCase {
         printWriter.append(testString, 1, 3);
         printWriter.flush();
         assertEquals(testString.substring(1, 3), out.toString());
+        try {
+            printWriter.append(testString, 4, 100);
+            fail("IndexOutOfBoundsException not thrown");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            printWriter.append(testString, 100, 1);
+            fail("IndexOutOfBoundsException not thrown");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
         printWriter.close();
-
     }
 
     /**
      * @tests java.io.PrintWriter#format(java.lang.String, java.lang.Object...)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {java.lang.String.class, java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {java.lang.String.class, java.lang.Object[].class}
+    )
     public void test_formatLjava_lang_String$Ljava_lang_Object() {
-        pw.format("%s %s", "Hello", "World");
-        pw.flush();
-        assertEquals("Wrote incorrect string", "Hello World", 
-                new String(bao.toByteArray()));
+        PrintWriter tobj;
+        
+        tobj = new PrintWriter(baos, false);
+        tobj.format("%s %s", "Hello", "World");
+        tobj.flush();
+        ByteArrayInputStream bis = new ByteArrayInputStream(baos.toByteArray());
+        byte[] rbytes = new byte[11];
+        bis.read(rbytes, 0, rbytes.length);
+        assertEquals("Wrote incorrect string", "Hello World",
+                new String(rbytes));
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        tobj.format("%1$.3G, %1$.5f, 0%2$xx", 12345.678, 123456);
+        tobj.flush();
+        assertEquals("Wrong output!", "1.23E+04, 12345.67800, 01e240x", new String(baos.toByteArray()));
+        tobj.close();
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        try {
+            tobj.format("%1$.3G, %1$x", 12345.678);
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
+
+        try {
+            tobj.format("%s %q", "Hello", "World");
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
+
+        try {
+            tobj.format("%s %s", "Hello");
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
     }
 
     /**
      * @tests java.io.PrintWriter#format(java.util.Locale, java.lang.String, java.lang.Object...)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
+    )
     public void test_formatLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
-        pw.format(Locale.US, "%s %s", "Hello", "World");
-        pw.flush();
-        assertEquals("Wrote incorrect string", "Hello World", 
-                new String(bao.toByteArray()));
+        PrintWriter tobj;
+
+        tobj = new PrintWriter(baos, false);
+        tobj.format(Locale.US, "%s %s", "Hello", "World");
+        tobj.flush();
+        ByteArrayInputStream bis = new ByteArrayInputStream(baos.toByteArray());
+        byte[] rbytes = new byte[11];
+        bis.read(rbytes, 0, rbytes.length);
+        assertEquals("Wrote incorrect string", "Hello World",
+                new String(rbytes));
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        tobj.format(Locale.GERMANY, "%1$.3G; %1$.5f; 0%2$xx", 12345.678, 123456);
+        tobj.flush();
+        assertEquals("Wrong output!", "1,23E+04; 12345,67800; 01e240x", new String(baos.toByteArray()));
+        tobj.close();
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        tobj.format(Locale.US, "%1$.3G, %1$.5f, 0%2$xx", 12345.678, 123456);
+        tobj.flush();
+        assertEquals("Wrong output!", "1.23E+04, 12345.67800, 01e240x", new String(baos.toByteArray()));
+        tobj.close();
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        try {
+            tobj.format(Locale.US, "%1$.3G, %1$x", 12345.678);
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
+
+        try {
+            tobj.format(Locale.US, "%s %q", "Hello", "World");
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
+
+        try {
+            tobj.format(Locale.US, "%s %s", "Hello");
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
     }
 
     /**
      * @tests java.io.PrintWriter#printf(java.lang.String, java.lang.Object...)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "printf",
-          methodArgs = {java.lang.String.class, java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "printf",
+        args = {java.lang.String.class, java.lang.Object[].class}
+    )
     public void test_printfLjava_lang_String$Ljava_lang_Object() {
-        pw.printf("%s %s", "Hello", "World");
-        pw.flush();
-        assertEquals("Wrote incorrect string", "Hello World", 
-                new String(bao.toByteArray()));
+        PrintWriter tobj;
+
+        tobj = new PrintWriter(baos, false);
+        tobj.printf("%s %s", "Hello", "World");
+        tobj.flush();
+        ByteArrayInputStream bis = new ByteArrayInputStream(baos.toByteArray());
+        byte[] rbytes = new byte[11];
+        bis.read(rbytes, 0, rbytes.length);
+        assertEquals("Wrote incorrect string", "Hello World",
+                new String(rbytes));
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        tobj.printf("%1$.3G, %1$.5f, 0%2$xx", 12345.678, 123456);
+        tobj.flush();
+        assertEquals("Wrong output!", "1.23E+04, 12345.67800, 01e240x", new String(baos.toByteArray()));
+        tobj.close();
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        try {
+            tobj.printf("%1$.3G, %1$x", 12345.678);
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
+
+        try {
+            tobj.printf("%s %q", "Hello", "World");
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
+
+        try {
+            tobj.printf("%s %s", "Hello");
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
     }
 
     /**
      * @tests java.io.PrintWriter#printf(java.util.Locale, java.lang.String, java.lang.Object...)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "printf",
-          methodArgs = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "printf",
+        args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
+    )
     public void test_printfLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
-        pw.printf(Locale.US, "%s %s", "Hello", "World");
-        pw.flush();
-        assertEquals("Wrote incorrect string", "Hello World", 
-                new String(bao.toByteArray()));
+        PrintWriter tobj;
+
+        tobj = new PrintWriter(baos, false);
+        tobj.printf(Locale.US, "%s %s", "Hello", "World");
+        tobj.flush();
+        ByteArrayInputStream bis = new ByteArrayInputStream(baos.toByteArray());
+        byte[] rbytes = new byte[11];
+        bis.read(rbytes, 0, rbytes.length);
+        assertEquals("Wrote incorrect string", "Hello World",
+                new String(rbytes));
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        tobj.printf(Locale.GERMANY, "%1$.3G; %1$.5f; 0%2$xx", 12345.678, 123456);
+        tobj.flush();
+        assertEquals("Wrong output!", "1,23E+04; 12345,67800; 01e240x", new String(baos.toByteArray()));
+        tobj.close();
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        tobj.printf(Locale.US, "%1$.3G, %1$.5f, 0%2$xx", 12345.678, 123456);
+        tobj.flush();
+        assertEquals("Wrong output!", "1.23E+04, 12345.67800, 01e240x", new String(baos.toByteArray()));
+        tobj.close();
+
+        baos.reset();
+        tobj = new PrintWriter(baos);
+        try {
+            tobj.printf(Locale.US, "%1$.3G, %1$x", 12345.678);
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
+
+        try {
+            tobj.printf(Locale.US, "%s %q", "Hello", "World");
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
+
+        try {
+            tobj.printf(Locale.US, "%s %s", "Hello");
+            fail("IllegalFormatException not thrown");
+        } catch (IllegalFormatException e) {
+            // expected
+        }
     }
 
     /**
      * Sets up the fixture, for example, open a network connection. This method
      * is called before a test is executed.
      */
-    protected void setUp() {
-        bao = new ByteArrayOutputStream();
-        pw = new PrintWriter(bao, false);
+    @Override
+    protected void setUp() throws Exception {
+        testFile = File.createTempFile("test", null);
+        testFilePath = testFile.getAbsolutePath();
+        pw = new PrintWriter(baos, false);
 
     }
 
@@ -1117,7 +1251,11 @@ public class PrintWriterTest extends junit.framework.TestCase {
      * Tears down the fixture, for example, close a network connection. This
      * method is called after a test is executed.
      */
-    protected void tearDown() {
+    @Override
+    protected void tearDown() throws Exception {
+        testFile.delete();
+        testFile = null;
+        testFilePath = null;
         try {
             pw.close();
         } catch (Exception e) {

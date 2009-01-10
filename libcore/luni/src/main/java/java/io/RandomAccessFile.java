@@ -102,7 +102,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * @throws IllegalArgumentException
      *             if {@code mode} is not {@code "r"}, {@code "rw"}, {@code
      *             "rws"} or {@code "rwd"}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies
      *             access request according to {@code mode}.
      * @see java.lang.SecurityManager#checkRead(FileDescriptor)
@@ -174,7 +174,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * @throws IllegalArgumentException
      *             if {@code mode} is not {@code "r"}, {@code "rw"}, {@code
      *             "rws"} or {@code "rwd"}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies
      *             access request according to {@code mode}.
      * @see java.lang.SecurityManager#checkRead(FileDescriptor)

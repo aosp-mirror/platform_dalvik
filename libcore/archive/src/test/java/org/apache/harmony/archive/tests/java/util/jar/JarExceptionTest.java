@@ -17,10 +17,10 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,27 +28,37 @@ import java.util.jar.Manifest;
 import junit.framework.TestCase;
 import java.util.jar.JarException;
 
-@TestTargetClass(JarException.class) 
+@TestTargetClass(JarException.class)
 public class JarExceptionTest extends TestCase {
     /**
      * @tests java.util.jar.JarException#JarException(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Another functionality checked.",
-      targets = {
-        @TestTarget(
-          methodName = "JarException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarException",
+        args = {}
+    )
+    public void test_Constructor() throws Exception {
+        JarException ex = new JarException();
+        JarException ex1 = new JarException("Test string");
+        JarException ex2 = new JarException(null);
+        assertNotSame(ex, ex1);
+        assertNotSame(ex.getMessage(), ex1.getMessage());
+        assertNotSame(ex, ex2);
+        assertSame(ex.getMessage(), ex2.getMessage());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() throws Exception {
-        try {
-            new Manifest(new ByteArrayInputStream(
-                    "jlkasj dl: dsklf jlks dslka : fdsfsd\n\n\n\ndsfas".getBytes()));
-            fail("Should have thrown exception");
-        } catch (IOException e) {
-            // correct
-        }
+        JarException ex1 = new JarException("Test string");
+        JarException ex2 = new JarException(null);
+        assertNotSame(ex1, ex2);
+        assertNotSame(ex1.getMessage(), ex2.getMessage());
     }
 }

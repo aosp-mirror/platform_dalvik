@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,10 +16,11 @@
 
 package tests.java.sql;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -143,15 +144,12 @@ public class UpdateFunctionalityTest2 extends TestCase {
      * @tests UpdateFunctionalityTest2#testUpdate1(). Updates row with no
      *        referencing ones and RESTRICT action
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates row with no referencing ones and RESTRICT action",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Updates row with no referencing ones and RESTRICT action",
+        method = "execute",
+        args = {java.lang.String.class}
+    )
     public void testUpdate1() throws SQLException {
         DatabaseCreator.fillFKStrictTable(conn);
         statement.execute("UPDATE " + DatabaseCreator.PARENT_TABLE
@@ -164,10 +162,17 @@ public class UpdateFunctionalityTest2 extends TestCase {
      *        
      *  TODO not supported       
      */
-/*    public void testUpdate2() throws SQLException {
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Attempts to update row with referencing ones and RESTRICT action - expecting SQLException",
+            method = "execute",
+            args = {java.lang.String.class}
+        )
+    @KnownFailure("not supported")
+    public void testUpdate2() throws SQLException {
         DatabaseCreator.fillFKStrictTable(conn);
         try {
-            statement.execute("UPDATE " + DatabaseCreator.PARENT_TABLE
+            statement.executeUpdate("UPDATE " + DatabaseCreator.PARENT_TABLE
                     + " SET id = 5 WHERE id = 1;");
             fail("expecting SQLException");
         } catch (SQLException ex) {
@@ -175,20 +180,17 @@ public class UpdateFunctionalityTest2 extends TestCase {
 
         }
     }
-*/
+
     /**
      * @tests UpdateFunctionalityTest2#testUpdate3(). Deletes all referencing
      *        rows and then updates referenced one
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Deletes all referencing rows and then updates referenced one",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Deletes all referencing rows and then updates referenced one",
+        method = "execute",
+        args = {java.lang.String.class}
+    )
     public void testUpdate3() throws SQLException {
         DatabaseCreator.fillFKStrictTable(conn);
         statement.execute("DELETE FROM " + DatabaseCreator.FKSTRICT_TABLE
@@ -203,39 +205,46 @@ public class UpdateFunctionalityTest2 extends TestCase {
      *        
      *  TODO foreign key functionality is not supported      
      */
-/*    public void testUpdate4() throws SQLException {
-        DatabaseCreator.fillFKStrictTable(conn);
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Attempts to set incorrect foreign key value - expecting SQLException",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
+    )
+    @KnownFailure("not supported")
+   public void testUpdate4() throws SQLException {
+       DatabaseCreator.fillFKStrictTable(conn);
         try {
-            statement.execute("UPDATE " + DatabaseCreator.FKSTRICT_TABLE
+            statement.executeUpdate("UPDATE " + DatabaseCreator.FKSTRICT_TABLE
                     + " SET name_id = 6 WHERE name_id = 2");
             fail("expecting SQLException");
         } catch (SQLException ex) {
             // expected
         }
     }
-*/
+
     /**
      * @tests UpdateFunctionalityTest2#testUpdate5(). Updates row with
      *        referencing ones and CASCADE action - expecting that all
      *        referencing rows will also be updated
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates row with referencing ones and " +
-                "CASCADE action - expecting that all referencing rows will also be updated",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates row with referencing ones and CASCADE action - expecting that all referencing rows will also be updated",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
-      )
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates row with referencing ones and CASCADE action - expecting that all referencing rows will also be updated",
+            method = "executeQuery",
+            args = {java.lang.String.class}
+        )
     })
     public void testUpdate5() throws SQLException {
         DatabaseCreator.fillFKCascadeTable(conn);
-        statement.execute("UPDATE " + DatabaseCreator.PARENT_TABLE
+        statement.executeUpdate("UPDATE " + DatabaseCreator.PARENT_TABLE
                 + " SET id = 5 WHERE id = 1;");
 
         ResultSet r = statement.executeQuery("SELECT COUNT(*) " + "FROM "
@@ -256,26 +265,50 @@ public class UpdateFunctionalityTest2 extends TestCase {
      *        
      *  TODO Foreign key functionality is not supported       
      */
- /*   public void testUpdate6() throws SQLException {
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Attempts to set incorrect\n" + 
+                    "foreign key value to row with CASCADE action - expecting SQLException: not supported",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
+        )
+    @KnownFailure("not supported")
+    public void testUpdate6() throws SQLException {
         DatabaseCreator.fillFKCascadeTable(conn);
         try {
-            statement.execute("UPDATE " + DatabaseCreator.FKCASCADE_TABLE
+            statement.executeUpdate("UPDATE " + DatabaseCreator.FKCASCADE_TABLE
                     + " SET name_id = 6 WHERE name_id = 2");
             fail("expecting SQLException");
         } catch (SQLException ex) {
             // expected
         }
     }
-*/
+
     /**
      * @tests UpdateFunctionalityTest2#testUpdate7(). Updates table using
      *        subquery in WHERE clause
      *        
      *  TODO Foreign key functionality is not supported       
      */
-/*    public void testUpdate7() throws SQLException {
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates table using subquery in WHERE clause. Not supported: FK",
+            method = "executeQuery",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates table using subquery in WHERE clause. Not supported: FK.",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
+        )
+    })
+    @KnownFailure("not supported")
+   public void testUpdate7() throws SQLException {
+        
         DatabaseCreator.fillFKStrictTable(conn);
-        statement.execute("UPDATE " + DatabaseCreator.FKSTRICT_TABLE
+        statement.executeUpdate("UPDATE " + DatabaseCreator.FKSTRICT_TABLE
                 + " SET value = 'updated' WHERE name_id = ANY (SELECT id FROM "
                 + DatabaseCreator.PARENT_TABLE + " WHERE id > 1)");
         ResultSet r = statement.executeQuery("SELECT COUNT(*) FROM "
@@ -284,26 +317,27 @@ public class UpdateFunctionalityTest2 extends TestCase {
         assertEquals("Should be 1 row", 1, r.getInt(1));
         r.close();
     }
-*/
+
     /**
      * @tests UpdateFunctionalityTest2#testUpdate8(). Updates table using scalar
      *        subquery as new field value
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates table using scalar subquery as new field value",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates table using scalar subquery as new field value",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Updates table using scalar subquery as new field value",
+            method = "executeUpdate",
+            args = {java.lang.String.class}
         )
     })
     public void testUpdate8() throws SQLException {
-        statement.execute("UPDATE " + DatabaseCreator.SIMPLE_TABLE3
+        statement.executeUpdate("UPDATE " + DatabaseCreator.SIMPLE_TABLE3
                 + " SET speed = (SELECT MAX(speed) FROM "
                 + DatabaseCreator.SIMPLE_TABLE1
                 + ") WHERE id = (SELECT id FROM "
@@ -323,15 +357,12 @@ public class UpdateFunctionalityTest2 extends TestCase {
      * @tests UpdateFunctionalityTest2#testUpdate9(). Updates table using
      *        PreparedStatement
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Updates table using PreparedStatement",
-      targets = {
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Updates table using PreparedStatement",
+        method = "executeQuery",
+        args = {java.lang.String.class}
+    )
     public void testUpdate9() throws SQLException {
         DatabaseCreator.fillTestTable5(conn);
         PreparedStatement stat = conn.prepareStatement("UPDATE "

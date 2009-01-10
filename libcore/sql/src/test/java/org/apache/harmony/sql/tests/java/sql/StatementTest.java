@@ -18,9 +18,9 @@
 package org.apache.harmony.sql.tests.java.sql;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -34,15 +34,12 @@ public class StatementTest extends TestCase {
     /*
      * Public statics test
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Field testing",
-      targets = {
-        @TestTarget(
-          methodName = "!Constants",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Field testing",
+        method = "!Constants",
+        args = {}
+    )
     public void testPublicStatics() {
 
         HashMap<String, Integer> thePublicStatics = new HashMap<String, Integer>();

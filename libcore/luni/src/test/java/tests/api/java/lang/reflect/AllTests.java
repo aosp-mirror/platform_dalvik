@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Test for java.lang.reflect");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Test for java.lang.reflect");
 
         // $JUnit-BEGIN$
         suite.addTestSuite(AccessibleObjectTest.class);
@@ -38,6 +38,8 @@ public class AllTests {
         suite.addTestSuite(ConstructorTest.class);
         suite.addTestSuite(FieldTest.class);
         suite.addTestSuite(InvocationTargetExceptionTest.class);
+        suite.addTestSuite(MalformedParameterizedTypeExceptionTests.class);
+        suite.addTestSuite(UndeclaredThrowableExceptionTests.class);
         suite.addTestSuite(MethodTest.class);
         suite.addTestSuite(ModifierTest.class);
         suite.addTestSuite(ProxyTest.class);
@@ -47,9 +49,10 @@ public class AllTests {
         suite.addTestSuite(ParameterizedTypeTest.class);
         suite.addTestSuite(BoundedGenericMethodsTests.class);
         suite.addTestSuite(GenericMethodsTests.class);
-        suite.addTestSuite(BoundedWildcardsGenericMethodsTests.class);
+        suite.addTestSuite(WildcardTypeTest.class);
         suite.addTestSuite(GenericTypesTest.class);
         suite.addTestSuite(GenericReflectionCornerCases.class);
+        suite.addTestSuite(GenericSignatureFormatErrorTest.class);
         // $JUnit-END$
 
         return suite;

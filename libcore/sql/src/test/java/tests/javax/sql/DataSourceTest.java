@@ -1,11 +1,13 @@
 package tests.javax.sql;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.PrintWriter;
 
 import javax.sql.DataSource;
 
@@ -15,12 +17,11 @@ public class DataSourceTest extends TestCase {
     /**
      * @tests {@link javax.sql.DataSource#getConnection()}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getConnetion",
-                                     methodArgs = {})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "getConnection",
+        args = {}
     )
     public void testGetConnection() {
         fail("Not yet implemented");
@@ -29,12 +30,11 @@ public class DataSourceTest extends TestCase {
     /**
      * @tests {@link javax.sql.DataSource#getConnection(String, String)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getConnection",
-                                     methodArgs = {String.class,String.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "getConnection",
+        args = {java.lang.String.class, java.lang.String.class}
     )
     public void testGetConnectionStringString() {
         fail("Not yet implemented");
@@ -43,12 +43,11 @@ public class DataSourceTest extends TestCase {
     /**
      * @tests {@link javax.sql.DataSource#getLoginTimeout()}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getLoginTimeout",
-                                     methodArgs = {})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "getLoginTimeout",
+        args = {}
     )
     public void testGetLoginTimeout() {
         fail("Not yet implemented");
@@ -57,12 +56,11 @@ public class DataSourceTest extends TestCase {
     /**
      * @tests {@link javax.sql.DataSource#getLogWriter()}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getLogWriter",
-                                     methodArgs = {})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "getLogWriter",
+        args = {}
     )
     public void testGetLogWriter() {
         fail("Not yet implemented");
@@ -71,12 +69,11 @@ public class DataSourceTest extends TestCase {
     /**
      * @tests {@link javax.sql.DataSource#setLoginTimeout(int)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "setLoginTimeout",
-                                     methodArgs = {int.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "setLoginTimeout",
+        args = {int.class}
     )
     public void testSetLoginTimeout() {
         fail("Not yet implemented");
@@ -86,12 +83,11 @@ public class DataSourceTest extends TestCase {
     /**
      * @tests {@link javax.sql.DataSource#setLogWriter(java.io.PrintWriter)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "setLoginTimeout",
-                                     methodArgs = {int.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "setLogWriter",
+        args = {PrintWriter.class}
     )
     public void testSetLogWriter() {
         fail("Not yet implemented");

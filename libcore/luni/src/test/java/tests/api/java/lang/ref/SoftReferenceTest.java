@@ -16,17 +16,20 @@
  */
 package tests.api.java.lang.ref;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
+import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
+import java.util.Vector;
 
 @TestTargetClass(SoftReference.class) 
 public class SoftReferenceTest extends junit.framework.TestCase {
     static Boolean bool;
+    SoftReference r;
 
     protected void doneSuite() {
         bool = null;
@@ -36,15 +39,12 @@ public class SoftReferenceTest extends junit.framework.TestCase {
      * @tests java.lang.ref.SoftReference#SoftReference(java.lang.Object,
      *        java.lang.ref.ReferenceQueue)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SoftReference",
-          methodArgs = {Object.class, java.lang.ref.ReferenceQueue.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SoftReference",
+        args = {java.lang.Object.class, java.lang.ref.ReferenceQueue.class}
+    )
     public void test_ConstructorLjava_lang_ObjectLjava_lang_ref_ReferenceQueue() {
         ReferenceQueue rq = new ReferenceQueue();
         bool = new Boolean(true);
@@ -68,15 +68,12 @@ public class SoftReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.SoftReference#SoftReference(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SoftReference",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SoftReference",
+        args = {java.lang.Object.class}
+    )
     public void test_ConstructorLjava_lang_Object() {
         bool = new Boolean(true);
         try {
@@ -91,21 +88,80 @@ public class SoftReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.SoftReference#get()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verified that get() can return null.",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verified that get() can return null.",
+        method = "get",
+        args = {}
+    )
     public void test_get() {
         bool = new Boolean(false);
         SoftReference sr = new SoftReference(bool);
         assertTrue("Same object not returned.", bool == sr.get());
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {}
+    )
+    public void test_get_SoftReference() {
+
+        class TestObject {
+            public boolean finalized;
+                public TestObject() {
+                    finalized = false;
+                }
+
+                protected void finalize() {
+                    finalized = true;
+                }
+        }
+
+        final ReferenceQueue rq = new ReferenceQueue();
+
+        class TestThread extends Thread {
+            public void run() {
+                Object testObj = new TestObject();
+                r = new SoftReference(testObj, rq);
+            }
+        }
+        Reference ref;
+        try {
+            TestThread t = new TestThread();
+            t.start();
+            t.join();
+            Vector<StringBuffer> v = new Vector<StringBuffer>();     
+            try {
+                while(true) {
+                    v.add(new StringBuffer(10000));
+                }
+            } catch(OutOfMemoryError ofme) {
+                v = null;
+            }
+        } catch (InterruptedException e) {
+            fail("InterruptedException : " + e.getMessage());
+        }
+
+        assertNull("get() should return null " +
+                "if OutOfMemoryError is thrown.", r.get());
+
+        try {
+            TestThread t = new TestThread();
+            t.start();
+            t.join();
+            System.gc();
+            System.runFinalization();
+            ref = rq.poll();
+            assertNotNull("Object not garbage collected.", ref);
+            assertNull("Object is not null.", ref.get());
+            assertNotNull("Object could not be reclaimed.", r.get());
+        } catch (Exception e) {
+            fail("Exception : " + e.getMessage());
+        }
+    }
+    
     protected void setUp() {
     }
 

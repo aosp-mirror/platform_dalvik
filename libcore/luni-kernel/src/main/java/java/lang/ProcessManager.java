@@ -27,6 +27,9 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Manages child processes.
@@ -35,6 +38,7 @@ import java.util.Map;
  * http://tinyurl.com/3ytwuq
  */
 final class ProcessManager {
+
     /**
      * constant communicated from native code indicating that a
      * child died, but it was unable to determine the status
@@ -63,7 +67,10 @@ final class ProcessManager {
 
     /**
      * Map from pid to Process. We keep weak references to the Process objects
-     * and clean up the entries when no more external references are left.
+     * and clean up the entries when no more external references are left. The
+     * process objects themselves don't require much memory, but file
+     * descriptors (associated with stdin/out/err in this case) can be
+     * a scarce resource.
      */
     private final Map<Integer, ProcessReference> processReferences
             = new HashMap<Integer, ProcessReference>();
@@ -71,12 +78,6 @@ final class ProcessManager {
     /** Keeps track of garbage-collected Processes. */
     private final ProcessReferenceQueue referenceQueue
             = new ProcessReferenceQueue();
-
-    /**
-     * Running count of processes that have yet to be reaped by
-     * a lower level <code>wait()</code> syscall
-     */
-    private int childCount = 0;
 
     private ProcessManager() {
         // Spawn a thread to listen for signals from child processes.
@@ -95,14 +96,14 @@ final class ProcessManager {
      *
      * @parm pid ID of process to kill
      */
-    private static native void kill(int pid);
+    private static native void kill(int pid) throws IOException;
 
     /**
      * Cleans up after garbage collected processes. Requires the lock on the
      * map.
      */
     void cleanUp() {
-        ProcessReference reference = null;
+        ProcessReference reference;
         while ((reference = referenceQueue.poll()) != null) {
             synchronized (processReferences) {
                 processReferences.remove(reference.processId);
@@ -128,14 +129,9 @@ final class ProcessManager {
         synchronized (processReferences) {
             cleanUp();
             if (pid >= 0) {
-                childCount--;
-                if (childCount < 0) {
-                    // The count got out of balance somehow; abort!
-                    throw new AssertionError("unbalanced child count");
-                }
-                processReference = processReferences.get(pid);
+                processReference = processReferences.remove(pid);
             } else if (exitValue == WAIT_STATUS_NO_CHILDREN) {
-                if (childCount == 0) {
+                if (processReferences.isEmpty()) {
                     /*
                      * There are no eligible children; wait for one to be
                      * added. The wait() will return due to the
@@ -193,12 +189,21 @@ final class ProcessManager {
         // Ensure onExit() doesn't access the process map before we add our
         // entry.
         synchronized (processReferences) {
-            int pid = exec(commands, environment, workingPath, in, out, err);
+            int pid;
+            try {
+                pid = exec(commands, environment, workingPath, in, out, err);
+            } catch (IOException e) {
+                IOException wrapper = new IOException("Error running exec()." 
+                        + " Commands: " + Arrays.toString(commands)
+                        + " Working Directory: " + workingDirectory
+                        + " Environment: " + Arrays.toString(environment));
+                wrapper.initCause(e);
+                throw wrapper;
+            }
             ProcessImpl process = new ProcessImpl(pid, in, out, err);
             ProcessReference processReference
                     = new ProcessReference(process, referenceQueue);
             processReferences.put(pid, processReference);
-            childCount++;
 
             /*
              * This will wake up the child monitor thread in case there
@@ -237,7 +242,12 @@ final class ProcessManager {
         }
 
         public void destroy() {
-            kill(this.id);
+            try {
+                kill(this.id);
+            } catch (IOException e) {
+                Logger.getLogger(Runtime.class.getName()).log(Level.FINE,
+                        "Failed to destroy process " + id + ".", e);
+            }
         }
 
         public int exitValue() {
@@ -277,6 +287,11 @@ final class ProcessManager {
                 this.exitValue = exitValue;
                 exitValueMutex.notifyAll();
             }
+        }
+
+        @Override
+        public String toString() {
+            return "Process[id=" + id + "]";  
         }
     }
 

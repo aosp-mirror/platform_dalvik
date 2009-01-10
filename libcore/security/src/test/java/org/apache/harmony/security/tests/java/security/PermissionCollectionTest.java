@@ -23,10 +23,11 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
+import java.security.AllPermission;
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.util.*;
@@ -58,9 +59,9 @@ public class PermissionCollectionTest extends TestCase {
         final private Collection col; 
         public RealPermissionCollection(Collection col)
         {
-            this.col = col;            
+            this.col = col; 
         }
-        
+                
         public void add(Permission permission) {}
         
         public Enumeration elements() 
@@ -75,17 +76,18 @@ public class PermissionCollectionTest extends TestCase {
     }
         
     /** Test read-only flag. Should be false by default and can be set once forever. */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isReadOnly",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isReadOnly",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setReadOnly",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setReadOnly",
+            args = {}
         )
     })
     public void testReadOnly()
@@ -96,5 +98,21 @@ public class PermissionCollectionTest extends TestCase {
         assertTrue("explicitly set read-only", pc.isReadOnly());
         pc.setReadOnly();
         assertTrue("more calls to setReadOnly() should not harm", pc.isReadOnly());
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
+    public void testToString() {
+        PermissionCollection pc = new RealPermissionCollection(null);
+        try {
+            String str = pc.toString();
+            assertNotNull("toString return null", str);
+        } catch (Exception e) {
+            fail("Unexpected exception");
+        }
     }
 }

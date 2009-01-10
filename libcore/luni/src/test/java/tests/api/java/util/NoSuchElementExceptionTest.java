@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -31,51 +31,48 @@ public class NoSuchElementExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.NoSuchElementException#NoSuchElementException()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Need to call constructor directly.",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchElementException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NoSuchElementException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.util.NoSuchElementException()
+        
+        assertNotNull(new NoSuchElementException());
 
         try {
             Vector v = new Vector();
             v.elements().nextElement();
+            fail("NoSuchElementException expected");
         } catch (NoSuchElementException e) {
-            return;
+            //expected
         }
-        // if we make it to here, assert a fail
-        fail("Failed to catch expected Exception");
     }
 
     /**
      * @tests java.util.NoSuchElementException#NoSuchElementException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't call constructor with different parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchElementException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NoSuchElementException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.util.NoSuchElementException(java.lang.String)
+        
+        assertNotNull(new NoSuchElementException("String"));
+        assertNotNull(new NoSuchElementException(null));
 
         try {
             Vector v = new Vector();
             v.firstElement();
+            fail("NoSuchElementException expected");
         } catch (NoSuchElementException e) {
-            return;
+            //expected
         }
-        // if we make it to here, assert a fail
-        fail("Failed to catch Exception");
     }
 
     /**

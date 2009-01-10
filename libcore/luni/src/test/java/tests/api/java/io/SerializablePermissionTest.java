@@ -18,9 +18,9 @@
 package tests.api.java.io;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.SerializablePermission;
 
@@ -30,15 +30,12 @@ public class SerializablePermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.SerializablePermission#SerializablePermission(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SerializablePermission",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SerializablePermission",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.io.SerializablePermission(java.lang.String)
         assertEquals("permission ill-formed", 
@@ -50,15 +47,12 @@ public class SerializablePermissionTest extends junit.framework.TestCase {
      * @tests java.io.SerializablePermission#SerializablePermission(java.lang.String,
      *        java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SerializablePermission",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SerializablePermission",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.io.SerializablePermission(java.lang.String,
         // java.lang.String)

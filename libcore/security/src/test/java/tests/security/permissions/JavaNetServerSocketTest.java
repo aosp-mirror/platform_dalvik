@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,21 +16,24 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.SocketAddress;
 /*
- * This class tests the secrity permissions which are documented in
+ * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.net.ServerSocket
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(java.net.ServerSocket.class)
 public class JavaNetServerSocketTest extends TestCase {
     
     SecurityManager old;
@@ -46,14 +49,31 @@ public class JavaNetServerSocketTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that java.net.ServerSocket constructor calls " +
-            "checkListen of security permissions.",
-      targets = {
-        @TestTarget(
-          methodName = "checkListen",
-          methodArgs = {int.class}
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.ServerSocket constructor calls checkListen on the security manager.",
+            method = "ServerSocket",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.ServerSocket constructor calls checkListen on the security manager.",
+            method = "ServerSocket",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.ServerSocket constructor calls checkListen on the security manager.",
+            method = "ServerSocket",
+            args = {int.class, int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.ServerSocket constructor calls checkListen on the security manager.",
+            method = "ServerSocket",
+            args = {int.class, int.class, java.net.InetAddress.class}
         )
     })
     public void test_ctor() throws IOException {
@@ -76,10 +96,28 @@ public class JavaNetServerSocketTest extends TestCase {
         System.setSecurityManager(s);
         
         s.reset();
-        ServerSocket ss  = new ServerSocket(8888);
+        ServerSocket ss = new ServerSocket(8888);
         assertTrue("java.net.ServerSocket ctor must call checkListen on security permissions", s.called);
-        assertEquals("Argument of checkListen is not correct", 8888, s.port);
+        assertEquals("Argument of checkListen is not correct", 8888, s.port);    
+        ss.close();
         
+        s.reset();
+        ss = new ServerSocket(8888, 55);
+        assertTrue("java.net.ServerSocket ctor must call checkListen on security permissions", s.called);
+        assertEquals("Argument of checkListen is not correct", 8888, s.port);    
+        ss.close();
+        
+        s.reset();
+        ss = new ServerSocket();
+        ss.bind(new InetSocketAddress(0));
+        assertTrue("java.net.ServerSocket ctor must call checkListen on security permissions", s.called);
+        assertEquals("Argument of checkListen is not correct", 0, s.port);    
+        ss.close();
+        
+        s.reset();
+        ss = new ServerSocket(8888, 55, InetAddress.getLocalHost());
+        assertTrue("java.net.ServerSocket ctor must call checkListen on security permissions", s.called);
+        assertEquals("Argument of checkListen is not correct", 8888, s.port);    
         ss.close();
     }
 }

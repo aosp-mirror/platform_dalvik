@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 package tests.security.interfaces;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.KnownFailure;
 
 import junit.framework.TestCase;
 
@@ -33,16 +33,16 @@ public class DSAPrivateKeyTest extends TestCase {
      * @tests java.security.interfaces.DSAPrivateKey 
      * #getX()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getX",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getX",
+        args = {}
+    )
     @SuppressWarnings("serial")
+    @KnownFailure("Incorrect value was returned for method " +
+                  "java.security.interfaces.DSAPrivateKey.getX(). "+
+                  "This test is passed for RI.")
     public void test_getX() throws Exception {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", Util.prov);
         keyGen.initialize(new DSAParameterSpec(Util.P, Util.Q, Util.G),

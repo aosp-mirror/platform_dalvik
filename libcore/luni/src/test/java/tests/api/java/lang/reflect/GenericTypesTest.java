@@ -16,9 +16,9 @@
 
 package tests.api.java.lang.reflect;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.lang.reflect.Constructor;
@@ -35,20 +35,20 @@ import java.lang.reflect.TypeVariable;
 public class GenericTypesTest extends GenericReflectionTestsBase {
     
     static class GenericType<T>{
-        T methodGenericType(T t){ return t;};
+        T methodGenericType(T t){ return t;}
         @SuppressWarnings("hiding")
-        <T> T hidingMethodGenericType(T t){ return t;};
-        static <T> T staticMethodGenericType(T t){ return t;};
+        <T> T hidingMethodGenericType(T t){ return t;}
+        static <T> T staticMethodGenericType(T t){ return t;}
     }
     
     static class MultipleBoundedGenericTypes<T,S extends T>{
-        void multipleBoundedGenericTypesTS(T t, S s){};
+        void multipleBoundedGenericTypesTS(T t, S s){}
     }
     
     static class SimpleInheritance <T> extends GenericType<T>{}
     
     static class ConstructorGenericType<T>{
-        ConstructorGenericType(T t){};
+        ConstructorGenericType(T t){}
     }
     
     static class InnerClassTest<T>{
@@ -66,15 +66,12 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
     }
     
     static interface InterfaceTest<T>{}
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Check positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "getGenericParameterTypes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Check positive functionality.",
+        method = "getGenericParameterTypes",
+        args = {}
+    )
     @SuppressWarnings("unchecked")
     public void testConstructorGenericType() throws Exception {
         Class<? extends ConstructorGenericType> clazz = ConstructorGenericType.class;
@@ -86,15 +83,12 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
         
         assertEquals(typeVariable, parameterType);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getGenericParameterTypes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "getGenericParameterTypes",
+        args = {}
+    )
     @SuppressWarnings("unchecked")
     public void testStaticMethodGenericType() throws Exception {
         Class<? extends GenericType> clazz = GenericType.class;
@@ -108,15 +102,12 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
         assertInstanceOf(TypeVariable.class, parameterType);
         assertEquals(method, ((TypeVariable)parameterType).getGenericDeclaration());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getGenericParameterTypes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "getGenericParameterTypes",
+        args = {}
+    )
     @SuppressWarnings("unchecked")
     public void testHidingMethodGenericType() throws Exception {
         Class<? extends GenericType> clazz = GenericType.class;
@@ -132,19 +123,16 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
     }
     
     static class MultipleGenericTypes<T,S>{
-        void multipleGenericTypesT(T t){};
-        void multipleGenericTypesS(S s){};
-        void multipleGenericTypesTS(T t, S s){};
+        void multipleGenericTypesT(T t){}
+        void multipleGenericTypesS(S s){}
+        void multipleGenericTypesTS(T t, S s){}
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getGenericParameterTypes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "getGenericParameterTypes",
+        args = {}
+    )
     @SuppressWarnings("unchecked")
     public void testMultipleGenericTypes() throws Exception {
         //Type parameters
@@ -182,15 +170,12 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
         assertEquals(typeVariableS, multipleGenericTypesTSTypeS);
     }
     
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTypeParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTypeParameters",
+        args = {}
+    )
     @SuppressWarnings("unchecked")
     public void testMultipleBoundedGenericTypes() throws Exception {
         //Type parameters
@@ -208,15 +193,12 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
         Type boundS = boundsS[0];
         assertEquals(typeVariableT, boundS);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getGenericParameterTypes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "getGenericParameterTypes",
+        args = {}
+    )
     @SuppressWarnings("unchecked")
     public void testSimpleInheritance() throws Exception {
         Class<? extends SimpleInheritance> clazz = SimpleInheritance.class;
@@ -238,15 +220,12 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
         TypeVariable actualSuperTypeVariable = (TypeVariable) actualTypeArguments[0];
         assertEquals(subTypeVariable, actualSuperTypeVariable);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getGenericParameterTypes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't check exceptions.",
+        method = "getGenericParameterTypes",
+        args = {}
+    )
     @SuppressWarnings("unchecked")
     public void testInnerClassTest() throws Exception {
         Class<? extends InnerClassTest> clazz =InnerClassTest.class;
@@ -277,15 +256,12 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
         TypeVariable<?> methodTypeVariable = (TypeVariable<?>) methodParameterTypes[0];
         assertEquals(clazz, methodTypeVariable.getGenericDeclaration());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "getGenericExceptionTypes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Exceptions are not verified.",
+        method = "getGenericExceptionTypes",
+        args = {}
+    )
     @SuppressWarnings("unchecked")
     public void testException() throws Exception {
         Class<? extends ExceptionTest> clazz = ExceptionTest.class;

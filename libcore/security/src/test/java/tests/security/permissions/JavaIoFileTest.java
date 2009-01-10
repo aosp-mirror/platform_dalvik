@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,24 +16,24 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.security.Permission;
+
+import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 /*
- * This class tests the secrity permissions which are documented in
+ * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.io.File.
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(java.io.File.class)
 public class JavaIoFileTest extends TestCase {
     
     SecurityManager old;
@@ -50,14 +50,18 @@ public class JavaIoFileTest extends TestCase {
         super.tearDown();
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that File.delete and File.deleteOnExit methods " +
-            "call checkDelete method of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkDelete",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.delete and File.deleteOnExit methods call checkDelete on security manager.",
+            method = "delete",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.delete and File.deleteOnExit methods call checkDelete on security manager.",
+            method = "deleteOnExit",
+            args = {}
         )
     })
     public void test_File1() throws IOException {
@@ -74,7 +78,10 @@ public class JavaIoFileTest extends TestCase {
             public void checkDelete(String file) {
                 called = true;
                 this.filename = file;
-                super.checkDelete(file);
+            }
+            @Override
+            public void checkPermission(Permission p) {
+                
             }
         }
         
@@ -98,16 +105,78 @@ public class JavaIoFileTest extends TestCase {
         assertEquals("Argument of checkDelete is not correct", filename, s.filename);
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that File.exists(), File.canRead(), File.isFile(), " +
-            "File.isDirectory(), File.isHidden(), File.lastModified(), " +
-            "File.length(), File.list(...), File.listFiles(...) methods " +
-            "call  checkRead method of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkRead",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "exists",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "canRead",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "isFile",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "isDirectory",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "isHidden",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "lastModified",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "length",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "list",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "list",
+            args = {java.io.FilenameFilter.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "listFiles",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "listFiles",
+            args = {java.io.FilenameFilter.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that File.exists(), File.canRead(), File.isFile(), File.isDirectory(), File.isHidden(), File.lastModified(), File.length(), File.list(...), File.listFiles(...) methods call checkRead method of security manager.",
+            method = "listFiles",
+            args = {java.io.FileFilter.class}
         )
     })
     public void test_File2() throws IOException {
@@ -122,7 +191,10 @@ public class JavaIoFileTest extends TestCase {
             public void checkRead(String file){
                 called = true;
                 this.file = file;
-                super.checkRead(file);
+            }
+            @Override
+            public void checkPermission(Permission p) {
+                
             }
         }
 
@@ -196,14 +268,60 @@ public class JavaIoFileTest extends TestCase {
         assertEquals("Argument of checkRead is not correct", filename, s.file);
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that write/create methods of File class call " +
-            "checkWrite method of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkWrite",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that write/create methods of File class call checkWrite on security manager.",
+            method = "canWrite",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that write/create methods of File class call checkWrite on security manager.",
+            method = "createNewFile",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that write/create methods of File class call checkWrite on security manager.",
+            method = "createTempFile",
+            args = {java.lang.String.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that write/create methods of File class call checkWrite on security manager.",
+            method = "createTempFile",
+            args = {java.lang.String.class, java.lang.String.class, java.io.File.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that write/create methods of File class call checkWrite on security manager.",
+            method = "mkdir",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that write/create methods of File class call checkWrite on security manager.",
+            method = "mkdirs",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that write/create methods of File class call checkWrite on security manager.",
+            method = "renameTo",
+            args = {java.io.File.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that write/create methods of File class call checkWrite on security manager.",
+            method = "setLastModified",
+            args = {long.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that write/create methods of File class call checkWrite on security manager.",
+            method = "setReadOnly",
+            args = {}
         )
     })
     public void test_File3() throws IOException {
@@ -218,10 +336,17 @@ public class JavaIoFileTest extends TestCase {
             public void checkWrite(String file){
                 called = true;
                 this.file = file;
-                super.checkWrite(file);
+            }
+            @Override
+            public void checkPermission(Permission p) {
+                
             }
         }
 
+        String tmpPath = System.getProperty("java.io.tmpdir");
+        if(!tmpPath.endsWith("/")) {
+            tmpPath += "/";
+        }
         long id = new java.util.Date().getTime();
         String filename  = "SecurityPermissionsTest_"+id;
         String filename2 = "SecurityPermissionsTest_"+(id+1);
@@ -247,16 +372,16 @@ public class JavaIoFileTest extends TestCase {
         assertEquals("Argument of checkWrite is not correct", filename, s.file);
 
         s.reset();
-        File tmp = new File("/tmp/dir"+id);
+        File tmp = new File(tmpPath + "dir"+id);
         tmp.mkdir();
         assertTrue("File.canWrite() must call checkWrite on security manager", s.called);
-        assertEquals("Argument of checkWrite is not correct", "/tmp/dir"+id, s.file);
+        assertEquals("Argument of checkWrite is not correct", tmpPath + "dir"+id, s.file);
 
         s.reset();
-        tmp = new File("/tmp/a"+id+"/b/c");
+        tmp = new File(tmpPath + "a"+id+"/b/c");
         tmp.mkdirs();
         assertTrue("File.mkdirs() must call checkWrite on security manager", s.called);
-        assertEquals("Argument of checkWrite is not correct", "/tmp/a"+id+"/b/c", s.file);
+        assertEquals("Argument of checkWrite is not correct", tmpPath +"a"+id+"/b/c", s.file);
         
         s.reset();
         f.renameTo(f2);
@@ -286,6 +411,120 @@ public class JavaIoFileTest extends TestCase {
         filename = tmp.getCanonicalPath();
         assertTrue("File.createTempFile(String,String,File) must call checkWrite on security manager", s.called);
         assertEquals("Argument of checkWrite is not correct", filename, s.file);
+    }
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that checkRead(java.io.FileDescriptor) " +
+                    "and checkPropertyAccess(java.lang.String) on " +
+                    "security manager are called.",
+            method = "getCanonicalFile",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that checkRead(java.io.FileDescriptor) " +
+                    "and checkPropertyAccess(java.lang.String) on " +
+                    "security manager are called.",
+            method = "getCanonicalPath",
+            args = {}
+        )
+    })
+    public void test_File4() throws IOException {
+        class TestSecurityManager extends SecurityManager {
+            boolean checkPropertyAccessCalled;
+            
+            void reset(){
+                checkPropertyAccessCalled = false;
+            }
+            @Override
+            public void checkPropertyAccess(String key){
+                checkPropertyAccessCalled = true;
+            }
+            @Override
+            public void checkPermission(Permission p) {
+                
+            }
+        }
+
+        long id = new java.util.Date().getTime();
+        TestSecurityManager s = new TestSecurityManager();
+        System.setSecurityManager(s);
+
+        String filename = "SecurityPermissionsTest_" + id;
+        File f = new File(filename);
+
+        try {
+            s.reset();
+            f.getCanonicalFile();
+            assertTrue("File.getCanonicalFile() must call checkPropertyAccess " +
+                    "on security manager", s.checkPropertyAccessCalled);
+            
+            s.reset();
+            f = new File(filename);
+            filename = f.getCanonicalPath();
+            assertTrue("File.getCanonicalPath() must call checkPropertyAccess " +
+                    " on security manager", s.checkPropertyAccessCalled);
+        } finally {
+            f.delete();
+        }
+    }
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that checkPropertyAccess(java.lang.String) on " +
+                    "security manager is called.",
+            method = "getAbsoluteFile",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that checkPropertyAccess(java.lang.String) on " +
+                    "security manager is called.",
+            method = "getAbsolutePath",
+            args = {}
+        )
+    })
+    public void test_File5() throws IOException {
+        class TestSecurityManager extends SecurityManager {
+            boolean checkPropertyAccessCalled;
+            
+            void reset(){
+                checkPropertyAccessCalled = false;
+            }
+            @Override
+            public void checkPropertyAccess(String key){
+                checkPropertyAccessCalled = true;
+            }
+            @Override
+            public void checkPermission(Permission p) {
+                
+            }
+        }
+
+        long id = new java.util.Date().getTime();
+        TestSecurityManager s = new TestSecurityManager();
+        System.setSecurityManager(s);
+
+        String filename = "SecurityPermissionsTest_" + id;
+        File f = new File(filename);
+
+        try {
+            s.reset();
+            f.getAbsoluteFile();
+            assertTrue("File.getAbsoluteFile() must call checkPropertyAccess " +
+                    "on security manager", s.checkPropertyAccessCalled);
+            
+            s.reset();
+            f = new File(filename);
+            filename = f.getAbsolutePath();
+            assertTrue("File.getAbsolutePath() must call checkPropertyAccess " +
+                    " on security manager", s.checkPropertyAccessCalled);
+        } finally {
+            f.delete();
+        }
     }
 }
 

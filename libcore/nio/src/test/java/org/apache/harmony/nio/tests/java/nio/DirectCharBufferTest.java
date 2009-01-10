@@ -15,9 +15,8 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.ByteBuffer;
@@ -27,6 +26,7 @@ import java.nio.ByteOrder;
 public class DirectCharBufferTest extends CharBufferTest {
     
     public void setUp(){
+        capacity = BUFFER_LENGTH;
         buf = ByteBuffer.allocateDirect(BUFFER_LENGTH*2).asCharBuffer();
         super.loadTestData1(buf);
         baseBuf = buf;
@@ -36,27 +36,23 @@ public class DirectCharBufferTest extends CharBufferTest {
         buf = null;
         baseBuf = null;
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies hasArray method for direct CharBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "hasArray",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies hasArray method for direct CharBuffer.",
+        method = "hasArray",
+        args = {}
+    )
     public void testHasArray() {
         assertFalse(buf.hasArray());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies array method for direct CharBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "array",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies array method for direct CharBuffer.",
+        method = "array",
+        args = {}
+    )
     public void testArray() {
         try {
             buf.array();
@@ -64,15 +60,13 @@ public class DirectCharBufferTest extends CharBufferTest {
         } catch (UnsupportedOperationException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies arrayOffset method for direct CharBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "arrayOffset",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies arrayOffset method for direct CharBuffer.",
+        method = "arrayOffset",
+        args = {}
+    )
     public void testArrayOffset() {
         try {
             buf.arrayOffset();
@@ -80,27 +74,23 @@ public class DirectCharBufferTest extends CharBufferTest {
         } catch (UnsupportedOperationException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies isDirect method for direct CharBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isDirect",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies isDirect method for direct CharBuffer.",
+        method = "isDirect",
+        args = {}
+    )
     public void testIsDirect() {
         assertTrue(buf.isDirect());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies order method for direct CharBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "order",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "order",
+        args = {}
+    )
     public void testOrder() {
         assertEquals(ByteOrder.BIG_ENDIAN, buf.order());
     }

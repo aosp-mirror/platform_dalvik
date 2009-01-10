@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.ByteBuffer;
@@ -28,6 +26,7 @@ public class HeapByteBufferTest extends ByteBufferTest {
     
     protected void setUp() throws Exception {   
         super.setUp();
+        capacity = BUFFER_LENGTH;
         buf = ByteBuffer.allocate(BUFFER_LENGTH);
         baseBuf = buf;
     }
@@ -42,15 +41,12 @@ public class HeapByteBufferTest extends ByteBufferTest {
      * @tests java.nio.ByteBuffer#allocate(int)
      * 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "allocate",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "allocate",
+        args = {int.class}
+    )
     public void testAllocatedByteBuffer_IllegalArg() {
         try {
             ByteBuffer.allocate(-1);
@@ -59,39 +55,34 @@ public class HeapByteBufferTest extends ByteBufferTest {
             // expected 
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies isDirect method with not direct buffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isDirect",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies isDirect method with not direct buffer.",
+        method = "isDirect",
+        args = {}
+    )
     public void testIsDirect() {
         assertFalse(buf.isDirect());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that hasArray returns true value.",
-      targets = {
-        @TestTarget(
-          methodName = "hasArray",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that hasArray returns true value.",
+        method = "hasArray",
+        args = {}
+    )
     public void testHasArray() {
         assertTrue(buf.hasArray());
+        assertNotNull(buf.array());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies isReadOnly method with non read only buffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isReadOnly",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies isReadOnly method with non read only buffer.",
+        method = "isReadOnly",
+        args = {}
+    )
     public void testIsReadOnly() {
         assertFalse(buf.isReadOnly());
     }

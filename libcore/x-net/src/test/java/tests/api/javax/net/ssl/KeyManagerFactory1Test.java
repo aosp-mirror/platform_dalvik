@@ -18,13 +18,11 @@
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.KnownFailure;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -35,6 +33,7 @@ import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
+import javax.net.ssl.KeyStoreBuilderParameters;
 import javax.net.ssl.ManagerFactoryParameters;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -42,6 +41,7 @@ import javax.net.ssl.KeyManagerFactorySpi;
 
 import org.apache.harmony.security.tests.support.SpiEngUtils;
 import org.apache.harmony.xnet.tests.support.MyKeyManagerFactorySpi;
+
 import junit.framework.TestCase;
 
 /**
@@ -103,15 +103,12 @@ public class KeyManagerFactory1Test extends TestCase {
     /**
      * @tests avax.net.ssl.KeyManagerFactory#getAlgorithm() 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAlgorithm",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAlgorithm",
+        args = {}
+    )
     public void test_getAlgorithm()
         throws NoSuchAlgorithmException, NoSuchProviderException {
         if (!DEFSupported) fail(NotSupportedMsg);
@@ -134,15 +131,12 @@ public class KeyManagerFactory1Test extends TestCase {
      *  Test for <code>getDefaultAlgorithm()</code> method
      * Assertion: returns value which is specifoed in security property
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDefaultAlgorithm",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefaultAlgorithm",
+        args = {}
+    )
     public void test_getDefaultAlgorithm() {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -172,15 +166,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * returns security property "ssl.KeyManagerFactory.algorithm";
      * returns instance of KeyManagerFactory
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_String01() throws NoSuchAlgorithmException {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -202,15 +193,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * throws NullPointerException when algorithm is null;
      * throws NoSuchAlgorithmException when algorithm is not correct;
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_String02() {
         try {
             KeyManagerFactory.getInstance(null);
@@ -233,15 +221,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * method 
      * Assertion: throws IllegalArgumentException when provider is null or empty
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_lang_String01() throws NoSuchProviderException,
             NoSuchAlgorithmException {
         if (!DEFSupported) {
@@ -270,15 +255,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * throws NullPointerException when algorithm is null;
      * throws NoSuchAlgorithmException when algorithm is not correct;
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_lang_String02() throws NoSuchProviderException {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -307,15 +289,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * Assertion: throws NoSuchProviderException when provider has
      * invalid value
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_lang_String03()
         throws NoSuchAlgorithmException {
         if (!DEFSupported) {
@@ -340,15 +319,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * Test for <code>getInstance(String algorithm, String provider)</code>
      * method Assertion: returns instance of KeyManagerFactory
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_lang_String04()
         throws NoSuchProviderException,
             NoSuchAlgorithmException {
@@ -374,15 +350,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * method 
      * Assertion: throws IllegalArgumentException when provider is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, Provider.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_security_Provider01()
         throws NoSuchAlgorithmException {
         if (!DEFSupported) {
@@ -406,15 +379,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * throws NullPointerException when algorithm is null;
      * throws NoSuchAlgorithmException when algorithm is not correct;
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, Provider.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_security_Provider02() {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -441,15 +411,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * method 
      * Assertion: returns instance of KeyManagerFactory
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, Provider.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_security_Provider03()
         throws NoSuchAlgorithmException,
             IllegalArgumentException {
@@ -471,15 +438,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * Test for <code>KeyManagerFactory</code> constructor 
      * Assertion: returns KeyManagerFactory object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "KeyManagerFactory",
-          methodArgs = {KeyManagerFactorySpi.class, Provider.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "KeyManagerFactory",
+        args = {javax.net.ssl.KeyManagerFactorySpi.class, java.security.Provider.class, java.lang.String.class}
+    )
     public void test_Constructor() throws NoSuchAlgorithmException {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -517,26 +481,18 @@ public class KeyManagerFactory1Test extends TestCase {
      * @throws CertificateException 
      * @throws UnrecoverableKeyException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getKeyManagers",
-          methodArgs = {}
-        )
-    })
-    public void _test_getKeyManagers()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getKeyManagers",
+        args = {}
+    )
+    public void test_getKeyManagers()
         throws Exception {
         if (!DEFSupported) fail(NotSupportedMsg);
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(defaultAlgorithm);
-        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        InputStream v1in = new FileInputStream(ClassLoader
-                .getSystemClassLoader().getResource("keystore.jks").getFile());
         char[] pass = "password".toCharArray();
-        keyStore.load(v1in, pass);
-        v1in.close();
-        kmf.init(keyStore, pass);
+        kmf.init(null, pass);
         assertNotNull("Key manager array is null", kmf.getKeyManagers());
         assertEquals("Incorrect size of array",
                 1, kmf.getKeyManagers().length);
@@ -545,15 +501,12 @@ public class KeyManagerFactory1Test extends TestCase {
     /**
      * @tests avax.net.ssl.KeyManagerFactory#getProvider()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getProvider",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getProvider",
+        args = {}
+    )
     public void test_getProvider()
         throws Exception {
         if (!DEFSupported) fail(NotSupportedMsg);
@@ -577,15 +530,12 @@ public class KeyManagerFactory1Test extends TestCase {
      * <code>getKeyManagers()</code> 
      * Assertion: returns not empty KeyManager array
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "init",
-          methodArgs = {KeyStore.class, char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException checking missed",
+        method = "init",
+        args = {java.security.KeyStore.class, char[].class}
+    )
     public void test_initLjava_security_KeyStore$C()
         throws NoSuchAlgorithmException,
         KeyStoreException, UnrecoverableKeyException {
@@ -625,6 +575,7 @@ public class KeyManagerFactory1Test extends TestCase {
             assertTrue("Length of result KeyManager array should not be 0",
                     (km.length > 0));
         }
+      
     }
 
     /**
@@ -632,17 +583,18 @@ public class KeyManagerFactory1Test extends TestCase {
      * Assertion:
      * throws InvalidAlgorithmParameterException when params is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exception case was checked only",
-      targets = {
-        @TestTarget(
-          methodName = "init",
-          methodArgs = {ManagerFactoryParameters.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "functionality is not implemented in org.apache.harmony.xnet.provider.jsse.engineInit(ManagerFactoryParameters)",
+        method = "init",
+        args = {javax.net.ssl.ManagerFactoryParameters.class}
+    )
+    @KnownFailure("ManagerFactoryParameters object is not supported " + 
+                  "and InvalidAlgorithmParameterException was thrown." +
+                  "RI: functionality is not implemented, just exception.")
     public void test_initLjavax_net_ssl_ManagerFactoryParameters()
         throws NoSuchAlgorithmException {
+
         if (!DEFSupported) {
             fail(NotSupportedMsg);
             return;
@@ -657,6 +609,19 @@ public class KeyManagerFactory1Test extends TestCase {
             } catch (InvalidAlgorithmParameterException e) {
             }
         }
+        
+        KeyStore.ProtectionParameter pp = new ProtectionParameterImpl();
+        KeyStore.Builder bld = KeyStore.Builder.newInstance("testType", null, pp);
+        assertNotNull("Null object KeyStore.Builder", bld);
+        
+        try {
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(defaultAlgorithm);
+            KeyStoreBuilderParameters ksp = new KeyStoreBuilderParameters(bld);
+            assertNotNull(ksp.getParameters());
+            kmf.init(ksp);
+            fail("InvalidAlgorithmParameterException must be thrown");
+        } catch (InvalidAlgorithmParameterException e) {
+        }
     }
     
 }
@@ -669,4 +634,8 @@ class myKeyManagerFactory extends KeyManagerFactory {
             String alg) {
         super(spi, prov, alg);
     }
+}
+
+class ProtectionParameterImpl implements KeyStore.ProtectionParameter {
+    ProtectionParameterImpl(){}
 }

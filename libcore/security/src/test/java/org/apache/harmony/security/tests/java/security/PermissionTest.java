@@ -23,13 +23,16 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.Permission;
+import java.security.SecurityPermission;
 
 import junit.framework.TestCase;
+
+import org.apache.harmony.security.tests.java.security.ProviderTest.TestSecurityManager;
 @TestTargetClass(Permission.class)
 /**
  * Tests for <code>Permission</code>
@@ -78,15 +81,12 @@ public class PermissionTest extends TestCase {
      * Test that a permission object is created with the specified name and is
      * properly converted to String
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Non null string parameter verified",
-      targets = {
-        @TestTarget(
-          methodName = "Permission",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Non null string parameter verified",
+        method = "Permission",
+        args = {java.lang.String.class}
+    )
     public void testCtor() {
         String name = "testCtor123^%$#&^ &^$";
         Permission test = new RealPermission(name);
@@ -100,15 +100,12 @@ public class PermissionTest extends TestCase {
      * checkPermission() should be called with this permission, otherwise
      * nothing happens
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "checkGuard",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "checkGuard",
+        args = {java.lang.Object.class}
+    )
     public void testCheckGuard() {
         final Permission test = new RealPermission("234234");
         SecurityManager old = System.getSecurityManager();
@@ -129,18 +126,30 @@ public class PermissionTest extends TestCase {
         } finally {
             System.setSecurityManager(old);
         }
+        
+        
+        TestSecurityManager sm = new TestSecurityManager("testGuardPermission");
+        try {
+            System.setSecurityManager(sm);
+            Permission p = new SecurityPermission("testGuardPermission");
+            p.checkGuard(this);
+            fail("expected SecurityException");
+        } catch (SecurityException e) {
+            // ok
+            assertTrue("checkPermisson was not called", sm.called);
+        } finally {
+            System.setSecurityManager(null);
+        }
+        
     }
 
     /** newPermissionCollection() should return null */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Returned parameter was tested.",
-      targets = {
-        @TestTarget(
-          methodName = "newPermissionCollection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Returned parameter was tested.",
+        method = "newPermissionCollection",
+        args = {}
+    )
     public void testCollection() {
         assertNull(new RealPermission("123").newPermissionCollection());
     }

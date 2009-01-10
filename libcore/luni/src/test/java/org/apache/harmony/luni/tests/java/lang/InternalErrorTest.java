@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class InternalErrorTest extends TestCase {
     /**
      * @tests java.lang.InternalError#InternalError()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InternalError",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InternalError",
+        args = {}
+    )
     public void test_Constructor() {
         InternalError e = new InternalError();
         assertNull(e.getMessage());
@@ -49,15 +46,12 @@ public class InternalErrorTest extends TestCase {
     /**
      * @tests java.lang.InternalError#InternalError(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InternalError",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InternalError",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         InternalError e = new InternalError("fixture");
         assertEquals("fixture", e.getMessage());

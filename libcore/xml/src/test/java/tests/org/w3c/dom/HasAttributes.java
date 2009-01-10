@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Node;
@@ -73,15 +73,12 @@ public final class HasAttributes extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that hasAttributes method returns false value.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttributes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that hasAttributes method returns false value.",
+        method = "hasAttributes",
+        args = {}
+    )
     public void testHasAttributes1() throws Throwable {
         Document doc;
         NodeList addrList;
@@ -93,15 +90,12 @@ public final class HasAttributes extends DOMTestCase {
         state = addrNode.hasAttributes();
         assertFalse("throw_False", state);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that hasAttributes method returns true value.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttributes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that hasAttributes method returns true value.",
+        method = "hasAttributes",
+        args = {}
+    )
     public void testHasAttributes2() throws Throwable {
         Document doc;
         NodeList addrList;

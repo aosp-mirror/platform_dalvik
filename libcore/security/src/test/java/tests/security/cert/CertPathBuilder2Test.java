@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -48,7 +48,7 @@ import org.apache.harmony.security.tests.support.SpiEngUtils;
 @TestTargetClass(CertPathBuilder.class)
 public class CertPathBuilder2Test extends TestCase {
     private static final String defaultAlg = "CertPB";
-    private static final String CertPathBuilderProviderClass = "tests.security.cert.support.cert.MyCertPathBuilderSpi";
+    private static final String CertPathBuilderProviderClass = "org.apache.harmony.security.tests.support.cert.MyCertPathBuilderSpi";
 
     private static final String[] invalidValues = SpiEngUtils.invalidValues;
 
@@ -68,7 +68,8 @@ public class CertPathBuilder2Test extends TestCase {
         super.setUp();
         mProv = (new SpiEngUtils()).new MyProvider("MyCertPathBuilderProvider",
                 "Provider for testing", CertPathBuilder1Test.srvCertPathBuilder
-                        .concat(".").concat(defaultAlg),
+                        + "." + defaultAlg,
+
                 CertPathBuilderProviderClass);
         Security.insertProviderAt(mProv, 1);
     }
@@ -123,16 +124,13 @@ public class CertPathBuilder2Test extends TestCase {
      * throws NoSuchAlgorithmException when algorithm  is not correct
      * returns CertPathBuilder object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _testGetInstance01() throws NoSuchAlgorithmException,
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
+    public void testGetInstance01() throws NoSuchAlgorithmException,
             InvalidAlgorithmParameterException, CertPathBuilderException {
         try {
             CertPathBuilder.getInstance(null);
@@ -166,16 +164,13 @@ public class CertPathBuilder2Test extends TestCase {
      * throws NoSuchProviderException when provider is available; 
      * returns CertPathBuilder object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
-    public void _testGetInstance02() throws NoSuchAlgorithmException,
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
+    public void testGetInstance02() throws NoSuchAlgorithmException,
             NoSuchProviderException, IllegalArgumentException,
             InvalidAlgorithmParameterException, CertPathBuilderException {
         try {
@@ -239,16 +234,13 @@ public class CertPathBuilder2Test extends TestCase {
      * throws NoSuchAlgorithmException when algorithm  is not correct
      * returns CertPathBuilder object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {java.lang.String.class, java.security.Provider.class}
-        )
-    })
-    public void _testGetInstance03() throws NoSuchAlgorithmException,
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
+    public void testGetInstance03() throws NoSuchAlgorithmException,
             IllegalArgumentException,
             InvalidAlgorithmParameterException, CertPathBuilderException {
         try {

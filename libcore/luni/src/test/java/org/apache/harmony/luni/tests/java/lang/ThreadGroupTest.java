@@ -17,17 +17,18 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
+import java.security.Permission;
 import java.util.Vector;
 
-// BEGIN android-changed
 @TestTargetClass(ThreadGroup.class) 
 public class ThreadGroupTest extends junit.framework.TestCase implements Thread.UncaughtExceptionHandler {
-// END android-changed
     
     class MyThread extends Thread {
         public volatile int heartBeat = 0;
@@ -44,6 +45,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
+                    break;
                 }
             }
         }
@@ -75,15 +77,14 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#ThreadGroup(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "ThreadGroup",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ThreadGroup",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure("Security checking is missed. " +
+            "checkAccess method should be invoked.")
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.ThreadGroup(java.lang.String)
 
@@ -101,22 +102,37 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
 
         // cleanup
         newGroup.destroy();
-
+        
+        newGroup = new ThreadGroup("");
+        assertEquals("", newGroup.getName());
+        
+        newGroup = new ThreadGroup(null);
+        assertNull(newGroup.getName());
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new ThreadGroup(name);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }              
     }
-
+    
     /**
      * @tests java.lang.ThreadGroup#ThreadGroup(java.lang.ThreadGroup,
      *        java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ThreadGroup",
-          methodArgs = {java.lang.ThreadGroup.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ThreadGroup",
+        args = {java.lang.ThreadGroup.class, java.lang.String.class}
+    )
+    @KnownFailure("Security checking is missed. " +
+            "checkAccess method should be invoked.")
     public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_String() {
         // Test for method java.lang.ThreadGroup(java.lang.ThreadGroup,
         // java.lang.String)
@@ -152,23 +168,47 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         } catch (IllegalThreadStateException e) {
             newGroup = null;
         }
-        ;
+        
         assertNull("Can't create a subgroup of a destroyed group",
                 newGroup);
+        
+        try {
+            new ThreadGroup(null, "name");
+            fail("NullPointerException is not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
+        
+        try {
+            new ThreadGroup(newGroup, null);
+            fail("NullPointerException is not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new ThreadGroup(getRootThreadGroup(), "a name here");
+            fail("SecurityException was not thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }             
     }
 
     /**
      * @tests java.lang.ThreadGroup#activeCount()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "activeCount",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "activeCount",
+        args = {}
+    )
+    @KnownFailure("Active thread count is not increased after starting of " +
+            "the thread from ThreadGroup.")
     public void test_activeCount() {
         // Test for method int java.lang.ThreadGroup.activeCount()
         ThreadGroup tg = new ThreadGroup("activeCount");
@@ -180,11 +220,11 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
                 }
             }
         });
-        int count = tg.activeCount();
-        assertTrue("wrong active count: " + count, count == 0);
+        int beforeCount = tg.activeCount();
         t1.start();
-        count = tg.activeCount();
-        assertTrue("wrong active count: " + count, count == 1);
+        int afterCount = tg.activeCount();
+        assertTrue("count of active threads should be increased", 
+                (afterCount - beforeCount) == 1);
         t1.interrupt();
         try {
             t1.join();
@@ -194,20 +234,17 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         tg.destroy();
     }
 
-    // BEGIN android-added
     /**
      * @tests java.lang.ThreadGroup#activeGroupCount()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "activeGroupCount",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "activeGroupCount",
+        args = {}
+    )
     public void test_activeGroupCount() {
+     
         ThreadGroup tg = new ThreadGroup("group count");
         assertEquals("Incorrect number of groups",
                 0, tg.activeGroupCount());
@@ -232,15 +269,12 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#allowThreadSuspension(boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "allowThreadSuspension",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "allowThreadSuspension",
+        args = {boolean.class}
+    )
     @SuppressWarnings("deprecation")
     public void test_allowThreadSuspensionZ() {
         ThreadGroup tg = new ThreadGroup("thread suspension");
@@ -249,20 +283,18 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         assertTrue("Thread suspention can not be changed",
                 tg.allowThreadSuspension(true));
     }
-    // END android-added
 
     /**
      * @tests java.lang.ThreadGroup#checkAccess()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "checkAccess",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkAccess",
+        args = {}
+    )
+    @KnownFailure("Security checking is missed. " +
+            "checkAccess method should be invoked.")
     public void test_checkAccess() {
         // Test for method void java.lang.ThreadGroup.checkAccess()
 
@@ -284,20 +316,243 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
 
         testRoot.destroy();
 
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            testRoot.checkAccess();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }            
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "enumerate",
+        args = {java.lang.Thread[].class}
+    )
+    @KnownFailure("Security checking is missed. " +
+            "checkAccess method should be invoked.")    
+    public void test_enumerateLThreadArray() {
+        int numThreads = initialThreadGroup.activeCount();
+        Thread[] listOfThreads = new Thread[numThreads];
+
+        int countThread = initialThreadGroup.enumerate(listOfThreads);
+        assertEquals(numThreads, countThread);
+        assertEquals(Thread.currentThread(), listOfThreads[0]);
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            initialThreadGroup.enumerate(listOfThreads);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }        
+    }    
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "enumerate",
+        args = {java.lang.Thread[].class, boolean.class}
+    )
+    @KnownFailure("Depends of activeCount failure.")     
+    public void test_enumerateLThreadArrayLZ() {
+        int numThreads = initialThreadGroup.activeCount();
+        Thread[] listOfThreads = new Thread[numThreads];
+
+        int countThread = initialThreadGroup.enumerate(listOfThreads, false);
+        assertEquals(numThreads, countThread);
+        assertEquals(Thread.currentThread(), listOfThreads[0]);    
+
+        countThread = initialThreadGroup.enumerate(listOfThreads, true);
+        assertEquals(numThreads, countThread);
+        assertEquals(Thread.currentThread(), listOfThreads[0]);         
+
+        ThreadGroup subGroup = new ThreadGroup(initialThreadGroup, "Test Group 1");
+        int subThreadsCount = 3;
+        Vector<MyThread> subThreads = populateGroupsWithThreads(subGroup, 
+                subThreadsCount);
+        
+        countThread = initialThreadGroup.enumerate(listOfThreads, true);
+        assertEquals(numThreads, countThread);
+        assertEquals(Thread.currentThread(), listOfThreads[0]); 
+        
+        for(MyThread thr:subThreads) {
+            thr.start();
+        }
+        // lets give them some time to start
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException ie) {
+            fail("Should not be interrupted");
+        }
+
+        int numThreads2 = initialThreadGroup.activeCount();
+        listOfThreads = new Thread[numThreads2];
+        
+        assertEquals(numThreads + subThreadsCount, numThreads2);
+        
+        countThread = initialThreadGroup.enumerate(listOfThreads, true);
+        assertEquals(numThreads2, countThread);
+        assertEquals(Thread.currentThread(), listOfThreads[0]); 
+        
+        for(MyThread thr:subThreads) {
+            thr.interrupt();
+        }
+        // lets give them some time to die
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException ie) {
+            fail("Should not be interrupted");
+        }       
+
+        int numThreads3 = initialThreadGroup.activeCount();
+        listOfThreads = new Thread[numThreads3];
+        
+        assertEquals(numThreads, numThreads3);
+        
+        countThread = initialThreadGroup.enumerate(listOfThreads, false);
+        assertEquals(numThreads3, countThread);
+        assertEquals(Thread.currentThread(), listOfThreads[0]); 
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            initialThreadGroup.enumerate(listOfThreads, true);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }   
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "enumerate",
+        args = {java.lang.ThreadGroup[].class}
+    )
+    @KnownFailure("Security checking is missed. " +
+            "checkAccess method should be invoked.")     
+    public void test_enumerateLThreadGroupArray() {
+        int numGroupThreads = initialThreadGroup.activeGroupCount();
+        ThreadGroup[] listOfGroups = new ThreadGroup[numGroupThreads];
+
+        int countGroupThread = initialThreadGroup.enumerate(listOfGroups);
+        assertEquals(numGroupThreads, countGroupThread);
+        
+        ThreadGroup[] listOfGroups1 = new ThreadGroup[numGroupThreads + 1];
+        countGroupThread = initialThreadGroup.enumerate(listOfGroups1);
+        assertEquals(numGroupThreads, countGroupThread);
+        assertNull(listOfGroups1[listOfGroups1.length - 1]);
+        
+        ThreadGroup[] listOfGroups2 = new ThreadGroup[numGroupThreads - 1];
+        countGroupThread = initialThreadGroup.enumerate(listOfGroups2);
+        assertEquals(numGroupThreads - 1, countGroupThread);
+        
+        ThreadGroup thrGroup1 = new ThreadGroup("Test Group 1");
+        countGroupThread = thrGroup1.enumerate(listOfGroups);
+        assertEquals(0, countGroupThread);
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            initialThreadGroup.enumerate(listOfGroups);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }   
+     }    
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "enumerate",
+        args = {java.lang.ThreadGroup[].class, boolean.class}
+    )
+    @KnownFailure("Security checking is missed. " +
+            "checkAccess method should be invoked.")     
+    public void test_enumerateLThreadGroupArrayLZ() {
+        ThreadGroup thrGroup = new ThreadGroup("Test Group 1");
+        Vector<MyThread> subThreads = populateGroupsWithThreads(thrGroup, 3);
+        int numGroupThreads = thrGroup.activeGroupCount();
+        ThreadGroup[] listOfGroups = new ThreadGroup[numGroupThreads];
+        
+        assertEquals(0, thrGroup.enumerate(listOfGroups, true));
+        assertEquals(0, thrGroup.enumerate(listOfGroups, false));
+        
+        for(MyThread thr:subThreads) {
+            thr.start();
+        }
+        
+        numGroupThreads = thrGroup.activeGroupCount();
+        listOfGroups = new ThreadGroup[numGroupThreads];
+        
+        assertEquals(0, thrGroup.enumerate(listOfGroups, true));
+        assertEquals(0, thrGroup.enumerate(listOfGroups, false));
+        
+        ThreadGroup subGroup1 = new ThreadGroup(thrGroup, "Test Group 2");
+        Vector<MyThread> subThreads1 = populateGroupsWithThreads(subGroup1, 3); 
+        numGroupThreads = thrGroup.activeGroupCount();
+        listOfGroups = new ThreadGroup[numGroupThreads];
+        
+        assertEquals(1, thrGroup.enumerate(listOfGroups, true));
+        assertEquals(1, thrGroup.enumerate(listOfGroups, false));      
+        
+        for(MyThread thr:subThreads1) {
+            thr.start();
+        }
+        numGroupThreads = thrGroup.activeGroupCount();
+        listOfGroups = new ThreadGroup[numGroupThreads];
+            
+        assertEquals(1, thrGroup.enumerate(listOfGroups, true));
+        assertEquals(1, thrGroup.enumerate(listOfGroups, false));              
+        
+        for(MyThread thr:subThreads) {
+            thr.interrupt();
+         }        
+        
+        ThreadGroup subGroup2 = new ThreadGroup(subGroup1, "Test Group 3");
+        Vector<MyThread> subThreads2 = populateGroupsWithThreads(subGroup2, 3); 
+        numGroupThreads = thrGroup.activeGroupCount();
+        listOfGroups = new ThreadGroup[numGroupThreads];
+        
+        assertEquals(2, thrGroup.enumerate(listOfGroups, true));
+        assertEquals(1, thrGroup.enumerate(listOfGroups, false));  
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            thrGroup.enumerate(listOfGroups, true);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }   
+    }
+    
     /**
      * @tests java.lang.ThreadGroup#destroy()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "destroy",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "destroy",
+        args = {}
+    )
+    @KnownFailure("the daemon thread group is not get destroyed " + 
+            " if the last daemon's child is destroyed.")
     public void test_destroy() {
         // Test for method void java.lang.ThreadGroup.destroy()
 
@@ -426,20 +681,28 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
                 "Should be able to destroy a ThreadGroup that has no threads",
                 passed);
 
+        ThreadGroup tg = new ThreadGroup("ThreadGroup");
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            originalCurrent.destroy();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        } 
     }
 
     /**
      * @tests java.lang.ThreadGroup#destroy()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IllegalThreadStateException.",
-      targets = {
-        @TestTarget(
-          methodName = "destroy",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies IllegalThreadStateException.",
+        method = "destroy",
+        args = {}
+    )
     public void test_destroy_subtest0() {
         ThreadGroup group1 = new ThreadGroup("test_destroy_subtest0");
         group1.destroy();
@@ -453,18 +716,14 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#getMaxPriority()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMaxPriority",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMaxPriority",
+        args = {}
+    )
     public void test_getMaxPriority() {
         // Test for method int java.lang.ThreadGroup.getMaxPriority()
-
         final ThreadGroup originalCurrent = getInitialThreadGroup();
         ThreadGroup testRoot = new ThreadGroup(originalCurrent, "Test group");
 
@@ -486,18 +745,14 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#getName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         // Test for method java.lang.String java.lang.ThreadGroup.getName()
-
         final ThreadGroup originalCurrent = getInitialThreadGroup();
         final String name = "Test group";
         final ThreadGroup testRoot = new ThreadGroup(originalCurrent, name);
@@ -512,19 +767,16 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#getParent()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getParent",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getParent",
+        args = {}
+    )
+    @KnownFailure("checkAccess method is called with incorrect group???")  
     public void test_getParent() {
         // Test for method java.lang.ThreadGroup
         // java.lang.ThreadGroup.getParent()
-
         final ThreadGroup originalCurrent = getInitialThreadGroup();
         ThreadGroup testRoot = new ThreadGroup(originalCurrent, "Test group");
 
@@ -576,21 +828,20 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         testRoot.destroy();
     }
 
-    // BEGIN android-added
     /**
      * @tests java.lang.ThreadGroup#interrupt()
      */
     private static boolean interrupted = false;
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "interrupt",
-                methodArgs = {}
-              )
-          })    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "interrupt",
+        args = {}
+    )    
+    @KnownFailure("Security checking is missed. " +
+            "checkAccess method should be invoked.")     
     public void test_interrupt() {
+
         Thread.setDefaultUncaughtExceptionHandler(this);
         ThreadGroup tg = new ThreadGroup("interrupt");
         Thread t1 = new Thread(tg, new Runnable() {
@@ -612,41 +863,43 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         }
         assertTrue("Incorrect state of thread", interrupted);
         tg.destroy();
+
+        ThreadGroup threadGroup = new ThreadGroup("securityCheck");
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            threadGroup.interrupt();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }        
     }
-    // END android-added
 
     /**
      * @tests java.lang.ThreadGroup#isDaemon()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isDaemon",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isDaemon",
+        args = {}
+    )
     public void test_isDaemon() {
         // Test for method boolean java.lang.ThreadGroup.isDaemon()
-
         daemonTests();
-
     }
 
-    // BEGIN android-added
     /**
      * @tests java.lang.ThreadGroup#isDestroyed()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isDestroyed",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isDestroyed",
+        args = {}
+    )
     public void test_isDestroyed() {
         final ThreadGroup originalCurrent = getInitialThreadGroup();
         final ThreadGroup testRoot = new ThreadGroup(originalCurrent,
@@ -657,20 +910,16 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         assertTrue("Test group already destroyed",
                 testRoot.isDestroyed());
     }
-    // END android-added
 
     /**
      * @tests java.lang.ThreadGroup#list()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "list",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "list",
+        args = {}
+    )
     public void test_list() {
         // Test for method void java.lang.ThreadGroup.list()
 
@@ -725,19 +974,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#parentOf(java.lang.ThreadGroup)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parentOf",
-          methodArgs = {java.lang.ThreadGroup.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parentOf",
+        args = {java.lang.ThreadGroup.class}
+    )
     public void test_parentOfLjava_lang_ThreadGroup() {
         // Test for method boolean
         // java.lang.ThreadGroup.parentOf(java.lang.ThreadGroup)
-
         final ThreadGroup originalCurrent = getInitialThreadGroup();
         final ThreadGroup testRoot = new ThreadGroup(originalCurrent,
                 "Test group");
@@ -768,19 +1013,17 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#resume()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "resume",
-          methodArgs = {}
-        )
-    })
-    @SuppressWarnings("deprecation")
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "resume",
+        args = {}
+    )
+   @KnownFailure("Failure depends on activeCount().")  
+   @SuppressWarnings("deprecation")
+   @AndroidOnly("Thread.resume is implemented on some RI")
     public void test_resume() throws OutOfMemoryError {
         // Test for method void java.lang.ThreadGroup.resume()
-
         final ThreadGroup originalCurrent = getInitialThreadGroup();
 
         final ThreadGroup testRoot = new ThreadGroup(originalCurrent,
@@ -791,106 +1034,95 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         final int THREADS_PER_GROUP = 2;
         final Vector<MyThread> threads = populateGroupsWithThreads(testRoot,
                 THREADS_PER_GROUP);
-
-        boolean[] isResumed = null;
         try {
-            try {
-                for (int i = 0; i < threads.size(); i++) {
-                    Thread t = threads.elementAt(i);
-                    t.start();
-                    t.suspend();
-                }
-                // In 5.0, activeCount() only returns threads that are alive
-                assertTrue("Internal error when populating ThreadGroups", testRoot
-                        .activeCount() == threads.size());
-            } catch (OutOfMemoryError e) {
-                for (int i = 0; i < threads.size(); i++) {
-                    Thread t = threads.elementAt(i);
-                    t.resume();
-                    t.stop(); // deprecated but effective
-                }
-                throw e;
+            for (int i = 0; i < threads.size(); i++) {
+                Thread t = threads.elementAt(i);
+                t.start();
             }
+        } catch (OutOfMemoryError e) {
+            for (int i = 0; i < threads.size(); i++) {
+                Thread t = threads.elementAt(i);
+                t.interrupt();
+            }
+            throw e;
+        }
 
-            // Now that they are all suspended, let's resume the ThreadGroup
+        try {
             testRoot.resume();
-
-            // Give them some time to really resume
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException ie) {
-                fail("Should not have been interrupted");
-            }
-
-            isResumed = new boolean[threads.size()];
-            boolean failed = false;
-            for (int i = 0; i < isResumed.length; i++) {
-                MyThread t = threads.elementAt(i);
-                if (!failed) { // if one failed, don't waste time checking the
-                    // rest
-                    isResumed[i] = t.isActivelyRunning(1000);
-                    failed = failed | (!isResumed[i]);
-                }
-                t.stop(); // deprecated but effective
-            }
-
-            // Give them some time to really die
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException ie) {
-                fail("Should not have been interrupted");
-            }
-        } finally {
-            // Make sure we do cleanup before returning
-            testRoot.destroy();
+            fail("Thread.resume() is not supported and throws an UOE on Android.");
+        } catch (UnsupportedOperationException e) {
+            // expected
         }
 
-        for (int i = 0; i < isResumed.length; i++) {
-            assertTrue("Thread " + threads.elementAt(i)
-                    + " was not running when it was killed", isResumed[i]);
+
+        for (int i = 0; i < threads.size(); i++) {
+            MyThread t = threads.elementAt(i);
+            t.interrupt();
         }
+
+        // Make sure we do cleanup before returning
+        testRoot.destroy();
 
         assertEquals("Method destroy must have problems",
                 0, testRoot.activeCount());
-
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            originalCurrent.resume();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        } 
     }
 
     /**
      * @tests java.lang.ThreadGroup#setDaemon(boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check that daemon thread group is destroyed when " +
-            "last thread from this group is stopped or its last thread group " +
-            "is destroyed.",
-      targets = {
-        @TestTarget(
-          methodName = "setDaemon",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDaemon",
+        args = {boolean.class}
+    )
+    @KnownFailure("Security checking is missed. " +
+            "checkAccess method should be invoked.")     
     public void test_setDaemonZ() {
         // Test for method void java.lang.ThreadGroup.setDaemon(boolean)
-
         daemonTests();
+        
+        final ThreadGroup testRoot = new ThreadGroup("Test group");
 
+        testRoot.setDaemon(true);
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        
+        try {
+            new ThreadGroup("");
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }
     }
 
     /**
      * @tests java.lang.ThreadGroup#setMaxPriority(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setMaxPriority",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setMaxPriority",
+        args = {int.class}
+    )
+    @KnownFailure("Security checking is missed. " +
+            "checkAccess method should be invoked.")      
     public void test_setMaxPriorityI() {
         // Test for method void java.lang.ThreadGroup.setMaxPriority(int)
-
         final ThreadGroup originalCurrent = getInitialThreadGroup();
         ThreadGroup testRoot = new ThreadGroup(originalCurrent, "Test group");
 
@@ -1007,24 +1239,33 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         } finally {
             System.setSecurityManager(null);
         }
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        
+        try {
+            testRoot.setMaxPriority(Thread.MAX_PRIORITY);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }
     }
 
     /**
      * @tests java.lang.ThreadGroup#stop()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "stop",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "stop",
+        args = {}
+    )
+    @AndroidOnly("stop() method not implemented. throws UnsupportedOperationException.")
     @SuppressWarnings("deprecation")
     public void test_stop() throws OutOfMemoryError {
         // Test for method void java.lang.ThreadGroup.stop()
-
         final ThreadGroup originalCurrent = getInitialThreadGroup();
 
         final ThreadGroup testRoot = new ThreadGroup(originalCurrent,
@@ -1044,61 +1285,56 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         } catch (OutOfMemoryError e) {
             for (int i = 0; i < threads.size(); i++) {
                 Thread t = threads.elementAt(i);
-                t.stop(); // deprecated but effective
+                t.interrupt();
             }
             throw e;
         }
 
         // Now that they are all running, let's stop the ThreadGroup
-        testRoot.stop();
+        try {
+            testRoot.stop();
+            fail("Thread.stop() is not supported and throws an UOE on Android.");
+        } catch (UnsupportedOperationException e) {
+            // expected
+        }
 
-        // stop is an async call. The thread may take a while to stop. We have
-        // to wait for all of them to stop. However, if stop does not work,
-        // we'd have to wait forever. So, we wait with a timeout, and if the
-        // Thread is still alive, we assume stop for ThreadGroups does not
-        // work. How much we wait (timeout) is very important
-        boolean passed = true;
         for (int i = 0; i < threads.size(); i++) {
             Thread t = threads.elementAt(i);
-            try {
-                // We wait 5000 ms per Thread, but due to scheduling it may
-                // take a while to run
-                t.join(5000);
-            } catch (InterruptedException ie) {
-                fail("Should not be interrupted");
-            }
-            if (t.isAlive()) {
-                passed = false;
-                break;
-            }
+            t.interrupt();
         }
 
         // To make sure that even if we fail, we exit in a clean state
         testRoot.destroy();
 
-        assertTrue("Thread should be dead by now", passed);
-
         assertEquals("Method destroy (or wipeAllThreads) must have problems",
                 0, testRoot.activeCount());
 
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        
+        try {
+            originalCurrent.stop();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }
     }
 
     /**
      * @tests java.lang.ThreadGroup#suspend()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "suspend",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "suspend",
+        args = {}
+    )
+    @AndroidOnly("suspend() method not implemented. throws UnsupportedOperationException.")
     @SuppressWarnings("deprecation")
     public void test_suspend() throws OutOfMemoryError {
         // Test for method void java.lang.ThreadGroup.suspend()
-
         final ThreadGroup originalCurrent = getInitialThreadGroup();
 
         final ThreadGroup testRoot = new ThreadGroup(originalCurrent,
@@ -1110,72 +1346,59 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         final Vector<MyThread> threads = populateGroupsWithThreads(testRoot,
                 THREADS_PER_GROUP);
 
-        boolean passed = false;
         try {
-            try {
-                for (int i = 0; i < threads.size(); i++) {
-                    Thread t = threads.elementAt(i);
-                    t.start();
-                }
-            } catch (OutOfMemoryError e) {
-                for (int i = 0; i < threads.size(); i++) {
-                    Thread t = threads.elementAt(i);
-                    t.stop(); // deprecated but effective
-                }
-                throw e;
-            }
-
-            // Now that they are all running, let's suspend the ThreadGroup
-            testRoot.suspend();
-
-            passed = allSuspended(threads);
-            assertTrue("Should be able to wipe all threads (allSuspended="
-                    + passed + ")", wipeAllThreads(testRoot));
-        } finally {
-
-            // We can't destroy a ThreadGroup if we do not make sure it has no
-            // threads at all
-            testRoot.stop();
-            long waitTime = 5000;
             for (int i = 0; i < threads.size(); i++) {
                 Thread t = threads.elementAt(i);
-                while (t.isAlive() && waitTime >= 0) {
-                   try {
-                      Thread.sleep(10);
-                      waitTime -= 10;
-                   } catch (InterruptedException e) {
-                      fail("unexpected interruption");
-                   }
-                }
-                if (waitTime < 0) {
-                   fail("stop() has not stopped threads in ThreadGroup 'testRoot'");
-                }
-             }
-            // Make sure we cleanup before returning from the method
-            testRoot.destroy();
+                t.start();
+            }
+        } catch (OutOfMemoryError e) {
+            for (int i = 0; i < threads.size(); i++) {
+                Thread t = threads.elementAt(i);
+                t.interrupt();
+            }
+            throw e;
         }
-        assertTrue("All threads should be suspended", passed);
+
+        try {
+            testRoot.suspend();
+            fail("Thread.suspend() is not supported and throws an UOE on Android.");
+        } catch (UnsupportedOperationException e) {
+            // expected
+        }
+
+        for (int i = 0; i < threads.size(); i++) {
+            Thread t = threads.elementAt(i);
+            t.interrupt();
+         }
+        // Make sure we cleanup before returning from the method
+        testRoot.destroy();
 
         assertEquals("Method destroy (or wipeAllThreads) must have problems",
                 0, testRoot.activeCount());
-
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            originalCurrent.suspend();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }  
     }
 
     /**
      * @tests java.lang.ThreadGroup#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.lang.ThreadGroup.toString()
-
         final ThreadGroup originalCurrent = getInitialThreadGroup();
         final String tGroupName = "Test group";
 
@@ -1211,15 +1434,12 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
      * @tests java.lang.ThreadGroup#uncaughtException(java.lang.Thread,
      *        java.lang.Throwable)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "uncaughtException",
-          methodArgs = {java.lang.Thread.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "uncaughtException",
+        args = {java.lang.Thread.class, java.lang.Throwable.class}
+    )  
     @SuppressWarnings("deprecation")
     public void test_uncaughtExceptionLjava_lang_ThreadLjava_lang_Throwable() {
         // Test for method void
@@ -1227,7 +1447,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         // java.lang.Throwable)
 
         final ThreadGroup originalCurrent = getInitialThreadGroup();
-
+ 
         // indices for the array defined below
         final int TEST_DEATH = 0;
         final int TEST_OTHER = 1;
@@ -1247,57 +1467,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         class TestException extends RuntimeException {
             private static final long serialVersionUID = 1L;
         }
-
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // - - - - - - -
-        testRoot = new ThreadGroup(originalCurrent,
-                "Test killing a Thread, forcing it to throw ThreadDeath") {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                if (e instanceof ThreadDeath) {
-                    passed[TEST_KILLING] = true;
-                }
-                // always forward, any exception
-                super.uncaughtException(t, e);
-            }
-        };
-
-        // Test if a Thread tells its ThreadGroup about ThreadDeath
-        thread = new Thread(testRoot, null, "victim thread (to be killed)") {
-            @Override
-            public void run() {
-                while (true) {
-                    Thread.yield();
-                }
-            }
-        };
-        thread.start();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ie) {
-            fail("Should not have been interrupted");
-        }
-        // we know this is deprecated, but we must test this scenario.
-        // When we stop a thread, it is tagged as not alive even though it is
-        // still running code.
-        // join would be a no-op, and we might have a race condition. So, to
-        // play safe, we wait before joining & testing if the exception was
-        // really forwarded to the ThreadGroup
-        thread.stop();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ie) {
-            fail("Should not have been interrupted");
-        }
-        try {
-            thread.join();
-        } catch (InterruptedException ie) {
-            fail("Should not have been interrupted");
-        }
-        testRoot.destroy();
-        assertTrue(
-                "Any thread should notify its ThreadGroup about its own death, even if killed:"
-                        + testRoot, passed[TEST_KILLING]);
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // - - - - - - -
@@ -1330,7 +1499,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         assertTrue(
                 "Any thread should notify its ThreadGroup about its own death, even if suicide:"
                         + testRoot, passed[TEST_FORCING_THROW_THREAD_DEATH]);
-
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // - - - - - - -
 
@@ -1355,7 +1523,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         testRoot.destroy();
         assertTrue("A thread should not call uncaughtException when it dies:"
                 + testRoot, passed[TEST_DEATH]);
-
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // - - - - - - -
 
@@ -1388,7 +1555,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         assertTrue(
                 "Any thread should notify its ThreadGroup about an uncaught exception:"
                         + testRoot, passed[TEST_OTHER]);
-
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // - - - - - - -
 
@@ -1437,7 +1603,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         assertTrue(
                 "Any uncaughtException in uncaughtException should be no-op:"
                         + testRoot, passed[TEST_EXCEPTION_IN_UNCAUGHT]);
-
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // - - - - - - -
 
@@ -1479,7 +1644,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         testRoot.destroy();
     }
 
-    // BEGIN android-added
     /*
      * @see java.lang.Thread.UncaughtExceptionHandler#uncaughtException(java.lang.Thread, java.lang.Throwable)
      */
@@ -1487,7 +1651,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         interrupted = true;
         Thread.setDefaultUncaughtExceptionHandler(null);
     }
-    // END android-added
 
     @Override
     protected void setUp() {
@@ -1549,7 +1712,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         assertTrue("Setting daemon&getting does not work", !testRoot.isDaemon());
 
         testRoot.destroy();
-
     }
 
     private boolean wipeAllThreads(final ThreadGroup aGroup) {
@@ -1564,9 +1726,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         for (ThreadGroup element : children) {
             ok = ok && wipeAllThreads(element);
         }
-
         return ok;
-
     }
 
     private boolean wipeSideEffectThreads(ThreadGroup aGroup) {
@@ -1593,10 +1753,12 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
 
         for (ThreadGroup element : children) {
             ok = ok && wipeSideEffectThreads(element);
-            if (element.getName().equals("Test Group")
+            if(element.getName() !=  null) {
+                if (element.getName().equals("Test Group")
                     || element.getName().equals("foo")
                     || element.getName().equals("jp")) {
-                element.destroy();
+                    element.destroy();
+                }
             }
         }
         try {
@@ -1771,4 +1933,14 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         return rootThreadGroup;
 
     }
+    
+    SecurityManager sm = new SecurityManager() {
+
+        public void checkPermission(Permission perm) {
+        }
+        
+        public void checkAccess(ThreadGroup g) {
+           throw new SecurityException();
+        }
+    };
 }

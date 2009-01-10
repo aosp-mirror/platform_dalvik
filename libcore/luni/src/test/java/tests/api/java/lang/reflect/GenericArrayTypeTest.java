@@ -16,9 +16,9 @@
 
 package tests.api.java.lang.reflect;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.lang.reflect.Field;
@@ -30,22 +30,20 @@ import java.lang.reflect.TypeVariable;
 /**
  * Tests generic reflection on arrays with generic or parameterized component types.
  */
-@TestTargetClass(Field.class) 
+@TestTargetClass(GenericArrayType.class) 
 public class GenericArrayTypeTest extends GenericReflectionTestsBase {
 
     static class A<T> {
         T[] array;
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test with Type and TypeVariable.",
-      targets = {
-        @TestTarget(
-          methodName = "getGenericType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Missing tests for TypeNotPresentException, MalformedParameterizedTypeException",
+        method = "getGenericComponentType",
+        args = {}
+    )
     public void testGetGenericComponentType() throws Exception {
+        @SuppressWarnings("unchecked")
         Class<? extends A> clazz = GenericArrayTypeTest.A.class;
         Field field = clazz.getDeclaredField("array");
         Type genericType = field.getGenericType();
@@ -61,16 +59,14 @@ public class GenericArrayTypeTest extends GenericReflectionTestsBase {
     static class B<T> {
         B<T>[] array;
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Regression test with Type and TypeVariable.",
-            targets = {
-              @TestTarget(
-                methodName = "getGenericType",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Missing tests for TypeNotPresentException, MalformedParameterizedTypeException",
+        method = "getGenericComponentType",
+        args = {}
+    )
     public void testParameterizedComponentType() throws Exception {
+        @SuppressWarnings("unchecked")
         Class<? extends B> clazz = GenericArrayTypeTest.B.class;
         Field field = clazz.getDeclaredField("array");
         Type genericType = field.getGenericType();

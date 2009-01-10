@@ -100,18 +100,20 @@ public class Support_DecimalFormat extends Support_Format {
         // test currency instance with TR Locale
         number = new Double(350.76);
         format = (DecimalFormat) NumberFormat.getCurrencyInstance(new Locale(
-                "tr", "TR"));
-        text = "351 TL";
+                "de", "CH"));
+        text = "SFr. 350.76";
+        t_FormatWithField(24, format, number, text,
+                NumberFormat.Field.CURRENCY, 0, 4);
         t_FormatWithField(22, format, number, text, NumberFormat.Field.INTEGER,
-                0, 3);
+                5, 8);
         t_FormatWithField(23, format, number, text,
-                NumberFormat.Field.CURRENCY, 4, 6);
+                NumberFormat.Field.DECIMAL_SEPARATOR, 8, 9);
+        t_FormatWithField(23, format, number, text,
+                NumberFormat.Field.FRACTION, 9, 11);
 
         // test fields that are not included in the formatted text
         t_FormatWithField(25, format, number, text,
                 NumberFormat.Field.GROUPING_SEPARATOR, 0, 0);
-        t_FormatWithField(26, format, number, text,
-                NumberFormat.Field.DECIMAL_SEPARATOR, 0, 0);
         t_FormatWithField(27, format, number, text, NumberFormat.Field.SIGN, 0,
                 0);
         t_FormatWithField(28, format, number, text,
@@ -133,15 +135,15 @@ public class Support_DecimalFormat extends Support_Format {
         Number negativeNumber = new Double(-350.76);
 
         Locale us = Locale.US;
-        Locale tr = new Locale("tr", "TR");
+        Locale tr = new Locale("de", "CH");
 
         // test number instance
         t_Format(1, number, NumberFormat.getNumberInstance(us),
                 getNumberVectorUS());
 
         // test integer instance
-        // testFormat(2, number, NumberFormat.getIntegerInstance(us),
-        // getPercentVectorUS());
+        t_Format(2, number, NumberFormat.getIntegerInstance(us),
+                getIntegerVectorUS());
 
         // test percent instance
         t_Format(3, number, NumberFormat.getPercentInstance(us),
@@ -169,11 +171,11 @@ public class Support_DecimalFormat extends Support_Format {
 
         // test currency instance with TR Locale
         t_Format(9, number, NumberFormat.getCurrencyInstance(tr),
-                getPositiveCurrencyVectorTR());
+                getPositiveCurrencyVectorCH());
 
         // test negative currency instance with TR Locale
         t_Format(10, negativeNumber, NumberFormat.getCurrencyInstance(tr),
-                getNegativeCurrencyVectorTR());
+                getNegativeCurrencyVectorCH());
 
         // test multiple grouping seperators
         number = new Long(100300400);
@@ -194,18 +196,28 @@ public class Support_DecimalFormat extends Support_Format {
         return v;
     }
 
-    private static Vector<FieldContainer> getPositiveCurrencyVectorTR() {
+    private static Vector<FieldContainer> getIntegerVectorUS() {
         Vector<FieldContainer> v = new Vector<FieldContainer>();
         v.add(new FieldContainer(0, 3, NumberFormat.Field.INTEGER));
-        v.add(new FieldContainer(4, 6, NumberFormat.Field.CURRENCY));
         return v;
     }
 
-    private static Vector<FieldContainer> getNegativeCurrencyVectorTR() {
+    private static Vector<FieldContainer> getPositiveCurrencyVectorCH() {
         Vector<FieldContainer> v = new Vector<FieldContainer>();
-        v.add(new FieldContainer(0, 1, NumberFormat.Field.SIGN));
-        v.add(new FieldContainer(1, 4, NumberFormat.Field.INTEGER));
-        v.add(new FieldContainer(5, 7, NumberFormat.Field.CURRENCY));
+        v.add(new FieldContainer(0, 4, NumberFormat.Field.CURRENCY));
+        v.add(new FieldContainer(5, 8, NumberFormat.Field.INTEGER));
+        v.add(new FieldContainer(8, 9, NumberFormat.Field.DECIMAL_SEPARATOR));
+        v.add(new FieldContainer(9, 11, NumberFormat.Field.FRACTION));
+        return v;
+    }
+
+    private static Vector<FieldContainer> getNegativeCurrencyVectorCH() {
+        Vector<FieldContainer> v = new Vector<FieldContainer>();
+        v.add(new FieldContainer(0, 4, NumberFormat.Field.CURRENCY));
+        v.add(new FieldContainer(4, 5, NumberFormat.Field.SIGN));
+        v.add(new FieldContainer(5, 8, NumberFormat.Field.INTEGER));
+        v.add(new FieldContainer(8, 9, NumberFormat.Field.DECIMAL_SEPARATOR));
+        v.add(new FieldContainer(9, 11, NumberFormat.Field.FRACTION));
         return v;
     }
 

@@ -29,7 +29,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All NIO_Char test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All NIO_Char test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.nio_char.tests.java.nio.charset.AllTests.suite());
         suite.addTest(org.apache.harmony.nio_char.tests.java.nio.charset.spi.AllTests.suite());

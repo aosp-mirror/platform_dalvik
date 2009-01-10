@@ -16,8 +16,8 @@
  */
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -72,15 +72,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#asList(java.lang.Object[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asList",
-          methodArgs = {Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "asList",
+        args = {java.lang.Object[].class}
+    )
     public void test_asList$Ljava_lang_Object() {
         // Test for method java.util.List
         // java.util.Arrays.asList(java.lang.Object [])
@@ -117,15 +114,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#binarySearch(byte[], byte)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {byte[].class, byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {byte[].class, byte.class}
+    )
     public void test_binarySearch$BB() {
         // Test for method int java.util.Arrays.binarySearch(byte [], byte)
         for (byte counter = 0; counter < arraySize; counter++)
@@ -147,15 +141,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#binarySearch(char[], char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {char[].class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {char[].class, char.class}
+    )
     public void test_binarySearch$CC() {
         // Test for method int java.util.Arrays.binarySearch(char [], char)
         for (char counter = 0; counter < arraySize; counter++)
@@ -172,15 +163,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#binarySearch(double[], double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {double[].class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {double[].class, double.class}
+    )
     public void test_binarySearch$DD() {
         // Test for method int java.util.Arrays.binarySearch(double [], double)
         for (int counter = 0; counter < arraySize; counter++)
@@ -215,15 +203,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#binarySearch(float[], float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {float[].class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {float[].class, float.class}
+    )
     public void test_binarySearch$FF() {
         // Test for method int java.util.Arrays.binarySearch(float [], float)
         for (int counter = 0; counter < arraySize; counter++)
@@ -257,15 +242,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#binarySearch(int[], int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {int[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {int[].class, int.class}
+    )
     public void test_binarySearch$II() {
         // Test for method int java.util.Arrays.binarySearch(int [], int)
         for (int counter = 0; counter < arraySize; counter++)
@@ -286,15 +268,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#binarySearch(long[], long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {long[].class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {long[].class, long.class}
+    )
     public void test_binarySearch$JJ() {
         // Test for method int java.util.Arrays.binarySearch(long [], long)
         for (long counter = 0; counter < arraySize; counter++)
@@ -317,15 +296,12 @@ public class ArraysTest extends junit.framework.TestCase {
      * @tests java.util.Arrays#binarySearch(java.lang.Object[],
      *        java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {java.lang.Object[].class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {java.lang.Object[].class, java.lang.Object.class}
+    )
     public void test_binarySearch$Ljava_lang_ObjectLjava_lang_Object() {
         // Test for method int java.util.Arrays.binarySearch(java.lang.Object
         // [], java.lang.Object)
@@ -344,21 +320,28 @@ public class ArraysTest extends junit.framework.TestCase {
         assertTrue(
                 "Binary search succeeded for value not present in array 2",
                 Arrays.binarySearch(objectArray, new Integer(arraySize)) == -(arraySize + 1));
+
+        String[] sArray = new String[]{"1", "2", "3", "4", ""};
+        Object[] oArray = sArray;
+
+        try {
+            Arrays.binarySearch(oArray, new Integer(10));
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#binarySearch(java.lang.Object[],
      *        java.lang.Object, java.util.Comparator)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {Object[].class, java.lang.Object.class, java.util.Comparator.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ClassCastException.",
+        method = "binarySearch",
+        args = {java.lang.Object[].class, java.lang.Object.class, java.util.Comparator.class}
+    )
     public void test_binarySearch$Ljava_lang_ObjectLjava_lang_ObjectLjava_util_Comparator() {
         // Test for method int java.util.Arrays.binarySearch(java.lang.Object
         // [], java.lang.Object, java.util.Comparator)
@@ -380,15 +363,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#binarySearch(short[], short)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {short[].class, short.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {short[].class, short.class}
+    )
     public void test_binarySearch$SS() {
         // Test for method int java.util.Arrays.binarySearch(short [], short)
         for (short counter = 0; counter < arraySize; counter++)
@@ -410,15 +390,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(byte[], byte)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {byte[].class, byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {byte[].class, byte.class}
+    )
     public void test_fill$BB() {
         // Test for method void java.util.Arrays.fill(byte [], byte)
 
@@ -432,15 +409,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(byte[], int, int, byte)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {byte[].class, int.class, int.class, byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {byte[].class, int.class, int.class, byte.class}
+    )
     public void test_fill$BIIB() {
         // Test for method void java.util.Arrays.fill(byte [], int, int, byte)
         byte val = Byte.MAX_VALUE;
@@ -484,15 +458,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(short[], short)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {short[].class, short.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {short[].class, short.class}
+    )
     public void test_fill$SS() {
         // Test for method void java.util.Arrays.fill(short [], short)
 
@@ -506,16 +477,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(short[], int, int, short)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException, " +
-            "ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {short[].class, int.class, int.class, short.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {short[].class, int.class, int.class, short.class}
+    )
     public void test_fill$SIIS() {
         // Test for method void java.util.Arrays.fill(short [], int, int, short)
         short val = Short.MAX_VALUE;
@@ -525,20 +492,38 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill short array correctly", d[i] == val);
+        
+        try {
+            Arrays.fill(d, 10, 0, val);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, -10, 0, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, 10, d.length+1, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#fill(char[], char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {char[].class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {char[].class, char.class}
+    )
     public void test_fill$CC() {
         // Test for method void java.util.Arrays.fill(char [], char)
 
@@ -551,16 +536,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(char[], int, int, char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException," +  
-            "ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {char[].class, int.class, int.class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {char[].class, int.class, int.class, char.class}
+    )
     public void test_fill$CIIC() {
         // Test for method void java.util.Arrays.fill(char [], int, int, char)
         char val = 'T';
@@ -570,20 +551,38 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill char array correctly", d[i] == val);
+        
+        try {
+            Arrays.fill(d, 10, 0, val);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, -10, 0, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, 10, d.length+1, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#fill(int[], int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {int[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {int[].class, int.class}
+    )
     public void test_fill$II() {
         // Test for method void java.util.Arrays.fill(int [], int)
 
@@ -597,16 +596,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(int[], int, int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException," +  
-           "ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {int[].class, int.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {int[].class, int.class, int.class, int.class}
+    )
     public void test_fill$IIII() {
         // Test for method void java.util.Arrays.fill(int [], int, int, int)
         int val = Integer.MAX_VALUE;
@@ -616,20 +611,38 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill int array correctly", d[i] == val);
+        
+        try {
+            Arrays.fill(d, 10, 0, val);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, -10, 0, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, 10, d.length+1, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#fill(long[], long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {long[].class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {long[].class, long.class}
+    )
     public void test_fill$JJ() {
         // Test for method void java.util.Arrays.fill(long [], long)
 
@@ -643,16 +656,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(long[], int, int, long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException," +  
-            "ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {long[].class, int.class, int.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {long[].class, int.class, int.class, long.class}
+    )
     public void test_fill$JIIJ() {
         // Test for method void java.util.Arrays.fill(long [], int, int, long)
         long d[] = new long[1000];
@@ -662,20 +671,38 @@ public class ArraysTest extends junit.framework.TestCase {
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill long array correctly",
                     d[i] == Long.MAX_VALUE);
+        
+        try {
+            Arrays.fill(d, 10, 0, Long.MIN_VALUE);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, -10, 0, Long.MAX_VALUE);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, 10, d.length+1, Long.MAX_VALUE);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#fill(float[], float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {float[].class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {float[].class, float.class}
+    )
     public void test_fill$FF() {
         // Test for method void java.util.Arrays.fill(float [], float)
         float d[] = new float[1000];
@@ -688,16 +715,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(float[], int, int, float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException," +  
-            "ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {float[].class, int.class, int.class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {float[].class, int.class, int.class, float.class}
+    )
     public void test_fill$FIIF() {
         // Test for method void java.util.Arrays.fill(float [], int, int, float)
         float val = Float.MAX_VALUE;
@@ -707,20 +730,38 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill float array correctly", d[i] == val);
+        
+        try {
+            Arrays.fill(d, 10, 0, val);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, -10, 0, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, 10, d.length+1, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#fill(double[], double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {double[].class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {double[].class, double.class}
+    )
     public void test_fill$DD() {
         // Test for method void java.util.Arrays.fill(double [], double)
 
@@ -734,16 +775,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(double[], int, int, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException," +  
-            "ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {double[].class, int.class, int.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {double[].class, int.class, int.class, double.class}
+    )
     public void test_fill$DIID() {
         // Test for method void java.util.Arrays.fill(double [], int, int,
         // double)
@@ -754,20 +791,38 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill double array correctly", d[i] == val);
+        
+        try {
+            Arrays.fill(d, 10, 0, val);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, -10, 0, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, 10, d.length+1, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#fill(boolean[], boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {boolean[].class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {boolean[].class, boolean.class}
+    )
     public void test_fill$ZZ() {
         // Test for method void java.util.Arrays.fill(boolean [], boolean)
 
@@ -780,16 +835,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#fill(boolean[], int, int, boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException, " + 
-            "ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {boolean[].class, int.class, int.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {boolean[].class, int.class, int.class, boolean.class}
+    )
     public void test_fill$ZIIZ() {
         // Test for method void java.util.Arrays.fill(boolean [], int, int,
         // boolean)
@@ -800,20 +851,38 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill boolean array correctly", d[i] == val);
+        
+        try {
+            Arrays.fill(d, 10, 0, val);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, -10, 0, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, 10, d.length+1, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#fill(java.lang.Object[], java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {java.lang.Object[].class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {java.lang.Object[].class, java.lang.Object.class}
+    )
     public void test_fill$Ljava_lang_ObjectLjava_lang_Object() {
         // Test for method void java.util.Arrays.fill(java.lang.Object [],
         // java.lang.Object)
@@ -828,16 +897,12 @@ public class ArraysTest extends junit.framework.TestCase {
      * @tests java.util.Arrays#fill(java.lang.Object[], int, int,
      *        java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException," +  
-            "ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "fill",
-          methodArgs = {java.lang.Object[].class, int.class, int.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fill",
+        args = {java.lang.Object[].class, int.class, int.class, java.lang.Object.class}
+    )
     public void test_fill$Ljava_lang_ObjectIILjava_lang_Object() {
         // Test for method void java.util.Arrays.fill(java.lang.Object [], int,
         // int, java.lang.Object)
@@ -853,20 +918,38 @@ public class ArraysTest extends junit.framework.TestCase {
         for (int i = 400; i < d.length; i++)
             assertNull("Failed to fill Object array correctly with nulls",
                     d[i]);
+        
+        try {
+            Arrays.fill(d, 10, 0, val);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, -10, 0, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.fill(d, 10, d.length+1, val);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#equals(byte[], byte[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {byte[].class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {byte[].class, byte[].class}
+    )
     public void test_equals$B$B() {
         // Test for method boolean java.util.Arrays.equals(byte [], byte [])
         byte d[] = new byte[1000];
@@ -881,15 +964,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#equals(short[], short[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {short[].class, short[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {short[].class, short[].class}
+    )
     public void test_equals$S$S() {
         // Test for method boolean java.util.Arrays.equals(short [], short [])
         short d[] = new short[1000];
@@ -904,15 +984,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#equals(char[], char[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {char[].class, char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {char[].class, char[].class}
+    )
     public void test_equals$C$C() {
         // Test for method boolean java.util.Arrays.equals(char [], char [])
         char d[] = new char[1000];
@@ -928,15 +1005,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#equals(int[], int[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {int[].class, int[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {int[].class, int[].class}
+    )
     public void test_equals$I$I() {
         // Test for method boolean java.util.Arrays.equals(int [], int [])
         int d[] = new int[1000];
@@ -956,15 +1030,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#equals(long[], long[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {long[].class, long[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {long[].class, long[].class}
+    )
     public void test_equals$J$J() {
         // Test for method boolean java.util.Arrays.equals(long [], long [])
         long d[] = new long[1000];
@@ -983,15 +1054,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#equals(float[], float[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {float[].class, float[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {float[].class, float[].class}
+    )
     public void test_equals$F$F() {
         // Test for method boolean java.util.Arrays.equals(float [], float [])
         float d[] = new float[1000];
@@ -1011,15 +1079,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#equals(double[], double[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {double[].class, double[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {double[].class, double[].class}
+    )
     public void test_equals$D$D() {
         // Test for method boolean java.util.Arrays.equals(double [], double [])
         double d[] = new double[1000];
@@ -1042,15 +1107,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#equals(boolean[], boolean[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {boolean[].class, boolean[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {boolean[].class, boolean[].class}
+    )
     public void test_equals$Z$Z() {
         // Test for method boolean java.util.Arrays.equals(boolean [], boolean
         // [])
@@ -1066,15 +1128,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#equals(java.lang.Object[], java.lang.Object[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object[].class, java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object[].class, java.lang.Object[].class}
+    )
     public void test_equals$Ljava_lang_Object$Ljava_lang_Object() {
         // Test for method boolean java.util.Arrays.equals(java.lang.Object [],
         // java.lang.Object [])
@@ -1093,15 +1152,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(byte[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {byte[].class}
+    )
     public void test_sort$B() {
         // Test for method void java.util.Arrays.sort(byte [])
         byte[] reversedArray = new byte[arraySize];
@@ -1116,15 +1172,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_sort$BII() {
         // Test for method void java.util.Arrays.sort(byte [], int, int)
         int startIndex = arraySize / 4;
@@ -1176,15 +1229,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(char[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {char[].class}
+    )
     public void test_sort$C() {
         // Test for method void java.util.Arrays.sort(char [])
         char[] reversedArray = new char[arraySize];
@@ -1200,15 +1250,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_sort$CII() {
         // Test for method void java.util.Arrays.sort(char [], int, int)
         int startIndex = arraySize / 4;
@@ -1260,15 +1307,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(double[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {double[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {double[].class}
+    )
     public void test_sort$D() {
         // Test for method void java.util.Arrays.sort(double [])
         double[] reversedArray = new double[arraySize];
@@ -1307,15 +1351,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(double[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {double[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {double[].class, int.class, int.class}
+    )
     public void test_sort$DII() {
         // Test for method void java.util.Arrays.sort(double [], int, int)
         int startIndex = arraySize / 4;
@@ -1367,15 +1408,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(float[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {float[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {float[].class}
+    )
     public void test_sort$F() {
         // Test for method void java.util.Arrays.sort(float [])
         float[] reversedArray = new float[arraySize];
@@ -1414,15 +1452,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(float[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {float[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {float[].class, int.class, int.class}
+    )
     public void test_sort$FII() {
         // Test for method void java.util.Arrays.sort(float [], int, int)
         int startIndex = arraySize / 4;
@@ -1474,15 +1509,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(int[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {int[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {int[].class}
+    )
     public void test_sort$I() {
         // Test for method void java.util.Arrays.sort(int [])
         int[] reversedArray = new int[arraySize];
@@ -1497,15 +1529,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(int[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {int[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {int[].class, int.class, int.class}
+    )
     public void test_sort$III() {
         // Test for method void java.util.Arrays.sort(int [], int, int)
         int startIndex = arraySize / 4;
@@ -1557,15 +1586,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(long[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {long[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {long[].class}
+    )
     public void test_sort$J() {
         // Test for method void java.util.Arrays.sort(long [])
         long[] reversedArray = new long[arraySize];
@@ -1581,15 +1607,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(long[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {long[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {long[].class, int.class, int.class}
+    )
     public void test_sort$JII() {
         // Test for method void java.util.Arrays.sort(long [], int, int)
         int startIndex = arraySize / 4;
@@ -1641,15 +1664,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(java.lang.Object[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {java.lang.Object[].class}
+    )
     public void test_sort$Ljava_lang_Object() {
         // Test for method void java.util.Arrays.sort(java.lang.Object [])
         Object[] reversedArray = new Object[arraySize];
@@ -1659,20 +1679,27 @@ public class ArraysTest extends junit.framework.TestCase {
         for (int counter = 0; counter < arraySize; counter++)
             assertTrue("Resulting array not sorted",
                     reversedArray[counter] == objectArray[counter]);
+
+        Arrays.fill(reversedArray, 0, reversedArray.length/2, "String");
+        Arrays.fill(reversedArray, reversedArray.length/2, reversedArray.length, new Integer(1));
+        
+        try {
+            Arrays.sort(reversedArray);
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#sort(java.lang.Object[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {java.lang.Object[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {java.lang.Object[].class, int.class, int.class}
+    )
     public void test_sort$Ljava_lang_ObjectII() {
         // Test for method void java.util.Arrays.sort(java.lang.Object [], int,
         // int)
@@ -1721,22 +1748,31 @@ public class ArraysTest extends junit.framework.TestCase {
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException ignore) {
         }
+
+        Arrays.fill(reversedArray, 0, reversedArray.length/2, "String");
+        Arrays.fill(reversedArray, reversedArray.length/2, reversedArray.length, new Integer(1));
+        
+        try {
+            Arrays.sort(reversedArray, reversedArray.length/4, 3*reversedArray.length/4);
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+
+        Arrays.sort(reversedArray, 0, reversedArray.length/4);
+        Arrays.sort(reversedArray, 3*reversedArray.length/4, reversedArray.length);
     }
 
     /**
      * @tests java.util.Arrays#sort(java.lang.Object[], int, int,
      *        java.util.Comparator)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ClassCastException, IllegalArgumentException " +
-            "ArrayIndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {Object[].class, int.class, int.class, java.util.Comparator.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {java.lang.Object[].class, int.class, int.class, java.util.Comparator.class}
+    )
     public void test_sort$Ljava_lang_ObjectIILjava_util_Comparator() {
         // Test for method void java.util.Arrays.sort(java.lang.Object [], int,
         // int, java.util.Comparator)
@@ -1756,20 +1792,50 @@ public class ArraysTest extends junit.framework.TestCase {
         for (int counter = endIndex; counter < arraySize; counter++)
             assertTrue("Array modified outside of bounds",
                     objectArray[counter] == originalArray[counter]);
+
+        Arrays.fill(originalArray, 0, originalArray.length/2, "String");
+        Arrays.fill(originalArray, originalArray.length/2, originalArray.length, new Integer(1));
+        
+        try {
+            Arrays.sort(originalArray, startIndex, endIndex, comp);
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+
+        Arrays.sort(originalArray, endIndex, originalArray.length, comp);
+        
+        try {
+            Arrays.sort(originalArray, endIndex, originalArray.length + 1, comp);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch(ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.sort(originalArray, -1, startIndex, comp);
+            fail("ArrayIndexOutOfBoundsException expected");
+        } catch(ArrayIndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            Arrays.sort(originalArray, originalArray.length, endIndex, comp);
+            fail("IllegalArgumentException expected");
+        } catch(IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#sort(java.lang.Object[], java.util.Comparator)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {Object[].class, java.util.Comparator.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {java.lang.Object[].class, java.util.Comparator.class}
+    )
     public void test_sort$Ljava_lang_ObjectLjava_util_Comparator() {
         // Test for method void java.util.Arrays.sort(java.lang.Object [],
         // java.util.Comparator)
@@ -1780,20 +1846,27 @@ public class ArraysTest extends junit.framework.TestCase {
                     comp
                             .compare(objectArray[counter],
                                     objectArray[counter + 1]) <= 0);
+
+        Arrays.fill(objectArray, 0, objectArray.length/2, "String");
+        Arrays.fill(objectArray, objectArray.length/2, objectArray.length, new Integer(1));
+        
+        try {
+            Arrays.sort(objectArray, comp);
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Arrays#sort(short[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {short[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {short[].class}
+    )
     public void test_sort$S() {
         // Test for method void java.util.Arrays.sort(short [])
         short[] reversedArray = new short[arraySize];
@@ -1808,15 +1881,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(short[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {short[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {short[].class, int.class, int.class}
+    )
     public void test_sort$SII() {
         // Test for method void java.util.Arrays.sort(short [], int, int)
         int startIndex = arraySize / 4;
@@ -1868,15 +1938,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "sort",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_java_util_Arrays_sort_byte_array_NPE() {
         byte[] byte_array_null = null;
         try {
@@ -1897,15 +1964,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "sort",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_java_util_Arrays_sort_char_array_NPE() {
         char[] char_array_null = null;
         try {
@@ -1926,15 +1990,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(double[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {double[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "sort",
+        args = {double[].class, int.class, int.class}
+    )
     public void test_java_util_Arrays_sort_double_array_NPE() {
         double[] double_array_null = null;
         try {
@@ -1955,15 +2016,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(float[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {float[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "sort",
+        args = {float[].class, int.class, int.class}
+    )
     public void test_java_util_Arrays_sort_float_array_NPE() {
         float[] float_array_null = null;
         try {
@@ -1984,15 +2042,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(int[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {int[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "sort",
+        args = {int[].class, int.class, int.class}
+    )
     public void test_java_util_Arrays_sort_int_array_NPE() {
         int[] int_array_null = null;
         try {
@@ -2013,15 +2068,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(Object[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {java.lang.Object[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "sort",
+        args = {java.lang.Object[].class, int.class, int.class}
+    )
     public void test_java_util_Arrays_sort_object_array_NPE() {
         Object[] object_array_null = null;
         try {
@@ -2049,15 +2101,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(long[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {long[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "sort",
+        args = {long[].class, int.class, int.class}
+    )
     public void test_java_util_Arrays_sort_long_array_NPE() {
         long[] long_array_null = null;
         try {
@@ -2078,15 +2127,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#sort(short[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {short[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "sort",
+        args = {short[].class, int.class, int.class}
+    )
     public void test_java_util_Arrays_sort_short_array_NPE() {
         short[] short_array_null = null;
         try {
@@ -2107,15 +2153,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#deepEquals(Object[], Object[])      
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "deepEquals",
-          methodArgs = {java.lang.Object[].class, java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "deepEquals",
+        args = {java.lang.Object[].class, java.lang.Object[].class}
+    )
     public void test_deepEquals$Ljava_lang_ObjectLjava_lang_Object() {
        int [] a1 = {1, 2, 3};
        short [] a2 = {0, 1};
@@ -2140,15 +2183,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#deepHashCode(Object[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "deepHashCode",
-          methodArgs = {java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "deepHashCode",
+        args = {java.lang.Object[].class}
+    )
     public void test_deepHashCode$Ljava_lang_Object() {
         int [] a1 = {1, 2, 3};
         short [] a2 = {0, 1};
@@ -2170,15 +2210,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#hashCode(boolean[] a)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {boolean[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {boolean[].class}
+    )
     public void test_hashCode$LZ() {
         int listHashCode;
         int arrayHashCode;
@@ -2196,15 +2233,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#hashCode(int[] a)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {int[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {int[].class}
+    )
     public void test_hashCode$LI() {
         int listHashCode;
         int arrayHashCode;
@@ -2226,15 +2260,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#hashCode(char[] a)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {char[].class}
+    )
     public void test_hashCode$LC() {
         int listHashCode;
         int arrayHashCode;
@@ -2252,15 +2283,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#hashCode(byte[] a)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {byte[].class}
+    )
     public void test_hashCode$LB() {
         int listHashCode;
         int arrayHashCode;
@@ -2278,15 +2306,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#hashCode(long[] a)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {long[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {long[].class}
+    )
     public void test_hashCode$LJ() {
         int listHashCode;
         int arrayHashCode;
@@ -2305,15 +2330,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#hashCode(float[] a)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {float[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {float[].class}
+    )
     public void test_hashCode$LF() {
         int listHashCode;
         int arrayHashCode;
@@ -2334,15 +2356,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#hashCode(double[] a)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {double[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {double[].class}
+    )
     public void test_hashCode$LD() {
         int listHashCode;
         int arrayHashCode;
@@ -2360,15 +2379,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#hashCode(short[] a)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {short[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {short[].class}
+    )
     public void test_hashCode$LS() {
         int listHashCode;
         int arrayHashCode;
@@ -2386,15 +2402,12 @@ public class ArraysTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Arrays#hashCode(Object[] a)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {java.lang.Object[].class}
+    )
     public void test_hashCode$Ljava_lang_Object() {
         int listHashCode;
         int arrayHashCode;

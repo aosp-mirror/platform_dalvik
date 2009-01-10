@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +31,7 @@ public class AllTestsNet
     }
 
     public static final Test suite() {
-        TestSuite suite = new TestSuite("Tests for java.net");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.net");
 
         suite.addTest(org.apache.harmony.luni.tests.java.net.AllTests.suite());
         

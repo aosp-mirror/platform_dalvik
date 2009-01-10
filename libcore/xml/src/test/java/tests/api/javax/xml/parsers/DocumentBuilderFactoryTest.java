@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package tests.api.javax.xml.parsers;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,6 +30,8 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import tests.api.javax.xml.parsers.SAXParserFactoryTest.MyHandler;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,6 +42,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
 
 @TestTargetClass(DocumentBuilderFactory.class) 
 public class DocumentBuilderFactoryTest extends TestCase {
@@ -72,15 +75,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#DocumentBuilderFactory().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DocumentBuilderFactory",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DocumentBuilderFactory",
+        args = {}
+    )
     public void test_Constructor() {
         try {
             new DocumentBuilderFactoryChild();
@@ -199,15 +199,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isCoalescing().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isCoalescing",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isCoalescing",
+        args = {}
+    )
     public void test_isCoalescing() {
         dbf.setCoalescing(true);
         assertTrue(dbf.isCoalescing());
@@ -219,15 +216,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isExpandEntityReferences().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isExpandEntityReferences",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isExpandEntityReferences",
+        args = {}
+    )
     public void test_isExpandEntityReferences() {
         dbf.setExpandEntityReferences(true);
         assertTrue(dbf.isExpandEntityReferences());
@@ -239,15 +233,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isIgnoringComments().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isIgnoringComments",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isIgnoringComments",
+        args = {}
+    )
     public void test_isIgnoringComments() {
         dbf.setIgnoringComments(true);
         assertTrue(dbf.isIgnoringComments());
@@ -259,15 +250,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isIgnoringElementContentWhitespace().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isIgnoringElementContentWhitespace",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isIgnoringElementContentWhitespace",
+        args = {}
+    )
     public void test_isIgnoringElementContentWhitespace() {
         dbf.setIgnoringElementContentWhitespace(true);
         assertTrue(dbf.isIgnoringElementContentWhitespace());
@@ -279,15 +267,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isNamespaceAware().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isNamespaceAware",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isNamespaceAware",
+        args = {}
+    )
     public void test_isNamespaceAware() {
         dbf.setNamespaceAware(true);
         assertTrue(dbf.isNamespaceAware());
@@ -296,19 +281,21 @@ public class DocumentBuilderFactoryTest extends TestCase {
         assertFalse(dbf.isNamespaceAware());
     }
 
-    /**
-     * @tests javax.xml.parsers.DocumentBuilderFactory#isValidating().
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isValidating",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isValidating",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "",
+            method = "setValidating",
+            args = {boolean.class}
         )
     })
-    public void test_isValidating() {
+    public void test_setIsValidating() {
         dbf.setValidating(true);
         assertTrue(dbf.isValidating());
 
@@ -316,29 +303,38 @@ public class DocumentBuilderFactoryTest extends TestCase {
         assertFalse(dbf.isValidating());
     }
 
-    /**
-     * @tests javax.xml.parsers.DocumentBuilderFactory#isXIncludeAware().
-     */
-//    public void test_isXIncludeAware() {
-//        dbf.setXIncludeAware(true);
-//        assertTrue(dbf.isXIncludeAware());
-//
-//        dbf.setXIncludeAware(false);
-//        assertFalse(dbf.isXIncludeAware());
-//    }
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isXIncludeAware",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "",
+            method = "setXIncludeAware",
+            args = {boolean.class}
+        )
+    })
+    @KnownFailure("Should handle XIncludeAware flag more gracefully")
+    public void test_isSetXIncludeAware() {
+        dbf.setXIncludeAware(true);
+        assertTrue(dbf.isXIncludeAware());
+
+        dbf.setXIncludeAware(false);
+        assertFalse(dbf.isXIncludeAware());
+    }
 
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#newInstance().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "newInstance",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {}
+    )
     public void test_newInstance() {
         String className = null;
         try {
@@ -389,6 +385,31 @@ public class DocumentBuilderFactoryTest extends TestCase {
         }
     }
 
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "SAXException untested; unused on Android",
+        method = "newDocumentBuilder",
+        args = {}
+    )
+    public void test_newDocumentBuilder() {
+        // Ordinary case
+        try {
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            assertTrue(db instanceof DocumentBuilder);
+            db.parse(getClass().getResourceAsStream("/simple.xml"));
+        } catch(Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+        
+        // Exception case
+        dbf.setValidating(true);
+        try {
+            DocumentBuilder db = dbf.newDocumentBuilder();
+        } catch(ParserConfigurationException e) {
+            // Expected, since Android doesn't have a validating parser.
+        }
+    }
+    
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setAttribute(java.lang.String,
      *     java.lang.Object).
@@ -433,16 +454,14 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setCoalescing(boolean).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setCoalescing",
-          methodArgs = {boolean.class}
-        )
-    })
-    public void _test_setCoalescingZ() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setCoalescing",
+        args = {boolean.class}
+    )
+    @KnownFailure("Should support coalescing")
+    public void test_setCoalescingZ() {
         dbf.setCoalescing(true);
         assertTrue(dbf.isCoalescing());
 
@@ -507,15 +526,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setExpandEntityReferences(boolean).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setExpandEntityReferences",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setExpandEntityReferences",
+        args = {boolean.class}
+    )
     public void test_setExpandEntityReferencesZ() {
         dbf.setExpandEntityReferences(true);
         assertTrue(dbf.isExpandEntityReferences());
@@ -571,16 +587,21 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setFeature(java.lang.String).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setFeature",
-          methodArgs = {java.lang.String.class, boolean.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getFeature",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setFeature",
+            args = {java.lang.String.class, boolean.class}
         )
     })
-    public void test_setFeatureLjava_lang_String() {
+    public void test_getSetFeatureLjava_lang_String() {
         String[] features = { "http://xml.org/sax/features/namespaces",
                 "http://xml.org/sax/features/validation" };
         try {
@@ -626,15 +647,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setIgnoringComments(boolean).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setIgnoringComments",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setIgnoringComments",
+        args = {boolean.class}
+    )
     public void test_setIgnoringCommentsZ() {
         commentElements.clear();
 
@@ -686,15 +704,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setIgnoringElementContentWhitespace(boolean).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setIgnoringElementContentWhitespace",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setIgnoringElementContentWhitespace",
+        args = {boolean.class}
+    )
     public void test_setIgnoringElementContentWhitespaceZ() {
         dbf.setIgnoringElementContentWhitespace(true);
         assertTrue(dbf.isIgnoringElementContentWhitespace());
@@ -738,15 +753,12 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setNamespaceAware(boolean).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setNamespaceAware",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setNamespaceAware",
+        args = {boolean.class}
+    )
     public void test_setNamespaceAwareZ() {
         dbf.setNamespaceAware(true);
         assertTrue(dbf.isNamespaceAware());
@@ -787,6 +799,38 @@ public class DocumentBuilderFactoryTest extends TestCase {
         }
     }
 
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getAttribute",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setAttribute",
+            args = {java.lang.String.class, Object.class}
+        )
+    })
+    public void test_getSetAttribute() {
+        // Android SAX implementation doesn't support attributes, so
+        // we can only make sure the expected exception is thrown.
+        try {
+            dbf.setAttribute("foo", new Object());
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+        
+        try {
+            dbf.getAttribute("foo");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+    }
+    
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setSchema(javax.xml.validation.Schema).
      */

@@ -18,17 +18,24 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.io.Serializable;
 import java.security.AllPermission;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.Permission;
 import java.security.PermissionCollection;
+import java.security.PublicKey;
 import java.security.SecurityPermission;
+import java.security.SignatureException;
 import java.security.UnresolvedPermission;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
@@ -50,15 +57,12 @@ public class UnresolvedPermissionTest extends TestCase {
      * Creates an Object with given name, type, action, certificates. Empty or
      * null type is not allowed - exception should be thrown.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnresolvedPermission",
-          methodArgs = {String.class, String.class, String.class, Certificate[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "UnresolvedPermission",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class, java.security.cert.Certificate[].class}
+    )
     public void testCtor() {
         String type = "laskjhlsdk 2345346";
         String name = "^%#UHVKU^%V  887y";
@@ -95,15 +99,12 @@ public class UnresolvedPermissionTest extends TestCase {
     /**
      * UnresolvedPermission never implies any other permission.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
     public void testImplies() {
         UnresolvedPermission up = new UnresolvedPermission(
                 "java.security.SecurityPermission", "a.b.c", null, null);
@@ -112,15 +113,12 @@ public class UnresolvedPermissionTest extends TestCase {
         assertFalse(up.implies(new SecurityPermission("a.b.c")));
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerialization() throws Exception {
         UnresolvedPermission up = new UnresolvedPermission(
                 "java.security.SecurityPermission", "a.b.c", "actions", null);
@@ -138,15 +136,12 @@ public class UnresolvedPermissionTest extends TestCase {
         assertNull(deserializedUp.getUnresolvedCerts());
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "missing serialization golden file",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void _testSerialization_Compatibility() throws Exception {
         UnresolvedPermission up = new UnresolvedPermission(
                 "java.security.SecurityPermission", "a.b.c", "actions", null);
@@ -167,15 +162,12 @@ public class UnresolvedPermissionTest extends TestCase {
         });
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void testEquals() {
         UnresolvedPermission up1 = new UnresolvedPermission("type1", "name1",
                 "action1", null);
@@ -212,15 +204,12 @@ public class UnresolvedPermissionTest extends TestCase {
 
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getActions",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getActions",
+        args = {}
+    )
     public void testGetActions() {
         UnresolvedPermission up1 = new UnresolvedPermission("type1", "name1",
                 "action1", null);
@@ -235,15 +224,12 @@ public class UnresolvedPermissionTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getUnresolvedActions",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getUnresolvedActions",
+        args = {}
+    )
     public void testGetUnresolvedActions() {
         UnresolvedPermission up1 = new UnresolvedPermission("type1", "name1",
                 "action1 @#$%^&*", null);
@@ -258,17 +244,55 @@ public class UnresolvedPermissionTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getUnresolvedCerts",
-          methodArgs = {}
-        )
-    })
-    public void _testGetUnresolvedCerts() {
-        Certificate[] certificate = new java.security.cert.Certificate[0];
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getUnresolvedCerts",
+        args = {}
+    )
+    public void testGetUnresolvedCerts() {
+        Certificate[] certificate = new java.security.cert.Certificate[] {
+                new Certificate(null) {
+
+                    @Override
+                    public byte[] getEncoded()
+                            throws CertificateEncodingException {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+
+                    @Override
+                    public PublicKey getPublicKey() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+
+                    @Override
+                    public String toString() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+
+                    @Override
+                    public void verify(PublicKey key)
+                            throws CertificateException,
+                            NoSuchAlgorithmException, InvalidKeyException,
+                            NoSuchProviderException, SignatureException {
+                        // TODO Auto-generated method stub
+                        
+                    }
+
+                    @Override
+                    public void verify(PublicKey key, String sigProvider)
+                            throws CertificateException,
+                            NoSuchAlgorithmException, InvalidKeyException,
+                            NoSuchProviderException, SignatureException {
+                        // TODO Auto-generated method stub
+                        
+                    }
+                    
+                }
+        };
         UnresolvedPermission up1 = new UnresolvedPermission("type1", "name1",
                 "action1 @#$%^&*", null);
         UnresolvedPermission up2 = null;
@@ -286,15 +310,12 @@ public class UnresolvedPermissionTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getUnresolvedName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getUnresolvedName",
+        args = {}
+    )
     public void testGetUnresolvedName() {
         UnresolvedPermission up1 = new UnresolvedPermission("type1", "name1!@#$%^&&* )(",
                 "action1 @#$%^&*", null);
@@ -309,15 +330,12 @@ public class UnresolvedPermissionTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getUnresolvedType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getUnresolvedType",
+        args = {}
+    )
     public void testGetUnresolvedType() {
         UnresolvedPermission up1 = new UnresolvedPermission("type1@#$%^&* )(", "name1",
                 "action1", null);
@@ -332,15 +350,12 @@ public class UnresolvedPermissionTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void testHashCode() {
         UnresolvedPermission up1 = new UnresolvedPermission("type1", "name1",
                 "action1", null);
@@ -363,15 +378,12 @@ public class UnresolvedPermissionTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "newPermissionCollection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newPermissionCollection",
+        args = {}
+    )
     public void testNewPermissionCollection() {
         UnresolvedPermission up1 = new UnresolvedPermission("type1", "name1",
                 "action1", null);
@@ -398,15 +410,12 @@ public class UnresolvedPermissionTest extends TestCase {
         
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         UnresolvedPermission up1 = new UnresolvedPermission("type1", "name1",
                 "action1", null);

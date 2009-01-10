@@ -364,7 +364,7 @@ public abstract class NumberFormat extends Format {
      * 
      * @return the currency that was set in getInstance() or in setCurrency(),
      *         or {@code null}.
-     * @throws java.lang.UnsupportedOperationException
+     * @throws UnsupportedOperationException
      * @since Android 1.0
      */
     public Currency getCurrency() {
@@ -646,7 +646,7 @@ public abstract class NumberFormat extends Format {
      * 
      * @param currency
      *            the new currency.
-     * @throws java.lang.UnsupportedOperationException
+     * @throws UnsupportedOperationException
      * @since Android 1.0
      */
     public void setCurrency(Currency currency) {

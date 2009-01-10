@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Node;
@@ -52,20 +52,19 @@ public final class HCNodeDocumentFragmentNormalize extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies positive functionality of getNodeValue method, " +
-            "and that getNextSibling method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getNodeValue",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies positive functionality of getNodeValue method, and that getNextSibling method returns null.",
+            method = "getNodeValue",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getNextSibling",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies positive functionality of getNodeValue method, and that getNextSibling method returns null.",
+            method = "getNextSibling",
+            args = {}
         )
-
     })
     public void testNodeDocumentFragmentNormalize1() throws Throwable {
         Document doc;
@@ -87,15 +86,12 @@ public final class HCNodeDocumentFragmentNormalize extends DOMTestCase {
         retval = txtNode.getNextSibling();
         assertNull("singleChild", retval);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getFirstChild method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getFirstChild",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getFirstChild method returns null.",
+        method = "getFirstChild",
+        args = {}
+    )
     public void testNodeDocumentFragmentNormalize2() throws Throwable {
         Document doc;
         DocumentFragment docFragment;

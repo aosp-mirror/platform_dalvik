@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.util;  
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.apache.harmony.luni.util.MsgHelp;
@@ -36,15 +36,12 @@ public class MsgHelpTest extends TestCase {
      * Test method for 'org.apache.harmony.luni.util.MsgHelp.format(String,
      * Object[])'
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "format",
-                methodArgs = {java.lang.String.class, Object[].class}
-              )
-          })        
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {java.lang.String.class, java.lang.Object[].class}
+    )        
     public void testFormatLjava_lang_String$Ljava_lang_Object() {
         assertEquals("empty", MsgHelp.format("empty", new Object[0]));
 

@@ -54,7 +54,7 @@ public final class Currency implements Serializable {
      *            the currency code.
      * @return the {@code Currency} instance for this currency code.
      * 
-     * @throws java.lang.IllegalArgumentException
+     * @throws IllegalArgumentException
      *             if the currency code is not a supported ISO 4217 currency
      *             code.
      * @since Android 1.0
@@ -90,7 +90,7 @@ public final class Currency implements Serializable {
      *            the {@code Locale} of a country.
      * @return the {@code Currency} used in the country defined by the locale parameter.
      * 
-     * @throws java.lang.IllegalArgumentException
+     * @throws IllegalArgumentException
      *             if the locale's country is not a supported ISO 3166 Country.
      * @since Android 1.0
      */

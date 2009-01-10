@@ -18,8 +18,8 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.security.SignatureException;
@@ -30,15 +30,12 @@ public class SignatureException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.SignatureException#SignatureException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SignatureException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SignatureException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.security.SignatureException()
         SignatureException e = new SignatureException();
@@ -49,15 +46,12 @@ public class SignatureException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.SignatureException#SignatureException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with null string parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "SignatureException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verification with null string parameter missed",
+        method = "SignatureException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.SignatureException(java.lang.String)
         SignatureException e = new SignatureException("test message");

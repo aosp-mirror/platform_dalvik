@@ -17,9 +17,9 @@
 
 package org.apache.harmony.annotation.tests.java.lang.annotation;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -39,13 +39,24 @@ public class AnnotationTypeMismatchExceptionTest extends TestCase {
      * @tests java.lang.annotation.AnnotationTypeMismatchException#AnnotationTypeMismatchException(Method,
      *        String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AnnotationTypeMismatchException",
-          methodArgs = {java.lang.reflect.Method.class, java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "AnnotationTypeMismatchException",
+            args = {java.lang.reflect.Method.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "element",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "foundType",
+            args = {}
         )
     })
     @SuppressWarnings("nls")

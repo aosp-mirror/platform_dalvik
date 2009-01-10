@@ -18,14 +18,15 @@
 package tests.api.java.io;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -45,407 +46,1119 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
 
     String unihw = "\u0048\u0065\u006C\u0801\u006C\u006F\u0020\u0057\u0081\u006F\u0072\u006C\u0064";
 
-    //java.io.FileOutputStream fos;
-
-    public String fileString = "Test_All_Tests\nTest_java_io_BufferedInputStream\nTest_java_io_BufferedOutputStream\nTest_java_io_ByteArrayInputStream\nTest_java_io_ByteArrayOutputStream\nTest_java_io_DataInputStream\nTest_java_io_File\nTest_java_io_FileDescriptor\nTest_java_io_FileInputStream\nTest_java_io_FileNotFoundException\nTest_java_io_FileOutputStream\nTest_java_io_FilterInputStream\nTest_java_io_FilterOutputStream\nTest_java_io_InputStream\nTest_java_io_IOException\nTest_java_io_OutputStream\nTest_java_io_PrintStream\nTest_RandomAccessFile\nTest_java_io_SyncFailedException\nTest_java_lang_AbstractMethodError\nTest_java_lang_ArithmeticException\nTest_java_lang_ArrayIndexOutOfBoundsException\nTest_java_lang_ArrayStoreException\nTest_java_lang_Boolean\nTest_java_lang_Byte\nTest_java_lang_Character\nTest_java_lang_Class\nTest_java_lang_ClassCastException\nTest_java_lang_ClassCircularityError\nTest_java_lang_ClassFormatError\nTest_java_lang_ClassLoader\nTest_java_lang_ClassNotFoundException\nTest_java_lang_CloneNotSupportedException\nTest_java_lang_Double\nTest_java_lang_Error\nTest_java_lang_Exception\nTest_java_lang_ExceptionInInitializerError\nTest_java_lang_Float\nTest_java_lang_IllegalAccessError\nTest_java_lang_IllegalAccessException\nTest_java_lang_IllegalArgumentException\nTest_java_lang_IllegalMonitorStateException\nTest_java_lang_IllegalThreadStateException\nTest_java_lang_IncompatibleClassChangeError\nTest_java_lang_IndexOutOfBoundsException\nTest_java_lang_InstantiationError\nTest_java_lang_InstantiationException\nTest_java_lang_Integer\nTest_java_lang_InternalError\nTest_java_lang_InterruptedException\nTest_java_lang_LinkageError\nTest_java_lang_Long\nTest_java_lang_Math\nTest_java_lang_NegativeArraySizeException\nTest_java_lang_NoClassDefFoundError\nTest_java_lang_NoSuchFieldError\nTest_java_lang_NoSuchMethodError\nTest_java_lang_NullPointerException\nTest_java_lang_Number\nTest_java_lang_NumberFormatException\nTest_java_lang_Object\nTest_java_lang_OutOfMemoryError\nTest_java_lang_RuntimeException\nTest_java_lang_SecurityManager\nTest_java_lang_Short\nTest_java_lang_StackOverflowError\nTest_java_lang_String\nTest_java_lang_StringBuffer\nTest_java_lang_StringIndexOutOfBoundsException\nTest_java_lang_System\nTest_java_lang_Thread\nTest_java_lang_ThreadDeath\nTest_java_lang_ThreadGroup\nTest_java_lang_Throwable\nTest_java_lang_UnknownError\nTest_java_lang_UnsatisfiedLinkError\nTest_java_lang_VerifyError\nTest_java_lang_VirtualMachineError\nTest_java_lang_vm_Image\nTest_java_lang_vm_MemorySegment\nTest_java_lang_vm_ROMStoreException\nTest_java_lang_vm_VM\nTest_java_lang_Void\nTest_java_net_BindException\nTest_java_net_ConnectException\nTest_java_net_DatagramPacket\nTest_java_net_DatagramSocket\nTest_java_net_DatagramSocketImpl\nTest_java_net_InetAddress\nTest_java_net_NoRouteToHostException\nTest_java_net_PlainDatagramSocketImpl\nTest_java_net_PlainSocketImpl\nTest_java_net_Socket\nTest_java_net_SocketException\nTest_java_net_SocketImpl\nTest_java_net_SocketInputStream\nTest_java_net_SocketOutputStream\nTest_java_net_UnknownHostException\nTest_java_util_ArrayEnumerator\nTest_java_util_Date\nTest_java_util_EventObject\nTest_java_util_HashEnumerator\nTest_java_util_Hashtable\nTest_java_util_Properties\nTest_java_util_ResourceBundle\nTest_java_util_tm\nTest_java_util_Vector\n";
+    static final String testString = "Lorem ipsum dolor sit amet,\n" +
+    "consectetur adipisicing elit,\nsed do eiusmod tempor incididunt ut" +
+    "labore et dolore magna aliqua.\n";
+    static final int testLength = testString.length();
 
     /**
      * @tests java.io.RandomAccessFile#RandomAccessFile(java.io.File,
      *        java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "RandomAccessFile",
-          methodArgs = {java.io.File.class, java.lang.String.class}
-        )
-    })
-    public void test_ConstructorLjava_io_FileLjava_lang_String()
-            throws Exception {
-        // Test for method java.io.RandomAccessFile(java.io.File,
-        // java.lang.String)
-        RandomAccessFile raf = new java.io.RandomAccessFile(f, "rw");
-        raf.write(20);
-        raf.seek(0);
-        assertEquals("Incorrect int read/written", 20, raf.read());
-        raf.close();
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "RandomAccessFile",
+        args = {java.io.File.class, java.lang.String.class}
+    )
+    public void test_ConstructorLjava_io_FileLjava_lang_String() throws Exception {
+        RandomAccessFile raf = null;
+        File tmpFile = new File(fileName);
+
+        try {
+            raf = new java.io.RandomAccessFile(tmpFile, "r");
+            fail("Test 1: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            // Expected.
+        } catch (IllegalArgumentException e) {
+            fail("Test 2: Unexpected IllegalArgumentException: " + e.getMessage());
+        }
+
+        tmpFile.createNewFile();
+        
+        try {
+            // Checking the remaining valid mode parameters.
+            try {
+                raf = new java.io.RandomAccessFile(tmpFile, "rwd");
+            } catch (IllegalArgumentException e) {
+                fail("Test 3: Unexpected IllegalArgumentException: " + e.getMessage());
+            }
+            raf.close();
+            try {
+                raf = new java.io.RandomAccessFile(tmpFile, "rws");
+            } catch (IllegalArgumentException e) {
+                fail("Test 4: Unexpected IllegalArgumentException: " + e.getMessage());
+            }
+            raf.close();
+            try {
+                raf = new java.io.RandomAccessFile(tmpFile, "rw");
+            } catch (IllegalArgumentException e) {
+                fail("Test 5: Unexpected IllegalArgumentException: " + e.getMessage());
+            }
+            raf.close();
+            
+            // Checking an invalid mode parameter.
+            try {
+                raf = new java.io.RandomAccessFile(tmpFile, "i");
+                fail("Test 6: IllegalArgumentException expected.");
+            } catch (IllegalArgumentException e) {
+                // Expected.
+            }
+        } finally {
+            if (raf != null ) raf.close();
+            tmpFile.delete();
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#RandomAccessFile(java.lang.String,
      *        java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "RandomAccessFile",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "RandomAccessFile",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_String()
             throws IOException {
-        // Test for method java.io.RandomAccessFile(java.lang.String,
-        // java.lang.String)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.write("Test".getBytes(), 0, 4);
-        raf.close();
+        RandomAccessFile raf = null;
+        File tmpFile = new File(fileName);
+
+        try {
+            raf = new java.io.RandomAccessFile(fileName, "r");
+            fail("Test 1: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            // Expected.
+        } catch (IllegalArgumentException e) {
+            fail("Test 2: Unexpected IllegalArgumentException: " + e.getMessage());
+        }
+
+        try {
+            // Checking the remaining valid mode parameters.
+            try {
+                raf = new java.io.RandomAccessFile(fileName, "rwd");
+            } catch (IllegalArgumentException e) {
+                fail("Test 3: Unexpected IllegalArgumentException: " + e.getMessage());
+            }
+            raf.close();
+            try {
+                raf = new java.io.RandomAccessFile(fileName, "rws");
+            } catch (IllegalArgumentException e) {
+                fail("Test 4: Unexpected IllegalArgumentException: " + e.getMessage());
+            }
+            raf.close();
+            try {
+                raf = new java.io.RandomAccessFile(fileName, "rw");
+            } catch (IllegalArgumentException e) {
+                fail("Test 5: Unexpected IllegalArgumentException: " + e.getMessage());
+            }
+            raf.close();
+            
+            // Checking an invalid mode parameter.
+            try {
+                raf = new java.io.RandomAccessFile(fileName, "i");
+                fail("Test 6: IllegalArgumentException expected.");
+            } catch (IllegalArgumentException e) {
+                // Expected.
+            }
+            
+            // Checking for NoWritableChannelException.
+            raf = new java.io.RandomAccessFile(fileName, "r");
+            FileChannel fcr = raf.getChannel();
+
+            try {
+                fcr.lock(0L, Long.MAX_VALUE, false);
+                fail("Test 7: NonWritableChannelException expected.");
+            } catch (NonWritableChannelException e) {
+                // Expected.
+            }
+            
+        } finally {
+            if (raf != null ) raf.close();
+            if (tmpFile.exists()) tmpFile.delete();
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#close()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "No IOException checking, requires native code that can be forced to throw such an exception.",
+        method = "close",
+        args = {}
+    )
     public void test_close() {
         // Test for method void java.io.RandomAccessFile.close()
         try {
             RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
             raf.close();
             raf.write("Test".getBytes(), 0, 4);
-            fail("Failed to close file properly");
+            fail("Failed to close file properly.");
         } catch (IOException e) {}
     }
 
     /**
+     * @tests java.io.RandomAccessFile#getChannel()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getChannel",
+        args = {}
+    )
+    public void test_getChannel() throws IOException {
+
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        FileChannel fc = raf.getChannel();
+        
+        // Indirect test: If the file's file pointer moves then the position
+        // in the channel has to move accordingly.
+        assertTrue("Test 1: Channel position expected to be 0.", fc.position() == 0);
+        
+        raf.write(testString.getBytes());
+        assertEquals("Test 2: Unexpected channel position.", 
+                testLength, fc.position());
+        assertTrue("Test 3: Channel position is not equal to file pointer.", 
+                fc.position() == raf.getFilePointer());
+        raf.close();
+    }
+    
+    /**
      * @tests java.io.RandomAccessFile#getFD()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getFD",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "No IOException checking since this exception is not thrown.",
+        method = "getFD",
+        args = {}
+    )
     public void test_getFD() throws IOException {
         // Test for method java.io.FileDescriptor
         // java.io.RandomAccessFile.getFD()
 
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        assertTrue("Returned invalid fd", raf.getFD().valid());
+        assertTrue("Test 1: Returned invalid fd.", raf.getFD().valid());
 
         raf.close();
-        assertFalse("Returned valid fd after close", raf.getFD().valid());
+        assertFalse("Test 2: Returned valid fd after close", raf.getFD().valid());
     }
 
     /**
      * @tests java.io.RandomAccessFile#getFilePointer()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getFilePointer",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFilePointer",
+        args = {}
+    )
     public void test_getFilePointer() throws IOException {
         // Test for method long java.io.RandomAccessFile.getFilePointer()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.write(fileString.getBytes(), 0, 1000);
-        assertEquals("Incorrect filePointer returned", 1000, raf
+        raf.write(testString.getBytes(), 0, testLength);
+        assertEquals("Test 1: Incorrect filePointer returned. ", testLength, raf
                 .getFilePointer());
+        raf.close();
+        try {
+            raf.getFilePointer();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#length()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "length",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "length",
+        args = {}
+    )
     public void test_length() throws IOException {
         // Test for method long java.io.RandomAccessFile.length()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.write(fileString.getBytes());
-        assertEquals("Incorrect length returned", fileString.length(), raf
-                .length());
+        raf.write(testString.getBytes());
+        assertEquals("Test 1: Incorrect length returned. ", testLength, 
+                raf.length());
+        raf.close();
+        try {
+            raf.length();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#read()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "write",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "read",
+            args = {}
         )
     })
-    public void test_read() throws IOException {
-        // Test for method int java.io.RandomAccessFile.read()
-        FileOutputStream fos = new java.io.FileOutputStream(fileName);
-        fos.write(fileString.getBytes(), 0, fileString.length());
-        fos.close();
+    public void test_read_write() throws IOException {
+        int i;
+        byte[] testBuf = testString.getBytes();
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        for (i = 0; i < testString.length(); i++) {
+            try {
+                raf.write(testBuf[i]);
+            } catch (Exception e) {
+                fail("Test 1: Unexpected exception while writing: " 
+                        + e.getMessage());
+            }
+        }
+        
+        raf.seek(0);
 
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "r");
-        assertEquals("Incorrect bytes returned from read",
-                fileString.charAt(0), raf.read());
+        for (i = 0; i < testString.length(); i++) {
+            assertEquals(String.format("Test 2: Incorrect value written or read at index %d; ", i), 
+                    testBuf[i], raf.read());
+        }
+        
+        assertTrue("Test 3: End of file indicator (-1) expected.", raf.read() == -1);
+        
+        raf.close();
+        try {
+            raf.write(42);
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.read();
+            fail("Test 5: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#read(byte[])
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "read",
+        args = {byte[].class}
+    )
     public void test_read$B() throws IOException {
-        // Test for method int java.io.RandomAccessFile.read(byte [])
         FileOutputStream fos = new java.io.FileOutputStream(fileName);
-        fos.write(fileString.getBytes(), 0, fileString.length());
+        fos.write(testString.getBytes(), 0, testLength);
         fos.close();
 
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "r");
-        byte[] rbuf = new byte[4000];
-        raf.read(rbuf);
-        assertEquals("Incorrect bytes returned from read", fileString,
-                new String(rbuf, 0, fileString.length()));
+        byte[] rbuf = new byte[testLength + 10];
+        
+        int bytesRead = raf.read(rbuf);
+        assertEquals("Test 1: Incorrect number of bytes read. ", 
+                testLength, bytesRead);
+        assertEquals("Test 2: Incorrect bytes read. ", testString,
+                new String(rbuf, 0, testLength));
+        
+        bytesRead = raf.read(rbuf);
+        assertTrue("Test 3: EOF (-1) expected. ", bytesRead == -1);
 
+        raf.close();
+        try {
+            bytesRead = raf.read(rbuf);
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#read(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_read$BII() throws IOException {
-        // Test for method int java.io.RandomAccessFile.read(byte [], int, int)
+        int bytesRead;
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         byte[] rbuf = new byte[4000];
+        
         FileOutputStream fos = new java.io.FileOutputStream(fileName);
-        fos.write(fileString.getBytes(), 0, fileString.length());
+        fos.write(testString.getBytes(), 0, testLength);
         fos.close();
-        raf.read(rbuf, 0, fileString.length());
-        assertEquals("Incorrect bytes returned from read", fileString,
-                new String(rbuf, 0, fileString.length()));
+        
+        // Read half of the file contents.
+        bytesRead = raf.read(rbuf, 10, testLength / 2);
+        assertEquals("Test 1: Incorrect number of bytes read. ", 
+                testLength / 2, bytesRead);
+        assertEquals("Test 2: Incorrect bytes read. ", 
+                testString.substring(0, testLength / 2),
+                new String(rbuf, 10, testLength / 2));
+        
+        // Read the rest of the file contents.
+        bytesRead = raf.read(rbuf, 0, testLength);
+        assertEquals("Test 3: Incorrect number of bytes read. ", 
+                testLength - (testLength / 2), bytesRead);
+        assertEquals("Test 4: Incorrect bytes read. ", 
+                testString.substring(testLength / 2, (testLength / 2) + bytesRead),
+                new String(rbuf, 0, bytesRead));
+        
+        // Try to read even more.
+        bytesRead = raf.read(rbuf, 0, 1);
+        assertTrue("Test 5: EOF (-1) expected. ", bytesRead == -1);
+
+        // Illegal parameter value tests.
+        try {
+            raf.read(rbuf, -1, 1);
+            fail("Test 6: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        try {
+            raf.read(rbuf, 0, -1);
+            fail("Test 7: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        try {
+            raf.read(rbuf, 2000, 2001);
+            fail("Test 8: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        
+        // IOException test.
+        raf.close();
+        try {
+            bytesRead = raf.read(rbuf, 0, 1);
+            fail("Test 9: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#readBoolean()
+     * @tests java.io.RandomAccessFile#writeBoolean(boolean)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readBoolean",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeBoolean",
+            args = {boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readBoolean",
+            args = {}
         )
     })
-    public void test_readBoolean() throws IOException {
-        // Test for method boolean java.io.RandomAccessFile.readBoolean()
+    public void test_read_writeBoolean() throws IOException {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         raf.writeBoolean(true);
+        raf.writeBoolean(false);
         raf.seek(0);
-        assertTrue("Incorrect boolean read/written", raf.readBoolean());
+        
+        assertEquals("Test 1: Incorrect value written or read;", 
+                true, raf.readBoolean());
+        assertEquals("Test 2: Incorrect value written or read;", 
+                false, raf.readBoolean());
+        
+        try {
+            raf.readBoolean();
+            fail("Test 3: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
         raf.close();
+        try {
+            raf.writeBoolean(false);
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readBoolean();
+            fail("Test 5: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#readByte()
+     * @tests java.io.RandomAccessFile#writeByte(byte)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readByte",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeByte",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readByte",
+            args = {}
         )
     })
-    public void test_readByte() throws IOException {
-        // Test for method byte java.io.RandomAccessFile.readByte()
+    public void test_read_writeByte() throws IOException {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeByte(127);
+        raf.writeByte(Byte.MIN_VALUE);
+        raf.writeByte(11);
+        raf.writeByte(Byte.MAX_VALUE);
+        raf.writeByte(Byte.MIN_VALUE - 1);
+        raf.writeByte(Byte.MAX_VALUE + 1);
         raf.seek(0);
-        assertEquals("Incorrect bytes read/written", 127, raf.readByte());
+        
+        assertEquals("Test 1: Incorrect value written or read;", 
+                Byte.MIN_VALUE, raf.readByte());
+        assertEquals("Test 2: Incorrect value written or read;", 
+                11, raf.readByte());
+        assertEquals("Test 3: Incorrect value written or read;", 
+                Byte.MAX_VALUE, raf.readByte());
+        assertEquals("Test 4: Incorrect value written or read;", 
+                127, raf.readByte());
+        assertEquals("Test 5: Incorrect value written or read;", 
+                -128, raf.readByte());
+        
+        try {
+            raf.readByte();
+            fail("Test 6: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
         raf.close();
+        try {
+            raf.writeByte(13);
+            fail("Test 7: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readByte();
+            fail("Test 8: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#readChar()
+     * @tests java.io.RandomAccessFile#writeChar(char)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readChar",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeChar",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readChar",
+            args = {}
         )
     })
-    public void test_readChar() throws IOException {
-        // Test for method char java.io.RandomAccessFile.readChar()
+    public void test_read_writeChar() throws IOException {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        raf.writeChar(Character.MIN_VALUE);
         raf.writeChar('T');
+        raf.writeChar(Character.MAX_VALUE);
+        raf.writeChar(Character.MIN_VALUE - 1);
+        raf.writeChar(Character.MAX_VALUE + 1);
         raf.seek(0);
-        assertEquals("Incorrect char read/written", 'T', raf.readChar());
+        
+        assertEquals("Test 1: Incorrect value written or read;", 
+                Character.MIN_VALUE, raf.readChar());
+        assertEquals("Test 2: Incorrect value written or read;", 
+                'T', raf.readChar());
+        assertEquals("Test 3: Incorrect value written or read;", 
+                Character.MAX_VALUE, raf.readChar());
+        assertEquals("Test 4: Incorrect value written or read;", 
+                0xffff, raf.readChar());
+        assertEquals("Test 5: Incorrect value written or read;", 
+                0, raf.readChar());
+        
+        try {
+            raf.readChar();
+            fail("Test 6: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
         raf.close();
+        try {
+            raf.writeChar('E');
+            fail("Test 7: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readChar();
+            fail("Test 8: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#readDouble()
+     * @tests java.io.RandomAccessFile#writeDouble(double)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readDouble",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeDouble",
+            args = {double.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readDouble",
+            args = {}
         )
     })
-    public void test_readDouble() throws IOException {
-        // Test for method double java.io.RandomAccessFile.readDouble()
+    public void test_read_writeDouble() throws IOException {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         raf.writeDouble(Double.MAX_VALUE);
+        raf.writeDouble(424242.4242);
         raf.seek(0);
-        assertEquals("Incorrect double read/written", Double.MAX_VALUE, raf
-                .readDouble(), 0);
+        
+        assertEquals("Test 1: Incorrect value written or read;", 
+                Double.MAX_VALUE, raf.readDouble());
+        assertEquals("Test 2: Incorrect value written or read;", 
+                424242.4242, raf.readDouble());
+        
+        try {
+            raf.readDouble();
+            fail("Test 3: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
         raf.close();
+        try {
+            raf.writeDouble(Double.MIN_VALUE);
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readDouble();
+            fail("Test 5: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#readFloat()
+     * @tests java.io.RandomAccessFile#writeFloat(double)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readFloat",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeFloat",
+            args = {float.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readFloat",
+            args = {}
         )
     })
-    public void test_readFloat() throws IOException {
-        // Test for method float java.io.RandomAccessFile.readFloat()
+    public void test_read_writeFloat() throws IOException {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         raf.writeFloat(Float.MAX_VALUE);
+        raf.writeFloat(555.55f);
         raf.seek(0);
-        assertEquals("Incorrect float read/written", Float.MAX_VALUE, raf
-                .readFloat(), 0);
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#readFully(byte[])
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readFully",
-          methodArgs = {byte[].class}
-        )
-    })
-    public void test_readFully$B() throws IOException {
-        // Test for method void java.io.RandomAccessFile.readFully(byte [])
-        byte[] buf = new byte[10];
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeBytes("HelloWorld");
-        raf.seek(0);
-        raf.readFully(buf);
-        assertEquals("Incorrect bytes read/written", "HelloWorld", new String(
-                buf, 0, 10));
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#readFully(byte[], int, int)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readFully",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_readFully$BII() throws IOException {
-        // Test for method void java.io.RandomAccessFile.readFully(byte [], int,
-        // int)
-        byte[] buf = new byte[10];
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeBytes("HelloWorld");
-        raf.seek(0);
-        raf.readFully(buf, 0, buf.length);
-        assertEquals("Incorrect bytes read/written", "HelloWorld", new String(
-                buf, 0, 10));
+        
+        assertEquals("Test 1: Incorrect value written or read. ", 
+                Float.MAX_VALUE, raf.readFloat());
+        assertEquals("Test 2: Incorrect value written or read. ", 
+                555.55f, raf.readFloat());
+        
         try {
-            raf.readFully(buf, 0, buf.length);
-            fail("Reading past end of buffer did not throw EOFException");
-        } catch (EOFException e) {}
+            raf.readFloat();
+            fail("Test 3: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
+        raf.close();
+        try {
+            raf.writeFloat(Float.MIN_VALUE);
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readFloat();
+            fail("Test 5: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#readInt()
+     * @tests java.io.RandomAccessFile#writeInt(char)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readInt",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeInt",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readInt",
+            args = {}
         )
     })
-    public void test_readInt() throws IOException {
-        // Test for method int java.io.RandomAccessFile.readInt()
+    public void test_read_writeInt() throws IOException {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         raf.writeInt(Integer.MIN_VALUE);
+        raf.writeInt('T');
+        raf.writeInt(Integer.MAX_VALUE);
+        raf.writeInt(Integer.MIN_VALUE - 1);
+        raf.writeInt(Integer.MAX_VALUE + 1);
         raf.seek(0);
-        assertEquals("Incorrect int read/written", Integer.MIN_VALUE, raf
-                .readInt());
+        
+        assertEquals("Test 1: Incorrect value written or read;", 
+                Integer.MIN_VALUE, raf.readInt());
+        assertEquals("Test 2: Incorrect value written or read;", 
+                'T', raf.readInt());
+        assertEquals("Test 3: Incorrect value written or read;", 
+                Integer.MAX_VALUE, raf.readInt());
+        assertEquals("Test 4: Incorrect value written or read;", 
+                0x7fffffff, raf.readInt());
+        assertEquals("Test 5: Incorrect value written or read;", 
+                0x80000000, raf.readInt());
+        
+        try {
+            raf.readInt();
+            fail("Test 6: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
         raf.close();
+        try {
+            raf.writeInt('E');
+            fail("Test 7: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readInt();
+            fail("Test 8: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.RandomAccessFile#readLong()
+     * @tests java.io.RandomAccessFile#writeLong(char)
+     */
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeLong",
+            args = {long.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readLong",
+            args = {}
+        )
+    })
+    public void test_read_writeLong() throws IOException {
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        raf.writeLong(Long.MIN_VALUE);
+        raf.writeLong('T');
+        raf.writeLong(Long.MAX_VALUE);
+        raf.writeLong(Long.MIN_VALUE - 1);
+        raf.writeLong(Long.MAX_VALUE + 1);
+        raf.seek(0);
+        
+        assertEquals("Test 1: Incorrect value written or read;", 
+                Long.MIN_VALUE, raf.readLong());
+        assertEquals("Test 2: Incorrect value written or read;", 
+                'T', raf.readLong());
+        assertEquals("Test 3: Incorrect value written or read;", 
+                Long.MAX_VALUE, raf.readLong());
+        assertEquals("Test 4: Incorrect value written or read;", 
+                0x7fffffffffffffffl, raf.readLong());
+        assertEquals("Test 5: Incorrect value written or read;", 
+                0x8000000000000000l, raf.readLong());
+        
+        try {
+            raf.readLong();
+            fail("Test 6: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
+        raf.close();
+        try {
+            raf.writeLong('E');
+            fail("Test 7: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readLong();
+            fail("Test 8: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.RandomAccessFile#readShort()
+     * @tests java.io.RandomAccessFile#writeShort(short)
+     */
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeShort",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readShort",
+            args = {}
+        )
+    })
+    public void test_read_writeShort() throws IOException {
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        raf.writeShort(Short.MIN_VALUE);
+        raf.writeShort('T');
+        raf.writeShort(Short.MAX_VALUE);
+        raf.writeShort(Short.MIN_VALUE - 1);
+        raf.writeShort(Short.MAX_VALUE + 1);
+        raf.seek(0);
+        
+        assertEquals("Test 1: Incorrect value written or read;", 
+                Short.MIN_VALUE, raf.readShort());
+        assertEquals("Test 2: Incorrect value written or read;", 
+                'T', raf.readShort());
+        assertEquals("Test 3: Incorrect value written or read;", 
+                Short.MAX_VALUE, raf.readShort());
+        assertEquals("Test 4: Incorrect value written or read;", 
+                0x7fff, raf.readShort());
+        assertEquals("Test 5: Incorrect value written or read;", 
+                (short) 0x8000, raf.readShort());
+        
+        try {
+            raf.readShort();
+            fail("Test 6: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
+        raf.close();
+        try {
+            raf.writeShort('E');
+            fail("Test 7: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readShort();
+            fail("Test 8: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.RandomAccessFile#readUTF()
+     * @tests java.io.RandomAccessFile#writeShort(char)
+     */
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeUTF",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readUTF",
+            args = {}
+        )
+    })
+    public void test_read_writeUTF() throws IOException {
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        raf.writeUTF(unihw);
+        raf.seek(0);
+        assertEquals("Test 1: Incorrect UTF string written or read;", 
+                unihw, raf.readUTF());
+        
+        try {
+            raf.readUTF();
+            fail("Test 2: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
+        raf.close();
+        try {
+            raf.writeUTF("Already closed.");
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readUTF();
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.RandomAccessFile#writeBytes(java.lang.String)
+     * @tests java.io.RandomAccessFile#readFully(byte[])
+     */
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeBytes",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readFully",
+            args = {byte[].class}
+        )
+    })
+    public void test_readFully$B_writeBytesLjava_lang_String() throws IOException {
+        byte[] buf = new byte[testLength];
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        raf.writeBytes(testString);
+        raf.seek(0);
+        
+        try {
+            raf.readFully(null);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+        
+        raf.readFully(buf);
+        assertEquals("Test 2: Incorrect bytes written or read;", 
+                testString, new String(buf));
+
+        try {
+            raf.readFully(buf);
+            fail("Test 3: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
+        raf.close();        
+        try {
+            raf.writeBytes("Already closed.");
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        try {
+            raf.readFully(buf);
+            fail("Test 5: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.RandomAccessFile#writeBytes(java.lang.String)
+     * @tests java.io.RandomAccessFile#readFully(byte[], int, int)
+     */
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "writeBytes",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "Tests against golden file missing.",
+            method = "readFully",
+            args = {byte[].class, int.class, int.class}
+        )
+    })
+    public void test_readFully$BII() throws IOException {
+        byte[] buf = new byte[testLength];
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        raf.writeBytes(testString);
+        raf.seek(0);
+        
+        try {
+            raf.readFully(null);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+        
+        raf.readFully(buf, 5, testLength - 10);
+        for (int i = 0; i < 5; i++) {
+            assertEquals("Test 2: Incorrect bytes read;", 0, buf[i]);
+        }
+        assertEquals("Test 3: Incorrect bytes written or read;", 
+                testString.substring(0, testLength - 10), 
+                new String(buf, 5, testLength - 10));
+
+        // Reading past the end of the file.
+        try {
+            raf.readFully(buf, 3, testLength - 6);
+            fail("Test 4: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+
+        // Passing invalid arguments.
+        try {
+            raf.readFully(buf, -1, 1);
+            fail("Test 5: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        try {
+            raf.readFully(buf, 0, -1);
+            fail("Test 6: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        try {
+            raf.readFully(buf, 2, testLength);
+            fail("Test 7: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        
+        // Reading from a closed file.
+        raf.close();        
+        try {
+            raf.readFully(buf);
+            fail("Test 8: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.RandomAccessFile#readUnsignedByte()
+     */
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Tests against golden file missing.",
+        method = "readUnsignedByte",
+        args = {}
+    )
+    public void test_readUnsignedByte() throws IOException {
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        raf.writeByte(-1);
+        raf.seek(0);
+        
+        assertEquals("Test 1: Incorrect value written or read;", 
+                255, raf.readUnsignedByte());
+        
+        try {
+            raf.readUnsignedByte();
+            fail("Test 2: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
+        raf.close();
+        try {
+            raf.readUnsignedByte();
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.RandomAccessFile#readUnsignedShort()
+     */
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Tests against golden file missing.",
+        method = "readUnsignedShort",
+        args = {}
+    )
+    public void test_readUnsignedShort() throws IOException {
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        raf.writeShort(-1);
+        raf.seek(0);
+        
+        assertEquals("Test 1: Incorrect value written or read;", 
+                65535, raf.readUnsignedShort());
+        
+        try {
+            raf.readUnsignedShort();
+            fail("Test 2: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+        
+        raf.close();
+        try {
+            raf.readUnsignedShort();
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#readLine()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readLine",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "",
+        method = "readLine",
+        args = {}
+    )
     public void test_readLine() throws IOException {
         // Test for method java.lang.String java.io.RandomAccessFile.readLine()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -453,900 +1166,313 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
         raf.write(s.getBytes(), 0, s.length());
         raf.seek(0);
 
-        assertEquals("Goodbye", raf.readLine());
-        assertEquals("Cruel", raf.readLine());
-        assertEquals("World", raf.readLine());
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#readLong()
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readLong",
-          methodArgs = {}
-        )
-    })
-    public void test_readLong() throws IOException {
-        // Test for method long java.io.RandomAccessFile.readLong()
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeLong(Long.MAX_VALUE);
-        raf.seek(0);
-        assertEquals("Incorrect long read/written", Long.MAX_VALUE, raf
-                .readLong());
+        assertEquals("Test 1: Incorrect line read;", "Goodbye", raf.readLine());
+        assertEquals("Test 2: Incorrect line read;", "Cruel", raf.readLine());
+        assertEquals("Test 3: Incorrect line read;", "World", raf.readLine());
+        assertNull("Test 4: Incorrect line read; null expected.", raf.readLine());
+        
         raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#readShort()
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readShort",
-          methodArgs = {}
-        )
-    })
-    public void test_readShort() throws IOException {
-        // Test for method short java.io.RandomAccessFile.readShort()
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeShort(Short.MIN_VALUE);
-        raf.seek(0);
-        assertEquals("Incorrect long read/written", Short.MIN_VALUE, raf
-                .readShort());
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#readUnsignedByte()
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readUnsignedByte",
-          methodArgs = {}
-        )
-    })
-    public void test_readUnsignedByte() throws IOException {
-        // Test for method int java.io.RandomAccessFile.readUnsignedByte()
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeByte(-1);
-        raf.seek(0);
-        assertEquals("Incorrect byte read/written", 255, raf.readUnsignedByte());
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#readUnsignedShort()
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "EOFException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readUnsignedShort",
-          methodArgs = {}
-        )
-    })
-    public void test_readUnsignedShort() throws IOException {
-        // Test for method int java.io.RandomAccessFile.readUnsignedShort()
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeShort(-1);
-        raf.seek(0);
-        assertEquals("Incorrect byte read/written", 65535, raf
-                .readUnsignedShort());
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#readUTF()
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readUTF",
-          methodArgs = {}
-        )
-    })
-    public void test_readUTF() throws IOException {
-        // Test for method java.lang.String java.io.RandomAccessFile.readUTF()
-
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeUTF(unihw);
-        raf.seek(0);
-        assertEquals("Incorrect utf string read", unihw, raf.readUTF());
-        raf.close();
+        try {
+            raf.readLine();
+            fail("Test 5: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+       
     }
 
     /**
      * @tests java.io.RandomAccessFile#seek(long)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "seek",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "seek",
+        args = {long.class}
+    )
     public void test_seekJ() throws IOException {
         // Test for method void java.io.RandomAccessFile.seek(long)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.write(fileString.getBytes(), 0, fileString.length());
+        
+        try {
+            raf.seek(-1);
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+
+        raf.write(testString.getBytes(), 0, testLength);
         raf.seek(12);
-        assertEquals("Seek failed to set filePointer", 12, raf.getFilePointer());
+        assertEquals("Test 2: Seek failed to set file pointer.", 12, 
+                raf.getFilePointer());
+        
+        raf.close();
+        try {
+            raf.seek(1);
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.RandomAccessFile#skipBytes(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "skipBytes",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "skipBytes",
+        args = {int.class}
+    )
     public void test_skipBytesI() throws IOException {
-        // Test for method int java.io.RandomAccessFile.skipBytes(int)
         byte[] buf = new byte[5];
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         raf.writeBytes("HelloWorld");
         raf.seek(0);
-        raf.skipBytes(5);
+        
+        assertTrue("Test 1: Nothing should be skipped if parameter is less than zero",
+                raf.skipBytes(-1) == 0);
+        
+        assertEquals("Test 4: Incorrect number of bytes skipped; ", 
+                5, raf.skipBytes(5));
+
         raf.readFully(buf);
-        assertEquals("Failed to skip bytes", "World", new String(buf, 0, 5));
+        assertEquals("Test 3: Failed to skip bytes.", 
+                "World", new String(buf, 0, 5));
+
+        raf.seek(0);
+        assertEquals("Test 4: Incorrect number of bytes skipped; ", 
+                10, raf.skipBytes(20));
+
         raf.close();
+        try {
+            raf.skipBytes(1);
+            fail("Test 5: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
+    /**
+     * @tests java.io.RandomAccessFile#skipBytes(int)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLength",
+        args = {long.class}
+    )
+    public void test_setLengthJ() throws IOException {
+        int bytesRead;
+        long truncLength = (long) (testLength * 0.75);
+        byte[] rbuf = new byte[testLength + 10];
+        
+        // Setup the test file.
+        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
+        raf.write(testString.getBytes());
+        assertEquals("Test 1: Incorrect file length;", 
+                testLength, raf.length());
+        
+        // Truncate the file.
+        raf.setLength(truncLength);
+        assertTrue("Test 2: File pointer not moved to the end of the truncated file.", 
+                raf.getFilePointer() == truncLength);
+        
+        raf.close();
+        raf = new java.io.RandomAccessFile(fileName, "rw");
+        assertEquals("Test 3: Incorrect file length;", 
+                truncLength, raf.length());
+        bytesRead = raf.read(rbuf);
+        assertEquals("Test 4: Incorrect number of bytes read;", 
+                truncLength, bytesRead);
+        assertEquals("Test 5: Incorrect bytes read. ", 
+                testString.substring(0, bytesRead),
+                new String(rbuf, 0, bytesRead));
+        
+        // Expand the file.
+        raf.setLength(testLength + 2);
+        assertTrue("Test 6: File pointer incorrectly moved.", 
+                raf.getFilePointer() == truncLength);
+        assertEquals("Test 7: Incorrect file length;", 
+                testLength + 2, raf.length());
+        
+        // Exception testing.
+        try {
+            raf.setLength(-1);
+            fail("Test 8: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
+        }
+        
+        raf.close();
+        try {
+            raf.setLength(truncLength);
+            fail("Test 9: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+    
     /**
      * @tests java.io.RandomAccessFile#write(byte[])
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {byte[].class}
+    )
     public void test_write$B() throws IOException {
-        // Test for method void java.io.RandomAccessFile.write(byte [])
+        byte[] rbuf = new byte[4000];
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         
         byte[] nullByteArray = null;
         try {
             raf.write(nullByteArray);
-            fail("should throw NullPointerException");
+            fail("Test 1: NullPointerException expected.");
         } catch (NullPointerException e) {
-            //expected
+            // Expected.
         }   
         
-        byte[] rbuf = new byte[4000];
-        raf.write(fileString.getBytes());
+        try {
+            raf.write(testString.getBytes());
+        } catch (Exception e) {
+            fail("Test 2: Unexpected exception: " + e.getMessage());
+        }
+        
         raf.close();
-        
+
         try {
-            raf.write(nullByteArray);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            //expected
-        }  
-        
-        //will not throw IOException if array's length is 0
-        raf.write(new byte[0]);
-        
-        try {
-            raf.write(fileString.getBytes());
-            fail("should throw IOException");
+            raf.write(new byte[0]);
         } catch (IOException e) {
-            //expected
-        }  
+            fail("Test 3: Unexpected IOException: " + e.getMessage());
+        }
+        
+        try {
+            raf.write(testString.getBytes());
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
         
         FileInputStream fis = new java.io.FileInputStream(fileName);
-        fis.read(rbuf, 0, fileString.length());
-        assertEquals("Incorrect bytes written", fileString, new String(rbuf, 0,
-                fileString.length()));    
+        fis.read(rbuf, 0, testLength);
+        assertEquals("Incorrect bytes written", testString, new String(rbuf, 0,
+                testLength));    
     }
 
     /**
      * @tests java.io.RandomAccessFile#write(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_write$BII() throws IOException {
-        // Test for method void java.io.RandomAccessFile.write(byte [], int,
-        // int)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
+    public void test_write$BII() throws Exception {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         byte[] rbuf = new byte[4000];
-        raf.write(fileString.getBytes(), 0, fileString.length());
+        byte[] testBuf = null;
+        int bytesRead;
+        
+        try {
+            raf.write(testBuf, 1, 1);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+        
+        testBuf = testString.getBytes();
+        
+        try {
+            raf.write(testBuf, -1, 10);
+            fail("Test 2: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+            assertEquals(
+                    "Test 2: IndexOutOfBoundsException rather than a subclass expected.",
+                    IndexOutOfBoundsException.class, e.getClass());
+        }
+        
+        try {
+            raf.write(testBuf, 0, -1);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+            assertEquals(
+                    "Test 3: IndexOutOfBoundsException rather than a subclass expected.",
+                    IndexOutOfBoundsException.class, e.getClass());
+        }
+        
+        try {
+            raf.write(testBuf, 5, testLength);
+            fail("Test 4: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+            assertEquals(
+                    "Test 4: IndexOutOfBoundsException rather than a subclass expected.",
+                    IndexOutOfBoundsException.class, e.getClass());
+        }
+        
+        // Positive test: The following write should not fail.
+        try {
+            raf.write(testBuf, 3, testLength - 5);
+        } catch (Exception e) {
+            fail("Test 5: Unexpected exception: " + e.getMessage());
+        }
+        
         raf.close();
+        
+        // Writing nothing to a closed file should not fail either.
+        try {
+            raf.write(new byte[0]);
+        } catch (IOException e) {
+            fail("Test 6: Unexpected IOException: " + e.getMessage());
+        }
+        
+        // Writing something to a closed file should fail.
+        try {
+            raf.write(testString.getBytes());
+            fail("Test 7: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        
         FileInputStream fis = new java.io.FileInputStream(fileName);
-        fis.read(rbuf, 0, fileString.length());
-        assertEquals("Incorrect bytes written", fileString, new String(rbuf, 0,
-                fileString.length()));
+        bytesRead = fis.read(rbuf, 0, testLength);
+        assertEquals("Test 8: Incorrect number of bytes written or read;",
+                testLength - 5, bytesRead);
+        assertEquals("Test 9: Incorrect bytes written or read; ", 
+                testString.substring(3, testLength - 2), 
+                new String(rbuf, 0, bytesRead));    
     }
     
-    /**
-     * @tests java.io.RandomAccessFile#write(byte[], int, int)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Checks exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_write_$BII_Exception() throws IOException {
-        raf = new java.io.RandomAccessFile(f, "rw");
-        byte[] nullByteArray = null;
-        byte[] byteArray = new byte[10];
-        
-        try {
-            raf.write(nullByteArray, -1, -1);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-
-        try {
-            raf.write(nullByteArray, 0, 0);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-        
-        try {
-            raf.write(nullByteArray, 1, -1);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-
-        try {
-            raf.write(nullByteArray, 1, 0);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-        
-        try {
-            raf.write(nullByteArray, 1, 1);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-        
-        try {
-            raf.write(byteArray, -1, -1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // expected
-        }
-
-        try {
-            raf.write(byteArray, -1, 0);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // expected
-        }
-        
-        try {
-            raf.write(byteArray, -1, 1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // expected
-        }
-
-        try {
-            raf.write(byteArray, 0, -1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // expected
-        }
-
-        raf.write(byteArray, 0, 0);
-        raf.write(byteArray, 0, byteArray.length);
-        raf.write(byteArray, 1, 0);
-        raf.write(byteArray, byteArray.length, 0);
-        
-        try {
-            raf.write(byteArray, byteArray.length + 1, 0);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            //expected
-        }
-        
-        try {
-            raf.write(byteArray, byteArray.length + 1, 1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            //expected
-        }
-
-        raf.close();
-
-        try {
-            raf.write(nullByteArray, -1, -1);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-        
-        try {
-            raf.write(byteArray, -1, -1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // expected
-        }
-        
-        try {
-            raf.write(byteArray, 0, 1);
-            fail("should throw IOException");
-        } catch (IOException e) {
-            //expected
-        }
-        
-        try {
-            raf.write(byteArray, 0, byteArray.length);
-            fail("should throw IOException");
-        } catch (IOException e) {
-            //expected
-        }
-        
-        try {
-            raf.write(byteArray, 1, 1);
-            fail("should throw IOException");
-        } catch (IOException e) {
-            //expected
-        }
-        
-        try {
-            raf.write(byteArray, byteArray.length + 1, 0);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            //expected
-        }
-        
-        // will not throw IOException if count = 0
-        raf.write(byteArray, 0, 0);
-        raf.write(byteArray, byteArray.length, 0);
-    }
-    
-
-    /**
-     * @tests java.io.RandomAccessFile#write(int)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_writeI() throws IOException {
-        // Test for method void java.io.RandomAccessFile.write(int)
-        byte[] rbuf = new byte[4000];
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.write('t');
-        raf.close();
-        FileInputStream fis = new java.io.FileInputStream(fileName);
-        fis.read(rbuf, 0, 1);
-        assertEquals("Incorrect byte written", 't', rbuf[0]);
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeBoolean(boolean)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeBoolean",
-          methodArgs = {boolean.class}
-        )
-    })
-    public void test_writeBooleanZ() throws IOException {
-        // Test for method void java.io.RandomAccessFile.writeBoolean(boolean)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeBoolean(true);
-        raf.seek(0);
-        assertTrue("Incorrect boolean read/written", raf.readBoolean());
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeByte(int)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeByte",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_writeByteI() throws IOException {
-        // Test for method void java.io.RandomAccessFile.writeByte(int)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeByte(127);
-        raf.seek(0);
-        assertEquals("Incorrect byte read/written", 127, raf.readByte());
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeBytes(java.lang.String)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeBytes",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void test_writeBytesLjava_lang_String() throws IOException {
-        // Test for method void
-        // java.io.RandomAccessFile.writeBytes(java.lang.String)
-        byte[] buf = new byte[10];
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeBytes("HelloWorld");
-        raf.seek(0);
-        raf.readFully(buf);
-        assertEquals("Incorrect bytes read/written", "HelloWorld", new String(
-                buf, 0, 10));
-        raf.close();
-
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeChar(int)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeChar",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_writeCharI() throws IOException {
-        // Test for method void java.io.RandomAccessFile.writeChar(int)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeChar('T');
-        raf.seek(0);
-        assertEquals("Incorrect char read/written", 'T', raf.readChar());
-        raf.close();
-    }
-
     /**
      * @tests java.io.RandomAccessFile#writeChars(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeChars",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Tests against golden file missing.",
+        method = "writeChars",
+        args = {java.lang.String.class}
+    )
     public void test_writeCharsLjava_lang_String() throws IOException {
-        // Test for method void
-        // java.io.RandomAccessFile.writeChars(java.lang.String)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeChars("HelloWorld");
-        char[] hchars = new char[10];
-        "HelloWorld".getChars(0, 10, hchars, 0);
+        raf.writeChars(unihw);
+        char[] hchars = new char[unihw.length()];
+        unihw.getChars(0, unihw.length(), hchars, 0);
         raf.seek(0);
         for (int i = 0; i < hchars.length; i++)
-            assertEquals("Incorrect string written", hchars[i], raf.readChar());
+            assertEquals("Test 1: Incorrect character written or read at index " + i + ";",
+                    hchars[i], raf.readChar());
         raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeDouble(double)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeDouble",
-          methodArgs = {double.class}
-        )
-    })
-    public void test_writeDoubleD() throws IOException {
-        // Test for method void java.io.RandomAccessFile.writeDouble(double)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeDouble(Double.MAX_VALUE);
-        raf.seek(0);
-        assertEquals("Incorrect double read/written", Double.MAX_VALUE, raf
-                .readDouble(), 0);
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeFloat(float)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeFloat",
-          methodArgs = {float.class}
-        )
-    })
-    public void test_writeFloatF() throws IOException {
-        // Test for method void java.io.RandomAccessFile.writeFloat(float)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeFloat(Float.MAX_VALUE);
-        raf.seek(0);
-        assertEquals("Incorrect float read/written", Float.MAX_VALUE, raf
-                .readFloat(), 0);
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeInt(int)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeInt",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_writeIntI() throws IOException {
-        // Test for method void java.io.RandomAccessFile.writeInt(int)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeInt(Integer.MIN_VALUE);
-        raf.seek(0);
-        assertEquals("Incorrect int read/written", Integer.MIN_VALUE, raf
-                .readInt());
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeLong(long)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeLong",
-          methodArgs = {long.class}
-        )
-    })
-    public void test_writeLongJ() throws IOException {
-        // Test for method void java.io.RandomAccessFile.writeLong(long)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeLong(Long.MAX_VALUE);
-        raf.seek(0);
-        assertEquals("Incorrect long read/written", Long.MAX_VALUE, raf
-                .readLong());
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeShort(int)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeShort",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_writeShortI() throws IOException {
-        // Test for method void java.io.RandomAccessFile.writeShort(int)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeShort(Short.MIN_VALUE);
-        raf.seek(0);
-        assertEquals("Incorrect long read/written", Short.MIN_VALUE, raf
-                .readShort());
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#writeUTF(java.lang.String)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "writeUTF",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void test_writeUTFLjava_lang_String() throws IOException {
-        // Test for method void
-        // java.io.RandomAccessFile.writeUTF(java.lang.String)
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        raf.writeUTF(unihw);
-        raf.seek(0);
-        assertEquals("Incorrect utf string", unihw, raf.readUTF());
-        raf.close();
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#seek(long)
-     * 
-     * Regression for HARMONY-374
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Checks exception",
-      targets = {
-        @TestTarget(
-          methodName = "seek",
-          methodArgs = {long.class}
-        )
-    })
-    public void test_seekI() throws IOException {
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         try {
-            raf.seek(-1);
-            fail("IOException must be thrown if pos < 0");
+            raf.writeChars("Already closed.");
+            fail("Test 2: IOException expected.");
         } catch (IOException e) {
+            // Expected.
         }
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#read(byte[], int, int)
-     * 
-     * Regression for HARMONY-377
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression. Checks exceptions, IOException missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_readBII() throws IOException {
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        try {
-            raf.read(new byte[1], -1, 1);
-            fail("IndexOutOfBoundsException must be thrown if off <0");
-        } catch (IndexOutOfBoundsException e) {
-        }
-
-        try {
-            raf.read(new byte[1], 0, -1);
-            fail("IndexOutOfBoundsException must be thrown if len <0");
-        } catch (IndexOutOfBoundsException e) {
-        }
-
-        try {
-            raf.read(new byte[1], 0, 5);
-            fail("IndexOutOfBoundsException must be thrown if off+len > b.lengh");
-        } catch (IndexOutOfBoundsException e) {
-        }
-
-        try {
-            raf.read(new byte[10], Integer.MAX_VALUE, 5);
-            fail("IndexOutOfBoundsException expected");
-        } catch (IndexOutOfBoundsException e) {
-        }
-
-        try {
-            raf.read(new byte[10], 5, Integer.MAX_VALUE);
-            fail("IndexOutOfBoundsException expected");
-        } catch (IndexOutOfBoundsException e) {
-        }
-
-        raf.close();
-    }
-    
-    /**
-     * @tests java.io.RandomAccessFile#read(byte[],int,int) 
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks IndexOutOfBoundsException",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_read_$BII_IndexOutOfBoundsException() throws IOException {
-        FileOutputStream fos = new java.io.FileOutputStream(fileName);
-        fos.write(fileString.getBytes(), 0, fileString.length());
-        fos.close();
-
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "r");
-        byte[] rbuf = new byte[100];
-        raf.close();
-        try {
-            raf.read(rbuf,-1,0);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-          //expected
-        }
-    }
-    
-    /**
-     * @tests java.io.RandomAccessFile#read(byte[],int,int) 
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test. Probably planned for IOException testing.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_read_$BII_IOException() throws IOException {
-        FileOutputStream fos = new java.io.FileOutputStream(fileName);
-        fos.write(fileString.getBytes(), 0, fileString.length());
-        fos.close();
-
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "r");
-        byte[] rbuf = new byte[100];
-        raf.close();
-        int read = raf.read(rbuf,0,0);
-        assertEquals(0,read);
-    }
-    
-    /**
-     * @tests java.io.RandomAccessFile#read(byte[])
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test. Probably planned for IOException testing.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class}
-        )
-    })
-    public void test_read_$B_IOException() throws IOException {
-        FileOutputStream fos = new java.io.FileOutputStream(fileName);
-        fos.write(fileString.getBytes(), 0, fileString.length());
-        fos.close();
-
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "r");
-        byte[] rbuf = new byte[0];
-        raf.close();
-        int read = raf.read(rbuf);
-        assertEquals(0,read);
-    }
-    
-    /**
-     * @tests java.io.RandomAccessFile#read(byte[],int,int) 
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks NullPointerException",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_read_$BII_NullPointerException() throws IOException {
-        RandomAccessFile raf = new RandomAccessFile(File.createTempFile("tmp",
-                "tmp"), "r");
-        byte[] rbuf = null;
-        try {
-            raf.read(rbuf, 0, -1);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-    }
-
-    /**
-     * @tests java.io.RandomAccessFile#write(byte[], int, int)
-     * 
-     * Regression for HARMONY-377
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_writeBII() throws IOException {
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
-        try {
-            raf.write(new byte[1], -1, 1);
-            fail("IndexOutOfBoundsException must be thrown if off <0");
-        } catch (IndexOutOfBoundsException e) {
-        }
-
-        try {
-            raf.write(new byte[1], 0, -1);
-            fail("IndexOutOfBoundsException must be thrown if len <0");
-        } catch (IndexOutOfBoundsException e) {
-        }
-
-        try {
-            raf.write(new byte[1], 0, 5);
-            fail("IndexOutOfBoundsException must be thrown if off+len > b.lengh");
-        } catch (IndexOutOfBoundsException e) {
-        }
-
-        try {
-            raf.write(new byte[10], Integer.MAX_VALUE, 5);
-            fail("IndexOutOfBoundsException expected");
-        } catch (IndexOutOfBoundsException e) {
-        }
-
-        try {
-            raf.write(new byte[10], 5, Integer.MAX_VALUE);
-            fail("IndexOutOfBoundsException expected");
-        } catch (IndexOutOfBoundsException e) {
-        }
-        raf.close();
-    }
-
-    /**
-     * Regression for HARMONY-69
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test. Checks NonWritableChannelException.",
-      targets = {
-        @TestTarget(
-          methodName = "RandomAccessFile",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
-    public void testRandomAccessFile_String_String() throws IOException {
-        f.createNewFile();
-        RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "r");
-        FileChannel fcr = raf.getChannel();
-
-        try {
-            fcr.lock(0L, Long.MAX_VALUE, false);
-            fail("NonWritableChannelException expected!");
-        } catch (NonWritableChannelException e) {}
-        raf.close();
     }
 
     /**
@@ -1355,6 +1481,7 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
+
         f = File.createTempFile("raf", "tst");
         if (!f.delete()) {
             fail("Unable to delete test file : " + f);

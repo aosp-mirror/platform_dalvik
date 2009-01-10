@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,10 @@
 
 package tests.security;
 
+import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 import java.lang.reflect.Field;
 import java.security.AccessController;
@@ -28,10 +31,11 @@ import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 
 import junit.framework.TestCase;
+
 @TestTargetClass(AccessController.class)
 public class AccessControllerTest extends TestCase {
     
-    private static void setProtectionDomain(Class c, ProtectionDomain pd){
+    private static void setProtectionDomain(Class<?> c, ProtectionDomain pd){
         Field fields[] = Class.class.getDeclaredFields();
         for(Field f : fields){
             if("pd".equals(f.getName())){
@@ -58,7 +62,6 @@ public class AccessControllerTest extends TestCase {
         t.setUp();
         t.test_do_privileged1();
         t.tearDown();
-        System.out.println("\nok\n");
     }
 
     @Override
@@ -78,18 +81,16 @@ public class AccessControllerTest extends TestCase {
         super.tearDown();
     }
     
-    private void waitForDebugger(){
-        boolean wait = true;
-        while(wait){
-            System.out.print(".");
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
-        }
-        System.out.println();
-    }
-    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that checkPermission throws a SecurityException " +
+                    "if a particular permission is not set in the protection domain " +
+                    "of a class on the call stack.",
+            method = "checkPermission",
+            args = {Permission.class}
+        )
+    })
     public void test_do_privileged1() throws Exception {
         // add TestPermission to T1 and T2 only
         c1.add(p);
@@ -98,11 +99,9 @@ public class AccessControllerTest extends TestCase {
         setProtectionDomain(T1.class, new ProtectionDomain(codeSource, c1));
         setProtectionDomain(T2.class, new ProtectionDomain(codeSource, c2));
         
-//        waitForDebugger();
-       
         System.setSecurityManager(new SecurityManager());
         try {
-            String res = T0.f0();
+            T0.f0();
             fail("expected java.security.AccessControlException");
         }
         catch(java.security.AccessControlException e){
@@ -113,6 +112,16 @@ public class AccessControllerTest extends TestCase {
         }
     }
     
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that checkPermission does not throw a SecurityException " +
+                    "if all classes on the call stack refer to a protection domain " +
+                    "which contains the necessary permissions.",
+            method = "checkPermission",
+            args = {Permission.class}
+        )
+    })
     public void test_do_privileged2() {
         // add TestPermission to T0, T1, T2
         c0.add(p);
@@ -135,6 +144,26 @@ public class AccessControllerTest extends TestCase {
         }
     }
 
+    @TestTargets({
+        @TestTargetNew(
+                level = TestLevel.PARTIAL_COMPLETE,
+                notes = "Verifies that checkPermission does not throw a SecurityException " +
+                        "if a method call is performed with doPrivileged, even if not all " +
+                        "classes beyond the doPrivileged call have the necessary permissions " +
+                        "set in their protection domains.",
+                method = "checkPermission",
+                args = {Permission.class}
+        ),
+        @TestTargetNew(
+                level = TestLevel.PARTIAL_COMPLETE,
+                notes = "Verifies that checkPermission does not throw a SecurityException " +
+                        "if a method call is performed with doPrivileged, even if not all " +
+                        "classes beyond the doPrivileged call have the necessary permissions " +
+                        "set in their protection domains.",
+                method = "doPrivileged",
+                args = {PrivilegedAction.class}
+        )
+    })
     public void test_do_privileged3() {
         // add TestPermission to T1 and T2, and call it with doPrivileged from T1
         c1.add(p);
@@ -190,6 +219,8 @@ public class AccessControllerTest extends TestCase {
     }
     
     static class TestPermission extends BasicPermission {
+        private static final long serialVersionUID = 1L;
+
         public TestPermission(){ super("TestPermission"); }
     
         @Override

@@ -17,15 +17,17 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
+import java.io.BufferedInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
+import tests.support.Support_ASimpleInputStream;
 import tests.support.Support_PlatformFile;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 @TestTargetClass(FilterInputStream.class) 
 public class FilterInputStreamTest extends junit.framework.TestCase {
@@ -38,195 +40,378 @@ public class FilterInputStreamTest extends junit.framework.TestCase {
 
     private String fileName;
 
-    private java.io.InputStream is;
+    private FilterInputStream is;
 
     byte[] ibuf = new byte[4096];
 
-    public String fileString = "Test_All_Tests\nTest_java_io_BufferedInputStream\nTest_java_io_BufferedOutputStream\nTest_java_io_ByteArrayInputStream\nTest_java_io_ByteArrayOutputStream\nTest_java_io_DataInputStream\nTest_java_io_File\nTest_java_io_FileDescriptor\nTest_java_io_FileInputStream\nTest_java_io_FileNotFoundException\nTest_java_io_FileOutputStream\nTest_FilterInputStream\nTest_java_io_FilterOutputStream\nTest_java_io_InputStream\nTest_java_io_IOException\nTest_java_io_OutputStream\nTest_java_io_PrintStream\nTest_java_io_RandomAccessFile\nTest_java_io_SyncFailedException\nTest_java_lang_AbstractMethodError\nTest_java_lang_ArithmeticException\nTest_java_lang_ArrayIndexOutOfBoundsException\nTest_java_lang_ArrayStoreException\nTest_java_lang_Boolean\nTest_java_lang_Byte\nTest_java_lang_Character\nTest_java_lang_Class\nTest_java_lang_ClassCastException\nTest_java_lang_ClassCircularityError\nTest_java_lang_ClassFormatError\nTest_java_lang_ClassLoader\nTest_java_lang_ClassNotFoundException\nTest_java_lang_CloneNotSupportedException\nTest_java_lang_Double\nTest_java_lang_Error\nTest_java_lang_Exception\nTest_java_lang_ExceptionInInitializerError\nTest_java_lang_Float\nTest_java_lang_IllegalAccessError\nTest_java_lang_IllegalAccessException\nTest_java_lang_IllegalArgumentException\nTest_java_lang_IllegalMonitorStateException\nTest_java_lang_IllegalThreadStateException\nTest_java_lang_IncompatibleClassChangeError\nTest_java_lang_IndexOutOfBoundsException\nTest_java_lang_InstantiationError\nTest_java_lang_InstantiationException\nTest_java_lang_Integer\nTest_java_lang_InternalError\nTest_java_lang_InterruptedException\nTest_java_lang_LinkageError\nTest_java_lang_Long\nTest_java_lang_Math\nTest_java_lang_NegativeArraySizeException\nTest_java_lang_NoClassDefFoundError\nTest_java_lang_NoSuchFieldError\nTest_java_lang_NoSuchMethodError\nTest_java_lang_NullPointerException\nTest_java_lang_Number\nTest_java_lang_NumberFormatException\nTest_java_lang_Object\nTest_java_lang_OutOfMemoryError\nTest_java_lang_RuntimeException\nTest_java_lang_SecurityManager\nTest_java_lang_Short\nTest_java_lang_StackOverflowError\nTest_java_lang_String\nTest_java_lang_StringBuffer\nTest_java_lang_StringIndexOutOfBoundsException\nTest_java_lang_System\nTest_java_lang_Thread\nTest_java_lang_ThreadDeath\nTest_java_lang_ThreadGroup\nTest_java_lang_Throwable\nTest_java_lang_UnknownError\nTest_java_lang_UnsatisfiedLinkError\nTest_java_lang_VerifyError\nTest_java_lang_VirtualMachineError\nTest_java_lang_vm_Image\nTest_java_lang_vm_MemorySegment\nTest_java_lang_vm_ROMStoreException\nTest_java_lang_vm_VM\nTest_java_lang_Void\nTest_java_net_BindException\nTest_java_net_ConnectException\nTest_java_net_DatagramPacket\nTest_java_net_DatagramSocket\nTest_java_net_DatagramSocketImpl\nTest_java_net_InetAddress\nTest_java_net_NoRouteToHostException\nTest_java_net_PlainDatagramSocketImpl\nTest_java_net_PlainSocketImpl\nTest_java_net_Socket\nTest_java_net_SocketException\nTest_java_net_SocketImpl\nTest_java_net_SocketInputStream\nTest_java_net_SocketOutputStream\nTest_java_net_UnknownHostException\nTest_java_util_ArrayEnumerator\nTest_java_util_Date\nTest_java_util_EventObject\nTest_java_util_HashEnumerator\nTest_java_util_Hashtable\nTest_java_util_Properties\nTest_java_util_ResourceBundle\nTest_java_util_tm\nTest_java_util_Vector\n";
+    private static final String testString = "Lorem ipsum dolor sit amet,\n" +
+    "consectetur adipisicing elit,\nsed do eiusmod tempor incididunt ut" +
+    "labore et dolore magna aliqua.\n";
+
+    private static final int testLength = testString.length();
+
+    /**
+     * @tests java.io.FilterInputStream#InputStream()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies constructor FilterInputStream(InputStream).",
+        method = "FilterInputStream",
+        args = {java.io.InputStream.class}
+    )     
+    public void test_Constructor() {
+        // The FilterInputStream object has already been created in setUp().
+        // If anything has gone wrong, closing it should throw a
+        // NullPointerException.
+        try {
+            is.close();
+        } catch (IOException e) {
+            fail("Unexpected IOException: " + e.getMessage());
+        } catch (NullPointerException npe) {
+            fail("Unexpected NullPointerException.");
+        }
+    }
 
     /**
      * @tests java.io.FilterInputStream#available()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "available", 
-                                    methodArgs = {})                         
-            }
-        )     
-    public void test_available() {
-        // Test for method int java.io.FilterInputStream.available()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "available",
+        args = {}
+    )     
+    public void test_available() throws IOException {
+        assertEquals("Test 1: Returned incorrect number of available bytes;", 
+                testLength, is.available());
+
+        is.close();
         try {
-            assertTrue("Returned incorrect number of available bytes", is
-                    .available() == fileString.length());
-        } catch (Exception e) {
-            fail("Exception during available test : " + e.getMessage());
+            is.available();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.FilterInputStream#close()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                         
-            }
-        )     
-    public void test_close() {
-        // Test for method void java.io.FilterInputStream.close()
-        try {
-            is.close();
-        } catch (java.io.IOException e) {
-            fail("Exception attempting to close stream : " + e.getMessage());
-        }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "close",
+        args = {}
+    )     
+    public void test_close() throws IOException {
+        is.close();
 
         try {
             is.read();
-        } catch (java.io.IOException e) {
-            return;
+            fail("Test 1: Read from closed stream succeeded.");
+        } catch (IOException e) {
+            // Expected.
         }
-        fail("Able to read from closed stream");
+        
+        Support_ASimpleInputStream sis = new Support_ASimpleInputStream(true);
+        is = new MyFilterInputStream(sis);
+        try {
+            is.close();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        sis.throwExceptionOnNextUse = false;
     }
 
     /**
      * @tests java.io.FilterInputStream#mark(int)
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Dummy test.",
-            targets = { @TestTarget(methodName = "mark", 
-                                    methodArgs = {int.class})                         
-            }
-        )     
-    public void test_markI() {
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Verifies mark(int) in combination with reset().",
+            method = "mark",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Verifies mark(int) in combination with reset().",
+            method = "reset",
+            args = {}
+        )
+    })     
+    public void test_markI() throws Exception {
         // Test for method void java.io.FilterInputStream.mark(int)
-        assertTrue("Mark not supported by parent InputStream", true);
+        final int bufSize = 10;
+        byte[] buf1 = new byte[bufSize];
+        byte[] buf2 = new byte[bufSize];
+
+        // Purpose 1: Check that mark() does nothing if the filtered stream
+        // is a FileInputStream.
+        is.read(buf1, 0, bufSize);
+        is.mark(2 * bufSize);
+        is.read(buf1, 0, bufSize);
+        try {
+            is.reset();
+        } catch (IOException e) {
+            // Expected
+        }
+        is.read(buf2, 0, bufSize);
+        assertFalse("Test 1: mark() should have no effect.", 
+                Arrays.equals(buf1, buf2));
+        is.close();
+
+        // Purpose 2: Check that mark() in combination with reset() works if
+        // the filtered stream is a BufferedInputStream.
+        is = new MyFilterInputStream(new BufferedInputStream(
+                new java.io.FileInputStream(fileName), 100));
+        is.read(buf1, 0, bufSize);
+        is.mark(2 * bufSize);
+        is.read(buf1, 0, bufSize);
+        is.reset();
+        is.read(buf2, 0, bufSize);
+        assertTrue("Test 2: mark() or reset() has failed.", 
+                Arrays.equals(buf1, buf2));
     }
 
     /**
      * @tests java.io.FilterInputStream#markSupported()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies markSupported() method.",
-            targets = { @TestTarget(methodName = "markSupported", 
-                                    methodArgs = {})                         
-            }
-        )     
-    public void test_markSupported() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies markSupported() method.",
+        method = "markSupported",
+        args = {}
+    )     
+    public void test_markSupported() throws Exception {
         // Test for method boolean java.io.FilterInputStream.markSupported()
-        assertTrue("markSupported returned true", !is.markSupported());
+        
+        // Test 1: Check that markSupported() returns false for a filtered
+        // input stream that is known to not support mark(). 
+        assertFalse("Test 1: markSupported() incorrectly returned true " +
+                "for a FileInputStream.", is.markSupported());
+        is.close();
+        // Test 2: Check that markSupported() returns true for a filtered
+        // input stream that is known to support mark(). 
+        is = new MyFilterInputStream(new BufferedInputStream(
+                new java.io.FileInputStream(fileName), 100));
+        assertTrue("Test 2: markSupported() incorrectly returned false " +
+                "for a BufferedInputStream.", is.markSupported());
     }
-
+        
     /**
      * @tests java.io.FilterInputStream#read()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {})                         
-            }
-        )    
-    public void test_read() {
-        // Test for method int java.io.FilterInputStream.read()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {}
+    )    
+    public void test_read() throws IOException {
+        int c = is.read();
+        assertEquals("Test 1: Read returned incorrect char;", 
+                testString.charAt(0), c);
+        
+        is.close();
         try {
-            int c = is.read();
-            assertTrue("read returned incorrect char", c == fileString
-                    .charAt(0));
-        } catch (Exception e) {
-            fail("Exception during read test : " + e.getMessage());
+            is.read();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.FilterInputStream#read(byte[])
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {byte[].class})                         
-            }
-        )    
-    public void test_read$B() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {byte[].class}
+    )    
+    public void test_read$B() throws IOException {
         // Test for method int java.io.FilterInputStream.read(byte [])
         byte[] buf1 = new byte[100];
+        is.read(buf1);
+        assertTrue("Test 1: Failed to read correct data.", 
+                new String(buf1, 0, buf1.length).equals(
+                        testString.substring(0, 100)));
+
+        is.close();
         try {
             is.read(buf1);
-            assertTrue("Failed to read correct data", new String(buf1, 0,
-                    buf1.length).equals(fileString.substring(0, 100)));
-        } catch (Exception e) {
-            fail("Exception during read test : " + e.getMessage());
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.FilterInputStream#read(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
-        )        
-    public void test_read$BII() {
-        // Test for method int java.io.FilterInputStream.read(byte [], int, int)
-        byte[] buf1 = new byte[100];
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )        
+    public void test_read$BII() throws IOException {
+        byte[] buf1 = new byte[20];
+        is.skip(10);
+        is.read(buf1, 0, buf1.length);
+        assertTrue("Failed to read correct data", new String(buf1, 0,
+                buf1.length).equals(testString.substring(10, 30)));
+    }
+
+    /**
+     * @tests FilterInputStream#read(byte[], int, int)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Illegal argument checks.",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )      
+    public void test_read$BII_Exception() throws IOException {
+        byte[] buf = null;
         try {
-            is.skip(3000);
-            is.mark(1000);
-            is.read(buf1, 0, buf1.length);
-            assertTrue("Failed to read correct data", new String(buf1, 0,
-                    buf1.length).equals(fileString.substring(3000, 3100)));
-        } catch (Exception e) {
-            fail("Exception during read test : " + e.getMessage());
+            is.read(buf, -1, 0);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        } 
+
+        buf = new byte[1000];        
+        try {
+            is.read(buf, -1, 0);
+            fail("Test 2: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
+        try {
+            is.read(buf, 0, -1);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+        
+        try {
+            is.read(buf, -1, -1);
+            fail("Test 4: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+
+        try {
+            is.read(buf, 0, 1001);
+            fail("Test 5: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+
+        try {
+            is.read(buf, 1001, 0);
+            fail("Test 6: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+
+        try {
+            is.read(buf, 500, 501);
+            fail("Test 7: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+        
+        is.close();
+        try {
+            is.read(buf, 0, 100);
+            fail("Test 8: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.FilterInputStream#reset()
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Dummy test.",
-            targets = { @TestTarget(methodName = "reset", 
-                                    methodArgs = {})                         
-            }
-        )    
-    public void test_reset() {
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Verifies reset() in combination with mark().",
+            method = "reset",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Verifies reset() in combination with mark().",
+            method = "mark",
+            args = { int.class }
+        )
+    })    
+    public void test_reset() throws Exception {
         // Test for method void java.io.FilterInputStream.reset()
+        
+        // Test 1: Check that reset() throws an IOException if the
+        // filtered stream is a FileInputStream.
         try {
             is.reset();
-            fail("should throw IOException");
+            fail("Test 1: IOException expected.");
         } catch (IOException e) {
             // expected
         }
+        
+        // Test 2: Check that reset() throws an IOException if the
+        // filtered stream is a BufferedInputStream but mark() has not
+        // yet been called.
+        is = new MyFilterInputStream(new BufferedInputStream(
+                new java.io.FileInputStream(fileName), 100));
+        try {
+            is.reset();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // expected
+        }
+        
+        // Test 3: Check that reset() in combination with mark()
+        // works correctly.
+        final int bufSize = 10;
+        byte[] buf1 = new byte[bufSize];
+        byte[] buf2 = new byte[bufSize];
+        is.read(buf1, 0, bufSize);
+        is.mark(2 * bufSize);
+        is.read(buf1, 0, bufSize);
+        try {
+            is.reset();
+        } catch (IOException e) {
+            fail("Test 3: Unexpected IOException.");
+        }
+        is.read(buf2, 0, bufSize);
+        assertTrue("Test 4: mark() or reset() has failed.", 
+                Arrays.equals(buf1, buf2));
     }
 
     /**
      * @tests java.io.FilterInputStream#skip(long)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "skip", 
-                                    methodArgs = {long.class})                         
-            }
-        )    
-    public void test_skipJ() {
-        // Test for method long java.io.FilterInputStream.skip(long)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "skip",
+        args = {long.class}
+    )    
+    public void test_skipJ() throws IOException {
         byte[] buf1 = new byte[10];
+        is.skip(10);
+        is.read(buf1, 0, buf1.length);
+        assertTrue("Test 1: Failed to skip to the correct position.", 
+                new String(buf1, 0, buf1.length).equals(
+                        testString.substring(10, 20)));
+
+        is.close();
         try {
-            is.skip(1000);
-            is.read(buf1, 0, buf1.length);
-            assertTrue("Failed to skip to correct position", new String(buf1,
-                    0, buf1.length).equals(fileString.substring(1000, 1010)));
-        } catch (Exception e) {
-            fail("Exception during skip test");
+            is.read();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
@@ -236,7 +421,7 @@ public class FilterInputStreamTest extends junit.framework.TestCase {
      */
     protected void setUp() {
         try {
-            fileName = System.getProperty("user.dir");
+            fileName = System.getProperty("java.io.tmpdir");
             String separator = System.getProperty("file.separator");
             if (fileName.charAt(fileName.length() - 1) == separator.charAt(0))
                 fileName = Support_PlatformFile.getNewPlatformFile(fileName,
@@ -245,7 +430,7 @@ public class FilterInputStreamTest extends junit.framework.TestCase {
                 fileName = Support_PlatformFile.getNewPlatformFile(fileName
                         + separator, "input.tst");
             java.io.OutputStream fos = new java.io.FileOutputStream(fileName);
-            fos.write(fileString.getBytes());
+            fos.write(testString.getBytes());
             fos.close();
             is = new MyFilterInputStream(new java.io.FileInputStream(fileName));
         } catch (java.io.IOException e) {
@@ -262,7 +447,7 @@ public class FilterInputStreamTest extends junit.framework.TestCase {
         try {
             is.close();
         } catch (Exception e) {
-            System.out.println("Exception during BIS tearDown");
+            System.out.println("Unexpected exception in tearDown().");
         }
         new java.io.File(fileName).delete();
     }

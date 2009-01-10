@@ -18,8 +18,8 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.security.SecurityPermission;
@@ -30,15 +30,12 @@ public class SecurityPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.SecurityPermission#SecurityPermission(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with valid parameter only",
-      targets = {
-        @TestTarget(
-          methodName = "SecurityPermission",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verification with valid parameter only",
+        method = "SecurityPermission",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.SecurityPermission(java.lang.String)
         assertEquals("create securityPermission constructor(string) failed",
@@ -51,15 +48,12 @@ public class SecurityPermission2Test extends junit.framework.TestCase {
      * @tests java.security.SecurityPermission#SecurityPermission(java.lang.String,
      *        java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with valid parameters only",
-      targets = {
-        @TestTarget(
-          methodName = "SecurityPermission",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verification with valid parameters only",
+        method = "SecurityPermission",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.security.SecurityPermission(java.lang.String,
         // java.lang.String)

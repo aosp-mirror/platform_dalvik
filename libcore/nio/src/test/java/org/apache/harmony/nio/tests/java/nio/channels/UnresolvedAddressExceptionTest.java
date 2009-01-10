@@ -15,9 +15,9 @@
  */
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.channels.UnresolvedAddressException;
@@ -35,15 +35,20 @@ public class UnresolvedAddressExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization/deserialization compatibility.",
-            targets = {
-              @TestTarget(
-                methodName = "!SerializationSelf",
-                methodArgs = {}
-              )
-          })
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "!SerializationSelf",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "UnresolvedAddressException",
+            args = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new UnresolvedAddressException());
@@ -52,15 +57,20 @@ public class UnresolvedAddressExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization/deserialization compatibility.",
-            targets = {
-              @TestTarget(
-                methodName = "!SerializationGolden",
-                methodArgs = {}
-              )
-          })
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "!SerializationGolden",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "UnresolvedAddressException",
+            args = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new UnresolvedAddressException());

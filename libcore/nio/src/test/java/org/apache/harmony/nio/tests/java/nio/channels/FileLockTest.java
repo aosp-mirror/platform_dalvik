@@ -16,8 +16,7 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 
@@ -71,15 +70,12 @@ public class FileLockTest extends TestCase {
      * @tests java.nio.channels.FileLock#FileLock(FileChannel, long, long,
      *        boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "FileLock",
-          methodArgs = {java.nio.channels.FileChannel.class, long.class, long.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "FileLock",
+        args = {java.nio.channels.FileChannel.class, long.class, long.class, boolean.class}
+    )
     public void test_Constructor_Ljava_nio_channels_FileChannelJJZ() {
         FileLock fileLock1 = new MockFileLock(null, 0, 0, false);
         assertNull(fileLock1.channel());
@@ -108,15 +104,12 @@ public class FileLockTest extends TestCase {
     /**
      * @tests java.nio.channels.FileLock#channel()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "channel",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "channel",
+        args = {}
+    )
     public void test_channel() {
         assertSame(readWriteChannel, mockLock.channel());
         FileLock lock = new MockFileLock(null, 0, 10, true);
@@ -126,15 +119,12 @@ public class FileLockTest extends TestCase {
     /**
      * @tests java.nio.channels.FileLock#position()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "position",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "position",
+        args = {}
+    )
     public void test_position() {
         FileLock fileLock1 = new MockFileLock(readWriteChannel, 20, 100, true);
         assertEquals(20, fileLock1.position());
@@ -148,15 +138,12 @@ public class FileLockTest extends TestCase {
     /**
      * @tests java.nio.channels.FileLock#size()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() {
         FileLock fileLock1 = new MockFileLock(readWriteChannel, 20, 100, true);
         assertEquals(100, fileLock1.size());
@@ -171,15 +158,12 @@ public class FileLockTest extends TestCase {
     /**
      * @tests java.nio.channels.FileLock#isShared()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "[check with false shared parameter]",
-      targets = {
-        @TestTarget(
-          methodName = "isShared",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "[check with false shared parameter]",
+        method = "isShared",
+        args = {}
+    )
     public void test_isShared() {
         assertFalse(mockLock.isShared());
         FileLock lock = new MockFileLock(null, 0, 10, true);
@@ -189,15 +173,12 @@ public class FileLockTest extends TestCase {
     /**
      * @tests java.nio.channels.FileLock#overlaps(long, long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "overlaps",
-          methodArgs = {long.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "overlaps",
+        args = {long.class, long.class}
+    )
     public void test_overlaps_JJ() {
         assertTrue(mockLock.overlaps(0, 11));
         assertFalse(mockLock.overlaps(0, 10));
@@ -212,15 +193,12 @@ public class FileLockTest extends TestCase {
     /**
      * @tests java.nio.channels.FileLock#isValid()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isValid",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isValid",
+        args = {}
+    )
     public void test_isValid() throws IOException {
         FileLock fileLock = readWriteChannel.lock();
         assertTrue(fileLock.isValid());
@@ -231,15 +209,12 @@ public class FileLockTest extends TestCase {
     /**
      * @tests java.nio.channels.FileLock#release()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "release",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "release",
+        args = {}
+    )
     public void test_release() throws Exception {
         File file = File.createTempFile("test", "tmp");
         file.deleteOnExit();
@@ -266,5 +241,23 @@ public class FileLockTest extends TestCase {
         } catch (ClosedChannelException e) {
             //expected
         }
+    }
+    
+    /**
+     * @tests java.nio.channels.FileLock#release()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
+    public void test_toString() throws Exception {
+        File file = File.createTempFile("test", "tmp");
+        file.deleteOnExit();
+        FileOutputStream fout = new FileOutputStream(file);
+        FileChannel fileChannel = fout.getChannel();
+        FileLock fileLock = fileChannel.lock();
+        assertTrue(fileLock.toString().length() > 0);
     }
 }

@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -51,15 +51,12 @@ public class DSAPublicKeySpecTest extends TestCase {
     /**
      * Test for <code>DSAPublicKeySpec</code> ctor
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DSAPublicKeySpec",
-          methodArgs = {java.math.BigInteger.class, java.math.BigInteger.class, java.math.BigInteger.class, java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DSAPublicKeySpec",
+        args = {java.math.BigInteger.class, java.math.BigInteger.class, java.math.BigInteger.class, java.math.BigInteger.class}
+    )
     public final void testDSAPublicKeySpec() {
         KeySpec ks = new DSAPublicKeySpec(
                 new BigInteger("1"), // y
@@ -73,15 +70,12 @@ public class DSAPublicKeySpecTest extends TestCase {
     /**
      * Test for <code>getG</code> method 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getG",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getG",
+        args = {}
+    )
     public final void testGetG() {
         DSAPublicKeySpec dpks = new DSAPublicKeySpec(
                 new BigInteger("1"), // y
@@ -95,15 +89,12 @@ public class DSAPublicKeySpecTest extends TestCase {
     /**
      * Test for <code>getP</code> method 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getP",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getP",
+        args = {}
+    )
     public final void testGetP() {
         DSAPublicKeySpec dpks = new DSAPublicKeySpec(
                 new BigInteger("1"), // y
@@ -117,15 +108,12 @@ public class DSAPublicKeySpecTest extends TestCase {
     /**
      * Test for <code>getQ</code> method 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getQ",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getQ",
+        args = {}
+    )
     public final void testGetQ() {
         DSAPublicKeySpec dpks = new DSAPublicKeySpec(
                 new BigInteger("1"), // y
@@ -139,15 +127,12 @@ public class DSAPublicKeySpecTest extends TestCase {
     /**
      * Test for <code>getY</code> method 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getY",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getY",
+        args = {}
+    )
     public final void testGetY() {
         DSAPublicKeySpec dpks = new DSAPublicKeySpec(
                 new BigInteger("1"), // y

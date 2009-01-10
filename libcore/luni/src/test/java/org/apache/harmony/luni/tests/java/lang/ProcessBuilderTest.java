@@ -16,16 +16,19 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.FilePermission;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,43 +36,38 @@ import java.util.Map;
 
 @TestTargetClass(ProcessBuilder.class) 
 public class ProcessBuilderTest extends TestCase {
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ProcessBuilder",
-          methodArgs = {java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ProcessBuilder",
+        args = {java.lang.String[].class}
+    )
     public void testProcessBuilderStringArray() {
 
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks only NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "ProcessBuilder",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ProcessBuilder",
+        args = {java.util.List.class}
+    )
     public void testProcessBuilderListOfString() {
+        List<String> list = Arrays.asList("command1", "command2", "command3");
+        ProcessBuilder pb = new ProcessBuilder(list);
+        assertEquals(list, pb.command());
+        
         try {
             new ProcessBuilder((List<String>) null);
             fail("no null pointer exception");
         } catch (NullPointerException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "command",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "command",
+        args = {}
+    )
     public void testCommand() {
         ProcessBuilder pb = new ProcessBuilder("command");
         assertEquals(1, pb.command().size());
@@ -84,15 +82,12 @@ public class ProcessBuilderTest extends TestCase {
         list.toArray(command);
         assertTrue(Arrays.equals(new String[]{"BBB","CCC","DDD"}, command));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "command",
-          methodArgs = {java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "command",
+        args = {java.lang.String[].class}
+    )
     public void testCommandStringArray() {
         ProcessBuilder pb = new ProcessBuilder("command");
         ProcessBuilder pbReturn = pb.command("cmd");
@@ -100,15 +95,12 @@ public class ProcessBuilderTest extends TestCase {
         assertEquals(1, pb.command().size());
         assertEquals("cmd", pb.command().get(0));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "command",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "command",
+        args = {java.util.List.class}
+    )
     public void testCommandListOfString() {
         ProcessBuilder pb = new ProcessBuilder("command");
         List<String> newCmd = new ArrayList<String>();
@@ -123,28 +115,22 @@ public class ProcessBuilderTest extends TestCase {
         assertEquals("cmd", pb.command().get(0));
         assertEquals("arg", pb.command().get(1));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "directory",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "directory",
+        args = {}
+    )
     public void testDirectory() {
         ProcessBuilder pb = new ProcessBuilder("command");
         assertNull(pb.directory());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "directory",
-          methodArgs = {java.io.File.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "directory",
+        args = {java.io.File.class}
+    )
     public void testDirectoryFile() {
         ProcessBuilder pb = new ProcessBuilder("command");
         File dir = new File(System.getProperty("java.io.tmpdir"));
@@ -156,69 +142,65 @@ public class ProcessBuilderTest extends TestCase {
         assertSame(pb, pbReturn);
         assertNull(pb.directory());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "environment",
-          methodArgs = {}
-        )
-    })
-    public void _testEnvironment() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "environment",
+        args = {}
+    )
+    @AndroidOnly("SystemEnvironment.clear() method throws UnsupportedOperationException.")
+    public void testEnvironment() {
         ProcessBuilder pb = new ProcessBuilder("command");
         Map<String, String> env = pb.environment();
-        assertEquals(System.getenv(), env);
-        env.clear();
-        env = pb.environment();
-        assertTrue(env.isEmpty());
+        assertEquals(System.getenv().size(), env.size());
         try {
-            env.put(null,"");
-            fail("should throw NPE.");
-        } catch (NullPointerException e) {
-            // expected;
-        }
-        try {
-            env.put("",null);
-            fail("should throw NPE.");
-        } catch (NullPointerException e) {
-            // expected;
-        }
-        try {
-            env.get(null);
-            fail("should throw NPE.");
-        } catch (NullPointerException e) {
-            // expected;
-        }
-        try {
-            env.get(new Object());
-            fail("should throw ClassCastException.");
-        } catch (ClassCastException e) {
-            // expected;
+            env.clear();
+            env = pb.environment();
+            assertTrue(env.isEmpty());
+            try {
+                env.put(null,"");
+                fail("should throw NPE.");
+            } catch (NullPointerException e) {
+                // expected;
+            }
+            try {
+                env.put("",null);
+                fail("should throw NPE.");
+            } catch (NullPointerException e) {
+                // expected;
+            }
+            try {
+                env.get(null);
+                fail("should throw NPE.");
+            } catch (NullPointerException e) {
+                // expected;
+            }
+            try {
+                env.get(new Object());
+                fail("should throw ClassCastException.");
+            } catch (ClassCastException e) {
+                // expected;
+            }
+        } catch(UnsupportedOperationException e) {
+            //expected: Android specific
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "redirectErrorStream",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "redirectErrorStream",
+        args = {}
+    )
     public void testRedirectErrorStream() {
         ProcessBuilder pb = new ProcessBuilder("command");
         assertFalse(pb.redirectErrorStream());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Doesn't check false.",
-      targets = {
-        @TestTarget(
-          methodName = "redirectErrorStream",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Doesn't check false.",
+        method = "redirectErrorStream",
+        args = {boolean.class}
+    )
     public void testRedirectErrorStreamBoolean() {
         ProcessBuilder pb = new ProcessBuilder("command");
         ProcessBuilder pbReturn = pb.redirectErrorStream(true);
@@ -230,15 +212,12 @@ public class ProcessBuilderTest extends TestCase {
      * @throws IOException
      * @tests {@link java.lang.ProcessBuilder#start()}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "start",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException is not checked.",
+        method = "start",
+        args = {}
+    )
     @SuppressWarnings("nls")
     public void testStart() throws IOException {
         ProcessBuilder pb = new ProcessBuilder("java", "-version");
@@ -255,5 +234,46 @@ public class ProcessBuilderTest extends TestCase {
         } else {
             assertTrue(err.read(buf) > 0);
         }
+        
+        List<String> list = Arrays.asList(null, null, null);
+        ProcessBuilder pbn = new ProcessBuilder(list);
+        try {
+            pbn.start();
+            fail("NullPointerException is not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
+        
+        List<String> emptyList = Arrays.asList();
+        ProcessBuilder pbe = new ProcessBuilder(emptyList);
+        try {
+            pbe.start();
+            fail("IndexOutOfBoundsException  is not thrown.");
+        } catch(IndexOutOfBoundsException npe) {
+            //expected
+        }
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkExec(String cmd) {
+                throw new SecurityException(); 
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            pb.start();
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }      
+        
+        pb.directory(new File(System.getProperty("java.class.path")));
     }
 }

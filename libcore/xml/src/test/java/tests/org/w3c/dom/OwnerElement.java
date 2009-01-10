@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Node;
@@ -77,15 +77,12 @@ public final class OwnerElement extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies positive functionlity.",
-      targets = {
-        @TestTarget(
-          methodName = "getOwnerElement",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies positive functionlity.",
+        method = "getOwnerElement",
+        args = {}
+    )
     public void testGetOwnerElement1() throws Throwable {
         Document doc;
         NodeList addressList;
@@ -103,15 +100,12 @@ public final class OwnerElement extends DOMTestCase {
         name = elementNode.getNodeName();
         assertEquals("throw_Equals", "address", name);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getOwnerElement method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getOwnerElement",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getOwnerElement method returns null.",
+        method = "getOwnerElement",
+        args = {}
+    )
     public void testGetOwnerElement2() throws Throwable {
         Document doc;
         Attr newAttr;

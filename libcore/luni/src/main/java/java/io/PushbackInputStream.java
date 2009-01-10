@@ -176,7 +176,7 @@ public class PushbackInputStream extends FilterInputStream {
      *            the maximum number of bytes to store in {@code buffer}.
      * @return the number of bytes read or -1 if the end of the source stream
      *         has been reached.
-     * @throws ArrayIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code length < 0}, or if
      *             {@code offset + length} is greater than the length of
      *             {@code buffer}.
@@ -302,7 +302,7 @@ public class PushbackInputStream extends FilterInputStream {
      *            the index of the first byte in {@code buffer} to push back.
      * @param length
      *            the number of bytes to push back.
-     * @throws ArrayIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code length < 0}, or if
      *             {@code offset + length} is greater than the length of
      *             {@code buffer}.

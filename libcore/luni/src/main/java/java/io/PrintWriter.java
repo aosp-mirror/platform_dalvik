@@ -725,7 +725,7 @@ public class PrintWriter extends Writer {
      *            the index of the first character in {@code buffer} to write.
      * @param count
      *            the number of characters in {@code buffer} to write.
-     * @throws ArrayIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code count < 0}, or if {@code
      *             offset + count} is greater than the length of {@code buf}.
      * @since Android 1.0
@@ -794,7 +794,7 @@ public class PrintWriter extends Writer {
      *            the index of the first character in {@code str} to write.
      * @param count
      *            the number of characters from {@code str} to write.
-     * @throws StringIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code count < 0}, or if {@code
      *             offset + count} is greater than the length of {@code str}.
      * @since Android 1.0

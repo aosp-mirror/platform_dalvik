@@ -18,9 +18,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.NamedNodeMap;
@@ -70,15 +70,12 @@ public final class HCNotationsRemoveNamedItemNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that removeNamedItemNS method throws DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that removeNamedItemNS method throws DOMException.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testRemoveNamedItemNS() throws Throwable {
         Document doc;
         NamedNodeMap notations;

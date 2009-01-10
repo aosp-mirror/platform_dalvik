@@ -18,8 +18,8 @@
 package tests.api.java.io;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.io.StringBufferInputStream;
@@ -32,15 +32,12 @@ public class StringBufferInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringBufferInputStream#StringBufferInputStream(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StringBufferInputStream",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StringBufferInputStream",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         try {
             new StringBufferInputStream("");
@@ -53,15 +50,12 @@ public class StringBufferInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringBufferInputStream#available()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "available",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "available",
+        args = {}
+    )
     public void test_available() {
         // Test for method int java.io.StringBufferInputStream.available()
         assertEquals("Returned incorrect number of available bytes", 11, sbis
@@ -71,15 +65,12 @@ public class StringBufferInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringBufferInputStream#read()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_read$BII() {
         // Test for method int java.io.StringBufferInputStream.read()
         byte[] buf = new byte[5];
@@ -91,15 +82,12 @@ public class StringBufferInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringBufferInputStream#read(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "read",
+        args = {}
+    )
     public void test_read() {
         // Test for method int java.io.StringBufferInputStream.read(byte [],
         // int, int)
@@ -109,15 +97,12 @@ public class StringBufferInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringBufferInputStream#reset()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "reset",
+        args = {}
+    )
     public void test_reset() {
         // Test for method void java.io.StringBufferInputStream.reset()
         long s = sbis.skip(6);
@@ -129,15 +114,12 @@ public class StringBufferInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringBufferInputStream#skip(long)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "skip",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "skip",
+        args = {long.class}
+    )
     public void test_skipJ() {
         // Test for method long java.io.StringBufferInputStream.skip(long)
         long s = sbis.skip(6);

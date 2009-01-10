@@ -18,9 +18,9 @@
 package org.apache.harmony.luni.tests.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.Serializable;
 import java.net.HttpRetryException;
@@ -54,15 +54,12 @@ public class HttpRetryExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Checks serialization",
-              targets = {
-                @TestTarget(
-                  methodName = "!SerializationSelf",
-                  methodArgs = {}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Checks serialization",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
         SerializationTest.verifySelf(new HttpRetryException(DETAIL, 100,
                 LOCATION), comparator);
@@ -71,15 +68,12 @@ public class HttpRetryExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Checks serialization",
-              targets = {
-                @TestTarget(
-                  methodName = "!SerializationGolden",
-                  methodArgs = {}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Checks serialization",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
         SerializationTest.verifyGolden(this, new HttpRetryException(DETAIL,
                 100, LOCATION), comparator);

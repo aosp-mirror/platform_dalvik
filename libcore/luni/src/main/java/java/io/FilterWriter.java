@@ -53,7 +53,7 @@ public abstract class FilterWriter extends Writer {
     /**
      * Closes this writer. This implementation closes the target writer.
      * 
-     * @throws java.io.IOException
+     * @throws IOException
      *             if an error occurs attempting to close this writer.
      * @since Android 1.0
      */
@@ -68,7 +68,7 @@ public abstract class FilterWriter extends Writer {
      * Flushes this writer to ensure all pending data is sent out to the target
      * writer. This implementation flushes the target writer.
      * 
-     * @throws java.io.IOException
+     * @throws IOException
      *             if an error occurs attempting to flush this writer.
      * @since Android 1.0
      */
@@ -89,7 +89,7 @@ public abstract class FilterWriter extends Writer {
      *            the index of the first character in {@code buffer} to write.
      * @param count
      *            the number of characters in {@code buffer} to write.
-     * @throws java.io.IOException
+     * @throws IOException
      *             if an error occurs while writing to this writer.
      * @since Android 1.0
      */
@@ -109,7 +109,7 @@ public abstract class FilterWriter extends Writer {
      * 
      * @param oneChar
      *            the char to write to the target writer.
-     * @throws java.io.IOException
+     * @throws IOException
      *             if an error occurs while writing to this writer.
      * @since Android 1.0
      */
@@ -131,7 +131,7 @@ public abstract class FilterWriter extends Writer {
      *            the index of the first character in {@code str} to write.
      * @param count
      *            the number of chars in {@code str} to write.
-     * @throws java.io.IOException
+     * @throws IOException
      *             if an error occurs while writing to this writer.
      * @since Android 1.0
      */

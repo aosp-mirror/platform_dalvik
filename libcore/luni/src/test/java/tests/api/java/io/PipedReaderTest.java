@@ -17,9 +17,9 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
 
 import java.io.IOException;
@@ -57,6 +57,29 @@ public class PipedReaderTest extends junit.framework.TestCase {
         }
     }
 
+    static class PWriter2 implements Runnable {
+        PipedWriter pw;
+
+        public boolean keepRunning = true;
+
+        public void run() {
+            try {
+                pw.write('H');
+                pw.close();
+                while (keepRunning) {
+                    Thread.sleep(1000);
+                }
+            } catch (Exception e) {
+                e.printStackTrace(System.out);
+                System.out.println("Error while running the writer thread.");
+            }
+        }
+
+        public PWriter2(PipedWriter writer) {
+            pw = writer;
+        }
+    }
+    
     PipedReader preader;
 
     PWriter pwriter;
@@ -66,49 +89,58 @@ public class PipedReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedReader#PipedReader()
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test",
-      targets = {
-        @TestTarget(
-          methodName = "PipedReader",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PipedReader",
+        args = {}
+    )
     public void test_Constructor() {
-    // Test for method java.io.PipedReader()
-    // Used in test
+        preader = new PipedReader();
+        assertNotNull(preader);
+        try {
+            preader.close();
+        } catch (IOException e) {
+            fail("Unexpeceted IOException");
+        }
     }
 
     /**
      * @tests java.io.PipedReader#PipedReader(java.io.PipedWriter)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PipedReader",
-          methodArgs = {java.io.PipedWriter.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PipedReader",
+        args = {java.io.PipedWriter.class}
+    )
     public void test_ConstructorLjava_io_PipedWriter() throws IOException {
         // Test for method java.io.PipedReader(java.io.PipedWriter)
-        preader = new PipedReader(new PipedWriter());
+        try {
+            preader = new PipedReader(new PipedWriter());
+        } catch (Exception e) {
+            fail("Test 1: Constructor failed: " + e.getMessage());
+        }
+        preader.close();
+            
+        PipedWriter pw = new PipedWriter(new PipedReader());
+        try {
+            preader = new PipedReader(pw);
+            fail("Test 2: IOException expected because the writer is already connected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.PipedReader#close()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "No IOException checking because it is never thrown in the source code.",
+        method = "close",
+        args = {}
+    )
     public void test_close() throws Exception {
         // Test for method void java.io.PipedReader.close()
         char[] c = null;
@@ -117,23 +149,26 @@ public class PipedReaderTest extends junit.framework.TestCase {
         t.start();
         Thread.sleep(500); // Allow writer to start
         c = new char[11];
-        preader.read(c, 0, 11);
+        preader.read(c, 0, 5);
         preader.close();
-        assertEquals("Read incorrect chars", "Hello World", new String(c));
+        
+        try {
+            preader.read(c, 0, 5);
+            fail("IOException expected because the reader is closed.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.PipedReader#connect(java.io.PipedWriter)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.io.PipedWriter.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.io.PipedWriter.class}
+    )
     public void test_connectLjava_io_PipedWriter() throws Exception {
         // Test for method void java.io.PipedReader.connect(java.io.PipedWriter)
         char[] c = null;
@@ -146,28 +181,25 @@ public class PipedReaderTest extends junit.framework.TestCase {
         c = new char[11];
         preader.read(c, 0, 11);
 
-        assertEquals("Read incorrect chars", "Hello World", new String(c));
+        assertEquals("Test 1: Wrong characters read. ", "Hello World", new String(c));
         try {
-            preader.connect(pwriter.pw);
-            fail("Failed to throw exception connecting to pre-connected reader");
-        } catch (Exception e) {
-            // Correct
+            preader.connect(new PipedWriter());
+            fail("Test 2: IOException expected because the reader is already connected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.PipedReader#read()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {}
-        )
-    })
-    public void test_read() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {}
+    )
+    public void test_read_1() throws Exception {
         // Test for method int java.io.PipedReader.read()
         char[] c = null;
         preader = new PipedReader();
@@ -178,22 +210,61 @@ public class PipedReaderTest extends junit.framework.TestCase {
         for (int i = 0; i < c.length; i++) {
             c[i] = (char) preader.read();
         }
-        assertEquals("Read incorrect chars", "Hello World", new String(c));
+        assertEquals("Test 1: Wrong characters read. ", "Hello World", new String(c));
+        
+        try {
+            preader.read();
+            fail("Test 2: IOException expected since the thread that has " +
+                 "written to the pipe is no longer alive.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        
+        preader.close();
+        try {
+            preader.read();
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.PipedReader#read()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks that read() returns -1 if the PipedWriter connectedto this PipedReader is closed.",
+        method = "read",
+        args = {}
+    )
+    public void test_read_2() throws Exception {
+        Thread writerThread;
+        PipedWriter pw;
+        PWriter2 pwriter;
+
+        preader = new PipedReader();
+        pw = new PipedWriter(preader);
+        
+        writerThread = new Thread(pwriter = new PWriter2(pw), "PWriter2");
+        writerThread.start();
+        Thread.sleep(500); // Allow writer to start
+        
+        preader.read();
+        assertEquals("Test 1: No more data indication expected. ", -1, preader.read());
+        pwriter.keepRunning = false;
     }
 
     /**
      * @tests java.io.PipedReader#read(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
-    public void test_read$CII() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checking missed.",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
+    public void test_read$CII_1() throws Exception {
         // Test for method int java.io.PipedReader.read(char [], int, int)
         char[] c = null;
         preader = new PipedReader();
@@ -207,262 +278,174 @@ public class PipedReaderTest extends junit.framework.TestCase {
             n = preader.read(c, x, 11 - x);
             x = x + n;
         }
-        assertEquals("Read incorrect chars", "Hello World", new String(c));
+        assertEquals("Test 1: Wrong characters read. ", "Hello World", new String(c));
+
+        preader.close();
         try {
-            preader.close();
             preader.read(c, 8, 7);
-            fail("Failed to throw exception reading from closed reader");
-        } catch (Exception e) {
-            // Correct
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.PipedReader#read(char[], int, int)
-     * Regression for HARMONY-387
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_read$CII_2() throws IOException{
         PipedWriter pw = new PipedWriter();
         PipedReader obj = null;
         try {
             obj = new PipedReader(pw);
-            obj.read(new char[0], (int) 0, (int) -1);
-            fail("IndexOutOfBoundsException expected");
+            obj.read(new char[0], 0, -1);
+            fail("IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException t) {
-            assertEquals(
-                    "IndexOutOfBoundsException rather than a subclass expected",
-                    IndexOutOfBoundsException.class, t.getClass());
+            // Expected.
+           assertEquals(
+                "IndexOutOfBoundsException rather than a subclass expected.",
+                IndexOutOfBoundsException.class, t.getClass());
         }
     }
 
     /**
      * @tests java.io.PipedReader#read(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_read$CII_3() throws IOException {
         PipedWriter pw = new PipedWriter();
         PipedReader obj = null;
         try {
             obj = new PipedReader(pw);
-            obj.read(new char[0], (int) -1, (int) 0);
-            fail("IndexOutOfBoundsException expected");
+            obj.read(new char[0], -1, 0);
+            fail("IndexOutOfBoundsException expected.");
         } catch (ArrayIndexOutOfBoundsException t) {
-            fail("IndexOutOfBoundsException expected");
+            fail("IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException t) {
-        }
+            // Expected.
+       }
     }
 
     /**
      * @tests java.io.PipedReader#read(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_read$CII_4() throws IOException {
         PipedWriter pw = new PipedWriter();
         PipedReader obj = null;
         try {
             obj = new PipedReader(pw);
-            obj.read(new char[0], (int) -1, (int) -1);
-            fail("IndexOutOfBoundsException expected");
+            obj.read(new char[10], 2, 9);
+            fail("IndexOutOfBoundsException expected.");
         } catch (ArrayIndexOutOfBoundsException t) {
-            fail("IndexOutOfBoundsException expected");
+            fail("IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException t) {
+            // Expected.
         }
     }
     
     /**
      * @tests java.io.PipedReader#read(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
-    public void test_read_$CII_IOException() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
+    public void test_read$CII_5() throws IOException{
         PipedWriter pw = new PipedWriter();
-        PipedReader pr = new PipedReader(pw);
-        char[] buf = null;
-        pr.close();
+        PipedReader obj = null;
         try {
-            pr.read(buf, 0, 10);
-            fail("Should throws IOException"); //$NON-NLS-1$
-        } catch (IOException e) {
-            // expected
-        } finally {
-            pw = null;
-            pr = null;
-        }
-        
-        pr = new PipedReader();
-        buf = null;
-        pr.close();
-        try {
-            pr.read(buf, 0, 10);
-            fail("Should throws IOException"); //$NON-NLS-1$
-        } catch (IOException e) {
-            // expected
-        } finally {
-            pr = null;
-        }
-        
-        pw = new PipedWriter();
-        pr = new PipedReader(pw);
-        buf = new char[10];
-        pr.close();
-        try {
-            pr.read(buf, -1, 0);
-            fail("Should throws IOException"); //$NON-NLS-1$
-        } catch (IOException e) {
-            // expected
-        } finally {
-            pw = null;
-            pr = null;
-        }
-        
-        pw = new PipedWriter();
-        pr = new PipedReader(pw);
-        buf = new char[10];
-        pr.close();
-        try {
-            pr.read(buf, 0, -1);
-            fail("Should throws IOException"); //$NON-NLS-1$
-        } catch (IOException e) {
-            // expected
-        } finally {
-            pw = null;
-            pr = null;
-        }
-        
-        pw = new PipedWriter();
-        pr = new PipedReader(pw);
-        buf = new char[10];
-        pr.close();
-        try {
-            pr.read(buf, 1, 10);
-            fail("Should throws IOException"); //$NON-NLS-1$
-        } catch (IOException e) {
-            // expected
-        } finally {
-            pw = null;
-            pr = null;
-        }
-        
-        pw = new PipedWriter();
-        pr = new PipedReader(pw);
-        pr.close();
-        try {
-            pr.read(new char[0], -1, -1);
-            fail("should throw IOException"); //$NON-NLS-1$
-        } catch (IOException e) {
-            // expected
-        } finally {
-            pw = null;
-            pr = null;
-        }
-        
-        pw = new PipedWriter();
-        pr = new PipedReader(pw);
-        pr.close();
-        try {
-            pr.read(null, 0, 1);
-            fail("should throw IOException"); //$NON-NLS-1$
-        } catch (IOException e) {
-            // expected
-        } finally {
-            pw = null;
-            pr = null;
-        }
-        
-        pw = new PipedWriter();
-        pr = new PipedReader(pw);
-        try {
-            pr.read(null, 0, -1);
-            fail("should throw NullPointerException"); //$NON-NLS-1$
+            obj = new PipedReader(pw);
+            obj.read(null, 0, 1);
+            fail("NullPointerException expected.");
         } catch (NullPointerException e) {
-            // expected
-        } finally {
-            pw = null;
-            pr = null;
+            // Expected.
         }
+    }
+
+    /**
+     * @tests java.io.PipedReader#read()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks that read() returns -1 if the PipedWriter connectedto this PipedReader is closed.",
+        method = "read",
+        args = {}
+    )
+    public void test_read$CII_6() throws Exception {
+        Thread writerThread;
+        PipedWriter pw;
+        PWriter2 pwriter;
+        char[] c = new char[1];
+
+        preader = new PipedReader();
+        pw = new PipedWriter(preader);
         
-        pw = new PipedWriter();
-        pr = new PipedReader(pw);
-        try {
-            pr.read(new char[10], 11, 0);
-            fail("should throw IndexOutOfBoundsException"); //$NON-NLS-1$
-        } catch (IndexOutOfBoundsException e) {
-            // expected
-        } finally {
-            pw = null;
-            pr = null;
-        }
+        writerThread = new Thread(pwriter = new PWriter2(pw), "PWriter2");
+        writerThread.start();
+        Thread.sleep(500); // Allow writer to start
         
-        pw = new PipedWriter();
-        pr = new PipedReader(pw);
-        try {
-            pr.read(null, 1, 0);
-            fail("should throw NullPointerException"); //$NON-NLS-1$
-        } catch (NullPointerException e) {
-            // expected
-        } finally {
-            pw = null;
-            pr = null;
-        }
+        preader.read(c, 0, 1);
+        assertEquals("Test 1: No more data indication expected. ", 
+                     -1, preader.read(c, 0, 1));
+        pwriter.keepRunning = false;
     }
 
     /**
      * @tests java.io.PipedReader#ready()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "ready",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ready",
+        args = {}
+    )
     public void test_ready() throws Exception {
         // Test for method boolean java.io.PipedReader.ready()
         char[] c = null;
         preader = new PipedReader();
+        
+        try {
+            preader.ready();
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        
         t = new Thread(new PWriter(preader), "");
         t.start();
         Thread.sleep(500); // Allow writer to start
-        assertTrue("Reader should be ready", preader.ready());
+        assertTrue("Test 2: Reader should be ready", preader.ready());
         c = new char[11];
         for (int i = 0; i < c.length; i++)
             c[i] = (char) preader.read();
-        assertFalse("Reader should not be ready after reading all chars",
+        assertFalse("Test 3: Reader should not be ready after reading all chars",
                 preader.ready());
+        
+        preader.close();
+        try {
+            preader.ready();
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**

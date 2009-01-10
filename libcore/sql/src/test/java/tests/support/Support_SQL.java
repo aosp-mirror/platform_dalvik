@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package tests.support;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -39,14 +40,30 @@ public class Support_SQL {
 
     public static String sqlUser = null;
 
-    public static int sqlMaxConnections = 1;
+    public static int sqlMaxConnections = 5;
 
-    public static int sqlMaxTasks = 0;
+    public static int sqlMaxTasks = 1;
+    
+    private static File dbFile = null;
 
     public static void loadDriver() {
         try {
             loadProperties(Class.forName("tests.support.Support_SQL")
                     .getResourceAsStream("/connection.properties"));
+
+            String tmp = System.getProperty("java.io.tmpdir");
+            File ctsDir = new File(tmp);
+            if (ctsDir.isDirectory()) {
+                dbFile = File.createTempFile("sqliteTest", ".db", ctsDir);
+                dbFile.deleteOnExit();
+            } else {
+                System.err.println("ctsdir does not exist");
+            }
+            Class.forName("SQLite.JDBCDriver").newInstance();
+
+            // overwrite sqlUrl to point to valid directory
+            sqlUrl = "jdbc:sqlite:/" + dbFile.getPath();
+
             Class.forName(sqlDriver).newInstance();
         } catch (Exception ex) {
             System.err.println("Unexpected exception " + ex.toString());
@@ -86,5 +103,9 @@ public class Support_SQL {
         sqlMaxConnections = Integer.parseInt(properties
                 .getProperty("sqlMaxConnections"));
         sqlMaxTasks = Integer.parseInt(properties.getProperty("sqlMaxTasks"));
+    }
+    
+    public static String getFilename() {
+        return dbFile.getPath();
     }
 }

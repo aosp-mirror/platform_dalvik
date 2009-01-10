@@ -18,19 +18,26 @@
 package org.apache.harmony.logging.tests.java.util.logging;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
+import java.io.File;
 import java.text.MessageFormat;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
 import junit.framework.TestCase;
+
+import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
 
 @TestTargetClass(Formatter.class) 
 public class FormatterTest extends TestCase {
@@ -42,75 +49,89 @@ public class FormatterTest extends TestCase {
 
     static String MSG = "msg, pls. ignore it";
 
+    static LogManager manager = LogManager.getLogManager();
+
+    final static Properties props = new Properties();
+
+    final static String className = FormatterTest.class.getName();
+
+    final static String TEMPPATH = System.getProperty("java.io.tmpdir");
+
+    final static String SEP = File.separator;
+
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
+        manager.reset();
+        
+        //initProp
+        props.clear();
+        props.put("java.util.logging.FileHandler.level", "FINE");
+        props.put("java.util.logging.FileHandler.filter", className
+                + "$MockFilter");
+        props.put("java.util.logging.FileHandler.formatter", className
+                + "$MockFormatter");
+        props.put("java.util.logging.FileHandler.encoding", "iso-8859-1");
+        // limit to only two message
+        props.put("java.util.logging.FileHandler.limit", "1000");
+        // rotation count is 2
+        props.put("java.util.logging.FileHandler.count", "2");
+        // using append mode
+        props.put("java.util.logging.FileHandler.append", "true");
+        props.put("java.util.logging.FileHandler.pattern",
+                        "%t/log/java%u.test");
+        
+        File file = new File(TEMPPATH + SEP + "log");
+        file.mkdir();
+        manager.readConfiguration(EnvironmentHelper
+                .PropertiesToInputStream(props));
+
         f = new MockFormatter();
         r = new LogRecord(Level.FINE, MSG);
         h = new FileHandler();
-      
     }
 
     /*
      * test for constructor protected Formatter()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Formatter",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "Formatter",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getHead",
+            args = {java.util.logging.Handler.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getTail",
+            args = {java.util.logging.Handler.class}
         )
     })
-    public void _testFormatter() {
-        Formatter formatter;
-        formatter = new MockFormatter();
-        assertEquals("head string is not empty", "", formatter.getHead(null));
-        assertEquals("tail string is not empty", "", formatter.getTail(null));
+    public void testFormatter() {
+        assertEquals("head string is not empty", "", f.getHead(null));
+        assertEquals("tail string is not empty", "", f.getTail(null));
 
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Abstract method.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
-    public void _testFormat() {
-        assertEquals("format", f.format(r));
-    }
-    
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "format",
-                methodArgs = {java.util.logging.LogRecord.class}
-              )
-          })
-          public void _testFormatNull() {
-        assertEquals("format",f.format(null));
-          }
 
     /*
      * test for method public String getHead(Handler h)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getHead",
-          methodArgs = {java.util.logging.Handler.class}
-        )
-    })
-    public void _testGetHead() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getHead",
+        args = {Handler.class}
+    )
+    public void testGetHead() {
         assertEquals("head string is not empty", "", f.getHead(null));
         assertEquals("head string is not empty", "", f.getHead(h));
         h.publish(r);
@@ -120,31 +141,26 @@ public class FormatterTest extends TestCase {
     /*
      * test for method public String getTail(Handler h)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTail",
-          methodArgs = {java.util.logging.Handler.class}
-        )
-    })
-    public void _testGetTail() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getTail",
+        args = {Handler.class}
+    )
+    public void testGetTail() {
         assertEquals("tail string is not empty", "", f.getTail(null));
         assertEquals("tail string is not empty", "", f.getTail(h));
         h.publish(r);
         assertEquals("tail string is not empty", "", f.getTail(h));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "formatMessage",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
-    public void _testFormatMessage() {
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "formatMessage",
+        args = {LogRecord.class}
+    )
+    public void testFormatMessage() {
         assertEquals(MSG, f.formatMessage(r));
 
         String pattern = "test formatter {0, number}";
@@ -155,7 +171,7 @@ public class FormatterTest extends TestCase {
         r.setParameters(oa);
         assertEquals(pattern, f.formatMessage(r));
 
-        oa = new Object[] { new Integer(100), new Float(1.1) };
+        oa = new Object[] { new Integer(100), new Float(1.2), new Float(2.2) };
         r.setParameters(oa);
         assertEquals(MessageFormat.format(pattern, oa), f.formatMessage(r));
 
@@ -166,28 +182,26 @@ public class FormatterTest extends TestCase {
         r.setMessage(pattern);
         assertEquals(pattern, f.formatMessage(r));
 
-        pattern = "pattern without 0 {1, number}";
-        r.setMessage(pattern);
-        assertEquals(MessageFormat.format(pattern, oa), f.formatMessage(r));
-
         pattern = null;
         r.setMessage(pattern);
         assertNull(f.formatMessage(r));
-        
-        
-        assertNull(f.formatMessage(null));
-        
+
+        // The RI fails in this test because it uses a MessageFormat to format
+        // the message even though it doesn't contain "{0". The spec says that
+        // this would indicate that a MessageFormat should be used and else no
+        // formatting should be done.
+        pattern = "pattern without 0 {1, number}";
+        r.setMessage(pattern);
+        assertEquals(pattern, f.formatMessage(r));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "formatMessage",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
-    public void _testLocalizedFormatMessage() {
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "formatMessage",
+        args = {LogRecord.class}
+    )
+    public void testLocalizedFormatMessage() {
         // normal case
         r.setMessage("msg");
         ResourceBundle rb = ResourceBundle

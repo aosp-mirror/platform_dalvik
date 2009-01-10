@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.harmony.archive.tests.java.util.zip;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,7 +29,7 @@ import java.io.OutputStream;
 import java.util.zip.Checksum;
 import java.util.zip.GZIPOutputStream;
 
-@TestTargetClass(GZIPOutputStream.class) 
+@TestTargetClass(GZIPOutputStream.class)
 public class GZIPOutputStreamTest extends junit.framework.TestCase {
 
     class TestGZIPOutputStream extends GZIPOutputStream {
@@ -48,27 +49,23 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.GZIPOutputStream#GZIPOutputStream(java.io.OutputStream)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "GZIPOutputStream",
-          methodArgs = {java.io.OutputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "GZIPOutputStream",
+        args = {java.io.OutputStream.class}
+    )
     public void test_ConstructorLjava_io_OutputStream() {
         try {
             FileOutputStream outFile = new FileOutputStream("GZIPOutCon.txt");
             TestGZIPOutputStream outGZIP = new TestGZIPOutputStream(outFile);
             assertNotNull("the constructor for GZIPOutputStream is null",
                     outGZIP);
-            assertEquals("the CRC value of the outputStream is not zero", 0, outGZIP
-                    .getChecksum().getValue());
+            assertEquals("the CRC value of the outputStream is not zero", 0,
+                    outGZIP.getChecksum().getValue());
             outGZIP.close();
         } catch (IOException e) {
-            fail(
-                    "an IO error occured while trying to find the output file or creating GZIP constructor");
+            fail("an IO error occured while trying to find the output file or creating GZIP constructor");
         }
     }
 
@@ -76,15 +73,12 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
      * @tests java.util.zip.GZIPOutputStream#GZIPOutputStream(java.io.OutputStream,
      *        int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "GZIPOutputStream",
-          methodArgs = {java.io.OutputStream.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "GZIPOutputStream",
+        args = {java.io.OutputStream.class, int.class}
+    )
     public void test_ConstructorLjava_io_OutputStreamI() {
         try {
             FileOutputStream outFile = new FileOutputStream("GZIPOutCon.txt");
@@ -92,33 +86,31 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
                     100);
             assertNotNull("the constructor for GZIPOutputStream is null",
                     outGZIP);
-            assertEquals("the CRC value of the outputStream is not zero", 0, outGZIP
-                    .getChecksum().getValue());
+            assertEquals("the CRC value of the outputStream is not zero", 0,
+                    outGZIP.getChecksum().getValue());
             outGZIP.close();
         } catch (IOException e) {
-            fail(
-                    "an IO error occured while trying to find the output file or creating GZIP constructor");
+            fail("an IO error occured while trying to find the output file or creating GZIP constructor");
         }
     }
 
     /**
      * @tests java.util.zip.GZIPOutputStream#finish()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "finish",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "finish",
+        args = {}
+    )
     public void test_finish() {
         // test method java.util.zip.GZIPOutputStream.finish()
-        byte byteArray[] = { 3, 5, 2, 'r', 'g', 'e', 'f', 'd', 'e', 'w' };
+        byte byteArray[] = {3, 5, 2, 'r', 'g', 'e', 'f', 'd', 'e', 'w'};
+        TestGZIPOutputStream outGZIP = null;
+        FileOutputStream outFile = null;
         try {
-            FileOutputStream outFile = new FileOutputStream("GZIPOutFinish.txt");
-            TestGZIPOutputStream outGZIP = new TestGZIPOutputStream(outFile);
+            outFile = new FileOutputStream("GZIPOutFinish.txt");
+            outGZIP = new TestGZIPOutputStream(outFile);
 
             outGZIP.finish();
             int r = 0;
@@ -128,30 +120,37 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
                 r = 1;
             }
 
-            assertEquals("GZIP instance can still be used after finish is called",
+            assertEquals(
+                    "GZIP instance can still be used after finish is called",
                     1, r);
             outGZIP.close();
         } catch (IOException e) {
-            fail(
-                    "an IO error occured while trying to find the output file or creating GZIP constructor");
+            fail("an IO error occured while trying to find the output file or creating GZIP constructor");
+        }
+        try {
+            outFile = new FileOutputStream("GZIPOutFinish.txt");
+            outGZIP = new TestGZIPOutputStream(outFile);
+            outFile.close();
+
+            outGZIP.finish();
+            fail("Expected IOException");
+        } catch (IOException e) {
+            // expected
         }
     }
 
     /**
      * @tests java.util.zip.GZIPOutputStream#close()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checking missed.",
+        method = "close",
+        args = {}
+    )
     public void test_close() {
         // test method java.util.zip.GZIPOutputStream.close()
-        byte byteArray[] = { 3, 5, 2, 'r', 'g', 'e', 'f', 'd', 'e', 'w' };
+        byte byteArray[] = {3, 5, 2, 'r', 'g', 'e', 'f', 'd', 'e', 'w'};
         try {
             FileOutputStream outFile = new FileOutputStream("GZIPOutClose2.txt");
             TestGZIPOutputStream outGZIP = new TestGZIPOutputStream(outFile);
@@ -162,36 +161,35 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
             } catch (IOException e) {
                 r = 1;
             }
-            assertEquals("GZIP instance can still be used after close is called",
-                    1, r);
+            assertEquals(
+                    "GZIP instance can still be used after close is called", 1,
+                    r);
         } catch (IOException e) {
-            fail(
-                    "an IO error occured while trying to find the output file or creating GZIP constructor");
+            fail("an IO error occured while trying to find the output file or creating GZIP constructor");
         }
     }
 
     /**
      * @tests java.util.zip.GZIPOutputStream#write(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_write$BII() {
         // test method java.util.zip.GZIPOutputStream.writeBII
-        byte byteArray[] = { 3, 5, 2, 'r', 'g', 'e', 'f', 'd', 'e', 'w' };
+        byte byteArray[] = {3, 5, 2, 'r', 'g', 'e', 'f', 'd', 'e', 'w'};
+        TestGZIPOutputStream outGZIP = null;
         try {
             FileOutputStream outFile = new FileOutputStream("GZIPOutWrite.txt");
-            TestGZIPOutputStream outGZIP = new TestGZIPOutputStream(outFile);
+            outGZIP = new TestGZIPOutputStream(outFile);
             outGZIP.write(byteArray, 0, 10);
             // ran JDK and found this CRC32 value is 3097700292
             // System.out.print(outGZIP.getChecksum().getValue());
-            assertEquals("the checksum value was incorrect result of write from GZIP",
+            assertEquals(
+                    "the checksum value was incorrect result of write from GZIP",
                     3097700292L, outGZIP.getChecksum().getValue());
 
             // test for boundary check
@@ -200,12 +198,19 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
                 outGZIP.write(byteArray, 0, 11);
             } catch (ArrayIndexOutOfBoundsException e) {
                 r = 1;
+            } catch (IndexOutOfBoundsException ee) {
+                r = 1;
             }
             assertEquals("out of bounds exception is not present", 1, r);
             outGZIP.close();
         } catch (IOException e) {
-            fail(
-                    "an IO error occured while trying to find the output file or creating GZIP constructor");
+            fail("an IO error occured while trying to find the output file or creating GZIP constructor");
+        }
+        try {
+            outGZIP.write(byteArray, 0, 10);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            // expected
         }
     }
 
@@ -219,14 +224,14 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
         try {
             File dFile = new File("GZIPOutCon.txt");
             dFile.delete();
-            File dFile2 = new File("GZIPOutFinish.txt"); 
+            File dFile2 = new File("GZIPOutFinish.txt");
             dFile2.delete();
-            File dFile3 = new File("GZIPOutWrite.txt"); 
+            File dFile3 = new File("GZIPOutWrite.txt");
             dFile3.delete();
-            File dFile4 = new File("GZIPOutClose2.txt"); 
-            dFile4.delete(); 
+            File dFile4 = new File("GZIPOutClose2.txt");
+            dFile4.delete();
         } catch (SecurityException e) {
-            fail("Cannot delete file for security reasons");        
+            fail("Cannot delete file for security reasons");
         }
     }
 

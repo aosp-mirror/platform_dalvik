@@ -18,9 +18,8 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -67,9 +66,7 @@ public class KeyFactory2Test extends junit.framework.TestCase {
             for (int i = 0; i < iterations; i++) {
                 try {
                     Thread.sleep(sleepTime);
-                    System.out.print("[KA]");
                 } catch (InterruptedException e) {
-                    System.out.print("[I]");
                     break;
                 }
             }
@@ -97,15 +94,12 @@ public class KeyFactory2Test extends junit.framework.TestCase {
      * @tests java.security.KeyFactory#KeyFactory(java.security.KeyFactorySpi,
      *        java.security.Provider, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "KeyFactory",
-          methodArgs = {KeyFactorySpi.class, Provider.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "KeyFactory",
+        args = {java.security.KeyFactorySpi.class, java.security.Provider.class, java.lang.String.class}
+    )
     public void test_constructor() {
         KeyFactorySpi kfs = new KeyFactorySpiStub();
 
@@ -131,15 +125,12 @@ public class KeyFactory2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyFactory#generatePrivate(java.security.spec.KeySpec)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidKeySpecException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "generatePrivate",
-          methodArgs = {KeySpec.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "generatePrivate",
+        args = {java.security.spec.KeySpec.class}
+    )
     public void test_generatePrivateLjava_security_spec_KeySpec() {
         // Test for method java.security.PrivateKey
         // java.security.KeyFactory.generatePrivate(java.security.spec.KeySpec)
@@ -168,6 +159,7 @@ public class KeyFactory2Test extends junit.framework.TestCase {
                                 + keyfactAlgs[i], samePrivate);
                 fact.generatePrivate(new PKCS8EncodedKeySpec(keys.getPrivate()
                         .getEncoded()));
+                
             } catch (InvalidKeySpecException e) {
                 fail("invalid key spec for algorithm " + keyfactAlgs[i]);
             } catch (NoSuchAlgorithmException e) {
@@ -177,19 +169,16 @@ public class KeyFactory2Test extends junit.framework.TestCase {
             }
         }
     }
-
+    
     /**
      * @tests java.security.KeyFactory#generatePublic(java.security.spec.KeySpec)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidKeySpecException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "generatePublic",
-          methodArgs = {KeySpec.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "InvalidKeySpecException checking missed",
+        method = "generatePublic",
+        args = {java.security.spec.KeySpec.class}
+    )
     public void test_generatePublicLjava_security_spec_KeySpec() {
         // Test for method java.security.PublicKey
         // java.security.KeyFactory.generatePublic(java.security.spec.KeySpec)
@@ -228,15 +217,12 @@ public class KeyFactory2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyFactory#getAlgorithm()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAlgorithm",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAlgorithm",
+        args = {}
+    )
     public void test_getAlgorithm() {
         // Test for method java.lang.String
         // java.security.KeyFactory.getAlgorithm()
@@ -257,15 +243,12 @@ public class KeyFactory2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyFactory#getInstance(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchAlgorithmException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "NoSuchAlgorithmException checking missed",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_String() {
         // Test for method java.security.KeyFactory
         // java.security.KeyFactory.getInstance(java.lang.String)
@@ -282,15 +265,12 @@ public class KeyFactory2Test extends junit.framework.TestCase {
      * @tests java.security.KeyFactory#getInstance(java.lang.String,
      *        java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchAlgorithmException, NoSuchProviderException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "NoSuchAlgorithmException, NoSuchProviderException checking missed",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_lang_String() {
 
         // Test1: Test for method java.security.KeyFactory
@@ -325,15 +305,12 @@ public class KeyFactory2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyFactory#getInstance(java.lang.String, Provider)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchAlgorithmException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, Provider.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "NoSuchAlgorithmException checking missed",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_security_Provider() {
 
         // Test1: Test for method java.security.KeyFactory
@@ -369,15 +346,12 @@ public class KeyFactory2Test extends junit.framework.TestCase {
      * @tests java.security.KeyFactory#getKeySpec(java.security.Key,
      *        java.lang.Class)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidKeySpecException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getKeySpec",
-          methodArgs = {Key.class, Class.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "InvalidKeySpecException checking missed",
+        method = "getKeySpec",
+        args = {java.security.Key.class, java.lang.Class.class}
+    )
     public void test_getKeySpecLjava_security_KeyLjava_lang_Class() {
         // Test for method java.security.spec.KeySpec
         // java.security.KeyFactory.getKeySpec(java.security.Key,
@@ -435,15 +409,12 @@ public class KeyFactory2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyFactory#getProvider()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getProvider",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getProvider",
+        args = {}
+    )
     public void test_getProvider() {
         // Test for method java.security.Provider
         // java.security.KeyFactory.getProvider()
@@ -462,15 +433,12 @@ public class KeyFactory2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyFactory#translateKey(java.security.Key)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidKeyException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "translateKey",
-          methodArgs = {Key.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "InvalidKeyException checking missed",
+        method = "translateKey",
+        args = {java.security.Key.class}
+    )
     public void test_translateKeyLjava_security_Key() {
         // Test for method java.security.Key
         // java.security.KeyFactory.translateKey(java.security.Key)
@@ -525,7 +493,7 @@ public class KeyFactory2Test extends junit.framework.TestCase {
         Provider provider = Security.getProvider(providerName);
         if (provider == null)
             return new String[0];
-        Enumeration e = provider.keys();
+        Enumeration<Object> e = provider.keys();
         while (e.hasMoreElements()) {
             String algorithm = (String) e.nextElement();
             if (algorithm.startsWith(KEYFACTORY_ID) && !algorithm.contains(" ")) {
@@ -533,14 +501,14 @@ public class KeyFactory2Test extends junit.framework.TestCase {
             }
         }
 
-        return (String[]) algs.toArray(new String[algs.size()]);
+        return algs.toArray(new String[algs.size()]);
     }
 
     /**
      * Returns the public key spec class for a given algorithm, or null if it is
      * not known.
      */
-    private Class getPrivateKeySpecClass(String algName) {
+    private Class<? extends KeySpec> getPrivateKeySpecClass(String algName) {
         if (algName.equals("RSA")) {
             return java.security.spec.RSAPrivateCrtKeySpec.class;
         }
@@ -554,7 +522,7 @@ public class KeyFactory2Test extends junit.framework.TestCase {
      * Returns the private key spec class for a given algorithm, or null if it
      * is not known.
      */
-    private Class getPublicKeySpecClass(String algName) {
+    private Class<? extends KeySpec> getPublicKeySpecClass(String algName) {
         if (algName.equals("RSA")) {
             return java.security.spec.RSAPublicKeySpec.class;
         }

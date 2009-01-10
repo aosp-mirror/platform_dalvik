@@ -183,7 +183,7 @@ If a constant in the file becomes out of sync, the VM will log an error
 message and abort during startup.
 
 
-==== Tips ====
+==== Development tips ====
 
 If you need to debug the initial piece of an opcode handler, and your
 debug code expands it beyond the handler size limit, you can insert a

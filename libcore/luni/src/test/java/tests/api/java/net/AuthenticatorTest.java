@@ -17,34 +17,71 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.Authenticator;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.net.Authenticator.RequestorType;
+import java.security.Permission;
 
 import junit.framework.TestCase;
 
-@TestTargetClass(Authenticator.class) 
+@TestTargetClass(value = Authenticator.class,
+                 untestedMethods = {
+                    @TestTargetNew(
+                         level = TestLevel.NOT_FEASIBLE,
+                         notes = "",
+                         method = "getRequestingHost",
+                         args = {}
+                     ),
+                     @TestTargetNew(
+                         level = TestLevel.NOT_FEASIBLE,
+                         notes = "",
+                         method = "getRequestingPort",
+                         args = {}
+                     ),
+                     @TestTargetNew(
+                         level = TestLevel.NOT_FEASIBLE,
+                         notes = "",
+                         method = "getRequestingSite",
+                         args = {}
+                     ),
+                     @TestTargetNew(
+                         level = TestLevel.NOT_FEASIBLE,
+                         notes = "",
+                         method = "getRequestingProtocol",
+                         args = {}
+                     ),
+                     @TestTargetNew(
+                         level = TestLevel.NOT_FEASIBLE,
+                         notes = "",
+                         method = "getRequestingPrompt",
+                         args = {}
+                     ),
+                     @TestTargetNew(
+                         level = TestLevel.NOT_FEASIBLE,
+                         notes = "",
+                         method = "getRequestingScheme",
+                         args = {}
+                     )}
+    ) 
 public class AuthenticatorTest extends TestCase {
 
     /**
      * @tests java.net.Authenticator.RequestorType#valueOf(String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Test for checking RequestorType values.",
-      targets = {
-        @TestTarget(
-          methodName = "!Constants",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Test for checking RequestorType values.",
+        method = "!Constants",
+        args = {}
+    )
     public void test_RequestorType_valueOfLjava_lang_String() throws Exception {
         assertEquals(RequestorType.PROXY, Authenticator.RequestorType
                 .valueOf("PROXY"));
@@ -71,15 +108,12 @@ public class AuthenticatorTest extends TestCase {
     /**
      * @tests java.net.Authenticator.RequestorType#values()
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "Test for checking RequestorType values.",
-          targets = {
-            @TestTarget(
-              methodName = "!Constants",
-              methodArgs = {}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Test for checking RequestorType values.",
+        method = "!Constants",
+        args = {}
+    )
     public void test_RequestorType_values() throws Exception {        
         RequestorType[] rt = RequestorType.values();
         assertEquals(RequestorType.PROXY, rt[0]);
@@ -89,15 +123,12 @@ public class AuthenticatorTest extends TestCase {
     /**
      * @tests java.net.Authenticator#requestPasswordAuthentication(java.net.InetAddress, int, String, String, String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "requestPasswordAuthentication",
-          methodArgs = {InetAddress.class, int.class, String.class, String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "requestPasswordAuthentication",
+        args = {java.net.InetAddress.class, int.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void test_requestPasswordAuthentication_InetAddress_int_String_String_String() throws Exception {
         // Regression test for Harmony-2413
         MockAuthenticator mock = new MockAuthenticator();
@@ -105,20 +136,40 @@ public class AuthenticatorTest extends TestCase {
         Authenticator.setDefault(mock);
         Authenticator.requestPasswordAuthentication(addr, -1, "http", "promt", "HTTP");
         assertEquals(mock.getRequestorType(), RequestorType.SERVER);
+        
+        SecurityManager sm = new SecurityManager() {
+            final String permissionName = "requestPasswordAuthentication";
+
+            public void checkPermission(Permission perm) {
+                if (perm.getName().equals(permissionName)) {
+                    throw new SecurityException();
+                }
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            Authenticator.requestPasswordAuthentication("test_host", addr, -1, 
+                    "http", "promt", "HTTP");
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+            Authenticator.setDefault(null);
+        }        
     }
 
     /**
      * @tests java.net.Authenticator#requestPasswordAuthentication(String, java.net.InetAddress, int, String, String, String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "requestPasswordAuthentication",
-          methodArgs = {String.class, InetAddress.class, int.class, String.class, String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "requestPasswordAuthentication",
+        args = {java.lang.String.class, java.net.InetAddress.class, int.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void test_requestPasswordAuthentication_String_InetAddress_int_String_String_String() throws Exception {
         // Regression test for Harmony-2413
         MockAuthenticator mock = new MockAuthenticator();
@@ -126,6 +177,29 @@ public class AuthenticatorTest extends TestCase {
         Authenticator.setDefault(mock);
         Authenticator.requestPasswordAuthentication("test_host", addr, -1, "http", "promt", "HTTP");
         assertEquals(mock.getRequestorType(), RequestorType.SERVER);
+        
+        SecurityManager sm = new SecurityManager() {
+            final String permissionName = "requestPasswordAuthentication";
+
+            public void checkPermission(Permission perm) {
+                if (perm.getName().equals(permissionName)) {
+                    throw new SecurityException();
+                }
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            Authenticator.requestPasswordAuthentication("test_host", addr, -1, 
+                    "http", "promt", "HTTP");
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+            Authenticator.setDefault(null);
+        }
     }
 
     /**
@@ -133,15 +207,12 @@ public class AuthenticatorTest extends TestCase {
      * @tests java.net.Authenticator#
      *         requestPasswordAuthentication_String_InetAddress_int_String_String_String_URL_Authenticator_RequestorType()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "requestPasswordAuthentication",
-          methodArgs = {String.class, InetAddress.class, int.class, String.class, String.class, String.class, URL.class, Authenticator.RequestorType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "requestPasswordAuthentication",
+        args = {java.lang.String.class, java.net.InetAddress.class, int.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.net.URL.class, java.net.Authenticator.RequestorType.class}
+    )
     public void test_requestPasswordAuthentication_String_InetAddress_int_String_String_String_URL_Authenticator_RequestorType()
             throws UnknownHostException, MalformedURLException {
         MockAuthenticator mock = new MockAuthenticator();
@@ -151,21 +222,42 @@ public class AuthenticatorTest extends TestCase {
                 RequestorType.PROXY);
         assertNull(mock.getRequestingURL());
         assertNull(mock.getRequestorType());
+        
+        SecurityManager sm = new SecurityManager() {
+            final String permissionName = "requestPasswordAuthentication";
+
+            public void checkPermission(Permission perm) {
+                if (perm.getName().equals(permissionName)) {
+                    throw new SecurityException();
+                }
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            Authenticator.requestPasswordAuthentication("localhost", InetAddress
+                    .getByName("127.0.0.1"), 80, "HTTP", "", "", url,
+                    RequestorType.PROXY);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+            Authenticator.setDefault(null);
+        }
     }
 
     /**
      * 
      * @tests java.net.Authenticator#getRequestingURL()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getRequestingURL",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getRequestingURL",
+        args = {}
+    )
         public void test_getRequestingURL() throws Exception {
         MockAuthenticator mock = new MockAuthenticator();
         assertNull(mock.getRequestingURL());
@@ -175,20 +267,96 @@ public class AuthenticatorTest extends TestCase {
      * 
      * @tests java.net.Authenticator#getRequestorType()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getRequestorType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getRequestorType",
+        args = {}
+    )
     public void test_getRequestorType() throws Exception {
         MockAuthenticator mock = new MockAuthenticator();
         assertNull(mock.getRequestorType());
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDefault",
+        args = {java.net.Authenticator.class}
+    )
+    public void test_setDefault() {
+        StubAuthenticator stub = new StubAuthenticator();
+        InetAddress addr;
+        try {
+            addr = InetAddress.getLocalHost();
+            PasswordAuthentication  pa = Authenticator.
+            requestPasswordAuthentication(addr, 8080, "http", "promt", "HTTP");
+            assertNull(pa);
+       
+        } catch (UnknownHostException e) {
+            fail("UnknownHostException was thrown.");
+        }
+        
+        MockAuthenticator mock = new MockAuthenticator();
+        Authenticator.setDefault(mock);
+        
+        try {
+            addr = InetAddress.getLocalHost();
+            PasswordAuthentication  pa = Authenticator.
+            requestPasswordAuthentication(addr, 80, "http", "promt", "HTTP");
+            assertNull(pa);
+        
+        } catch (UnknownHostException e) {
+            fail("UnknownHostException was thrown.");
+        }
+        Authenticator.setDefault(null);
+        
+        SecurityManager sm = new SecurityManager() {
+            final String permissionName = "setDefaultAuthenticator";
+
+            public void checkPermission(Permission perm) {
+                if (perm.getName().equals(permissionName)) {
+                    throw new SecurityException();
+                }
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            Authenticator.setDefault(stub);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+            Authenticator.setDefault(null);
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Authenticator",
+        args = {}
+    )
+    public void test_Constructor() {
+        MockAuthenticator ma = new MockAuthenticator();
+        assertNull(ma.getRequestingURL());
+        assertNull(ma.getRequestorType());
+    }    
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPasswordAuthentication",
+        args = {}
+    )
+    public void test_getPasswordAuthentication() {
+        MockAuthenticator ma = new MockAuthenticator();
+        assertNull(ma.getPasswordAuthentication());
+    }
+    
     /*
      * Mock Authernticator for test
      */
@@ -203,6 +371,53 @@ public class AuthenticatorTest extends TestCase {
 
         public Authenticator.RequestorType getRequestorType() {
             return super.getRequestorType();
+        }
+        
+        public PasswordAuthentication getPasswordAuthentication() {
+            return super.getPasswordAuthentication();
+        }
+        
+        public String getMockRequestingHost() {
+            return super.getRequestingHost();
+        }
+        
+        public int getMockRequestingPort() {
+            return super.getRequestingPort();
+        }
+        
+        public String getMockRequestingPrompt() {
+            return super.getRequestingPrompt();
+        }
+        
+        public String getMockRequestingProtocol() {
+            return super.getRequestingProtocol();
+        }
+        
+        public String getMockRequestingScheme() {
+            return super.getRequestingScheme();
+        }
+        
+        public InetAddress getMockRequestingSite() {
+            return super.getRequestingSite();
+        }
+    }
+    
+    class StubAuthenticator extends java.net.Authenticator {
+        public StubAuthenticator() {
+            super();
+        }
+
+        public URL getRequestingURL() {
+            return null;
+        }
+
+        public Authenticator.RequestorType getRequestorType() {
+            return null;
+        }
+        
+        public PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication("test", 
+                    new char[] {'t', 'e', 's', 't'});
         }
     }
 }

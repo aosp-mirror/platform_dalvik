@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,9 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -31,7 +31,7 @@ import java.util.PropertyPermission;
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.util.Locale
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(java.util.Locale.class)
 public class JavaUtilLocale extends TestCase {
     
     SecurityManager old;
@@ -47,16 +47,13 @@ public class JavaUtilLocale extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that java.util.Locale.setDefault(Locale) method " +
-            "calls checkPermission method of security permissions.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that java.util.Locale.setDefault(Locale) method calls checkPermission on security manager.",
+        method = "setDefault",
+        args = {java.util.Locale.class}
+    )
     public void test_setDefault() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;
@@ -72,7 +69,6 @@ public class JavaUtilLocale extends TestCase {
                 }
                 super.checkPermission(permission);
             }
-            
         }
         
         Locale loc = Locale.getDefault();

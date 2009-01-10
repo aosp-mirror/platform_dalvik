@@ -23,13 +23,15 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.nio.ByteBuffer;
 import java.security.DigestException;
+import java.security.MessageDigest;
 import java.security.MessageDigestSpi;
+import java.security.NoSuchAlgorithmException;
 
 import junit.framework.TestCase;
 @TestTargetClass(MessageDigestSpi.class)
@@ -41,35 +43,70 @@ public class MessageDigestSpiTest extends TestCase {
     /**
     * java.security.MessageDigestSpi#MessageDigestSpi()
     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "MessageDigestSpi",
-          methodArgs = {}
+    @SuppressWarnings("cast")
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "MessageDigestSpi",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineDigest",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineReset",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineUpdate",
+            args = {byte.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineUpdate",
+            args = {byte[].class, int.class, int.class}
         )
     })
    public void test_constructor() {
+        MyMessageDigest mds;
         try {
-            new MyMessageDigest();
+            mds = new MyMessageDigest();
+            assertTrue(mds instanceof MessageDigestSpi);
         } catch (Exception e) {
             fail("Unexpected exception " + e.getMessage());
+        }
+        
+        try {
+            mds = new MyMessageDigest();
+            byte[] ba = {0, 1, 2, 3, 4, 5};
+            
+            mds.engineDigest();
+            mds.engineReset();
+            mds.engineUpdate(ba[0]);
+            mds.engineUpdate(ba, 0, ba.length);
+        } catch (Exception e) {
+            fail("Unexpected exception for abstract methods");
         }
     }
 
     /**
      * java.security.MessageDigestSpi#engineDigest(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification of other variants of len and offset parameters missed",
-      targets = {
-        @TestTarget(
-          methodName = "engineDigest",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "engineDigest",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_engineDigestLB$LILI() throws Exception {
 
         final int DIGEST_LENGHT = 2;
@@ -98,6 +135,23 @@ public class MessageDigestSpiTest extends TestCase {
             fail("No expected DigestException");
         } catch (DigestException e) {
         }
+        
+        try {
+            //test: offset param > digest length
+            md.engineDigest(b, b.length + 1, b.length);
+            fail("No expected DigestException - 1");
+        } catch (DigestException e) {
+        }
+        
+        try {
+            //test: negative param
+            md.engineDigest(b, -1, b.length);
+            fail("No expected DigestException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // on RI
+        } catch (DigestException e) {
+            // ok
+        }
 
         assertEquals("incorrect result", DIGEST_LENGHT, md
                 .engineDigest(b, 1, 3));
@@ -115,32 +169,34 @@ public class MessageDigestSpiTest extends TestCase {
     /**
      * java.security.MessageDigestSpi#engineGetDigestLength()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Not zero digest length in bytes wasn't checked",
-      targets = {
-        @TestTarget(
-          methodName = "engineGetDigestLength",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "engineGetDigestLength",
+        args = {}
+    )
     public void test_engineGetDigestLength() {
         MyMessageDigest md = new MyMessageDigest();
         assertEquals(0, md.engineGetDigestLength());
+        
+        MessageDigest md5Digest = null;
+        try {
+            md5Digest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            fail("unexpected Exception: " + e);
+        }
+        assertEquals(16, md5Digest.getDigestLength());
     }
 
     /**
      * java.security.MessageDigestSpi#engineUpdate(ByteBuffer)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "engineUpdate",
-          methodArgs = {ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "engineUpdate",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void test_engineUpdateLjava_nio_ByteBuffer() {
         MyMessageDigest md = new MyMessageDigest();
         byte[] b = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -164,15 +220,12 @@ public class MessageDigestSpiTest extends TestCase {
     /**
      * @tests java.security.MessageDigestSpi#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() throws CloneNotSupportedException {
         MyMessageDigest md = new MyMessageDigest();
         try {

@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.Guard;
 import java.security.GuardedObject;
@@ -44,13 +44,18 @@ public class GuardedObjectTest extends TestCase {
     }
 
     /** Null guard imposes no restriction. */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Haven't separate case for getObject() method",
-      targets = {
-        @TestTarget(
-          methodName = "GuardedObject",
-          methodArgs = {Object.class, Guard.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "GuardedObject",
+            args = {java.lang.Object.class, java.security.Guard.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getObject",
+            args = {}
         )
     })
     public void testNoGuard() {
@@ -64,13 +69,18 @@ public class GuardedObjectTest extends TestCase {
     }
 
     /** Test real guard can both allow and deny access. */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Haven't separate case for getObject() method",
-      targets = {
-        @TestTarget(
-          methodName = "GuardedObject",
-          methodArgs = {Object.class, Guard.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "GuardedObject",
+            args = {java.lang.Object.class, java.security.Guard.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getObject",
+            args = {}
         )
     })
     public void testGuard() {

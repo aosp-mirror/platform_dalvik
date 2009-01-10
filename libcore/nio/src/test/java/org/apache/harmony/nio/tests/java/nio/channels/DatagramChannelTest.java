@@ -17,8 +17,8 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 
@@ -31,23 +31,112 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousCloseException;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.IllegalBlockingModeException;
 import java.nio.channels.NotYetConnectedException;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.UnresolvedAddressException;
 import java.nio.channels.UnsupportedAddressTypeException;
 import java.nio.channels.spi.SelectorProvider;
-import java.security.Permission;
 
 import junit.framework.TestCase;
 import tests.support.Support_PortManager;
 
 /**
  * Test for DatagramChannel
- * 
+ *
  */
-@TestTargetClass(DatagramChannel.class)
+@TestTargetClass(
+    value = DatagramChannel.class,
+    untestedMethods = {
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "AsynchronousCloseException can not easily be tested",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "AsynchronousCloseException can not easily be tested",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "AsynchronousCloseException can not easily be tested",
+            method = "read",
+            args = {java.nio.ByteBuffer[].class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "AsynchronousCloseException can not easily be tested",
+            method = "read",
+            args = {java.nio.ByteBuffer[].class, int.class, int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "AsynchronousCloseException can not easily be tested",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "AsynchronousCloseException can not easily be tested",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "AsynchronousCloseException can not easily be tested",
+            method = "write",
+            args = {java.nio.ByteBuffer[].class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "AsynchronousCloseException can not easily be tested",
+            method = "write",
+            args = {java.nio.ByteBuffer[].class, int.class, int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "ClosedByInterruptException can not easily be tested",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "ClosedByInterruptException can not easily be tested",
+            method = "read",
+            args = {java.nio.ByteBuffer[].class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "ClosedByInterruptException can not easily be tested",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "ClosedByInterruptException can not easily be tested",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "ClosedByInterruptException can not easily be tested",
+            method = "write",
+            args = {java.nio.ByteBuffer[].class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "ClosedByInterruptException can not easily be tested",
+            method = "write",
+            args = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    }
+)
 public class DatagramChannelTest extends TestCase {
 
     private static final int CAPACITY_NORMAL = 200;
@@ -127,17 +216,33 @@ public class DatagramChannelTest extends TestCase {
     // Test for methods in abstract class.
     // -------------------------------------------------------------------
     /*
+     * Test method for 'java.nio.channels.DatagramChannel()'
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DatagramChannel",
+        args = {java.nio.channels.spi.SelectorProvider.class}
+    )
+    public void testConstructor() throws IOException {
+        DatagramChannel channel =
+                SelectorProvider.provider().openDatagramChannel();
+        assertNotNull(channel);
+        assertSame(SelectorProvider.provider(),channel.provider());
+        channel = DatagramChannel.open();
+        assertNotNull(channel);
+        assertSame(SelectorProvider.provider(), channel.provider());
+    }
+
+    /*
      * Test method for 'java.nio.channels.DatagramChannel.validOps()'
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "validOps",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "validOps",
+        args = {}
+    )
     public void testValidOps() {
         MockDatagramChannel testMock = new MockDatagramChannel(SelectorProvider
                 .provider());
@@ -151,15 +256,12 @@ public class DatagramChannelTest extends TestCase {
     /*
      * Test method for 'java.nio.channels.DatagramChannel.open()'
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Doesn't call open method.",
-      targets = {
-        @TestTarget(
-          methodName = "open",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies the result of the setUp method.",
+        method = "open",
+        args = {}
+    )
     public void testOpen() {
         MockDatagramChannel testMock = new MockDatagramChannel(SelectorProvider
                 .provider());
@@ -171,166 +273,379 @@ public class DatagramChannelTest extends TestCase {
     }
 
     /*
-     * Test method for 'java.nio.channels.DatagramChannel.read(ByteBuffer)'
+     * Test method for 'java.nio.channels.DatagramChannel.open()'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify AsynchronousCloseException, " + 
-            "ClosedByInterruptException, IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class}
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "isOpen",
+        args = {}
+    )
+    public void testIsOpen() throws Exception {
+        assertTrue(this.channel1.isOpen());
+        this.channel1.close();
+        assertFalse(this.channel1.isOpen());
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies default status of DatagramChannel.",
+            method = "validOps",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies default status of DatagramChannel.",
+            method = "provider",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies default status of DatagramChannel.",
+            method = "isRegistered",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies default status of DatagramChannel.",
+            method = "isBlocking",
+            args = {}
         )
     })
+    public void testChannelBasicStatus() {
+        DatagramSocket gotSocket = this.channel1.socket();
+        assertFalse(gotSocket.isClosed());
+        assertTrue(this.channel1.isBlocking());
+        assertFalse(this.channel1.isRegistered());
+        assertEquals((SelectionKey.OP_READ | SelectionKey.OP_WRITE),
+                this.channel1.validOps());
+        assertEquals(SelectorProvider.provider(), this.channel1.provider());
+    }
+
+    /*
+     * Test method for 'java.nio.channels.DatagramChannel.read(ByteBuffer)'
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )
     public void testReadByteBufferArray() throws IOException {
-        final int testNum = 0;
-        long readres = testNum;
-        MockDatagramChannel testMock = new MockDatagramChannel(SelectorProvider
-                .provider());
-        MockDatagramChannel testMocknull = new MockDatagramChannel(null);
-        int bufSize = 10;
-        ByteBuffer[] readBuf = null;
+        ByteBuffer[] readBuf = new ByteBuffer[2];
+        readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        readBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
         try {
             this.channel1.read(readBuf);
-            fail("Should throw NPE");
-        } catch (NullPointerException e) {
-            // correct
-        }
-        try {
-            readres = testMock.read(readBuf);
-            fail("Should throw NPE");
-        } catch (NullPointerException e) {
-            // correct
-        }
-        readBuf = new ByteBuffer[bufSize];
-        try {
-            readres = this.channel1.read(readBuf);
-            fail("Should throw NotYetConnectedException");
+            fail("should throw NotYetConnectedException");
         } catch (NotYetConnectedException e) {
             // correct
         }
-        readres = testMock.read(readBuf);
-        assertEquals(testNum, readres);
-        readres = testMocknull.read(readBuf);
-        assertEquals(testNum, readres);
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        this.channel1.configureBlocking(false);
+        // note : blocking-mode will make the read process endless!
+        assertEquals(0, this.channel1.read(readBuf));
+        this.channel1.close();
+        assertFalse(this.channel1.isOpen());
+        try {
+            assertEquals(0, this.channel1.read(readBuf));
+        } catch (ClosedChannelException e) {
+            // correct
+        }
     }
 
-    /*
-     * Test method for 'java.nio.channels.DatagramChannel.read(ByteBuffer)'
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class}
-        )
-    })
-    public void testReadByteBufferArray_BufNull() throws IOException {
-        MockDatagramChannel testMock = new MockDatagramChannel(SelectorProvider
-                .provider());
-        MockDatagramChannel testMocknull = new MockDatagramChannel(null);
-
-        ByteBuffer[] readBuf = null;
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void testReadByteBufferArray_ConnectedBufNull()
+            throws IOException {
+        ByteBuffer[] readBuf = new ByteBuffer[2];
+        readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        this.channel1.configureBlocking(false);
+        // note : blocking-mode will make the read process endless!
+        try {
+            this.channel1.read((ByteBuffer[])null);
+            fail("should throw NPE");
+        } catch (NullPointerException e) {
+            // correct
+        }
         try {
             this.channel1.read(readBuf);
-            fail("Should throw NPE");
+            fail("should throw NPE");
         } catch (NullPointerException e) {
             // correct
         }
-        try {
-            testMock.read(readBuf);
-            fail("Should throw NPE");
-        } catch (NullPointerException e) {
-            // correct
-        }
-        try {
-            testMocknull.read(readBuf);
-            fail("Should throw NPE");
-        } catch (NullPointerException e) {
-            // correct
-        }
+        datagramSocket1.close();
     }
 
-    /*
-     * Test method for 'java.nio.channels.DatagramChannel.write(ByteBuffer)'
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify all exceptions according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void testWriteByteBuffer() throws IOException {
-        MockDatagramChannel testMock = new MockDatagramChannel(SelectorProvider
-                .provider());
-        MockDatagramChannel testMocknull = new MockDatagramChannel(null);
-        int bufSize = 10;
-        ByteBuffer[] readBuf = null;
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void testReadByteBufferArray_NotConnectedBufNull()
+            throws IOException {
+        ByteBuffer[] readBuf = new ByteBuffer[2];
+        readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
         try {
-            this.channel1.write(readBuf);
-            fail("Should throw NPE");
+            this.channel1.read((ByteBuffer[])null);
+            fail("should throw NPE");
         } catch (NullPointerException e) {
             // correct
         }
         try {
-            testMock.write(readBuf);
-            fail("Should throw NPE");
-        } catch (NullPointerException e) {
-            // correct
-        }
-        readBuf = new ByteBuffer[bufSize];
-        try {
-            this.channel1.write(readBuf);
-            fail("Should throw NotYetConnectedException");
+            this.channel1.read(readBuf);
+            fail("should throw NotYetConnectedException");
         } catch (NotYetConnectedException e) {
             // correct
         }
-        long writeres = 0;
-        writeres = testMock.write(readBuf);
-
-        assertEquals(0, writeres);
-        writeres = testMocknull.write(readBuf);
-        assertEquals(0, writeres);
     }
 
     /*
-     * Test method for 'java.nio.channels.DatagramChannel.write(ByteBuffer)'
+     * Test method for 'DatagramChannelImpl.write(ByteBuffer[])'
      */
-    @TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "write",
-              methodArgs = {java.nio.ByteBuffer[].class}
-            )
-        })
-    public void testWriteByteBuffer_Bufnull() throws IOException {
-        MockDatagramChannel testMock = new MockDatagramChannel(SelectorProvider
-                .provider());
-        MockDatagramChannel testMocknull = new MockDatagramChannel(null);
-        ByteBuffer[] readBuf = null;
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify all exceptions according to specification.",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void testWriteByteBufferArray_Block() throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
         try {
-            this.channel1.write(readBuf);
-            fail("Should throw NPE");
+            this.channel1.write(writeBuf);
+            fail("Should throw NotYetConnectedException.");
+        } catch (NotYetConnectedException e) {
+            // correct
+        }
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        assertEquals(CAPACITY_NORMAL * 2, this.channel1.write(writeBuf));
+        // cannot be buffered again!
+        assertEquals(0, this.channel1.write(writeBuf));
+    }
+
+    public void disabled_testWriteByteBufferArray_Block_close() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+        ByteBuffer[] targetBuf = new ByteBuffer[2];
+        targetBuf[0] = ByteBuffer.wrap(new byte[2]);
+        targetBuf[1] = ByteBuffer.wrap(new byte[2]);
+
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(TIME_UNIT);
+                    channel1.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            this.channel1.write(targetBuf);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
+
+    public void disabled_testWriteByteBufferArray_Block_interrupt() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        class MyThread extends Thread {
+            public String errMsg = null;
+            public void run() {
+                try {
+                    ByteBuffer[] targetBuf = new ByteBuffer[2];
+                    targetBuf[0] = ByteBuffer.wrap(new byte[2]);
+                    targetBuf[1] = ByteBuffer.wrap(new byte[2]);
+                    channel1.write(targetBuf);
+                    errMsg = "should throw ClosedByInterruptException";
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                } catch (IOException e) {
+                    errMsg = "Unexcted Exception was thrown: " + e.getClass() +
+                            ": " + e.getMessage();
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        try {
+            Thread.sleep(TIME_UNIT);
+            thread.interrupt();
+        } catch (InterruptedException e) {
+            // ok
+        }
+        thread.join(TIME_UNIT);
+        if (thread.errMsg != null) {
+            fail(thread.errMsg);
+        }
+    }
+
+    /*
+     * Test method for 'DatagramChannelImpl.write(ByteBuffer[])'
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void testWriteByteBufferArray_NonBlock() throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        // non-block mode
+        this.channel1.configureBlocking(false);
+        try {
+            this.channel1.write(writeBuf);
+            fail("Should throw NotYetConnectedException.");
+        } catch (NotYetConnectedException e) {
+            // correct
+        }
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        assertEquals(CAPACITY_NORMAL * 2, this.channel1.write(writeBuf));
+        // cannot be buffered again!
+        assertEquals(0, this.channel1.write(writeBuf));
+        this.channel1.close();
+        try {
+            this.channel1.write(writeBuf, 0, 1);
+            fail("Should throw ClosedChannelEception.");
+        } catch (ClosedChannelException e) {
+            // expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void testWriteByteBufferArray_BlockClosed() throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        // non-block mode
+        this.channel1.configureBlocking(false);
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        this.channel1.close();
+        try {
+            channel1.write(writeBuf);
+            fail("should throw ClosedChannelException");
+        } catch (ClosedChannelException e) {
+            // correct
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void testWriteByteBufferArray_NonBlockClosed() throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        this.channel1.close();
+        try {
+            channel1.write(writeBuf);
+            fail("should throw ClosedChannelException");
+        } catch (ClosedChannelException e) {
+            // correct
+        }
+    }
+
+    /*
+     * Test method for 'DatagramChannelImpl.write(ByteBuffer[])'
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void testWriteByteBufferArray_NotConnectedBufNull()
+            throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        try {
+            this.channel1.write((ByteBuffer[])null);
+            fail("should throw NPE");
         } catch (NullPointerException e) {
             // correct
         }
         try {
-            testMock.write(readBuf);
-            fail("Should throw NPE");
+            this.channel1.write(writeBuf);
+            fail("should throw NotYetConnectedException");
+        } catch (NotYetConnectedException e) {
+            // correct
+        }
+    }
+
+    /*
+     * Test method for 'DatagramChannelImpl.write(ByteBuffer[])'
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void testWriteByteBufferArray_ConnectedBufNull()
+            throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        try {
+            this.channel1.write((ByteBuffer[])null);
+            fail("should throw NPE");
         } catch (NullPointerException e) {
             // correct
         }
         try {
-            testMocknull.write(readBuf);
-            fail("Should throw NPE");
+            this.channel1.write(writeBuf);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // correct
+        }
+        datagramSocket1.close();
+        try {
+            this.channel1.write((ByteBuffer[])null);
+            fail("should throw NPE");
         } catch (NullPointerException e) {
             // correct
         }
@@ -342,18 +657,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.socket()'
-     * 
+     *
      * @throws SocketException
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "socket",
-                  methodArgs = {}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_BasicStatusBeforeConnect() throws SocketException {
         assertFalse(this.channel1.isConnected());// not connected
         DatagramSocket s1 = this.channel1.socket();
@@ -365,18 +677,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.socket()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "socket",
-                  methodArgs = {}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_Block_BasicStatusAfterConnect() throws IOException {
         this.channel1.connect(localAddr1);
         DatagramSocket s1 = this.channel1.socket();
@@ -385,17 +694,15 @@ public class DatagramChannelTest extends TestCase {
         // same
         assertSame(s1, s2);
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "socket",
-                  methodArgs = {}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_NonBlock_BasicStatusAfterConnect()
-            throws IOException {        
+            throws IOException {
         this.channel1.connect(localAddr1);
         this.channel1.configureBlocking(false);
         DatagramSocket s1 = this.channel1.socket();
@@ -407,18 +714,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.socket()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "socket",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_ActionsBeforeConnect() throws IOException {
         assertFalse(this.channel1.isConnected());// not connected
         DatagramSocket s = this.channel1.socket();
@@ -427,33 +731,28 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.socket()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "socket",
-                  methodArgs = {}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_Block_ActionsAfterConnect() throws IOException {
         assertFalse(this.channel1.isConnected());// not connected
         this.channel1.connect(localAddr1);
         DatagramSocket s = this.channel1.socket();
         assertSocketActionAfterConnect(s);
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "socket",
-                  methodArgs = {}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_NonBlock_ActionsAfterConnect() throws IOException {
         this.channel1.connect(localAddr1);
         this.channel1.configureBlocking(false);
@@ -494,8 +793,8 @@ public class DatagramChannelTest extends TestCase {
         assertEquals(s.getPort(), localAddr1.getPort());
         assertTrue(s.getReceiveBufferSize() >= 8192);
         // not same , but equals
-        assertNotSame(s.getRemoteSocketAddress(), (SocketAddress) localAddr1);
-        assertEquals(s.getRemoteSocketAddress(), (SocketAddress) localAddr1);
+        assertNotSame(s.getRemoteSocketAddress(), localAddr1);
+        assertEquals(s.getRemoteSocketAddress(), localAddr1);
         assertFalse(s.getReuseAddress());
         assertTrue(s.getSendBufferSize() >= 8192);
         assertEquals(s.getSoTimeout(), 0);
@@ -538,15 +837,12 @@ public class DatagramChannelTest extends TestCase {
     // -------------------------------------------------------------------
     // Test for configureBlocking()
     // -------------------------------------------------------------------
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ClosedChannelException.",
-      targets = {
-        @TestTarget(
-          methodName = "configureBlocking",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {ByteBuffer.class}
+    )
     public void testConfigureBlocking_Read() throws Exception {
         assertTrue(this.channel1.isBlocking());
         ByteBuffer buf = ByteBuffer.allocate(CAPACITY_1KB);
@@ -572,20 +868,18 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.isConnected()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isConnected",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isConnected",
+        args = {}
+    )
     public void testIsConnected_WithServer() throws IOException {
         connectLocalServer();
+        assertTrue(this.channel1.isConnected());
         disconnectAfterConnected();
         this.datagramSocket1.close();
         this.channel1.close();
@@ -599,15 +893,12 @@ public class DatagramChannelTest extends TestCase {
     /**
      * Test method for 'DatagramChannelImpl.connect(SocketAddress)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.net.SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_BlockWithServer() throws IOException {
         // blocking mode
         assertTrue(this.channel1.isBlocking());
@@ -615,20 +906,16 @@ public class DatagramChannelTest extends TestCase {
         datagramSocket1.close();
         disconnectAfterConnected();
     }
-    
+
     /**
      * Test method for 'DatagramChannelImpl.connect(SocketAddress)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify AsynchronousCloseException, " +
-            "ClosedByInterruptException, SecurityException, IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.net.SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_BlockNoServer() throws IOException {
         connectWithoutServer();
         disconnectAfterConnected();
@@ -636,18 +923,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.connect(SocketAddress)'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "connect",
-                  methodArgs = {java.net.SocketAddress.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_NonBlockWithServer() throws IOException {
         // Non blocking mode
         this.channel1.configureBlocking(false);
@@ -658,18 +942,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.connect(SocketAddress)'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "Verifies IllegalArgumentException.",
-              targets = {
-                @TestTarget(
-                  methodName = "connect",
-                  methodArgs = {java.net.SocketAddress.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_Null() throws IOException {
         assertFalse(this.channel1.isConnected());
         try {
@@ -682,18 +963,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.connect(SocketAddress)'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "Verifies UnsupportedAddressTypeException.",
-              targets = {
-                @TestTarget(
-                  methodName = "connect",
-                  methodArgs = {java.net.SocketAddress.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies UnsupportedAddressTypeException.",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_UnsupportedType() throws IOException {
         assertFalse(this.channel1.isConnected());
         class SubSocketAddress extends SocketAddress {
@@ -712,20 +990,65 @@ public class DatagramChannelTest extends TestCase {
         }
     }
 
+    public void disabled_testConnect_Block_close() throws Exception {
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(TIME_UNIT);
+                    channel1.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            this.channel1.connect(localAddr1);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
+
+    public void disabled_testConnect_Block_interrupt() throws Exception {
+        class MyThread extends Thread {
+            public String errMsg = null;
+            public void run() {
+                try {
+                    channel1.connect(localAddr1);
+                    errMsg = "should throw ClosedByInterruptException";
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                } catch (IOException e) {
+                    errMsg = "Unexcted Exception was thrown: " + e.getClass() +
+                            ": " + e.getMessage();
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        try {
+            Thread.sleep(TIME_UNIT);
+            thread.interrupt();
+        } catch (InterruptedException e) {
+            // ok
+        }
+        thread.join(TIME_UNIT);
+        if (thread.errMsg != null) {
+            fail(thread.errMsg);
+        }
+    }
+
     /**
      * Test method for 'DatagramChannelImpl.connect(SocketAddress)'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "Verifies UnresolvedAddressException.",
-              targets = {
-                @TestTarget(
-                  methodName = "connect",
-                  methodArgs = {java.net.SocketAddress.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies UnresolvedAddressException.",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_Unresolved() throws IOException {
         assertFalse(this.channel1.isConnected());
         InetSocketAddress unresolved = new InetSocketAddress(
@@ -737,15 +1060,13 @@ public class DatagramChannelTest extends TestCase {
             // OK.
         }
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "connect",
-                  methodArgs = {java.net.SocketAddress.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_EmptyHost() throws Exception {
         assertFalse(this.channel1.isConnected());
 
@@ -756,19 +1077,16 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.connect(SocketAddress)'
-     * 
+     *
      * @throws IOException
-     * 
+     *
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "Verifies ClosedChannelException.",
-              targets = {
-                @TestTarget(
-                  methodName = "connect",
-                  methodArgs = {java.net.SocketAddress.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClosedChannelException.",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_ClosedChannelException() throws IOException {
         assertFalse(this.channel1.isConnected());
         this.channel1.close();
@@ -783,19 +1101,16 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.connect(SocketAddress)'
-     * 
+     *
      * @throws IOException
-     * 
+     *
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "Verifies IllegalStateException.",
-              targets = {
-                @TestTarget(
-                  methodName = "connect",
-                  methodArgs = {java.net.SocketAddress.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalStateException.",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_IllegalStateException() throws IOException {
         assertFalse(this.channel1.isConnected());
         this.channel1.connect(localAddr1);
@@ -811,19 +1126,16 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.connect(SocketAddress)'
-     * 
+     *
      * @throws IOException
-     * 
+     *
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies ClosedChannelException.",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.net.SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClosedChannelException.",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testConnect_CheckOpenBeforeStatus() throws IOException {
         assertFalse(this.channel1.isConnected());
         this.channel1.connect(localAddr1);
@@ -874,18 +1186,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.disconnect()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "disconnect",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify IOException.",
+        method = "disconnect",
+        args = {}
+    )
     public void testDisconnect_BeforeConnect() throws IOException {
         assertFalse(this.channel1.isConnected());
         assertEquals(this.channel1, this.channel1.disconnect());
@@ -894,18 +1203,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.disconnect()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "disconnect",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "disconnect",
+        args = {}
+    )
     public void testDisconnect_UnconnectedClosed() throws IOException {
         assertFalse(this.channel1.isConnected());
         this.channel1.close();
@@ -916,18 +1222,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.disconnect()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "disconnect",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "disconnect",
+        args = {}
+    )
     public void testDisconnect_BlockWithServerChannelClosed()
             throws IOException {
         assertTrue(this.channel1.isBlocking());
@@ -939,18 +1242,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.disconnect()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "disconnect",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "disconnect",
+        args = {}
+    )
     public void testDisconnect_NonBlockWithServerChannelClosed()
             throws IOException {
         this.channel1.configureBlocking(false);
@@ -962,19 +1262,17 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.disconnect()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "disconnect",
-          methodArgs = {}
-        )
-    })
-    public void testDisconnect_BlockWithServerServerClosed() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "disconnect",
+        args = {}
+    )
+    public void testDisconnect_BlockWithServerServerClosed()
+            throws IOException {
         assertTrue(this.channel1.isBlocking());
         connectLocalServer();
         // disconnect after server close
@@ -986,18 +1284,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.disconnect()'
-     * 
+     *
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "disconnect",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "disconnect",
+        args = {}
+    )
     public void testDisconnect_NonBlockWithServerServerClosed()
             throws IOException {
         this.channel1.configureBlocking(false);
@@ -1016,18 +1311,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_UnconnectedNull() throws Exception {
         assertFalse(this.channel1.isConnected());
         try {
@@ -1040,18 +1332,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_UnconnectedReadonly() throws Exception {
         assertFalse(this.channel1.isConnected());
         ByteBuffer dst = ByteBuffer.allocateDirect(CAPACITY_NORMAL)
@@ -1067,18 +1356,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_UnconnectedBufEmpty() throws Exception {
         this.channel1.configureBlocking(false);
         assertFalse(this.channel1.isConnected());
@@ -1088,18 +1374,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_UnconnectedBufZero() throws Exception {
         assertFalse(this.channel1.isConnected());
         ByteBuffer dst = ByteBuffer.allocateDirect(CAPACITY_ZERO);
@@ -1108,18 +1391,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_UnconnectedBufNotEmpty() throws Exception {
         assertFalse(this.channel1.isConnected());
         ByteBuffer dst = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
@@ -1131,18 +1411,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_UnconnectedBufFull() throws Exception {
         assertFalse(this.channel1.isConnected());
         ByteBuffer dst = ByteBuffer.allocateDirect(CAPACITY_ONE);
@@ -1154,18 +1431,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_UnconnectedClose() throws Exception {
         assertFalse(this.channel1.isConnected());
         ByteBuffer dst = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
@@ -1181,18 +1455,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_UnconnectedCloseNull() throws Exception {
         assertFalse(this.channel1.isConnected());
         this.channel1.close();
@@ -1208,18 +1479,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_UnconnectedCloseReadonly() throws Exception {
         assertFalse(this.channel1.isConnected());
         ByteBuffer dst = ByteBuffer.allocateDirect(CAPACITY_NORMAL)
@@ -1237,18 +1505,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_NonBlockNoServerBufEmpty() throws Exception {
         this.channel1.configureBlocking(false);
         receiveNonBlockNoServer(CAPACITY_NORMAL);
@@ -1256,18 +1521,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_BlockNoServerNull() throws Exception {
         assertTrue(this.channel1.isBlocking());
         receiveNoServerNull();
@@ -1275,18 +1537,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_NonBlockNoServerNull() throws Exception {
         this.channel1.configureBlocking(false);
         receiveNoServerNull();
@@ -1294,18 +1553,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_BlockNoServerReadonly() throws Exception {
         assertTrue(this.channel1.isBlocking());
         receiveNoServerReadonly();
@@ -1313,18 +1569,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_NonBlockNoServerReadonly() throws Exception {
         this.channel1.configureBlocking(false);
         receiveNoServerReadonly();
@@ -1332,18 +1585,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_NonBlockNoServerBufZero() throws Exception {
         this.channel1.configureBlocking(false);
         receiveNonBlockNoServer(CAPACITY_ZERO);
@@ -1351,18 +1601,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_NonBlockNoServerBufNotEmpty() throws Exception {
         this.channel1.configureBlocking(false);
         connectWithoutServer();
@@ -1373,18 +1620,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_NonBlockNoServerBufFull() throws Exception {
         this.channel1.configureBlocking(false);
         connectWithoutServer();
@@ -1394,18 +1638,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "receive",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_BlockNoServerChannelClose() throws Exception {
         assertTrue(this.channel1.isBlocking());
         receiveNoServerChannelClose();
@@ -1413,18 +1654,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_NonBlockNoServerChannelClose() throws Exception {
         this.channel1.configureBlocking(false);
         receiveNoServerChannelClose();
@@ -1432,18 +1670,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_BlockNoServerCloseNull() throws Exception {
         assertTrue(this.channel1.isBlocking());
         receiveNoServerChannelCloseNull();
@@ -1451,18 +1686,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_NonBlockNoServerCloseNull() throws Exception {
         this.channel1.configureBlocking(false);
         receiveNoServerChannelCloseNull();
@@ -1470,18 +1702,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "receive",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })       
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_NonBlockNoServerCloseReadonly() throws Exception {
         this.channel1.configureBlocking(false);
         receiveNoServerChannelCloseReadonly();
@@ -1489,18 +1718,15 @@ public class DatagramChannelTest extends TestCase {
 
     /**
      * Test method for 'DatagramChannelImpl.receive(ByteBuffer)'
-     * 
+     *
      * @throws Exception
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceive_BlockNoServerCloseReadonly() throws Exception {
         assertTrue(this.channel1.isBlocking());
         receiveNoServerChannelCloseReadonly();
@@ -1598,63 +1824,56 @@ public class DatagramChannelTest extends TestCase {
 
     private void sendDataBlocking(InetSocketAddress addr, ByteBuffer writeBuf)
             throws IOException {
-        InetSocketAddress ipAddr = addr; 
+        InetSocketAddress ipAddr = addr;
         assertEquals(CAPACITY_NORMAL, this.channel1.send(writeBuf, ipAddr));
         assertTrue(this.channel1.isOpen());
         assertTrue(this.channel1.isBlocking());
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
     }
 
     private void sendDataNonBlocking(InetSocketAddress addr, ByteBuffer writeBuf)
             throws IOException {
-        InetSocketAddress ipAddr = addr; 
+        InetSocketAddress ipAddr = addr;
         this.channel1.configureBlocking(false);
         assertEquals(CAPACITY_NORMAL, this.channel1.send(writeBuf, ipAddr));
         assertTrue(this.channel1.isOpen());
         assertFalse(this.channel1.isBlocking());
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
     }
 
     /*
      * Test method for 'DatagramChannelImpl.send(ByteBuffer, SocketAddress)'
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "send",
-                  methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testSend_NoServerBlockingCommon() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         sendDataBlocking(localAddr1, writeBuf);
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "send",
-                  methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testSend_NoServerNonblockingCommon() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         sendDataNonBlocking(localAddr1, writeBuf);
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "send",
-                  methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testSend_NoServerTwice() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         sendDataBlocking(localAddr1, writeBuf);
@@ -1667,15 +1886,13 @@ public class DatagramChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "send",
-                  methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testSend_NoServerNonBlockingTwice() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         sendDataNonBlocking(localAddr1, writeBuf);
@@ -1688,15 +1905,13 @@ public class DatagramChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "send",
-                  methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testSend_NoServerBufNull() throws IOException {
         try {
             sendDataBlocking(localAddr1, null);
@@ -1705,15 +1920,13 @@ public class DatagramChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "send",
-                  methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testSend_NoServerBufNullTwice() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         try {
@@ -1730,15 +1943,13 @@ public class DatagramChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "DOesn't verify all exceptions according to spec.",
-              targets = {
-                @TestTarget(
-                  methodName = "send",
-                  methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "DOesn't verify all exceptions according to spec.",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testSend_NoServerAddrNull() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         try {
@@ -1748,20 +1959,18 @@ public class DatagramChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "send",
-                  methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testSend_NoServerAddrNullTwice() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         try {
             sendDataBlocking(null, writeBuf);
-            fail("Should throw a NPE here.");
+            fail("Should throw NPE");
         } catch (NullPointerException e) {
             // correct
         }
@@ -1777,19 +1986,20 @@ public class DatagramChannelTest extends TestCase {
     // -------------------------------------------------------------------
     // Test for receive()and send(): Send and Receive with Real Data
     // -------------------------------------------------------------------
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-            )
-          })
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_Normal() throws Exception {
         this.channel1.socket().bind(localAddr2);
         sendByChannel("some normal string in testReceiveSend_Normal",
@@ -1797,19 +2007,21 @@ public class DatagramChannelTest extends TestCase {
         receiveByChannel(CAPACITY_NORMAL, localAddr2,
                 "some normal string in testReceiveSend_Normal");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_NotBound() throws Exception {
         // not bound
         sendByChannel("some normal string in testReceiveSend_Normal",
@@ -1818,19 +2030,21 @@ public class DatagramChannelTest extends TestCase {
         assertNull(channel1.receive(buf));
         assertFalse(channel1.socket().isBound());
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_NonBlock_NotBound() throws Exception {
         // not bound
         this.channel1.configureBlocking(false);
@@ -1838,21 +2052,23 @@ public class DatagramChannelTest extends TestCase {
         sendByChannel("some normal string in testReceiveSend_Normal",
                 localAddr2);
         ByteBuffer buf = ByteBuffer.wrap(new byte[CAPACITY_NORMAL]);
-        assertNull((InetSocketAddress) this.channel1.receive(buf));
+        assertNull(this.channel1.receive(buf));
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_Normal_S2C() throws Exception {
         this.channel1.socket().bind(localAddr2);
         sendByDatagramSocket(
@@ -1860,38 +2076,42 @@ public class DatagramChannelTest extends TestCase {
         receiveByChannel(CAPACITY_NORMAL, localAddr2,
                 "some normal string in testReceiveSend_Normal_S2C");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-            )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_Normal_C2S() throws Exception {
         this.datagramSocket1 = new DatagramSocket(localAddr2.getPort());
         String str1 = "some normal string in testReceiveSend_Normal_C2S";
         sendByChannel(str1, localAddr2);
         receiveByDatagramSocket(CAPACITY_NORMAL, localAddr2, str1);
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_NonBlock_Normal_C2S() throws Exception {
         this.channel1.configureBlocking(false);
         this.channel2.configureBlocking(false);
@@ -1900,19 +2120,21 @@ public class DatagramChannelTest extends TestCase {
         sendByChannel(str1, localAddr2);
         receiveByDatagramSocket(CAPACITY_NORMAL, localAddr2, str1);
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Normal_S2S() throws Exception {
         String msg = "normal string in testReceiveSend_Normal_S2S";
         this.datagramSocket1 = new DatagramSocket(testPort);
@@ -1926,33 +2148,41 @@ public class DatagramChannelTest extends TestCase {
         this.datagramSocket2.receive(rdp);
         assertEquals(new String(buf, 0, CAPACITY_NORMAL).trim(), msg);
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-            )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_Empty() throws Exception {
         this.channel1.socket().bind(localAddr2);
         sendByChannel("", localAddr2);
         receiveByChannel(CAPACITY_NORMAL, localAddr2, "");
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_NonBlock_Empty() throws Exception {
         this.channel1.configureBlocking(false);
         this.channel2.configureBlocking(false);
@@ -1960,37 +2190,41 @@ public class DatagramChannelTest extends TestCase {
         sendByChannel("", localAddr2);
         receiveByChannel(CAPACITY_NORMAL, localAddr2, "");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-            )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_Empty_S2C() throws Exception {
         this.channel1.socket().bind(localAddr2);
         sendByDatagramSocket("", localAddr2);
         receiveByChannel(CAPACITY_NORMAL, localAddr2, "");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_NonBlock_Empty_S2C() throws Exception {
         this.channel1.configureBlocking(false);
         this.channel2.configureBlocking(false);
@@ -1998,37 +2232,41 @@ public class DatagramChannelTest extends TestCase {
         sendByDatagramSocket("", localAddr2);
         receiveByChannel(CAPACITY_NORMAL, localAddr2, "");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-            )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_Empty_C2S() throws Exception {
         this.datagramSocket1 = new DatagramSocket(localAddr2.getPort());
         sendByChannel("", localAddr2);
         receiveByDatagramSocket(CAPACITY_NORMAL, localAddr2, "");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_NonBlock_Empty_C2S() throws Exception {
         this.channel1.configureBlocking(false);
         this.channel2.configureBlocking(false);
@@ -2036,15 +2274,13 @@ public class DatagramChannelTest extends TestCase {
         sendByChannel("", localAddr2);
         receiveByDatagramSocket(CAPACITY_NORMAL, localAddr2, "");
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReceiveSend_Empty_S2S() throws Exception {
         String msg = "";
         this.datagramSocket1 = new DatagramSocket(testPort);
@@ -2058,55 +2294,61 @@ public class DatagramChannelTest extends TestCase {
         this.datagramSocket2.receive(rdp);
         assertEquals(new String(buf, 0, CAPACITY_NORMAL).trim(), msg);
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_Oversize() throws Exception {
         this.channel1.socket().bind(localAddr2);
         sendByChannel("0123456789", localAddr2);
         receiveByChannel(5, localAddr2, "01234");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_Oversize_C2S() throws Exception {
         this.datagramSocket1 = new DatagramSocket(localAddr2.getPort());
         sendByChannel("0123456789", localAddr2);
         receiveByDatagramSocket(5, localAddr2, "01234");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_NonBlock_Oversize_C2S() throws Exception {
         this.channel1.configureBlocking(false);
         this.channel2.configureBlocking(false);
@@ -2114,37 +2356,41 @@ public class DatagramChannelTest extends TestCase {
         sendByChannel("0123456789", localAddr2);
         receiveByDatagramSocket(5, localAddr2, "01234");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_Block_Oversize_S2C() throws Exception {
         this.channel1.socket().bind(localAddr2);
         sendByDatagramSocket("0123456789", localAddr2);
         receiveByChannel(5, localAddr2, "01234");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "receive",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),
-              @TestTarget(
-                methodName = "send",
-                methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-            )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "receive",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "send",
+            args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+        )
+    })
     public void testReceiveSend_8K() throws Exception {
         StringBuffer str8k = new StringBuffer();
         for (int i = 0; i < 8 * CAPACITY_1KB; i++) {
@@ -2155,16 +2401,13 @@ public class DatagramChannelTest extends TestCase {
         sendByChannel(str, localAddr2);
         receiveByChannel(8 * CAPACITY_1KB, localAddr2, str);
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "Doesn't verify AsynchronousCloseException, " +
-                    "ClosedByInterruptException.",
-              targets = {
-                @TestTarget(
-                  methodName = "send",
-                  methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-                )
-            })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testReceiveSend_64K() throws Exception {
         StringBuffer str64k = new StringBuffer();
         for (int i = 0; i < CAPACITY_64KB; i++) {
@@ -2227,7 +2470,7 @@ public class DatagramChannelTest extends TestCase {
             this.channel1.close();
         }
     }
-    
+
     /*
      * Fails if the difference between current time and start time is greater
      * than timeout.
@@ -2256,15 +2499,13 @@ public class DatagramChannelTest extends TestCase {
     private class mockAddress extends SocketAddress {
         private static final long serialVersionUID = 1L;
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "send",
-          methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
     public void testSend_MockSocketAddress() throws Exception {
 
         SocketAddress badAddr = new mockAddress();
@@ -2288,58 +2529,217 @@ public class DatagramChannelTest extends TestCase {
             System.setSecurityManager(sm);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify AsynchronousCloseException, " + 
-            "ClosedByInterruptException, IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void testRead_Security() throws Exception {        
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify AsynchronousCloseException, ClosedByInterruptException, IOException.",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, SocketAddress.class}
+    )
+    public void testSend_Security() throws Exception {
         ByteBuffer buf = ByteBuffer.allocate(CAPACITY_NORMAL);
         String strHello = "hello";
         localAddr1 = new InetSocketAddress("127.0.0.1", testPort);
         this.channel1.socket().bind(localAddr1);
         this.channel2.socket().bind(localAddr2);
         this.channel1.connect(localAddr2);
-        this.channel2.send(ByteBuffer.wrap(strHello.getBytes()), localAddr1);
-        final SecurityManager sm = System.getSecurityManager();
-        System.setSecurityManager(new MockSecurityManager("10.0.0.1"));
 
-        // seems no security check
+        final SecurityManager sm = System.getSecurityManager();
+        MockSecurityManager mockManager = new MockSecurityManager("127.0.0.1");
+        System.setSecurityManager(mockManager);
+
         try {
+            this.channel2.send(ByteBuffer.wrap(strHello.getBytes()), localAddr1);
             assertEquals(strHello.length(), this.channel1.read(buf));
         } finally {
             System.setSecurityManager(sm);
         }
+
+        assertTrue(mockManager.checkConnectCalled);
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "receive",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })
-    public void testReceive_Peek_Security_Nonblocking() throws Exception {        
+
+    public void disabled_testSend_Block_close() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+        ByteBuffer targetBuf = ByteBuffer.wrap(new byte[2]);
+
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(TIME_UNIT);
+                    channel1.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            this.channel1.send(targetBuf, localAddr1);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
+
+    public void disabled_testSend_Block_interrupt() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        class MyThread extends Thread {
+            public String errMsg = null;
+            public void run() {
+                try {
+                    ByteBuffer targetBuf = ByteBuffer.wrap(new byte[2]);
+                    channel1.send(targetBuf, localAddr1);
+                    errMsg = "should throw ClosedByInterruptException";
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                } catch (IOException e) {
+                    errMsg = "Unexcted Exception was thrown: " + e.getClass() +
+                            ": " + e.getMessage();
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        try {
+            Thread.sleep(TIME_UNIT);
+            thread.interrupt();
+        } catch (InterruptedException e) {
+            // ok
+        }
+        thread.join(TIME_UNIT);
+        if (thread.errMsg != null) {
+            fail(thread.errMsg);
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testReceive_Security() throws Exception {
         ByteBuffer buf = ByteBuffer.allocate(CAPACITY_NORMAL);
         String strHello = "hello";
         localAddr1 = new InetSocketAddress("127.0.0.1", testPort);
         this.channel1.socket().bind(localAddr1);
         sendByChannel(strHello, localAddr1);
+
         final SecurityManager sm = System.getSecurityManager();
+        MockSecurityManager mockManager = new MockSecurityManager("10.0.0.1");
+        System.setSecurityManager(mockManager);
+
         try {
-            System.setSecurityManager(new MockSecurityManager("10.0.0.1"));
             this.channel1.configureBlocking(false);
-            // for accepted addr, no problem.
             assertNull(this.channel1.receive(buf));
         } finally {
             System.setSecurityManager(sm);
         }
+
+        assertTrue(mockManager.checkAcceptCalled);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testReceive_Block_close() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+        ByteBuffer targetBuf = ByteBuffer.wrap(new byte[2]);
+
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(TIME_UNIT);
+                    channel1.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            this.channel1.receive(targetBuf);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testReceive_Block_interrupt() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        class MyThread extends Thread {
+            public String errMsg = null;
+            public void run() {
+                try {
+                    ByteBuffer targetBuf = ByteBuffer.wrap(new byte[2]);
+                    channel1.receive(targetBuf);
+                    errMsg = "should throw ClosedByInterruptException";
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                } catch (IOException e) {
+                    errMsg = "Unexcted Exception was thrown: " + e.getClass() +
+                            ": " + e.getMessage();
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        try {
+            Thread.sleep(TIME_UNIT);
+            thread.interrupt();
+        } catch (InterruptedException e) {
+            // ok
+        }
+        thread.join(TIME_UNIT);
+        if (thread.errMsg != null) {
+            fail(thread.errMsg);
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
+    public void testConnect_Security() throws IOException {
+        localAddr1 = new InetSocketAddress("127.0.0.1", testPort);
+        SecurityManager sm = System.getSecurityManager();
+        MockSecurityManager mockManager = new MockSecurityManager("127.0.0.1");
+        System.setSecurityManager(mockManager);
+
+        try {
+            this.channel1.connect(localAddr1);
+        } finally {
+            System.setSecurityManager(sm);
+        }
+
+        assertTrue(mockManager.checkConnectCalled);
     }
 
     // -------------------------------------------------------------------
@@ -2348,7 +2748,7 @@ public class DatagramChannelTest extends TestCase {
 
     private void connectWriteBuf(InetSocketAddress ipAddr, ByteBuffer buf)
             throws IOException {
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         assertEquals(CAPACITY_NORMAL, this.channel1.write(buf));
         assertEquals(0, this.channel1.write(buf));
@@ -2366,47 +2766,40 @@ public class DatagramChannelTest extends TestCase {
     /*
      * Test method for 'DatagramChannelImpl.write(ByteBuffer)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testWriteByteBuffer_Block() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         connectWriteBuf(localAddr1, writeBuf);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testWriteByteBuffer_NonBlock() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         this.channel1.configureBlocking(false);
         connectWriteBuf(localAddr1, writeBuf);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void testWriteByteBuffer_Block_closed() throws IOException {
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testWriteByteBuffer_BlockClosed() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        InetSocketAddress ipAddr = localAddr1; 
+        InetSocketAddress ipAddr = localAddr1;
         noconnectWrite(writeBuf);
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         this.channel1.close();
         try {
@@ -2416,22 +2809,20 @@ public class DatagramChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void testWriteByteBuffer_NonBlock_closed() throws IOException {
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testWriteByteBuffer_NonBlockClosed() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        InetSocketAddress ipAddr = localAddr1; 
+        InetSocketAddress ipAddr = localAddr1;
         // non block mode
         this.channel1.configureBlocking(false);
         noconnectWrite(writeBuf);
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         this.channel1.close();
         try {
@@ -2441,25 +2832,23 @@ public class DatagramChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void testWriteByteBuffer_Block_BufNull() throws IOException {
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testWriteByteBuffer_BlockBufNull() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(0);
-        InetSocketAddress ipAddr = localAddr1; 
+        InetSocketAddress ipAddr = localAddr1;
         try {
             this.channel1.write((ByteBuffer) null);
             fail("Should throw NPE.");
         } catch (NullPointerException e) {
             // correct
         }
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         try {
             this.channel1.write((ByteBuffer) null);
@@ -2476,18 +2865,16 @@ public class DatagramChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void testWriteByteBuffer_NonBlock_BufNull() throws IOException {
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testWriteByteBuffer_NonBlockBufNull() throws IOException {
         ByteBuffer writeBuf = ByteBuffer.allocateDirect(0);
-        InetSocketAddress ipAddr = localAddr1;     
+        InetSocketAddress ipAddr = localAddr1;
 
         // non block mode
         this.channel1.configureBlocking(false);
@@ -2498,7 +2885,7 @@ public class DatagramChannelTest extends TestCase {
         } catch (NullPointerException e) {
             // correct
         }
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         try {
             this.channel1.write((ByteBuffer) null);
@@ -2519,47 +2906,114 @@ public class DatagramChannelTest extends TestCase {
     /*
      * Test method for 'DatagramChannelImpl.write(ByteBuffer[], int, int)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify all exceptions according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
-    public void testWriteByteBufferArrayIntInt_Block() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify all exceptions according to specification.",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testWriteByteBufferArrayII_Block() throws IOException {
         ByteBuffer[] writeBuf = new ByteBuffer[2];
         writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        InetSocketAddress ipAddr = localAddr1; 
+        InetSocketAddress ipAddr = localAddr1;
         try {
             this.channel1.write(writeBuf, 0, 2);
             fail("Should throw NotYetConnectedException.");
         } catch (NotYetConnectedException e) {
             // correct
         }
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         assertEquals(CAPACITY_NORMAL * 2, this.channel1.write(writeBuf, 0, 2));
         // cannot be buffered again!
         assertEquals(0, this.channel1.write(writeBuf, 0, 1));
-
+        this.channel1.close();
+        try {
+            this.channel1.write(writeBuf, 0, 1);
+            fail("Should throw ClosedChannelEception.");
+        } catch (ClosedChannelException e) {
+            // expected
+        }
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "write",
-                  methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-                )
-            })
-    public void testWriteByteBufferArrayIntInt_NonBlock() throws IOException {
+
+    public void disabled_testWriteByteBufferArrayII_Block_close() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+        ByteBuffer[] targetBuf = new ByteBuffer[2];
+        targetBuf[0] = ByteBuffer.wrap(new byte[2]);
+        targetBuf[1] = ByteBuffer.wrap(new byte[2]);
+
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(TIME_UNIT);
+                    channel1.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            this.channel1.write(targetBuf, 0 ,2);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
+
+    public void disabled_testWriteByteBufferArrayII_Block_interrupt() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        class MyThread extends Thread {
+            public String errMsg = null;
+            public void run() {
+                try {
+                    ByteBuffer[] targetBuf = new ByteBuffer[2];
+                    targetBuf[0] = ByteBuffer.wrap(new byte[2]);
+                    targetBuf[1] = ByteBuffer.wrap(new byte[2]);
+                    channel1.write(targetBuf, 0, 2);
+                    errMsg = "should throw ClosedByInterruptException";
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                } catch (IOException e) {
+                    errMsg = "Unexcted Exception was thrown: " + e.getClass() +
+                            ": " + e.getMessage();
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        try {
+            Thread.sleep(TIME_UNIT);
+            thread.interrupt();
+        } catch (InterruptedException e) {
+            // ok
+        }
+        thread.join(TIME_UNIT);
+        if (thread.errMsg != null) {
+            fail(thread.errMsg);
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testWriteByteBufferArrayII_NonBlock() throws IOException {
         ByteBuffer[] writeBuf = new ByteBuffer[2];
         writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        InetSocketAddress ipAddr = localAddr1; 
+        InetSocketAddress ipAddr = localAddr1;
         // non-block mode
         this.channel1.configureBlocking(false);
         try {
@@ -2568,30 +3022,80 @@ public class DatagramChannelTest extends TestCase {
         } catch (NotYetConnectedException e) {
             // correct
         }
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         assertEquals(CAPACITY_NORMAL * 2, this.channel1.write(writeBuf, 0, 2));
         // cannot be buffered again!
         assertEquals(0, this.channel1.write(writeBuf, 0, 1));
+        this.channel1.close();
+        try {
+            this.channel1.write(writeBuf, 0, 1);
+            fail("Should throw ClosedChannelEception.");
+        } catch (ClosedChannelException e) {
+            // expected
+        }
+    }
 
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testWriteByteBufferArrayII_BlockClosed() throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        // non-block mode
+        this.channel1.configureBlocking(false);
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        this.channel1.close();
+        try {
+            channel1.write(writeBuf, 0, 2);
+            fail("should throw ClosedChannelException");
+        } catch (ClosedChannelException e) {
+            // correct
+        }
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "write",
-                  methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-                )
-            })
-    public void testWriteByteBufferArrayIntInt_NoConnectIndexBad()
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testWriteByteBufferArrayII_NonBlockClosed() throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        this.channel1.close();
+        try {
+            channel1.write(writeBuf, 0, 2);
+            fail("should throw ClosedChannelException");
+        } catch (ClosedChannelException e) {
+            // correct
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testWriteByteBufferArrayII_NotConnectedIndexBad()
             throws IOException {
         ByteBuffer[] writeBuf = new ByteBuffer[2];
         writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        InetSocketAddress ipAddr = localAddr1; 
+        InetSocketAddress ipAddr = localAddr1;
         try {
-            this.channel1.write(writeBuf, -1, 2);
+            this.channel1.write(writeBuf, -1, 0);
             fail("should throw IndexOutOfBoundsException");
         } catch (IndexOutOfBoundsException e) {
             // correct
@@ -2600,96 +3104,6 @@ public class DatagramChannelTest extends TestCase {
             this.channel1.write(writeBuf, 0, -1);
             fail("should throw IndexOutOfBoundsException");
         } catch (IndexOutOfBoundsException e) {
-            // correct
-        }
-        this.channel1.connect(ipAddr); 
-        assertTrue(this.channel1.isConnected());
-        assertEquals(CAPACITY_NORMAL * 2, this.channel1.write(writeBuf, 0, 2));
-        // cannot be buffered again!
-        assertEquals(0, this.channel1.write(writeBuf, 0, 1));
-    }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "write",
-                  methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-                )
-            })
-    public void testWriteByteBufferArrayIntInt_ConnectedIndexBad()
-            throws IOException {
-        ByteBuffer[] writeBuf = new ByteBuffer[2];
-        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        InetSocketAddress ipAddr = localAddr1; 
-        this.channel1.connect(ipAddr); 
-        assertTrue(this.channel1.isConnected());
-        try {
-            this.channel1.write(writeBuf, -1, 2);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // correct
-        }
-        try {
-            this.channel1.write(writeBuf, 0, -1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // correct
-        }
-    }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "write",
-                  methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-                )
-            })
-    public void testWriteByteBufferArrayIntInt_BufNullNoConnect()
-            throws IOException {
-        ByteBuffer[] writeBuf = new ByteBuffer[2];
-        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        try {
-            this.channel1.write(null, 0, 2);
-            fail("should throw NPE");
-        } catch (NullPointerException e) {
-            // correct
-        }
-        try {
-            this.channel1.write(null, -1, 2);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // correct
-        }
-        try {
-            this.channel1.write(null, 0, 3);
-            fail("should throw NPE");
-        } catch (NullPointerException e) {
-            // correct
-        }
-    }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-              )
-    })
-    public void testWriteByteBufferArrayIntInt_BufNullConnect()
-            throws IOException {
-        ByteBuffer[] writeBuf = new ByteBuffer[2];
-        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        InetSocketAddress ipAddr = localAddr1; 
-        this.channel1.connect(ipAddr); 
-        assertTrue(this.channel1.isConnected());
-        try {
-            this.channel1.write(null, 0, 2);
-            fail("should throw NPE");
-        } catch (NullPointerException e) {
             // correct
         }
         try {
@@ -2698,10 +3112,137 @@ public class DatagramChannelTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
             // correct
         }
+        try {
+            this.channel1.write(writeBuf, 1, 2);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 2, 1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 3, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testWriteByteBufferArrayII_ConnectedIndexBad()
+            throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        writeBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        try {
+            this.channel1.write(writeBuf, -1, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 0, -1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 0, 3);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 1, 2);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 2, 1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 3, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testWriteByteBufferArrayII_NotConnectedBufNull()
+            throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        try {
+            this.channel1.write(null, 0, 20);
+            fail("should throw NPE");
+        } catch (NullPointerException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 0, 2);
+            fail("should throw NotYetConnectedException");
+        } catch (NotYetConnectedException e) {
+            // correct
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testWriteByteBufferArrayII_ConnectedBufNull()
+            throws IOException {
+        ByteBuffer[] writeBuf = new ByteBuffer[2];
+        writeBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        try {
+            this.channel1.write(null, 0, 20);
+            fail("should throw NPE");
+        } catch (NullPointerException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 0, 2);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // correct
+        }
         datagramSocket1.close();
         try {
-            this.channel1.write(null, 0, 2);
+            this.channel1.write(null, 0, 20);
             fail("should throw NPE");
+        } catch (NullPointerException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(writeBuf, 0, 2);
+            fail("should throw NullPointerException");
         } catch (NullPointerException e) {
             // correct
         }
@@ -2714,15 +3255,12 @@ public class DatagramChannelTest extends TestCase {
     /*
      * Test method for 'DatagramChannelImpl.read(ByteBuffer)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReadByteBuffer() throws IOException {
         ByteBuffer readBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         try {
@@ -2731,7 +3269,7 @@ public class DatagramChannelTest extends TestCase {
         } catch (NotYetConnectedException e) {
             // correct
         }
-        this.channel1.connect(localAddr1); 
+        this.channel1.connect(localAddr1);
         assertTrue(this.channel1.isConnected());
         this.channel1.configureBlocking(false);
         // note : blocking-mode will make the read process endless!
@@ -2744,25 +3282,23 @@ public class DatagramChannelTest extends TestCase {
             // OK.
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void testReadByteBuffer_bufNull() throws IOException {
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testReadByteBuffer_BufNull() throws IOException {
         ByteBuffer readBuf = ByteBuffer.allocateDirect(0);
-        InetSocketAddress ipAddr = localAddr1; 
+        InetSocketAddress ipAddr = localAddr1;
         try {
             this.channel1.read(readBuf);
             fail("should throw NotYetConnectedException");
         } catch (NotYetConnectedException e) {
             // correct
         }
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         try {
             channel1.read((ByteBuffer) null);
@@ -2779,33 +3315,37 @@ public class DatagramChannelTest extends TestCase {
     /*
      * Test method for 'DatagramChannelImpl.read(ByteBuffer[], int, int)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify AsynchronousCloseException, " + 
-            "ClosedByInterruptException, IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
-    public void testReadByteBufferArrayIntInt() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify AsynchronousCloseException, ClosedByInterruptException, IOException.",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testReadByteBufferArrayII() throws IOException {
         ByteBuffer[] readBuf = new ByteBuffer[2];
         readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
         readBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        InetSocketAddress ipAddr = localAddr1; 
+        InetSocketAddress ipAddr = localAddr1;
         try {
             this.channel1.read(readBuf, 0, 2);
             fail("should throw NotYetConnectedException");
         } catch (NotYetConnectedException e) {
             // correct
         }
-        this.channel1.connect(ipAddr); 
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         this.channel1.configureBlocking(false);
         // note : blocking-mode will make the read process endless!
         assertEquals(0, this.channel1.read(readBuf, 0, 1));
         assertEquals(0, this.channel1.read(readBuf, 0, 2));
+        this.channel1.close();
+        assertFalse(this.channel1.isOpen());
+        try {
+            assertEquals(0, this.channel1.read(readBuf, 0, 1));
+        } catch (ClosedChannelException e) {
+            // correct
+        }
+
         datagramSocket1.close();
         //regression test for HARMONY-932
         try {
@@ -2827,31 +3367,24 @@ public class DatagramChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
-    public void testReadByteBufferArrayIntInt_BufNull() throws IOException {
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testReadByteBufferArrayII_ConnectedBufNull()
+            throws IOException {
         ByteBuffer[] readBuf = new ByteBuffer[2];
         readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        InetSocketAddress ipAddr = localAddr1; 
-        try {
-            this.channel1.read(null, 0, 0);
-            fail("should throw NPE");
-        } catch (NullPointerException e) {
-            // correct
-        }
-        this.channel1.connect(ipAddr); 
+        InetSocketAddress ipAddr = localAddr1;
+        this.channel1.connect(ipAddr);
         assertTrue(this.channel1.isConnected());
         this.channel1.configureBlocking(false);
         // note : blocking-mode will make the read process endless!
         try {
-            this.channel1.read(null, 0, 0);
+            this.channel1.read(null, 0, 2);
             fail("should throw NPE");
         } catch (NullPointerException e) {
             // correct
@@ -2863,31 +3396,218 @@ public class DatagramChannelTest extends TestCase {
         } catch (NullPointerException e) {
             // correct
         }
+        datagramSocket1.close();
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testReadByteBufferArrayII_NotConnectedBufNull()
+            throws IOException {
+        ByteBuffer[] readBuf = new ByteBuffer[2];
+        readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        try {
+            this.channel1.read(null, 0, 2);
+            fail("should throw NPE");
+        } catch (NullPointerException e) {
+            // correct
+        }
+        try {
+            this.channel1.read(readBuf, 0, 2);
+            fail("should throw NotYetConnectedException");
+        } catch (NotYetConnectedException e) {
+            // correct
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testReadByteBufferArrayII_ConnectedIndexBad() throws IOException {
+        ByteBuffer[] readBuf = new ByteBuffer[2];
+        readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        readBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        this.channel1.connect(ipAddr);
+        assertTrue(this.channel1.isConnected());
+        this.channel1.configureBlocking(false);
+        // note : blocking-mode will make the read process endless!
+        try {
+            this.channel1.read(readBuf, -1, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.read(readBuf, 0, -1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
         try {
             this.channel1.read(readBuf, 0, 3);
             fail("should throw IndexOutOfBoundsException");
         } catch (IndexOutOfBoundsException e) {
             // correct
         }
-        datagramSocket1.close();
+        try {
+            this.channel1.read(readBuf, 1, 2);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.read(readBuf, 2, 1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.read(readBuf, 3, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testReadByteBufferArrayII_NotConnectedIndexBad()
+            throws IOException {
+        ByteBuffer[] readBuf = new ByteBuffer[2];
+        readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        readBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        InetSocketAddress ipAddr = localAddr1;
+        try {
+            this.channel1.write(readBuf, -1, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(readBuf, 0, -1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(readBuf, 0, 3);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(readBuf, 1, 2);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(readBuf, 2, 1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+        try {
+            this.channel1.write(readBuf, 3, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // correct
+        }
+    }
+
+    public void disabled_testReadByteBufferArrayII_Block_close() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+        ByteBuffer[] targetBuf = new ByteBuffer[2];
+        targetBuf[0] = ByteBuffer.wrap(new byte[2]);
+        targetBuf[1] = ByteBuffer.wrap(new byte[2]);
+
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(TIME_UNIT);
+                    channel1.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            this.channel1.read(targetBuf, 0, 2);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testReadByteBufferArrayII_Block_interrupt() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        class MyThread extends Thread {
+            public String errMsg = null;
+            public void run() {
+                try {
+                    ByteBuffer[] targetBuf = new ByteBuffer[2];
+                    targetBuf[0] = ByteBuffer.wrap(new byte[2]);
+                    targetBuf[1] = ByteBuffer.wrap(new byte[2]);
+                    channel1.read(targetBuf, 0, 2);
+                    errMsg = "should throw ClosedByInterruptException";
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                } catch (IOException e) {
+                    errMsg = "Unexcted Exception was thrown: " + e.getClass() +
+                            ": " + e.getMessage();
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        try {
+            Thread.sleep(TIME_UNIT);
+            thread.interrupt();
+        } catch (InterruptedException e) {
+            // ok
+        }
+        thread.join(TIME_UNIT);
+        if (thread.errMsg != null) {
+            fail(thread.errMsg);
+        }
     }
 
     // -------------------------------------------------------------------
     // test read and write
     // -------------------------------------------------------------------
-    @TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "read",
-              methodArgs = {java.nio.ByteBuffer.class}
-            ),
-            @TestTarget(
-              methodName = "configureBlocking",
-              methodArgs = {boolean.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReadWrite_configureBlock() throws Exception {
         byte[] targetArray = new byte[2];
         // bind and connect
@@ -2914,14 +3634,38 @@ public class DatagramChannelTest extends TestCase {
         } catch (AsynchronousCloseException e) {
             // ok
         }
+        this.channel1.close();
+        try {
+            this.channel1.configureBlocking(true);
+            fail("should throw ClosedChannelException");
+        } catch (ClosedChannelException e) {
+            // expected
+        }
+        
+        this.channel1 = SelectorProvider.provider().openDatagramChannel();
+        this.channel1.configureBlocking(false);
+        this.channel1.register(SelectorProvider.provider().openSelector(),
+                SelectionKey.OP_READ);
+        try {
+            this.channel1.configureBlocking(true);
+            fail("should throw IllegalBlockingModeException");
+        } catch (IllegalBlockingModeException e) {
+            // expected
+        }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
         )
     })
     public void testReadWrite_Block_Zero() throws Exception {
@@ -2939,23 +3683,23 @@ public class DatagramChannelTest extends TestCase {
 
         // read
         ByteBuffer targetBuf = ByteBuffer.wrap(targetArray);
-        int readCount = this.channel2.read(targetBuf);
-
-        assertEquals(0, readCount);
+        assertEquals(0, this.channel2.read(targetBuf));
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "read",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                ),              
-                @TestTarget(
-                  methodName = "write",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testReadWrite_Block_Normal() throws Exception {
         byte[] sourceArray = new byte[CAPACITY_NORMAL];
         byte[] targetArray = new byte[CAPACITY_NORMAL];
@@ -2972,13 +3716,19 @@ public class DatagramChannelTest extends TestCase {
         readWriteReadData(this.channel1, sourceArray, this.channel2,
                 targetArray, CAPACITY_NORMAL, "testReadWrite_Block_Normal");
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
         )
     })
     public void testReadWrite_Block_Empty() throws Exception {
@@ -3002,19 +3752,21 @@ public class DatagramChannelTest extends TestCase {
         // empty message let the reader blocked
         closeBlockedReaderChannel2(targetBuf);
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "read",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                ),              
-                @TestTarget(
-                  methodName = "write",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testReadWrite_changeBlock_Empty() throws Exception {
         // empty buf
         byte[] sourceArray = "".getBytes();
@@ -3055,19 +3807,21 @@ public class DatagramChannelTest extends TestCase {
             // OK.
         }
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "read",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                ),              
-                @TestTarget(
-                  methodName = "write",
-                  methodArgs = {java.nio.ByteBuffer.class}
-                )
-            })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testReadWrite_Block_8KB() throws Exception {
         byte[] sourceArray = new byte[CAPACITY_1KB * 8];
         byte[] targetArray = new byte[CAPACITY_1KB * 8];
@@ -3118,16 +3872,13 @@ public class DatagramChannelTest extends TestCase {
             assertEquals(targetArray[i], (byte) i);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NotYetConnectedException, " +
-            "ClosedChannelException, ClosedByInterruptException.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReadWrite_Block_64K() throws Exception {
         byte[] sourceArray = new byte[CAPACITY_64KB];
         for (int i = 0; i < sourceArray.length; i++) {
@@ -3149,13 +3900,19 @@ public class DatagramChannelTest extends TestCase {
             // too big
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
         )
     })
     public void testReadWrite_Block_DifferentAddr() throws Exception {
@@ -3181,13 +3938,19 @@ public class DatagramChannelTest extends TestCase {
         // we close the blocked channel
         closeBlockedReaderChannel2(targetBuf);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
         )
     })
     public void testReadWrite_Block_WriterNotBind() throws Exception {
@@ -3210,13 +3973,19 @@ public class DatagramChannelTest extends TestCase {
         ByteBuffer targetBuf = ByteBuffer.wrap(targetArray);
         closeBlockedReaderChannel2(targetBuf);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
         )
     })
     public void testReadWrite_Block_WriterBindLater() throws Exception {
@@ -3270,13 +4039,19 @@ public class DatagramChannelTest extends TestCase {
         }
 
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
         )
     })
     public void testReadWrite_Block_ReaderNotBind() throws Exception {
@@ -3326,19 +4101,20 @@ public class DatagramChannelTest extends TestCase {
     // -------------------------------------------------------------------
     // Test read and write in non-block mode.
     // -------------------------------------------------------------------
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),              
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer.class}
-              )
-          })
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testReadWrite_NonBlock_Normal() throws Exception {
         byte[] sourceArray = new byte[CAPACITY_NORMAL];
         byte[] targetArray = new byte[CAPACITY_NORMAL];
@@ -3358,19 +4134,21 @@ public class DatagramChannelTest extends TestCase {
         readWriteReadData(this.channel1, sourceArray, this.channel2,
                 targetArray, CAPACITY_NORMAL, "testReadWrite_NonBlock_Normal");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),              
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testReadWrite_NonBlock_8KB() throws Exception {
         byte[] sourceArray = new byte[CAPACITY_1KB * 8];
         byte[] targetArray = new byte[CAPACITY_1KB * 8];
@@ -3390,19 +4168,21 @@ public class DatagramChannelTest extends TestCase {
         readWriteReadData(this.channel1, sourceArray, this.channel2,
                 targetArray, 8 * CAPACITY_1KB, "testReadWrite_NonBlock_8KB");
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),              
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testReadWrite_NonBlock_DifferentAddr() throws Exception {
         byte[] sourceArray = new byte[CAPACITY_NORMAL];
         byte[] targetArray = new byte[CAPACITY_NORMAL];
@@ -3427,19 +4207,59 @@ public class DatagramChannelTest extends TestCase {
         ByteBuffer targetBuf = ByteBuffer.wrap(targetArray);
         assertEquals(0, this.channel2.read(targetBuf));
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),              
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
+    public void testReadWrite_NonBlock_Empty() throws Exception {
+        // empty buf
+        byte[] sourceArray = "".getBytes();
+        byte[] targetArray = new byte[CAPACITY_NORMAL];
+
+        this.channel1.configureBlocking(false);
+        this.channel2.configureBlocking(false);
+
+        // bind and connect
+
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        // write
+        ByteBuffer sourceBuf = ByteBuffer.wrap(sourceArray);
+        assertEquals(0, this.channel1.write(sourceBuf));
+
+        // read
+        ByteBuffer targetBuf = ByteBuffer.wrap(targetArray);
+        assertEquals(0, this.channel2.read(targetBuf));
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testReadWrite_NonBlock_WriterNotBind() throws Exception {
         byte[] sourceArray = new byte[CAPACITY_NORMAL];
         byte[] targetArray = new byte[CAPACITY_NORMAL];
@@ -3463,19 +4283,57 @@ public class DatagramChannelTest extends TestCase {
         ByteBuffer targetBuf = ByteBuffer.wrap(targetArray);
         assertEquals(0, this.channel2.read(targetBuf));
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",
-                methodArgs = {java.nio.ByteBuffer.class}
-              ),              
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer.class}
-              )
-          })
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
+    public void testReadWrite_NonBlock_Zero() throws Exception {
+        byte[] sourceArray = new byte[0];
+        byte[] targetArray = new byte[0];
+
+        this.channel1.configureBlocking(false);
+        this.channel2.configureBlocking(false);
+
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        // write
+        ByteBuffer sourceBuf = ByteBuffer.wrap(sourceArray);
+        assertEquals(0, this.channel1.write(sourceBuf));
+
+        // read
+        ByteBuffer targetBuf = ByteBuffer.wrap(targetArray);
+        assertEquals(0, this.channel2.read(targetBuf));
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "read",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testReadWrite_NonBlock_ReaderNotBind() throws Exception {
         byte[] sourceArray = new byte[CAPACITY_NORMAL];
         byte[] targetArray = new byte[CAPACITY_NORMAL];
@@ -3499,36 +4357,94 @@ public class DatagramChannelTest extends TestCase {
         ByteBuffer targetBuf = ByteBuffer.wrap(targetArray);
         assertEquals(0, this.channel2.read(targetBuf));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void test_write_LBuffer_positioned() throws Exception {
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testWriteByteBuffer_Positioned() throws Exception {
         // Regression test for Harmony-683
         int postion = 16;
         DatagramChannel dc = DatagramChannel.open();
-        byte[] sourceArray = new byte[CAPACITY_NORMAL];        
+        byte[] sourceArray = new byte[CAPACITY_NORMAL];
         dc.connect(localAddr1);
         // write
         ByteBuffer sourceBuf = ByteBuffer.wrap(sourceArray);
         sourceBuf.position(postion);
         assertEquals(CAPACITY_NORMAL - postion, dc.write(sourceBuf));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "send",
-          methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-        )
-    })
-    public void test_send_LBuffer_LSocketAddress_PositonNotZero()
+
+    public void disabled_testWriteByteBuffer_Block_close() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+        ByteBuffer targetBuf = ByteBuffer.wrap(new byte[2]);
+
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(TIME_UNIT);
+                    channel1.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            this.channel1.send(targetBuf, localAddr1);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
+
+    public void disabled_testWriteByteBuffer_Block_interrupt() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        class MyThread extends  Thread {
+            public String errMsg = null;
+            public void run() {
+                try {
+                    ByteBuffer targetBuf = ByteBuffer.wrap(new byte[2]);
+                    channel1.send(targetBuf, localAddr1);
+                    errMsg = "should throw ClosedByInterruptException";
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                } catch (IOException e) {
+                    errMsg = "Unexcted Exception was thrown: " + e.getClass() +
+                            ": " + e.getMessage();
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        try {
+            Thread.sleep(TIME_UNIT);
+            thread.interrupt();
+        } catch (InterruptedException e) {
+            // ok
+        }
+        thread.join(TIME_UNIT);
+        if (thread.errMsg != null) {
+            fail(thread.errMsg);
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
+    public void testSend_PositonNotZero()
             throws Exception {
         // regression test for Harmony-701
         int CAPACITY_NORMAL = 256;
@@ -3539,81 +4455,230 @@ public class DatagramChannelTest extends TestCase {
         ByteBuffer sourceBuf = ByteBuffer.wrap(sourceArray);
         sourceBuf.position(postion);
         int ret = dc.send(sourceBuf, localAddr1);
-        // assert send (256 - 16) bytes  
+        // assert send (256 - 16) bytes
         assertEquals(CAPACITY_NORMAL - postion, ret);
         // assert the position of ByteBuffer has been set
         assertEquals(CAPACITY_NORMAL, sourceBuf.position());
     }
-    
+
     /**
-     * @tests DatagramChannel#read(ByteBuffer[])
+     * @tests DatagramChannel#read(ByteBuffer)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class}
-        )
-    })
-    public void test_read_$LByteBuffer() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testReadByteBuffer2() throws Exception {
         // regression test for Harmony-754
         channel2.socket().bind(localAddr1);
         channel1.socket().bind(localAddr2);
-        channel1.connect(localAddr1);         
+        channel1.connect(localAddr1);
         channel2.connect(localAddr2);
         channel2.write(ByteBuffer.allocate(CAPACITY_NORMAL));
-        
-        ByteBuffer[] readBuf = new ByteBuffer[2];
-        readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        readBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);        
-        
+
+        ByteBuffer readBuf = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+
         channel1.configureBlocking(true);
         assertEquals(CAPACITY_NORMAL, channel1.read(readBuf));
+    }
+
+    public void disabled_testReadByteBuffer_Block_close() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+        ByteBuffer targetBuf = ByteBuffer.wrap(new byte[2]);
+
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(TIME_UNIT);
+                    channel1.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            this.channel1.read(targetBuf);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testReadByteBuffer_Block_interrupt() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        class MyThread extends Thread {
+            public String errMsg = null;
+            public void run() {
+                try {
+                    ByteBuffer targetBuf = ByteBuffer.wrap(new byte[2]);
+                    channel1.read(targetBuf);
+                    errMsg = "should throw ClosedByInterruptException";
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                } catch (IOException e) {
+                    errMsg = "Unexcted Exception was thrown: " + e.getClass() +
+                            ": " + e.getMessage();
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        try {
+            Thread.sleep(TIME_UNIT);
+            thread.interrupt();
+        } catch (InterruptedException e) {
+            // ok
+        }
+        thread.join(TIME_UNIT);
+        if (thread.errMsg != null) {
+            fail(thread.errMsg);
+        }
+    }
+
+    /**
+     * @tests DatagramChannel#read(ByteBuffer[])
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void testReadByteBufferArray2() throws Exception {
+        // regression test for Harmony-754
+        channel2.socket().bind(localAddr1);
+        channel1.socket().bind(localAddr2);
+        channel1.connect(localAddr1);
+        channel2.connect(localAddr2);
+        channel2.write(ByteBuffer.allocate(CAPACITY_NORMAL));
+
+        ByteBuffer[] readBuf = new ByteBuffer[2];
+        readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+        readBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+
+        channel1.configureBlocking(true);
+        assertEquals(CAPACITY_NORMAL, channel1.read(readBuf));
+    }
+
+    public void disabled_testReadByteBufferArray_Block_close() throws Exception {
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+        ByteBuffer[] targetBuf = new ByteBuffer[2];
+        targetBuf[0] = ByteBuffer.wrap(new byte[2]);
+        targetBuf[1] = ByteBuffer.wrap(new byte[2]);
+
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(TIME_UNIT);
+                    channel1.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            this.channel1.read(targetBuf);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
+
+    public void disabled_testReadByteBufferArray_Block_interrupt() throws Exception {
+        // makes emulator hang
+        // bind and connect
+        this.channel1.socket().bind(localAddr2);
+        this.channel1.connect(localAddr1);
+        this.channel2.socket().bind(localAddr1);
+        this.channel2.connect(localAddr2);
+
+        class MyThread extends Thread {
+            public String errMsg = null;
+            public void run() {
+                try {
+                    ByteBuffer[] targetBuf = new ByteBuffer[2];
+                    targetBuf[0] = ByteBuffer.wrap(new byte[2]);
+                    targetBuf[1] = ByteBuffer.wrap(new byte[2]);
+                    channel1.read(targetBuf);
+                    errMsg = "should throw ClosedByInterruptException";
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                } catch (IOException e) {
+                    errMsg = "Unexcted Exception was thrown: " + e.getClass() +
+                            ": " + e.getMessage();
+                }
+            }
+        }
+        MyThread thread = new MyThread();
+        thread.start();
+        try {
+            Thread.sleep(TIME_UNIT);
+            thread.interrupt();
+        } catch (InterruptedException e) {
+            // ok
+        }
+        thread.join(TIME_UNIT);
+        if (thread.errMsg != null) {
+            fail(thread.errMsg);
+        }
     }
 
     /**
      * @tests DatagramChannel#read(ByteBuffer[],int,int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
-    public void test_read_$LByteBufferII() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void testReadByteBufferArrayII2() throws Exception {
         // regression test for Harmony-754
         channel2.socket().bind(localAddr1);
         channel1.socket().bind(localAddr2);
-        channel1.connect(localAddr1);         
+        channel1.connect(localAddr1);
         channel2.connect(localAddr2);
         channel2.write(ByteBuffer.allocate(CAPACITY_NORMAL));
-        
+
         ByteBuffer[] readBuf = new ByteBuffer[2];
         readBuf[0] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
-        readBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);        
-        
+        readBuf[1] = ByteBuffer.allocateDirect(CAPACITY_NORMAL);
+
         channel1.configureBlocking(true);
         assertEquals(CAPACITY_NORMAL, channel1.read(readBuf,0,2));
     }
-    
+
     /**
      * @tests DatagramChannel#read(ByteBuffer)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void test_read_LByteBuffer_closed_nullBuf() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testReadByteBuffer_closed_nullBuf() throws Exception {
         // regression test for Harmony-754
         ByteBuffer c = null;
         DatagramChannel channel = DatagramChannel.open();
@@ -3625,20 +4690,17 @@ public class DatagramChannelTest extends TestCase {
             // expected
         }
     }
-    
+
     /**
      * @tests DatagramChannel#read(ByteBuffer)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void test_read_LByteBuffer_NotConnected_nullBuf() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testReadByteBuffer_NotConnected_nullBuf() throws Exception {
         // regression test for Harmony-754
         ByteBuffer c = null;
         DatagramChannel channel = DatagramChannel.open();
@@ -3649,20 +4711,17 @@ public class DatagramChannelTest extends TestCase {
             // expected
         }
     }
-    
+
     /**
      * @tests DatagramChannel#read(ByteBuffer)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void test_read_LByteBuffer_readOnlyBuf() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void testReadByteBuffer_readOnlyBuf() throws Exception {
         // regression test for Harmony-754
         ByteBuffer c = ByteBuffer.allocate(1);
         DatagramChannel channel = DatagramChannel.open();
@@ -3680,20 +4739,17 @@ public class DatagramChannelTest extends TestCase {
             // expected
         }
     }
-    
+
     /**
      * @tests DatagramChannel#send(ByteBuffer, SocketAddress)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "send",
-          methodArgs = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
-        )
-    })
-    public void test_send_LByteBuffer_LSocketAddress_closed() throws IOException{
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "send",
+        args = {java.nio.ByteBuffer.class, java.net.SocketAddress.class}
+    )
+    public void testSend_Closed() throws IOException{
         // regression test for Harmony-913
         channel1.close();
         ByteBuffer buf = ByteBuffer.allocate(CAPACITY_NORMAL);
@@ -3722,20 +4778,17 @@ public class DatagramChannelTest extends TestCase {
             //pass
         }
     }
-    
+
     /**
      * @tests DatagramChannel#socket()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "socket",
-          methodArgs = {}
-        )
-    })
-    public void test_socket_IllegalBlockingModeException() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
+    public void testSocket_NonBlock_IllegalBlockingModeException() throws Exception {
         // regression test for Harmony-1036
         DatagramChannel channel = DatagramChannel.open();
         channel.configureBlocking(false);
@@ -3753,69 +4806,4 @@ public class DatagramChannelTest extends TestCase {
             // expected
         }
     }
-    
-    // -------------------------------------------------------------------
-    // Mock class for security test.
-    // -------------------------------------------------------------------
-    private class MockSecurityManager extends SecurityManager {
-
-        String validHost = null;
-
-        int validPort = -1;
-
-        MockSecurityManager() {
-            super();
-            this.validHost = null;
-        }
-
-        MockSecurityManager(String host) {
-            super();
-            this.validHost = host;
-        }
-
-        MockSecurityManager(int port) {
-            super();
-            this.validPort = port;
-        }
-
-        public void checkPermission(Permission perm) {
-            // no-op
-        }
-
-        public void checkPermission(Permission perm, Object context) {
-            // no-op
-        }
-
-        public void checkConnect(String host, int port) {
-            // our local addr is OK.
-            if (null != this.validHost) {
-                if (!this.validHost.equals(host)) {
-                    throw new SecurityException();
-                }
-            }
-            if ("127.0.0.1".equals(host)) {
-                return;
-            }
-            super.checkConnect(host, port);
-        }
-
-        public void checkAccept(String host, int port) {
-            // our local addr is OK.
-            if (null != this.validHost) {
-                if (!this.validHost.equals(host)) {
-                    throw new SecurityException();
-                }
-            }
-            if (-1 != this.validPort) {
-                if (this.validPort != port) {
-                    throw new SecurityException();
-                }
-            }
-            if ("127.0.0.1".equals(host)) {
-                return;
-            }
-            super.checkAccept(host, port);
-        }
-    }
-
 }

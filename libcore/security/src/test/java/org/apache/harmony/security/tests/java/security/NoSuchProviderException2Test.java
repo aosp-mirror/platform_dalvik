@@ -18,9 +18,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.NoSuchProviderException;
 
@@ -30,15 +30,12 @@ public class NoSuchProviderException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.NoSuchProviderException#NoSuchProviderException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchProviderException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NoSuchProviderException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.security.NoSuchProviderException()
         try {
@@ -53,15 +50,12 @@ public class NoSuchProviderException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.NoSuchProviderException#NoSuchProviderException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchProviderException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Null parameter checking missed",
+        method = "NoSuchProviderException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method
         // java.security.NoSuchProviderException(java.lang.String)

@@ -18,11 +18,12 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 
@@ -34,15 +35,12 @@ public class URLDecoderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLDecoder#URLDecoder()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "URLDecoder",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "URLDecoder",
+        args = {}
+    )
     public void test_Constructor() throws Exception {
         URLDecoder ud = new URLDecoder();
         assertNotNull("Constructor failed.", ud);
@@ -51,15 +49,12 @@ public class URLDecoderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLDecoder#decode(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "decode",
+        args = {java.lang.String.class}
+    )
     public void test_decodeLjava_lang_String() throws Exception {
         // Test for method java.lang.String
         // java.net.URLDecoder.decode(java.lang.String)
@@ -77,21 +72,49 @@ public class URLDecoderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLDecoder#decode(java.lang.String, java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "decode",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_decodeLjava_lang_String_Ljava_lang_String() {
         // Regression for HARMONY-467
+
+        String enc = "UTF-8";
+        
+        String [] urls = { "http://" + Support_Configuration.HomeAddress + 
+                           "/test?hl=en&q=te+st", 
+                           "file://a+b/c/d.e-f*g_+l",
+                           "jar:file://a.jar+!/b.c/",
+                           "ftp://test:pwd@localhost:2121/%D0%9C",
+                           "%D0%A2%D0%B5%D1%81%D1%82+URL+for+test"}; 
+        
+        String [] expected = {"http://" + Support_Configuration.HomeAddress + 
+                              "/test?hl=en&q=te st",
+                              "file://a b/c/d.e-f*g_ l",
+                              "jar:file://a.jar !/b.c/"};
+
+        for(int i = 0; i < urls.length - 2; i++) {
+            try {
+                assertEquals(expected[i], URLDecoder.decode(urls[i], enc));
+            } catch (UnsupportedEncodingException e) {
+                fail("UnsupportedEncodingException: " + e.getMessage());
+            }
+        }
+        
+        try {
+            URLDecoder.decode(urls[urls.length - 2], enc);
+            URLDecoder.decode(urls[urls.length - 1], enc);
+        } catch (UnsupportedEncodingException e) {
+            fail("UnsupportedEncodingException: " + e.getMessage());
+        }
+        
         try {
             URLDecoder.decode("", "");
             fail("UnsupportedEncodingException expected");
         } catch (UnsupportedEncodingException e) {
+            //expected
         }
     }
 }

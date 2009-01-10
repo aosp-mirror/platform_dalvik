@@ -280,7 +280,7 @@ public class BufferedWriter extends Writer {
      * @throws IOException
      *             if this writer has already been closed or another I/O error
      *             occurs.
-     * @throws StringIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code offset + count} is greater
      *             than the length of {@code str}.
      * @since Android 1.0

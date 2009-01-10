@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.KeyStore;
 import java.security.cert.Certificate;
@@ -47,15 +47,12 @@ public class KSTrustedCertificateEntryTest extends TestCase {
      * constructor
      * Assertion: throws NullPointerException when trustCert is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification of positive case with non null parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "TrustedCertificateEntry",
-          methodArgs = {Certificate.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "TrustedCertificateEntry",
+        args = {java.security.cert.Certificate.class}
+    )
     public void testTrustedCertificateEntry() {
         Certificate cert = null;
         try {
@@ -63,21 +60,27 @@ public class KSTrustedCertificateEntryTest extends TestCase {
             fail("NullPointerException must be thrown when trustCert is null");
         } catch (NullPointerException e) {
         }
+        
+        cert = new MyCertificate("TEST", new byte[10]);
+        try {
+            KeyStore.TrustedCertificateEntry ksTCE = new KeyStore.TrustedCertificateEntry(cert);
+            assertNotNull(ksTCE);
+            assertTrue(ksTCE instanceof KeyStore.TrustedCertificateEntry);
+        } catch (Exception e) {
+            fail("Unexpected exception was thrown when trustCert is not null");
+        }
     }
     
     /**
      * Test for <codfe>getTrustedCertificate()</code> method
      * Assertion: returns trusted Certificate from goven entry 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTrustedCertificate",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTrustedCertificate",
+        args = {}
+    )
     public void testGetTrustedCertificate() {
         Certificate cert = new MyCertificate("TEST", new byte[10]);
         KeyStore.TrustedCertificateEntry ksTCE = 
@@ -89,15 +92,12 @@ public class KSTrustedCertificateEntryTest extends TestCase {
      * Test for <codfe>toString()</code> method
      * Assertion: returns non null string 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         Certificate cert = new MyCertificate("TEST", new byte[10]);
         KeyStore.TrustedCertificateEntry ksTCE = 

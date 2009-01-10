@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -36,15 +36,12 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
      * @tests java.util.IllegalFormatConversionException#IllegalFormatConversionException(char,
      *        Class)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "IllegalFormatConversionException",
-          methodArgs = {char.class, java.lang.Class.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IllegalFormatConversionException",
+        args = {char.class, java.lang.Class.class}
+    )
     public void test_illegalFormatConversionException() {
         try {
             new IllegalFormatConversionException(' ', null);
@@ -52,20 +49,19 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
         } catch (NullPointerException e) {
             // desired
         }
+        
+        assertNotNull(new IllegalFormatConversionException(' ', String.class));
     }
 
     /**
      * @tests java.util.IllegalFormatConversionException#getArgumentClass()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getArgumentClass",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getArgumentClass",
+        args = {}
+    )
     public void test_getArgumentClass() {
         char c = '*';
         Class<String> argClass = String.class;
@@ -79,15 +75,12 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatConversionException#getConversion()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getConversion",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getConversion",
+        args = {}
+    )
     public void test_getConversion() {
         char c = '*';
         Class<String> argClass = String.class;
@@ -100,15 +93,12 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatConversionException#getMessage()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMessage",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMessage",
+        args = {}
+    )
     public void test_getMessage() {
         char c = '*';
         Class<String> argClass = String.class;
@@ -139,15 +129,12 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new IllegalFormatConversionException('*',
@@ -157,15 +144,12 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

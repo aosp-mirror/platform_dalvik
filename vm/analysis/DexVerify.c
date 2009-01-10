@@ -20,20 +20,9 @@
  */
 #include "Dalvik.h"
 #include "analysis/CodeVerify.h"
-#include "libdex/DexCatch.h"
-#include "libdex/InstrUtils.h"
-
-//#define static
-
-/* verification failure reporting */
-#define LOG_VFY(...)                dvmLogVerifyFailure(NULL, __VA_ARGS__);
-#define LOG_VFY_METH(_meth, ...)    dvmLogVerifyFailure(_meth, __VA_ARGS__);
 
 
 /* fwd */
-static bool computeCodeWidths(const Method* meth, InsnFlags* insnFlags,\
-    int* pNewInstanceCount);
-static bool setTryFlags(const Method* meth, InsnFlags* insnFlags);
 static bool verifyMethod(Method* meth, int verifyFlags);
 static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
     int verifyFlags);
@@ -223,7 +212,7 @@ static bool verifyMethod(Method* meth, int verifyFlags)
      * Count up the #of occurrences of new-instance instructions while we're
      * at it.
      */
-    if (!computeCodeWidths(meth, insnFlags, &newInstanceCount))
+    if (!dvmComputeCodeWidths(meth, insnFlags, &newInstanceCount))
         goto bail;
 
     /*
@@ -236,7 +225,7 @@ static bool verifyMethod(Method* meth, int verifyFlags)
     /*
      * Set the "in try" flags for all instructions guarded by a "try" block.
      */
-    if (!setTryFlags(meth, insnFlags))
+    if (!dvmSetTryFlags(meth, insnFlags))
         goto bail;
 
     /*
@@ -267,263 +256,6 @@ bail:
     return result;
 }
 
-
-/*
- * Compute the width of the instruction at each address in the instruction
- * stream.  Addresses that are in the middle of an instruction, or that
- * are part of switch table data, are not set (so the caller should probably
- * initialize "insnFlags" to zero).
- *
- * Logs an error and returns "false" on failure.
- */
-static bool computeCodeWidths(const Method* meth, InsnFlags* insnFlags,
-    int* pNewInstanceCount)
-{
-    const int insnCount = dvmGetMethodInsnsSize(meth);
-    const u2* insns = meth->insns;
-    bool result = false;
-    int i;
-
-    *pNewInstanceCount = 0;
-
-    for (i = 0; i < insnCount; /**/) {
-        int width;
-
-        /*
-         * Switch tables and array data tables are identified with
-         * "extended NOP" opcodes.  They contain no executable code,
-         * so we can just skip past them.
-         */
-        if (*insns == kPackedSwitchSignature) {
-            width = 4 + insns[1] * 2;
-        } else if (*insns == kSparseSwitchSignature) {
-            width = 2 + insns[1] * 4;
-        } else if (*insns == kArrayDataSignature) {
-            u4 size = insns[2] | (((u4)insns[3]) << 16);
-            width = 4 + (insns[1] * size + 1) / 2;
-        } else {
-            int instr = *insns & 0xff;
-            width = dexGetInstrWidthAbs(gDvm.instrWidth, instr);
-            if (width == 0) {
-                LOG_VFY_METH(meth,
-                    "VFY: invalid post-opt instruction (0x%x)\n", instr);
-                goto bail;
-            }
-            if (width < 0 || width > 5) {
-                LOGE("VFY: bizarre width value %d\n", width);
-                dvmAbort();
-            }
-
-            if (instr == OP_NEW_INSTANCE)
-                (*pNewInstanceCount)++;
-        }
-
-        if (width > 65535) {
-            LOG_VFY_METH(meth, "VFY: insane width %d\n", width);
-            goto bail;
-        }
-
-        insnFlags[i] |= width;
-        i += width;
-        insns += width;
-    }
-    if (i != (int) dvmGetMethodInsnsSize(meth)) {
-        LOG_VFY_METH(meth, "VFY: code did not end where expected (%d vs. %d)\n",
-            i, dvmGetMethodInsnsSize(meth));
-        goto bail;
-    }
-
-    result = true;
-
-bail:
-    return result;
-}
-
-/*
- * Set the "in try" flags for all instructions protected by "try" statements.
- * Also sets the "branch target" flags for exception handlers.
- *
- * Call this after widths have been set in "insnFlags".
- *
- * Returns "false" if something in the exception table looks fishy, but
- * we're expecting the exception table to be somewhat sane.
- */
-static bool setTryFlags(const Method* meth, InsnFlags* insnFlags)
-{
-    u4 insnsSize = dvmGetMethodInsnsSize(meth);
-    DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
-    const DexCode* pCode = dvmGetMethodCode(meth);
-    u4 triesSize = pCode->triesSize;
-    const DexTry* pTries;
-    u4 handlersSize;
-    u4 offset;
-    u4 i;
-
-    if (triesSize == 0) {
-        return true;
-    }
-
-    pTries = dexGetTries(pCode);
-    handlersSize = dexGetHandlersSize(pCode);
-
-    for (i = 0; i < triesSize; i++) {
-        const DexTry* pTry = &pTries[i];
-        u4 start = pTry->startAddr;
-        u4 end = start + pTry->insnCount;
-        u4 addr;
-
-        if ((start >= end) || (start >= insnsSize) || (end > insnsSize)) {
-            LOG_VFY_METH(meth,
-                "VFY: bad exception entry: startAddr=%d endAddr=%d (size=%d)\n",
-                start, end, insnsSize);
-            return false;
-        }
-
-        if (dvmInsnGetWidth(insnFlags, start) == 0) {
-            LOG_VFY_METH(meth,
-                "VFY: 'try' block starts inside an instruction (%d)\n",
-                start);
-            return false;
-        }
-
-        for (addr = start; addr < end;
-            addr += dvmInsnGetWidth(insnFlags, addr))
-        {
-            assert(dvmInsnGetWidth(insnFlags, addr) != 0);
-            dvmInsnSetInTry(insnFlags, addr, true);
-        }
-    }
-
-    /* Iterate over each of the handlers to verify target addresses. */
-    offset = dexGetFirstHandlerOffset(pCode);
-    for (i = 0; i < handlersSize; i++) {
-        DexCatchIterator iterator;
-        dexCatchIteratorInit(&iterator, pCode, offset);
-
-        for (;;) {
-            DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
-            u4 addr;
-
-            if (handler == NULL) {
-                break;
-            }
-
-            addr = handler->address;
-            if (dvmInsnGetWidth(insnFlags, addr) == 0) {
-                LOG_VFY_METH(meth,
-                    "VFY: exception handler starts at bad address (%d)\n",
-                    addr);
-                return false;
-            }
-
-            dvmInsnSetBranchTarget(insnFlags, addr, true);
-        }
-
-        offset = dexCatchIteratorGetEndOffset(&iterator, pCode);
-    }
-
-    return true;
-}
-
-/*
- * Verify a switch table.  "curOffset" is the offset of the switch
- * instruction.
- */
-static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
-    int curOffset)
-{
-    const int insnCount = dvmGetMethodInsnsSize(meth);
-    const u2* insns = meth->insns + curOffset;
-    const u2* switchInsns;
-    int switchCount, tableSize;
-    int offsetToSwitch, offsetToKeys, offsetToTargets, targ;
-    int offset, absOffset;
-
-    assert(curOffset >= 0 && curOffset < insnCount);
-
-    /* make sure the start of the switch is in range */
-    offsetToSwitch = (s2) insns[1];
-    if (curOffset + offsetToSwitch < 0 ||
-        curOffset + offsetToSwitch + 2 >= insnCount)
-    {
-        LOG_VFY_METH(meth,
-            "VFY: invalid switch start: at %d, switch offset %d, count %d\n",
-            curOffset, offsetToSwitch, insnCount);
-        return false;
-    }
-
-    /* offset to switch table is a relative branch-style offset */
-    switchInsns = insns + offsetToSwitch;
-
-    /* make sure the table is 32-bit aligned */
-    if ((((u4) switchInsns) & 0x03) != 0) {
-        LOG_VFY_METH(meth,
-            "VFY: unaligned switch table: at %d, switch offset %d\n",
-            curOffset, offsetToSwitch);
-        return false;
-    }
-
-    switchCount = switchInsns[1];
-
-    if ((*insns & 0xff) == OP_PACKED_SWITCH) {
-        /* 0=sig, 1=count, 2/3=firstKey */
-        offsetToTargets = 4;
-        offsetToKeys = -1;
-    } else {
-        /* 0=sig, 1=count, 2..count*2 = keys */
-        offsetToKeys = 2;
-        offsetToTargets = 2 + 2*switchCount;
-    }
-    tableSize = offsetToTargets + switchCount*2;
-
-    /* make sure the end of the switch is in range */
-    if (curOffset + offsetToSwitch + tableSize > insnCount) {
-        LOG_VFY_METH(meth,
-            "VFY: invalid switch end: at %d, switch offset %d, end %d, count %d\n",
-            curOffset, offsetToSwitch, curOffset + offsetToSwitch + tableSize,
-            insnCount);
-        return false;
-    }
-
-    /* for a sparse switch, verify the keys are in ascending order */
-    if (offsetToKeys > 0 && switchCount > 1) {
-        s4 lastKey;
-
-        lastKey = switchInsns[offsetToKeys] |
-                  (switchInsns[offsetToKeys+1] << 16);
-        for (targ = 1; targ < switchCount; targ++) {
-            s4 key = (s4) switchInsns[offsetToKeys + targ*2] |
-                    (s4) (switchInsns[offsetToKeys + targ*2 +1] << 16);
-            if (key <= lastKey) {
-                LOG_VFY_METH(meth,
-                    "VFY: invalid packed switch: last key=%d, this=%d\n",
-                    lastKey, key);
-                return false;
-            }
-
-            lastKey = key;
-        }
-    }
-
-    /* verify each switch target */
-    for (targ = 0; targ < switchCount; targ++) {
-        offset = (s4) switchInsns[offsetToTargets + targ*2] |
-                (s4) (switchInsns[offsetToTargets + targ*2 +1] << 16);
-        absOffset = curOffset + offset;
-
-        if (absOffset < 0 || absOffset >= insnCount ||
-            !dvmInsnIsOpcode(insnFlags, absOffset))
-        {
-            LOG_VFY_METH(meth,
-                "VFY: invalid switch target %d (-> 0x%x) at 0x%x[%d]\n",
-                offset, absOffset, curOffset, targ);
-            return false;
-        }
-        dvmInsnSetBranchTarget(insnFlags, absOffset, true);
-    }
-
-    return true;
-}
 
 /*
  * Verify an array data table.  "curOffset" is the offset of the fill-array-data
@@ -576,58 +308,6 @@ static bool checkArrayData(const Method* meth, int curOffset)
             insnCount);
         return false;
     }
-
-    return true;
-}
-
-/*
- * Verify that the target of a branch instruction is valid.
- *
- * We don't expect code to jump directly into an exception handler, but
- * it's valid to do so as long as the target isn't a "move-exception"
- * instruction.  We verify that in a later stage.
- *
- * The VM spec doesn't forbid an instruction from branching to itself,
- * but the Dalvik spec declares that only certain instructions can do so.
- */
-static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
-    int curOffset, bool selfOkay)
-{
-    const int insnCount = dvmGetMethodInsnsSize(meth);
-    const u2* insns = meth->insns + curOffset;
-    int offset, absOffset;
-    bool isConditional;
-
-    if (!dvmGetBranchTarget(meth, insnFlags, curOffset, &offset,
-            &isConditional))
-        return false;
-
-    if (!selfOkay && offset == 0) {
-        LOG_VFY_METH(meth, "VFY: branch offset of zero not allowed at 0x%x\n",
-            curOffset);
-        return false;
-    }
-
-    /*
-     * Check for 32-bit overflow.  This isn't strictly necessary if we can
-     * depend on the VM to have identical "wrap-around" behavior, but
-     * it's unwise to depend on that.
-     */
-    if (((s8) curOffset + (s8) offset) != (s8)(curOffset + offset)) {
-        LOG_VFY_METH(meth, "VFY: branch target overflow 0x%x +%d\n",
-            curOffset, offset);
-        return false;
-    }
-    absOffset = curOffset + offset;
-    if (absOffset < 0 || absOffset >= insnCount ||
-        !dvmInsnIsOpcode(insnFlags, absOffset))
-    {
-        LOG_VFY_METH(meth,
-            "VFY: invalid branch target %d (-> 0x%x) at 0x%x\n",
-            offset, absOffset, curOffset);
-        return false;
-    }
-    dvmInsnSetBranchTarget(insnFlags, absOffset, true);
 
     return true;
 }
@@ -864,7 +544,7 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
         case OP_PACKED_SWITCH:
         case OP_SPARSE_SWITCH:
             /* verify the associated table */
-            if (!checkSwitchTargets(meth, insnFlags, i))
+            if (!dvmCheckSwitchTargets(meth, insnFlags, i))
                 return false;
             break;
 
@@ -889,12 +569,12 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
         case OP_IF_GTZ:
         case OP_IF_LEZ:
             /* check the destination */
-            if (!checkBranchTarget(meth, insnFlags, i, false))
+            if (!dvmCheckBranchTarget(meth, insnFlags, i, false))
                 return false;
             break;
         case OP_GOTO_32:
             /* check the destination; self-branch is okay */
-            if (!checkBranchTarget(meth, insnFlags, i, true))
+            if (!dvmCheckBranchTarget(meth, insnFlags, i, true))
                 return false;
             break;
 
@@ -1007,3 +687,4 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
 
     return true;
 }
+

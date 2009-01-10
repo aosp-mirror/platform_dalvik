@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Node;
@@ -77,15 +77,12 @@ public final class NodeHasAttributes extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttributes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasAttributes",
+        args = {}
+    )
     public void testHasAttributes1() throws Throwable {
         Document doc;
         Element element;
@@ -101,15 +98,12 @@ public final class NodeHasAttributes extends DOMTestCase {
         hasAttributes = element.hasAttributes();
         assertTrue("nodehasattributes01_2", hasAttributes);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that hasAttributes method returns false value.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttributes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that hasAttributes method returns false value.",
+        method = "hasAttributes",
+        args = {}
+    )
     public void testHasAttributes2() throws Throwable {
         Document doc;
         DocumentType docType;
@@ -119,15 +113,12 @@ public final class NodeHasAttributes extends DOMTestCase {
         hasAttributes = docType.hasAttributes();
         assertFalse("nodehasattributes02", hasAttributes);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that hasAttributes method returns true value.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttributes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that hasAttributes method returns true value.",
+        method = "hasAttributes",
+        args = {}
+    )
     public void testHasAttributes3() throws Throwable {
         Document doc;
         Element element;
@@ -140,15 +131,12 @@ public final class NodeHasAttributes extends DOMTestCase {
         hasAttributes = element.hasAttributes();
         assertTrue("hasAttributes", hasAttributes);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that hasAttributes method returns true value.",
-      targets = {
-      @TestTarget(
-        methodName = "hasAttributes",
-        methodArgs = {}
-      )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that hasAttributes method returns true value.",
+        method = "hasAttributes",
+        args = {}
+    )
     public void testHasAttributes4() throws Throwable {
         Document doc;
         Document newDoc;

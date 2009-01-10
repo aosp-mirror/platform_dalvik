@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -58,15 +58,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#Hashtable()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Hashtable",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Hashtable",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.util.Hashtable()
         new Support_MapTest2(new Hashtable()).runTest();
@@ -79,15 +76,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#Hashtable(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "Hashtable",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Hashtable",
+        args = {int.class}
+    )
     public void test_ConstructorI() {
         // Test for method java.util.Hashtable(int)
         Hashtable h = new Hashtable(9);
@@ -98,20 +92,24 @@ public class HashtableTest extends junit.framework.TestCase {
         assertNull("Empty hashtable access", empty.get("nothing"));
         empty.put("something", "here");
         assertTrue("cannot get element", empty.get("something") == "here");
+        
+        try {
+            new Hashtable(-1);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#Hashtable(int, float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "Hashtable",
-          methodArgs = {int.class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Hashtable",
+        args = {int.class, float.class}
+    )
     public void test_ConstructorIF() {
         // Test for method java.util.Hashtable(int, float)
         Hashtable h = new java.util.Hashtable(10, 0.5f);
@@ -121,20 +119,31 @@ public class HashtableTest extends junit.framework.TestCase {
         assertNull("Empty hashtable access", empty.get("nothing"));
         empty.put("something", "here");
         assertTrue("cannot get element", empty.get("something") == "here");
+        
+        try {
+            new Hashtable(-1, 0.75f);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            new Hashtable(0, -0.75f);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#Hashtable(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "Hashtable",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Hashtable",
+        args = {java.util.Map.class}
+    )
     public void test_ConstructorLjava_util_Map() {
         // Test for method java.util.Hashtable(java.util.Map)
         Map map = new TreeMap();
@@ -147,20 +156,24 @@ public class HashtableTest extends junit.framework.TestCase {
                 ht.get("Gah") == firstVal);
         assertTrue("b) Incorrect Hashtable constructed",
                 ht.get("Ooga") == secondVal);
+        
+        try {
+            new Hashtable(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#clear()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {}
+    )
     public void test_clear() {
         // Test for method void java.util.Hashtable.clear()
         Hashtable h = hashtableClone(htfull);
@@ -175,15 +188,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         // Test for method java.lang.Object java.util.Hashtable.clone()
 
@@ -207,54 +217,59 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#contains(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "contains",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "contains",
+        args = {java.lang.Object.class}
+    )
     public void test_containsLjava_lang_Object() {
         // Test for method boolean
         // java.util.Hashtable.contains(java.lang.Object)
         assertTrue("Element not found", ht10.contains("Val 7"));
         assertTrue("Invalid element found", !ht10.contains("ZZZZZZZZZZZZZZZZ"));
+        
+        try {
+            ht10.contains(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#containsKey(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "containsKey",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsKey",
+        args = {java.lang.Object.class}
+    )
     public void test_containsKeyLjava_lang_Object() {
         // Test for method boolean
         // java.util.Hashtable.containsKey(java.lang.Object)
 
         assertTrue("Failed to find key", htfull.containsKey("FKey 4"));
         assertTrue("Failed to find key", !htfull.containsKey("FKey 99"));
+        
+        try {
+            htfull.containsKey(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#containsValue(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "containsValue",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsValue",
+        args = {java.lang.Object.class}
+    )
     public void test_containsValueLjava_lang_Object() {
         // Test for method boolean
         // java.util.Hashtable.containsValue(java.lang.Object)
@@ -264,20 +279,24 @@ public class HashtableTest extends junit.framework.TestCase {
                     .nextElement()));
         assertTrue("Returned true for invalid value", !ht10
                 .containsValue(new Object()));
+
+        try {
+            ht10.containsValue(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException ee) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#elements()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "elements",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "elements",
+        args = {}
+    )
     public void test_elements() {
         // Test for method java.util.Enumeration java.util.Hashtable.elements()
         Enumeration elms = ht10.elements();
@@ -294,15 +313,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#elements()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "elements",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "elements",
+        args = {}
+    )
     public void test_elements_subtest0() {
         // this is the reference implementation behavior
         final Hashtable ht = new Hashtable(7);
@@ -338,15 +354,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#entrySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "entrySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entrySet",
+        args = {}
+    )
     public void test_entrySet() {
         // Test for method java.util.Set java.util.Hashtable.entrySet()
         Set s = ht10.entrySet();
@@ -376,15 +389,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.util.Hashtable.equals(java.lang.Object)
         Hashtable h = hashtableClone(ht10);
@@ -395,15 +405,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#get(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {java.lang.Object.class}
+    )
     public void test_getLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.Hashtable.get(java.lang.Object)
@@ -423,20 +430,24 @@ public class HashtableTest extends junit.framework.TestCase {
 
         k.setKey(12);
         assertNull(h2.get(k));
+
+        try {
+            h2.get(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         // Test for method int java.util.Hashtable.hashCode()
         Set entrySet = ht10.entrySet();
@@ -452,15 +463,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#isEmpty()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isEmpty",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isEmpty",
+        args = {}
+    )
     public void test_isEmpty() {
         // Test for method boolean java.util.Hashtable.isEmpty()
 
@@ -498,15 +506,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#keys()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keys",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "keys",
+        args = {}
+    )
     public void test_keys() {
         // Test for method java.util.Enumeration java.util.Hashtable.keys()
 
@@ -524,15 +529,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#keys()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keys",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "keys",
+        args = {}
+    )
     public void test_keys_subtest0() {
         // this is the reference implementation behavior
         final Hashtable ht = new Hashtable(3);
@@ -553,15 +555,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#keySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "keySet",
+        args = {}
+    )
     public void test_keySet() {
         // Test for method java.util.Set java.util.Hashtable.keySet()
         Set s = ht10.keySet();
@@ -612,15 +611,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#keySet()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "keySet",
+        args = {}
+    )
     public void test_keySet_subtest0() {
         Set s1 = ht10.keySet();
         assertTrue("should contain key", s1.remove("Key 0"));
@@ -658,15 +654,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#keySet()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "keySet",
+        args = {}
+    )
     public void test_keySet_subtest1() {
         // this is the reference implementation behavior
         final Hashtable ht = new Hashtable(7);
@@ -710,15 +703,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#put(java.lang.Object, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {Object.class, Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "put",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.Hashtable.put(java.lang.Object, java.lang.Object)
@@ -732,20 +722,31 @@ public class HashtableTest extends junit.framework.TestCase {
         h.put("Value 100", key);
         assertTrue("Key/Value not inserted into full table", h.size() == 8
                 && (h.contains(key)));
+
+        try {
+            h.put(null, key);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+
+        try {
+            h.put("Value 100", null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#putAll(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "putAll",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putAll",
+        args = {java.util.Map.class}
+    )
     public void test_putAllLjava_util_Map() {
         // Test for method void java.util.Hashtable.putAll(java.util.Map)
         Hashtable h = new Hashtable();
@@ -756,40 +757,49 @@ public class HashtableTest extends junit.framework.TestCase {
             assertTrue("Failed to put all elements", h.get(x).equals(
                     ht10.get(x)));
         }
+
+        try {
+            h.putAll(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException ee) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#remove(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify remove method for non existent element.",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     public void test_removeLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.Hashtable.remove(java.lang.Object)
         Hashtable h = hashtableClone(htfull);
         Object k = h.remove("FKey 0");
         assertTrue("Remove failed", !h.containsKey("FKey 0") || k == null);
+        assertNull(h.remove("FKey 0"));
+        
+        try {
+            h.remove(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Hashtable#size()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() {
         // Test for method int java.util.Hashtable.size()
         assertTrue("Returned invalid size", ht10.size() == 10
@@ -825,15 +835,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.util.Hashtable.toString()
         Hashtable h = new Hashtable();
@@ -851,15 +858,12 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Hashtable#values()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "values",
+        args = {}
+    )
     public void test_values() {
         // Test for method java.util.Collection java.util.Hashtable.values()
         Collection c = ht10.values();
@@ -886,17 +890,18 @@ public class HashtableTest extends junit.framework.TestCase {
     /**
      * Regression Test for JIRA 2181
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "entrySet",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "entrySet",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "remove",
+            args = {java.lang.Object.class}
         )
     })
     public void test_entrySet_remove()
@@ -918,10 +923,44 @@ public class HashtableTest extends junit.framework.TestCase {
         assertFalse(hashtable.containsKey("my.nonexistent.prop"));
     }
 
+    class Mock_Hashtable extends Hashtable {
+        boolean flag = false;
+
+        public Mock_Hashtable(int i) {
+            super(i);
+        }
+
+        @Override
+        protected void rehash() {
+            flag = true;
+            super.rehash();
+        }
+        
+        public boolean isRehashed() {
+            return flag;
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "rehash",
+        args = {}
+    )
+    public void test_rehash() {
+        Mock_Hashtable mht = new Mock_Hashtable(5);
+        
+        assertFalse(mht.isRehashed());
+        for(int i = 0; i < 10; i++) {
+            mht.put(i, "New value");
+        }
+        assertTrue(mht.isRehashed());
+    }
+
     protected Hashtable hashtableClone(Hashtable s) {
         return (Hashtable) s.clone();
     }
-
+    
     /**
      * Sets up the fixture, for example, open a network connection. This method
      * is called before a test is executed.

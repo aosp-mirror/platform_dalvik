@@ -22,9 +22,9 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.DocumentType;
@@ -72,16 +72,12 @@ public final class InternalSubset extends DOMTestCase {
     * Runs the test case.
     * @throws Throwable Any uncaught exception causes test to fail
     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify that getInternalSubset method returns " +
-            "the internal subset as a string.",
-      targets = {
-        @TestTarget(
-          methodName = "getInternalSubset",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify that getInternalSubset method returns the internal subset as a string.",
+        method = "getInternalSubset",
+        args = {}
+    )
    public void testGetInternalSubset() throws Throwable {
       Document doc;
       DocumentType docType;

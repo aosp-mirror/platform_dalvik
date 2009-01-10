@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -45,15 +45,12 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetworkInterface#getName()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         if (atLeastOneInterface) {
             assertNotNull("validate that non null name is returned",
@@ -72,15 +69,12 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetworkInterface#getInetAddresses()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInetAddresses",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInetAddresses",
+        args = {}
+    )
     public void test_getInetAddresses() {
 
         // security manager that allows us to check that we only return the
@@ -271,15 +265,12 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetworkInterface#getDisplayName()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDisplayName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDisplayName",
+        args = {}
+    )
     public void test_getDisplayName() {
         if (atLeastOneInterface) {
             assertNotNull("validate that non null display name is returned",
@@ -299,15 +290,12 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetworkInterface#getByName(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getByName",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "SocketException checking missed.",
+        method = "getByName",
+        args = {java.lang.String.class}
+    )
     public void test_getByNameLjava_lang_String() {
         try {
             assertNull("validate null handled ok",
@@ -341,6 +329,14 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
                     fail("validate to get network interface using name - socket exception");
                 }
             }
+            try {
+                NetworkInterface.getByName(null);
+                fail("NullPointerException was not thrown.");
+            } catch(NullPointerException npe) {
+                //expected
+            } catch (SocketException e) {
+                fail("SocketException was thrown.");
+            }
         }
 
         // validate that we get the right interface with the second interface as
@@ -363,15 +359,12 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetworkInterface#getByInetAddress(java.net.InetAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getByInetAddress",
-          methodArgs = {InetAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "SocketException checking missed.",
+        method = "getByInetAddress",
+        args = {java.net.InetAddress.class}
+    )
     public void test_getByInetAddressLjava_net_InetAddress() {
 
         byte addressBytes[] = new byte[4];
@@ -418,6 +411,15 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
                     }
                 }
             }
+            
+            try {
+                NetworkInterface.getByInetAddress(null);
+                fail("NullPointerException should be thrown.");
+            } catch(NullPointerException npe) {
+                //expected
+            } catch (SocketException e) {
+                fail("SocketException was thrown.");
+            }
         }
 
         // validate that we get the right interface with the second interface as
@@ -445,15 +447,12 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetworkInterface#getNetworkInterfaces()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getNetworkInterfaces",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "SocketException checking missed.",
+        method = "getNetworkInterfaces",
+        args = {}
+    )
     public void test_getNetworkInterfaces() {
 
         // really this is tested by all of the other calls but just make sure we
@@ -469,15 +468,12 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetworkInterface#equals(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.net.SocketPermission.equals(java.lang.Object)
@@ -496,15 +492,12 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetworkInterface#hashCode()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
 
         if (atLeastOneInterface) {
@@ -522,15 +515,12 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetworkInterface#toString()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         if (atLeastOneInterface) {
             assertNotNull("validate that non null string is generated",

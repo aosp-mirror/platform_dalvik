@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * All-inclusive internal header file.  Include this to get everything useful.
  */
@@ -70,12 +71,12 @@
 #include "libdex/OpCode.h"
 #include "libdex/InstrUtils.h"
 #include "AllocTracker.h"
+#include "PointerSet.h"
 #include "Globals.h"
 #include "reflect/Reflect.h"
 #include "oo/TypeCheck.h"
 #include "Atomic.h"
 #include "interp/Interp.h"
-#include "PointerSet.h"
 #include "InlineNative.h"
 
 #endif /*_DALVIK_DALVIK*/

@@ -22,29 +22,39 @@
 
 package tests.api.javax.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import tests.targets.security.cert.CertificateFactoryTestX509;
+
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Principal;
+import java.security.Provider;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.SignatureException;
+import java.security.Provider.Service;
 import java.security.cert.CertificateFactory;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Set;
+import java.util.logging.Logger;
 
+import javax.security.cert.Certificate;
 import javax.security.cert.CertificateEncodingException;
 import javax.security.cert.CertificateException;
 import javax.security.cert.CertificateExpiredException;
@@ -78,45 +88,92 @@ public class X509CertificateTest extends TestCase {
             + "UdDgQDAQEBMAoGA1UdIQQDAQEBMAwGByqGSM44BAMBAQADMAAwLQIUAL4QvoazNWP"
             + "7jrj84/GZlhm09DsCFQCBKGKCGbrP64VtUt4JPmLjW1VxQA==\n"
             + "-----END CERTIFICATE-----";
+   
+   /**
+    * Copy of CertPathValidatorTestPKIX.selfSignedCert
+    */
+   private static final String selfSignedCert = "-----BEGIN CERTIFICATE-----\n"
+        + "MIICSDCCAbECBEk2ZvswDQYJKoZIhvcNAQEEBQAwazELMAkGA1UEBhMCQU4xEDAOBgNVBAgTB0Fu\n"
+        + "ZHJvaWQxEDAOBgNVBAcTB0FuZHJvaWQxEDAOBgNVBAoTB0FuZHJvaWQxEDAOBgNVBAsTB0FuZHJv\n"
+        + "aWQxFDASBgNVBAMTC0FuZHJvaWQgQ1RTMB4XDTA4MTIwMzExMDExNVoXDTM2MDQyMDExMDExNVow\n"
+        + "azELMAkGA1UEBhMCQU4xEDAOBgNVBAgTB0FuZHJvaWQxEDAOBgNVBAcTB0FuZHJvaWQxEDAOBgNV\n"
+        + "BAoTB0FuZHJvaWQxEDAOBgNVBAsTB0FuZHJvaWQxFDASBgNVBAMTC0FuZHJvaWQgQ1RTMIGfMA0G\n"
+        + "CSqGSIb3DQEBAQUAA4GNADCBiQKBgQCAMd+N1Bu2eiI4kukOLvFlpTSEHTGplN2vvw76T7jSZinx\n"
+        + "WcrtLe6qH1uPffbVNW4/BRn6OywbcynazEdqEUa09hWtHYmUsXpRPyGUBScNnyF751SGA2JIQUfg\n"
+        + "3gi3gT3h32Z64AIHnn5gsGDJkeWOHx6/uVOV7iqr7cwPdLp03QIDAQABMA0GCSqGSIb3DQEBBAUA\n"
+        + "A4GBAGG46Udsh6U7bSkJsyPPmSCCEkGr14L8F431UuaWbLvQVDtyPv8vtdJilyUTVnlWM6JNGV/q\n"
+        + "bgHuLbohkVXn9l68GtgQ7QDexHJE5hEDG/S7cYNi9GhrCfzAjEed13VMntZHZ0XQ4E7jBOmhcMAY\n"
+        + "DC9BBx1sVKoji17RP4R8CTf1\n" + "-----END CERTIFICATE-----";
 
     private java.security.cert.X509Certificate cert;
 
     private javax.security.cert.X509Certificate tbt_cert;
+    
+    private java.security.cert.X509Certificate javaCert;
+    
+    private Provider myProvider;
+
+    private javax.security.cert.X509Certificate javaxCert;
+
+    private java.security.cert.Certificate javaSSCert;
+
+    private Provider mySSProvider;
+
+    private Certificate javaxSSCert;
 
     protected void setUp() throws Exception {
         try {
             ByteArrayInputStream bais = new ByteArrayInputStream(base64cert
                     .getBytes());
-
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             this.cert = (java.security.cert.X509Certificate) cf
                     .generateCertificate(bais);
             this.tbt_cert = X509Certificate.getInstance(cert.getEncoded());
+
+            // non self signed cert
+            this.javaCert = (java.security.cert.X509Certificate) cf
+                    .generateCertificate(new ByteArrayInputStream(
+                            CertificateFactoryTestX509.encodedCertificate
+                                    .getBytes()));
+            this.javaxCert = X509Certificate.getInstance(javaCert.getEncoded());
+            myProvider = cf.getProvider();
+            Security.addProvider(myProvider);
+
+            // self signed cert
+            this.javaSSCert = cf.generateCertificate(new ByteArrayInputStream(
+                    selfSignedCert.getBytes()));
+            this.javaxSSCert = X509Certificate.getInstance(javaCert
+                    .getEncoded());
+            mySSProvider = cf.getProvider();
+            Security.addProvider(mySSProvider);
+
         } catch (java.security.cert.CertificateException e) {
             // The requested certificate type is not available.
             // Test pass..
             this.cert = null;
+            Logger.global.warning("Error in test setup: Certificate type not supported");
         } catch (javax.security.cert.CertificateException e) {
             // The requested certificate type is not available.
             // Test pass..
             this.cert = null;
+            Logger.global.warning("Error in test setup: Certificate type not supported");
         }
     }
 
     /**
      * X509Certificate() constructor testing.
+     * @tests {@link X509Certificate#X509Certificate() }
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "X509Certificate",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "X509Certificate",
+        args = {}
+    )
     public void testConstructor() throws CertificateEncodingException {
+        //Direct constructor
         X509Certificate cert = new MyCertificate();
+        assertNotNull(cert);
         assertNull("Principal should be null", cert.getIssuerDN());
         assertEquals("Wrong end date", new Date(), cert.getNotAfter());
         assertEquals("Wrong start date", new Date(), cert.getNotBefore());
@@ -127,20 +184,23 @@ public class X509CertificateTest extends TestCase {
         assertNull("Signature algorithm parameters should be null", cert.getSigAlgParams());
         assertNull("Subject should be null", cert.getSubjectDN());
         assertEquals("Version should be 0", 0, cert.getVersion());
+        
+        try {
+            X509Certificate.getInstance(new byte[]{(byte) 1 });
+        } catch (CertificateException e) {
+            //ok
+        }
     }
 
     /**
      * getInstance(InputStream inStream) method testing.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.io.InputStream.class}
+    )
     public void testGetInstance1() {
         if (this.cert == null) {
             // The requested certificate type is not available.
@@ -172,29 +232,37 @@ public class X509CertificateTest extends TestCase {
 
     /**
      * getInstance(byte[] certData) method testing.
+     * @throws CertificateEncodingException 
+     * @throws java.security.cert.CertificateEncodingException 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {byte[].class}
-        )
-    })
-    public void testGetInstance2() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies CertificateException.",
+        method = "getInstance",
+        args = {byte[].class}
+    )
+    public void testGetInstance2() throws java.security.cert.CertificateEncodingException, CertificateEncodingException {
+        boolean certificateException = false;
+        X509Certificate c = null;
         if (this.cert == null) {
             // The requested certificate type is not available.
             // Test can not be applied.
             return;
         }
         try {
-            X509Certificate.getInstance(cert.getEncoded());
+            c = X509Certificate.getInstance(cert.getEncoded());
         } catch (java.security.cert.CertificateEncodingException e) {
             fail("Unexpected CertificateEncodingException was thrown.");
         } catch (CertificateException e) {
             // The requested certificate type is not available.
             // Test pass..
+            certificateException = true;
+            
+        }
+        
+        if (! certificateException) {
+            assertNotNull(c);
+            assertTrue(Arrays.equals(c.getEncoded(),cert.getEncoded() ));
         }
 
         // Regression for HARMONY-756
@@ -204,21 +272,23 @@ public class X509CertificateTest extends TestCase {
         } catch (CertificateException e) {
             // expected;
         }
+        
     }
 
     /**
      * checkValidity() method testing.
+     * @throws CertificateNotYetValidException 
+     * @throws CertificateExpiredException 
+     * @throws java.security.cert.CertificateExpiredException 
+     * @throws java.security.cert.CertificateNotYetValidException 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "checkValidity",
-          methodArgs = {}
-        )
-    })
-    public void testCheckValidity1() {
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Doesn't verify exceptions.",
+        method = "checkValidity",
+        args = {}
+    )
+    public void testCheckValidity1() throws CertificateExpiredException, CertificateNotYetValidException, java.security.cert.CertificateExpiredException, java.security.cert.CertificateNotYetValidException {
         if (this.cert == null) {
             // The requested certificate type is not available.
             // Test can not be applied.
@@ -240,21 +310,33 @@ public class X509CertificateTest extends TestCase {
             assertTrue("Unexpected CertificateNotYetValidException was thrown",
                     date.compareTo(nb_date) < 0);
         }
+       
+       try {
+       tbt_cert.checkValidity();
+       } catch (CertificateExpiredException e) {
+        // ok
+       }
+       
+       try {
+            cert.checkValidity();
+        } catch (java.security.cert.CertificateExpiredException e) {
+            // ok
+        } 
+       
     }
 
     /**
      * checkValidity(Date date) method testing.
+     * @throws CertificateNotYetValidException 
+     * @throws CertificateExpiredException 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "checkValidity",
-          methodArgs = {java.util.Date.class}
-        )
-    })
-    public void testCheckValidity2() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "checkValidity",
+        args = {java.util.Date.class}
+    )
+    public void testCheckValidity2() throws CertificateNotYetValidException, CertificateExpiredException {
         if (this.cert == null) {
             // The requested certificate type is not available.
             // Test can not be applied.
@@ -283,20 +365,35 @@ public class X509CertificateTest extends TestCase {
                         + "was thrown", date[i].compareTo(nb_date) < 0);
             }
         }
+        
+        Calendar calendarNow = Calendar.getInstance();
+        
+        try {
+            tbt_cert.checkValidity(calendarNow.getTime());
+        } catch (CertificateExpiredException e) {
+            //ok
+        }
+        
+        Calendar calendarPast = GregorianCalendar.getInstance();
+        calendarPast.clear();
+        
+        try {
+            tbt_cert.checkValidity(calendarPast.getTime());
+        } catch (CertificateNotYetValidException e) {
+            //ok
+        }
+        
     }
 
     /**
      * getVersion() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getVersion",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getVersion",
+        args = {}
+    )
     public void testGetVersion() {
         if (this.cert == null) {
             // The requested certificate type is not available.
@@ -309,15 +406,12 @@ public class X509CertificateTest extends TestCase {
     /**
      * getSerialNumber() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSerialNumber",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSerialNumber",
+        args = {}
+    )
     public void testGetSerialNumber() {
         if (this.cert == null) {
             // The requested certificate type is not available.
@@ -331,20 +425,17 @@ public class X509CertificateTest extends TestCase {
     /**
      * getIssuerDN() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getIssuerDN",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Denigrated API",
+        method = "getIssuerDN",
+        args = {}
+    )
     public void testGetIssuerDN() {
         if (this.cert == null) {
             // The requested certificate type is not available.
             // Test can not be applied.
-            return;
+            Logger.global.warning("testGetIssuerDN: error in test setup.");
         }
         assertEquals("The issuer DN is not correct.", tbt_cert.getIssuerDN(),
                 cert.getIssuerDN());
@@ -353,15 +444,12 @@ public class X509CertificateTest extends TestCase {
     /**
      * getSubjectDN() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSubjectDN",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSubjectDN",
+        args = {}
+    )
     public void testGetSubjectDN() {
         if (this.cert == null) {
             // The requested certificate type is not available.
@@ -375,15 +463,12 @@ public class X509CertificateTest extends TestCase {
     /**
      * getNotBefore() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getNotBefore",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getNotBefore",
+        args = {}
+    )
     public void testGetNotBefore() {
         if (this.cert == null) {
             // The requested certificate type is not available.
@@ -397,15 +482,12 @@ public class X509CertificateTest extends TestCase {
     /**
      * getNotAfter() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getNotAfter",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getNotAfter",
+        args = {}
+    )
     public void testGetNotAfter() {
         if (this.cert == null) {
             // The requested certificate type is not available.
@@ -419,15 +501,12 @@ public class X509CertificateTest extends TestCase {
     /**
      * getSigAlgName() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSigAlgName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSigAlgName",
+        args = {}
+    )
     public void testGetSigAlgName() {
         if (this.cert == null) {
             // The requested certificate type is not available.
@@ -441,15 +520,12 @@ public class X509CertificateTest extends TestCase {
     /**
      * getSigAlgOID() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSigAlgOID",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSigAlgOID",
+        args = {}
+    )
     public void testGetSigAlgOID() {
         if (this.cert == null) {
             // The requested certificate type is not available.
@@ -463,15 +539,12 @@ public class X509CertificateTest extends TestCase {
     /**
      * getSigAlgParams() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSigAlgParams",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSigAlgParams",
+        args = {}
+    )
     public void testGetSigAlgParams() {
         if (this.cert == null) {
             // The requested certificate type is not available.
@@ -550,7 +623,8 @@ public class X509CertificateTest extends TestCase {
 
         @Override
         public byte[] getEncoded() throws CertificateEncodingException {
-            return null;
+            return new byte[] { (byte) 1, (byte) 2,
+                    (byte) 3, (byte) 4, (byte) 5 };
         }
 
         @Override
@@ -575,6 +649,249 @@ public class X509CertificateTest extends TestCase {
                 InvalidKeyException, NoSuchProviderException,
                 SignatureException {
         }
+    }
+    
+    public class MyModifiablePublicKey implements PublicKey {
+       
+        private PublicKey key;
+        private boolean modifiedAlgo;
+        private String algo;
+        private String format;
+        private boolean modifiedFormat;
+        private boolean modifiedEncoding;
+        private byte[] encoding;
+        
+        public MyModifiablePublicKey(PublicKey k) {
+            super();
+            this.key = k;
+        }
+
+        public String getAlgorithm() {
+            if (modifiedAlgo) {
+                return algo;
+            } else {
+                return key.getAlgorithm();
+            }
+        }
+
+        public String getFormat() {
+            if (modifiedFormat) {
+                return this.format;
+            } else {
+                return key.getFormat();
+            }
+            
+        }
+
+        public byte[] getEncoded() {
+            if (modifiedEncoding) {
+                return this.encoding;
+            } else {
+                return key.getEncoded();
+            }
+            
+        }
+
+        public long getSerVerUID() {
+            return key.serialVersionUID;
+        }
+        
+        public void setAlgorithm(String myAlgo) {
+            modifiedAlgo = true;
+            this.algo = myAlgo;
+        }
+        
+        public void setFormat(String myFormat) {
+            modifiedFormat = true;
+            format = myFormat;
+        }
+        
+        public void setEncoding(byte[] myEncoded) {
+            modifiedEncoding = true;
+            encoding = myEncoded;
+        }
+    }
+    
+    /**
+     * @throws CertificateEncodingException 
+     * @tests {@link Certificate#getEncoded()}
+     */
+    @TestTargetNew(
+      level = TestLevel.SUFFICIENT,
+      notes = "No ASN1/DER encoder available. Exception is not supported.",
+      method = "getEncoded",
+      args = {}
+    )
+    public void testGetEncoded()
+            throws CertificateEncodingException, java.security.cert.CertificateException {
+        // cert = DER encoding of the ASN1.0 structure
+        assertTrue(Arrays.equals(cert.getEncoded(), tbt_cert.getEncoded()));
+        assertFalse(Arrays.equals(javaxCert.getEncoded(), tbt_cert.getEncoded()));
+    }
+    
+    /**
+     * @tests {@link Certificate#getPublicKey()}
+     */
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "getPublicKey",
+      args = {}
+    )
+    public void testGetPublicKey() {
+       PublicKey key = javaxCert.getPublicKey();
+       assertNotNull(key);
+       assertEquals(javaxCert.getPublicKey(), javaCert.getPublicKey());
+       assertEquals(key.getAlgorithm(),"RSA");
+       
+       key = javaxSSCert.getPublicKey();
+       assertNotNull(key);
+       assertFalse(javaxSSCert.getPublicKey().equals(javaSSCert.getPublicKey()));
+       assertEquals(key.getAlgorithm(),"RSA");
+       
+       //assertTrue(mySSProvider.containsKey(key));
+
+    }
+    
+    /**
+     * @throws SignatureException 
+     * @throws NoSuchProviderException 
+     * @throws NoSuchAlgorithmException 
+     * @throws InvalidKeyException 
+     * @throws CertificateException 
+     * @tests {@link Certificate#verify(PublicKey)}
+     */
+    @TestTargetNew(
+      level = TestLevel.SUFFICIENT,
+      notes = " CertificateException not supported."+
+                "NoSuchAlgorithmException, NoSuchProviderException can be "+
+                "implemented only with working Cert. Verification fails (see failing) "+
+                "precondition assertions",
+      method = "verify",
+      args = {java.security.PublicKey.class}
+    )
+    @KnownFailure("there is an error with the self signed certificate")
+    public void testVerifyPublicKey() throws InvalidKeyException,
+            NoSuchAlgorithmException, NoSuchProviderException,
+            SignatureException, CertificateException {
+
+        // Preconditions
+        assertNotNull(javaxCert.getPublicKey());
+        assertNotNull(javaxSSCert.getPublicKey());
+        //precondition for self signed certificates
+        assertEquals(((X509Certificate) javaxSSCert).getIssuerDN().getName(),
+                ((X509Certificate) javaxSSCert).getSubjectDN());
+
+        // must always evaluate true for self signed
+        // here not self signed:
+        try {
+            javaxCert.verify(javaxCert.getPublicKey());
+        } catch (SignatureException e) {
+            // ok
+        }
+
+        PublicKey k = javaxCert.getPublicKey();
+
+        MyModifiablePublicKey changedEncoding = new MyModifiablePublicKey(k);
+        changedEncoding
+                .setEncoding(new byte[javaxCert.getEncoded().length - 1]);
+
+        try {
+            javaxCert.verify(tbt_cert.getPublicKey());
+        } catch (InvalidKeyException e) {
+            // ok
+        }
+
+
+        try {
+            javaxCert.verify(null);
+        } catch (Exception e) {
+            // ok
+        }
+
+        try {
+            javaxCert.verify(changedEncoding);
+            fail("Exception expected");
+        } catch (Exception e) {
+            // ok
+        }
+        
+        MyModifiablePublicKey changedAlgo = new MyModifiablePublicKey(k);
+        changedAlgo.setAlgorithm("MD5withBla");
+        
+        try {
+            javaxCert.verify(changedAlgo);
+            fail("Exception expected");
+        } catch (SignatureException e) {
+            // ok
+        }
+        
+        
+        /*
+
+        Security.removeProvider(mySSProvider.getName());
+
+        try {
+            javaxSSCert.verify(javaxSSCert.getPublicKey());
+        } catch (NoSuchProviderException e) {
+            // ok
+        }
+
+        Security.addProvider(mySSProvider);
+        
+        //Test NoSuchAlgorithmException
+        
+        
+        
+        // must always evaluate true for self signed
+        javaxSSCert.verify(javaxSSCert.getPublicKey());
+               
+        */  
+    }
+    
+    /**
+     * @throws SignatureException 
+     * @throws NoSuchProviderException 
+     * @throws NoSuchAlgorithmException 
+     * @throws java.security.cert.CertificateException 
+     * @throws InvalidKeyException 
+     * @throws IOException 
+     * @throws CertificateException 
+     * @tests {@link Certificate#verify(PublicKey, String)}
+     */
+    @TestTargetNew(
+      level = TestLevel.SUFFICIENT,
+      notes = "only exception testing: there is an error with the self signed "+
+              "certificate. Should verify.",
+      method = "verify",
+      args = {java.security.PublicKey.class, java.lang.String.class}
+    )
+    @KnownFailure("there is an error with the self signed certificate")
+    public void testVerifyPublicKeyString() throws InvalidKeyException,
+            java.security.cert.CertificateException, NoSuchAlgorithmException,
+            NoSuchProviderException, SignatureException, IOException,
+            CertificateException {
+        
+        try {
+            javaxCert.verify(javaxCert.getPublicKey(), myProvider.getName());
+        } catch (NoSuchAlgorithmException e) {
+            // ok
+        }
+
+        // myProvider.getService(type, algorithm)
+
+        Security.removeProvider(myProvider.getName());
+        try {
+            javaxCert.verify(javaxCert.getPublicKey(), myProvider.getName());
+        } catch (NoSuchProviderException e) {
+            // ok
+        }
+        Security.addProvider(myProvider);
+        
+        
+        // self signed cert: should verify with provider
+        javaxSSCert.verify(javaxSSCert.getPublicKey(), mySSProvider.getName());
+
     }
 
     public static Test suite() {

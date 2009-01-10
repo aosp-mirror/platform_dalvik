@@ -29,16 +29,18 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All SQL test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All SQL test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.sql.tests.java.sql.AllTests.suite());
         suite.addTest(org.apache.harmony.sql.tests.javax.sql.AllTests.suite());
         suite.addTest(tests.java.sql.AllTests.suite());
-
-        suite.addTestSuite(SQLite.JDBCDriverTest.class);
+        suite.addTest(tests.SQLite.AllTests.suite());
+        
         suite.addTestSuite(tests.sql.ConnectionTest.class);
         suite.addTestSuite(tests.sql.PreparedStatementTest.class);
+        suite.addTestSuite(tests.sql.ResultSetGetterTests.class);
         suite.addTestSuite(tests.sql.ResultSetMetaDataTest.class);
+        suite.addTestSuite(tests.sql.ResultSetTest.class);
         suite.addTestSuite(tests.sql.StatementTest.class);
         // $JUnit-END$
         return suite;

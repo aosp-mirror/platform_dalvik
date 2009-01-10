@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -61,15 +61,12 @@ public class CertStoreExceptionTest extends TestCase {
      * Test for <code>CertStoreException()</code> constructor Assertion:
      * constructs CertStoreException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CertStoreException",
+        args = {}
+    )
     public void testCertStoreException01() {
         CertStoreException tE = new CertStoreException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -81,15 +78,12 @@ public class CertStoreExceptionTest extends TestCase {
      * constructs CertStoreException with detail message msg. Parameter
      * <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CertStoreException",
+        args = {java.lang.String.class}
+    )
     public void testCertStoreException02() {
         CertStoreException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -104,15 +98,12 @@ public class CertStoreExceptionTest extends TestCase {
      * Test for <code>CertStoreException(String)</code> constructor Assertion:
      * constructs CertStoreException when <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null asa parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null asa parameter.",
+        method = "CertStoreException",
+        args = {java.lang.String.class}
+    )
     public void testCertStoreException03() {
         String msg = null;
         CertStoreException tE = new CertStoreException(msg);
@@ -125,15 +116,12 @@ public class CertStoreExceptionTest extends TestCase {
      * Assertion: constructs CertStoreException when <code>cause</code> is
      * null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreException",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "CertStoreException",
+        args = {java.lang.Throwable.class}
+    )
     public void testCertStoreException04() {
         Throwable cause = null;
         CertStoreException tE = new CertStoreException(cause);
@@ -146,15 +134,12 @@ public class CertStoreExceptionTest extends TestCase {
      * Assertion: constructs CertStoreException when <code>cause</code> is not
      * null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreException",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CertStoreException",
+        args = {java.lang.Throwable.class}
+    )
     public void testCertStoreException05() {
         CertStoreException tE = new CertStoreException(tCause);
         if (tE.getMessage() != null) {
@@ -173,15 +158,12 @@ public class CertStoreExceptionTest extends TestCase {
      * Assertion: constructs CertStoreException when <code>cause</code> is
      * null <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as parameters.",
+        method = "CertStoreException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCertStoreException06() {
         CertStoreException tE = new CertStoreException(null, null);
         assertNull("getMessage() must return null", tE.getMessage());
@@ -193,15 +175,12 @@ public class CertStoreExceptionTest extends TestCase {
      * Assertion: constructs CertStoreException when <code>cause</code> is
      * null <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as the second parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as the second parameter.",
+        method = "CertStoreException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCertStoreException07() {
         CertStoreException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -217,15 +196,12 @@ public class CertStoreExceptionTest extends TestCase {
      * Assertion: constructs CertStoreException when <code>cause</code> is not
      * null <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as the first parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as the first parameter.",
+        method = "CertStoreException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCertStoreException08() {
         CertStoreException tE = new CertStoreException(null, tCause);
         if (tE.getMessage() != null) {
@@ -244,15 +220,12 @@ public class CertStoreExceptionTest extends TestCase {
      * Assertion: constructs CertStoreException when <code>cause</code> is not
      * null <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "CertStoreException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCertStoreException09() {
         CertStoreException tE;
         for (int i = 0; i < msgs.length; i++) {

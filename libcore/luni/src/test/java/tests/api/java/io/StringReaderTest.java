@@ -18,8 +18,8 @@
 package tests.api.java.io;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.io.IOException;
@@ -35,15 +35,12 @@ public class StringReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringReader#StringReader(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StringReader",
-          methodArgs = {java.lang.String.class}
-        )
-    })    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StringReader",
+        args = {java.lang.String.class}
+    )    
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.io.StringReader(java.lang.String)
         try {
@@ -56,15 +53,12 @@ public class StringReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringReader#close()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
     public void test_close() {
         // Test for method void java.io.StringReader.close()
         try {
@@ -79,46 +73,42 @@ public class StringReaderTest extends junit.framework.TestCase {
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.StringReader#mark(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "mark",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_markI() {
-        // Test for method void java.io.StringReader.mark(int)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "IOException will never be thrown for this implementation.",
+        method = "mark",
+        args = {int.class}
+    )
+    public void test_markI() throws IOException {
+        sr = new StringReader(testString);
+        sr.skip(5);
+        sr.mark(0);
+        sr.skip(5);
+        sr.reset();
+        char[] buf = new char[10];
+        sr.read(buf, 0, 2);
+        assertTrue("Failed to return to mark", new String(buf, 0, 2)
+                .equals(testString.substring(5, 7)));
         try {
-            sr = new StringReader(testString);
-            sr.skip(5);
-            sr.mark(0);
-            sr.skip(5);
-            sr.reset();
-            char[] buf = new char[10];
-            sr.read(buf, 0, 2);
-            assertTrue("Failed to return to mark", new String(buf, 0, 2)
-                    .equals(testString.substring(5, 7)));
-        } catch (Exception e) {
-            fail("Exception during mark test : " + e.getMessage());
+            sr.mark(-1);
+            fail("IllegalArgumentException not thrown!");
+        } catch (IllegalArgumentException e) {
+            // expected
         }
     }
 
     /**
      * @tests java.io.StringReader#markSupported()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "markSupported",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "markSupported",
+        args = {}
+    )
     public void test_markSupported() {
         // Test for method boolean java.io.StringReader.markSupported()
 
@@ -129,15 +119,12 @@ public class StringReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringReader#read()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "IOException will never be thrown for this implementation.",
+        method = "read",
+        args = {}
+    )
     public void test_read() {
         // Test for method int java.io.StringReader.read()
         try {
@@ -154,15 +141,12 @@ public class StringReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringReader#read(char[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "IOException will never be thrown for this implementation.",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_read$CII() {
         // Test for method int java.io.StringReader.read(char [], int, int)
         try {
@@ -180,15 +164,12 @@ public class StringReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringReader#ready()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "ready",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "IOException will never be thrown for this implementation.",
+        method = "ready",
+        args = {}
+    )
     public void test_ready() {
         // Test for method boolean java.io.StringReader.ready()
         try {
@@ -210,15 +191,12 @@ public class StringReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringReader#reset()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "IOException will never be thrown for this implementation.",
+        method = "reset",
+        args = {}
+    )
     public void test_reset() {
         // Test for method void java.io.StringReader.reset()
         try {
@@ -239,15 +217,12 @@ public class StringReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringReader#skip(long)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "skip",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "IOException will never be thrown for this implementation.",
+        method = "skip",
+        args = {long.class}
+    )
     public void test_skipJ() {
         // Test for method long java.io.StringReader.skip(long)
         try {

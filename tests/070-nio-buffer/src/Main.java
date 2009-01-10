@@ -16,13 +16,21 @@
 
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 public class Main {
-    /**
+    public static void main(String[] args) {
+         intFloatTest();
+         basicShortTest();
+    }
+
+    /*
      * Create a buffer and fiddle with it.
      */
-    public static void main(String[] args) {
+    public static void basicShortTest() {
         ByteBuffer directBuf = ByteBuffer.allocateDirect(64);
         //ByteBuffer directBuf = ByteBuffer.allocateDirect(65);
 
@@ -63,6 +71,28 @@ public class Main {
         } catch (BufferOverflowException boe) {
             System.out.println("Got expected buffer overflow exception");
         }
+    }
+
+    /*
+     * Try this with either floats or ints; ints fail with
+     * BufferOverflowException, floats work.
+     *
+     * From http://code.google.com/p/android/issues/detail?id=1585 .
+     */
+    public static void intFloatTest() {
+        ByteBuffer direct = ByteBuffer.allocateDirect(100);
+        direct.order(ByteOrder.nativeOrder());
+        IntBuffer int1 = direct.asIntBuffer();
+        int data[] = new int[25];
+        //FloatBuffer int1 = direct.asFloatBuffer();
+        //float data[] = new float[25];
+        int1.clear ();
+        int1.put (data);
+        int1.position (0);
+            
+        int1.clear ();
+        int1.put (data);
+        int1.position (0);
     }
 }
 

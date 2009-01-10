@@ -133,6 +133,18 @@ public class State {
         return null;
     }
     
+    public final ClassObj findClass(String name) {
+        for (Heap heap: mHeaps.values()) {
+            ClassObj theClass = heap.getClass(name);
+            
+            if (theClass != null) {
+                return theClass;
+            }
+        }
+        
+        return null;
+    }
+    
     public final void dumpInstanceCounts() {
         for (Heap heap: mHeaps.values()) {
             System.out.println(
@@ -146,6 +158,14 @@ public class State {
             System.out.println(
                 "+------------------ sizes for heap: " + heap.mName);
             heap.dumpSizes();
+        }
+    }
+
+    public final void dumpSubclasses() {
+        for (Heap heap: mHeaps.values()) {
+            System.out.println(
+                "+------------------ subclasses for heap: " + heap.mName);
+            heap.dumpSubclasses();
         }
     }
     

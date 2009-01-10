@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Node;
@@ -58,15 +58,12 @@ public final class LocalName extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "getLocalName",
+        args = {}
+    )
     public void testGetLocalName1() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -81,15 +78,12 @@ public final class LocalName extends DOMTestCase {
         localName = addrAttr.getLocalName();
         assertEquals("localName", "domestic", localName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getLocalName method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getLocalName method returns null.",
+        method = "getLocalName",
+        args = {}
+    )
     public void testGetLocalName2() throws Throwable {
         Document doc;
         Node createdNode;
@@ -99,15 +93,12 @@ public final class LocalName extends DOMTestCase {
         localName = createdNode.getLocalName();
         assertNull("localNameNull", localName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getLocalName method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getLocalName method returns null.",
+        method = "getLocalName",
+        args = {}
+    )
     public void testGetLocalName3() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -121,15 +112,12 @@ public final class LocalName extends DOMTestCase {
         localName = textNode.getLocalName();
         assertNull("textNodeLocalName", localName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "getLocalName",
+        args = {}
+    )
     public void testGetLocalName4() throws Throwable {
         Document doc;
         NodeList elementList;

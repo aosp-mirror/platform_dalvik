@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -72,6 +72,10 @@ public class ObservableTest extends junit.framework.TestCase {
         public void doChange() {
             setChanged();
         }
+
+        public void clearChange() {
+            clearChanged();
+        }
     }
 
     Observer observer;
@@ -81,15 +85,12 @@ public class ObservableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Observable#Observable()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Observable",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Observable",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.util.Observable()
         try {
@@ -104,15 +105,12 @@ public class ObservableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Observable#addObserver(java.util.Observer)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addObserver",
-          methodArgs = {java.util.Observer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addObserver",
+        args = {java.util.Observer.class}
+    )
     public void test_addObserverLjava_util_Observer() {
         // Test for method void
         // java.util.Observable.addObserver(java.util.Observer)
@@ -137,15 +135,12 @@ public class ObservableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Observable#countObservers()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "countObservers",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "countObservers",
+        args = {}
+    )
     public void test_countObservers() {
         // Test for method int java.util.Observable.countObservers()
         assertEquals("New observable had > 0 observers", 0, observable
@@ -158,15 +153,12 @@ public class ObservableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Observable#deleteObserver(java.util.Observer)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify negative case: delete non-existent observer.",
-      targets = {
-        @TestTarget(
-          methodName = "deleteObserver",
-          methodArgs = {java.util.Observer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "deleteObserver",
+        args = {java.util.Observer.class}
+    )
     public void test_deleteObserverLjava_util_Observer() {
         // Test for method void
         // java.util.Observable.deleteObserver(java.util.Observer)
@@ -174,21 +166,19 @@ public class ObservableTest extends junit.framework.TestCase {
         observable.deleteObserver(observer);
         assertEquals("Failed to delete observer",
                 0, observable.countObservers());
-
+        observable.deleteObserver(observer);
+        observable.deleteObserver(null);
     }
 
     /**
      * @tests java.util.Observable#deleteObservers()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "deleteObservers",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "deleteObservers",
+        args = {}
+    )
     public void test_deleteObservers() {
         // Test for method void java.util.Observable.deleteObservers()
         observable.addObserver(new TestObserver());
@@ -207,31 +197,59 @@ public class ObservableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Observable#hasChanged()
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "hasChanged",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "hasChanged",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setChanged",
+            args = {}
         )
     })
     public void test_hasChanged() {
-        // TODO : Implement test
+        assertFalse(observable.hasChanged());
+        observable.addObserver(observer = new TestObserver());
+        observable.doChange();
+        assertTrue(observable.hasChanged());
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setChanged",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "clearChanged",
+            args = {}
+        )
+    })
+    public void test_clearChanged() {
+        assertFalse(observable.hasChanged());
+        observable.addObserver(observer = new TestObserver());
+        observable.doChange();
+        assertTrue(observable.hasChanged());
+        observable.clearChange();
+        assertFalse(observable.hasChanged());
     }
 
     /**
      * @tests java.util.Observable#notifyObservers()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "notifyObservers",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "notifyObservers",
+        args = {}
+    )
     public void test_notifyObservers() {
         // Test for method void java.util.Observable.notifyObservers()
         observable.addObserver(observer = new TestObserver());
@@ -265,15 +283,12 @@ public class ObservableTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Observable#notifyObservers(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "notifyObservers",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "notifyObservers",
+        args = {java.lang.Object.class}
+    )
     public void test_notifyObserversLjava_lang_Object() {
         // Test for method void
         // java.util.Observable.notifyObservers(java.lang.Object)

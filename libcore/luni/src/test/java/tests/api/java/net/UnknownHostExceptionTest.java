@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(java.net.UnknownHostException.class) 
 public class UnknownHostExceptionTest extends junit.framework.TestCase {
@@ -28,15 +28,12 @@ public class UnknownHostExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.UnknownHostException#UnknownHostException()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnknownHostException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "UnknownHostException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.net.UnknownHostException()
         try {
@@ -54,15 +51,12 @@ public class UnknownHostExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.UnknownHostException#UnknownHostException(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnknownHostException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "UnknownHostException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.net.UnknownHostException(java.lang.String)
         try {

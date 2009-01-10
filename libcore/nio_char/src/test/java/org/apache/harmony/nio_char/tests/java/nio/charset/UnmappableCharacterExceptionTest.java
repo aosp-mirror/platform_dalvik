@@ -17,8 +17,8 @@
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.io.Serializable;
@@ -36,19 +36,24 @@ import org.apache.harmony.testframework.serialization.SerializationTest.Serializ
  */
 public class UnmappableCharacterExceptionTest extends TestCase {
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnmappableCharacterException",
-          methodArgs = {int.class}
-        ), @TestTarget(
-          methodName = "getMessage",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "getInputLength",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "UnmappableCharacterException",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getMessage",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getInputLength",
+            args = {}
         )
     })
     public void testConstructor() {
@@ -90,15 +95,12 @@ public class UnmappableCharacterExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!SerializationSelf",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new UnmappableCharacterException(11),
@@ -108,15 +110,12 @@ public class UnmappableCharacterExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!SerializationGolden",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new UnmappableCharacterException(

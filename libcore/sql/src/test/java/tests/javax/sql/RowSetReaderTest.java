@@ -1,8 +1,8 @@
 package tests.javax.sql;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -16,12 +16,11 @@ public class RowSetReaderTest extends TestCase {
     /**
      * @tests {@link javax.sql.RowSetReader#readData(RowSetInternal)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "setColumnName",
-                                   methodArgs = {RowSetInternal.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "readData",
+        args = {javax.sql.RowSetInternal.class}
     )
     public void testReadData() {
         fail("Not yet implemented");

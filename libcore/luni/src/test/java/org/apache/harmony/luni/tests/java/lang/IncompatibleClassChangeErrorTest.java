@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class IncompatibleClassChangeErrorTest extends TestCase {
     /**
      * @tests java.lang.IncompatibleClassChangeError#IncompatibleClassChangeError()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "IncompatibleClassChangeError",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IncompatibleClassChangeError",
+        args = {}
+    )
     public void test_Constructor() {
         IncompatibleClassChangeError e = new IncompatibleClassChangeError();
         assertNull(e.getMessage());
@@ -49,15 +46,12 @@ public class IncompatibleClassChangeErrorTest extends TestCase {
     /**
      * @tests java.lang.IncompatibleClassChangeError#IncompatibleClassChangeError(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "IncompatibleClassChangeError",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IncompatibleClassChangeError",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         IncompatibleClassChangeError e = new IncompatibleClassChangeError("fixture");
         assertEquals("fixture", e.getMessage());

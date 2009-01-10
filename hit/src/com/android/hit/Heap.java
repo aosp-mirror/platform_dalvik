@@ -35,7 +35,8 @@ public class Heap {
     HashMap<Integer, ThreadObj> mThreads = new HashMap<Integer, ThreadObj>();
 
     //  Class definitions
-    HashMap<Long, ClassObj> mClasses = new HashMap<Long, ClassObj>();
+    HashMap<Long, ClassObj> mClassesById = new HashMap<Long, ClassObj>();
+    HashMap<String, ClassObj> mClassesByName = new HashMap<String, ClassObj>();
 
     //  List of instances of above class definitions
     HashMap<Long, Instance> mInstances = new HashMap<Long, Instance>();
@@ -96,15 +97,20 @@ public class Heap {
     }
 
     public final void addClass(long id, ClassObj theClass) {
-        mClasses.put(id, theClass);
+        mClassesById.put(id, theClass);
+        mClassesByName.put(theClass.mClassName, theClass);
     }
     
     public final ClassObj getClass(long id) {
-        return mClasses.get(id);
+        return mClassesById.get(id);
+    }
+
+    public final ClassObj getClass(String name) {
+        return mClassesByName.get(name);
     }
 
     public final void dumpInstanceCounts() {
-        for (ClassObj theClass: mClasses.values()) {
+        for (ClassObj theClass: mClassesById.values()) {
             int count = theClass.mInstances.size();
             
             if (count > 0) {
@@ -113,8 +119,19 @@ public class Heap {
         }
     }
 
+    public final void dumpSubclasses() {
+        for (ClassObj theClass: mClassesById.values()) {
+            int count = theClass.mSubclasses.size();
+            
+            if (count > 0) {
+                System.out.println(theClass);
+                theClass.dumpSubclasses();
+            }
+        }
+    }
+    
     public final void dumpSizes() {
-        for (ClassObj theClass: mClasses.values()) {
+        for (ClassObj theClass: mClassesById.values()) {
             int size = 0;
             
             for (Instance instance: theClass.mInstances) {
@@ -135,7 +152,7 @@ public class Heap {
      */
     public final void resolveInstanceRefs(State state) {
         for (Instance instance : mInstances.values()) {
-            ClassObj theClass = mClasses.get(instance.mClassId);
+            ClassObj theClass = mClassesById.get(instance.mClassId);
 
             if (theClass == null) {
                 continue;
@@ -143,7 +160,7 @@ public class Heap {
 
             String name = theClass.mClassName;
             String superclassName = "none";
-            ClassObj superClass = mClasses.get(theClass.mSuperclassId);
+            ClassObj superClass = mClassesById.get(theClass.mSuperclassId);
             
             if (superClass != null) {
                 superclassName = superClass.mClassName;
@@ -155,7 +172,7 @@ public class Heap {
     }
 
     public final void resolveClassStatics(State state) {
-        for (ClassObj theClass: mClasses.values()) {
+        for (ClassObj theClass: mClassesById.values()) {
             theClass.resolveReferences(state);
         }
     }

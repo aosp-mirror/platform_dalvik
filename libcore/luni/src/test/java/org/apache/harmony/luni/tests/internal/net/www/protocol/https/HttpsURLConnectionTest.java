@@ -17,14 +17,18 @@
 
 package org.apache.harmony.luni.tests.internal.net.www.protocol.https;
 
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -52,7 +56,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 /**
  * Implementation independent test for HttpsURLConnection.
@@ -70,7 +73,8 @@ import junit.framework.TestSuite;
  * <br>
  * The password to the certstore should be "password" (without quotes).
  */
-@TestTargetClass(HttpsURLConnection.class) 
+@TestTargetClass(HttpsURLConnection.class)
+@AndroidOnly("we only have a .bks key store in the test resources")
 public class HttpsURLConnectionTest extends TestCase {
 
     // the password to the store
@@ -103,21 +107,27 @@ public class HttpsURLConnectionTest extends TestCase {
     private static String systemTrustStore;
 
     private static String systemTrustStorePassword;
+    
+    private static File store;
+    
+    static {
+        try {
+            store = File.createTempFile("key_store", "bks");
+        } catch (Exception e) {
+            // ignore
+        }
+    }
 
     /**
      * Checks that HttpsURLConnection's default SSLSocketFactory is operable.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that HttpsURLConnection's default " +
-            "SSLSocketFactory is operable.",
-      targets = {
-        @TestTarget(
-          methodName = "getDefaultSSLSocketFactory",
-          methodArgs = {}
-        )
-    })
-    public void _testGetDefaultSSLSocketFactory() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that HttpsURLConnection's default SSLSocketFactory is operable.",
+        method = "getDefaultSSLSocketFactory",
+        args = {}
+    )
+    public void testGetDefaultSSLSocketFactory() throws Exception {
         // set up the properties defining the default values needed by SSL stuff
         setUpStoreProperties();
 
@@ -143,19 +153,14 @@ public class HttpsURLConnectionTest extends TestCase {
      * test checks connection state parameters established by
      * HttpsURLConnection.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies  if HTTPS connection performs initial SSL " +
-            "handshake with the server working over SSL, sends " +
-            "encrypted HTTP request, and receives expected HTTP " +
-            "response.",
-      targets = {
-        @TestTarget(
-          methodName = "setDefaultHostnameVerifier",
-          methodArgs = {javax.net.ssl.HostnameVerifier.class}
-        )
-    })
-    public void _testHttpsConnection() throws Throwable {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies  if HTTPS connection performs initial SSL handshake with the server working over SSL, sends encrypted HTTP request, and receives expected HTTP response.",
+        method = "setDefaultHostnameVerifier",
+        args = {javax.net.ssl.HostnameVerifier.class}
+    )
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void testHttpsConnection() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
         setUpStoreProperties();
 
@@ -192,25 +197,28 @@ public class HttpsURLConnectionTest extends TestCase {
      * Tests the behaviour of HTTPS connection in case of unavailability
      * of requested resource.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies the behaviour of HTTPS connection in case of " +
-            "unavailability of requested resource.",
-      targets = {
-        @TestTarget(
-          methodName = "setDoInput",
-          methodArgs = {boolean.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies the behaviour of HTTPS connection in case of unavailability of requested resource.",
+            method = "setDoInput",
+            args = {boolean.class}
         ),
-        @TestTarget(
-          methodName = "setConnectTimeout",
-          methodArgs = {int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies the behaviour of HTTPS connection in case of unavailability of requested resource.",
+            method = "setConnectTimeout",
+            args = {int.class}
         ),
-        @TestTarget(
-          methodName = "setReadTimeout",
-          methodArgs = {int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies the behaviour of HTTPS connection in case of unavailability of requested resource.",
+            method = "setReadTimeout",
+            args = {int.class}
         )
     })
-    public void _testHttpsConnection_Not_Found_Response() throws Throwable {
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void testHttpsConnection_Not_Found_Response() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
         setUpStoreProperties();
 
@@ -251,17 +259,13 @@ public class HttpsURLConnectionTest extends TestCase {
      * Tests possibility to set up the default SSLSocketFactory
      * to be used by HttpsURLConnection.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies possibility to set up the default " +
-            "SSLSocketFactory to be used by HttpsURLConnection.",
-      targets = {
-        @TestTarget(
-          methodName = "setDefaultSSLSocketFactory",
-          methodArgs = {javax.net.ssl.SSLSocketFactory.class}
-        )
-    })
-    public void _testSetDefaultSSLSocketFactory() throws Throwable {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies possibility to set up the default SSLSocketFactory to be used by HttpsURLConnection.",
+        method = "setDefaultSSLSocketFactory",
+        args = {javax.net.ssl.SSLSocketFactory.class}
+    )
+    public void testSetDefaultSSLSocketFactory() throws Throwable {
         // create the SSLServerSocket which will be used by server side
         SSLContext ctx = getContext();
         SSLServerSocket ss = (SSLServerSocket) ctx.getServerSocketFactory()
@@ -310,17 +314,13 @@ public class HttpsURLConnectionTest extends TestCase {
      * Tests possibility to set up the SSLSocketFactory
      * to be used by HttpsURLConnection.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies possibility to set up the SSLSocketFactory " + 
-            "to be used by HttpsURLConnection.",
-      targets = {
-        @TestTarget(
-          methodName = "setSSLSocketFactory",
-          methodArgs = {javax.net.ssl.SSLSocketFactory.class}
-        )
-    })
-    public void _testSetSSLSocketFactory() throws Throwable {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies possibility to set up the SSLSocketFactory to be used by HttpsURLConnection.",
+        method = "setSSLSocketFactory",
+        args = {javax.net.ssl.SSLSocketFactory.class}
+    )
+    public void testSetSSLSocketFactory() throws Throwable {
         // create the SSLServerSocket which will be used by server side
         SSLContext ctx = getContext();
         SSLServerSocket ss = (SSLServerSocket) ctx.getServerSocketFactory()
@@ -367,31 +367,36 @@ public class HttpsURLConnectionTest extends TestCase {
      * Tests the behaviour of HttpsURLConnection in case of retrieving
      * of the connection state parameters before connection has been made.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies the behaviour of HttpsURLConnection in case " +
-            "of retrieving of the connection state parameters before " +
-            "connection has been made.",
-      targets = {
-        @TestTarget(
-          methodName = "getCipherSuite",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies the behaviour of HttpsURLConnection in case of retrieving of the connection state parameters before connection has been made.",
+            method = "getCipherSuite",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getPeerPrincipal",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies the behaviour of HttpsURLConnection in case of retrieving of the connection state parameters before connection has been made.",
+            method = "getPeerPrincipal",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getLocalPrincipal",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies the behaviour of HttpsURLConnection in case of retrieving of the connection state parameters before connection has been made.",
+            method = "getLocalPrincipal",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getServerCertificates",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies the behaviour of HttpsURLConnection in case of retrieving of the connection state parameters before connection has been made.",
+            method = "getServerCertificates",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getLocalCertificates",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies the behaviour of HttpsURLConnection in case of retrieving of the connection state parameters before connection has been made.",
+            method = "getLocalCertificates",
+            args = {}
         )
     })
     public void testUnconnectedStateParameters() throws Throwable {
@@ -426,17 +431,14 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * Tests if setHostnameVerifier() method replaces default verifier.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies if setHostnameVerifier() method replaces " +
-            "default verifier.",
-      targets = {
-        @TestTarget(
-          methodName = "setHostnameVerifier",
-          methodArgs = {javax.net.ssl.HostnameVerifier.class}
-        )
-    })
-    public void _testSetHostnameVerifier() throws Throwable {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies if setHostnameVerifier() method replaces default verifier.",
+        method = "setHostnameVerifier",
+        args = {javax.net.ssl.HostnameVerifier.class}
+    )
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void testSetHostnameVerifier() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
@@ -478,17 +480,14 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * Tests the behaviour in case of sending the data to the server.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies the behaviour in case of sending the data to " +
-            "the server.",
-      targets = {
-        @TestTarget(
-          methodName = "setDoOutput",
-          methodArgs = {boolean.class}
-        )
-    })
-    public void _test_doOutput() throws Throwable {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies the behaviour in case of sending the data to the server.",
+        method = "setDoOutput",
+        args = {boolean.class}
+    )
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void test_doOutput() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
@@ -523,25 +522,28 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * Tests HTTPS connection process made through the proxy server.
      */
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.PARTIAL,
-            purpose = "Verifies HTTPS connection process made through " +
-                    "the proxy server.",
-            targets = {
-              @TestTarget(
-                methodName = "setDoInput",
-                methodArgs = {boolean.class}
-              ),
-              @TestTarget(
-                methodName = "setConnectTimeout",
-                methodArgs = {int.class}
-              ),
-              @TestTarget(
-                methodName = "setReadTimeout",
-                methodArgs = {int.class}
-              )
-          })  
-    public void _testProxyConnection() throws Throwable {
+            notes = "Verifies HTTPS connection process made through the proxy server.",
+            method = "setDoInput",
+            args = {boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server.",
+            method = "setConnectTimeout",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server.",
+            method = "setReadTimeout",
+            args = {int.class}
+        )
+    })
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void testProxyConnection() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
@@ -577,25 +579,28 @@ public class HttpsURLConnectionTest extends TestCase {
      * Tests HTTPS connection process made through the proxy server.
      * Proxy server needs authentication.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies HTTPS connection process made through the proxy " +
-            "server. Proxy server needs authentication.",
-      targets = {
-          @TestTarget(
-              methodName = "setDoInput",
-              methodArgs = {boolean.class}
-          ),
-          @TestTarget(
-              methodName = "setConnectTimeout",
-              methodArgs = {int.class}
-          ),
-          @TestTarget(
-              methodName = "setReadTimeout",
-              methodArgs = {int.class}
-          )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication.",
+            method = "setDoInput",
+            args = {boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication.",
+            method = "setConnectTimeout",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication.",
+            method = "setReadTimeout",
+            args = {int.class}
+        )
     })
-    public void _testProxyAuthConnection() throws Throwable {
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void testProxyAuthConnection() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
@@ -641,25 +646,28 @@ public class HttpsURLConnectionTest extends TestCase {
      * the connection is opened through one proxy,
      * for the second time through another.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies HTTPS connection process made through " +
-            "the proxy server.",
-      targets = {
-        @TestTarget(
-          methodName = "getCipherSuite",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies HTTPS connection process made through the proxy server.",
+            method = "getCipherSuite",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getLocalPrincipal",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies HTTPS connection process made through the proxy server.",
+            method = "getLocalPrincipal",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getPeerPrincipal",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies HTTPS connection process made through the proxy server.",
+            method = "getPeerPrincipal",
+            args = {}
         )
     })
-    public void _testConsequentProxyConnection() throws Throwable {
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void testConsequentProxyConnection() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
@@ -704,30 +712,34 @@ public class HttpsURLConnectionTest extends TestCase {
      * Proxy server needs authentication.
      * Client sends data to the server.
      */
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.PARTIAL,
-            purpose = "Verifies HTTPS connection process made through the " +
-                    "proxy server. Proxy server needs authentication. " +
-                  "Client sends data to the server.",
-            targets = {
-                @TestTarget(
-                    methodName = "setDoInput",
-                    methodArgs = {boolean.class}
-                ),
-                @TestTarget(
-                    methodName = "setConnectTimeout",
-                    methodArgs = {int.class}
-                ),
-                @TestTarget(
-                    methodName = "setReadTimeout",
-                    methodArgs = {int.class}
-                ),
-                @TestTarget(
-                    methodName = "setDoOutput",
-                    methodArgs = {boolean.class}
-                )
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication. Client sends data to the server.",
+            method = "setDoInput",
+            args = {boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication. Client sends data to the server.",
+            method = "setConnectTimeout",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication. Client sends data to the server.",
+            method = "setReadTimeout",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication. Client sends data to the server.",
+            method = "setDoOutput",
+            args = {boolean.class}
+        )
     })
-    public void _testProxyAuthConnection_doOutput() throws Throwable {
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void testProxyAuthConnection_doOutput() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
@@ -771,26 +783,28 @@ public class HttpsURLConnectionTest extends TestCase {
      * Proxy server needs authentication but client fails to authenticate
      * (Authenticator was not set up in the system).
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies HTTPS connection process made through the proxy " +
-            "server. Proxy server needs authentication but client fails " +
-            "to authenticate (Authenticator was not set up in the system).",
-      targets = {
-        @TestTarget(
-          methodName = "setDoInput",
-          methodArgs = {boolean.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication but client fails to authenticate (Authenticator was not set up in the system).",
+            method = "setDoInput",
+            args = {boolean.class}
         ),
-        @TestTarget(
-          methodName = "setConnectTimeout",
-          methodArgs = {int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication but client fails to authenticate (Authenticator was not set up in the system).",
+            method = "setConnectTimeout",
+            args = {int.class}
         ),
-        @TestTarget(
-          methodName = "setReadTimeout",
-          methodArgs = {int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies HTTPS connection process made through the proxy server. Proxy server needs authentication but client fails to authenticate (Authenticator was not set up in the system).",
+            method = "setReadTimeout",
+            args = {int.class}
         )
-    })    
-    public void _testProxyAuthConnectionFailed() throws Throwable {
+    })
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void testProxyAuthConnectionFailed() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
@@ -831,25 +845,28 @@ public class HttpsURLConnectionTest extends TestCase {
      * Tests the behaviour of HTTPS connection in case of unavailability
      * of requested resource.
      */
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.PARTIAL,
-            purpose = "Verifies the behaviour of HTTPS connection in case " +
-                    "of unavailability of requested resource.",
-            targets = {
-              @TestTarget(
-                methodName = "setDoInput",
-                methodArgs = {boolean.class}
-              ),
-              @TestTarget(
-                methodName = "setConnectTimeout",
-                methodArgs = {int.class}
-              ),
-              @TestTarget(
-                methodName = "setReadTimeout",
-                methodArgs = {int.class}
-              )
-          })     
-    public void _testProxyConnection_Not_Found_Response() throws Throwable {
+            notes = "Verifies the behaviour of HTTPS connection in case of unavailability of requested resource.",
+            method = "setDoInput",
+            args = {boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies the behaviour of HTTPS connection in case of unavailability of requested resource.",
+            method = "setConnectTimeout",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies the behaviour of HTTPS connection in case of unavailability of requested resource.",
+            method = "setReadTimeout",
+            args = {int.class}
+        )
+    })
+    @KnownFailure("VM aborts after more than one test was run.")
+    public void testProxyConnection_Not_Found_Response() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
@@ -898,8 +915,32 @@ public class HttpsURLConnectionTest extends TestCase {
             System.out.println("------ " + getName());
             System.out.println("------------------------");
         }
+        
+        if (store != null) {
+            String ksFileName = "org/apache/harmony/luni/tests/key_store."
+                    + KeyStore.getDefaultType().toLowerCase();
+            InputStream in = ClassLoader.getSystemClassLoader()
+                    .getResourceAsStream(ksFileName);
+            FileOutputStream out = new FileOutputStream(store);
+            BufferedInputStream bufIn = new BufferedInputStream(in, 8192);
+            while (bufIn.available() > 0) {
+                byte[] buf = new byte[128];
+                int read = bufIn.read(buf);
+                out.write(buf, 0, read);
+            }
+            bufIn.close();
+            out.close();
+        } else {
+            fail("couldn't set up key store");
+        }
     }
 
+    public void tearDown() {
+        if (store != null) {
+            store.delete();
+        }
+    }
+    
     /**
      * Checks the HttpsURLConnection getter's values and compares
      * them with actual corresponding values of remote peer.
@@ -937,14 +978,8 @@ public class HttpsURLConnectionTest extends TestCase {
      * @throws AssertionFailedError if property was not set 
      * or file does not exist.
      */
-    private static String getKeyStoreFileName() throws Exception {
-        String ksFileName = "org/apache/harmony/luni/tests/key_store."
-                + KeyStore.getDefaultType().toLowerCase();
-        URL url = ClassLoader.getSystemClassLoader().getResource(ksFileName);
-        assertNotNull("Expected KeyStore file: '" + ksFileName
-                + "' for default KeyStore of type '"
-                + KeyStore.getDefaultType() + "' does not exist.", url);
-        return new File(url.toURI()).getAbsolutePath();
+    private static String getKeyStoreFileName() {
+        return store.getAbsolutePath();
     }
 
     /**
@@ -1474,13 +1509,5 @@ public class HttpsURLConnectionTest extends TestCase {
                 thrown = e;
             }
         }
-    }
-
-    public static junit.framework.Test suite() {
-        return new TestSuite(HttpsURLConnectionTest.class);
-    }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
     }
 }

@@ -17,26 +17,63 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 @TestTargetClass(Number.class) 
 public class NumberTest extends junit.framework.TestCase {
+    
+    class MockNumber extends Number {
 
+        @Override
+        public double doubleValue() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        @Override
+        public float floatValue() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        @Override
+        public int intValue() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        @Override
+        public long longValue() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+        
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Number",
+        args = {}
+    )
+    public void test_Number() {
+        MockNumber number = new MockNumber();
+        assertEquals(0, number.longValue());
+        assertEquals(0, number.shortValue());
+    }
+    
     /**
      * @tests java.lang.Number#byteValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "byteValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "byteValue",
+        args = {}
+    )
     public void test_byteValue() {
         int number = 1231243;
         assertTrue("Incorrect byte returned for: " + number,
@@ -59,15 +96,12 @@ public class NumberTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Number#shortValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "shortValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "shortValue",
+        args = {}
+    )
     public void test_shortValue() {
         int number = 1231243;
         assertTrue("Incorrect byte returned for: " + number,

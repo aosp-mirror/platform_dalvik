@@ -17,8 +17,8 @@
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.nio.BufferOverflowException;
@@ -41,15 +41,12 @@ public class CharsetDecoderTest extends TestCase {
      * @tests java.nio.charset.CharsetDecoder.CharsetDecoder(Charset, float,
      *        float)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "CharsetDecoder",
-          methodArgs = {java.nio.charset.Charset.class, float.class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks IllegalArgumentException.",
+        method = "CharsetDecoder",
+        args = {java.nio.charset.Charset.class, float.class, float.class}
+    )
     public void test_ConstructorLjava_nio_charset_CharsetFF() {
         // Regression for HARMONY-142
         try {
@@ -78,15 +75,12 @@ public class CharsetDecoderTest extends TestCase {
     /**
      * @tests java.nio.charset.CharsetDecoder#decode(java.nio.ByteBuffer)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Regression test.",
+        method = "decode",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void test_decode() throws CharacterCodingException {
         // Regression for HARMONY-33
 //        ByteBuffer bb = ByteBuffer.allocate(1);
@@ -124,15 +118,12 @@ public class CharsetDecoderTest extends TestCase {
     /*
      * Test malfunction decode(ByteBuffer)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test. Checks CoderMalfunctionError",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Regression test. Checks CoderMalfunctionError",
+        method = "decode",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void test_decodeLjava_nio_ByteBuffer() throws Exception {
         MockMalfunctionCharset cs1 = new MockMalfunctionCharset(
                 "Harmony-124-1", null); //$NON-NLS-1$
@@ -208,19 +199,24 @@ public class CharsetDecoderTest extends TestCase {
     /*
      * Test the method decode(ByteBuffer) .
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
-        ),@TestTarget(
-          methodName = "implOnMalformedInput",
-          methodArgs = {java.nio.charset.CodingErrorAction.class}
-        ),@TestTarget(
-          methodName = "replaceWith",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Functional test.",
+            method = "decode",
+            args = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Functional test.",
+            method = "implOnMalformedInput",
+            args = {java.nio.charset.CodingErrorAction.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Functional test.",
+            method = "replaceWith",
+            args = {java.lang.String.class}
         )
     })
     public void testDecodeLjava_nio_ByteBuffer_ReplaceOverflow()

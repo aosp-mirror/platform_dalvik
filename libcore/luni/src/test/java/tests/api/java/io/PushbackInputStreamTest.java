@@ -17,18 +17,19 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.PushbackInputStream;
 
+import tests.support.Support_ASimpleInputStream;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
 @TestTargetClass(PushbackInputStream.class) 
 public class PushbackInputStreamTest extends junit.framework.TestCase {
 
+    Support_ASimpleInputStream underlying = new Support_ASimpleInputStream();
     PushbackInputStream pis;
 
     public String fileString = "Test_All_Tests\nTest_java_io_BufferedInputStream\nTest_java_io_BufferedOutputStream\nTest_java_io_ByteArrayInputStream\nTest_java_io_ByteArrayOutputStream\nTest_java_io_DataInputStream\nTest_java_io_File\nTest_java_io_FileDescriptor\nTest_java_io_FileInputStream\nTest_java_io_FileNotFoundException\nTest_java_io_FileOutputStream\nTest_java_io_FilterInputStream\nTest_java_io_FilterOutputStream\nTest_java_io_InputStream\nTest_java_io_IOException\nTest_java_io_OutputStream\nTest_java_io_PrintStream\nTest_java_io_RandomAccessFile\nTest_java_io_SyncFailedException\nTest_java_lang_AbstractMethodError\nTest_java_lang_ArithmeticException\nTest_java_lang_ArrayIndexOutOfBoundsException\nTest_java_lang_ArrayStoreException\nTest_java_lang_Boolean\nTest_java_lang_Byte\nTest_java_lang_Character\nTest_java_lang_Class\nTest_java_lang_ClassCastException\nTest_java_lang_ClassCircularityError\nTest_java_lang_ClassFormatError\nTest_java_lang_ClassLoader\nTest_java_lang_ClassNotFoundException\nTest_java_lang_CloneNotSupportedException\nTest_java_lang_Double\nTest_java_lang_Error\nTest_java_lang_Exception\nTest_java_lang_ExceptionInInitializerError\nTest_java_lang_Float\nTest_java_lang_IllegalAccessError\nTest_java_lang_IllegalAccessException\nTest_java_lang_IllegalArgumentException\nTest_java_lang_IllegalMonitorStateException\nTest_java_lang_IllegalThreadStateException\nTest_java_lang_IncompatibleClassChangeError\nTest_java_lang_IndexOutOfBoundsException\nTest_java_lang_InstantiationError\nTest_java_lang_InstantiationException\nTest_java_lang_Integer\nTest_java_lang_InternalError\nTest_java_lang_InterruptedException\nTest_java_lang_LinkageError\nTest_java_lang_Long\nTest_java_lang_Math\nTest_java_lang_NegativeArraySizeException\nTest_java_lang_NoClassDefFoundError\nTest_java_lang_NoSuchFieldError\nTest_java_lang_NoSuchMethodError\nTest_java_lang_NullPointerException\nTest_java_lang_Number\nTest_java_lang_NumberFormatException\nTest_java_lang_Object\nTest_java_lang_OutOfMemoryError\nTest_java_lang_RuntimeException\nTest_java_lang_SecurityManager\nTest_java_lang_Short\nTest_java_lang_StackOverflowError\nTest_java_lang_String\nTest_java_lang_StringBuffer\nTest_java_lang_StringIndexOutOfBoundsException\nTest_java_lang_System\nTest_java_lang_Thread\nTest_java_lang_ThreadDeath\nTest_java_lang_ThreadGroup\nTest_java_lang_Throwable\nTest_java_lang_UnknownError\nTest_java_lang_UnsatisfiedLinkError\nTest_java_lang_VerifyError\nTest_java_lang_VirtualMachineError\nTest_java_lang_vm_Image\nTest_java_lang_vm_MemorySegment\nTest_java_lang_vm_ROMStoreException\nTest_java_lang_vm_VM\nTest_java_lang_Void\nTest_java_net_BindException\nTest_java_net_ConnectException\nTest_java_net_DatagramPacket\nTest_java_net_DatagramSocket\nTest_java_net_DatagramSocketImpl\nTest_java_net_InetAddress\nTest_java_net_NoRouteToHostException\nTest_java_net_PlainDatagramSocketImpl\nTest_java_net_PlainSocketImpl\nTest_java_net_Socket\nTest_java_net_SocketException\nTest_java_net_SocketImpl\nTest_java_net_SocketInputStream\nTest_java_net_SocketOutputStream\nTest_java_net_UnknownHostException\nTest_java_util_ArrayEnumerator\nTest_java_util_Date\nTest_java_util_EventObject\nTest_java_util_HashEnumerator\nTest_java_util_Hashtable\nTest_java_util_Properties\nTest_java_util_ResourceBundle\nTest_java_util_tm\nTest_java_util_Vector\n";
@@ -36,15 +37,12 @@ public class PushbackInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackInputStream#PushbackInputStream(java.io.InputStream)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PushbackInputStream",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PushbackInputStream",
+        args = {java.io.InputStream.class}
+    )
     public void test_ConstructorLjava_io_InputStream() {
         // Test for method java.io.PushbackInputStream(java.io.InputStream)
         try {
@@ -64,64 +62,90 @@ public class PushbackInputStreamTest extends junit.framework.TestCase {
      * @tests java.io.PushbackInputStream#PushbackInputStream(java.io.InputStream,
      *        int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PushbackInputStream",
-          methodArgs = {java.io.InputStream.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "PushbackInputStream",
+        args = {java.io.InputStream.class, int.class}
+    )
     public void test_ConstructorLjava_io_InputStreamI() {
-        // Test for method java.io.PushbackInputStream(java.io.InputStream, int)
+        ByteArrayInputStream bas = new ByteArrayInputStream("Hello".getBytes());
         try {
-            pis = new PushbackInputStream(new ByteArrayInputStream("Hello"
-                    .getBytes()), 5);
-            pis.unread("Hellos".getBytes());
-        } catch (IOException e) {
-            // Correct
-            // Pushback buffer should be full
-            return;
-
+            pis = new PushbackInputStream(bas, 0);
+            fail("Test 1: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
         }
-        fail("Failed to throw exception on unread when buffer full");
+        try {
+            pis = new PushbackInputStream(bas, -1);
+            fail("Test 2: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
+        }
+        
+        pis = new PushbackInputStream(bas , 5);
+        try {
+            pis.unread("Hello world".getBytes());
+            fail("Test 3: IOException expected when the unread buffer is full.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
+    public void test_close() throws IOException {
+        PushbackInputStream tobj;
+
+        tobj = new PushbackInputStream(underlying);
+        tobj.close();
+        tobj.close();
+        tobj = new PushbackInputStream(underlying);
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.close();
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.PushbackInputStream#available()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "available",
-          methodArgs = {}
-        )
-    })
-    public void test_available() {
-        // Test for method int java.io.PushbackInputStream.available()
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "",
+        method = "available",
+        args = {}
+    )
+    public void test_available() throws IOException {
+        PushbackInputStream tobj;
+
+        tobj = new PushbackInputStream(underlying);
+        assertEquals("Wrong number!", 30, tobj.available());
+        underlying.throwExceptionOnNextUse = true;
         try {
-            assertTrue("Available returned incorrect number of bytes", pis
-                    .available() == fileString.getBytes().length);
+            tobj.available();
+            fail("IOException not thrown.");
         } catch (IOException e) {
-            fail("Exception during available test: " + e.toString());
+            // expected
         }
     }
 
     /**
      * @tests java.io.PushbackInputStream#markSupported()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "markSupported",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "markSupported",
+        args = {}
+    )
     public void test_markSupported() {
         // Test for method boolean java.io.PushbackInputStream.markSupported()
         assertTrue("markSupported returned true", !pis.markSupported());
@@ -130,66 +154,84 @@ public class PushbackInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackInputStream#read()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {}
-        )
-    })
-    public void test_read() {
-        // Test for method int java.io.PushbackInputStream.read()
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {}
+    )
+    public void test_read() throws IOException {
+        PushbackInputStream tobj;
+
+        tobj = new PushbackInputStream(underlying);
+        assertEquals("Test 1: Incorrect byte read;", 66, tobj.read());
+        underlying.throwExceptionOnNextUse = true;
         try {
-            assertTrue("Incorrect byte read", pis.read() == fileString
-                    .getBytes()[0]);
+            tobj.read();
+            fail("Test 2: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during read test : " + e.getMessage());
+            // expected
         }
+
+        assertEquals("Test 3: Incorrect byte read;", 
+                fileString.getBytes()[0], pis.read());
     }
 
     /**
      * @tests java.io.PushbackInputStream#read(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_read$BII() {
-        // Test for method int java.io.PushbackInputStream.read(byte [], int,
-        // int)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
+    public void test_read$BII() throws IOException {
+        PushbackInputStream tobj;
+        byte[] buf = ("01234567890123456789").getBytes();
+
+        tobj = new PushbackInputStream(underlying);
+        tobj.read(buf, 6, 5);
+        assertEquals("Wrong value read!", "BEGIN", new String(buf, 6, 5));
+        assertEquals("Too much read!", "012345BEGIN123456789", new String(buf));
+        underlying.throwExceptionOnNextUse = true;
         try {
-            byte[] buf = new byte[100];
-            pis.read(buf, 0, buf.length);
-            assertTrue("Incorrect bytes read", new String(buf)
-                    .equals(fileString.substring(0, 100)));
+            tobj.read(buf, 6, 5);
+            fail("IOException not thrown.");
         } catch (IOException e) {
-            fail("Exception during read test : " + e.getMessage());
+            // expected
         }
     }
 
     /**
      * @tests java.io.PushbackInputStream#skip(long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "skip",
-          methodArgs = {long.class}
-        )
-    })
-    public void test_skipJ() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "skip",
+        args = {long.class}
+    )
+    public void test_skipJ() throws IOException {
+        PushbackInputStream tobj;
+        byte[] buf = ("01234567890123456789").getBytes();
+
+        tobj = new PushbackInputStream(underlying);
+        tobj.skip(6);
+        assertEquals("Wrong number!", 30 - 6, tobj.available());
+        tobj.skip(1000000);
+        tobj.skip(1000000);
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.skip(1);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method long java.io.PushbackInputStream.skip(long)
         try {
-            byte[] buf = new byte[50];
+            buf = new byte[50];
             pis.skip(50);
             pis.read(buf, 0, buf.length);
             assertTrue("a) Incorrect bytes read", new String(buf)
@@ -208,16 +250,37 @@ public class PushbackInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackInputStream#unread(byte[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "unread",
-          methodArgs = {byte[].class}
-        )
-    })
-    public void test_unread$B() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "unread",
+        args = {byte[].class}
+    )
+    public void test_unread$B() throws IOException {
+        PushbackInputStream tobj;
+        String str2 = "0123456789";
+        byte[] buf2 = str2.getBytes();
+        byte[] readBuf = new byte[10];
+
+        tobj = new PushbackInputStream(underlying, 10);
+        tobj.unread(buf2);
+        assertEquals("Wrong number!", 30 + 10, tobj.available());
+        try {
+            tobj.unread(buf2);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+        tobj.read(readBuf);
+        assertEquals("Incorrect bytes read", str2, new String(readBuf));
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.read(buf2);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method void java.io.PushbackInputStream.unread(byte [])
         try {
             byte[] buf = new byte[100];
@@ -236,16 +299,37 @@ public class PushbackInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackInputStream#unread(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "unread",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_unread$BII() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "unread",
+        args = {byte[].class, int.class, int.class}
+    )
+    public void test_unread$BII() throws IOException {
+        PushbackInputStream tobj;
+        String str2 = "0123456789";
+        byte[] buf2 = (str2 + str2 + str2).getBytes();
+        byte[] readBuf = new byte[10];
+
+        tobj = new PushbackInputStream(underlying, 10);
+        tobj.unread(buf2, 15, 10);
+        assertEquals("Wrong number!", 30 + 10, tobj.available());
+        try {
+            tobj.unread(buf2, 15, 10);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+        tobj.read(readBuf);
+        assertEquals("Incorrect bytes read", "5678901234", new String(readBuf));
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.read(buf2, 15, 10);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method void java.io.PushbackInputStream.unread(byte [], int,
         // int)
         try {
@@ -265,16 +349,29 @@ public class PushbackInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackInputStream#unread(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "unread",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_unreadI() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "unread",
+        args = {int.class}
+    )
+    public void test_unreadI() throws IOException {
+        PushbackInputStream tobj;
+
+        tobj = new PushbackInputStream(underlying);
+        tobj.unread(23); // Why does this work?!?
+        tobj.skip(2);
+        tobj.unread(23);
+        assertEquals("Wrong number!", 30, tobj.available());
+        assertEquals("Wrong value read!", 23, tobj.read());
+        tobj.unread(13);
+        try {
+            tobj.unread(13);
+            fail("IOException not thrown (ACTUALLY NOT SURE WHETHER IT REALLY MUST BE THROWN!).");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method void java.io.PushbackInputStream.unread(int)
         try {
             int x;

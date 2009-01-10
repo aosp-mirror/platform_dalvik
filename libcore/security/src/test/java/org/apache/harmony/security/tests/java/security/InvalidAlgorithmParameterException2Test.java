@@ -18,9 +18,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.InvalidAlgorithmParameterException;
 
@@ -31,15 +31,12 @@ public class InvalidAlgorithmParameterException2Test extends
     /**
      * @tests java.security.InvalidAlgorithmParameterException#InvalidAlgorithmParameterException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidAlgorithmParameterException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InvalidAlgorithmParameterException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.security.InvalidAlgorithmParameterException()
         InvalidAlgorithmParameterException e = new InvalidAlgorithmParameterException();
@@ -52,15 +49,12 @@ public class InvalidAlgorithmParameterException2Test extends
     /**
      * @tests java.security.InvalidAlgorithmParameterException#InvalidAlgorithmParameterException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies constructor with one string parameter",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidAlgorithmParameterException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies constructor with one string parameter",
+        method = "InvalidAlgorithmParameterException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method
         // java.security.InvalidAlgorithmParameterException(java.lang.String)

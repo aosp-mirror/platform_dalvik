@@ -331,7 +331,7 @@ public class File implements Serializable, Comparable<File> {
      * Indicates whether the current context is allowed to read from this file.
      * 
      * @return {@code true} if this file can be read, {@code false} otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             read request.
      * @since Android 1.0
@@ -351,7 +351,7 @@ public class File implements Serializable, Comparable<File> {
      * 
      * @return {@code true} if this file can be written, {@code false}
      *         otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             write request.
      * @since Android 1.0
@@ -394,7 +394,7 @@ public class File implements Serializable, Comparable<File> {
      * Deletes this file. Directories must be empty before they will be deleted.
      * 
      * @return {@code true} if this file was deleted, {@code false} otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             request.
      * @see java.lang.SecurityManager#checkDelete
@@ -421,7 +421,7 @@ public class File implements Serializable, Comparable<File> {
      * terminates. This will only happen when the virtual machine terminates 
      * normally as described by the Java Language Specification section 12.9.
      * 
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             request.
      * @since Android 1.0
@@ -462,7 +462,7 @@ public class File implements Serializable, Comparable<File> {
      * underlying file system.
      * 
      * @return {@code true} if this file exists, {@code false} otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @see #getPath
@@ -744,7 +744,7 @@ public class File implements Serializable, Comparable<File> {
      * 
      * @return {@code true} if this file is a directory, {@code false}
      *         otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @since Android 1.0
@@ -767,7 +767,7 @@ public class File implements Serializable, Comparable<File> {
      * file system.
      * 
      * @return {@code true} if this file is a file, {@code false} otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @since Android 1.0
@@ -793,7 +793,7 @@ public class File implements Serializable, Comparable<File> {
      * file system for this purpose.
      * 
      * @return {@code true} if the file is hidden, {@code false} otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @since Android 1.0
@@ -824,7 +824,7 @@ public class File implements Serializable, Comparable<File> {
      * milliseconds since January 1st, 1970, midnight.
      * 
      * @return the time when this file was last modified.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @since Android 1.0
@@ -854,7 +854,7 @@ public class File implements Serializable, Comparable<File> {
      *         otherwise.
      * @throws IllegalArgumentException
      *             if {@code time < 0}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies write
      *             access to this file.
      * @since Android 1.0
@@ -878,7 +878,7 @@ public class File implements Serializable, Comparable<File> {
      * 
      * @return {@code true} if the operation is successful, {@code false}
      *         otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies write
      *             access to this file.
      * @since Android 1.0
@@ -897,7 +897,7 @@ public class File implements Serializable, Comparable<File> {
      * Returns the length of this file in bytes.
      * 
      * @return the number of bytes in this file.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @since Android 1.0
@@ -922,7 +922,7 @@ public class File implements Serializable, Comparable<File> {
      * </p>
      * 
      * @return an array of strings with file names or {@code null}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @see #isDirectory
@@ -954,7 +954,7 @@ public class File implements Serializable, Comparable<File> {
      * absolute, they are relative otherwise.
      * 
      * @return an array of files or {@code null}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @see #list
@@ -987,7 +987,7 @@ public class File implements Serializable, Comparable<File> {
      * @param filter
      *            the filter to match names against, may be {@code null}.
      * @return an array of files or {@code null}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @see #list(FilenameFilter filter)
@@ -1019,7 +1019,7 @@ public class File implements Serializable, Comparable<File> {
      * @param filter
      *            the filter to match names against, may be {@code null}.
      * @return an array of files or {@code null}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @since Android 1.0
@@ -1061,7 +1061,7 @@ public class File implements Serializable, Comparable<File> {
      * @param filter
      *            the filter to match names against, may be {@code null}.
      * @return an array of files or {@code null}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies read
      *             access to this file.
      * @since Android 1.0
@@ -1098,7 +1098,7 @@ public class File implements Serializable, Comparable<File> {
      * 
      * @return {@code true} if the directory has been created, {@code false}
      *         otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies write
      *             access for this file.
      * @see #mkdirs
@@ -1121,7 +1121,7 @@ public class File implements Serializable, Comparable<File> {
      * @return {@code true} if the necessary directories have been created,
      *         {@code false} if the target directory already exists or one of
      *         the directories can not be created.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies write
      *             access for this file.
      * @see #mkdir
@@ -1157,7 +1157,7 @@ public class File implements Serializable, Comparable<File> {
      * @throws IOException
      *             if an I/O error occurs or the directory does not exist where
      *             the file should have been created.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies write
      *             access for this file.
      * @since Android 1.0
@@ -1332,7 +1332,7 @@ public class File implements Serializable, Comparable<File> {
      * @param dest
      *            the file containing the new name.
      * @return {@code true} if the File was renamed, {@code false} otherwise.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies write
      *             access for this file or the {@code dest} file.
      * @since Android 1.0

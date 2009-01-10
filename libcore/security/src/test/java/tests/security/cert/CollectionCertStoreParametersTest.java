@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -60,15 +60,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Assertion: Creates an instance of CollectionCertStoreParameters
      * with the default parameter values (an empty and immutable Collection) 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CollectionCertStoreParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CollectionCertStoreParameters",
+        args = {}
+    )
     public final void testCollectionCertStoreParameters01() {
         CertStoreParameters cp = new CollectionCertStoreParameters();
         assertTrue("isCollectionCertStoreParameters",
@@ -80,15 +77,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Assertion: Creates an instance of CollectionCertStoreParameters
      * with the default parameter values (an empty and immutable Collection) 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CollectionCertStoreParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CollectionCertStoreParameters",
+        args = {}
+    )
     @SuppressWarnings("unchecked")
     public final void testCollectionCertStoreParameters02() {
         CollectionCertStoreParameters cp = new CollectionCertStoreParameters();
@@ -109,15 +103,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * constructor<br>
      * Assertion: Creates an instance of CollectionCertStoreParameters 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CollectionCertStoreParameters",
-          methodArgs = {java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CollectionCertStoreParameters",
+        args = {java.util.Collection.class}
+    )
     public final void testCollectionCertStoreParametersCollection01() {
         Vector<Certificate> certificates = new Vector<Certificate>();
         certificates.add(new MyCertificate("TEST", new byte[] {}));
@@ -131,15 +122,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * that is not a <code>Certificate</code> or <code>CRL</code>, that object
      * will be ignored by the Collection <code>CertStore</code>. 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CollectionCertStoreParameters",
-          methodArgs = {java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CollectionCertStoreParameters",
+        args = {java.util.Collection.class}
+    )
     public final void testCollectionCertStoreParametersCollection02() {
         // just check that we able to create CollectionCertStoreParameters
         // object passing Collection containing Object which is not
@@ -158,15 +146,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * available to the Collection CertStore. The Collection CertStore will
      * not modify the contents of the Collection 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CollectionCertStoreParameters",
-          methodArgs = {java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CollectionCertStoreParameters",
+        args = {java.util.Collection.class}
+    )
     public final void testCollectionCertStoreParametersCollection03() {
         Vector<Certificate> certificates = new Vector<Certificate>();
         // create using empty collection
@@ -189,15 +174,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Assertion: <code>NullPointerException</code> - if
      * <code>collection</code> is <code>null</code> 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CollectionCertStoreParameters",
-          methodArgs = {java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "CollectionCertStoreParameters",
+        args = {java.util.Collection.class}
+    )
     public final void testCollectionCertStoreParametersCollection04() {
         try {
             new CollectionCertStoreParameters(null);
@@ -210,15 +192,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Test #1 for <code>clone()</code> method<br>
      * Assertion: Returns a copy of this object
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public final void testClone01() {
         Vector<Certificate> certificates = new Vector<Certificate>();
         certificates.add(new MyCertificate("TEST", new byte[] {(byte)4}));
@@ -235,15 +214,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Assertion: ...only a reference to the <code>Collection</code>
      * is copied, and not the contents
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public final void testClone02() {
         Vector<Certificate> certificates = new Vector<Certificate>();
         certificates.add(new MyCertificate("TEST", new byte[] {(byte)4}));
@@ -260,15 +236,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Assertion: ...only a reference to the <code>Collection</code>
      * is copied, and not the contents
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public final void testClone03() {
         CollectionCertStoreParameters cp1 =
             new CollectionCertStoreParameters();
@@ -285,15 +258,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Test #1 for <code>toString()</code> method<br>
      * Assertion: returns the formatted string describing parameters
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString01() {
         CollectionCertStoreParameters cp =
             new CollectionCertStoreParameters();
@@ -305,15 +275,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Test #2 for <code>toString()</code> method<br>
      * Assertion: returns the formatted string describing parameters
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString02() {
         Vector<Certificate> certificates = new Vector<Certificate>();
         certificates.add(new MyCertificate("TEST", new byte[] {(byte)4}));
@@ -327,15 +294,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Test #1 for <code>getCollection()</code> method<br>
      * Assertion: returns the Collection (never null)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCollection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getCollection",
+        args = {}
+    )
     public final void testGetCollection01() {
         CollectionCertStoreParameters cp = new CollectionCertStoreParameters();
         assertNotNull(cp.getCollection());
@@ -345,15 +309,12 @@ public class CollectionCertStoreParametersTest extends TestCase {
      * Test #2 for <code>getCollection()</code> method<br>
      * Assertion: returns the Collection (never null)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCollection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getCollection",
+        args = {}
+    )
     public final void testGetCollection02() {
         Vector certificates = new Vector();
         CollectionCertStoreParameters cp =

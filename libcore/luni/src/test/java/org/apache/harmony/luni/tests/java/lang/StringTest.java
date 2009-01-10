@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,44 +30,19 @@ import java.lang.reflect.Constructor;
 @TestTargetClass(String.class) 
 public class StringTest extends TestCase {
 
-    private static final Constructor<String> UNSAFE_CONSTRUCTOR;
-    static {
-        Constructor<String> uc;
-        try {
-            uc = String.class.getDeclaredConstructor(new Class[] { int.class,
-                    int.class, char[].class });
-            uc.setAccessible(true);
-        } catch (Exception e) {
-            uc = null;
-        }
-        UNSAFE_CONSTRUCTOR = uc;
-    }
-
     private static String newString(int start, int len, char[] data) {
-        if (UNSAFE_CONSTRUCTOR == null) {
-            return new String(data, start, len);
-        }
-
-        try {
-            return UNSAFE_CONSTRUCTOR.newInstance(Integer.valueOf(start), Integer.valueOf(len),
-                    data);
-        } catch (Exception e) {
-            throw new AssertionError(e);
-        }
+        return new String(data, start,len);
     }
     
     /**
      * @tests java.lang.String#String()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {}
+    )
     public void test_Constructor() {
         assertEquals("Created incorrect string", "", new String());
     }
@@ -75,15 +50,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(byte[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {byte[].class}
+    )
     public void test_Constructor$B() {
         assertEquals("Failed to create string", "HelloWorld", new String(
                 "HelloWorld".getBytes()));
@@ -92,15 +64,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(byte[], int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {byte[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {byte[].class, int.class}
+    )
     @SuppressWarnings("deprecation")
     public void test_Constructor$BI() {
         String s = new String(new byte[] { 65, 66, 67, 68, 69 }, 0);
@@ -112,15 +81,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_Constructor$BII() {
         byte[] hwba = "HelloWorld".getBytes();
         assertEquals("Failed to create string", "HelloWorld", new String(hwba,
@@ -136,15 +102,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(byte[], int, int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {byte[].class, int.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IndexOutOfBoundsException is not verified.",
+        method = "String",
+        args = {byte[].class, int.class, int.class, int.class}
+    )
     @SuppressWarnings("deprecation")
     public void test_Constructor$BIII() {
         String s = new String(new byte[] { 65, 66, 67, 68, 69 }, 0, 1, 3);
@@ -156,15 +119,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(byte[], int, int, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {byte[].class, int.class, int.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {byte[].class, int.class, int.class, java.lang.String.class}
+    )
     public void test_Constructor$BIILjava_lang_String() throws Exception {
         String s = new String(new byte[] { 65, 66, 67, 68, 69 }, 0, 5, "8859_1");
         assertEquals("Incorrect string returned: " + s, "ABCDE", s);
@@ -180,15 +140,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(byte[], java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "UnsupportedEncodingException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {byte[].class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "UnsupportedEncodingException is not verified.",
+        method = "String",
+        args = {byte[].class, java.lang.String.class}
+    )
     public void test_Constructor$BLjava_lang_String() throws Exception {
         String s = new String(new byte[] { 65, 66, 67, 68, 69 }, "8859_1");
         assertEquals("Incorrect string returned: " + s, "ABCDE", s);
@@ -197,15 +154,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(char[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {char[].class}
+    )
     public void test_Constructor$C() {
         assertEquals("Failed Constructor test", "World", new String(new char[] {
                 'W', 'o', 'r', 'l', 'd' }));
@@ -214,15 +168,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_Constructor$CII() throws Exception {
         char[] buf = { 'H', 'e', 'l', 'l', 'o', 'W', 'o', 'r', 'l', 'd' };
         String s = new String(buf, 0, buf.length);
@@ -238,15 +189,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         String s = new String("Hello World");
         assertEquals("Failed to construct correct string", "Hello World", s);
@@ -255,15 +203,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(java.lang.StringBuffer)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {java.lang.StringBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {java.lang.StringBuffer.class}
+    )
     public void test_ConstructorLjava_lang_StringBuffer() {
         StringBuffer sb = new StringBuffer();
         sb.append("HelloWorld");
@@ -273,15 +218,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(java.lang.StringBuilder)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {java.lang.StringBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {java.lang.StringBuilder.class}
+    )
     public void test_ConstructorLjava_lang_StringBuilder() {
         StringBuilder sb = new StringBuilder(32);
         sb.append("HelloWorld");
@@ -297,15 +239,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#String(int[],int,int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "String",
-          methodArgs = {int[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "String",
+        args = {int[].class, int.class, int.class}
+    )
     public void test_Constructor$III() {
         assertEquals("HelloWorld", new String(new int[] { 'H', 'e', 'l', 'l',
                 'o', 'W', 'o', 'r', 'l', 'd' }, 0, 10));
@@ -354,15 +293,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#contentEquals(CharSequence)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "contentEquals",
-          methodArgs = {java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "contentEquals",
+        args = {java.lang.CharSequence.class}
+    )
     public void test_contentEqualsLjava_lang_CharSequence() {
         String s = "abc";
         assertTrue(s.contentEquals((CharSequence) new StringBuffer("abc")));
@@ -384,15 +320,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#contentEquals(StringBuffer)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "contentEquals",
-          methodArgs = {java.lang.StringBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "contentEquals",
+        args = {java.lang.StringBuffer.class}
+    )
     @SuppressWarnings("nls")
     public void test_boolean_contentEquals_StringBuffer() {
         String s = "abc";
@@ -416,15 +349,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String#contains(CharSequence)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "contains",
-          methodArgs = {java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "contains",
+        args = {java.lang.CharSequence.class}
+    )
     @SuppressWarnings("cast")
     public void test_containsLjava_lang_CharSequence() {
         String s = "abcdefghijklmnopqrstuvwxyz";
@@ -447,15 +377,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.String.offsetByCodePoints(int, int)'
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "offsetByCodePoints",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "offsetByCodePoints",
+        args = {int.class, int.class}
+    )
     public void test_offsetByCodePointsII() {
         int result = new String("a\uD800\uDC00b").offsetByCodePoints(0, 2);
         assertEquals(3, result);
@@ -579,15 +506,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.codePointAt(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointAt",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointAt",
+        args = {int.class}
+    )
     public void test_codePointAtI() {
         String s = "abc";
         assertEquals('a', s.codePointAt(0));
@@ -649,15 +573,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.codePointBefore(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointBefore",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointBefore",
+        args = {int.class}
+    )
     public void test_codePointBeforeI() {
         String s = "abc";
         assertEquals('a', s.codePointBefore(1));
@@ -719,15 +640,12 @@ public class StringTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.codePointCount(int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointCount",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointCount",
+        args = {int.class, int.class}
+    )
     public void test_codePointCountII() {
         assertEquals(1, "\uD800\uDC00".codePointCount(0, 2));
         assertEquals(1, "\uD800\uDC01".codePointCount(0, 2));

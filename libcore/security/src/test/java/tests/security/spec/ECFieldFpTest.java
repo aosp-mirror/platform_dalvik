@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -57,15 +57,12 @@ public class ECFieldFpTest extends TestCase {
      * Assertion: creates new object of <code>ECFieldFp</code> class
      * using valid <code>p</code> (odd prime)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ECFieldFp",
-          methodArgs = {java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "ECFieldFp",
+        args = {java.math.BigInteger.class}
+    )
     public final void testECFieldFp01() {
         new ECFieldFp(BigInteger.valueOf(23L));
     }
@@ -76,15 +73,12 @@ public class ECFieldFpTest extends TestCase {
      * Assertion: creates new object of <code>ECFieldFp</code> class
      * using valid <code>p</code> (odd but not prime)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ECFieldFp",
-          methodArgs = {java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "ECFieldFp",
+        args = {java.math.BigInteger.class}
+    )
     public final void testECFieldFp02() {
         new ECFieldFp(BigInteger.valueOf(21L));
     }
@@ -94,15 +88,12 @@ public class ECFieldFpTest extends TestCase {
      * 
      * Assertion: IllegalArgumentException if <code>p</code> is not positive
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ECFieldFp",
-          methodArgs = {java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "ECFieldFp",
+        args = {java.math.BigInteger.class}
+    )
     public final void testECFieldFp03() {
         try {
             new ECFieldFp(BigInteger.valueOf(-1L)); 
@@ -117,15 +108,12 @@ public class ECFieldFpTest extends TestCase {
      * 
      * Assertion: IllegalArgumentException if <code>p</code> is not positive
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ECFieldFp",
-          methodArgs = {java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "ECFieldFp",
+        args = {java.math.BigInteger.class}
+    )
     public final void testECFieldFp04() {
         try {
             new ECFieldFp(BigInteger.valueOf(0L));
@@ -140,15 +128,12 @@ public class ECFieldFpTest extends TestCase {
      * 
      * Assertion: NullPointerException if <code>p</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ECFieldFp",
-          methodArgs = {java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "ECFieldFp",
+        args = {java.math.BigInteger.class}
+    )
     public final void testECFieldFp05() {
         try {
             new ECFieldFp(null);
@@ -164,15 +149,12 @@ public class ECFieldFpTest extends TestCase {
      * Assertion: must return the same value if invoked
      * repeatedly on the same object. 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public final void testHashCode01() {
         ECFieldFp f = new ECFieldFp(BigInteger.valueOf(23L));
         int hc = f.hashCode();
@@ -192,15 +174,12 @@ public class ECFieldFpTest extends TestCase {
      * Assertion: must return the same value if invoked
      * on equal (according to the <code>equals(Object)</code> method) objects. 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public final void testHashCode02() {
         assertTrue(new ECFieldFp(BigInteger.valueOf(23L)).hashCode() ==
                    new ECFieldFp(BigInteger.valueOf(23L)).hashCode());
@@ -211,15 +190,12 @@ public class ECFieldFpTest extends TestCase {
      *
      * Assertion: returns field size in bits which is prime size
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFieldSize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFieldSize",
+        args = {}
+    )
     public final void testGetFieldSize() {
         assertEquals(5, new ECFieldFp(BigInteger.valueOf(23L)).getFieldSize());
     }
@@ -229,15 +205,12 @@ public class ECFieldFpTest extends TestCase {
      *
      * Assertion: returns prime 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getP",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getP",
+        args = {}
+    )
     public final void testGetP() {
         BigInteger p = BigInteger.valueOf(23L);
         assertTrue(p.equals(new ECFieldFp(p).getP()));
@@ -248,15 +221,12 @@ public class ECFieldFpTest extends TestCase {
      *
      * Assertion: object equals to itself. 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public final void testEqualsObject01() {
         ECFieldFp obj = new ECFieldFp(BigInteger.valueOf(23L));
         assertTrue(obj.equals(obj));
@@ -267,15 +237,12 @@ public class ECFieldFpTest extends TestCase {
      *
      * Assertion: returns false if <code>obj</code> is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public final void testEqualsObject02() {
         assertFalse(new ECFieldFp(BigInteger.valueOf(23L)).equals(null));
     }
@@ -286,15 +253,12 @@ public class ECFieldFpTest extends TestCase {
      * Assertion: returns false if <code>obj</code>
      * is not instance of <code>ECFieldFp</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public final void testEqualsObject03() {
         assertFalse(new ECFieldFp(BigInteger.valueOf(23L)).equals(new Object()));
     }
@@ -304,15 +268,12 @@ public class ECFieldFpTest extends TestCase {
      *
      * Assertion: true if prime values match. 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public final void testEqualsObject04() {
         assertTrue(new ECFieldFp(BigInteger.valueOf(23L)).equals(
                    new ECFieldFp(BigInteger.valueOf(23L))));

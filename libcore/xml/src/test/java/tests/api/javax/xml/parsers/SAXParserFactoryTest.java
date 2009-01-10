@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,20 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package tests.api.javax.xml.parsers;
-
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXNotSupportedException;
-import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -39,6 +26,21 @@ import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+
+import junit.framework.TestCase;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 @TestTargetClass(SAXParserFactory.class) 
 public class SAXParserFactoryTest extends TestCase {
@@ -67,82 +69,17 @@ public class SAXParserFactoryTest extends TestCase {
         is1.close();
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#SAXParserFactory()
-     *
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SAXParserFactory",
-          methodArgs = {}
-        )
-    })
-    public void _test_Constructor() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SAXParserFactory",
+        args = {}
+    )
+    @AndroidOnly("Android SAX implementation is non-validating")
+    public void test_Constructor() {
         MySAXParserFactory mpf = new MySAXParserFactory();
         assertTrue(mpf instanceof SAXParserFactory);
         assertFalse(mpf.isValidating());
-    }
-
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#getFeature(java.lang.String)
-     *
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ParserConfigurationException, SAXNotSupportedException.",
-      targets = {
-        @TestTarget(
-          methodName = "getFeature",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void test_getFeatureLjava_lang_String() {
-        String[] features = {
-                "http://xml.org/sax/features/namespaces",
-        "http://xml.org/sax/features/validation"};
-        for (int i = 0; i < features.length; i++) {
-            try {
-                spf.setFeature(features[i], true);
-                assertTrue(spf.getFeature(features[i]));
-                spf.setFeature(features[i], false);
-                assertFalse(spf.getFeature(features[i]));
-            } catch (ParserConfigurationException pce) {
-                fail("ParserConfigurationException is thrown");
-            } catch (SAXNotRecognizedException snre) {
-                fail("SAXNotRecognizedException is thrown");
-            } catch (SAXNotSupportedException snse) {
-                fail("SAXNotSupportedException is thrown");
-            }
-        }
-
-        try {
-            spf.getFeature("");
-            fail("SAXNotRecognizedException is not thrown");
-        } catch (ParserConfigurationException pce) {
-            fail("ParserConfigurationException is thrown");
-        } catch (SAXNotRecognizedException snre) {
-            //expected
-        } catch (SAXNotSupportedException snse) {
-            fail("SAXNotSupportedException is thrown");
-        } catch (NullPointerException npe) {
-            fail("NullPointerException is thrown");
-        }
-
-        try {
-            spf.getFeature(null);
-            fail("NullPointerException is not thrown");
-        } catch (ParserConfigurationException pce) {
-            fail("ParserConfigurationException is thrown");
-        } catch (SAXNotRecognizedException snre) {
-            fail("SAXNotRecognizedException is thrown");
-        } catch (SAXNotSupportedException snse) {
-            fail("SAXNotSupportedException is thrown");
-        } catch (NullPointerException npe) {
-            // expected
-        }
     }
 
     /**
@@ -162,20 +99,22 @@ public class SAXParserFactoryTest extends TestCase {
         }
     }
      */
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#isNamespaceAware()
-     *
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setNamespaceAware",
-          methodArgs = {boolean.class}
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isNamespaceAware",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setNamespaceAware",
+            args = {boolean.class}
         )
     })
-    public void test_isNamespaceAware() {
+    public void test_setIsNamespaceAware() {
         spf.setNamespaceAware(true);
         assertTrue(spf.isNamespaceAware());
         spf.setNamespaceAware(false);
@@ -184,20 +123,21 @@ public class SAXParserFactoryTest extends TestCase {
         assertTrue(spf.isNamespaceAware());
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#isValidating()
-     *
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isValidating",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isValidating",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "",
+            method = "setValidating",
+            args = {boolean.class}
         )
     })
-    public void test_isValidating() {
+    public void test_setIsValidating() {
         spf.setValidating(true);
         assertTrue(spf.isValidating());
         spf.setValidating(false);
@@ -206,31 +146,34 @@ public class SAXParserFactoryTest extends TestCase {
         assertTrue(spf.isValidating());
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#isXIncludeAware()
-     *
-     */
-//    public void test_isXIncludeAware() {
-//        assertFalse(spf.isXIncludeAware());
-//        spf.setXIncludeAware(true);
-//        assertTrue(spf.isXIncludeAware());
-//        spf.setXIncludeAware(false);
-//        assertFalse(spf.isXIncludeAware());
-//    }
-
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#newInstance()
-     *
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "newInstance",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isXIncludeAware",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "",
+            method = "setXIncludeAware",
+            args = {boolean.class}
         )
     })
+    @KnownFailure("Should handle XIncludeAware flag more gracefully")
+    public void test_setIsXIncludeAware() {
+        spf.setXIncludeAware(true);
+        assertTrue(spf.isXIncludeAware());
+        spf.setXIncludeAware(false);
+        assertFalse(spf.isXIncludeAware());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {}
+    )
     public void test_newInstance() {
         String className = null;
         try {
@@ -272,44 +215,52 @@ public class SAXParserFactoryTest extends TestCase {
         }
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#newSAXParser()
-     *
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "newSAXParser",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "SAXException untested; unused on Android",
+        method = "newSAXParser",
+        args = {}
+    )
     public void test_newSAXParser() {
+        // Ordinary case
         try {
             SAXParser sp = spf.newSAXParser();
             assertTrue(sp instanceof SAXParser);
             sp.parse(is1, new MyHandler());
         } catch(Exception e) {
-            fail("Exception was thrown: " + e.toString());
+            throw new RuntimeException("Unexpected exception", e);
+        }
+        
+        // Exception case
+        spf.setValidating(true);
+        try {
+            SAXParser sp = spf.newSAXParser();
+        } catch(ParserConfigurationException e) {
+            // Expected, since Android doesn't have a validating parser.
+        } catch (SAXException e) {
+            throw new RuntimeException("Unexpected exception", e);
         }
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#setFeature(java.lang.String,
-     *       boolean)
-     *
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify SAXNotSupportedException, ParserConfigurationException.",
-      targets = {
-        @TestTarget(
-          methodName = "setFeature",
-          methodArgs = {java.lang.String.class, boolean.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            method = "setFeature",
+            notes = "ParserConfigurationException untested; unused on Android",
+            args = {java.lang.String.class, boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            method = "getFeature",
+            notes = "ParserConfigurationException untested; unused on Android",
+            args = {java.lang.String.class}
         )
-    })
+    })        
     public void test_setFeatureLjava_lang_StringZ() {
+        // We can't verify ParserConfigurationException and
+        // SAXNotSupportedException since these are never
+        // thrown by Android.
+        
         String[] features = {
                 "http://xml.org/sax/features/namespaces",
                 "http://xml.org/sax/features/validation" };
@@ -341,19 +292,17 @@ public class SAXParserFactoryTest extends TestCase {
             fail("NullPointerException is thrown");
         }
 
-// Doesn't make sense for us.
-//        try {
-//            spf.setFeature("http://xml.org/sax/features/use-attributes2", true);
-//            fail("SAXNotSupportedException is not thrown");
-//        } catch (ParserConfigurationException pce) {
-//            fail("ParserConfigurationException is thrown");
-//        } catch (SAXNotRecognizedException snre) {
-//            fail("SAXNotRecognizedException is thrown");
-//        } catch (SAXNotSupportedException snse) {
-//            //expected
-//        } catch (NullPointerException npe) {
-//            fail("NullPointerException is thrown");
-//        }
+        try {
+            spf.setFeature("http://xml.org/sax/features/unknown-feature", true);
+        } catch (ParserConfigurationException pce) {
+            fail("ParserConfigurationException is thrown");
+        } catch (SAXNotRecognizedException snre) {
+            fail("SAXNotRecognizedException is thrown");
+        } catch (SAXNotSupportedException snse) {
+            // Acceptable, although this doesn't happen an Android.
+        } catch (NullPointerException npe) {
+            fail("NullPointerException is thrown");
+        }
 
         try {
             spf.setFeature(null, true);
@@ -369,20 +318,13 @@ public class SAXParserFactoryTest extends TestCase {
         }
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#setNamespaceAware(boolean)
-     *
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamespaceAware",
-          methodArgs = {boolean.class}
-        )
-    })
-    public void _test_setNamespaceAwareZ() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "setNamespaceAware",
+        args = {boolean.class}
+    )
+    @KnownFailure("Error in namespace feature handling (for ExpatParser)")
+    public void test_setNamespaceAwareZ() {
 
         spf.setNamespaceAware(true);
         MyHandler mh = new MyHandler();
@@ -392,7 +334,6 @@ public class SAXParserFactoryTest extends TestCase {
         } catch(javax.xml.parsers.ParserConfigurationException pce) {
             fail("ParserConfigurationException was thrown during parsing");
         } catch(org.xml.sax.SAXException se) {
-            se.printStackTrace();
             fail("SAXException was thrown during parsing");
         } catch(IOException ioe) {
             fail("IOException was thrown during parsing");
@@ -409,6 +350,7 @@ public class SAXParserFactoryTest extends TestCase {
         } catch(javax.xml.parsers.ParserConfigurationException pce) {
             fail("ParserConfigurationException was thrown during parsing");
         } catch(org.xml.sax.SAXException se) {
+            se.printStackTrace();
             fail("SAXException was thrown during parsing");
         } catch(IOException ioe) {
             fail("IOException was thrown during parsing");
@@ -434,10 +376,6 @@ public class SAXParserFactoryTest extends TestCase {
         }
     }
 
-    /**
-     * @tests javax.xml.parsers.SAXParserFactory#setSchema(javax.xml.validation.Schema)
-     * TBD getSchema() IS NOT SUPPORTED
-     */
     /*   public void test_setSchemaLjavax_xml_validation_Schema() {
         SchemaFactory sf =
             SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -450,10 +388,7 @@ public class SAXParserFactoryTest extends TestCase {
         }
     }
      */
-    /**
-     * @tests javax.xml.parsers.SAXParserFactory#setValidating(boolean)
-     *
-     */
+
 //    public void test_setValidatingZ() {
 //        MyHandler mh = new MyHandler();
 //        InputStream is2 = getClass().getResourceAsStream("/recipe.xml");
@@ -520,10 +455,6 @@ public class SAXParserFactoryTest extends TestCase {
 //        }
 //    }
 
-    /**
-     * @test javax.xml.parsers.SAXParserFactory#setXIncludeAware(boolean)
-     *
-     */
 //    public void test_setXIncludeAwareZ() {
 //        spf.setXIncludeAware(true);
 //        MyHandler mh = new MyHandler();
@@ -599,20 +530,18 @@ public class SAXParserFactoryTest extends TestCase {
             return null;
         }
 
-        public void setFeature(String name,
-                boolean value)
-        throws ParserConfigurationException,
-        SAXNotRecognizedException,
-        SAXNotSupportedException {
+        public void setFeature(String name, boolean value) throws
+                ParserConfigurationException, SAXNotRecognizedException,
+                SAXNotSupportedException {
 
         }
 
-        public boolean getFeature(String name)
-        throws ParserConfigurationException,
-        SAXNotRecognizedException,
-        SAXNotSupportedException {
+        public boolean getFeature(String name) throws 
+                ParserConfigurationException, SAXNotRecognizedException,
+                SAXNotSupportedException {
             return true;
         }
 
     }
+
 }

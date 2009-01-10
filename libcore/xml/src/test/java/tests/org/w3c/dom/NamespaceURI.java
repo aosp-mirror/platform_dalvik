@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Attr;
@@ -94,15 +94,12 @@ public final class NamespaceURI extends DOMTestCase {
 //        attrNamespaceURI = addrAttr.getNamespaceURI();
 //        assertEquals("namespaceURI", "http://www.nist.gov", attrNamespaceURI);
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify that getNamespaceURI method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getNamespaceURI",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify that getNamespaceURI method returns null.",
+        method = "getNamespaceURI",
+        args = {}
+    )
     public void testGetNamespaceURI2() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -118,15 +115,12 @@ public final class NamespaceURI extends DOMTestCase {
         attrNamespaceURI = addrAttr.getNamespaceURI();
         assertEquals("namespaceURI", "http://www.nist.gov", attrNamespaceURI);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify that getNamespaceURI method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getNamespaceURI",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify that getNamespaceURI method returns null.",
+        method = "getNamespaceURI",
+        args = {}
+    )
     public void testGetNamespaceURI3() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -139,15 +133,12 @@ public final class NamespaceURI extends DOMTestCase {
         employeeNamespace = testEmployee.getNamespaceURI();
         assertEquals("namespaceURI", "http://www.nist.gov", employeeNamespace);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getNamespaceURI method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getNamespaceURI",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getNamespaceURI method returns null.",
+        method = "getNamespaceURI",
+        args = {}
+    )
     public void testGetNamespaceURI4() throws Throwable {
         Document doc;
         NodeList elementList;

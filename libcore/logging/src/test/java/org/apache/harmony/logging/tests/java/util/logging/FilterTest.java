@@ -31,9 +31,9 @@
 package org.apache.harmony.logging.tests.java.util.logging;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.util.logging.Filter;
 import java.util.logging.LogRecord;
@@ -46,15 +46,12 @@ import junit.framework.TestCase;
  */
 @TestTargetClass(Filter.class) 
 public class FilterTest extends TestCase {
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies interface.",
-      targets = {
-        @TestTarget(
-          methodName = "isLoggable",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies interface.",
+        method = "isLoggable",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testFilter() {
         MockFilter f = new MockFilter();
         assertFalse(f.isLoggable(null));

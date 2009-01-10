@@ -123,6 +123,8 @@ LOCAL_SRC_FILES := \
 	analysis/DexOptimize.c \
 	analysis/DexVerify.c \
 	analysis/ReduceConstants.c \
+	analysis/RegisterMap.c \
+	analysis/VerifySubs.c \
 	interp/Interp.c.arm \
 	interp/Stack.c \
 	jdwp/ExpandBuf.c \

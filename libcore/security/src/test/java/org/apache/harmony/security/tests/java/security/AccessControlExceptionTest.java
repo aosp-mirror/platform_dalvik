@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.AccessControlException;
 import java.security.AllPermission;
@@ -51,15 +51,12 @@ public class AccessControlExceptionTest extends TestCase {
     /**
      * Tests AccessControlException(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AccessControlException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "AccessControlException",
+        args = {java.lang.String.class}
+    )
     public void testAccessControlExceptionString() {
         new AccessControlException(null);
         new AccessControlException("Failure");
@@ -68,33 +65,29 @@ public class AccessControlExceptionTest extends TestCase {
     /**
      * Tests AccessControlException(String, Permission)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies method with positive arguments only",
-      targets = {
-        @TestTarget(
-          methodName = "AccessControlException",
-          methodArgs = {java.lang.String.class, java.security.Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "AccessControlException",
+        args = {java.lang.String.class, java.security.Permission.class}
+    )
     public void testAccessControlExceptionStringPermission() {
         Permission perm = new AllPermission();
-        new AccessControlException("001", perm);
+        AccessControlException controlException = new AccessControlException("001", perm);
+        assertEquals("exception message", "001", controlException.getMessage());
+        assertEquals("permission", perm, controlException.getPermission());
     }
 
     /**
      * 
      * Tests AccessControlException.getPermission()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPermission",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPermission",
+        args = {}
+    )
     public void testGetPermission() {
         Permission perm = new UnresolvedPermission("unresolvedType",
                 "unresolvedName", "unresolvedActions", null);

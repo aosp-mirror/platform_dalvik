@@ -408,6 +408,15 @@ bail:
 
     //dvmLinearAllocDump(NULL);
 
+#if 0
+    {
+        extern int gDvm__totalInstr, gDvm__gcInstr, gDvm__gcData,
+               gDvm__gcSimpleData;
+        LOGI("GC DATA: totinst=%d, gcinst=%d, gcdata=%d simpled=%d\n",
+            gDvm__totalInstr, gDvm__gcInstr, gDvm__gcData, gDvm__gcSimpleData);
+    }
+#endif
+
     free(bootClassPath);
     LOGV("DexOpt command complete (result=%d)\n", result);
     return result;

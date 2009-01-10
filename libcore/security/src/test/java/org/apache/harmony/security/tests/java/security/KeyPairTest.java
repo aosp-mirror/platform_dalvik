@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -82,17 +82,19 @@ public class KeyPairTest extends TestCase {
      * Assertion: creates new <code>KeyPair</code> instance using valid
      * parameters (both <code>null</code>)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification when just one parameter is null missed",
-      targets = {
-        @TestTarget(
-          methodName = "KeyPair",
-          methodArgs = {PublicKey.class, PrivateKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verification when parameter is null",
+        method = "KeyPair",
+        args = {java.security.PublicKey.class, java.security.PrivateKey.class}
+    )
     public final void testKeyPair01() {
         Object kp = new KeyPair(null, null);
+        assertTrue(kp instanceof KeyPair);
+        
+        kp = new KeyPair(null, TestKeyPair.getPrivate());
+        assertTrue(kp instanceof KeyPair);
+        kp = new KeyPair(TestKeyPair.getPublic(), null);
         assertTrue(kp instanceof KeyPair);
     }
 
@@ -102,15 +104,12 @@ public class KeyPairTest extends TestCase {
      * parameters (both valid keys)
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification when just one parameter is null missed",
-      targets = {
-        @TestTarget(
-          methodName = "KeyPair",
-          methodArgs = {PublicKey.class, PrivateKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verification when parameter is not null",
+        method = "KeyPair",
+        args = {java.security.PublicKey.class, java.security.PrivateKey.class}
+    )
     public final void testKeyPair02() throws InvalidKeySpecException {
         Object kp = new KeyPair(TestKeyPair.getPublic(), TestKeyPair.getPrivate());
         assertTrue(kp instanceof KeyPair);
@@ -120,15 +119,12 @@ public class KeyPairTest extends TestCase {
      * Test #1 for <code>getPrivate()</code> method<br>
      * Assertion: returns private key (<code>null</code> in this case)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrivate",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getPrivate",
+        args = {}
+    )
     public final void testGetPrivate01() {
         KeyPair kp = new KeyPair(null, null);
         assertNull(kp.getPrivate());
@@ -139,15 +135,12 @@ public class KeyPairTest extends TestCase {
      * Assertion: returns private key (valid private key in this case)
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrivate",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getPrivate",
+        args = {}
+    )
     public final void testGetPrivate02() throws InvalidKeySpecException {
         PrivateKey pk = TestKeyPair.getPrivate();
         KeyPair kp = new KeyPair(null, pk);
@@ -158,15 +151,12 @@ public class KeyPairTest extends TestCase {
      * Test #1 for <code>getPublic()</code> method<br>
      * Assertion: returns public key (<code>null</code> in this case)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPublic",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getPublic",
+        args = {}
+    )
     public final void testGetPublic01() {
         KeyPair kp = new KeyPair(null, null);
         assertNull(kp.getPublic());
@@ -177,15 +167,12 @@ public class KeyPairTest extends TestCase {
      * Assertion: returns public key (valid public key in this case)
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPublic",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getPublic",
+        args = {}
+    )
     public final void testGetPublic02() throws InvalidKeySpecException {
         PublicKey pk = TestKeyPair.getPublic();
         KeyPair kp = new KeyPair(pk, null);

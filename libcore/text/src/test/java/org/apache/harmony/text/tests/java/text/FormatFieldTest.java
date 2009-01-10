@@ -17,9 +17,9 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -42,15 +42,12 @@ public class FormatFieldTest extends TestCase {
      * @tests java.text.Format.Field#FormatField(java.lang.String) Test of
      *        method java.text.Format.Field#FormatField(java.lang.String).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Field",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Field",
+        args = {java.lang.String.class}
+    )
     public void test_Constructor() {
         try {
             new MockFormatField("test");

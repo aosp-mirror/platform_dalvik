@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -31,15 +31,12 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter.BigDecimalLayoutForm#values()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "values",
+        args = {}
+    )
     public void test_values() {
         BigDecimalLayoutForm[] vals = BigDecimalLayoutForm.values();
         assertEquals("Invalid length of enum values", 2, vals.length);
@@ -52,20 +49,24 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter.BigDecimalLayoutForm#valueOf(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {java.lang.String.class}
+    )
     public void test_valueOfLjava_lang_String() {
         BigDecimalLayoutForm sci = BigDecimalLayoutForm.valueOf("SCIENTIFIC");
         assertEquals("Wrong scientific value in enum", BigDecimalLayoutForm.SCIENTIFIC, sci);
 
         BigDecimalLayoutForm decFloat = BigDecimalLayoutForm.valueOf("DECIMAL_FLOAT");
         assertEquals("Wrong dec float value from valueOf ", BigDecimalLayoutForm.DECIMAL_FLOAT, decFloat);
+
+        try {
+            decFloat = BigDecimalLayoutForm.valueOf("Wrong format");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 }

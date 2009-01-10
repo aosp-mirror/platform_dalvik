@@ -44,9 +44,9 @@ static jstring InetAddress_gethostname(JNIEnv* env, jobject obj)
     }
 }
 
-static void throwNullPointerException(JNIEnv *env)
+static void throwNullPointerException(JNIEnv* env)
 {
-    const char *className = "java/lang/NullPointerException";
+    const char* className = "java/lang/NullPointerException";
 
     jclass exClass = env->FindClass(className);
 
@@ -57,78 +57,104 @@ static void throwNullPointerException(JNIEnv *env)
     }
 }
 
-
-static jboolean InetAddress_gethostbyname(JNIEnv* env, jobject obj, jstring nameStr, jbyteArray addr)
+static jbyteArray getHostByNameAdb(JNIEnv* env, const char* name)
 {
-    if (addr == NULL || 4 != env->GetArrayLength(addr)) {
-        return false;
+    struct in_addr outaddr;
+    jbyteArray out = NULL;
+
+#if 0
+    LOGI("ADB networking: -gethostbyname err %d addr 0x%08x %u.%u.%u.%u",
+            err, (unsigned int)outaddr.a.s_addr,
+            outaddr.j[0],outaddr.j[1],
+            outaddr.j[2],outaddr.j[3]);
+#endif
+
+    if (adb_networking_gethostbyname(name, &outaddr) >= 0) {
+        out = env->NewByteArray(4);
+        env->SetByteArrayRegion(out, 0, 4, (jbyte*) &outaddr.s_addr);
     }
 
+    return out;
+}
+
+static jbyteArray getHostByNameGetAddrInfo(JNIEnv* env, const char* name, jboolean preferIPv6Address)
+{
+    struct addrinfo hints, *res = NULL;
+    jbyteArray out = NULL;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = preferIPv6Address ? AF_UNSPEC : AF_INET;
+
+    int ret = getaddrinfo(name, NULL, &hints, &res);
+    if (ret == 0  && res) {
+        struct sockaddr* saddr = res[0].ai_addr;
+        size_t addrlen = 0;
+        void* rawaddr;
+
+        switch (res[0].ai_family) {
+            // Find the raw address length and start pointer.
+            case AF_INET6:
+                addrlen = 16;
+                rawaddr = &((struct sockaddr_in6*) saddr)->sin6_addr.s6_addr;
+                break;
+            case AF_INET:
+                addrlen = 4;
+                rawaddr = &((struct sockaddr_in*) saddr)->sin_addr.s_addr;
+                break;
+            default:
+                // Do nothing. addrlength = 0, so we will return NULL.
+                break;
+        }
+
+        if (addrlen) {
+            out = env->NewByteArray(addrlen);
+            env->SetByteArrayRegion(out, 0, addrlen, (jbyte*) rawaddr);
+        }
+    } else if (ret == EAI_SYSTEM && errno == EACCES) {
+        /* No permission to use network */
+        jniThrowException(
+                env, "java/lang/SecurityException",
+                "Permission denied (maybe missing INTERNET permission)");
+    }
+
+    if (res) {
+        freeaddrinfo(res);
+    }
+
+    return out;
+}
+
+jbyteArray InetAddress_gethostbyname(JNIEnv* env, jobject obj, jstring nameStr, jboolean preferIPv6Address)
+{
     if (nameStr == NULL) {
         throwNullPointerException(env);
-        return false;
+        return 0;
     }
 
-    jboolean ret;
     const char* name = env->GetStringUTFChars(nameStr, NULL);
+    jbyteArray out = NULL;
 
     char useAdbNetworkingProperty[PROPERTY_VALUE_MAX];
     char adbConnected[PROPERTY_VALUE_MAX];
-
     property_get ("android.net.use-adb-networking",
             useAdbNetworkingProperty, "");
-
     property_get ("adb.connected",
             adbConnected, "");
 
+    // Any non-empty string value for use-adb-networking is considered "set"
     if ((strlen(useAdbNetworkingProperty) > 0)
             && (strlen(adbConnected) > 0) ) {
-        // Any non-empty string value for use-adb-networking is considered "set"
-        union {
-            struct in_addr a;
-            jbyte j[4];
-        } outaddr;
-
-        //LOGI("ADB networking: +gethostbyname '%s'", name);
-        int err;
-        err = adb_networking_gethostbyname(name, &(outaddr.a));
-#if 0
-        LOGI("ADB networking: -gethostbyname err %d addr 0x%08x %u.%u.%u.%u",
-                err, (unsigned int)outaddr.a.s_addr,
-                outaddr.j[0],outaddr.j[1],
-                outaddr.j[2],outaddr.j[3]);
-#endif
-
-        if (err < 0) {
-            ret = false;
-        } else {
-            ret = true;
-            env->SetByteArrayRegion(addr, 0, 4, outaddr.j);
-        }
+        out = getHostByNameAdb(env, name);
     } else {
-        // normal case...no adb networking
-        struct hostent* ent = gethostbyname(name);
-
-        if (ent != NULL && ent->h_length > 0) {
-            jbyte v[4];
-            memcpy(v, ent->h_addr, 4);
-            env->SetByteArrayRegion(addr, 0, 4, v);
-            ret = true;
-        } else if (errno == EACCES) {
-            /* No permission to use network */
-            ret = false;
-            jniThrowException(
-                    env, "java/lang/SecurityException",
-                    "Permission denied (maybe missing INTERNET permission)");
-        } else {
-            ret = false;
-        }
+        out = getHostByNameGetAddrInfo(env, name, preferIPv6Address);
     }
 
+    if (!out) {
+        LOGI("Unknown host %s, throwing UnknownHostException", name);
+        jniThrowException(env, "java/net/UnknownHostException", name);
+    }
     env->ReleaseStringUTFChars(nameStr, name);
-
-    return ret;
-
+    return out;
 }
 
 
@@ -164,7 +190,7 @@ static jobjectArray InetAddress_getaliasesbyname(JNIEnv* env, jobject obj, jstri
     }
 
     jclass clazz = env->FindClass("java/lang/String");
-    if(clazz == NULL) {
+    if (clazz == NULL) {
         jniThrowException(env, "java/lang/ClassNotFoundException", "couldn't find class java.lang.String");
         return NULL;
     }
@@ -206,7 +232,7 @@ static JNINativeMethod gMethods[] = {
       (void*) InetAddress_getaliasesbyname },
     { "gethostbyaddr",    "(Ljava/lang/String;)Ljava/lang/String;",
       (void*) InetAddress_gethostbyaddr },
-    { "gethostbyname",    "(Ljava/lang/String;[B)Z",
+    { "gethostbyname",    "(Ljava/lang/String;Z)[B",
       (void*) InetAddress_gethostbyname },
     { "gethostname",      "()Ljava/lang/String;",
       (void*) InetAddress_gethostname  }

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 package tests.security.interfaces;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -34,16 +34,15 @@ public class ECPublicKeyTest extends TestCase {
      * @tests java.security.interfaces.ECPublicKey 
      * #getW()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getW",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getW",
+        args = {}
+    )
     @SuppressWarnings("serial")
+    @AndroidOnly("EC is not supported for android. " + 
+                 "EC is not define in RI.")
     public void test_getW() throws Exception {
         KeyPairGenerator gen = KeyPairGenerator.getInstance("EC", Util.prov);
         gen.initialize(Util.ecParam, new SecureRandom(new MySecureRandomSpi(),

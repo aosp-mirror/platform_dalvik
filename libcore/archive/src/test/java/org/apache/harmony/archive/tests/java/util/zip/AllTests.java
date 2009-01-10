@@ -30,13 +30,14 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
                 "Suite org.apache.harmony.archive.tests.java.util.zip");
         // $JUnit-BEGIN$
         suite.addTestSuite(Adler32Test.class);
         suite.addTestSuite(CheckedInputStreamTest.class);
         suite.addTestSuite(CheckedOutputStreamTest.class);
         suite.addTestSuite(CRC32Test.class);
+        suite.addTestSuite(DataFormatExceptionTest.class);
         suite.addTestSuite(DeflaterOutputStreamTest.class);
         suite.addTestSuite(DeflaterTest.class);
         suite.addTestSuite(GZIPInputStreamTest.class);
@@ -44,6 +45,7 @@ public class AllTests {
         suite.addTestSuite(InflaterInputStreamTest.class);
         suite.addTestSuite(InflaterTest.class);
         suite.addTestSuite(ZipEntryTest.class);
+        suite.addTestSuite(ZipExceptionTest.class);
         suite.addTestSuite(ZipFileTest.class);
         suite.addTestSuite(ZipInputStreamTest.class);
         suite.addTestSuite(ZipOutputStreamTest.class);

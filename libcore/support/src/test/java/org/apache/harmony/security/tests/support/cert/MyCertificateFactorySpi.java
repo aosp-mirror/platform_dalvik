@@ -101,11 +101,11 @@ public class MyCertificateFactorySpi extends CertificateFactorySpi {
         if (!(inStream instanceof DataInputStream)) {
             throw new CertificateException("Incorrect inputstream");
         }
-        Iterator it = engineGetCertPathEncodings();
+        Iterator<String> it = engineGetCertPathEncodings();
         if (!it.hasNext()) {
             throw new CertificateException("There are no CertPath encodings");
         }
-        return engineGenerateCertPath(inStream, (String) it.next());
+        return engineGenerateCertPath(inStream, it.next());
     }
 
     public CertPath engineGenerateCertPath(InputStream inStream, String encoding)
@@ -121,8 +121,7 @@ public class MyCertificateFactorySpi extends CertificateFactorySpi {
         return null;
     }
 
-    public CertPath engineGenerateCertPath(List certificates)
-            throws CertificateException {
+    public CertPath engineGenerateCertPath(List<? extends Certificate> certificates) {
         if (certificates == null) {
             if (mode) {
                 throw new NullPointerException("certificates is null");

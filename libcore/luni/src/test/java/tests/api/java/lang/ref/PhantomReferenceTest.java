@@ -17,9 +17,9 @@
 
 package tests.api.java.lang.ref;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.lang.ref.PhantomReference;
@@ -32,7 +32,7 @@ import java.lang.ref.ReferenceQueue;
 @TestTargetClass(PhantomReference.class) 
 public class PhantomReferenceTest extends junit.framework.TestCase {
     static Boolean bool;
-
+    public boolean isCalled = false;
     protected void doneSuite() {
         bool = null;
     }
@@ -40,34 +40,32 @@ public class PhantomReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.PhantomReference#get()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {}
+    )
     public void test_get() {
         ReferenceQueue rq = new ReferenceQueue();
         bool = new Boolean(false);
         PhantomReference pr = new PhantomReference(bool, rq);
+        assertNull("get() should return null.", pr.get());
+        pr.enqueue();
+        assertNull("get() should return null.", pr.get());
+        pr.clear();
         assertNull("get() should return null.", pr.get());
     }
 
     /**
      * @tests java.lang.Runtime#gc()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Interaction test with Runtime.getRuntime().gc().",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Interaction test with Runtime.getRuntime().gc().",
+        method = "get",
+        args = {}
+    )
     public void test_gcInteraction() {
         class TestPhantomReference<T> extends PhantomReference<T> {
             public TestPhantomReference(T referent,
@@ -96,7 +94,7 @@ public class PhantomReferenceTest extends junit.framework.TestCase {
                 tprs[3] = new TestPhantomReference(obj, rq);
             }
         }
-
+        
         try {
             Thread t = new TestThread();
             t.start();
@@ -104,6 +102,11 @@ public class PhantomReferenceTest extends junit.framework.TestCase {
             System.gc();
             System.runFinalization();
 
+            assertNull("get() should return null.", tprs[0].get());
+            assertNull("get() should return null.", tprs[1].get());
+            assertNull("get() should return null.", tprs[2].get());
+            assertNull("get() should return null.", tprs[3].get());
+            
             for (int i = 0; i < 4; i++) {
                 Reference r = rq.remove(100L);
                 assertNotNull("Reference should have been enqueued.", r);
@@ -124,15 +127,12 @@ public class PhantomReferenceTest extends junit.framework.TestCase {
      * @tests java.lang.ref.PhantomReference#PhantomReference(java.lang.Object,
      *        java.lang.ref.ReferenceQueue)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PhantomReference",
-          methodArgs = {Object.class, java.lang.ref.ReferenceQueue.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PhantomReference",
+        args = {java.lang.Object.class, java.lang.ref.ReferenceQueue.class}
+    )
     public void test_ConstructorLjava_lang_ObjectLjava_lang_ref_ReferenceQueue() {
         ReferenceQueue rq = new ReferenceQueue();
         bool = new Boolean(true);

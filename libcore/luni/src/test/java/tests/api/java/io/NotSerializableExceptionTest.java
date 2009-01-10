@@ -17,12 +17,11 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.NotSerializableException;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(NotSerializableException.class) 
 public class NotSerializableExceptionTest extends junit.framework.TestCase {
@@ -30,46 +29,38 @@ public class NotSerializableExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.NotSerializableException#NotSerializableException()
      */
-    @TestInfo(
+    @TestTargetNew(
             level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "NotSerializableException", 
-                                    methodArgs = {})                                    
-            }
-        )        
+            method = "NotSerializableException",
+            args = {}
+        )     
     public void test_Constructor() {
-        NotSerializableException nse = new NotSerializableException();
-        assertNull(nse.getMessage());
+        try {
+            if (true) // To avoid unreachable code compilation error.
+                throw new NotSerializableException();
+            fail("Test 1: NotSerializableException expected.");
+        } catch (NotSerializableException e) {
+            assertNull("Test 2: Null expected for exceptions constructed without a message.",
+                    e.getMessage());
+        }
     }
 
     /**
      * @tests java.io.NotSerializableException#NotSerializableException(java.lang.String)
      */
-    @TestInfo(
+    @TestTargetNew(
             level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "NotSerializableException", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )        
+            method = "NotSerializableException",
+            args = {java.lang.String.class}
+        )     
     public void test_ConstructorLjava_lang_String() {
-        // Test for method java.io.NotSerializableException(java.lang.String)
-        String message = "Test message";
-        NotSerializableException nse = new NotSerializableException(message);
-        assertSame(message, nse.getMessage());
-    }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
+        try {
+            if (true) // To avoid unreachable code compilation error.
+                throw new NotSerializableException("Something went wrong.");
+            fail("Test 1: NotSerializableException expected.");
+        } catch (NotSerializableException e) {
+            assertEquals("Test 2: Incorrect message;",
+                    "Something went wrong.", e.getMessage());
+        }
     }
 }

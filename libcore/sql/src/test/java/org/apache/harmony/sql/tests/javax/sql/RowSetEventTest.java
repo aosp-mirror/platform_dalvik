@@ -17,11 +17,12 @@
 
 package org.apache.harmony.sql.tests.javax.sql;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
+import javax.sql.ConnectionEvent;
 import javax.sql.RowSet;
 import javax.sql.RowSetEvent;
 import junit.framework.TestCase;
@@ -32,12 +33,11 @@ public class RowSetEventTest extends TestCase {
     /**
      * @tests {@link javax.sql.RowSetEvent#RowSetEvent(javax.sql.RowSet)}.
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies RowSetEvent() constructor.",
-            targets = { @TestTarget(methodName = "RowSetEvent", 
-                                    methodArgs = {RowSet.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "functional test missing but not feasible: no implementation available.",
+        method = "RowSetEvent",
+        args = {javax.sql.RowSet.class}
     )    
     public void testConstructor() {
         try {
@@ -50,4 +50,6 @@ public class RowSetEventTest extends TestCase {
         RowSetEvent rse = new RowSetEvent(irs);
         assertSame(irs, rse.getSource());
     }
+    
+    
 }

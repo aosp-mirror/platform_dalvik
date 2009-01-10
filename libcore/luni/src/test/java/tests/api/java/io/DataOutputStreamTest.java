@@ -17,18 +17,29 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-@TestTargetClass(DataOutputStream.class) 
+import tests.support.Support_OutputStream;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
+@TestTargetClass(
+        value = DataOutputStream.class,
+        untestedMethods = {
+            @TestTargetNew(
+                    level = TestLevel.NOT_NECESSARY,
+                    notes = "Implicitely tested in setUp().",
+                    method = "DataOutputStream",
+                    args = {java.io.OutputStream.class}
+                )    
+        }
+) 
 public class DataOutputStreamTest extends junit.framework.TestCase {
 
     private DataOutputStream os;
@@ -36,71 +47,71 @@ public class DataOutputStreamTest extends junit.framework.TestCase {
     private DataInputStream dis;
 
     private ByteArrayOutputStream bos;
+    
+    private Support_OutputStream sos;
 
     String unihw = "\u0048\u0065\u006C\u006C\u006F\u0020\u0057\u006F\u0072\u006C\u0064";
 
-    public String fileString = "Test_All_Tests\nTest_java_io_BufferedInputStream\nTest_java_io_BufferedOutputStream\nTest_java_io_ByteArrayInputStream\nTest_java_io_ByteArrayOutputStream\nTest_java_io_DataInputStream\n";
+    private static final String testString = "Lorem ipsum dolor sit amet,\n" +
+    "consectetur adipisicing elit,\nsed do eiusmod tempor incididunt ut" +
+    "labore et dolore magna aliqua.\n";
 
-    /**
-     * @tests java.io.DataOutputStream#DataOutputStream(java.io.OutputStream)
-     */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Check seyUp method for sources.",
-            targets = { @TestTarget(methodName = "DataOutputStream", 
-                                    methodArgs = {java.io.OutputStream.class} )                         
-            }
-    )    
-    public void test_ConstructorLjava_io_OutputStream() {
-        // Test for method java.io.DataOutputStream(java.io.OutputStream)
-        assertTrue("Used in all tests", true);
-    }
+    private static final int testLength = testString.length();
 
     /**
      * @tests java.io.DataOutputStream#flush()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "flush", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "flush",
+        args = {}
     )     
-    public void test_flush() {
-        // Test for method void java.io.DataOutputStream.flush()
+    public void test_flush() throws IOException {
+        BufferedOutputStream buf = new BufferedOutputStream(bos);
+        
+        os = new DataOutputStream(buf);
+        os.writeInt(9087589);
+        assertTrue("Test 1: Written data should not be available.", 
+                bos.toByteArray().length == 0);
+        os.flush();
+        assertTrue("Test 2: Written data should be available.", 
+                bos.toByteArray().length > 0);
+        os.close();
+
+        openDataInputStream();
+        int c = dis.readInt();
+        assertEquals("Test 3: Failed to flush correctly;", 9087589, c);
+        dis.close();
+        
+        os = new DataOutputStream(sos);
         try {
-            os.writeInt(9087589);
             os.flush();
-            openDataInputStream();
-            int c = dis.readInt();
-            dis.close();
-            assertEquals("Failed to flush correctly", 9087589, c);
+            fail("Test 4: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during flush test : " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataOutputStream#size()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies size() method.",
-            targets = { @TestTarget(methodName = "size", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies size() method.",
+        method = "size",
+        args = {}
     )     
     public void test_size() {
         // Test for method int java.io.DataOutputStream.size()
 
         try {
-            os.write(fileString.getBytes(), 0, 150);
+            os.write(testString.getBytes(), 0, testLength / 2);
             os.close();
+            assertEquals("Incorrect size returned", testLength / 2, os.size());
             openDataInputStream();
-            byte[] rbuf = new byte[150];
-            dis.read(rbuf, 0, 150);
+            byte[] rbuf = new byte[testLength / 2];
+            dis.read(rbuf, 0, testLength / 2);
             dis.close();
-            assertEquals("Incorrect size returned", 150, os.size());
         } catch (IOException e) {
             fail("Exception during write test : " + e.getMessage());
         }
@@ -109,325 +120,149 @@ public class DataOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.DataOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checking missed.",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
     )      
-    public void test_write$BII() {
-        // Test for method void java.io.DataOutputStream.write(byte [], int,
-        // int)
+    public void test_write$BII() throws IOException {
+        int r;
+        os.write(testString.getBytes(), 5, testLength - 7);
+        os.close();
+        openDataInputStream();
+        byte[] rbuf = new byte[testLength];
+        r = dis.read(rbuf, 0, testLength);
+        assertEquals("Test 1: Incorrect number of bytes read;",
+                testLength - 7, r);
+        dis.close();
+        assertTrue("Test 2: Incorrect bytes written or read.", 
+                new String(rbuf, 0, r).equals(
+                        testString.substring(5, testLength - 2)));
+    }
+
+    /**
+     * @tests java.io.DataOutputStream#write(byte[], int, int)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Illegal argument checks.",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )         
+    public void test_write$BII_Exception() throws IOException {
+        byte[] nullByteArray = null;
+        byte[] byteArray = new byte[10];
+        
         try {
-            os.write(fileString.getBytes(), 0, 150);
-            os.close();
-            openDataInputStream();
-            byte[] rbuf = new byte[150];
-            dis.read(rbuf, 0, 150);
-            dis.close();
-            assertTrue("Incorrect bytes written", new String(rbuf, 0, 150)
-                    .equals(fileString.substring(0, 150)));
-        } catch (IOException e) {
-            fail("Exception during write test : " + e.getMessage());
+            os.write(nullByteArray, 0, 1);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+        
+        try {
+            os.write(byteArray, -1, 1);
+            fail("Test 2: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
+        try {
+            os.write(byteArray, 0, -1);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
+        try {
+            os.write(byteArray, 1, 10);
+            fail("Test 4: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataOutputStream#write(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "write",
+        args = {int.class}
     )    
-    public void test_writeI() {
-        // Test for method void java.io.DataOutputStream.write(int)
-        try {
-            os.write((int) 't');
-            os.close();
-            openDataInputStream();
-            int c = dis.read();
-            dis.close();
-            assertTrue("Incorrect int written", (int) 't' == c);
-        } catch (IOException e) {
-            fail("Exception during write test : " + e.getMessage());
-        }
-    }
+    public void test_writeI() throws IOException {
+        os.write(42);
+        os.close();
+        
+        openDataInputStream();
+        assertEquals("Test 1: Incorrect int written or read;", 
+                42, dis.read());
+        dis.close();
 
-    /**
-     * @tests java.io.DataOutputStream#writeBoolean(boolean)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeBoolean", 
-                                    methodArgs = {boolean.class})                         
-            }
-    )       
-    public void test_writeBooleanZ() {
-        // Test for method void java.io.DataOutputStream.writeBoolean(boolean)
+        os = new DataOutputStream(sos);
         try {
-            os.writeBoolean(true);
-            os.close();
-            openDataInputStream();
-            boolean c = dis.readBoolean();
-            dis.close();
-            assertTrue("Incorrect boolean written", c);
+            os.write(42);
+            fail("Test 2: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during writeBoolean test : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataOutputStream#writeByte(int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeByte", 
-                                    methodArgs = {int.class})                         
-            }
-    )     
-    public void test_writeByteI() {
-        // Test for method void java.io.DataOutputStream.writeByte(int)
-        try {
-            os.writeByte((byte) 127);
-            os.close();
-            openDataInputStream();
-            byte c = dis.readByte();
-            dis.close();
-            assertTrue("Incorrect byte written", c == (byte) 127);
-        } catch (IOException e) {
-            fail("Exception during writeByte test : " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataOutputStream#writeBytes(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeBytes", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "writeBytes",
+        args = {java.lang.String.class}
     )         
     public void test_writeBytesLjava_lang_String() throws IOException {
-        // Test for method void
-        // java.io.DataOutputStream.writeBytes(java.lang.String)
-        try {
-            os.write(fileString.getBytes());
-            os.close();
-            openDataInputStream();
-            byte[] rbuf = new byte[4000];
-            dis.read(rbuf, 0, fileString.length());
-            dis.close();
-            assertTrue("Incorrect bytes written", new String(rbuf, 0,
-                    fileString.length()).equals(fileString));
-        } catch (IOException e) {
-            fail("Exception during writeBytes test : " + e.getMessage());
-        }
-        // regression test for HARMONY-1101
-        new DataOutputStream(null).writeBytes("");
-    }
+        os.writeBytes(testString);
+        os.close();
+        
+        openDataInputStream();
+        byte[] rbuf = new byte[testLength];
+        dis.read(rbuf, 0, testLength);
+        dis.close();
+        assertTrue("Test 1: Incorrect bytes written or read.", 
+                new String(rbuf, 0, testLength).equals(testString));
 
-    /**
-     * @tests java.io.DataOutputStream#writeChar(int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeChar", 
-                                    methodArgs = {int.class})                         
-            }
-    )         
-    public void test_writeCharI() {
-        // Test for method void java.io.DataOutputStream.writeChar(int)
+        os = new DataOutputStream(sos);
         try {
-            os.writeChar('T');
-            os.close();
-            openDataInputStream();
-            char c = dis.readChar();
-            dis.close();
-            assertEquals("Incorrect char written", 'T', c);
+            os.writeBytes(testString);
+            fail("Test 2: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during writeChar test : " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataOutputStream#writeChars(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeChars", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "writeChars",
+        args = {java.lang.String.class}
     )       
-    public void test_writeCharsLjava_lang_String() {
-        // Test for method void
-        // java.io.DataOutputStream.writeChars(java.lang.String)
+    public void test_writeCharsLjava_lang_String() throws IOException {
+        os.writeChars(unihw);
+        os.close();
+        openDataInputStream();
+        char[] chars = new char[unihw.length()];
+        int i, a = dis.available() / 2;
+        for (i = 0; i < a; i++) chars[i] = dis.readChar();
+        assertEquals("Test 1: Incorrect chars written or read;", 
+                unihw, new String(chars, 0, i)
+        );
+        dis.close();
+        
+        os = new DataOutputStream(sos);
         try {
-            os.writeChars("Test String");
-            os.close();
-            openDataInputStream();
-            char[] chars = new char[50];
-            int i, a = dis.available() / 2;
-            for (i = 0; i < a; i++)
-                chars[i] = dis.readChar();
-            assertEquals("Incorrect chars written", "Test String", new String(chars, 0, i)
-                    );
+            os.writeChars(unihw);
+            fail("Test 2: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during writeChars test : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataOutputStream#writeDouble(double)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeDouble", 
-                                    methodArgs = {double.class})                         
-            }
-    )      
-    public void test_writeDoubleD() {
-        // Test for method void java.io.DataOutputStream.writeDouble(double)
-        try {
-            os.writeDouble(908755555456.98);
-            os.close();
-            openDataInputStream();
-            double c = dis.readDouble();
-            dis.close();
-            assertEquals("Incorrect double written", 908755555456.98, c);
-        } catch (IOException e) {
-            fail("Exception during writeDouble test : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataOutputStream#writeFloat(float)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed..",
-            targets = { @TestTarget(methodName = "writeFloat", 
-                                    methodArgs = {float.class})                         
-            }
-    )     
-    public void test_writeFloatF() {
-        // Test for method void java.io.DataOutputStream.writeFloat(float)
-        try {
-            os.writeFloat(9087.456f);
-            os.close();
-            openDataInputStream();
-            float c = dis.readFloat();
-            dis.close();
-            assertTrue("Incorrect float written", c == 9087.456f);
-        } catch (IOException e) {
-            fail("Exception during writeFloattest : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataOutputStream#writeInt(int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeInt", 
-                                    methodArgs = {int.class})                         
-            }
-    )        
-    public void test_writeIntI() {
-        // Test for method void java.io.DataOutputStream.writeInt(int)
-        try {
-            os.writeInt(9087589);
-            os.close();
-            openDataInputStream();
-            int c = dis.readInt();
-            dis.close();
-            assertEquals("Incorrect int written", 9087589, c);
-        } catch (IOException e) {
-            fail("Exception during writeInt test : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataOutputStream#writeLong(long)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeLong", 
-                                    methodArgs = {long.class})                         
-            }
-    )         
-    public void test_writeLongJ() {
-        // Test for method void java.io.DataOutputStream.writeLong(long)
-        try {
-            os.writeLong(908755555456L);
-            os.close();
-            openDataInputStream();
-            long c = dis.readLong();
-            dis.close();
-            assertEquals("Incorrect long written", 908755555456L, c);
-        } catch (IOException e) {
-            fail("Exception during writeLong test" + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataOutputStream#writeShort(int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeShort", 
-                                    methodArgs = {int.class})                         
-            }
-    )     
-    public void test_writeShortI() {
-        // Test for method void java.io.DataOutputStream.writeShort(int)
-        try {
-            os.writeShort((short) 9087);
-            os.close();
-            openDataInputStream();
-            short c = dis.readShort();
-            dis.close();
-            assertEquals("Incorrect short written", 9087, c);
-        } catch (IOException e) {
-            fail("Exception during writeShort test : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataOutputStream#writeUTF(java.lang.String)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeUTF", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
-    )      
-    public void test_writeUTFLjava_lang_String() {
-        // Test for method void
-        // java.io.DataOutputStream.writeUTF(java.lang.String)
-        try {
-            os.writeUTF(unihw);
-            os.close();
-            openDataInputStream();
-            assertTrue("Failed to write string in UTF format",
-                    dis.available() == unihw.length() + 2);
-            assertTrue("Incorrect string returned", dis.readUTF().equals(unihw));
-        } catch (Exception e) {
-            fail("Exception during writeUTF" + e.getMessage());
+            // Expected.
         }
     }
 
@@ -440,6 +275,7 @@ public class DataOutputStreamTest extends junit.framework.TestCase {
      * is called before a test is executed.
      */
     protected void setUp() {
+        sos = new Support_OutputStream(true);
         bos = new ByteArrayOutputStream();
         os = new DataOutputStream(bos);
     }
@@ -449,6 +285,7 @@ public class DataOutputStreamTest extends junit.framework.TestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
+        sos.setThrowsException(false);
         try {
             if (os != null)
                 os.close();

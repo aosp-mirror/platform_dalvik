@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -42,15 +42,12 @@ public class X509CRLSelectorTest extends TestCase {
     /**
      * @tests java.security.cert.X509CRLSelector#addIssuer(javax.security.auth.x500.X500Principal)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addIssuer",
-          methodArgs = {X500Principal.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "addIssuer",
+        args = {javax.security.auth.x500.X500Principal.class}
+    )
     public void test_addIssuerLjavax_security_auth_x500_X500Principal01()
             throws Exception {
         //Regression for HARMONY-465
@@ -66,15 +63,12 @@ public class X509CRLSelectorTest extends TestCase {
     /**
      * @tests java.security.cert.X509CRLSelector#addIssuerName(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "addIssuerName",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IOException.",
+        method = "addIssuerName",
+        args = {java.lang.String.class}
+    )
     public void test_addIssuerNameLjava_lang_String01() throws Exception {
         //Regression for HARMONY-465
         X509CRLSelector obj = new X509CRLSelector();
@@ -97,15 +91,12 @@ public class X509CRLSelectorTest extends TestCase {
     /**
      * @tests java.security.cert.X509CRLSelector#addIssuerName(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "addIssuerName",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "addIssuerName",
+        args = {java.lang.String.class}
+    )
     public void test_addIssuerNameLjava_lang_String02() throws IOException {
         // Regression for HARMONY-736
         X509CRLSelector selector = new X509CRLSelector();
@@ -118,15 +109,12 @@ public class X509CRLSelectorTest extends TestCase {
     /**
      * @tests java.security.cert.X509CRLSelector#addIssuerName(byte[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "addIssuerName",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IOException.",
+        method = "addIssuerName",
+        args = {byte[].class}
+    )
     public void test_addIssuerName$B_3() throws Exception {
         //Regression for HARMONY-465
         X509CRLSelector obj = new X509CRLSelector();
@@ -141,15 +129,12 @@ public class X509CRLSelectorTest extends TestCase {
     /**
      * @tests java.security.cert.X509CRLSelector#addIssuerName(byte[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "addIssuerName",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "addIssuerName",
+        args = {byte[].class}
+    )
     public void test_addIssuerName$B_4() throws Exception {
         //Regression for HARMONY-465
         X509CRLSelector obj = new X509CRLSelector();
@@ -164,15 +149,12 @@ public class X509CRLSelectorTest extends TestCase {
     /**
      * @tests setIssuerNames(Collection <?> names)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "setIssuerNames",
-          methodArgs = {java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Regression test.",
+        method = "setIssuerNames",
+        args = {java.util.Collection.class}
+    )
     public void test_setIssuerNamesLjava_util_Collection01() throws IOException {
         // Regression for HARMONY-737
         X509CRLSelector selector = new X509CRLSelector();

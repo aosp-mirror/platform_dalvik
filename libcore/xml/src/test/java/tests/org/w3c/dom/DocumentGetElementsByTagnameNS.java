@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Document;
@@ -61,15 +61,12 @@ public final class DocumentGetElementsByTagnameNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies '*' as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "getElementsByTagNameNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies '*' as parameters.",
+        method = "getElementsByTagNameNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetElementsByTagNameNS1() throws Throwable {
         Document doc;
         Document newDoc;
@@ -86,15 +83,12 @@ public final class DocumentGetElementsByTagnameNS extends DOMTestCase {
         assertEquals("documentgetelementsbytagnameNS01", 1, childList
                 .getLength());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies '*' as the first parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "getElementsByTagNameNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies '*' as the first parameter.",
+        method = "getElementsByTagNameNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetElementsByTagNameNS2() throws Throwable {
         Document doc;
         Element docElem;
@@ -109,15 +103,12 @@ public final class DocumentGetElementsByTagnameNS extends DOMTestCase {
         assertEquals("documentgetelementsbytagnameNS02", 6, childList
                 .getLength());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies wrong namespaceURI as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "getElementsByTagNameNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies wrong namespaceURI as a parameter.",
+        method = "getElementsByTagNameNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetElementsByTagNameNS3() throws Throwable {
         Document doc;
         NodeList childList;
@@ -126,15 +117,12 @@ public final class DocumentGetElementsByTagnameNS extends DOMTestCase {
         assertEquals("documentgetelementsbytagnameNS03", 0, childList
                 .getLength());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "getElementsByTagNameNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "getElementsByTagNameNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetElementsByTagNameNS4() throws Throwable {
         Document doc;
         NodeList childList;
@@ -145,15 +133,12 @@ public final class DocumentGetElementsByTagnameNS extends DOMTestCase {
         assertEquals("documentgetelementsbytagnameNS04", 0, childList
                 .getLength());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "getElementsByTagNameNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "getElementsByTagNameNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetElementsByTagNameNS5() throws Throwable {
         Document doc;
         NodeList childList;

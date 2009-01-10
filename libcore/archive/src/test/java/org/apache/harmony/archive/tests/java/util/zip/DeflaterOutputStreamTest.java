@@ -17,10 +17,10 @@
 
 package org.apache.harmony.archive.tests.java.util.zip;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.EOFException;
 import java.io.File;
@@ -34,10 +34,12 @@ import java.util.zip.InflaterInputStream;
 
 import junit.framework.TestCase;
 
-@TestTargetClass(DeflaterOutputStream.class) 
+@TestTargetClass(DeflaterOutputStream.class)
 public class DeflaterOutputStreamTest extends TestCase {
 
     private class MyDeflaterOutputStream extends DeflaterOutputStream {
+        boolean deflateFlag = false;
+
         MyDeflaterOutputStream(OutputStream out) {
             super(out);
         }
@@ -54,8 +56,17 @@ public class DeflaterOutputStreamTest extends TestCase {
             return buf;
         }
 
-        void myDeflate() throws IOException {
-            deflate();
+        protected void deflate() throws IOException {
+            deflateFlag = true;
+            super.deflate();
+        }
+
+        boolean getDaflateFlag() {
+            return deflateFlag;
+        }
+
+        void cleanDaflateFlag() {
+            deflateFlag = false;
         }
     }
 
@@ -64,7 +75,7 @@ public class DeflaterOutputStreamTest extends TestCase {
     @Override
     protected void setUp() {
         // setting up a deflater to be used
-        byte byteArray[] = { 1, 3, 4, 7, 8 };
+        byte byteArray[] = {1, 3, 4, 7, 8};
         int x = 0;
         Deflater deflate = new Deflater(1);
         deflate.setInput(byteArray);
@@ -82,17 +93,15 @@ public class DeflaterOutputStreamTest extends TestCase {
      * @tests java.util.zip.DeflaterOutputStream#DeflaterOutputStream(java.io.OutputStream,
      *        java.util.zip.Deflater)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DeflaterOutputStream",
-          methodArgs = {java.io.OutputStream.class, java.util.zip.Deflater.class}
-        )
-    })
-    public void test_ConstructorLjava_io_OutputStreamLjava_util_zip_Deflater() throws Exception {
-        byte byteArray[] = { 1, 3, 4, 7, 8 };
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DeflaterOutputStream",
+        args = {java.io.OutputStream.class, java.util.zip.Deflater.class}
+    )
+    public void test_ConstructorLjava_io_OutputStreamLjava_util_zip_Deflater()
+            throws Exception {
+        byte byteArray[] = {1, 3, 4, 7, 8};
         File f1 = new File("hyts_Constru_OD.tst");
         FileOutputStream fos = new FileOutputStream(f1);
         Deflater defl = null;
@@ -118,15 +127,12 @@ public class DeflaterOutputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.DeflaterOutputStream#DeflaterOutputStream(java.io.OutputStream)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DeflaterOutputStream",
-          methodArgs = {java.io.OutputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DeflaterOutputStream",
+        args = {java.io.OutputStream.class}
+    )
     public void test_ConstructorLjava_io_OutputStream() throws Exception {
         File f1 = new File("hyts_Constru_O.tst");
         FileOutputStream fos = new FileOutputStream(f1);
@@ -145,21 +151,18 @@ public class DeflaterOutputStreamTest extends TestCase {
      * @tests java.util.zip.DeflaterOutputStream#DeflaterOutputStream(java.io.OutputStream,
      *        java.util.zip.Deflater, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DeflaterOutputStream",
-          methodArgs = {java.io.OutputStream.class, java.util.zip.Deflater.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DeflaterOutputStream",
+        args = {java.io.OutputStream.class, java.util.zip.Deflater.class, int.class}
+    )
     public void test_ConstructorLjava_io_OutputStreamLjava_util_zip_DeflaterI()
             throws Exception {
         int buf = 5;
         int negBuf = -5;
         int zeroBuf = 0;
-        byte byteArray[] = { 1, 3, 4, 7, 8, 3, 6 };
+        byte byteArray[] = {1, 3, 4, 7, 8, 3, 6};
         File f1 = new File("hyts_Constru_ODI.tst");
         FileOutputStream fos = new FileOutputStream(f1);
         Deflater defl = null;
@@ -200,20 +203,17 @@ public class DeflaterOutputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.DeflaterOutputStream#close()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "IOException can not be checked.",
+        method = "close",
+        args = {}
+    )
     public void test_close() throws Exception {
         File f1 = new File("close.tst");
         FileOutputStream fos = new FileOutputStream(f1);
         DeflaterOutputStream dos = new DeflaterOutputStream(fos);
-        byte byteArray[] = { 1, 3, 4, 6 };
+        byte byteArray[] = {1, 3, 4, 6};
         dos.write(byteArray);
 
         FileInputStream fis = new FileInputStream(f1);
@@ -267,15 +267,12 @@ public class DeflaterOutputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.DeflaterOutputStream#finish()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "finish",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "finish",
+        args = {}
+    )
     public void test_finish() throws Exception {
         // Need test to see if method finish() actually finishes
         // Only testing possible errors, not if it actually works
@@ -283,7 +280,7 @@ public class DeflaterOutputStreamTest extends TestCase {
         File f1 = new File("finish.tst");
         FileOutputStream fos1 = new FileOutputStream(f1);
         DeflaterOutputStream dos = new DeflaterOutputStream(fos1);
-        byte byteArray[] = { 1, 3, 4, 6 };
+        byte byteArray[] = {1, 3, 4, 6};
         dos.write(byteArray);
         dos.finish();
 
@@ -327,15 +324,12 @@ public class DeflaterOutputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.DeflaterOutputStream#write(int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {int.class}
+    )
     public void test_writeI() throws Exception {
         File f1 = new File("writeI1.tst");
         FileOutputStream fos = new FileOutputStream(f1);
@@ -372,17 +366,14 @@ public class DeflaterOutputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.DeflaterOutputStream#write(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_write$BII() throws Exception {
-        byte byteArray[] = { 1, 3, 4, 7, 8, 3, 6 };
+        byte byteArray[] = {1, 3, 4, 7, 8, 3, 6};
 
         // Test to see if the correct bytes are saved.
         File f1 = new File("writeBII.tst");
@@ -447,5 +438,24 @@ public class DeflaterOutputStreamTest extends TestCase {
         }
 
         f2.delete();
+    }
+
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "deflate",
+        args = {}
+    )
+    public void test_deflate() throws Exception {
+        File f1 = new File("writeI1.tst");
+        FileOutputStream fos = new FileOutputStream(f1);
+        MyDeflaterOutputStream dos = new MyDeflaterOutputStream(fos);
+        assertFalse(dos.getDaflateFlag());
+        for (int i = 0; i < 3; i++) {
+            dos.write(i);
+        }
+        assertTrue(dos.getDaflateFlag());
+        dos.close();
     }
 }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,15 +30,16 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package org.apache.harmony.security.tests.java.security;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package org.apache.harmony.security.tests.java.security;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(AccessControlException2Test.class);
         suite.addTestSuite(AccessControlExceptionTest.class);
-//        suite.addTestSuite(AccessController2Test.class);
+        suite.addTestSuite(AccessController2Test.class);
         suite.addTestSuite(AlgorithmParameterGenerator1Test.class);
         suite.addTestSuite(AlgorithmParameterGenerator2Test.class);
         suite.addTestSuite(AlgorithmParameterGenerator3Test.class);
+        suite.addTestSuite(AlgorithmParametersSpiTest.class);
         suite.addTestSuite(AlgorithmParametersTest.class);
         suite.addTestSuite(AllPermission2Test.class);
         suite.addTestSuite(AuthProviderTest.class);
@@ -71,6 +72,7 @@ public class AllTests {
         suite.addTestSuite(KeyException2Test.class);
         suite.addTestSuite(KeyExceptionTest.class);
         suite.addTestSuite(KeyFactory2Test.class);
+        suite.addTestSuite(KeyFactorySpiTest.class);
         suite.addTestSuite(KeyManagementException2Test.class);
         suite.addTestSuite(KeyManagementExceptionTest.class);
         suite.addTestSuite(KeyPairGenerator1Test.class);
@@ -112,8 +114,8 @@ public class AllTests {
         suite.addTestSuite(ProviderServiceTest.class);
         suite.addTestSuite(ProviderTest.class);
         suite.addTestSuite(PublicKeyTest.class);
-//        suite.addTestSuite(SecureClassLoader2Test.class);
         suite.addTestSuite(SecureRandom2Test.class);
+        suite.addTestSuite(SecureRandomSpiTest.class);
         suite.addTestSuite(Security2Test.class);
         suite.addTestSuite(SecurityPermission2Test.class);
         suite.addTestSuite(SecurityPermissionTest.class);

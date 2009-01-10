@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class ErrorTest extends TestCase {
     /**
      * @tests java.lang.Error#Error()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Error",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Error",
+        args = {}
+    )
     public void test_Constructor() {
         Error e = new Error();
         assertNull(e.getMessage());
@@ -49,18 +46,41 @@ public class ErrorTest extends TestCase {
     /**
      * @tests java.lang.Error#Error(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Error",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Error",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         Error e = new Error("fixture");
         assertEquals("fixture", e.getMessage());
         assertNull(e.getCause());
     }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Error",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
+    public void test_ConstructorLjava_lang_StringLThrowable() {
+        Throwable thr = new Throwable();
+        String message = "Test message";
+        Error err = new Error(message, thr);
+        assertEquals(message, err.getMessage());
+        assertEquals(thr, err.getCause());
+    }   
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Error",
+        args = {java.lang.Throwable.class}
+    )
+    public void test_ConstructorLThrowable() {
+      Throwable thr = new Throwable();
+      Error err = new Error(thr);
+      assertEquals(thr, err.getCause());
+    }  
 }

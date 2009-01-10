@@ -15,9 +15,6 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.IntBuffer;
@@ -27,8 +24,9 @@ public class ReadOnlyWrappedIntBufferTest extends ReadOnlyIntBufferTest {
 
     protected void setUp() throws Exception {
         super.setUp();
+        capacity = BUFFER_LENGTH;
         buf = IntBuffer.wrap(new int[BUFFER_LENGTH]);
-        super.loadTestData1(buf);
+        loadTestData1(buf);
         buf = buf.asReadOnlyBuffer();
         baseBuf = buf;
     }

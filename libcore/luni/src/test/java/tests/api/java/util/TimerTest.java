@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -98,15 +98,12 @@ public class TimerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Timer#Timer(boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Timer",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Timer",
+        args = {boolean.class}
+    )
     public void test_ConstructorZ() {
         Timer t = null;
         try {
@@ -133,15 +130,12 @@ public class TimerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Timer#Timer()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Timer",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Timer",
+        args = {}
+    )
     public void test_Constructor() {
         Timer t = null;
         try {
@@ -168,15 +162,12 @@ public class TimerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Timer#Timer(String, boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "Timer",
-          methodArgs = {java.lang.String.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Timer",
+        args = {java.lang.String.class, boolean.class}
+    )
     public void test_ConstructorSZ() {
         Timer t = null;
         try {
@@ -196,20 +187,31 @@ public class TimerTest extends junit.framework.TestCase {
             if (t != null)
                 t.cancel();
         }
+
+        try {
+            new Timer(null, true);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+
+        try {
+            new Timer(null, false);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Timer#Timer(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "Timer",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Timer",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorS() {
         Timer t = null;
         try {
@@ -229,20 +231,24 @@ public class TimerTest extends junit.framework.TestCase {
             if (t != null)
                 t.cancel();
         }
+
+        try {
+            new Timer(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Timer#cancel()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "cancel",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "cancel",
+        args = {}
+    )
     public void test_cancel() {
         Timer t = null;
         try {
@@ -341,15 +347,12 @@ public class TimerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Timer#purge()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "purge",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "purge",
+        args = {}
+    )
     public void test_purge() throws Exception {
         Timer t = null;
         try {
@@ -384,15 +387,12 @@ public class TimerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Timer#schedule(java.util.TimerTask, java.util.Date)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "schedule",
-          methodArgs = {java.util.TimerTask.class, java.util.Date.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "schedule",
+        args = {java.util.TimerTask.class, java.util.Date.class}
+    )
     public void test_scheduleLjava_util_TimerTaskLjava_util_Date() {
         Timer t = null;
         try {
@@ -535,15 +535,12 @@ public class TimerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Timer#schedule(java.util.TimerTask, long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "schedule",
-          methodArgs = {java.util.TimerTask.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "schedule",
+        args = {java.util.TimerTask.class, long.class}
+    )
     public void test_scheduleLjava_util_TimerTaskJ() {
         Timer t = null;
         try {
@@ -662,15 +659,12 @@ public class TimerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Timer#schedule(java.util.TimerTask, long, long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "schedule",
-          methodArgs = {java.util.TimerTask.class, long.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "schedule",
+        args = {java.util.TimerTask.class, long.class, long.class}
+    )
     public void test_scheduleLjava_util_TimerTaskJJ() {
         Timer t = null;
         try {
@@ -821,15 +815,12 @@ public class TimerTest extends junit.framework.TestCase {
      * @tests java.util.Timer#schedule(java.util.TimerTask, java.util.Date,
      *        long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "schedule",
-          methodArgs = {java.util.TimerTask.class, java.util.Date.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "schedule",
+        args = {java.util.TimerTask.class, java.util.Date.class, long.class}
+    )
     public void test_scheduleLjava_util_TimerTaskLjava_util_DateJ() {
         Timer t = null;
         try {
@@ -990,15 +981,12 @@ public class TimerTest extends junit.framework.TestCase {
      * @tests java.util.Timer#scheduleAtFixedRate(java.util.TimerTask, long,
      *        long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "scheduleAtFixedRate",
-          methodArgs = {java.util.TimerTask.class, long.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "scheduleAtFixedRate",
+        args = {java.util.TimerTask.class, long.class, long.class}
+    )
     public void test_scheduleAtFixedRateLjava_util_TimerTaskJJ() {
         Timer t = null;
         try {
@@ -1113,15 +1101,12 @@ public class TimerTest extends junit.framework.TestCase {
      * @tests java.util.Timer#scheduleAtFixedRate(java.util.TimerTask,
      *        java.util.Date, long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "scheduleAtFixedRate",
-          methodArgs = {java.util.TimerTask.class, java.util.Date.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "scheduleAtFixedRate",
+        args = {java.util.TimerTask.class, java.util.Date.class, long.class}
+    )
     public void test_scheduleAtFixedRateLjava_util_TimerTaskLjava_util_DateJ() {
         Timer t = null;
         try {

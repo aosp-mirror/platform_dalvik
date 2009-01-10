@@ -25,14 +25,14 @@ import junit.framework.TestSuite;
 public class AllTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
                 "Suite for org.apache.harmony.logging.tests.java.util.logging");
         // $JUnit-BEGIN$
         suite.addTestSuite(ConsoleHandlerTest.class);
         suite.addTestSuite(ErrorManagerTest.class);
         suite.addTestSuite(FileHandlerTest.class);
         suite.addTestSuite(FilterTest.class);
-//        suite.addTestSuite(FormatterTest.class);
+        suite.addTestSuite(FormatterTest.class);
         suite.addTestSuite(HandlerTest.class);
         suite.addTestSuite(LevelTest.class);
         suite.addTestSuite(LoggerTest.class);

@@ -13,44 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package tests.api.javax.xml.parsers;
-
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.HandlerBase;
-import org.xml.sax.InputSource;
-import org.xml.sax.Locator;
-import org.xml.sax.Parser;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXNotSupportedException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-
-import tests.api.javax.xml.parsers.SAXParserTestSupport.MyDefaultHandler;
-import tests.api.javax.xml.parsers.SAXParserTestSupport.MyHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Vector;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+
+import junit.framework.TestCase;
+
+import org.xml.sax.HandlerBase;
+import org.xml.sax.InputSource;
+import org.xml.sax.Parser;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.ext.LexicalHandler;
+import org.xml.sax.helpers.DefaultHandler;
+
+import tests.api.javax.xml.parsers.SAXParserTestSupport.MyDefaultHandler;
+import tests.api.javax.xml.parsers.SAXParserTestSupport.MyHandler;
+import tests.api.org.xml.sax.support.BrokenInputStream;
+import tests.api.org.xml.sax.support.MethodLogger;
+import tests.api.org.xml.sax.support.MockHandler;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 @SuppressWarnings("deprecation")
 @TestTargetClass(SAXParser.class) 
@@ -64,7 +64,6 @@ public class SAXParserTest extends TestCase {
         /*
          * @see javax.xml.parsers.SAXParser#getParser()
          */
-        @SuppressWarnings("deprecation")
         @Override
         public Parser getParser() throws SAXException {
             // it is a fake
@@ -119,6 +118,9 @@ public class SAXParserTest extends TestCase {
         }
     }
 
+    private static final String LEXICAL_HANDLER_PROPERTY
+            = "http://xml.org/sax/properties/lexical-handler";
+    
     SAXParserFactory spf;
 
     SAXParser parser;
@@ -256,19 +258,13 @@ public class SAXParserTest extends TestCase {
 //        }
 //    }
 
-    /**
-     * @tests javax.xml.parser.SAXParser#SAXParser().
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SAXParser",
-          methodArgs = {}
-        )
-    })
-    public void _test_Constructor() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SAXParser",
+        args = {}
+    )
+    public void testSAXParser() {
         try {
             new MockSAXParser();
         } catch (Exception e) {
@@ -296,74 +292,64 @@ public class SAXParserTest extends TestCase {
     }
      */
 
-    /**
-     * @test javax.xml.parsers.SAXParser#isNamespaceAware()
-     *
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isNamespaceAware",
-          methodArgs = {}
-        )
-    })
-    public void _test_isNamespaceAware() {
-
-        spf.setNamespaceAware(true);
-        assertTrue(spf.isNamespaceAware());
-        spf.setNamespaceAware(false);
-        assertFalse(spf.isNamespaceAware());
-        spf.setNamespaceAware(true);
-        assertTrue(spf.isNamespaceAware());
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isNamespaceAware",
+        args = {}
+    )
+    public void testIsNamespaceAware() {
+        try {
+            spf.setNamespaceAware(true);
+            assertTrue(spf.newSAXParser().isNamespaceAware());
+            spf.setNamespaceAware(false);
+            assertFalse(spf.newSAXParser().isNamespaceAware());
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParser#isValidating()
-     *
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isValidating",
-          methodArgs = {}
-        )
-    })
-    public void _test_isValidating() {
-        assertFalse(parser.isValidating());
-        spf.setValidating(true);
-        assertFalse(parser.isValidating());
-        spf.setValidating(false);
-        assertFalse(parser.isValidating());
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "No validating parser in Android, hence not tested",
+        method = "isValidating",
+        args = {}
+    )
+    public void testIsValidating() {
+        try {
+            spf.setValidating(false);
+            assertFalse(spf.newSAXParser().isValidating());
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
     }
 
-    /**
-     * @test javax.xml.parser.SAXParser#isXIncludeAware()
-     * TODO X include aware is not supported
-     */
-//    public void test_isXIncludeAware() {
-//        assertFalse(parser.isXIncludeAware());
-//        spf.setXIncludeAware(true);
-//        assertFalse(parser.isXIncludeAware());
-//    }
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "No XInclude-aware parser in Android, hence not tested",
+        method = "isXIncludeAware",
+        args = {}
+    )
+    @KnownFailure("Should handle XIncludeAware flag more gracefully")
+    public void testIsXIncludeAware() {
+        try {
+            spf.setXIncludeAware(false);
+            assertFalse(spf.newSAXParser().isXIncludeAware());
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+    }
 
     /**
      * @test javax.xml.parsers.SAXParser#parse(java.io.File,
      *     org.xml.sax.helpers.DefaultHandler)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify positive functionality properly; " +
-            "not all exceptions are verified.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.File.class, org.xml.sax.helpers.DefaultHandler.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify positive functionality properly; not all exceptions are verified.",
+        method = "parse",
+        args = {java.io.File.class, org.xml.sax.helpers.DefaultHandler.class}
+    )
     public void _test_parseLjava_io_FileLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
@@ -400,28 +386,26 @@ public class SAXParserTest extends TestCase {
         }
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParser#parse(java.io.File,
-     *     org.xml.sax.HandlerBase)
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify positive functionality properly; " +
-            "not all exceptions are verified.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.File.class, org.xml.sax.HandlerBase.class}
-        )
-    })
-    @SuppressWarnings("deprecation")
-    public void _test_parseLjava_io_FileLorg_xml_sax_HandlerBase()
-    throws Exception {
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Sufficient while XML parser situation is still unclear",
+        method = "parse",
+        args = {java.io.File.class, org.xml.sax.HandlerBase.class}
+    )
+    public void testParseFileHandlerBase() {
         for(int i = 0; i < list_wf.length; i++) {
-            HashMap<String, String> hm = sp.readFile(list_out_hb[i].getPath());
-            MyHandler dh = new MyHandler();
-            parser.parse(list_wf[i], dh);
-            assertTrue(SAXParserTestSupport.equalsMaps(hm, dh.createData()));
+            try {
+                HashMap<String, String> hm = sp.readFile(
+                        list_out_hb[i].getPath());
+                MyHandler dh = new MyHandler();
+                parser.parse(list_wf[i], dh);
+                assertTrue(SAXParserTestSupport.equalsMaps(hm, 
+                        dh.createData()));
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
+            } catch (SAXException sax) {
+                fail("Unexpected SAXException " + sax.toString());
+            }
         }
 
         for(int i = 0; i < list_nwf.length; i++) {
@@ -431,6 +415,10 @@ public class SAXParserTest extends TestCase {
                 fail("SAXException is not thrown");
             } catch(org.xml.sax.SAXException se) {
                 //expected
+            } catch (FileNotFoundException fne) {
+                fail("Unexpected FileNotFoundException " + fne.toString());
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
             }
         }
 
@@ -440,12 +428,22 @@ public class SAXParserTest extends TestCase {
             fail("java.lang.IllegalArgumentException is not thrown");
         } catch(java.lang.IllegalArgumentException iae) {
             //expected
+        } catch (IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
         }
 
         try {
             parser.parse(list_wf[0], (HandlerBase) null);
         } catch(java.lang.IllegalArgumentException iae) {
             fail("java.lang.IllegalArgumentException is thrown");
+        } catch (FileNotFoundException fne) {
+            fail("Unexpected FileNotFoundException " + fne.toString());
+        } catch(IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
         }
     }
 
@@ -453,15 +451,13 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(org.xml.sax.InputSource,
      *     org.xml.sax.helpers.DefaultHandler)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {org.xml.sax.InputSource.class, org.xml.sax.helpers.DefaultHandler.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify IOException.",
+        method = "parse",
+        args = {org.xml.sax.InputSource.class, org.xml.sax.helpers.DefaultHandler.class}
+    )
+    
     public void _test_parseLorg_xml_sax_InputSourceLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
@@ -501,41 +497,51 @@ public class SAXParserTest extends TestCase {
         } catch(java.lang.IllegalArgumentException iae) {
             fail("java.lang.IllegalArgumentException is thrown");
         }
+        
+        try {
+            InputSource is = new InputSource(new BrokenInputStream(new FileInputStream(list_wf[0]), 10));
+            parser.parse(is, (DefaultHandler) null);
+            fail("IOException expected");
+        } catch(IOException e) {
+            // Expected
+        }
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParser#parse(org.xml.sax.InputSource,
-     *     org.xml.sax.HandlerBase)
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {org.xml.sax.InputSource.class, org.xml.sax.HandlerBase.class}
-        )
-    })
-    @SuppressWarnings("deprecation")
-    public void _test_parseLorg_xml_sax_InputSourceLorg_xml_sax_HandlerBase()
-    throws Exception {
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Sufficient while XML parser situation is still unclear",
+        method = "parse",
+        args = {org.xml.sax.InputSource.class, org.xml.sax.HandlerBase.class}
+    )
+    public void testParseInputSourceHandlerBase() {
         for(int i = 0; i < list_wf.length; i++) {
-            HashMap<String, String> hm = sp.readFile(list_out_hb[i].getPath());
-            MyHandler dh = new MyHandler();
-            InputSource is = new InputSource(new FileInputStream(list_wf[i]));
-            parser.parse(is, dh);
-            assertTrue(SAXParserTestSupport.equalsMaps(hm, dh.createData()));
+            try {
+                HashMap<String, String> hm = sp.readFile(
+                        list_out_hb[i].getPath());
+                MyHandler dh = new MyHandler();
+                InputSource is = new InputSource(new FileInputStream(list_wf[i]));
+                parser.parse(is, dh);
+                assertTrue(SAXParserTestSupport.equalsMaps(hm, 
+                        dh.createData()));
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
+            } catch (SAXException sax) {
+                fail("Unexpected SAXException " + sax.toString());
+            }
         }
 
         for(int i = 0; i < list_nwf.length; i++) {
             try {
                 MyHandler dh = new MyHandler();
-                InputSource is = new InputSource(new FileInputStream(
-                        list_nwf[i]));
+                InputSource is = new InputSource(new FileInputStream(list_nwf[i]));
                 parser.parse(is, dh);
                 fail("SAXException is not thrown");
             } catch(org.xml.sax.SAXException se) {
                 //expected
+            } catch (FileNotFoundException fne) {
+                fail("Unexpected FileNotFoundException " + fne.toString());
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
             }
         }
 
@@ -545,6 +551,10 @@ public class SAXParserTest extends TestCase {
             fail("java.lang.IllegalArgumentException is not thrown");
         } catch(java.lang.IllegalArgumentException iae) {
             //expected
+        } catch (IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
         }
 
         try {
@@ -552,6 +562,54 @@ public class SAXParserTest extends TestCase {
             parser.parse(is, (HandlerBase) null);
         } catch(java.lang.IllegalArgumentException iae) {
             fail("java.lang.IllegalArgumentException is thrown");
+        } catch (FileNotFoundException fne) {
+            fail("Unexpected FileNotFoundException " + fne.toString());
+        } catch(IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
+        }
+
+        // Reader case
+        try {
+            InputSource is = new InputSource(new InputStreamReader(
+                    new FileInputStream(list_wf[0])));
+            parser.parse(is, (HandlerBase) null);
+        } catch(java.lang.IllegalArgumentException iae) {
+            fail("java.lang.IllegalArgumentException is thrown");
+        } catch (FileNotFoundException fne) {
+            fail("Unexpected FileNotFoundException " + fne.toString());
+        } catch(IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
+        }
+        
+        // SystemID case
+        try {
+            InputSource is = new InputSource(list_wf[0].toURI().toString());
+            parser.parse(is, (HandlerBase) null);
+        } catch(java.lang.IllegalArgumentException iae) {
+            fail("java.lang.IllegalArgumentException is thrown");
+        } catch (FileNotFoundException fne) {
+            fail("Unexpected FileNotFoundException " + fne.toString());
+        } catch(IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
+        }
+        
+        // Inject IOException
+        try {
+            InputStream is = new BrokenInputStream(
+                    new FileInputStream(list_wf[0]), 10);
+            parser.parse(is, (HandlerBase) null, 
+                    SAXParserTestSupport.XML_SYSTEM_ID);
+            fail("IOException expected");
+        } catch(IOException e) {
+            // Expected
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
         }
     }
 
@@ -559,15 +617,12 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(java.io.InputStream,
      *     org.xml.sax.helpers.DefaultHandler)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify IOException.",
+        method = "parse",
+        args = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class}
+    )
     public void _test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
@@ -612,25 +667,27 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(java.io.InputStream,
      *     org.xml.sax.helpers.DefaultHandler, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify  IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class, java.lang.String.class}
-        )
-    })
-    public void _test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandlerLjava_lang_String()
-    throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify  IOException.",
+        method = "parse",
+        args = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class, java.lang.String.class}
+    )
+    public void _test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandlerLjava_lang_String() {
         for(int i = 0; i < list_wf.length; i++) {
-
-            HashMap<String, String> hm = new SAXParserTestSupport().readFile(
-                    list_out_dh[i].getPath());
-            MyDefaultHandler dh = new MyDefaultHandler();
-            InputStream is = new FileInputStream(list_wf[i]);
-            parser.parse(is, dh, SAXParserTestSupport.XML_SYSTEM_ID);
-            assertTrue(SAXParserTestSupport.equalsMaps(hm, dh.createData()));
+            try {
+                HashMap<String, String> hm = sp.readFile(
+                        list_out_hb[i].getPath());
+                MyDefaultHandler dh = new MyDefaultHandler();
+                InputStream is = new FileInputStream(list_wf[i]);
+                parser.parse(is, dh, SAXParserTestSupport.XML_SYSTEM_ID);
+                assertTrue(SAXParserTestSupport.equalsMaps(hm, 
+                        dh.createData()));
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
+            } catch (SAXException sax) {
+                fail("Unexpected SAXException " + sax.toString());
+            }
         }
 
         for(int i = 0; i < list_nwf.length; i++) {
@@ -641,16 +698,24 @@ public class SAXParserTest extends TestCase {
                 fail("SAXException is not thrown");
             } catch(org.xml.sax.SAXException se) {
                 //expected
+            } catch (FileNotFoundException fne) {
+                fail("Unexpected FileNotFoundException " + fne.toString());
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
             }
         }
 
         try {
             MyDefaultHandler dh = new MyDefaultHandler();
-            parser.parse((InputStream) null, dh,
+            parser.parse((InputStream) null, dh, 
                     SAXParserTestSupport.XML_SYSTEM_ID);
             fail("java.lang.IllegalArgumentException is not thrown");
         } catch(java.lang.IllegalArgumentException iae) {
             //expected
+        } catch (IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
         }
 
         try {
@@ -659,44 +724,86 @@ public class SAXParserTest extends TestCase {
                     SAXParserTestSupport.XML_SYSTEM_ID);
         } catch(java.lang.IllegalArgumentException iae) {
             fail("java.lang.IllegalArgumentException is thrown");
-        }
-
-        // TODO commented out since our parser is nonvalidating and thus never
-        // tries to load staff.dtd in "/" ... and therefore never can fail with
-        // an IOException
-        /*try {
-            MyDefaultHandler dh = new MyDefaultHandler();
-            InputStream is = new FileInputStream(list_wf[0]);
-            parser.parse(is, dh, "/");
-            fail("Expected IOException was not thrown");
+        } catch (FileNotFoundException fne) {
+            fail("Unexpected FileNotFoundException " + fne.toString());
         } catch(IOException ioe) {
-            // expected
-        }*/
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
+        }
+//        
+//        for(int i = 0; i < list_wf.length; i++) {
+//
+//            HashMap<String, String> hm = new SAXParserTestSupport().readFile(
+//                    list_out_dh[i].getPath());
+//            MyDefaultHandler dh = new MyDefaultHandler();
+//            InputStream is = new FileInputStream(list_wf[i]);
+//            parser.parse(is, dh, SAXParserTestSupport.XML_SYSTEM_ID);
+//            assertTrue(SAXParserTestSupport.equalsMaps(hm, dh.createData()));
+//        }
+//
+//        for(int i = 0; i < list_nwf.length; i++) {
+//            try {
+//                MyDefaultHandler dh = new MyDefaultHandler();
+//                InputStream is = new FileInputStream(list_nwf[i]);
+//                parser.parse(is, dh, SAXParserTestSupport.XML_SYSTEM_ID);
+//                fail("SAXException is not thrown");
+//            } catch(org.xml.sax.SAXException se) {
+//                //expected
+//            }
+//        }
+//
+//        try {
+//            MyDefaultHandler dh = new MyDefaultHandler();
+//            parser.parse((InputStream) null, dh,
+//                    SAXParserTestSupport.XML_SYSTEM_ID);
+//            fail("java.lang.IllegalArgumentException is not thrown");
+//        } catch(java.lang.IllegalArgumentException iae) {
+//            //expected
+//        }
+//
+//        try {
+//            InputStream is = new FileInputStream(list_wf[0]);
+//            parser.parse(is, (DefaultHandler) null, 
+//                    SAXParserTestSupport.XML_SYSTEM_ID);
+//        } catch(java.lang.IllegalArgumentException iae) {
+//            fail("java.lang.IllegalArgumentException is thrown");
+//        }
+//
+//        // TODO commented out since our parser is nonvalidating and thus never
+//        // tries to load staff.dtd in "/" ... and therefore never can fail with
+//        // an IOException
+//        /*try {
+//            MyDefaultHandler dh = new MyDefaultHandler();
+//            InputStream is = new FileInputStream(list_wf[0]);
+//            parser.parse(is, dh, "/");
+//            fail("Expected IOException was not thrown");
+//        } catch(IOException ioe) {
+//            // expected
+//        }*/
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParser#parse(java.io.InputStream,
-     *     org.xml.sax.HandlerBase)
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify positive functionality properly; " +
-            "not all exceptions are verified.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.InputStream.class, org.xml.sax.HandlerBase.class}
-        )
-    })
-    @SuppressWarnings("deprecation")
-    public void _test_parseLjava_io_InputStreamLorg_xml_sax_HandlerBase()
-    throws Exception {
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Sufficient while XML parser situation is still unclear",
+        method = "parse",
+        args = {java.io.InputStream.class, org.xml.sax.HandlerBase.class}
+    )
+    public void testParseInputStreamHandlerBase() {
         for(int i = 0; i < list_wf.length; i++) {
-            HashMap<String, String> hm = sp.readFile(list_out_hb[i].getPath());
-            MyHandler dh = new MyHandler();
-            InputStream is = new FileInputStream(list_wf[i]);
-            parser.parse(is, dh);
-            assertTrue(SAXParserTestSupport.equalsMaps(hm, dh.createData()));
+            try {
+                HashMap<String, String> hm = sp.readFile(
+                        list_out_hb[i].getPath());
+                MyHandler dh = new MyHandler();
+                InputStream is = new FileInputStream(list_wf[i]);
+                parser.parse(is, dh);
+                assertTrue(SAXParserTestSupport.equalsMaps(hm, 
+                        dh.createData()));
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
+            } catch (SAXException sax) {
+                fail("Unexpected SAXException " + sax.toString());
+            }
         }
 
         for(int i = 0; i < list_nwf.length; i++) {
@@ -707,6 +814,10 @@ public class SAXParserTest extends TestCase {
                 fail("SAXException is not thrown");
             } catch(org.xml.sax.SAXException se) {
                 //expected
+            } catch (FileNotFoundException fne) {
+                fail("Unexpected FileNotFoundException " + fne.toString());
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
             }
         }
 
@@ -716,6 +827,10 @@ public class SAXParserTest extends TestCase {
             fail("java.lang.IllegalArgumentException is not thrown");
         } catch(java.lang.IllegalArgumentException iae) {
             //expected
+        } catch (IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
         }
 
         try {
@@ -723,24 +838,34 @@ public class SAXParserTest extends TestCase {
             parser.parse(is, (HandlerBase) null);
         } catch(java.lang.IllegalArgumentException iae) {
             fail("java.lang.IllegalArgumentException is thrown");
+        } catch (FileNotFoundException fne) {
+            fail("Unexpected FileNotFoundException " + fne.toString());
+        } catch(IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
+        }
+        
+        // Inject IOException
+        try {
+            InputStream is = new BrokenInputStream(
+                    new FileInputStream(list_wf[0]), 10);
+            parser.parse(is, (HandlerBase) null);
+            fail("IOException expected");
+        } catch(IOException e) {
+            // Expected
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
         }
     }
 
-    /**
-     * @test javax.xml.parsers.SAXParser#parse(java.io.InputStream,
-     *     org.xml.sax.HandlerBase, java.lang.String)
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.InputStream.class, org.xml.sax.HandlerBase.class, java.lang.String.class}
-        )
-    })
-    @SuppressWarnings("deprecation")
-    public void _test_parseLjava_io_InputStreamLorg_xml_sax_HandlerBaseLjava_lang_String() {
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Sufficient while XML parser situation is still unclear",
+        method = "parse",
+        args = {java.io.InputStream.class, org.xml.sax.HandlerBase.class, java.lang.String.class}
+    )
+    public void testParseInputStreamHandlerBaseString() {
         for(int i = 0; i < list_wf.length; i++) {
             try {
                 HashMap<String, String> hm = sp.readFile(
@@ -798,36 +923,31 @@ public class SAXParserTest extends TestCase {
         } catch(SAXException sax) {
             fail("Unexpected SAXException " + sax.toString());
         }
-
-        // TODO commented out since our parser is nonvalidating and thus never
-        // tries to load staff.dtd in "/" ... and therefore never can fail with
-        // an IOException
-        /*try {
-            MyHandler dh = new MyHandler();
-            InputStream is = new FileInputStream(list_wf[0]);
-            parser.parse(is, dh, "/");
-            fail("Expected IOException was not thrown");
-        } catch (IOException ioe) {
-            // expected
-        } catch (SAXException sax) {
-            fail("Unexpected SAXException " + sax.toString());
-        }*/
-
+        
+        // Inject IOException
+        try {
+            InputStream is = new BrokenInputStream(
+                    new FileInputStream(list_wf[0]), 10);
+            parser.parse(is, (HandlerBase) null, 
+                    SAXParserTestSupport.XML_SYSTEM_ID);
+            fail("IOException expected");
+        } catch(IOException e) {
+            // Expected
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
     }
 
     /**
      * @test javax.xml.parsers.SAXParser#parse(java.lang.String,
      *     org.xml.sax.helpers.DefaultHandler)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class, org.xml.sax.helpers.DefaultHandler.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify IOException.",
+        method = "parse",
+        args = {java.lang.String.class, org.xml.sax.helpers.DefaultHandler.class}
+    )
     public void _test_parseLjava_lang_StringLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
@@ -865,36 +985,39 @@ public class SAXParserTest extends TestCase {
         }
     }
 
-    /**
-     * @tests javax.xml.parsers.SAXParser#parse(java.lang.String,
-     *    org.xml.sax.HandlerBase)
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class, org.xml.sax.HandlerBase.class}
-        )
-    })
-    @SuppressWarnings("deprecation")
-    public void _test_parseLjava_lang_StringLorg_xml_sax_HandlerBase()
-    throws Exception {
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Sufficient while XML parser situation is still unclear",
+        method = "parse",
+        args = {java.lang.String.class, org.xml.sax.HandlerBase.class}
+    )
+    public void testParseStringHandlerBase() {
         for(int i = 0; i < list_wf.length; i++) {
-            HashMap<String, String> hm = sp.readFile(list_out_hb[i].getPath());
-            MyHandler dh = new MyHandler();
-            parser.parse(list_wf[i].getPath(), dh);
-            assertTrue(SAXParserTestSupport.equalsMaps(hm, dh.createData()));
+            try {
+                HashMap<String, String> hm = sp.readFile(
+                        list_out_hb[i].getPath());
+                MyHandler dh = new MyHandler();
+                parser.parse(list_wf[i].toURI().toString(), dh);
+                assertTrue(SAXParserTestSupport.equalsMaps(hm, 
+                        dh.createData()));
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
+            } catch (SAXException sax) {
+                fail("Unexpected SAXException " + sax.toString());
+            }
         }
 
         for(int i = 0; i < list_nwf.length; i++) {
             try {
                 MyHandler dh = new MyHandler();
-                parser.parse(list_nwf[i].getPath(), dh);
+                parser.parse(list_nwf[i].toURI().toString(), dh);
                 fail("SAXException is not thrown");
             } catch(org.xml.sax.SAXException se) {
                 //expected
+            } catch (FileNotFoundException fne) {
+                fail("Unexpected FileNotFoundException " + fne.toString());
+            } catch (IOException ioe) {
+                fail("Unexpected IOException " + ioe.toString());
             }
         }
 
@@ -904,39 +1027,145 @@ public class SAXParserTest extends TestCase {
             fail("java.lang.IllegalArgumentException is not thrown");
         } catch(java.lang.IllegalArgumentException iae) {
             //expected
+        } catch (IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
         }
 
         try {
-            parser.parse(list_wf[0].getPath(), (HandlerBase) null);
+            parser.parse(list_wf[0].toURI().toString(), (HandlerBase) null);
         } catch(java.lang.IllegalArgumentException iae) {
             fail("java.lang.IllegalArgumentException is thrown");
+        } catch (FileNotFoundException fne) {
+            fail("Unexpected FileNotFoundException " + fne.toString());
+        } catch(IOException ioe) {
+            fail("Unexpected IOException " + ioe.toString());
+        } catch(SAXException sax) {
+            fail("Unexpected SAXException " + sax.toString());
         }
     }
 
-    /**
-     * @tests javax.xml.parsers.SAXParser#reset().
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check that SAXParser is reset to the same state " +
-            "as it was created.",
-      targets = {
-        @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
-        )
-    })
-    public void _test_reset() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "reset",
+        args = { }
+    )
+    @KnownFailure("Android DocumentBuilder should implement reset() properly")
+    public void testReset() {
         try {
             spf = SAXParserFactory.newInstance();
             parser = spf.newSAXParser();
+
+            parser.setProperty(LEXICAL_HANDLER_PROPERTY, new MockHandler(new MethodLogger()));
             parser.reset();
-        } catch (ParserConfigurationException pce) {
-            fail("Unexpected ParserConfigurationException " + pce.toString());
-        } catch(SAXException se) {
-            fail("Unexpected SAXException " + se.toString());
+            assertEquals(null, parser.getProperty(LEXICAL_HANDLER_PROPERTY));
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
         }
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "getParser",
+        args = { }
+    )
+    public void testGetParser() {
+        spf = SAXParserFactory.newInstance();
+        try {
+            Parser parser = spf.newSAXParser().getParser();
+            assertNotNull(parser);
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "getXMLReader",
+        args = { }
+    )
+    public void testGetReader() {
+        spf = SAXParserFactory.newInstance();
+        try {
+            XMLReader reader = spf.newSAXParser().getXMLReader();
+            assertNotNull(reader);
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            method = "getProperty",
+            args = { String.class }
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            method = "setProperty",
+            args = { String.class, Object.class }
+        )
+    })
+    @KnownFailure("ExpatParser should allow to clear properties")
+    public void testSetGetProperty() {
+        // Ordinary case
+        String validName = "http://xml.org/sax/properties/lexical-handler";
+        LexicalHandler validValue = new MockHandler(new MethodLogger());            
+
+        try {
+            SAXParser parser = spf.newSAXParser();
+            parser.setProperty(validName, validValue);
+            assertEquals(validValue, parser.getProperty(validName));
+            
+            parser.setProperty(validName, null);
+            assertEquals(null, parser.getProperty(validName));
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+        
+        // Unsupported property
+        try {
+            SAXParser parser = spf.newSAXParser();
+            parser.setProperty("foo", "bar");
+            fail("SAXNotRecognizedException expected");
+        } catch (SAXNotRecognizedException e) {
+            // Expected
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+        
+        try {
+            SAXParser parser = spf.newSAXParser();
+            parser.getProperty("foo");
+            fail("SAXNotRecognizedException expected");
+        } catch (SAXNotRecognizedException e) {
+            // Expected
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+
+        // No name case
+        try {
+            SAXParser parser = spf.newSAXParser();
+            parser.setProperty(null, "bar");
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            // Expected
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+
+        try {
+            SAXParser parser = spf.newSAXParser();
+            parser.getProperty(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            // Expected
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected exception", e);
+        }
+    }
     
 }
+

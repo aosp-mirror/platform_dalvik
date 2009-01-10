@@ -28,6 +28,22 @@ public class MockPreferenceChangeListener implements PreferenceChangeListener {
     public MockPreferenceChangeListener(int test) {
         testNum = test;
     }
+    
+    public void waitForEvent() {
+        waitForEvent(1);
+    }
+    
+    
+    public void waitForEvent(int count) {
+        for (int i = 0; i < count; i++) {
+            try {
+                synchronized (lock) {
+                    lock.wait(500);
+                }
+            } catch (InterruptedException e) {
+            }
+        }
+    }
 
     // private Object lock = new Object();
 

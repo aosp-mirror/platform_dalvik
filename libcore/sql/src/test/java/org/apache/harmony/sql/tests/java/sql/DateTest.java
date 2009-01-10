@@ -18,9 +18,9 @@
 package org.apache.harmony.sql.tests.java.sql;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.sql.Date;
 import java.util.Calendar;
@@ -112,6 +112,12 @@ public class DateTest extends TestCase {
      * Test of the Date(int, int, int) constructor - now deprecated but still
      * functioning
      */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Date",
+        args = {int.class, int.class, int.class}
+    )
     @SuppressWarnings("deprecation")
     public void testDateintintint() {
 
@@ -129,15 +135,12 @@ public class DateTest extends TestCase {
     /*
      * Test of the Date( long ) constructor
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Date",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Date",
+        args = {long.class}
+    )
     public void testDatelong() {
 
         long init1[] = { TIME_TESTDATE1, TIME_TESTDATE2, TIME_TESTDATE3,
@@ -155,15 +158,12 @@ public class DateTest extends TestCase {
      * Test of the (deprecated) int Date.getHours() method - which always throws
      * an IllegalArgumentException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getHours",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getHours",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void testGetHours() {
         Date theDate = new Date(TIME_TESTDATE1);
@@ -179,15 +179,12 @@ public class DateTest extends TestCase {
      * Test of the (deprecated) int Date.getMinutes() method - which always
      * throws an IllegalArgumentException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMinutes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMinutes",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void testGetMinutes() {
         Date theDate = new Date(TIME_TESTDATE1);
@@ -203,15 +200,12 @@ public class DateTest extends TestCase {
      * Test of the (deprecated) int Date.getSeconds() method - which always
      * throws an IllegalArgumentException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSeconds",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSeconds",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void testGetSeconds() {
         Date theDate = new Date(TIME_TESTDATE1);
@@ -227,15 +221,12 @@ public class DateTest extends TestCase {
      * Test of the (deprecated) Date.setHours( int ) method - which always
      * throws an IllegalArgumentException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setHours",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setHours",
+        args = {int.class}
+    )
     @SuppressWarnings("deprecation")
     public void testSetHours() {
         Date theDate = new Date(TIME_TESTDATE1);
@@ -251,15 +242,12 @@ public class DateTest extends TestCase {
      * Test of the (deprecated) Date.setMinutes( int ) method - which always
      * throws an IllegalArgumentException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setMinutes",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setMinutes",
+        args = {int.class}
+    )
     @SuppressWarnings("deprecation")
     public void testSetMinutes() {
         Date theDate = new Date(TIME_TESTDATE1);
@@ -276,15 +264,12 @@ public class DateTest extends TestCase {
      * Test of the (deprecated) Date.setSeconds( int ) method - which always
      * throws an IllegalArgumentException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setSeconds",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setSeconds",
+        args = {int.class}
+    )
     @SuppressWarnings("deprecation")
     public void testSetSeconds() {
         Date theDate = new Date(TIME_TESTDATE1);
@@ -301,15 +286,12 @@ public class DateTest extends TestCase {
      * time zone setting and this test sets the time zone before calling the
      * toString() method.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         // This test is set up for GMT time zone, so need to set the time zone
         // to GMT first
@@ -327,15 +309,12 @@ public class DateTest extends TestCase {
      * settings and sets up the time zone to one of a group of specific time
      * zones and tests the method using each of these time zones in turn.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setTime",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setTime",
+        args = {long.class}
+    )
     public void testSetTimelong() {
 
         // Loop over the array of test timezones
@@ -348,15 +327,6 @@ public class DateTest extends TestCase {
     /*
      * Internal method for testing Date.setTime with a specific time zone
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setTime",
-          methodArgs = {long.class}
-        )
-    })
     private void testSetTimelong(String timeZoneName, String[] dateArray) {
 
         if (timeZoneName != null) {
@@ -377,15 +347,12 @@ public class DateTest extends TestCase {
      * Test of the Date.valueOf( String ) method This test is not dependent on
      * the default Time Zone setting
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {java.lang.String.class}
+    )
     public void testValueOf() {
         String SQL_NOTVALID1 = "ABCDEF"; // Invalid date string
         String SQL_NOTVALID2 = "12321.43.56"; // Invalid date string
@@ -414,15 +381,12 @@ public class DateTest extends TestCase {
     /**
      * @tests java.sql.Date#valueOf(String )
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {java.lang.String.class}
+    )
     public void test_valueOf_IllegalArgumentException() {
         try{
             Date.valueOf("1996-10-07-01");

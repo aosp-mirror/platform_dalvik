@@ -29,7 +29,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All Prefs test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Prefs test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.prefs.tests.java.util.prefs.AllTests.suite());
         // $JUnit-END$

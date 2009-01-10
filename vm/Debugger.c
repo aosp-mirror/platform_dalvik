@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Link between JDWP and the VM.  The code here only runs as a result of
  * requests from the debugger, so speed is not essential.  Maintaining
@@ -2265,6 +2266,12 @@ static Object* getThisObject(const u4* framePtr)
         thisObj = NULL;
     else
         thisObj = (Object*) framePtr[argOffset];
+
+    if (thisObj != NULL && !dvmIsValidObject(thisObj)) {
+        LOGW("Debugger: invalid 'this' pointer %p in %s.%s; returning NULL\n",
+            framePtr, method->clazz->descriptor, method->name);
+        thisObj = NULL;
+    }
 
     return thisObj;
 }

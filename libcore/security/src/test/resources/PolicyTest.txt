@@ -1,0 +1,3 @@
+grant codeBase "file:${test.bin.dir}" {
+   permission java.security.SecurityPermission "codeBaseForPolicyTest"; 
+}; 

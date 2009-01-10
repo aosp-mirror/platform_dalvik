@@ -16,14 +16,17 @@
  */
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import java.util.Vector;
+
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 @TestTargetClass(Object.class) 
 public class ObjectTest extends junit.framework.TestCase {
 
+    public boolean isCalled = false;
     /**
      * Test objects.
      */
@@ -37,19 +40,18 @@ public class ObjectTest extends junit.framework.TestCase {
     int status = 0;
 
     int ready = 0;
+    TestThread1 thr1;
+    TestThread2 thr2;    
 
     /**
      * @tests java.lang.Object#Object()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Object",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Object",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.lang.Object()
         assertNotNull("Constructor failed !!!", new Object());
@@ -58,33 +60,107 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.lang.Object.equals(java.lang.Object)
         assertTrue("Same object should be equal", obj1.equals(obj1));
         assertTrue("Different objects should not be equal", !obj1.equals(obj2));
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "finalize",
+        args = {}
+    )
+    
+    public void test_finalize() {
+        isCalled = false;
+        class TestObject extends Object {
+
+            Vector<StringBuffer> v = new Vector<StringBuffer>();
+            public void add() {
+                v.add(new StringBuffer(10000));
+            }
+            
+            protected void finalize() throws Throwable {
+                isCalled = true;
+                super.finalize();
+            }
+        }
+
+        TestObject to = new TestObject();
+        
+        try {
+            while(true) {
+                to.add();
+            }
+        } catch(OutOfMemoryError oome) {
+            //expected
+            to = null;
+        }
+        System.gc();
+        System.runFinalization();
+        assertTrue(isCalled);
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
+    public void test_clone() {
+        MockCloneableObject mco = new MockCloneableObject();
+        try {
+            assertFalse(mco.equals(mco.clone()));
+            assertEquals(mco.getClass(), mco.clone().getClass());
+        } catch(CloneNotSupportedException cnse) {
+            fail("CloneNotSupportedException was thrown.");
+        }
+        
+        MockObject mo = new MockObject();
+        try {
+            mo.clone();
+            fail("CloneNotSupportedException was not thrown.");
+        } catch(CloneNotSupportedException cnse) {
+            //expected
+        }
+    }
+    class MockCloneableObject extends Object implements Cloneable {
+        public Object clone() throws CloneNotSupportedException {
+            return super.clone();
+        }        
+    }
+    
+    class MockObject extends Object {
+        
+        boolean isCalled = false;
+        
+        public void finalize() throws Throwable {
+            super.finalize();
+            isCalled = true;
+        }
+        
+        public Object clone() throws CloneNotSupportedException {
+            return super.clone();
+        }        
+    }
+    
     /**
      * @tests java.lang.Object#getClass()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getClass",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getClass",
+        args = {}
+    )
     public void test_getClass() {
         // Test for method java.lang.Class java.lang.Object.getClass()
         String classNames[] = { "java.lang.Object", "java.lang.Throwable",
@@ -111,15 +187,12 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         // Test for method int java.lang.Object.hashCode()
         assertTrue("Same object should have same hash.",
@@ -131,15 +204,12 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#notify()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalMonitorStateException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "notify",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "notify",
+        args = {}
+    )
     public void test_notify() {
         // Test for method void java.lang.Object.notify()
 
@@ -205,20 +275,25 @@ public class ObjectTest extends junit.framework.TestCase {
                                 + status + ")");
             }
         }
+        
+        try {
+            Object obj = new Object();
+            obj.notify();
+            fail("IllegalMonitorStateException was not thrown.");
+        } catch(IllegalMonitorStateException imse) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.Object#notifyAll()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalMonitorStateException  is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "notifyAll",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "notifyAll",
+        args = {}
+    )
     public void test_notifyAll() {
         // Test for method void java.lang.Object.notifyAll()
 
@@ -287,20 +362,25 @@ public class ObjectTest extends junit.framework.TestCase {
             }
 
         }
+        
+        try {
+            Object obj = new Object();
+            obj.notifyAll();
+            fail("IllegalMonitorStateException was not thrown.");
+        } catch(IllegalMonitorStateException imse) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.Object#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.lang.Object.toString()
         assertNotNull("Object toString returned null.", obj1.toString());
@@ -309,15 +389,12 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#wait()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "wait",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "wait",
+        args = {}
+    )
     public void test_wait() {
         // Test for method void java.lang.Object.wait()
 
@@ -360,20 +437,81 @@ public class ObjectTest extends junit.framework.TestCase {
                                 + status + ")");
             }
         }
+        
+        try {
+            Object obj = new Object();
+            obj.wait();
+            fail("IllegalMonitorStateException was not thrown.");
+        } catch(IllegalMonitorStateException imse) {
+            //expected
+        } catch(InterruptedException ex) {
+            fail("InterruptedException was thrown.");
+        }
+
+       try {
+           thr1 = new TestThread1(TestThread1.CASE_WAIT);
+           thr2 = new TestThread2();
+           thr1.start();
+           thr2.start();           
+           thr2.join();
+           thr1.join();
+           thr1 = null;
+           thr2 = null;
+        } catch(InterruptedException e) {
+            fail("InterruptedException was thrown.");
+        }
+        assertEquals(3, status);
     }
+    
+    class TestThread1 extends Thread {
+        
+        static final int CASE_WAIT = 0;
+        static final int CASE_WAIT_LONG = 1;
+        static final int CASE_WAIT_LONG_INT = 2;
+        
+        int testCase = CASE_WAIT;
+        
+        public TestThread1(int option) {
+            testCase = option;
+        }
+        
+        public void run() {
+            synchronized (obj1) {
+                try {
+                    switch(testCase) {
+                        case CASE_WAIT:
+                            obj1.wait();// Wait for ever.
+                            break;
+                        case CASE_WAIT_LONG:
+                            obj1.wait(5000L);
+                            break;
+                        case CASE_WAIT_LONG_INT:
+                            obj1.wait(10000L, 999999);
+                            break;
+                    }
+                    
+                } catch (InterruptedException ex) {
+                    status = 3;
+                }
+            }
+        }
+    }
+    
+    class TestThread2 extends Thread {
+        public void run() {
+            thr1.interrupt();
+        }
+    }   
 
     /**
      * @tests java.lang.Object#wait(long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "wait",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "wait",
+        args = {long.class}
+    )
     public void test_waitJ() {
         // Test for method void java.lang.Object.wait(long)
 
@@ -425,20 +563,41 @@ public class ObjectTest extends junit.framework.TestCase {
                                 + status + ")");
             }
         }
+        
+        try {
+            Object obj = new Object();
+            obj.wait(5000L);
+            fail("IllegalMonitorStateException was not thrown.");
+        } catch(IllegalMonitorStateException imse) {
+            //expected
+        } catch(InterruptedException ex) {
+            fail("InterruptedException was thrown.");
+        }
+
+       try {
+           thr1 = new TestThread1(TestThread1.CASE_WAIT_LONG);
+           thr2 = new TestThread2();
+           thr1.start();
+           thr2.start();           
+           thr2.join();
+           thr1.join();        
+           thr1 = null;
+           thr2 = null;           
+        } catch(InterruptedException e) {
+            fail("InterruptedException was thrown.");
+        }
+        assertEquals(3, status);
     }
 
     /**
      * @tests java.lang.Object#wait(long, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "wait",
-          methodArgs = {long.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "wait",
+        args = {long.class, int.class}
+    )
     public void test_waitJI() {
         // Test for method void java.lang.Object.wait(long, int)
 
@@ -457,7 +616,7 @@ public class ObjectTest extends junit.framework.TestCase {
                 }
             }
         }
-        ;
+        
 
         // Start of test code.
 
@@ -483,6 +642,30 @@ public class ObjectTest extends junit.framework.TestCase {
                                 + status + ")");
             }
         }
+        
+        try {
+            Object obj = new Object();
+            obj.wait(5000L, 1);
+            fail("IllegalMonitorStateException was not thrown.");
+        } catch(IllegalMonitorStateException imse) {
+            //expected
+        } catch(InterruptedException ex) {
+            fail("InterruptedException was thrown.");
+        }
+
+       try {
+           thr1 = new TestThread1(TestThread1.CASE_WAIT_LONG_INT);
+           thr2 = new TestThread2();
+           thr1.start();
+           thr2.start();           
+           thr2.join();
+           thr1.join();
+           thr1 = null;
+           thr2 = null;           
+        } catch(InterruptedException e) {
+            fail("InterruptedException was thrown.");
+        }
+        assertEquals(3, status);
 
     }
 }

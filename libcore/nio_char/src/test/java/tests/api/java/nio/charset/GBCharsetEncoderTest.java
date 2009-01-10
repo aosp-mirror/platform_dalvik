@@ -17,8 +17,8 @@
 package tests.api.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.nio.CharBuffer;
@@ -29,7 +29,7 @@ import java.nio.charset.Charset;
 /**
  * test case specific activity of gb18030 charset encoder
  */
-public class GBCharsetEncoderTest extends CharsetEncoderTest {
+public class GBCharsetEncoderTest extends AbstractCharsetEncoderTestCase {
 
     // charset for gb180303
     private static final Charset CS = Charset.forName("gb18030");
@@ -49,15 +49,12 @@ public class GBCharsetEncoderTest extends CharsetEncoderTest {
         super.tearDown();
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "canEncode",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IllegalStateException checking missed.",
+        method = "canEncode",
+        args = {char.class}
+    )
     public void testCanEncodechar() throws CharacterCodingException {
         // normal case for utfCS
         assertTrue(encoder.canEncode('\u0077'));
@@ -70,15 +67,12 @@ public class GBCharsetEncoderTest extends CharsetEncoderTest {
     /*
      * Class under test for boolean canEncode(CharSequence)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "canEncode",
-          methodArgs = {java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IllegalStateException checking missed.",
+        method = "canEncode",
+        args = {java.lang.CharSequence.class}
+    )
     public void testCanEncodeCharSequence() {
         assertTrue(encoder.canEncode(""));
         // surrogate char
@@ -90,16 +84,18 @@ public class GBCharsetEncoderTest extends CharsetEncoderTest {
         assertFalse(encoder.canEncode("\ud800"));
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "averageBytesPerChar",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "maxBytesPerChar",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "averageBytesPerChar",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "maxBytesPerChar",
+            args = {}
         )
     })
     public void testSpecificDefaultValue() {

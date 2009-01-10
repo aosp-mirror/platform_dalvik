@@ -17,32 +17,97 @@
 
 package tests.api.java.lang.reflect;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Modifier;
+import java.util.HashSet;
+import java.util.Set;
 
 @TestTargetClass(AccessibleObject.class) 
 public class AccessibleObjectTest extends junit.framework.TestCase {
 
     public class TestClass {
         public Object aField;
+        
+        @InheritedRuntime
+        public void annotatedMethod(){}
+    }
+    
+    public class SubTestClass extends TestClass{
+        @AnnotationRuntime0
+        @AnnotationRuntime1
+        @AnnotationClass0
+        @AnnotationSource0
+        public void annotatedMethod(){}
+    }
+    
+    
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target( {ElementType.METHOD})
+    static @interface AnnotationRuntime0 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target( { ElementType.METHOD})
+    static @interface AnnotationRuntime1 {
+    }
+
+    @Retention(RetentionPolicy.CLASS)
+    @Target( { ElementType.METHOD})
+    static @interface AnnotationClass0 {
+    }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @Target( {ElementType.METHOD})
+    static @interface AnnotationSource0 {
+    }
+    
+    @Inherited
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target( {ElementType.METHOD})
+    static @interface InheritedRuntime {
+    }
+    
+    //used for constructor test
+    private static class MyAccessibleObject extends AccessibleObject{
+        public MyAccessibleObject() {
+            super();
+        }
+    }
+    
+    /**
+     * @tests java.lang.reflect.AccessibleObject#AccessibleObject()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "The only thing I can do",
+        method = "AccessibleObject",
+        args = {}
+    )
+    public void test_Constructor() {
+        assertNotNull(new MyAccessibleObject());
     }
 
     /**
      * @tests java.lang.reflect.AccessibleObject#isAccessible()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isAccessible",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isAccessible",
+        args = {}
+    )
     public void test_isAccessible() {
         // Test for method boolean
         // java.lang.reflect.AccessibleObject.isAccessible()
@@ -61,19 +126,13 @@ public class AccessibleObjectTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.AccessibleObject#setAccessible(java.lang.reflect.AccessibleObject[],
      *        boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "setAccessible",
-          methodArgs = {java.lang.reflect.AccessibleObject[].class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "SecurityExeption is tested in tests.security.permissions.JavaLangReflectAccessibleObjectTest",
+        method = "setAccessible",
+        args = {java.lang.reflect.AccessibleObject[].class, boolean.class}
+    )
     public void test_setAccessible$Ljava_lang_reflect_AccessibleObjectZ() {
-        // Test for method void
-        // java.lang.reflect.AccessibleObject.setAccessible(java.lang.reflect.AccessibleObject
-        // [], boolean)
         try {
             AccessibleObject ao = TestClass.class.getField("aField");
             AccessibleObject[] aoa = new AccessibleObject[] { ao };
@@ -85,26 +144,118 @@ public class AccessibleObjectTest extends junit.framework.TestCase {
             fail("Exception during test : " + e.getMessage());
         }
     }
-
+    
     /**
      * @tests java.lang.reflect.AccessibleObject#setAccessible(boolean)
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test, setAccessible(boolean) method is not " +
-            "verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setAccessible",
-          methodArgs = {boolean.class}
-        )
-    })
-    public void test_setAccessibleZ() {
-        // Test for method void
-        // java.lang.reflect.AccessibleObject.setAccessible(boolean)
-        assertTrue("Used to test", true);
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "SecurityExeption is tested in tests.security.permissions.JavaLangReflectAccessibleObjectTest",
+        method = "setAccessible",
+        args = {boolean.class}
+    )
+    public void test_setAccessible() throws Exception {
+        AccessibleObject ao = TestClass.class.getField("aField");
+        ao.setAccessible(true);
+        assertTrue("Returned false to isAccessible", ao.isAccessible());
+        ao.setAccessible(false);
+        assertFalse("Returned true to isAccessible", ao.isAccessible());
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAnnotation",
+        args = {java.lang.Class.class}
+    )
+    @KnownFailure("Does not throw NPE if argument is null. Fixed in ToT")
+    public void test_getAnnotation() throws Exception{
+        AccessibleObject ao = SubTestClass.class.getMethod("annotatedMethod");
+        //test error case
+        boolean npeThrown = false;
+        try {
+          ao.getAnnotation(null);
+          fail("NPE expected");
+        } catch (NullPointerException e) {
+            npeThrown = true;
+        }
+        assertTrue("NPE expected", npeThrown);
+        
+        //test inherited on method has no effect
+        InheritedRuntime ir = ao.getAnnotation(InheritedRuntime.class);
+        assertNull("Inherited Annotations should have no effect", ir);
+        
+        //test ordinary runtime annotation
+        AnnotationRuntime0 rt0 = ao.getAnnotation(AnnotationRuntime0.class);
+        assertNotNull("AnnotationRuntime0 instance expected", rt0);
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAnnotations",
+        args = {}
+    )
+     public void test_getAnnotations() throws Exception {
+        AccessibleObject ao = SubTestClass.class.getMethod("annotatedMethod");
+        Annotation[] annotations = ao.getAnnotations();
+        assertEquals(2, annotations.length);
+        
+        Set<Class<?>> ignoreOrder = new HashSet<Class<?>>();
+        ignoreOrder.add(annotations[0].annotationType());
+        ignoreOrder.add(annotations[1].annotationType());
+
+        assertTrue("Missing @AnnotationRuntime0", 
+                ignoreOrder.contains(AnnotationRuntime0.class));
+        assertTrue("Missing @AnnotationRuntime1",
+                ignoreOrder.contains(AnnotationRuntime1.class));
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDeclaredAnnotations",
+        args = {}
+    )
+     public void test_getDeclaredAnnotations() throws Exception {
+        AccessibleObject ao = SubTestClass.class.getMethod("annotatedMethod");
+        Annotation[] annotations = ao.getDeclaredAnnotations();
+        assertEquals(2, annotations.length);
+        
+        Set<Class<?>> ignoreOrder = new HashSet<Class<?>>();
+        ignoreOrder.add(annotations[0].annotationType());
+        ignoreOrder.add(annotations[1].annotationType());
+
+        assertTrue("Missing @AnnotationRuntime0", 
+                ignoreOrder.contains(AnnotationRuntime0.class));
+        assertTrue("Missing @AnnotationRuntime1",
+                ignoreOrder.contains(AnnotationRuntime1.class));
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isAnnotationPresent",
+        args = {java.lang.Class.class}
+    )
+    @KnownFailure("Does not throw NPE if argument is null. Fixed in ToT")
+    public void test_isAnnotationPresent() throws Exception {
+        AccessibleObject ao = SubTestClass.class.getMethod("annotatedMethod");
+        assertTrue("Missing @AnnotationRuntime0",
+                ao.isAnnotationPresent(AnnotationRuntime0.class));
+        assertFalse("AnnotationSource0 should not be visible at runtime",
+                ao.isAnnotationPresent(AnnotationSource0.class));
+        boolean npeThrown = false;
+        try {
+          ao.isAnnotationPresent(null);
+          fail("NPE expected");
+        } catch (NullPointerException e) {
+            npeThrown = true;
+        }
+        assertTrue("NPE expected", npeThrown);
     }
 
+   
     /**
      * Sets up the fixture, for example, open a network connection. This method
      * is called before a test is executed.

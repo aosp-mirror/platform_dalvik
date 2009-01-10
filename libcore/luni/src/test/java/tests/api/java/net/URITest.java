@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -32,6 +32,72 @@ import junit.framework.TestCase;
 public class URITest extends TestCase {
 
     private URI[] uris;
+    
+    String[] constructorTests = new String[] {
+            "http://user@www.google.com:45/search?q=helpinfo#somefragment",
+            // http with authority, query and fragment
+            "ftp://ftp.is.co.za/rfc/rfc1808.txt", // ftp
+            "gopher://spinaltap.micro.umn.edu/00/Weather/California/Los%20Angeles", // gopher
+            "mailto:mduerst@ifi.unizh.ch", // mailto
+            "news:comp.infosystems.www.servers.unix", // news
+            "telnet://melvyl.ucop.edu/", // telnet
+            "http://123.24.17.98/test", // IPv4 authority
+            "http://www.google.com:80/test",// domain name authority
+            "http://joe@[3ffe:2a00:100:7031::1]:80/test",
+            // IPv6 authority, with userinfo and port
+            "/relative", // relative starting with /
+            "//relative", // relative starting with //
+            "relative", // relative with no /
+            "#fragment",// relative just with fragment
+            "http://user@host:80", // UI, host,port
+            "http://user@host", // ui, host
+            "http://host", // host
+            "http://host:80", // host,port
+            "http://joe@:80", // ui, port (becomes registry-based)
+            "file:///foo/bar", // empty authority, non empty path
+            "ht?tp://hoe@host:80", // miscellaneous tests
+            "mai/lto:hey?joe#man", "http://host/a%20path#frag",
+            // path with an escaped octet for space char
+            "http://host/a%E2%82%ACpath#frag",
+            // path with escaped octet for unicode char, not USASCII
+            "http://host/a\u20ACpath#frag",
+            // path with unicode char, not USASCII equivalent to
+            // = "http://host/a\u0080path#frag",
+            "http://host%20name/", // escaped octets in host (becomes
+            // registry based)
+            "http://host\u00DFname/", // unicodechar in host (becomes
+            // registry based)
+            // equivalent to = "http://host\u00dfname/",
+            "ht123-+tp://www.google.com:80/test", // legal chars in scheme
+    };
+    
+    String[] constructorTestsInvalid = new String[] {
+            "http:///a path#frag", // space char in path, not in escaped
+            // octet form, with no host
+            "http://host/a[path#frag", // an illegal char, not in escaped
+            // octet form, should throw an
+            // exception
+            "http://host/a%path#frag", // invalid escape sequence in path
+            "http://host/a%#frag", // incomplete escape sequence in path
+
+            "http://host#a frag", // space char in fragment, not in
+            // escaped octet form, no path
+            "http://host/a#fr#ag", // illegal char in fragment
+            "http:///path#fr%ag", // invalid escape sequence in fragment,
+            // with no host
+            "http://host/path#frag%", // incomplete escape sequence in
+            // fragment
+
+            "http://host/path?a query#frag", // space char in query, not
+            // in escaped octet form
+            "http://host?query%ag", // invalid escape sequence in query, no
+            // path
+            "http:///path?query%", // incomplete escape sequence in query,
+            // with no host
+
+            "mailto:user^name@fklkf.com" // invalid char in scheme
+    // specific part
+    };
 
     private URI[] getUris() throws URISyntaxException {
         if (uris != null) {
@@ -90,55 +156,14 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#URI(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "URI",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "URI",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // tests for public URI(String uri) throws URISyntaxException
-
-        String[] constructorTests = new String[] {
-                "http://user@www.google.com:45/search?q=helpinfo#somefragment",
-                // http with authority, query and fragment
-                "ftp://ftp.is.co.za/rfc/rfc1808.txt", // ftp
-                "gopher://spinaltap.micro.umn.edu/00/Weather/California/Los%20Angeles", // gopher
-                "mailto:mduerst@ifi.unizh.ch", // mailto
-                "news:comp.infosystems.www.servers.unix", // news
-                "telnet://melvyl.ucop.edu/", // telnet
-                "http://123.24.17.98/test", // IPv4 authority
-                "http://www.google.com:80/test",// domain name authority
-                "http://joe@[3ffe:2a00:100:7031::1]:80/test",
-                // IPv6 authority, with userinfo and port
-                "/relative", // relative starting with /
-                "//relative", // relative starting with //
-                "relative", // relative with no /
-                "#fragment",// relative just with fragment
-                "http://user@host:80", // UI, host,port
-                "http://user@host", // ui, host
-                "http://host", // host
-                "http://host:80", // host,port
-                "http://joe@:80", // ui, port (becomes registry-based)
-                "file:///foo/bar", // empty authority, non empty path
-                "ht?tp://hoe@host:80", // miscellaneous tests
-                "mai/lto:hey?joe#man", "http://host/a%20path#frag",
-                // path with an escaped octet for space char
-                "http://host/a%E2%82%ACpath#frag",
-                // path with escaped octet for unicode char, not USASCII
-                "http://host/a\u20ACpath#frag",
-                // path with unicode char, not USASCII equivalent to
-                // = "http://host/a\u0080path#frag",
-                "http://host%20name/", // escaped octets in host (becomes
-                // registry based)
-                "http://host\u00DFname/", // unicodechar in host (becomes
-                // registry based)
-                // equivalent to = "http://host\u00dfname/",
-                "ht123-+tp://www.google.com:80/test", // legal chars in scheme
-        };
 
         for (int i = 0; i < constructorTests.length; i++) {
             try {
@@ -148,34 +173,6 @@ public class URITest extends TestCase {
                         + " : " + e);
             }
         }
-
-        String[] constructorTestsInvalid = new String[] {
-                "http:///a path#frag", // space char in path, not in escaped
-                // octet form, with no host
-                "http://host/a[path#frag", // an illegal char, not in escaped
-                // octet form, should throw an
-                // exception
-                "http://host/a%path#frag", // invalid escape sequence in path
-                "http://host/a%#frag", // incomplete escape sequence in path
-
-                "http://host#a frag", // space char in fragment, not in
-                // escaped octet form, no path
-                "http://host/a#fr#ag", // illegal char in fragment
-                "http:///path#fr%ag", // invalid escape sequence in fragment,
-                // with no host
-                "http://host/path#frag%", // incomplete escape sequence in
-                // fragment
-
-                "http://host/path?a query#frag", // space char in query, not
-                // in escaped octet form
-                "http://host?query%ag", // invalid escape sequence in query, no
-                // path
-                "http:///path?query%", // incomplete escape sequence in query,
-                // with no host
-
-                "mailto:user^name@fklkf.com" // invalid char in scheme
-        // specific part
-        };
 
         int[] constructorTestsInvalidIndices = new int[] { 9, 13, 13, 13, 13,
                 16, 15, 21, 18, 17, 18, 11 };
@@ -229,20 +226,26 @@ public class URITest extends TestCase {
             } catch (URISyntaxException e) {
             }
         }
+        
+        try {
+            new URI(null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        } catch (URISyntaxException e) {
+            fail("URISyntaxException was thrown.");
+        }
     }
 
     /**
      * @tests java.net.URI#URI(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "URISyntaxException checked.",
-      targets = {
-        @TestTarget(
-          methodName = "URI",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "URISyntaxException checked.",
+        method = "URI",
+        args = {java.lang.String.class}
+    )
     public void test_URI_String() {
         try {
             URI myUri = new URI(":abc@mymail.com");
@@ -273,15 +276,12 @@ public class URITest extends TestCase {
      * @tests java.net.URI#URI(java.lang.String, java.lang.String,
      *        java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "URI",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "URI",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_lang_String() {
         // tests for public URI(String scheme, String ssp, String frag) throws
         // URISyntaxException
@@ -329,15 +329,12 @@ public class URITest extends TestCase {
      *        java.lang.String, int, java.lang.String, java.lang.String,
      *        java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "URISyntaxException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "URI",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class, int.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "URI",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class, int.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_lang_StringILjava_lang_StringLjava_lang_StringLjava_lang_String() {
         // tests for public URI(String scheme, String userinfo, String host, int
         // port, String path,
@@ -433,15 +430,12 @@ public class URITest extends TestCase {
      * @tests java.net.URI#URI(java.lang.String, java.lang.String,
      *        java.lang.String, java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "URI",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "URI",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws URISyntaxException {
         // relative path
@@ -488,15 +482,12 @@ public class URITest extends TestCase {
      * @tests java.net.URI#URI(java.lang.String, java.lang.String,
      *        java.lang.String, java.lang.String, java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "URI",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "URI",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws URISyntaxException {
         // URISyntaxException on relative path
@@ -544,15 +535,12 @@ public class URITest extends TestCase {
      * @tests java.net.URI#URI(java.lang.String, java.lang.String,
      *        java.lang.String, java.lang.String, java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "URI",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "URI",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void test_fiveArgConstructor() throws URISyntaxException {
         // accept [] as part of valid ipv6 host name
         URI uri = new URI("ftp", "[0001:1234::0001]", "/dir1/dir2", "query",
@@ -580,15 +568,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#compareTo(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ClassCastException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.net.URI.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {Object.class}
+    )
     public void test_compareToLjava_lang_Object() {
         // compareTo tests
 
@@ -671,15 +656,12 @@ public class URITest extends TestCase {
      * @throws URISyntaxException
      * @tests java.net.URI#compareTo(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ClassCastException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.net.URI.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.net.URI.class}
+    )
     public void test_compareTo2() throws URISyntaxException {
         URI uri, uri2;
 
@@ -705,36 +687,43 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#create(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException checked.",
-      targets = {
-        @TestTarget(
-          methodName = "create",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "create",
+        args = {java.lang.String.class}
+    )
     public void test_createLjava_lang_String() {
-        try {
-            URI myUri = URI.create("a scheme://reg/");
-            fail("IllegalArgumentException expected but not received.");
-        } catch (IllegalArgumentException e) {
-            // Expected
+        
+       
+        for (int i = 0; i < constructorTests.length; i++) {
+            try {
+                new URI(constructorTests[i]);
+            } catch (URISyntaxException e) {
+                fail("Failed to construct URI for: " + constructorTests[i]
+                        + " : " + e);
+            }
+        }
+        
+        for(int i = 0; i < constructorTestsInvalid.length; i++) {
+            try {
+                URI myUri = URI.create(constructorTestsInvalid[i]);
+                fail("IllegalArgumentException expected but not received.");
+            } catch (IllegalArgumentException e) {
+                // Expected
+            }
         }
     }
 
     /**
      * @tests java.net.URI#equals(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         String[][] equalsData = new String[][] {
                 { "", "" }, // null frags
@@ -814,15 +803,12 @@ public class URITest extends TestCase {
      * @throws URISyntaxException
      * @tests java.net.URI#equals(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equals2() throws URISyntaxException {
         // test URIs with empty string authority
         URI uri = new URI("http:///~/dictionary");
@@ -846,15 +832,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getAuthority()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAuthority",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAuthority",
+        args = {}
+    )
     public void test_getAuthority() throws Exception {
         URI[] uris = getUris();
 
@@ -888,15 +871,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getAuthority()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAuthority",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAuthority",
+        args = {}
+    )
     public void test_getAuthority2() throws Exception {
         // tests for URIs with empty string authority component
 
@@ -942,15 +922,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getFragment()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFragment",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFragment",
+        args = {}
+    )
     public void test_getFragment() throws Exception {
         URI[] uris = getUris();
 
@@ -975,15 +952,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getHost()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getHost",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getHost",
+        args = {}
+    )
     public void test_getHost() throws Exception {
         URI[] uris = getUris();
 
@@ -1005,15 +979,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getPath()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPath",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPath",
+        args = {}
+    )
     public void test_getPath() throws Exception {
         URI[] uris = getUris();
 
@@ -1039,15 +1010,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getPort()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPort",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPort",
+        args = {}
+    )
     public void test_getPort() throws Exception {
         URI[] uris = getUris();
 
@@ -1065,15 +1033,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getPort()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPort",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPort",
+        args = {}
+    )
     public void test_getPort2() throws Exception {
         // if port value is negative, the authority should be
         // consider registry based.
@@ -1102,15 +1067,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getQuery()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getQuery",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getQuery",
+        args = {}
+    )
     public void test_getQuery() throws Exception {
         URI[] uris = getUris();
 
@@ -1135,15 +1097,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getRawAuthority()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getRawAuthority",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getRawAuthority",
+        args = {}
+    )
     public void test_getRawAuthority() throws Exception {
         URI[] uris = getUris();
 
@@ -1173,15 +1132,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getRawFragment()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getRawFragment",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getRawFragment",
+        args = {}
+    )
     public void test_getRawFragment() throws Exception {
         URI[] uris = getUris();
 
@@ -1208,15 +1164,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getRawPath()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getRawPath",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getRawPath",
+        args = {}
+    )
     public void test_getRawPath() throws Exception {
         URI[] uris = getUris();
 
@@ -1243,15 +1196,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getRawQuery()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getRawQuery",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getRawQuery",
+        args = {}
+    )
     public void test_getRawQuery() throws Exception {
         URI[] uris = getUris();
 
@@ -1280,15 +1230,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getRawSchemeSpecificPart()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getRawSchemeSpecificPart",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getRawSchemeSpecificPart",
+        args = {}
+    )
     public void test_getRawSchemeSpecificPart() throws Exception {
         URI[] uris = getUris();
 
@@ -1320,15 +1267,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getRawUserInfo()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getRawUserInfo",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getRawUserInfo",
+        args = {}
+    )
     public void test_getRawUserInfo() throws URISyntaxException {
         URI[] uris = getUris();
 
@@ -1356,15 +1300,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getScheme()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getScheme",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getScheme",
+        args = {}
+    )
     public void test_getScheme() throws Exception {
         URI[] uris = getUris();
 
@@ -1386,15 +1327,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getSchemeSpecificPart()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSchemeSpecificPart",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSchemeSpecificPart",
+        args = {}
+    )
     public void test_getSchemeSpecificPart() throws Exception {
         URI[] uris = getUris();
 
@@ -1428,15 +1366,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#getUserInfo()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getUserInfo",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getUserInfo",
+        args = {}
+    )
     public void test_getUserInfo() throws Exception {
         URI[] uris = getUris();
 
@@ -1465,15 +1400,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#hashCode()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() throws Exception {
         String[][] hashCodeData = new String[][] {
                 { "", "" }, // null frags
@@ -1544,15 +1476,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#isAbsolute()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isAbsolute",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isAbsolute",
+        args = {}
+    )
     public void test_isAbsolute() throws URISyntaxException {
         String[] isAbsoluteData = new String[] { "mailto:user@ca.ibm.com",
                 "urn:isbn:123498989h", "news:software.ibm.com",
@@ -1574,15 +1503,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#isOpaque()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isOpaque",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isOpaque",
+        args = {}
+    )
     public void test_isOpaque() throws URISyntaxException {
         String[] isOpaqueData = new String[] { "mailto:user@ca.ibm.com",
                 "urn:isbn:123498989h", "news:software.ibm.com",
@@ -1604,15 +1530,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#normalize()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "normalize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "normalize",
+        args = {}
+    )
     public void test_normalize() throws Exception {
 
         String[] normalizeData = new String[] {
@@ -1674,15 +1597,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#normalize()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "normalize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "normalize",
+        args = {}
+    )
     public void test_normalize2() throws URISyntaxException {
         URI uri1 = null, uri2 = null;
         uri1 = new URI("file:/D:/one/two/../../three");
@@ -1699,15 +1619,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#normalize()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "normalize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "normalize",
+        args = {}
+    )
     public void test_normalize3() throws URISyntaxException {
         // return same URI if it has a normalized path already
         URI uri1 = null, uri2 = null;
@@ -1724,15 +1641,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#parseServerAuthority()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parseServerAuthority",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parseServerAuthority",
+        args = {}
+    )
     public void test_parseServerAuthority() throws URISyntaxException {
         // registry based uris
         URI[] uris = null;
@@ -1855,15 +1769,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#relativize(java.net.URI)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "relativize",
-          methodArgs = {java.net.URI.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "relativize",
+        args = {java.net.URI.class}
+    )
     public void test_relativizeLjava_net_URI() {
         // relativization tests
         String[][] relativizeData = new String[][] {
@@ -1914,20 +1825,27 @@ public class URITest extends TestCase {
                         + ": " + e);
             }
         }
+        
+        try {
+            URI b = new URI(relativizeData[0][0]);
+            b.relativize(null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        } catch (URISyntaxException e) {
+            fail("URISyntaxException was thrown.");
+        }
     }
 
     /**
      * @tests java.net.URI#relativize(java.net.URI)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "relativize",
-          methodArgs = {java.net.URI.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "NullPointerException checking missed.",
+        method = "relativize",
+        args = {java.net.URI.class}
+    )
     public void test_relativize2() throws Exception {
         URI a = new URI("http://host/dir");
         URI b = new URI("http://host/dir/file?query");
@@ -1953,15 +1871,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#resolve(java.net.URI)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "resolve",
-          methodArgs = {java.net.URI.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "NullPointerException checking missed.",
+        method = "resolve",
+        args = {java.net.URI.class}
+    )
     public void test_resolve() throws URISyntaxException {
         URI uri1 = null, uri2 = null;
         uri1 = new URI("file:/D:/one/two/three");
@@ -1978,15 +1893,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#resolve(java.net.URI)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "NullPointerException checking missed.",
-          targets = {
-            @TestTarget(
-              methodName = "resolve",
-              methodArgs = {java.net.URI.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "resolve",
+        args = {java.net.URI.class}
+    )
     public void test_resolveLjava_net_URI() {
         // resolution tests
         String[][] resolveData = new String[][] {
@@ -2025,7 +1937,7 @@ public class URITest extends TestCase {
                 URI result = b.resolve(r);
                 if (!result.toString().equals(resolveResults[i])) {
                     fail("Error: resolve, " + resolveData[i][0] + ", "
-                            + resolveData[i][1] + " returned: " + b.resolve(r)
+                            + resolveData[i][1] + " returned: " + result
                             + ", expected:" + resolveResults[i]);
                 }
                 if (!b.isOpaque()) {
@@ -2038,20 +1950,105 @@ public class URITest extends TestCase {
                         + ", " + resolveData[i][1] + ": " + e);
             }
         }
+        
+        try {
+            URI b = new URI(resolveData[0][0]);
+            b.resolve((URI) null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        } catch (URISyntaxException e) {
+            fail("URISyntaxException was thrown.");
+        }
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "resolve",
+        args = {java.lang.String.class}
+    )
+    public void test_resolveLjava_lang_String() {
+        // resolution tests
+        String[][] resolveData = new String[][] {
+                // authority in given URI
+                { "http://www.test.com/dir",
+                        "//www.test.com/hello?query#fragment" },
+                // no authority, absolute path
+                { "http://www.test.com/dir", "/abspath/file.txt" },
+                // no authority, relative paths
+                { "/", "dir1/file.txt" }, { "/dir1", "dir2/file.txt" },
+                { "/dir1/", "dir2/file.txt" }, { "", "dir1/file.txt" },
+                { "dir1", "dir2/file.txt" }, { "dir1/", "dir2/file.txt" },
+                // normalization required
+                { "/dir1/dir2/../dir3/./", "dir4/./file.txt" },
+                // allow a standalone fragment to be resolved
+                { "http://www.google.com/hey/joe?query#fragment", "#frag2" },
+                // return given when base is opaque
+                { "mailto:idontexist@uk.ibm.com", "dir1/dir2" },
+                // return given when given is absolute
+                { "http://www.google.com/hi/joe", "http://www.oogle.com" }, };
+
+        // expected results
+        String[] resolveResults = new String[] {
+                "http://www.test.com/hello?query#fragment",
+                "http://www.test.com/abspath/file.txt", "/dir1/file.txt",
+                "/dir2/file.txt", "/dir1/dir2/file.txt", "dir1/file.txt",
+                "dir2/file.txt", "dir1/dir2/file.txt",
+                "/dir1/dir3/dir4/file.txt",
+                "http://www.google.com/hey/joe?query#frag2", "dir1/dir2",
+                "http://www.oogle.com", };
+
+        for (int i = 0; i < resolveResults.length; i++) {
+            try {
+                URI b = new URI(resolveData[i][0]);
+                URI result = b.resolve(resolveData[i][1]);
+                if (!result.toString().equals(resolveResults[i])) {
+                    fail("Error: resolve, " + resolveData[i][0] + ", "
+                            + resolveData[i][1] + " returned: " + result
+                            + ", expected:" + resolveResults[i]);
+                }
+                if (!b.isOpaque()) {
+                    assertEquals(b + " and " + result
+                            + " incorrectly differ in absoluteness", b
+                            .isAbsolute(), result.isAbsolute());
+                }
+            } catch (URISyntaxException e) {
+                fail("Exception on resolve test on data " + resolveData[i][0]
+                        + ", " + resolveData[i][1] + ": " + e);
+            }
+        }
+        
+        try {
+            URI b = new URI(resolveData[0][0]);              
+            b.resolve((String) null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        } catch (URISyntaxException e) {
+            fail("URISyntaxException was thrown.");
+        }        
+        
+        try {
+            URI b = new URI(resolveData[0][0]);              
+            b.resolve("http://a/b/c/g?y/./x\n");
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        } catch (URISyntaxException e) {
+            fail("URISyntaxException was thrown.");
+        }
+    }
+    
     /**
      * @tests java.net.URI#toASCIIString()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toASCIIString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toASCIIString",
+        args = {}
+    )
     public void test_toASCIIString() throws Exception {
         URI[] uris = getUris();
 
@@ -2103,15 +2100,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#toString()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() throws Exception {
         URI[] uris = getUris();
 
@@ -2144,15 +2138,12 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#toURL()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toURL",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toURL",
+        args = {}
+    )
     public void test_toURL() throws Exception {
         String absoluteuris[] = new String[] { "mailto:user@ca.ibm.com",
                 "urn:isbn:123498989h", "news:software.ibm.com",

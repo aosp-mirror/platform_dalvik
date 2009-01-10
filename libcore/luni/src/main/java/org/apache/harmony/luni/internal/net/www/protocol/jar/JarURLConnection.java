@@ -150,7 +150,7 @@ public class JarURLConnection extends java.net.JarURLConnection {
     /**
      * @param url
      *            the URL of the JAR
-     * @throws java.net.MalformedURLException
+     * @throws MalformedURLException
      *             if the URL is malformed
      */
     public JarURLConnection(java.net.URL url) throws MalformedURLException {

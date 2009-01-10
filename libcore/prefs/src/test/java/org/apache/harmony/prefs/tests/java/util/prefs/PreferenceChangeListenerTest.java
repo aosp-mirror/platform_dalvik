@@ -17,9 +17,9 @@
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
@@ -43,15 +43,12 @@ public class PreferenceChangeListenerTest extends TestCase {
         l = new PreferenceChangeListenerImpl();
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Testing Interface",
-      targets = {
-        @TestTarget(
-          methodName = "preferenceChange",
-          methodArgs = {java.util.prefs.PreferenceChangeEvent.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Testing Interface",
+        method = "preferenceChange",
+        args = {java.util.prefs.PreferenceChangeEvent.class}
+    )
     public void testPreferenceChange() {
         l.preferenceChange(new PreferenceChangeEvent(Preferences.userRoot(),
                 "", ""));

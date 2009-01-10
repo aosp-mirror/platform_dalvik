@@ -1,26 +1,25 @@
 package tests.javax.sql;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.TestCase;
 
 import javax.sql.ConnectionEventListener;
+import javax.sql.PooledConnection;
 
-@TestTargetClass(PooledConnectionTest.class)
+@TestTargetClass(PooledConnection.class)
 public class PooledConnectionTest extends TestCase {
 
     /**
      * @tests {@link javax.sql.PooledConnection#addConnectionEventListener(javax.sql.ConnectionEventListener)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "addConnectionEventListener",
-                                   methodArgs = {ConnectionEventListener.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "addConnectionEventListener",
+        args = {javax.sql.ConnectionEventListener.class}
     )
     public void testAddConnectionEventListener() {
         fail("Not yet implemented");
@@ -29,12 +28,11 @@ public class PooledConnectionTest extends TestCase {
     /**
      * @tests {@link javax.sql.PooledConnection#close()}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "close",
-                                   methodArgs = {})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "close",
+        args = {}
     )
     public void testClose() {
         fail("Not yet implemented");
@@ -43,12 +41,11 @@ public class PooledConnectionTest extends TestCase {
     /**
      * @tests {@link javax.sql.PooledConnection#getConnection()}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getConnection",
-                                   methodArgs = {})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "getConnection",
+        args = {}
     )
     public void testGetConnection() {
         fail("Not yet implemented");
@@ -58,12 +55,11 @@ public class PooledConnectionTest extends TestCase {
     /**
      * @tests {@link javax.sql.PooledConnection#removeConnectionEventListener(ConnectionEventListener)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getConnection",
-                                   methodArgs = {ConnectionEventListener.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "removeConnectionEventListener",
+        args = {javax.sql.ConnectionEventListener.class}
     )
     public void testRemoveConnectionEventListener() {
         fail("Not yet implemented");

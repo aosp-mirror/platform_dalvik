@@ -698,7 +698,7 @@ public class ObjectInputStream extends InputStream implements ObjectInput,
      *            the maximum number of bytes to store in {@code buffer}.
      * @return the number of bytes read or -1 if the end of the source input
      *         stream has been reached.
-     * @throws ArrayIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code length < 0}, or if
      *             {@code offset + length} is greater than the length of
      *             {@code buffer}.

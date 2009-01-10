@@ -17,17 +17,25 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.security.Permission;
 import java.util.Map;
 
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargetClass;
+
+import java.util.concurrent.Semaphore;
+
 @TestTargetClass(Thread.class) 
 public class ThreadTest extends junit.framework.TestCase {
+    
+    int counter = 0;
 
     static class SimpleThread implements Runnable {
         int delay;
@@ -124,7 +132,7 @@ public class ThreadTest extends junit.framework.TestCase {
         }
     }
 
-    // TODO Added by Noser
+    // TODO android-added
     class MonitoredClass {
         public synchronized void enterLocked() {
             boolean b = Thread.holdsLock(this);
@@ -144,15 +152,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Thread",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Thread",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.lang.Thread()
 
@@ -188,15 +193,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread(java.lang.Runnable)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Thread",
-          methodArgs = {java.lang.Runnable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Thread",
+        args = {java.lang.Runnable.class}
+    )
     public void test_ConstructorLjava_lang_Runnable() {
         // Test for method java.lang.Thread(java.lang.Runnable)
         try {
@@ -210,15 +212,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread(java.lang.Runnable, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Thread",
-          methodArgs = {java.lang.Runnable.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Thread",
+        args = {java.lang.Runnable.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_RunnableLjava_lang_String() {
         // Test for method java.lang.Thread(java.lang.Runnable,
         // java.lang.String)
@@ -231,15 +230,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Thread",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Thread",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.Thread(java.lang.String)
         Thread t = new Thread("Testing");
@@ -251,15 +247,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread(java.lang.ThreadGroup, java.lang.Runnable)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Thread",
-          methodArgs = {java.lang.ThreadGroup.class, java.lang.Runnable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Thread",
+        args = {java.lang.ThreadGroup.class, java.lang.Runnable.class}
+    )
     public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_Runnable() {
         // Test for method java.lang.Thread(java.lang.ThreadGroup,
         // java.lang.Runnable)
@@ -276,17 +269,14 @@ public class ThreadTest extends junit.framework.TestCase {
 
     /**
      * @tests java.lang.Thread#Thread(java.lang.ThreadGroup, java.lang.Runnable,
-     *        java.lang.String)
+     *        java.lang.String)lo
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Thread",
-          methodArgs = {java.lang.ThreadGroup.class, java.lang.Runnable.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Thread",
+        args = {java.lang.ThreadGroup.class, java.lang.Runnable.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_RunnableLjava_lang_String() {
         // Test for method java.lang.Thread(java.lang.ThreadGroup,
         // java.lang.Runnable, java.lang.String)
@@ -315,21 +305,50 @@ public class ThreadTest extends junit.framework.TestCase {
             assertTrue("Null cannot be accepted as Thread name", true);
             foo.destroy();
         }
-
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Thread",
+        args = {java.lang.ThreadGroup.class, java.lang.Runnable.class, java.lang.String.class, long.class}
+    )
+    public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_RunnableLjava_lang_StringL$L() {
+        ThreadGroup tg = new ThreadGroup("Test Group2");
+        st = new Thread(tg, new SimpleThread(1), "SimpleThread3", 1);
+        assertTrue("Constructed incorrect thread", (st.getThreadGroup() == tg)
+                && st.getName().equals("SimpleThread3"));
+        st.start();
+        try {
+            st.join();
+        } catch (InterruptedException e) {
+        }
+        tg.destroy();
+
+        Runnable r = new Runnable() {
+            public void run() {
+            }
+        };
+        
+        try {
+            new Thread(tg, new SimpleThread(1), "SimpleThread3", 
+                    Integer.MAX_VALUE);
+            fail("StackOverflowError/OutOfMemoryError is not thrown.");
+        } catch(IllegalThreadStateException itse) {
+            //expected
+        }
+
+    }
+    
     /**
      * @tests java.lang.Thread#Thread(java.lang.ThreadGroup, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Thread",
-          methodArgs = {java.lang.ThreadGroup.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Thread",
+        args = {java.lang.ThreadGroup.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_String() {
         // Test for method java.lang.Thread(java.lang.ThreadGroup,
         // java.lang.String)
@@ -342,15 +361,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#activeCount()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "activeCount",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "activeCount",
+        args = {}
+    )
     public void test_activeCount() {
         // Test for method int java.lang.Thread.activeCount()
         Thread t = new Thread(new SimpleThread(1));
@@ -366,15 +382,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#checkAccess()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "checkAccess",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkAccess",
+        args = {}
+    )
     public void test_checkAccess() {
         // Test for method void java.lang.Thread.checkAccess()
         ThreadGroup tg = new ThreadGroup("Test Group3");
@@ -391,21 +404,38 @@ public class ThreadTest extends junit.framework.TestCase {
         } catch (InterruptedException e) {
         }
         tg.destroy();
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkAccess(Thread t) {
+               throw new SecurityException();
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.checkAccess();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }
     }
 
     /**
      * @tests java.lang.Thread#countStackFrames()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "if this thread is not suspended, countStackFrames() method " +
-            "should throw IllegalThreadStateException.",
-      targets = {
-        @TestTarget(
-          methodName = "countStackFrames",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "countStackFrames",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void test_countStackFrames() {
         /*
@@ -422,15 +452,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#currentThread()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "currentThread",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "currentThread",
+        args = {}
+    )
     public void test_currentThread() {
         assertNotNull(Thread.currentThread());
     }
@@ -438,38 +465,55 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#destroy()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchMethodError should be thrown. Need to add verification.",
-      targets = {
-        @TestTarget(
-          methodName = "destroy",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "destroy",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void test_destroy() {
         try {
             new Thread().destroy();
             // FIXME uncomment when IBM VME is updated
-            //fail("NoSuchMethodError was not thrown");
+            fail("NoSuchMethodError was not thrown");
         } catch (NoSuchMethodError e) {
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "dumpStack",
+        args = {}
+    )
+    public void test_dumpStack() {
+        try {
+            PrintStream savedErr = System.err;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(baos));
+            Thread.dumpStack();
+            System.setErr(savedErr);
+            
+            String s = new String(baos.toByteArray());
+            
+            assertTrue(s.contains("java.lang.Thread.dumpStack"));
+            
+        } catch(Exception e) {
+            fail("Unexpected exception was thrown: " + e.toString());
         }
     }
 
     /**
      * @tests java.lang.Thread#enumerate(java.lang.Thread[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "enumerate",
-          methodArgs = {java.lang.Thread[].class}
-        )
-    })
-    public void _test_enumerate$Ljava_lang_Thread() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "enumerate",
+        args = {java.lang.Thread[].class}
+    )
+    public void test_enumerate$Ljava_lang_Thread() {
         // Test for method int java.lang.Thread.enumerate(java.lang.Thread [])
         // The test has been updated according to HARMONY-1974 JIRA issue.
 
@@ -554,15 +598,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getContextClassLoader()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "getContextClassLoader",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getContextClassLoader",
+        args = {}
+    )
     public void test_getContextClassLoader() {
         // Test for method java.lang.ClassLoader
         // java.lang.Thread.getContextClassLoader()
@@ -572,20 +613,37 @@ public class ThreadTest extends junit.framework.TestCase {
                         .getContextClassLoader());
         t.start();
 
+ /*       SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+                if(perm.getName().equals("getClassLoader")) {
+                    throw new SecurityException();
+                }
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            t.getContextClassLoader();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }
+*/        
     }
 
     /**
      * @tests java.lang.Thread#getName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         // Test for method java.lang.String java.lang.Thread.getName()
         st = new Thread(new SimpleThread(1), "SimpleThread6");
@@ -597,15 +655,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getPriority()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPriority",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPriority",
+        args = {}
+    )
     public void test_getPriority() {
         // Test for method int java.lang.Thread.getPriority()
         st = new Thread(new SimpleThread(1));
@@ -618,15 +673,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getThreadGroup()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getThreadGroup",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getThreadGroup",
+        args = {}
+    )
     public void test_getThreadGroup() {
         // Test for method java.lang.ThreadGroup
         // java.lang.Thread.getThreadGroup()
@@ -668,15 +720,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#interrupt()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "interrupt",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "interrupt",
+        args = {}
+    )
     public void test_interrupt() {
         // Test for method void java.lang.Thread.interrupt()
         final Object lock = new Object();
@@ -733,20 +782,37 @@ public class ThreadTest extends junit.framework.TestCase {
         }
         assertTrue("Failed to Interrupt thread2", interrupted);
 
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkAccess(Thread t) {
+               throw new SecurityException();
+            }
+        };
+        st = new Thread();
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.interrupt();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }        
     }
 
     /**
      * @tests java.lang.Thread#interrupted()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "interrupted",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "interrupted",
+        args = {}
+    )
     public void test_interrupted() {
         assertFalse("Interrupted returned true for non-interrupted thread", Thread
                 .interrupted());
@@ -758,15 +824,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#isAlive()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Need to check after interrupt(), etc...",
-      targets = {
-        @TestTarget(
-          methodName = "isAlive",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isAlive",
+        args = {}
+    )
     public void test_isAlive() {
         // Test for method boolean java.lang.Thread.isAlive()
         SimpleThread simple;
@@ -780,6 +843,7 @@ public class ThreadTest extends junit.framework.TestCase {
             }
         }
         assertTrue("Started thread returned false", st.isAlive());
+        
         try {
             st.join();
         } catch (InterruptedException e) {
@@ -791,15 +855,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#isDaemon()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isDaemon",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isDaemon",
+        args = {}
+    )
     public void test_isDaemon() {
         // Test for method boolean java.lang.Thread.isDaemon()
         st = new Thread(new SimpleThread(1), "SimpleThread10");
@@ -812,15 +873,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#isInterrupted()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isInterrupted",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isInterrupted",
+        args = {}
+    )
     public void test_isInterrupted() {
         // Test for method boolean java.lang.Thread.isInterrupted()
         class SpinThread implements Runnable {
@@ -854,15 +912,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#join()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InterruptedException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "join",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "join",
+        args = {}
+    )
     public void test_join() {
         // Test for method void java.lang.Thread.join()
         SimpleThread simple;
@@ -889,20 +944,30 @@ public class ThreadTest extends junit.framework.TestCase {
         }
         assertTrue("Hung joining a non-started thread", result);
         th.start();
+        
+        st = new Thread() {
+            public void run() {
+                try {
+                    join();
+                    fail("InterruptedException was not thrown.");
+                } catch(InterruptedException ie) {
+                    //expected
+                }       
+            }           
+        };
+
+        st.start();        
     }
 
     /**
      * @tests java.lang.Thread#join(long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InterruptedException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "join",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "join",
+        args = {long.class}
+    )
     public void test_joinJ() {
         // Test for method void java.lang.Thread.join(long)
         SimpleThread simple;
@@ -964,20 +1029,30 @@ public class ThreadTest extends junit.framework.TestCase {
         killer.interrupt();
         assertTrue("Hung joining a non-started thread", result);
         th.start();
+        
+        st = new Thread() {
+            public void run() {
+                try {
+                    join(1000);
+                    fail("InterruptedException was not thrown.");
+                } catch(InterruptedException ie) {
+                    //expected
+                }       
+            }           
+        };
+
+        st.start(); 
     }
 
     /**
      * @tests java.lang.Thread#join(long, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InterruptedException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "join",
-          methodArgs = {long.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "join",
+        args = {long.class, int.class}
+    )
     public void test_joinJI() {
         // Test for method void java.lang.Thread.join(long, int)
         SimpleThread simple;
@@ -1030,22 +1105,78 @@ public class ThreadTest extends junit.framework.TestCase {
         killer.interrupt();
         assertTrue("Hung joining a non-started thread", result);
         th.start();
+        
+        st = new Thread() {
+            public void run() {
+                try {
+                    join(1000, 20);
+                    fail("InterruptedException was not thrown.");
+                } catch(InterruptedException ie) {
+                    //expected
+                }       
+            }           
+        };
+
+        st.start(); 
     }
 
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setContextClassLoader",
+            args = {java.lang.ClassLoader.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getContextClassLoader",
+            args = {}
+        )
+    })
+    public void test_setContextClassLoader() {
+        PublicClassLoader pcl = new PublicClassLoader();
+        st = new Thread();
+        st.setContextClassLoader(pcl);
+        assertEquals(pcl, st.getContextClassLoader());
+        
+        st.setContextClassLoader(null);
+        assertNull(st.getContextClassLoader());
+        
+        SecurityManager sm = new SecurityManager() {
+            public void checkPermission(Permission perm) {
+                if (perm.getName().equals("setContextClassLoader") 
+                        || perm.getName().equals("getClassLoader") ) {
+                    throw new SecurityException();
+                }
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.setContextClassLoader(pcl);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+    }
+    
+    
     /**
      * @tests java.lang.Thread#resume()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "resume",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "resume",
+        args = {}
+    )
+    @AndroidOnly("Android throws UnsupportedOperationException for Thread.resume()")
     @SuppressWarnings("deprecation")
-    public void _test_resume() {
+    public void test_resume() {
         // Test for method void java.lang.Thread.resume()
         int orgval;
         ResSupThread t;
@@ -1056,35 +1187,46 @@ public class ThreadTest extends junit.framework.TestCase {
                 ct.start();
                 t.wait();
             }
-            ct.suspend();
-            // Wait to be sure the suspend has occurred
-            Thread.sleep(500);
-            orgval = t.getCheckVal();
-            // Wait to be sure the thread is suspended
-            Thread.sleep(500);
-            assertTrue("Failed to suspend thread", orgval == t.getCheckVal());
-            ct.resume();
-            // Wait to be sure the resume has occurred.
-            Thread.sleep(500);
-            assertTrue("Failed to resume thread", orgval != t.getCheckVal());
-            ct.interrupt();
+            try {
+                ct.resume();
+            } catch (UnsupportedOperationException e) {
+                // expected
+            }
         } catch (InterruptedException e) {
             fail("Unexpected interrupt occurred : " + e.getMessage());
         }
+
+        // Security checks are made even though resume() is not supported.
+        SecurityManager sm = new SecurityManager() {
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkAccess(Thread t) {
+                throw new SecurityException();
+            }
+        };
+        st = new Thread();
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.resume();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }        
     }
 
     /**
      * @tests java.lang.Thread#run()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "run",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "run",
+        args = {}
+    )
     public void test_run() {
         // Test for method void java.lang.Thread.run()
         class RunThread implements Runnable {
@@ -1114,15 +1256,12 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#setDaemon(boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setDaemon",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDaemon",
+        args = {boolean.class}
+    )
     public void test_setDaemonZ() {
         // Test for method void java.lang.Thread.setDaemon(boolean)
         st = new Thread(new SimpleThread(1), "SimpleThread14");
@@ -1140,20 +1279,38 @@ public class ThreadTest extends junit.framework.TestCase {
             // We expect this one.
         }
         // END android-added
+
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+           
+            public void checkAccess(Thread t) {
+               throw new SecurityException();
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.setDaemon(false);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
     }
 
     /**
      * @tests java.lang.Thread#setName(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setName",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setName",
+        args = {java.lang.String.class}
+    )
     public void test_setNameLjava_lang_String() {
         // Test for method void java.lang.Thread.setName(java.lang.String)
         st = new Thread(new SimpleThread(1), "SimpleThread15");
@@ -1168,20 +1325,38 @@ public class ThreadTest extends junit.framework.TestCase {
             assertTrue("Null should not be accepted as a valid name", true);
         }
         st.start();
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkAccess(Thread t) {
+               throw new SecurityException();
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.setName("Bogus Name");
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }
     }
 
     /**
      * @tests java.lang.Thread#setPriority(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setPriority",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setPriority",
+        args = {int.class}
+    )
     public void test_setPriorityI() {
         // Test for method void java.lang.Thread.setPriority(int)
         st = new Thread(new SimpleThread(1));
@@ -1189,20 +1364,52 @@ public class ThreadTest extends junit.framework.TestCase {
         assertTrue("Failed to set priority",
                 st.getPriority() == Thread.MAX_PRIORITY);
         st.start();
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+           
+            public void checkAccess(Thread t) {
+               throw new SecurityException();
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.setPriority(Thread.MIN_PRIORITY);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+        
+        try {
+            st.setPriority(Thread.MIN_PRIORITY - 1);
+            fail("IllegalArgumentException is not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
+        
+        try {
+            st.setPriority(Thread.MAX_PRIORITY + 1);
+            fail("IllegalArgumentException is not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }        
     }
 
     /**
      * @tests java.lang.Thread#sleep(long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InterruptedException is not verified. Test needs enhancing.",
-      targets = {
-        @TestTarget(
-          methodName = "sleep",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sleep",
+        args = {long.class}
+    )
     public void test_sleepJ() {
         // Test for method void java.lang.Thread.sleep(long)
 
@@ -1216,20 +1423,55 @@ public class ThreadTest extends junit.framework.TestCase {
             fail("Unexpected interrupt received");
         }
         assertTrue("Failed to sleep long enough", (ftime - stime) >= 800);
+        
+        counter = 0;
+        st = new Thread() {
+           
+            public void run() {
+                while(true) {
+                    try {
+                        sleep(1000);
+                        counter++;
+                    } catch(InterruptedException e) {
+                        
+                    }
+                }
+            }
+        };
+       
+        st.start();
+
+        try {
+            Thread.sleep(5000);
+        } catch(InterruptedException e) {
+            fail("InterruptedException was thrown.");
+        }
+        assertEquals(4, counter);
+        
+        st = new Thread() {
+            public void run() {
+                try {
+                    sleep(10000);
+                    fail("InterruptedException is thrown.");
+                } catch(InterruptedException ie) {
+                    //exception
+                }
+            }
+        };
+
+        st.start();
+        st.interrupt();
     }
 
     /**
      * @tests java.lang.Thread#sleep(long, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified. Test needs revisiting.",
-      targets = {
-        @TestTarget(
-          methodName = "sleep",
-          methodArgs = {long.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sleep",
+        args = {long.class, int.class}
+    )
     public void test_sleepJI() {
         // Test for method void java.lang.Thread.sleep(long, int)
 
@@ -1245,21 +1487,54 @@ public class ThreadTest extends junit.framework.TestCase {
         long result = ftime - stime;
         assertTrue("Failed to sleep long enough: " + result, result >= 900
                 && result <= 1100);
+        
+        counter = 0;
+        st = new Thread() {
+           
+            public void run() {
+                while(true) {
+                    try {
+                        sleep(0, 999999);
+                        counter++;
+                    } catch(InterruptedException e) {
+                        
+                    }
+                }
+            }
+        };
+       
+        st.start();
+
+        try {
+            Thread.sleep(2, 999999);
+        } catch(InterruptedException e) {
+            fail("InterruptedException was thrown.");
+        }
+        assertEquals(2, counter);
+        
+        st = new Thread() {
+            public void run() {
+                try {
+                    sleep(10000, 999999);
+                    fail("InterruptedException is thrown.");
+                } catch(InterruptedException ie) {
+                    //exception
+                }
+            }
+        };
+        st.start();
+        st.interrupt();
     }
 
     /**
      * @tests java.lang.Thread#start()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalThreadStateException is not verified. " +
-            "Test needs revisiting.",
-      targets = {
-        @TestTarget(
-          methodName = "start",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "start",
+        args = {}
+    )
     public void test_start() {
         // Test for method void java.lang.Thread.start()
         try {
@@ -1278,22 +1553,27 @@ public class ThreadTest extends junit.framework.TestCase {
         } catch (InterruptedException e) {
             fail("Unexpected interrupt occurred");
         }
+        Thread thr = new Thread();
+        thr.start();
+        try {
+            thr.start();
+        } catch(IllegalThreadStateException itse){
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.Thread#stop()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "stop",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "stop",
+        args = {}
+    )
+    @AndroidOnly("Android throws UnsupportedOperationException for Thread.stop()")
     @SuppressWarnings("deprecation")
-    public void _test_stop() {
+    public void test_stop() {
         // Test for method void java.lang.Thread.stop()
         try {
             Runnable r = new ResSupThread(null);
@@ -1306,140 +1586,80 @@ public class ThreadTest extends junit.framework.TestCase {
         } catch (InterruptedException e) {
             fail("Unexpected interrupt received");
         }
-        st.stop();
-
         try {
-            st.join(10000);
-        } catch (InterruptedException e1) {
-            st.interrupt();
-            fail("Failed to stopThread before 10000 timeout");
+            st.stop();
+            fail("Expected UnsupportedOperationException because" +
+                    "Thread.stop is not supported.");
+        } catch (UnsupportedOperationException e) {
+            // expected
         }
-        assertTrue("Failed to stopThread", !st.isAlive());
-    }
 
-    /**
-     * @tests java.lang.Thread#stop()
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies security.",
-      targets = {
-        @TestTarget(
-          methodName = "stop",
-          methodArgs = {}
-        )
-    })
-    @SuppressWarnings("deprecation")
-    public void test_stop_subtest0() {
-        Thread t = new Thread("t");
-        class MySecurityManager extends SecurityManager {
-            public boolean intest = false;
-
-            @Override
-            public void checkAccess(Thread t) {
-// TODO(Fixed) The JDK expects exactly this security check. Test must be wrong.
-//                if (intest) {
-//                    fail("checkAccess called");
-//                }
-            }
-            @Override
-            public void checkPermission(Permission permission) {
-                if (permission.getName().equals("setSecurityManager")) {
-                    return;
+        // Security checks are made even though stop() is not supported.
+        SecurityManager sm = new SecurityManager() {
+            public void checkPermission(Permission perm) {
+                if(perm.getName().equals("stopThread")) {
+                    throw new SecurityException(); 
                 }
-                super.checkPermission(permission);
             }
-        }
-        MySecurityManager sm = new MySecurityManager();
+        };
+        st = new Thread();
+        SecurityManager oldSm = System.getSecurityManager();
         System.setSecurityManager(sm);
         try {
-            sm.intest = true;
-            try {
-                t.stop();
-                // Ignore any SecurityExceptions, may not have stopThread
-                // permission
-            } catch (SecurityException e) {
-            }
-            sm.intest = false;
-            t.start();
-            try {
-                t.join(2000);
-            } catch (InterruptedException e) {
-            }
-            sm.intest = true;
-            try {
-                t.stop();
-                // Ignore any SecurityExceptions, may not have stopThread
-                // permission
-            } catch (SecurityException e) {
-            }
-            sm.intest = false;
+            st.stop();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
         } finally {
-            System.setSecurityManager(null);
-        }
+            System.setSecurityManager(oldSm);
+        } 
     }
 
     /**
      * @tests java.lang.Thread#stop(java.lang.Throwable)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies security.",
-      targets = {
-        @TestTarget(
-          methodName = "stop",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies security.",
+        method = "stop",
+        args = {java.lang.Throwable.class}
+    )
     @SuppressWarnings("deprecation")
     public void test_stopLjava_lang_Throwable_subtest0() {
+        // Security checks are made even though stop(Throwable) is not supported.
         Thread t = new Thread("t");
         class MySecurityManager extends SecurityManager {
-            public boolean intest = false;
-
-            public boolean checkAccess = false;
-
             @Override
             public void checkAccess(Thread t) {
-                if (intest) {
-                    checkAccess = true;
-                }
+               throw new SecurityException();
             }
             @Override
             public void checkPermission(Permission permission) {
-                if (permission.getName().equals("setSecurityManager")) {
-                    return;
+
+                if(permission.getName().equals("stopThread")) {
+                    throw new SecurityException();
                 }
-                super.checkPermission(permission);
             }
         }
         MySecurityManager sm = new MySecurityManager();
         System.setSecurityManager(sm);
         try {
-            sm.intest = true;
             try {
                 t.stop(new ThreadDeath());
-                // Ignore any SecurityExceptions, may not have stopThread
-                // permission
+                fail("SecurityException was thrown.");
             } catch (SecurityException e) {
             }
-            sm.intest = false;
-            assertTrue("no checkAccess 1", sm.checkAccess);
             t.start();
             try {
-                t.join(2000);
+                t.join(1000);
             } catch (InterruptedException e) {
             }
-            sm.intest = true;
-            sm.checkAccess = false;
             try {
                 t.stop(new ThreadDeath());
-                // Ignore any SecurityExceptions, may not have stopThread
-                // permission
+                fail("SecurityException was thrown.");
             } catch (SecurityException e) {
             }
-            assertTrue("no checkAccess 2", sm.checkAccess);
-            sm.intest = false;
+
         } finally {
             System.setSecurityManager(null);
         }
@@ -1448,17 +1668,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#stop(java.lang.Throwable)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "stop",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException is not verified.",
+        method = "stop",
+        args = {java.lang.Throwable.class}
+    )
+    @AndroidOnly("Android throws UnsupportedOperationException for Thread.stop(Thorwable)")     
     @SuppressWarnings("deprecation")
-    public void _test_stopLjava_lang_Throwable() {
+    public void test_stopLjava_lang_Throwable() {
         // Test for method void java.lang.Thread.stop(java.lang.Throwable)
         ResSupThread t = new ResSupThread(Thread.currentThread());
         synchronized (t) {
@@ -1472,30 +1690,32 @@ public class ThreadTest extends junit.framework.TestCase {
         }
         try {
             st.stop(new BogusException("Bogus"));
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            assertTrue("Stopped child with exception not alive", st.isAlive());
-            st.interrupt();
-            return;
+            fail("Expected UnsupportedOperationException because" +
+                    "Thread.stop is not supported.");
+        } catch (UnsupportedOperationException e) {
+            // expected
         }
-        st.interrupt();
-        fail("Stopped child did not throw exception");
+
+        try {
+            st.stop(null);
+            fail("Expected NullPointerException was not thrown");
+        } catch (NullPointerException e) {
+            // expected
+        }
     }
 
     /**
      * @tests java.lang.Thread#suspend()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "suspend",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "suspend",
+        args = {}
+    )
+    @AndroidOnly("Android throws UnsupportedOperationException for Thread.suspend()")     
     @SuppressWarnings("deprecation")
-    public void _test_suspend() {
+    public void test_suspend() {
         // Test for method void java.lang.Thread.suspend()
         int orgval;
         ResSupThread t = new ResSupThread(Thread.currentThread());
@@ -1506,56 +1726,45 @@ public class ThreadTest extends junit.framework.TestCase {
                 t.wait();
             }
             ct.suspend();
-            // Wait to be sure the suspend has occurred
-            Thread.sleep(500);
-            orgval = t.getCheckVal();
-            // Wait to be sure the thread is suspended
-            Thread.sleep(500);
-            assertTrue("Failed to suspend thread", orgval == t.getCheckVal());
-            ct.resume();
-            // Wait to be sure the resume has occurred.
-            Thread.sleep(500);
-            assertTrue("Failed to resume thread", orgval != t.getCheckVal());
-            ct.interrupt();
+            fail("Expected UnsupportedOperationException because" +
+                    "Thread.suspend is not supported.");
+        } catch (UnsupportedOperationException e) {
+            // expected
         } catch (InterruptedException e) {
-            fail("Unexpected interrupt occurred");
+            fail("Unexpected InterruptedException was thrown");
         }
 
-        final Object notify = new Object();
-        Thread t1 = new Thread(new Runnable() {
-            public void run() {
-                synchronized (notify) {
-                    notify.notify();
-                }
-                Thread.currentThread().suspend();
+        // Security checks are made even though suspend() is not supported.
+        SecurityManager sm = new SecurityManager() {
+            public void checkPermission(Permission perm) {
             }
-        });
+            
+            public void checkAccess(Thread t) {
+                throw new SecurityException();
+            }
+        };
+        st = new Thread();
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
         try {
-            synchronized (notify) {
-                t1.start();
-                notify.wait();
-            }
-            // wait for Thread to suspend
-            Thread.sleep(500);
-            assertTrue("Thread should be alive", t1.isAlive());
-            t1.resume();
-            t1.join();
-        } catch (InterruptedException e) {
-        }
+            st.suspend();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }          
     }
 
     /**
      * @tests java.lang.Thread#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.lang.Thread.toString()
         ThreadGroup tg = new ThreadGroup("Test Group5");
@@ -1572,39 +1781,99 @@ public class ThreadTest extends junit.framework.TestCase {
         tg.destroy();
     }
     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "yield",
+        args = {}
+    )
+    public void test_yield() {
+
+        Counter [] countersNotYeld = new Counter[10];
+        
+        for(int i = 0; i < 10; i++) {
+            countersNotYeld[i] = new Counter(false);
+        }
+        Counter countersYeld = new Counter(true);
+        try {
+            Thread.sleep(11000);
+        } catch(InterruptedException ie) {}                
+       
+        for(Counter c:countersNotYeld) {
+            assertTrue(countersYeld.counter == c.counter);
+        }
+    }
+    
+    class Counter extends Thread {
+        public int counter = 0;
+        boolean isDoYield = false;
+        
+        public Counter(boolean isDoYield) {
+            this.isDoYield = isDoYield;
+            start();
+        }
+        
+        public void run() {
+            for(int i = 0; i < 10000; i++) {
+                if(isDoYield)
+                    yield();
+                counter ++;
+            }
+        }
+    } 
+
+    
     /**
      * @tests java.lang.Thread#getAllStackTraces()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "getAllStackTraces",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAllStackTraces",
+        args = {}
+    )
     public void test_getAllStackTraces() {
         Map<Thread, StackTraceElement[]> stMap = Thread.getAllStackTraces();
         assertNotNull(stMap);
         //TODO add security-based tests
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+                if(perm.getName().equals("modifyThreadGroup")) {
+                    throw new SecurityException();
+                }
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            Thread.getAllStackTraces();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+           System.setSecurityManager(oldSm);
+        }
     }
     
     /**
      * @tests java.lang.Thread#getDefaultUncaughtExceptionHandler
      * @tests java.lang.Thread#setDefaultUncaughtExceptionHandler
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setUncaughtExceptionHandler",
-          methodArgs = {java.lang.Thread.UncaughtExceptionHandler.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setDefaultUncaughtExceptionHandler",
+            args = {java.lang.Thread.UncaughtExceptionHandler.class}
         ),
-        @TestTarget(
-          methodName = "getDefaultUncaughtExceptionHandler",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getDefaultUncaughtExceptionHandler",
+            args = {}
         )
     })
     public void test_get_setDefaultUncaughtExceptionHandler() {
@@ -1620,20 +1889,38 @@ public class ThreadTest extends junit.framework.TestCase {
         Thread.setDefaultUncaughtExceptionHandler(null);
         assertNull(Thread.getDefaultUncaughtExceptionHandler());
         //TODO add security-based tests
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+                if(perm.getName().
+                        equals("setDefaultUncaughtExceptionHandler")) {
+                    throw new SecurityException();
+                }
+            }
+        };
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.setDefaultUncaughtExceptionHandler(handler);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        }  finally {
+            System.setSecurityManager(oldSm);           
+        }
     }
     
     /**
      * @tests java.lang.Thread#getStackTrace()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "getStackTrace",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getStackTrace",
+        args = {}
+    )
     public void test_getStackTrace() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         
@@ -1652,42 +1939,126 @@ public class ThreadTest extends junit.framework.TestCase {
         }
         
         //TODO add security-based tests
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+                if(perm.getName().
+                        equals("getStackTrace")) {
+                    throw new SecurityException();
+                }
+            }
+        };
+        st = new Thread();
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.getStackTrace();
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        }  finally {
+            System.setSecurityManager(oldSm);           
+        }
     }
     
     /**
      * @tests java.lang.Thread#getState()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "add additional state tests.",
-      targets = {
-        @TestTarget(
-          methodName = "getState",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getState",
+        args = {}
+    )
+    @KnownFailure("ToT FIXED") 
     public void test_getState() {
         Thread.State state = Thread.currentThread().getState();
         assertNotNull(state);
         assertEquals(Thread.State.RUNNABLE, state);
-        //TODO add additional state tests
+        
+        final Semaphore sem = new Semaphore(0);
+        final Object lock = new Object();
+        Thread th = new Thread() {
+            @Override
+            public void run() {
+                  while (!sem.hasQueuedThreads()) {}
+                  sem.release();
+                  while (run) {}
+                  try {
+                      sem.acquire();
+                  } catch (InterruptedException e) {
+                      fail("InterruptedException was thrown.");
+                  }
+                  synchronized (lock) {
+                      lock.equals(new Object());
+                  }
+                  synchronized (lock) {
+                      try {
+                        sem.release();
+                        lock.wait(Long.MAX_VALUE);
+                      } catch (InterruptedException e) {
+                          // expected
+                      }
+                  }
+            }
+        };
+        assertEquals(Thread.State.NEW, th.getState());
+        th.start();
+        try {
+            sem.acquire();
+        } catch (InterruptedException e) {
+            fail("InterruptedException was thrown.");
+        }
+        assertEquals(Thread.State.RUNNABLE, th.getState());
+        run = false;
+
+        while (!sem.hasQueuedThreads()){}
+        
+        assertEquals(Thread.State.WAITING, th.getState());
+        synchronized (lock) {
+            sem.release();
+            long start = System.currentTimeMillis();
+            while(start + 1000 > System.currentTimeMillis()) {}
+            assertEquals(Thread.State.BLOCKED, th.getState());
+        }
+
+        try {
+            sem.acquire();
+        } catch (InterruptedException e) {
+            fail("InterruptedException was thrown.");
+        }
+        
+        synchronized (lock) {
+            assertEquals(Thread.State.TIMED_WAITING, th.getState());
+            th.interrupt();
+        }
+        
+        try {
+            th.join(1000);
+        } catch(InterruptedException ie) {
+            fail("InterruptedException was thrown.");
+        }
+        assertEquals(Thread.State.TERMINATED, th.getState());
     }
+    boolean run = true;
     
     /**
      * @tests java.lang.Thread#getUncaughtExceptionHandler
      * @tests java.lang.Thread#setUncaughtExceptionHandler
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "getDefaultUncaughtExceptionHandler",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getUncaughtExceptionHandler",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setDefaultUncaughtExceptionHandler",
-          methodArgs = {java.lang.Thread.UncaughtExceptionHandler.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setUncaughtExceptionHandler",
+            args = {java.lang.Thread.UncaughtExceptionHandler.class}
         )
     })
     public void test_get_setUncaughtExceptionHandler() {
@@ -1703,20 +2074,38 @@ public class ThreadTest extends junit.framework.TestCase {
         Thread.currentThread().setUncaughtExceptionHandler(null);
 
         //TODO add security-based tests
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+           
+            public void checkAccess(Thread t) {
+               throw new SecurityException();
+            }
+        };
+        st = new Thread();
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            st.setUncaughtExceptionHandler(handler);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+
     }
     
     /**
      * @tests java.lang.Thread#getId()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getId",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getId",
+        args = {}
+    )
     public void test_getId() {
         assertTrue("current thread's ID is not positive", Thread.currentThread().getId() > 0);
         
@@ -1730,20 +2119,24 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#holdLock()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "holdsLock",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "holdsLock",
+        args = {java.lang.Object.class}
+    )
     public void test_holdsLock() {
         MonitoredClass monitor = new MonitoredClass();
         
         monitor.enterLocked();
         monitor.enterNonLocked();
+    
+        try {
+            Thread.holdsLock(null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
     }
 
     @Override

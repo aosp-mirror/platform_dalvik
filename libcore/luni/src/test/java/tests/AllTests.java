@@ -30,7 +30,7 @@ public class AllTests
     }
 
     public static final Test suite() {
-        TestSuite suite = new TestSuite();
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite();
         
         suite.addTest(tests.annotation.AllTests.suite());
         suite.addTest(tests.archive.AllTests.suite());
@@ -47,11 +47,13 @@ public class AllTests
         suite.addTest(tests.nio_char.AllTests.suite());
         suite.addTest(tests.prefs.AllTests.suite());
         suite.addTest(tests.regex.AllTests.suite());
-        suite.addTest(tests.security.AllTests.suite());
         suite.addTest(tests.sql.AllTests.suite());
         suite.addTest(tests.text.AllTests.suite());
         suite.addTest(tests.xml.AllTests.suite());
         suite.addTest(tests.xnet.AllTests.suite());
+        suite.addTest(tests.dom.AllTests.suite());
+
+        suite.addTest(tests.security.AllTests.suite());
 
         return suite;
     }

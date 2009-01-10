@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,9 +17,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.AuthProvider;
 
@@ -41,44 +41,70 @@ public class AuthProviderTest extends TestCase {
     /**
      * @tests java.security.AuthProvider#AuthProvider(String, double, String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies all negative variants in the one test case instead of" +
-                  " three tests for each case",
-      targets = {
-        @TestTarget(
-          methodName = "AuthProvider",
-          methodArgs = {java.lang.String.class, double.class, java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "AuthProvider",
+            args = {java.lang.String.class, double.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "login",
+            args = {javax.security.auth.Subject.class, javax.security.auth.callback.CallbackHandler.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "logout",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setCallbackHandler",
+            args = {javax.security.auth.callback.CallbackHandler.class}
         )
     })
-    public void testConstructor() {
+    public void testConstructor01() {
         AuthProviderStub ap = new AuthProviderStub("name", 1.0, "info");
+        CallbackHandler handler = null;
+        String[] str = {"", null, "!@#$%^&*()"};
+        double[] version = {0.0, -1.0, Double.MAX_VALUE, Double.MIN_VALUE, Double.NaN, Double.NEGATIVE_INFINITY};
+        
         assertEquals("name", ap.getName());
         assertEquals(1.0, ap.getVersion());
         assertEquals("info", ap.getInfo());
         assertNotNull(ap.getServices());
         assertTrue(ap.getServices().isEmpty());
         
+        for (int i = 0; i < str.length; i++) {
+            for (int j = 0; j < version.length; j++) {
+                try {
+                    ap = new AuthProviderStub(str[i], version[j], str[i]);
+                } catch (Exception ex) {
+                    fail("Unexpected exception was thrown");
+                }
+            }
+        }
+        
         try {
-            new AuthProviderStub(null, -1.0, null);
+            ap.setCallbackHandler(handler);
+            ap.login(null, handler);
+            ap.logout();
         } catch (Exception e) {
-            fail("unexpected exception");
+            fail("Unexpected exception");
         }
     }
     
-    private class AuthProviderStub extends AuthProvider {
+    public class AuthProviderStub extends AuthProvider {
         public AuthProviderStub(String name, double version, String info) {
             super( name,  version, info);
         }
-        public void login(Subject subject, CallbackHandler handler) {
-            
-        }
-        public void logout() {
-            
-        }
-        public void setCallbackHandler(CallbackHandler handler){
-            
-        }
+        public void login(Subject subject, CallbackHandler handler) {}
+        public void logout() {}
+        public void setCallbackHandler(CallbackHandler handler){}
 
     }
 }

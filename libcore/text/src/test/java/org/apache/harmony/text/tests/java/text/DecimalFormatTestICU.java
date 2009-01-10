@@ -16,15 +16,17 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Locale;
 
 /**
  * Test for additional features introduced by icu. These tests fail on the RI
@@ -41,23 +43,37 @@ public class DecimalFormatTestICU extends TestCase {
         format = (DecimalFormat) NumberFormat.getNumberInstance();
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "applyPattern",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Regression test.",
+            method = "format",
+            args = {java.lang.Object.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Regression test.",
+            method = "parse",
+            args = {java.lang.String.class}
         )
     })
-    public void test_sigDigPattern() throws Exception {
+    @AndroidOnly("special feature of icu4c")
+    public void test_sigDigitPatterns() throws Exception {
+        DecimalFormat format = (DecimalFormat) NumberFormat
+        .getInstance(Locale.US);
+
         format.applyPattern("@@@");
-        assertEquals("12300", format.format(12345));
-        assertEquals("0.123", format.format(0.12345));
+        assertEquals("sigDigit doesn't work", "12300", format.format(12345));
+        assertEquals("sigDigit doesn't work", "0.123", format.format(0.12345));
 
         format.applyPattern("@@##");
-        assertEquals("3.142", format.format(3.14159));
-        assertEquals("1.23", format.format(1.23004));
+        assertEquals("sigDigit doesn't work", "3.142", format.format(3.14159));
+        assertEquals("sigDigit doesn't work", "1.23", format.format(1.23004));
+        
+        format.applyPattern("@@###E0");
+        assertEquals("1.23E1", format.format(12.3));
+        format.applyPattern("0.0###E0");
+        assertEquals("1.23E1", format.format(12.3));
 
         try {
             format.applyPattern("@00");
@@ -74,32 +90,31 @@ public class DecimalFormatTestICU extends TestCase {
         } catch (IllegalArgumentException e) {
             // expected
         }
-
-        format.applyPattern("@@###E0");
-        assertEquals("1.23E1", format.format(12.3));
-        assertEquals(12.3f, format.parse("1.23E1").floatValue());
-        format.applyPattern("0.0###E0");
-        assertEquals("1.23E1", format.format(12.3));
-        assertEquals(12.3f, format.parse("1.23E1").floatValue());
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {Object.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test.",
+            method = "format",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test.",
+            method = "parse",
+            args = {java.lang.String.class}
         )
     })
+    @AndroidOnly("special feature of icu4c")
     public void test_paddingPattern() throws Exception {
         format.applyPattern("*x##,##,#,##0.0#");
         assertEquals("xxxxxxxxx123.0", format.format(123));
         assertEquals(123, format.parse("xxxxxxxxx123.0").intValue());
+
+        format.applyPattern("$*x#,##0.00");
+        assertEquals("$xx123.00", format.format(123));
+        assertEquals("$1,234.00", format.format(1234));
 
         format.applyPattern("*\u00e7#0 o''clock");
         assertEquals("\u00e72 o'clock", format.format(2));
@@ -124,19 +139,21 @@ public class DecimalFormatTestICU extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {Object.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test.",
+            method = "format",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test.",
+            method = "parse",
+            args = {java.lang.String.class}
         )
     })
+    @AndroidOnly("special feature of icu4c")
     public void test_positiveExponentSign() throws Exception {
         format.applyPattern("0.###E+0");
         assertEquals("1E+2", format.format(100));
@@ -165,19 +182,21 @@ public class DecimalFormatTestICU extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies the grouping size.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {Object.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies the grouping size.",
+            method = "format",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies the grouping size.",
+            method = "parse",
+            args = {java.lang.String.class}
         )
     })
+    @AndroidOnly("special feature of icu4c")
     public void test_secondaryGroupingSize() throws Exception {
         format.applyPattern("#,##,###,####");
         assertEquals("123,456,7890", format.format(1234567890));
@@ -188,5 +207,12 @@ public class DecimalFormatTestICU extends TestCase {
         format.applyPattern("###,###,####");
         assertEquals("123,456,7890", format.format(1234567890));
         assertEquals(1234567890, format.parse("123,456,7890").intValue());
+
+        format.applyPattern("###,##,###.#");
+        assertEquals("12,34,567.8", format.format(1234567.8));
+        format.applyPattern("##,#,##,###.#");
+        assertEquals("12,34,567.8", format.format(1234567.8));
+        format.applyPattern("#,##,##,###.#");
+        assertEquals("12,34,567.8", format.format(1234567.8));
     }
 }

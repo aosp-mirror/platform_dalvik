@@ -17,15 +17,15 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.StringWriter;
+
+import tests.support.Support_ASimpleWriter;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(CharArrayWriter.class) 
 public class CharArrayWriterTest extends junit.framework.TestCase {
@@ -39,28 +39,32 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#CharArrayWriter(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IllegalArgumentException checking missed.",
-            targets = { @TestTarget(methodName = "CharArrayWriter", 
-                                    methodArgs = {int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "CharArrayWriter",
+        args = {int.class}
     )    
     public void test_ConstructorI() {
         // Test for method java.io.CharArrayWriter(int)
         cw = new CharArrayWriter(90);
-        assertEquals("Created incorrect writer", 0, cw.size());
+        assertEquals("Test 1: Incorrect writer created.", 0, cw.size());
+        
+        try {
+            cw = new CharArrayWriter(-1);
+            fail("IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.CharArrayWriter#CharArrayWriter()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies CharArrayWriter() method.",
-            targets = { @TestTarget(methodName = "CharArrayWriter", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies CharArrayWriter() method.",
+        method = "CharArrayWriter",
+        args = {}
     )       
     public void test_Constructor() {
         // Test for method java.io.CharArrayWriter()
@@ -71,12 +75,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#close()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies close() method.",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies close() method.",
+        method = "close",
+        args = {}
     )        
     public void test_close() {
         // Test for method void java.io.CharArrayWriter.close()
@@ -86,12 +89,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#flush()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies flush() method.",
-            targets = { @TestTarget(methodName = "flush", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies flush() method.",
+        method = "flush",
+        args = {}
     )    
     public void test_flush() {
         // Test for method void java.io.CharArrayWriter.flush()
@@ -101,12 +103,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#reset()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies reset() method.",
-            targets = { @TestTarget(methodName = "reset", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies reset() method.",
+        method = "reset",
+        args = {}
     )      
     public void test_reset() {
         // Test for method void java.io.CharArrayWriter.reset()
@@ -127,12 +128,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#size()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies size() method.",
-            targets = { @TestTarget(methodName = "size", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies size() method.",
+        method = "size",
+        args = {}
     )    
     public void test_size() {
         // Test for method int java.io.CharArrayWriter.size()
@@ -144,12 +144,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#toCharArray()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies toCharArray() method.",
-            targets = { @TestTarget(methodName = "toCharArray", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies toCharArray() method.",
+        method = "toCharArray",
+        args = {}
     )     
     public void test_toCharArray() {
         // Test for method char [] java.io.CharArrayWriter.toCharArray()
@@ -168,12 +167,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#toString()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies toString() method.",
-            targets = { @TestTarget(methodName = "toString", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies toString() method.",
+        method = "toString",
+        args = {}
     )       
     public void test_toString() {
         // Test for method java.lang.String java.io.CharArrayWriter.toString()
@@ -186,12 +184,10 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#write(char[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies write(char[] c, int off, int len) method.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {char[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "write",
+        args = {char[].class, int.class, int.class}
     )     
     public void test_write$CII() {
         // Test for method void java.io.CharArrayWriter.write(char [], int, int)
@@ -211,34 +207,52 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
      * @tests java.io.CharArrayWriter#write(char[], int, int)
      * Regression for HARMONY-387
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Regression for write(char[] c, int off, int len) method.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {char[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Illegal argument checks.",
+        method = "write",
+        args = {char[].class, int.class, int.class}
     )         
-    public void test_write$CII_2() {
-        CharArrayWriter obj = new CharArrayWriter();
+    public void test_write$CII_Exception() {
+        char[] target = new char[10];
+        cw = new CharArrayWriter();
         try {
-            obj.write(new char []{'0'}, 0, -1);
-            fail("IndexOutOfBoundsException expected");
+            cw.write(target, -1, 1);
+            fail("Test 1: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException t) {
-            assertEquals(
-                    "IndexOutOfBoundsException rather than a subclass expected",
+            assertEquals("IndexOutOfBoundsException rather than a subclass expected;",
                     IndexOutOfBoundsException.class, t.getClass());
+        }
+        try {
+            cw.write(target, 0, -1);
+            fail("Test 2: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException t) {
+            assertEquals("IndexOutOfBoundsException rather than a subclass expected;",
+                    IndexOutOfBoundsException.class, t.getClass());
+        }
+        try {
+            cw.write(target, 1, target.length);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException t) {
+            assertEquals("IndexOutOfBoundsException rather than a subclass expected;",
+                    IndexOutOfBoundsException.class, t.getClass());
+        }
+        try {
+            cw.write((char[]) null, 1, 1);
+            fail("Test 4: NullPointerException expected.");
+        } catch (NullPointerException t) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.CharArrayWriter#write(int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies write(int) method.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies write(int) method.",
+        method = "write",
+        args = {int.class}
     )    
     public void test_writeI() {
         // Test for method void java.io.CharArrayWriter.write(int)
@@ -254,13 +268,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#write(java.lang.String, int, int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies write(java.lang.String, int, int) method. " +
-                    "[Need to check different strings?]",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {java.lang.String.class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies write(java.lang.String, int, int) method. [Need to check different strings?]",
+        method = "write",
+        args = {java.lang.String.class, int.class, int.class}
     )     
     public void test_writeLjava_lang_StringII() {
         // Test for method void java.io.CharArrayWriter.write(java.lang.String,
@@ -281,12 +293,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
      * @tests java.io.CharArrayWriter#write(java.lang.String, int, int)
      * Regression for HARMONY-387
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Regression for write(java.lang.String, int, int) method.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {java.lang.String.class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Regression for write(java.lang.String, int, int) method.",
+        method = "write",
+        args = {java.lang.String.class, int.class, int.class}
     )         
     public void test_writeLjava_lang_StringII_2() throws StringIndexOutOfBoundsException {
         CharArrayWriter obj = new CharArrayWriter();
@@ -300,23 +311,28 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#writeTo(java.io.Writer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeTo", 
-                                    methodArgs = {java.io.Writer.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "writeTo",
+        args = {java.io.Writer.class}
     )         
     public void test_writeToLjava_io_Writer() {
-        // Test for method void java.io.CharArrayWriter.writeTo(java.io.Writer)
+        Support_ASimpleWriter ssw = new Support_ASimpleWriter(true);
         cw.write("HelloWorld", 0, 10);
         StringWriter sw = new StringWriter();
         try {
             cw.writeTo(sw);
-            assertEquals("Writer failed to write correct chars",
+            assertEquals("Test 1: Writer failed to write correct chars;",
                          "HelloWorld", sw.toString());
         } catch (IOException e) {
             fail("Exception during writeTo test : " + e.getMessage());
+        }
+        
+        try {
+            cw.writeTo(ssw);
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
@@ -341,12 +357,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#append(char)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies append(char c) method.",
-            targets = { @TestTarget(methodName = "append", 
-                                    methodArgs = {char.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies append(char c) method.",
+        method = "append",
+        args = {char.class}
     )      
     public void test_appendChar() throws IOException {
         char testChar = ' ';
@@ -360,12 +375,11 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#append(CharSequence)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies append(CharSequence csq) method.",
-            targets = { @TestTarget(methodName = "append", 
-                                    methodArgs = {java.lang.CharSequence.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies append(CharSequence csq) method.",
+        method = "append",
+        args = {java.lang.CharSequence.class}
     )      
     public void test_appendCharSequence() {
 
@@ -380,21 +394,46 @@ public class CharArrayWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayWriter#append(CharSequence, int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IndexOutOfBoundsException checking missed.",
-            targets = { @TestTarget(methodName = "append", 
-                                    methodArgs = {java.lang.CharSequence.class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "append",
+        args = {java.lang.CharSequence.class, int.class, int.class}
     )    
-    public void test_appendCharSequenceIntInt() {
+    public void test_appendLjava_langCharSequenceII() {
         String testString = "My Test String";
         CharArrayWriter writer = new CharArrayWriter(10);
+        
+        // Illegal argument checks.
+        try {
+            writer.append(testString, -1, 0);
+            fail("Test 1: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        try {
+            writer.append(testString, 0, -1);
+            fail("Test 2: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        try {
+            writer.append(testString, 1, 0);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        try {
+            writer.append(testString, 1, testString.length() + 1);
+            fail("Test 4: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
         writer.append(testString, 1, 3);
         writer.flush();
-        assertEquals(testString.substring(1, 3), writer.toString());
+        assertEquals("Test 5: Appending failed;", 
+                testString.substring(1, 3), writer.toString());
         writer.close();
-
     }
 
 }

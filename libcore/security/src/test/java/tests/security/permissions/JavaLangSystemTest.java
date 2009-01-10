@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,10 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -29,11 +30,11 @@ import java.security.Permission;
 import java.util.Properties;
 import java.util.PropertyPermission;
 /*
- * This class tests the secrity permissions which are documented in
+ * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.lang.System
  */
-@TestTargetClass(java.lang.SecurityManager.class)
+@TestTargetClass(java.lang.System.class)
 public class JavaLangSystemTest extends TestCase {
     
     SecurityManager old;
@@ -49,14 +50,19 @@ public class JavaLangSystemTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getProperties calls checkPropertiesAccess " +
-            "method of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPropertiesAccess",
-          methodArgs = {}
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that getProperties and setProperties call checkPropertiesAccess on security manager.",
+            method = "getProperties",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that getProperties and setProperties call checkPropertiesAccess on security manager.",
+            method = "setProperties",
+            args = {java.util.Properties.class}
         )
     })
     public void test_Properties() {
@@ -85,14 +91,19 @@ public class JavaLangSystemTest extends TestCase {
         System.setProperties(props);
         assertTrue("System.setProperties must call checkPropertiesAccess on security manager", s.called);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that System.getProperty calls checkPropertyAccess on " +
-            "security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPropertyAccess",
-          methodArgs = {java.lang.String.class}
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that System.getProperty calls checkPropertyAccess on security manager.",
+            method = "getProperty",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that System.getProperty calls checkPropertyAccess on security manager.",
+            method = "getProperty",
+            args = {java.lang.String.class, java.lang.String.class}
         )
     })
     public void test_getProperty() {
@@ -126,16 +137,13 @@ public class JavaLangSystemTest extends TestCase {
         assertTrue("System.getProperty must call checkPropertyAccess on security manager", s.called);
         assertEquals("Argument of checkPropertyAccess is not correct", "key", s.key);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that System.setProperty method calls " +
-            "checkPermission of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that System.setProperty method calls checkPermission of security manager.",
+        method = "setProperty",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_setProperty() {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -162,16 +170,13 @@ public class JavaLangSystemTest extends TestCase {
         assertTrue("System.setProperty must call checkPermission on security manager", s.called);
         assertEquals("Argument of checkPermission is not correct", new PropertyPermission("key", "write"), s.p);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that System.setSecurityManager method checks " +
-            "security permissions.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that System.setSecurityManager method checks security permissions.",
+        method = "setSecurityManager",
+        args = {java.lang.SecurityManager.class}
+    )
     public void test_setSecurityManager() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;
@@ -190,16 +195,32 @@ public class JavaLangSystemTest extends TestCase {
         System.setSecurityManager(s);
         assertTrue("System.setSecurityManager must check security permissions", s.called);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that setIn/Out/Err methods call checkPermission " +
-            "method of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that setIn/Out/Err methods call checkPermission method of security manager., needs a fix in class System, see ticket #67",
+            method = "setIn",
+            args = {java.io.InputStream.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that setIn/Out/Err methods call checkPermission " +
+                    "method of security manager., needs a fix in class System, " +
+                    "see ticket #67",
+            method = "setOut",
+            args = {java.io.PrintStream.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that setIn/Out/Err methods call checkPermission " +
+                    "method of security manager., needs a fix in class System, " +
+                    "see ticket #67",
+            method = "setErr",
+            args = {java.io.PrintStream.class}
         )
     })
+    @KnownFailure("ToT fixed.")
     public void test_setInOutErr() {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -238,6 +259,138 @@ public class JavaLangSystemTest extends TestCase {
         System.setErr(out);
         assertTrue("System.setErr(PrintStream) must call checkPermission on security manager", s.called);
         assertEquals("Argument of checkPermission is not correct", p, s.p);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that exit calls checkExit on security manager.",
+        method = "exit",
+        args = {int.class}
+    )
+    public void test_exit() {
+        class ExitNotAllowedException extends RuntimeException {}
+        class TestSecurityManager extends SecurityManager {
+            boolean called;
+            int status;
+            void reset(){
+                called = false;
+                status = -1;
+            }
+            @Override
+            public void checkExit(int status){
+                this.called = true;
+                this.status = status;
+                throw new ExitNotAllowedException(); // prevent that the system is shut down
+            }
+        }
+        
+        TestSecurityManager s = new TestSecurityManager();
+        System.setSecurityManager(s);
+
+        s.reset();
+        try {
+            System.exit(11);
+            fail("Runtime.exit must call checkExit on security manager with a RuntimePermission");
+        }
+        catch(ExitNotAllowedException e){
+             // expected exception
+        }
+        assertTrue("Runtime.exit must call checkExit on security manager with a RuntimePermission", s.called);
+        assertEquals("Argument of checkExit is not correct", 11, s.status);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that runFinalizersOnExit calls checkExit on security manager., implementation of Runtime.runFinalizersOnExit needs to be fixed, see ticket 57",
+        method = "runFinalizersOnExit",
+        args = {boolean.class}
+    )
+    @KnownFailure("ToT fixed.")
+    public void test_runFinalizersOnExit() {
+        class TestSecurityManager extends SecurityManager {
+            boolean called;
+            int status;
+            void reset(){
+                called = false;
+                status = -1;
+            }
+            @Override
+            public void checkExit(int status){
+                this.called = true;
+                this.status = status;
+                super.checkExit(status);
+            }
+        }
+        
+        TestSecurityManager s = new TestSecurityManager();
+        System.setSecurityManager(s);
+
+        s.reset();
+        System.runFinalizersOnExit(true);
+        assertTrue("System.runFinalizersOnExit(true) must call checkExit on security manager", s.called);
+        assertEquals("Argument of checkExit is not correct", 0, s.status);
+
+        s.reset();
+        System.runFinalizersOnExit(false);
+        assertTrue("System.runFinalizersOnExit(false) must call checkExit on security manager", s.called);
+        assertEquals("Argument of checkExit is not correct", 0, s.status);
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that methods load and loadLibrary call checkLink on security manager., loadlibrary needs to be fixed, see ticket #58",
+            method = "load",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that methods load and loadLibrary call checkLink on security manager., loadlibrary needs to be fixed, see ticket #58",
+            method = "loadLibrary",
+            args = {java.lang.String.class}
+        )
+    })
+    @KnownFailure("ToT fixed.") 
+    public void test_load() {
+        final String library = "library";
+        
+        class CheckLinkCalledException extends RuntimeException {}
+        
+        class TestSecurityManager extends SecurityManager {
+            @Override
+            public void checkLink(String lib){
+                if(library.equals(lib)){
+                    throw new CheckLinkCalledException();
+                }
+                super.checkLink(lib);
+            }
+        }
+        
+        TestSecurityManager s = new TestSecurityManager();
+        System.setSecurityManager(s);
+
+        try {
+            System.load(library);
+            fail("System.load must call checkLink on security manager with argument "+library);
+        }
+        catch(CheckLinkCalledException e){
+            // ok
+        }
+        catch(Throwable t){
+            fail("System.load must call checkLink on security manager with argument "+library);
+        }
+        
+        try {
+            System.loadLibrary(library);
+            fail("System.load must call checkLink on security manager with argument "+library);
+        }
+        catch(CheckLinkCalledException e){
+            // ok
+        }
+        catch(Throwable t){
+            fail("System.load must call checkLink on security manager with argument "+library);
+        }
+        
     }
 }
 

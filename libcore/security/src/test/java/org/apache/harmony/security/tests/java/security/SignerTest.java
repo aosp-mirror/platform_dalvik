@@ -23,11 +23,13 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.security.IdentityScope;
+import java.security.InvalidParameterException;
+import java.security.KeyManagementException;
 import java.security.KeyPair;
 import java.security.Permission;
 import java.security.Permissions;
@@ -71,15 +73,12 @@ public class SignerTest extends TestCase {
     /**
      * @tests java.security.Signer#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() throws Exception {
         Signer s1 = new SignerStub("testToString1");
         assertEquals("[Signer]testToString1", s1.toString());
@@ -98,15 +97,12 @@ public class SignerTest extends TestCase {
     /**
      * verify Signer() creates instance
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Signer",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Signer",
+        args = {}
+    )
     public void testSigner() {
         Signer s = new SignerStub();
         assertNotNull(s);
@@ -117,55 +113,62 @@ public class SignerTest extends TestCase {
     /**
      * verify Signer(String) creates instance
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with null/empty parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "Signer",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Signer",
+        args = {java.lang.String.class}
+    )
     public void testSignerString() throws Exception {
         Signer s = new SignerStub("sss3");
         assertNotNull(s);
         assertEquals("sss3", s.getName());      
         assertNull(s.getPrivateKey());
+        
+        Signer s2 = new SignerStub(null);
+        assertNull(s2.getName());
+        
     }
 
     /**
      * verify  Signer(String, IdentityScope) creates instance
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "1. Verification with null/empty parameter missed. " +
-                  "2. KeyManagementException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "Signer",
-          methodArgs = {String.class, IdentityScope.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Signer",
+        args = {java.lang.String.class, java.security.IdentityScope.class}
+    )
     public void testSignerStringIdentityScope() throws Exception {
         Signer s = new SignerStub("sss4", IdentityScope.getSystemScope());
         assertNotNull(s);
         assertEquals("sss4", s.getName());
         assertSame(IdentityScope.getSystemScope(), s.getScope());
         assertNull(s.getPrivateKey());
+        
+        try {
+            Signer s2 = new SignerStub("sss4", IdentityScope.getSystemScope());
+            fail("expected KeyManagementException not thrown");
+        } catch (KeyManagementException e)
+        {
+            // ok
+        }
+        
+        Signer s2 = new SignerStub(null);
+        assertNull(s2.getName());
+        
+        
     }
 
     /**
      * verify Signer.getPrivateKey() returns null or private key
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrivateKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getPrivateKey",
+        args = {}
+    )
     public void testGetPrivateKey() throws Exception {
         byte [] privateKeyData = { 1, 2, 3, 4, 5};  
         PrivateKeyStub privateKey = new PrivateKeyStub("private", "fff", privateKeyData);
@@ -183,15 +186,12 @@ public class SignerTest extends TestCase {
     /**
      * verify Signer.getPrivateKey() throws SecurityException if permission is denied
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrivateKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getPrivateKey",
+        args = {}
+    )
     public void testGetPrivateKey_denied() throws Exception {
         MySecurityManager sm = new MySecurityManager();
         sm.denied.add(new SecurityPermission("getSignerPrivateKey"));
@@ -212,15 +212,12 @@ public class SignerTest extends TestCase {
     /**
      * @tests java.security.Signer#setKeyPair(java.security.KeyPair) 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidParameterException, KeyException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "setKeyPair",
-          methodArgs = {KeyPair.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "KeyException checking missed",
+        method = "setKeyPair",
+        args = {java.security.KeyPair.class}
+    )
     public void test_setKeyPairLjava_security_KeyPair() throws Exception {
         
         // Regression for HARMONY-2408
@@ -246,7 +243,18 @@ public class SignerTest extends TestCase {
             }
         } finally {
             System.setSecurityManager(oldSm);
-        }        
+        }
+        
+        
+        try {
+            KeyPair kp = new KeyPair(null, null);
+            SignerStub s = new SignerStub("name");
+            s.setKeyPair(kp);
+        } catch (InvalidParameterException e) {
+            // ok
+        }
+        
+        
     }
 
 }

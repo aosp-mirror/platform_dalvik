@@ -26,7 +26,7 @@ import java.nio.charset.Charset;
 /**
  * test gb18030 decoder
  */
-public class GBCharsetDecoderTest extends CharsetDecoderTest {
+public class GBCharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
     protected void setUp() throws Exception {
         cs = Charset.forName("gb18030");

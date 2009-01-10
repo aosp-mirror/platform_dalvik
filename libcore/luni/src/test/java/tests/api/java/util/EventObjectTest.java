@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -34,33 +34,30 @@ public class EventObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.util.EventObject#EventObject(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test. SetUp method doesn't verify " +
-            "IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "EventObject",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "See setUp method.",
+        method = "EventObject",
+        args = {java.lang.Object.class}
+    )
     public void test_ConstructorLjava_lang_Object() {
-        // Test for method java.util.EventObject(java.lang.Object)
-        assertTrue("Used to test", true);
+        try {
+            new EventObject(null);
+            fail ("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.EventObject#getSource()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSource",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSource",
+        args = {}
+    )
     public void test_getSource() {
         // Test for method java.lang.Object java.util.EventObject.getSource()
         assertTrue("Wrong source returned",
@@ -70,15 +67,12 @@ public class EventObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.util.EventObject#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.util.EventObject.toString()
         assertTrue("Incorrect toString returned: " + myEventObject.toString(),

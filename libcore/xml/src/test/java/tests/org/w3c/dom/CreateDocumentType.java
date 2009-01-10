@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.util.ArrayList;
@@ -86,15 +86,12 @@ public final class CreateDocumentType extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocumentType",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocumentType",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateDocumentType1() throws Throwable {
         String publicId = "STAFF";
         String systemId = "staff.xml";
@@ -115,15 +112,12 @@ public final class CreateDocumentType extends DOMTestCase {
             assertTrue("throw_NAMESPACE_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocumentType",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocumentType",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateDocumentType2() throws Throwable {
         String publicId = "http://www.localhost.com/";
         String systemId = "myDoc.dtd";
@@ -177,15 +171,12 @@ public final class CreateDocumentType extends DOMTestCase {
             }
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocumentType",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocumentType",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateDocumentType3() throws Throwable {
         
         String qualifiedName = "prefix:myDoc";
@@ -205,15 +196,12 @@ public final class CreateDocumentType extends DOMTestCase {
         nodeValue = newType.getNodeValue();
         assertNull("nodeValue", nodeValue);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocumentType",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocumentType",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateDocumentType4() throws Throwable {
         String publicId = "http://www.example.com/";
         String systemId = "myDoc.dtd";

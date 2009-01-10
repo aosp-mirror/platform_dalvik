@@ -17,9 +17,9 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -32,15 +32,12 @@ public class AnnotationTest extends TestCase {
     /**
      * @tests java.text.Annotation(Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Annotation",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Annotation",
+        args = {java.lang.Object.class}
+    )
     public void testAnnotation() {
         assertNotNull(new Annotation(null));
         assertNotNull(new Annotation("value"));
@@ -49,15 +46,12 @@ public class AnnotationTest extends TestCase {
     /**
      * @tests java.text.Annotation.getValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getValue",
+        args = {}
+    )
     public void testGetValue() {
         Annotation a = new Annotation(null);
         assertNull(a.getValue());
@@ -68,15 +62,12 @@ public class AnnotationTest extends TestCase {
     /**
      * @tests java.text.Annotation.toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         Annotation ant = new Annotation("HelloWorld");
         assertEquals("toString error.",

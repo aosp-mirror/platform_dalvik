@@ -16,31 +16,31 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.NotActiveException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.io.SerializablePermission;
 import java.io.StreamCorruptedException;
 import java.security.Permission;
 
+import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
+
 /*
- * This class tests the secrity permissions which are documented in
+ * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
- * for classes
- *    java.io.ObjectInputStream
- *    java.io.ObjectOutputStream
+ * for class java.io.ObjectInputStream
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(java.io.ObjectInputStream.class)
 public class JavaIoObjectInputStreamTest extends TestCase {
     
     SecurityManager old;
@@ -57,16 +57,20 @@ public class JavaIoObjectInputStreamTest extends TestCase {
         super.tearDown();
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that ObjectInputStream.enableResolveObject method " +
-            "calls checkPermission of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    // needed for serialization
+    private static class Node implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        public Node(){}
+    }
+
+   
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that ObjectInputStream.enableResolveObject method calls checkPermission on security manager.",
+        method = "enableResolveObject",
+        args = {boolean.class}
+    )
     public void test_ObjectInputStream() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -85,7 +89,8 @@ public class JavaIoObjectInputStreamTest extends TestCase {
             }
         }
         
-        // TestObjectInputStream is necessary in order to call enableResolveObject
+        // TestObjectInputStream is necessary in order to call protected
+        // method enableResolveObject
         class TestObjectInputStream extends ObjectInputStream  {
             TestObjectInputStream(InputStream s) throws StreamCorruptedException, IOException {
                 super(s);
@@ -99,8 +104,14 @@ public class JavaIoObjectInputStreamTest extends TestCase {
         long id = new java.util.Date().getTime();
         String filename  = "SecurityPermissionsTest_"+id;
         File f = File.createTempFile(filename, null);
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f));
+        oos.writeObject(new Node());
+        oos.flush();
+        oos.close();
         f.deleteOnExit();
+        
 
+        
         TestObjectInputStream ois = new TestObjectInputStream(new FileInputStream(f));
 
         TestSecurityManager s = new TestSecurityManager();
@@ -112,17 +123,15 @@ public class JavaIoObjectInputStreamTest extends TestCase {
         assertEquals("Name of SerializablePermission is not correct", "enableSubstitution", s.permission.getName());
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that ObjectInputStream constructor calls " +
-            "checkPermission method of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
+    @TestTargets({
+        @TestTargetNew(
+                level = TestLevel.PARTIAL_COMPLETE,
+                notes = "Verifies that the ObjectInputStream constructor calls checkPermission on security manager.",
+                method = "ObjectInputStream",
+                args = {InputStream.class}
         )
     })
-    public void test_ObjectInputOutputStream() throws IOException {
+    public void test_ObjectInputStream2() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called;
             Permission permission;
@@ -140,12 +149,7 @@ public class JavaIoObjectInputStreamTest extends TestCase {
             }
         }
         
-        // Beginning with J2SE 1.4.0, ObjectOutputStream's public one-argument constructor
-        // requires the "enableSubclassImplementation" SerializablePermission when invoked
-        // (either directly or indirectly) by a subclass which overrides 
-        // ObjectOutputStream.putFields or ObjectOutputStream.writeUnshared.
-        //
-        // Also beginning with J2SE 1.4.0, ObjectInputStream's public one-argument 
+        // Beginning with J2SE 1.4.0, ObjectInputStream's public one-argument 
         // constructor requires the "enableSubclassImplementation" SerializablePermission 
         // when invoked (either directly or indirectly) by a subclass which overrides 
         // ObjectInputStream.readFields or ObjectInputStream.readUnshared.
@@ -174,13 +178,18 @@ public class JavaIoObjectInputStreamTest extends TestCase {
             @Override
             public Object readUnshared() throws IOException, ClassNotFoundException {
                 return super.readUnshared();
-            }
+            }   
         }
+        
         
         
         long id = new java.util.Date().getTime();
         String filename  = "SecurityPermissionsTest_"+id;
         File f = File.createTempFile(filename, null);
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f));
+        oos.writeObject(new Node());
+        oos.flush();
+        oos.close();
         f.deleteOnExit();
         
         TestSecurityManager s = new TestSecurityManager();

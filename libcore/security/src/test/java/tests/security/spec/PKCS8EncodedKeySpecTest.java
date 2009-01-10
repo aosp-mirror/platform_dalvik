@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -57,36 +57,36 @@ public class PKCS8EncodedKeySpecTest extends TestCase {
      * Assertion: constructs new <code>PKCS8EncodedKeySpec</code>
      * object using valid parameter
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null parameter checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PKCS8EncodedKeySpec",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PKCS8EncodedKeySpec",
+        args = {byte[].class}
+    )
     public final void testPKCS8EncodedKeySpec() {
         byte[] encodedKey = new byte[] {(byte)1,(byte)2,(byte)3,(byte)4};
         
         EncodedKeySpec eks = new PKCS8EncodedKeySpec(encodedKey);
         
         assertTrue(eks instanceof PKCS8EncodedKeySpec);
+        try {
+            eks = new PKCS8EncodedKeySpec(null);
+            fail("expected NullPointerException");
+        } catch (NullPointerException e) {
+            // ok
+        }
     }
 
     /**
      * Test for <code>getEncoded()</code> method<br>
      * Assertion: returns encoded key
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getEncoded",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getEncoded",
+        args = {}
+    )
     public final void testGetEncoded() {
         byte[] encodedKey = new byte[] {(byte)1,(byte)2,(byte)3,(byte)4};
         
@@ -101,15 +101,12 @@ public class PKCS8EncodedKeySpecTest extends TestCase {
      * Test for <code>getFormat()</code> method
      * Assertion: returns format name (always "PKCS#8")
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFormat",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFormat",
+        args = {}
+    )
     public final void testGetFormat() {
         byte[] encodedKey = new byte[] {(byte)1,(byte)2,(byte)3,(byte)4};
         
@@ -123,21 +120,12 @@ public class PKCS8EncodedKeySpecTest extends TestCase {
      * can not be changed by modifying initial
      * array value
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that internal state of the object " + 
-            "can not be changed by modifying initial " + 
-            "array value.",
-      targets = {
-        @TestTarget(
-          methodName = "PKCS8EncodedKeySpec",
-          methodArgs = {byte[].class}
-        ),
-        @TestTarget(
-          methodName = "getEncoded",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getEncoded",
+        args = {}
+    )
     public final void testIsStatePreserved1() {
         // Reference array
         byte[] encodedKey = new byte[] {(byte)1,(byte)2,(byte)3,(byte)4};
@@ -162,21 +150,12 @@ public class PKCS8EncodedKeySpecTest extends TestCase {
      * can not be modified using returned value
      * of <code>getEncoded()</code> method 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that internal state of the object " + 
-            "can not be modified using returned value " + 
-            "of getEncoded() method.",
-      targets = {
-        @TestTarget(
-          methodName = "PKCS8EncodedKeySpec",
-          methodArgs = {byte[].class}
-        ),
-        @TestTarget(
-          methodName = "getEncoded",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getEncoded",
+        args = {}
+    )
     public final void testIsStatePreserved2() {
         // Reference array
         byte[] encodedKey = new byte[] {(byte)1,(byte)2,(byte)3,(byte)4};

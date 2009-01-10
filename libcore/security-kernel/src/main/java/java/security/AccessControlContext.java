@@ -228,9 +228,12 @@ public final class AccessControlContext {
                     .matchSubset(that.context, context))) {
                 return false;
             }
-            // 'combiner' is not taken into account - see the test 
-            // AccessControllerTest.testEqualsObject_01
-            return true;
+            // BEGIN android-changed
+            if(combiner != null) {
+                return combiner.equals(that.combiner);
+            }
+            return that.combiner == null;
+            // END android-changed
         }
         return false;
     }

@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.NamedNodeMap;
@@ -86,15 +86,12 @@ public final class NamedNodeMapSetNamedItemNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
     public void testSetNamedItemNS1() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -116,15 +113,12 @@ public final class NamedNodeMapSetNamedItemNS extends DOMTestCase {
         attrName = attribute.getNodeName();
         assertEquals("namednodemapsetnameditemns01", "streets", attrName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
     public void testSetNamedItemNS2() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -144,16 +138,12 @@ public final class NamedNodeMapSetNamedItemNS extends DOMTestCase {
         attrName = attribute.getNodeName();
         assertEquals("namednodemapsetnameditemns02", "L1:att", attrName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that setNamedItemNS throws DOMException with " +
-            "WRONG_DOCUMENT_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that setNamedItemNS throws DOMException with WRONG_DOCUMENT_ERR code.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
     public void testSetNamedItemNS3() throws Throwable {
 
         Document doc;
@@ -189,16 +179,12 @@ public final class NamedNodeMapSetNamedItemNS extends DOMTestCase {
             assertTrue("throw_WRONG_DOCUMENT_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that setNamedItemNS throws DOMException with " +
-            "WRONG_DOCUMENT_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that setNamedItemNS throws DOMException with WRONG_DOCUMENT_ERR code.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
     public void testSetNamedItemNS4() throws Throwable {
         Document doc;
         DOMImplementation domImpl;
@@ -269,16 +255,12 @@ public final class NamedNodeMapSetNamedItemNS extends DOMTestCase {
 //            assertTrue("throw_NO_MODIFICATION_ALLOWED_ERR_notations", success);
 //        }
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that setNamedItemNS throws DOMException with " +
-            "INUSE_ATTRIBUTE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that setNamedItemNS throws DOMException with INUSE_ATTRIBUTE_ERR code.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
     public void testSetNamedItemNS6() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -305,16 +287,12 @@ public final class NamedNodeMapSetNamedItemNS extends DOMTestCase {
             assertTrue("namednodemapsetnameditemns06", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that setNamedItemNS throws DOMException with " +
-            "INUSE_ATTRIBUTE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that setNamedItemNS throws DOMException with INUSE_ATTRIBUTE_ERR code.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
     public void testSetNamedItemNS7() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -341,16 +319,12 @@ public final class NamedNodeMapSetNamedItemNS extends DOMTestCase {
             assertTrue("namednodemapsetnameditemns07", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that setNamedItemNS throws DOMException with " +
-            "INUSE_ATTRIBUTE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that setNamedItemNS throws DOMException with INUSE_ATTRIBUTE_ERR code.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
     public void testSetNamedItemNS8() throws Throwable {
         Document doc;
         NamedNodeMap attributes;

@@ -181,7 +181,7 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
      *            the number of characters from {@code str} to write.
      * @throws IOException
      *             if this writer is closed or another I/O error occurs.
-     * @throws StringIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code count < 0}, or if {@code
      *             offset + count} is greater than the length of {@code str}.
      * @since Android 1.0
@@ -254,7 +254,7 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
      * @return this writer.
      * @throws IOException
      *             if this writer is closed or another I/O error occurs.
-     * @throws StringIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code start > end}, {@code start < 0}, {@code end < 0} or
      *             either {@code start} or {@code end} are greater or equal than
      *             the length of {@code csq}.

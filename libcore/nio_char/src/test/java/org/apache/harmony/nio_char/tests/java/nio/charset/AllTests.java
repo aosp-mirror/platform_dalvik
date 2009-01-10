@@ -26,7 +26,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
                 "Test for org.apache.harmony.nio_char.tests.java.nio.charset");
         //$JUnit-BEGIN$
         suite.addTestSuite(ASCIICharsetEncoderTest.class);

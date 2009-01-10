@@ -16,31 +16,28 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
 import java.io.File;
+
+import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
 @TestTargetClass(File.class)
 public class FileTest extends TestCase {
 
     /**
      * @tests java.io.File#File(java.io.File, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "File",
-          methodArgs = {java.io.File.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "File",
+        args = {java.io.File.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_io_FileLjava_lang_String() {
         // Regression test for HARMONY-21
         File path = new File("/dir/file");
@@ -51,8 +48,12 @@ public class FileTest extends TestCase {
         assertTrue("Assert 1.1: path not absolute ", new File("\\\\\\a\b").isAbsolute());
         
         // Test data used in a few places below
-        String dirName = System.getProperty("user.dir");
+        String dirName = System.getProperty("java.io.tmpdir");
         String fileName = "input.tst";
+
+        // change user.dir to a folder that's writeable on android.
+        String oldUserDir = System.getProperty("user.dir");
+        System.setProperty("user.dir", dirName);
 
         // Check filename is preserved correctly
         File d = new File(dirName);
@@ -74,27 +75,27 @@ public class FileTest extends TestCase {
         }
 
         f = new File((File) null, fileName);
-        assertTrue("Assert 4: Created incorrect file " + f.getPath(), f
-                .getAbsolutePath().equals(dirName));
-        
+        assertEquals("Assert 4: Created incorrect file " + f.getPath(), dirName,
+                f.getAbsolutePath());
+
         // Regression for HARMONY-46
         File f1 = new File("a");
         File f2 = new File("a/");
         assertEquals("Assert 5: Trailing slash file name is incorrect", f1, f2);
+
+        // reset user.dir
+        System.setProperty("user.dir", oldUserDir);
     }
     
     /**
      * @tests java.io.File#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         // Regression for HARMONY-53
         String mixedFname = "SoMe FiLeNaMe";
@@ -111,15 +112,12 @@ public class FileTest extends TestCase {
     /**
      * @tests java.io.File#getPath()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPath",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPath",
+        args = {}
+    )
     public void test_getPath() {
         // Regression for HARMONY-444
         File file;
@@ -135,15 +133,12 @@ public class FileTest extends TestCase {
     /**
      * @tests java.io.File#getPath()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPath",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPath",
+        args = {}
+    )
     public void test_getPath_With_Empty_FileName() {
         // Regression for HARMONY-829
         String f1ParentName = "01";
@@ -156,7 +151,7 @@ public class FileTest extends TestCase {
         assertEquals(-1, f2.compareTo(f1));
         assertEquals(1, f1.compareTo(f2));
 
-        File parent = new File(System.getProperty("user.dir"));
+        File parent = new File(System.getProperty("java.io.tmpdir"));
         File f3 = new File(parent, "");
 
         assertEquals(parent.getPath(), f3.getPath());
@@ -167,15 +162,12 @@ public class FileTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Verifies self serialization/deserialization.",
-              targets = {
-                @TestTarget(
-                  methodName = "!SerializationSelf",
-                  methodArgs = {}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies self serialization/deserialization.",
+        method = "!SerializationSelf",
+        args = {}
+    )    
     public void test_serialization_self() throws Exception {
         File testFile = new File("test.ser");
         SerializationTest.verifySelf(testFile);
@@ -184,15 +176,12 @@ public class FileTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization/deserialization compatibility.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization/deserialization compatibility.",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void test_serialization_compatibility() throws Exception {
         File file = new File("FileTest.golden.ser");
         SerializationTest.verifyGolden(this, file);

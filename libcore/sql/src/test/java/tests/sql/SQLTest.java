@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,19 +18,15 @@ package tests.sql;
 
 import dalvik.annotation.TestTargetClass;
 
+import junit.framework.TestCase;
+
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import tests.support.Support_SQL;
-
-import junit.extensions.TestSetup;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 @TestTargetClass(Statement.class)
 public class SQLTest extends TestCase {
@@ -41,14 +37,27 @@ public class SQLTest extends TestCase {
         createZoo();
     }
 
-    private final File dbFile = new File("sqliteTest2.db");
+    private File dbFile;
 
     protected void getSQLiteConnection() {
+        String tmp = System.getProperty("java.io.tmpdir");
+        assertEquals(tmp,System.getProperty("java.io.tmpdir"));
+        File ctsDir = new File(tmp);
         try {
+            if (ctsDir.isDirectory()) {
+                dbFile = File.createTempFile("sqliteTest", ".db", ctsDir);
+                dbFile.deleteOnExit();
+            } else {
+                System.err.println("ctsdir does not exist");
+            }
+            
             Class.forName("SQLite.JDBCDriver").newInstance();
-        if(dbFile.exists()) dbFile.delete();
             conn = DriverManager.getConnection("jdbc:sqlite:/"
-                    + dbFile.getName());
+                    + dbFile.getPath());
+            assertNotNull("Connection created ",conn);
+
+        } catch (IOException e) {
+            System.out.println("Problem creating file " + tmp);
         } catch (Exception e) {
             fail("Exception: " + e.toString());
         }
@@ -57,15 +66,18 @@ public class SQLTest extends TestCase {
     public void tearDown() {
     Statement st = null;
         try {
+            if (! conn.isClosed()) {
             st = conn.createStatement();
             st.execute("drop table if exists zoo");
-    
+            }
         } catch (SQLException e) {
             fail("Couldn't drop table: " + e.getMessage());
         } finally {
         try {
+            if (st != null) {
             st.close();
                 conn.close();
+            }
                 } catch(SQLException ee) {}
         }
     }

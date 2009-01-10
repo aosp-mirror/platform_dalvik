@@ -18,8 +18,8 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.security.InvalidParameterException;
@@ -39,15 +39,12 @@ public class Security2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Security#getProviders(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getProviders",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "NullPointerException checking missed",
+        method = "getProviders",
+        args = {java.lang.String.class}
+    )
     public void test_getProvidersLjava_lang_String() {
         // Test for method void
         // java.security.Security.getProviders(java.lang.String)
@@ -223,15 +220,12 @@ public class Security2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Security#getProviders(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getProviders",
-          methodArgs = {Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "NullPointerException checking missed",
+        method = "getProviders",
+        args = {java.util.Map.class}
+    )
     public void test_getProvidersLjava_util_Map() {
         // Test for method void
         // java.security.Security.getProviders(java.util.Map)
@@ -317,15 +311,12 @@ public class Security2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Security#removeProvider(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "removeProvider",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException checking missed",
+        method = "removeProvider",
+        args = {java.lang.String.class}
+    )
     public void test_removeProviderLjava_lang_String() {
         // Test for method void
         // java.security.Security.removeProvider(java.lang.String)

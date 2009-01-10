@@ -17,15 +17,25 @@
 
 package tests.api.java.lang.reflect;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import tests.support.Support_Field;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-
-import tests.support.Support_Field;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.HashSet;
+import java.util.Set;
 
 @TestTargetClass(Field.class) 
 public class FieldTest extends junit.framework.TestCase {
@@ -37,42 +47,93 @@ public class FieldTest extends junit.framework.TestCase {
     // JDK 1.5.
     // END android-note
     
+    public class TestClass {
+        @AnnotationRuntime0
+        @AnnotationRuntime1
+        @AnnotationClass0
+        @AnnotationSource0
+        public int annotatedField;
+        class Inner{}
+    }
+    
+    
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target( {ElementType.FIELD})
+    static @interface AnnotationRuntime0 {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target( { ElementType.FIELD})
+    static @interface AnnotationRuntime1 {
+    }
+
+    @Retention(RetentionPolicy.CLASS)
+    @Target( { ElementType.FIELD})
+    static @interface AnnotationClass0 {
+    }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @Target( {ElementType.FIELD})
+    static @interface AnnotationSource0 {
+    }
+    
+    @Inherited
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target( {ElementType.FIELD})
+    static @interface InheritedRuntime {
+    }
+    
+    public class GenericField<S, T extends Number> {
+        S field;
+        T boundedField;
+        int intField;
+    }
+    
+    
     static class TestField {
         public static int pubfield1;
-
-        protected static double doubleSField = Double.MAX_VALUE;
 
         private static int privfield1 = 123;
 
         protected int intField = Integer.MAX_VALUE;
+        protected final int intFField = Integer.MAX_VALUE;
+        protected static int intSField = Integer.MAX_VALUE;
+        private final int intPFField = Integer.MAX_VALUE;
 
         protected short shortField = Short.MAX_VALUE;
-
+        protected final short shortFField = Short.MAX_VALUE;
+        protected static short shortSField = Short.MAX_VALUE;
+        private final short shortPFField = Short.MAX_VALUE;
+        
         protected boolean booleanField = true;
+        protected static boolean booleanSField = true;
+        protected final boolean booleanFField = true;
+        private final boolean booleanPFField = true;
 
         protected byte byteField = Byte.MAX_VALUE;
+        protected static byte byteSField = Byte.MAX_VALUE;
+        protected final byte byteFField = Byte.MAX_VALUE;
+        private final byte bytePFField = Byte.MAX_VALUE;
 
         protected long longField = Long.MAX_VALUE;
+        protected final long longFField = Long.MAX_VALUE;
+        protected static long longSField = Long.MAX_VALUE;
+        private final long longPFField = Long.MAX_VALUE;
 
         protected double doubleField = Double.MAX_VALUE;
+        protected static double doubleSField = Double.MAX_VALUE;
+        protected static final double doubleSFField = Double.MAX_VALUE;
+        protected final double doubleFField = Double.MAX_VALUE;
+        private final double doublePFField = Double.MAX_VALUE; 
 
         protected float floatField = Float.MAX_VALUE;
+        protected final float floatFField = Float.MAX_VALUE;
+        protected static float floatSField = Float.MAX_VALUE;
+        private final float floatPFField = Float.MAX_VALUE;
 
         protected char charField = 'T';
-
-        protected final int intFField = Integer.MAX_VALUE;
-
-        protected final short shortFField = Short.MAX_VALUE;
-
-        protected final boolean booleanFField = true;
-
-        protected final byte byteFField = Byte.MAX_VALUE;
-
-        protected final long longFField = Long.MAX_VALUE;
-
-        protected final double doubleFField = Double.MAX_VALUE;
-
-        protected final float floatFField = Float.MAX_VALUE;
+        protected static char charSField = 'T';
+        private final char charPFField = 'T';
 
         protected final char charFField = 'T';
 
@@ -92,19 +153,21 @@ public class FieldTest extends junit.framework.TestCase {
     static class A {
         protected short shortField = Short.MAX_VALUE;
     }
+    
+    static enum TestEnum {
+        A, B, C;
+        int field;
+    }
 
     /**
      * @tests java.lang.reflect.Field#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.lang.reflect.Field.equals(java.lang.Object)
@@ -129,15 +192,12 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#get(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {java.lang.Object.class}
+    )
     public void test_getLjava_lang_Object() throws Throwable {
         // Test for method java.lang.Object
         // java.lang.reflect.Field.get(java.lang.Object)
@@ -155,12 +215,16 @@ public class FieldTest extends junit.framework.TestCase {
                 .doubleValue());
 
         // Try a get on a private field
+        boolean thrown = false;
         try {
             f = TestAccess.class.getDeclaredField("xxx");
             assertNotNull(f);
             f.get(null);
             fail("No expected IllegalAccessException");
-        } catch (IllegalAccessException ok) {}
+        } catch (IllegalAccessException ok) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
         
         // Try a get on a private field in nested member
         // temporarily commented because it breaks J9 VM
@@ -169,12 +233,37 @@ public class FieldTest extends junit.framework.TestCase {
         //assertEquals(x.privfield1, f.get(x));
 
         // Try a get using an invalid class.
+        thrown = false;
         try {
             f = x.getClass().getDeclaredField("doubleField");
             f.get(new String());
             fail("No expected IllegalArgumentException");
         } catch (IllegalArgumentException exc) {
             // Correct - Passed an Object that does not declare or inherit f
+            thrown = true;
+        }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        //Test NPE
+        thrown = false;
+        try {
+            f = TestField.class.getDeclaredField("intField");
+            f.get(null);
+            fail("Expected NullPointerException not thrown");
+        } catch (NullPointerException exc) {
+            // Correct - Passed an Object that does not declare or inherit f
+            thrown = true;
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        //Test no NPE on static fields
+        thrown = false;
+        try {
+            f = TestField.class.getDeclaredField("doubleSField");
+            f.get(null);
+            assertTrue("Exception thrown", true);
+        } catch (Exception exc) {
+            fail("No exception expected");
         }
     }
 
@@ -261,15 +350,18 @@ public class FieldTest extends junit.framework.TestCase {
                     f.set(o, value);
                 }
                 if (expectedException != null) {
-                    fail("expected exception " + expectedException.getName() + " for field " + f.getName() + ", value " + value);
+                    fail("expected exception " + expectedException.getName()
+                            + " for field " + f.getName() + ", value " + value);
                 }
             } catch (Exception e) {
                 if (expectedException == null) {
-                    fail("unexpected exception " + e + " for field " + f.getName() + ", value " + value);
+                    fail("unexpected exception " + e + " for field "
+                            + f.getName() + ", value " + value);
                 } else {
                     assertTrue("expected exception "
-                            + expectedException.getName() + " and got " + e + " for field " + f.getName() + ", value " + value, e
-                            .getClass().equals(expectedException));
+                            + expectedException.getName() + " and got " + e
+                            + " for field " + f.getName() + ", value " + value,
+                            e.getClass().equals(expectedException));
                 }
             }
         }
@@ -295,77 +387,108 @@ public class FieldTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.Field#setDouble(java.lang.Object, double)
      * @tests java.lang.reflect.Field#setChar(java.lang.Object, char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Stress test.",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.Object.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "get",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "getByte",
-          methodArgs = {java.lang.Object.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getByte",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "getBoolean",
-          methodArgs = {java.lang.Object.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getBoolean",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "getShort",
-          methodArgs = {java.lang.Object.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getShort",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "getInt",
-          methodArgs = {java.lang.Object.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getInt",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "getFloat",
-          methodArgs = {java.lang.Object.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getFloat",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "getDouble",
-          methodArgs = {java.lang.Object.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getDouble",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "getChar",
-          methodArgs = {java.lang.Object.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getChar",
+            args = {java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "set",
-          methodArgs = {java.lang.Object.class, java.lang.Object.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "set",
+            args = {java.lang.Object.class, java.lang.Object.class}
         ),
-        @TestTarget(
-          methodName = "setBoolean",
-          methodArgs = {java.lang.Object.class, boolean.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "setBoolean",
+            args = {java.lang.Object.class, boolean.class}
         ),
-        @TestTarget(
-          methodName = "setByte",
-          methodArgs = {java.lang.Object.class, byte.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "setByte",
+            args = {java.lang.Object.class, byte.class}
         ),
-        @TestTarget(
-          methodName = "setShort",
-          methodArgs = {java.lang.Object.class, short.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "setShort",
+            args = {java.lang.Object.class, short.class}
         ),
-        @TestTarget(
-          methodName = "setInt",
-          methodArgs = {java.lang.Object.class, int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "setInt",
+            args = {java.lang.Object.class, int.class}
         ),
-        @TestTarget(
-          methodName = "setLong",
-          methodArgs = {java.lang.Object.class, long.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "setLong",
+            args = {java.lang.Object.class, long.class}
         ),
-        @TestTarget(
-          methodName = "setFloat",
-          methodArgs = {java.lang.Object.class, float.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "setFloat",
+            args = {java.lang.Object.class, float.class}
         ),
-        @TestTarget(
-          methodName = "setDouble",
-          methodArgs = {java.lang.Object.class, double.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "setDouble",
+            args = {java.lang.Object.class, double.class}
         ),
-        @TestTarget(
-          methodName = "setChar",
-          methodArgs = {java.lang.Object.class, char.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "setChar",
+            args = {java.lang.Object.class, char.class}
         )
     })
     public void testProtectedFieldAccess() {
@@ -570,57 +693,83 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getBoolean(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getBoolean",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getBoolean",
+        args = {java.lang.Object.class}
+    )
     public void test_getBooleanLjava_lang_Object() {
-        // Test for method boolean
-        // java.lang.reflect.Field.getBoolean(java.lang.Object)
-
         TestField x = new TestField();
         Field f = null;
         boolean val = false;
         try {
             f = x.getClass().getDeclaredField("booleanField");
             val = f.getBoolean(x);
-
         } catch (Exception e) {
             fail("Exception during getBoolean test: " + e.toString());
         }
         assertTrue("Returned incorrect boolean field value", val);
+
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("doubleField");
-                f.getBoolean(x);
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since doubleField is not a
-                // boolean type
-                return;
-            }
-        } catch (Exception e) {
-            fail("Exception during getBoolean test: " + e.toString());
+            f = x.getClass().getDeclaredField("doubleField");
+            f.getBoolean(x);
+            fail("IllegalArgumentException expected but not thrown");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalArgumentException expected but not thrown");
         }
-        fail("Accessed field of invalid type");
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("booleanPFField");
+            f.getBoolean(x);
+            fail("IllegalAccessException expected but not thrown");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalAccessException expected but not thrown"
+                    + ex.getMessage());
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+        //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("booleanField");
+            f.getBoolean(null);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        //Test no NPE on static field
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("booleanSField");
+            boolean staticValue = f.getBoolean(null);
+            assertTrue("Wrong value returned", staticValue);
+        }  catch (Exception ex) {
+            fail("No exception expected");
+        }
     }
+    
 
     /**
      * @tests java.lang.reflect.Field#getByte(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getByte",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getByte",
+        args = {java.lang.Object.class}
+    )
     public void test_getByteLjava_lang_Object() {
         // Test for method byte
         // java.lang.reflect.Field.getByte(java.lang.Object)
@@ -634,33 +783,65 @@ public class FieldTest extends junit.framework.TestCase {
             fail("Exception during getbyte test : " + e.getMessage());
         }
         assertTrue("Returned incorrect byte field value", val == Byte.MAX_VALUE);
+        
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.getByte(x);
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since byteField is not a
-                // boolean type
-                return;
-            }
-        } catch (Exception e) {
-            fail("Exception during getbyte test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("doubleField");
+            f.getByte(x);
+            fail("IllegalArgumentException expected but not thrown");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalArgumentException expected but not thrown");
         }
-        fail("Accessed field of invalid type");
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("bytePFField");
+            f.getByte(x);
+            fail("IllegalAccessException expected but not thrown");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalAccessException expected but not thrown"
+                    + ex.getMessage());
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+        //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("byteField");
+            f.getByte(null);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        //Test no NPE on static field
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("byteSField");
+            byte staticValue = f.getByte(null);
+            assertEquals("Wrong value returned", Byte.MAX_VALUE, staticValue);
+        }  catch (Exception ex) {
+            fail("No exception expected "+ ex.getMessage());
+        }
     }
 
     /**
      * @tests java.lang.reflect.Field#getChar(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getChar",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getChar",
+        args = {java.lang.Object.class}
+    )
     public void test_getCharLjava_lang_Object() {
         // Test for method char
         // java.lang.reflect.Field.getChar(java.lang.Object)
@@ -674,33 +855,65 @@ public class FieldTest extends junit.framework.TestCase {
             fail("Exception during getCharacter test: " + e.toString());
         }
         assertEquals("Returned incorrect char field value", 'T', val);
+        
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.getChar(x);
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since charField is not a
-                // boolean type
-                return;
-            }
-        } catch (Exception e) {
-            fail("Exception during getchar test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("doubleField");
+            f.getChar(x);
+            fail("IllegalArgumentException expected but not thrown");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalArgumentException expected but not thrown");
         }
-        fail("Accessed field of invalid type");
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("charPFField");
+            f.getChar(x);
+            fail("IllegalAccessException expected but not thrown");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalAccessException expected but not thrown"
+                    + ex.getMessage());
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+        //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("charField");
+            f.getChar(null);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        //Test no NPE on static field
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("charSField");
+            char staticValue = f.getChar(null);
+            assertEquals("Wrong value returned", 'T', staticValue);
+        }  catch (Exception ex) {
+            fail("No exception expected "+ ex.getMessage());
+        }
     }
 
     /**
      * @tests java.lang.reflect.Field#getDeclaringClass()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDeclaringClass",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDeclaringClass",
+        args = {}
+    )
     public void test_getDeclaringClass() {
         // Test for method java.lang.Class
         // java.lang.reflect.Field.getDeclaringClass()
@@ -724,15 +937,12 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getDouble(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getDouble",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDouble",
+        args = {java.lang.Object.class}
+    )
     public void test_getDoubleLjava_lang_Object() {
         // Test for method double
         // java.lang.reflect.Field.getDouble(java.lang.Object)
@@ -747,33 +957,66 @@ public class FieldTest extends junit.framework.TestCase {
         }
         assertTrue("Returned incorrect double field value",
                 val == Double.MAX_VALUE);
+        
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.getDouble(x);
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since doubleField is not a
-                // boolean type
-                return;
-            }
-        } catch (Exception e) {
-            fail("Exception during getDouble test: " + e.toString());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.getDouble(x);
+            fail("IllegalArgumentException expected but not thrown");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalArgumentException expected but not thrown "
+                    + ex.getMessage());
         }
-        fail("Accessed field of invalid type");
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("doublePFField");
+            f.getDouble(x);
+            fail("IllegalAccessException expected but not thrown");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalAccessException expected but not thrown"
+                    + ex.getMessage());
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+        //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("doubleField");
+            f.getDouble(null);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        //Test no NPE on static field
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("doubleSFField");
+            double staticValue = f.getDouble(null);
+            assertEquals("Wrong value returned", Double.MAX_VALUE, staticValue);
+        }  catch (Exception ex) {
+            fail("No exception expected "+ ex.getMessage());
+        }
     }
 
     /**
      * @tests java.lang.reflect.Field#getFloat(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getFloat",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFloat",
+        args = {java.lang.Object.class}
+    )
     public void test_getFloatLjava_lang_Object() {
         // Test for method float
         // java.lang.reflect.Field.getFloat(java.lang.Object)
@@ -788,33 +1031,66 @@ public class FieldTest extends junit.framework.TestCase {
         }
         assertTrue("Returned incorrect float field value",
                 val == Float.MAX_VALUE);
+       
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.getFloat(x);
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since floatField is not a
-                // boolean type
-                return;
-            }
-        } catch (Exception e) {
-            fail("Exception during getfloat test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.getFloat(x);
+            fail("IllegalArgumentException expected but not thrown");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalArgumentException expected but not thrown "
+                    + ex.getMessage());
         }
-        fail("Accessed field of invalid type");
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("floatPFField");
+            f.getFloat(x);
+            fail("IllegalAccessException expected but not thrown");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalAccessException expected but not thrown"
+                    + ex.getMessage());
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+        //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("floatField");
+            f.getFloat(null);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        //Test no NPE on static field
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("floatSField");
+            float staticValue = f.getFloat(null);
+            assertEquals("Wrong value returned", Float.MAX_VALUE, staticValue);
+        }  catch (Exception ex) {
+            fail("No exception expected "+ ex.getMessage());
+        }
     }
 
     /**
      * @tests java.lang.reflect.Field#getInt(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getInt",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInt",
+        args = {java.lang.Object.class}
+    )
     public void test_getIntLjava_lang_Object() {
         // Test for method int java.lang.reflect.Field.getInt(java.lang.Object)
         TestField x = new TestField();
@@ -828,33 +1104,67 @@ public class FieldTest extends junit.framework.TestCase {
         }
         assertTrue("Returned incorrect Int field value",
                 val == Integer.MAX_VALUE);
+       
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.getInt(x);
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since IntField is not a
-                // boolean type
-                return;
-            }
-        } catch (Exception e) {
-            fail("Exception during getInt test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.getInt(x);
+            fail("IllegalArgumentException expected but not thrown");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalArgumentException expected but not thrown "
+                    + ex.getMessage());
         }
-        fail("Accessed field of invalid type");
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("intPFField");
+            f.getInt(x);
+            fail("IllegalAccessException expected but not thrown");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalAccessException expected but not thrown"
+                    + ex.getMessage());
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+        //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("intField");
+            f.getInt(null);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        //Test no NPE on static field
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("intSField");
+            int staticValue = f.getInt(null);
+            assertEquals("Wrong value returned", Integer.MAX_VALUE, staticValue);
+        } catch (Exception ex) {
+            fail("No exception expected " + ex.getMessage());
+        }
+        
     }
 
     /**
      * @tests java.lang.reflect.Field#getLong(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getLong",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLong",
+        args = {java.lang.Object.class}
+    )
     public void test_getLongLjava_lang_Object() {
         // Test for method long
         // java.lang.reflect.Field.getLong(java.lang.Object)
@@ -867,34 +1177,66 @@ public class FieldTest extends junit.framework.TestCase {
         } catch (Exception e) {
             fail("Exception during getLong test : " + e.getMessage());
         }
-        assertTrue("Returned incorrect long field value", val == Long.MAX_VALUE);
+        
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.getLong(x);
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // long type
-                return;
-            }
-        } catch (Exception e) {
-            fail("Exception during getlong test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.getLong(x);
+            fail("IllegalArgumentException expected but not thrown");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalArgumentException expected but not thrown "
+                    + ex.getMessage());
         }
-        fail("Accessed field of invalid type");
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("longPFField");
+            f.getLong(x);
+            fail("IllegalAccessException expected but not thrown");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalAccessException expected but not thrown"
+                    + ex.getMessage());
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+        //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("longField");
+            f.getLong(null);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        //Test no NPE on static field
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("longSField");
+            long staticValue = f.getLong(null);
+            assertEquals("Wrong value returned", Long.MAX_VALUE, staticValue);
+        }  catch (Exception ex) {
+            fail("No exception expected "+ ex.getMessage());
+        }
     }
 
     /**
      * @tests java.lang.reflect.Field#getModifiers()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getModifiers",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getModifiers",
+        args = {}
+    )
     public void test_getModifiers() {
         // Test for method int java.lang.reflect.Field.getModifiers()
         TestField x = new TestField();
@@ -915,15 +1257,12 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         // Test for method java.lang.String java.lang.reflect.Field.getName()
         TestField x = new TestField();
@@ -940,15 +1279,12 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getShort(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setShort",
-          methodArgs = {java.lang.Object.class, short.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getShort",
+        args = {java.lang.Object.class}
+    )
     public void test_getShortLjava_lang_Object() {
         // Test for method short
         // java.lang.reflect.Field.getShort(java.lang.Object)
@@ -964,33 +1300,66 @@ public class FieldTest extends junit.framework.TestCase {
         }
         assertTrue("Returned incorrect short field value",
                 val == Short.MAX_VALUE);
+      
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.getShort(x);
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // short type
-                return;
-            }
-        } catch (Exception e) {
-            fail("Exception during getshort test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.getShort(x);
+            fail("IllegalArgumentException expected but not thrown");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalArgumentException expected but not thrown "
+                    + ex.getMessage());
         }
-        fail("Accessed field of invalid type");
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("shortPFField");
+            f.getShort(x);
+            fail("IllegalAccessException expected but not thrown");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("IllegalAccessException expected but not thrown"
+                    + ex.getMessage());
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+        //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("shortField");
+            f.getShort(null);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        //Test no NPE on static field
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("shortSField");
+            short staticValue = f.getShort(null);
+            assertEquals("Wrong value returned", Short.MAX_VALUE, staticValue);
+        }  catch (Exception ex) {
+            fail("No exception expected "+ ex.getMessage());
+        }
     }
 
     /**
      * @tests java.lang.reflect.Field#getType()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getType",
+        args = {}
+    )
     public void test_getType() {
         // Test for method java.lang.Class java.lang.reflect.Field.getType()
         TestField x = new TestField();
@@ -1007,16 +1376,13 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#set(java.lang.Object, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "set",
-          methodArgs = {java.lang.Object.class, java.lang.Object.class}
-        )
-    })
-    public void test_setLjava_lang_ObjectLjava_lang_Object() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "set",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
+    public void test_setLjava_lang_ObjectLjava_lang_Object() throws Exception{
         // Test for method void java.lang.reflect.Field.set(java.lang.Object,
         // java.lang.Object)
         TestField x = new TestField();
@@ -1030,46 +1396,60 @@ public class FieldTest extends junit.framework.TestCase {
             fail("Exception during set test : " + e.getMessage());
         }
         assertEquals("Returned incorrect double field value", 1.0, val);
+        
+        //test wrong type
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.set(x, new Double(1.0));
-                fail("Accessed field of invalid type");
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // double type
-            }
-            try {
-                f = x.getClass().getDeclaredField("doubleFField");
-                f.set(x, new Double(1.0));
-                fail("Accessed field of invalid type");
-            } catch (IllegalAccessException ex) {
-                // Good, Exception should be thrown since doubleFField is
-                // declared as final
-            }
-            // Test setting a static field;
-            f = x.getClass().getDeclaredField("doubleSField");
+            f = x.getClass().getDeclaredField("booleanField");
             f.set(x, new Double(1.0));
-            val = f.getDouble(x);
-            assertEquals("Returned incorrect double field value", 1.0, val);
-        } catch (Exception e) {
-            fail("Exception during setDouble test: " + e.toString());
+            fail("Accessed field of invalid type");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
         }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        //test not accessible
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("doubleFField");
+            assertFalse(f.isAccessible());
+            f.set(x, new Double(1.0));
+            fail("Accessed inaccessible field");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+      //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("booleanField");
+            f.set(null, true);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        // Test setting a static field;
+        f = x.getClass().getDeclaredField("doubleSField");
+        f.set(null, new Double(1.0));
+        val = f.getDouble(x);
+        assertEquals("Returned incorrect double field value", 1.0, val);
     }
 
     /**
      * @tests java.lang.reflect.Field#setBoolean(java.lang.Object, boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setBoolean",
-          methodArgs = {java.lang.Object.class, boolean.class}
-        )
-    })
-    public void test_setBooleanLjava_lang_ObjectZ() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setBoolean",
+        args = {java.lang.Object.class, boolean.class}
+    )
+    public void test_setBooleanLjava_lang_ObjectZ() throws Exception{
         // Test for method void
         // java.lang.reflect.Field.setBoolean(java.lang.Object, boolean)
         TestField x = new TestField();
@@ -1083,42 +1463,60 @@ public class FieldTest extends junit.framework.TestCase {
             fail("Exception during setboolean test: " + e.toString());
         }
         assertTrue("Returned incorrect float field value", !val);
+        
+      //test wrong type
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.setInt(x, 42);
-                fail("Accessed field of invalid type");
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // int type
-            }
-
-            try {
-                f = x.getClass().getDeclaredField("booleanFField");
-                f.setBoolean(x, true);
-                fail("Accessed field of invalid type");
-            } catch (IllegalAccessException ex) {
-                // Good, Exception should be thrown since booleanField is
-                // declared as final
-            }
-        } catch (Exception e) {
-            fail("Exception during setboolean test: " + e.toString());
+            f = x.getClass().getDeclaredField("doubleField");
+            f.setBoolean(x, false);
+            fail("Accessed field of invalid type");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
         }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        //test not accessible
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("booleanPFField");
+            assertFalse(f.isAccessible());
+            f.setBoolean(x, true);
+            fail("Accessed inaccessible field");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+      //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("booleanField");
+            f.setBoolean(null, true);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        // Test setting a static field;
+        f = x.getClass().getDeclaredField("booleanSField");
+        f.setBoolean(null, false);
+        val = f.getBoolean(x);
+        assertFalse("Returned incorrect boolean field value", val);
     }
 
     /**
      * @tests java.lang.reflect.Field#setByte(java.lang.Object, byte)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setByte",
-          methodArgs = {java.lang.Object.class, byte.class}
-        )
-    })
-    public void test_setByteLjava_lang_ObjectB() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setByte",
+        args = {java.lang.Object.class, byte.class}
+    )
+    public void test_setByteLjava_lang_ObjectB() throws Exception{
         // Test for method void
         // java.lang.reflect.Field.setByte(java.lang.Object, byte)
         TestField x = new TestField();
@@ -1132,42 +1530,61 @@ public class FieldTest extends junit.framework.TestCase {
             fail("Exception during setByte test : " + e.getMessage());
         }
         assertEquals("Returned incorrect float field value", 1, val);
+      
+        //test wrong type
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.setByte(x, (byte) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // byte type
-            }
-
-            try {
-                f = x.getClass().getDeclaredField("byteFField");
-                f.setByte(x, (byte) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalAccessException ex) {
-                // Good, Exception should be thrown since byteFField is declared
-                // as final
-            }
-        } catch (Exception e) {
-            fail("Exception during setByte test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.setByte(x, Byte.MIN_VALUE);
+            fail("Accessed field of invalid type");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
         }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        //test not accessible
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("bytePFField");
+            assertFalse(f.isAccessible());
+            f.setByte(x, Byte.MIN_VALUE);
+            fail("Accessed inaccessible field");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+      //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("byteField");
+            f.setByte(null, Byte.MIN_VALUE);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        // Test setting a static field;
+        f = x.getClass().getDeclaredField("byteSField");
+        f.setByte(null, Byte.MIN_VALUE);
+        val = f.getByte(x);
+        assertEquals("Returned incorrect byte field value", Byte.MIN_VALUE,
+                val);
     }
 
     /**
      * @tests java.lang.reflect.Field#setChar(java.lang.Object, char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setChar",
-          methodArgs = {java.lang.Object.class, char.class}
-        )
-    })
-    public void test_setCharLjava_lang_ObjectC() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setChar",
+        args = {java.lang.Object.class, char.class}
+    )
+    public void test_setCharLjava_lang_ObjectC() throws Exception{
         // Test for method void
         // java.lang.reflect.Field.setChar(java.lang.Object, char)
         TestField x = new TestField();
@@ -1181,42 +1598,61 @@ public class FieldTest extends junit.framework.TestCase {
             fail("Exception during setChar test : " + e.getMessage());
         }
         assertEquals("Returned incorrect float field value", 1, val);
+       
+      //test wrong type
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.setChar(x, (char) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // char type
-            }
-
-            try {
-                f = x.getClass().getDeclaredField("charFField");
-                f.setChar(x, (char) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalAccessException ex) {
-                // Good, Exception should be thrown since charFField is declared
-                // as final
-            }
-        } catch (Exception e) {
-            fail("Exception during setChar test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.setChar(x, Character.MIN_VALUE);
+            fail("Accessed field of invalid type");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
         }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        //test not accessible
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("charPFField");
+            assertFalse(f.isAccessible());
+            f.setChar(x, Character.MIN_VALUE);
+            fail("Accessed inaccessible field");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+      //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("charField");
+            f.setChar(null, Character.MIN_VALUE);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        // Test setting a static field;
+        f = x.getClass().getDeclaredField("charSField");
+        f.setChar(null, Character.MIN_VALUE);
+        val = f.getChar(x);
+        assertEquals("Returned incorrect char field value",
+                Character.MIN_VALUE, val);
     }
 
     /**
      * @tests java.lang.reflect.Field#setDouble(java.lang.Object, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setDouble",
-          methodArgs = {java.lang.Object.class, double.class}
-        )
-    })
-    public void test_setDoubleLjava_lang_ObjectD() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDouble",
+        args = {java.lang.Object.class, double.class}
+    )
+    public void test_setDoubleLjava_lang_ObjectD() throws Exception{
         // Test for method void
         // java.lang.reflect.Field.setDouble(java.lang.Object, double)
         TestField x = new TestField();
@@ -1224,48 +1660,68 @@ public class FieldTest extends junit.framework.TestCase {
         double val = 0.0;
         try {
             f = x.getClass().getDeclaredField("doubleField");
-            f.setDouble(x, 1.0);
+            f.setDouble(x, Double.MIN_VALUE);
             val = f.getDouble(x);
         } catch (Exception e) {
             fail("Exception during setDouble test: " + e.toString());
         }
-        assertEquals("Returned incorrect double field value", 1.0, val);
+        assertEquals("Returned incorrect double field value", Double.MIN_VALUE,
+                val);
+       
+      //test wrong type
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.setDouble(x, 1.0);
-                fail("Accessed field of invalid type");
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // double type
-            }
-
-            try {
-                f = x.getClass().getDeclaredField("doubleFField");
-                f.setDouble(x, 1.0);
-                fail("Accessed field of invalid type");
-            } catch (IllegalAccessException ex) {
-                // Good, Exception should be thrown since doubleFField is
-                // declared as final
-            }
-        } catch (Exception e) {
-            fail("Exception during setDouble test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.setDouble(x, Double.MIN_VALUE);
+            fail("Accessed field of invalid type");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
         }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        //test not accessible
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("doublePFField");
+            assertFalse(f.isAccessible());
+            f.setDouble(x, Double.MIN_VALUE);
+            fail("Accessed inaccessible field");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+      //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("doubleField");
+            f.setDouble(null, Double.MIN_VALUE);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        // Test setting a static field;
+        f = x.getClass().getDeclaredField("doubleSField");
+        f.setDouble(null, Double.MIN_VALUE);
+        val = f.getDouble(x);
+        assertEquals("Returned incorrect double field value",
+                Double.MIN_VALUE, val);
     }
 
     /**
      * @tests java.lang.reflect.Field#setFloat(java.lang.Object, float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setFloat",
-          methodArgs = {java.lang.Object.class, float.class}
-        )
-    })
-    public void test_setFloatLjava_lang_ObjectF() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setFloat",
+        args = {java.lang.Object.class, float.class}
+    )
+    public void test_setFloatLjava_lang_ObjectF() throws Exception{
         // Test for method void
         // java.lang.reflect.Field.setFloat(java.lang.Object, float)
         TestField x = new TestField();
@@ -1273,47 +1729,68 @@ public class FieldTest extends junit.framework.TestCase {
         float val = 0.0F;
         try {
             f = x.getClass().getDeclaredField("floatField");
-            f.setFloat(x, (float) 1);
+            f.setFloat(x, Float.MIN_VALUE);
             val = f.getFloat(x);
         } catch (Exception e) {
             fail("Exception during setFloat test : " + e.getMessage());
         }
-        assertEquals("Returned incorrect float field value", 1.0, val, 0.0);
+        assertEquals("Returned incorrect float field value", Float.MIN_VALUE,
+                val, 0.0);
+        
+        //test wrong type
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.setFloat(x, (float) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // float type
-            }
-            try {
-                f = x.getClass().getDeclaredField("floatFField");
-                f.setFloat(x, (float) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalAccessException ex) {
-                // Good, Exception should be thrown since floatFField is
-                // declared as final
-            }
-        } catch (Exception e) {
-            fail("Exception during setFloat test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.setFloat(x, Float.MIN_VALUE);
+            fail("Accessed field of invalid type");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
         }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+        
+        //test not accessible
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("floatPFField");
+            assertFalse(f.isAccessible());
+            f.setFloat(x, Float.MIN_VALUE);
+            fail("Accessed inaccessible field");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+        
+      //Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("floatField");
+            f.setFloat(null, Float.MIN_VALUE);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+        
+        // Test setting a static field;
+        f = x.getClass().getDeclaredField("floatSField");
+        f.setFloat(null, Float.MIN_VALUE);
+        val = f.getFloat(x);
+        assertEquals("Returned incorrect float field value",
+                Float.MIN_VALUE, val);
     }
 
     /**
      * @tests java.lang.reflect.Field#setInt(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setInt",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
-    public void test_setIntLjava_lang_ObjectI() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setInt",
+        args = {java.lang.Object.class, int.class}
+    )
+    public void test_setIntLjava_lang_ObjectI() throws Exception{
         // Test for method void java.lang.reflect.Field.setInt(java.lang.Object,
         // int)
         TestField x = new TestField();
@@ -1321,47 +1798,68 @@ public class FieldTest extends junit.framework.TestCase {
         int val = 0;
         try {
             f = x.getClass().getDeclaredField("intField");
-            f.setInt(x, (int) 1);
+            f.setInt(x, Integer.MIN_VALUE);
             val = f.getInt(x);
         } catch (Exception e) {
             fail("Exception during setInteger test: " + e.toString());
         }
-        assertEquals("Returned incorrect int field value", 1, val);
+        assertEquals("Returned incorrect int field value", Integer.MIN_VALUE,
+                val);
+
+        // test wrong type
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.setInt(x, (int) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // int type
-            }
-            try {
-                f = x.getClass().getDeclaredField("intFField");
-                f.setInt(x, (int) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalAccessException ex) {
-                // Good, Exception should be thrown since intFField is declared
-                // as final
-            }
-        } catch (Exception e) {
-            fail("Exception during setInteger test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.setInt(x, Integer.MIN_VALUE);
+            fail("Accessed field of invalid type");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
         }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+
+        // test not accessible
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("intPFField");
+            assertFalse(f.isAccessible());
+            f.setInt(x, Integer.MIN_VALUE);
+            fail("Accessed inaccessible field");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+
+        // Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("intField");
+            f.setInt(null, Integer.MIN_VALUE);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+
+        // Test setting a static field;
+        f = x.getClass().getDeclaredField("intSField");
+        f.setInt(null, Integer.MIN_VALUE);
+        val = f.getInt(x);
+        assertEquals("Returned incorrect int field value",
+                Integer.MIN_VALUE, val);
     }
 
     /**
      * @tests java.lang.reflect.Field#setLong(java.lang.Object, long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setLong",
-          methodArgs = {java.lang.Object.class, long.class}
-        )
-    })
-    public void test_setLongLjava_lang_ObjectJ() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLong",
+        args = {java.lang.Object.class, long.class}
+    )
+    public void test_setLongLjava_lang_ObjectJ() throws Exception{
         // Test for method void
         // java.lang.reflect.Field.setLong(java.lang.Object, long)
         TestField x = new TestField();
@@ -1369,47 +1867,67 @@ public class FieldTest extends junit.framework.TestCase {
         long val = 0L;
         try {
             f = x.getClass().getDeclaredField("longField");
-            f.setLong(x, (long) 1);
+            f.setLong(x, Long.MIN_VALUE);
             val = f.getLong(x);
         } catch (Exception e) {
             fail("Exception during setLong test : " + e.getMessage());
         }
-        assertEquals("Returned incorrect long field value", 1, val);
+        assertEquals("Returned incorrect long field value", Long.MIN_VALUE, val);
+       
+        // test wrong type
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.setLong(x, (long) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // long type
-            }
-            try {
-                f = x.getClass().getDeclaredField("longFField");
-                f.setLong(x, (long) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalAccessException ex) {
-                // Good, Exception should be thrown since longFField is declared
-                // as final
-            }
-        } catch (Exception e) {
-            fail("Exception during setLong test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.setLong(x, Long.MIN_VALUE);
+            fail("Accessed field of invalid type");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
         }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+
+        // test not accessible
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("longPFField");
+            assertFalse(f.isAccessible());
+            f.setLong(x, Long.MIN_VALUE);
+            fail("Accessed inaccessible field");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+
+        // Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("longField");
+            f.setLong(null, Long.MIN_VALUE);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+
+        // Test setting a static field;
+        f = x.getClass().getDeclaredField("longSField");
+        f.setLong(null, Long.MIN_VALUE);
+        val = f.getLong(x);
+        assertEquals("Returned incorrect long field value",
+                Long.MIN_VALUE, val);
     }
 
     /**
      * @tests java.lang.reflect.Field#setShort(java.lang.Object, short)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setShort",
-          methodArgs = {java.lang.Object.class, short.class}
-        )
-    })
-    public void test_setShortLjava_lang_ObjectS() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setShort",
+        args = {java.lang.Object.class, short.class}
+    )
+    public void test_setShortLjava_lang_ObjectS() throws Exception{
         // Test for method void
         // java.lang.reflect.Field.setShort(java.lang.Object, short)
         TestField x = new TestField();
@@ -1417,46 +1935,67 @@ public class FieldTest extends junit.framework.TestCase {
         short val = 0;
         try {
             f = x.getClass().getDeclaredField("shortField");
-            f.setShort(x, (short) 1);
+            f.setShort(x, Short.MIN_VALUE);
             val = f.getShort(x);
         } catch (Exception e) {
             fail("Exception during setShort test : " + e.getMessage());
         }
-        assertEquals("Returned incorrect short field value", 1, val);
+        assertEquals("Returned incorrect short field value", Short.MIN_VALUE,
+                val);
+       
+        // test wrong type
+        boolean thrown = false;
         try {
-            try {
-                f = x.getClass().getDeclaredField("booleanField");
-                f.setShort(x, (short) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalArgumentException ex) {
-                // Good, Exception should be thrown since booleanField is not a
-                // short type
-            }
-            try {
-                f = x.getClass().getDeclaredField("shortFField");
-                f.setShort(x, (short) 1);
-                fail("Accessed field of invalid type");
-            } catch (IllegalAccessException ex) {
-                // Good, Exception should be thrown since shortFField is
-                // declared as final
-            }
-        } catch (Exception e) {
-            fail("Exception during setShort test : " + e.getMessage());
+            f = x.getClass().getDeclaredField("booleanField");
+            f.setShort(x, Short.MIN_VALUE);
+            fail("Accessed field of invalid type");
+        } catch (IllegalArgumentException ex) {
+            thrown = true;
         }
+        assertTrue("IllegalArgumentException expected but not thrown", thrown);
+
+        // test not accessible
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("shortPFField");
+            assertFalse(f.isAccessible());
+            f.setShort(x, Short.MIN_VALUE);
+            fail("Accessed inaccessible field");
+        } catch (IllegalAccessException ex) {
+            thrown = true;
+        }
+        assertTrue("IllegalAccessException expected but not thrown", thrown);
+
+        // Test NPE
+        thrown = false;
+        try {
+            f = x.getClass().getDeclaredField("shortField");
+            f.setShort(null, Short.MIN_VALUE);
+            fail("NullPointerException expected but not thrown");
+        } catch (NullPointerException ex) {
+            thrown = true;
+        } catch (Exception ex) {
+            fail("NullPointerException expected but not thrown");
+        }
+        assertTrue("NullPointerException expected but not thrown", thrown);
+
+        // Test setting a static field;
+        f = x.getClass().getDeclaredField("shortSField");
+        f.setShort(null, Short.MIN_VALUE);
+        val = f.getShort(x);
+        assertEquals("Returned incorrect short field value",
+                Short.MIN_VALUE, val);
     }
 
     /**
      * @tests java.lang.reflect.Field#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.lang.reflect.Field.toString()
         Field f = null;
@@ -1470,6 +2009,135 @@ public class FieldTest extends junit.framework.TestCase {
                 "private static final int tests.api.java.lang.reflect.FieldTest$TestField.x",
                         f.toString());
     }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDeclaredAnnotations",
+        args = {}
+    )
+    public void test_getDeclaredAnnotations() throws Exception {
+        Field field = TestClass.class.getField("annotatedField");
+        Annotation[] annotations = field.getDeclaredAnnotations();
+        assertEquals(2, annotations.length);
+
+        Set<Class<?>> ignoreOrder = new HashSet<Class<?>>();
+        ignoreOrder.add(annotations[0].annotationType());
+        ignoreOrder.add(annotations[1].annotationType());
+
+        assertTrue("Missing @AnnotationRuntime0", ignoreOrder
+                .contains(AnnotationRuntime0.class));
+        assertTrue("Missing @AnnotationRuntime1", ignoreOrder
+                .contains(AnnotationRuntime1.class));
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isEnumConstant",
+        args = {}
+    )
+    public void test_isEnumConstant() throws Exception {
+        Field field = TestEnum.class.getDeclaredField("A");
+        assertTrue("Enum constant not recognized", field.isEnumConstant());
+
+        field = TestEnum.class.getDeclaredField("field");
+        assertFalse("Non enum constant wrongly stated as enum constant", field
+                .isEnumConstant());
+        
+        field = TestClass.class.getDeclaredField("annotatedField");
+        assertFalse("Non enum constant wrongly stated as enum constant", field
+                .isEnumConstant());
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isSynthetic",
+        args = {}
+    )
+    public void test_isSynthetic() throws Exception {
+        Field[] fields = TestClass.Inner.class.getDeclaredFields();
+        assertEquals("Not exactly one field returned", 1, fields.length);
+
+        assertTrue("Enum constant not recognized", fields[0].isSynthetic());
+
+        Field field = TestEnum.class.getDeclaredField("field");
+        assertFalse("Non synthetic field wrongly stated as synthetic", field
+                .isSynthetic());
+
+        field = TestClass.class.getDeclaredField("annotatedField");
+        assertFalse("Non synthetic field wrongly stated as synthetic", field
+                .isSynthetic());
+    }
+    
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getGenericType",
+        args = {}
+    )
+    public void test_getGenericType() throws Exception {
+        Field field = GenericField.class.getDeclaredField("field");
+        Type type = field.getGenericType();
+        @SuppressWarnings("unchecked")
+        TypeVariable typeVar = (TypeVariable) type;
+        assertEquals("Wrong type name returned", "S", typeVar.getName());
+        
+        Field boundedField = GenericField.class.getDeclaredField("boundedField");
+        Type boundedType = boundedField.getGenericType();
+        @SuppressWarnings("unchecked")
+        TypeVariable boundedTypeVar = (TypeVariable) boundedType;
+        assertEquals("Wrong type name returned", "T", boundedTypeVar.getName());
+        assertEquals("More than one bound found", 1,
+                boundedTypeVar.getBounds().length);
+        assertEquals("Wrong bound returned", Number.class,
+                boundedTypeVar.getBounds()[0]);
+    } 
+    
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toGenericString",
+        args = {}
+    )
+    public void test_toGenericString() throws Exception {
+        Field field = GenericField.class.getDeclaredField("field");
+        assertEquals("Wrong generic string returned",
+                "S tests.api.java.lang.reflect.FieldTest$GenericField.field",
+                field.toGenericString());
+
+        Field boundedField = GenericField.class
+                .getDeclaredField("boundedField");
+        assertEquals(
+                "Wrong generic string returned",
+                "T tests.api.java.lang.reflect.FieldTest$GenericField.boundedField",
+                boundedField.toGenericString());
+        
+        Field ordinary = GenericField.class.getDeclaredField("intField");
+        assertEquals(
+                "Wrong generic string returned",
+                "int tests.api.java.lang.reflect.FieldTest$GenericField.intField",
+                ordinary.toGenericString());
+    }
+        
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
+    @KnownFailure("Spec and code is not conform with other well-established implementation. Fixed in ToT.")
+    public void test_hashCode() throws Exception {
+        Field field = TestClass.class.getDeclaredField("annotatedField");
+        assertEquals("Wrong hashCode returned", field.getName().hashCode()
+                ^ field.getDeclaringClass().getName().hashCode(), field
+                .hashCode());
+    } 
+    
 
     /**
      * Sets up the fixture, for example, open a network connection. This method

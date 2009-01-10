@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class ArrayIndexOutOfBoundsExceptionTest extends TestCase {
     /**
      * @tests java.lang.ArrayIndexOutOfBoundsException#ArrayIndexOutOfBoundsException(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ArrayIndexOutOfBoundsException",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ArrayIndexOutOfBoundsException",
+        args = {int.class}
+    )
     public void test_ConstructorI() {
         ArrayIndexOutOfBoundsException e = new ArrayIndexOutOfBoundsException(-1);
         assertNotNull(e.getMessage());
@@ -50,15 +47,12 @@ public class ArrayIndexOutOfBoundsExceptionTest extends TestCase {
     /**
      * @tests java.lang.ArrayIndexOutOfBoundsException#ArrayIndexOutOfBoundsException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ArrayIndexOutOfBoundsException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ArrayIndexOutOfBoundsException",
+        args = {}
+    )
     public void test_Constructor() {
         ArrayIndexOutOfBoundsException e = new ArrayIndexOutOfBoundsException();
         assertNull(e.getMessage());
@@ -68,15 +62,12 @@ public class ArrayIndexOutOfBoundsExceptionTest extends TestCase {
     /**
      * @tests java.lang.ArrayIndexOutOfBoundsException#ArrayIndexOutOfBoundsException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ArrayIndexOutOfBoundsException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ArrayIndexOutOfBoundsException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         ArrayIndexOutOfBoundsException e = new ArrayIndexOutOfBoundsException("fixture");
         assertEquals("fixture", e.getMessage());

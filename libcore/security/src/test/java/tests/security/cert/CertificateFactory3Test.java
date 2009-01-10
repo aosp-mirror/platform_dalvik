@@ -22,12 +22,15 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.TestCase;
+
+import org.apache.harmony.security.tests.support.SpiEngUtils;
+import org.apache.harmony.security.tests.support.cert.TestUtils;
+import tests.support.resource.Support_Resources;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -39,10 +42,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-
-import org.apache.harmony.security.tests.support.cert.TestUtils;
-import org.apache.harmony.security.tests.support.SpiEngUtils;
-import org.apache.harmony.security.tests.support.resource.Support_Resources;
 
 /**
  * Tests for <code>CertificateFactory</code> class methods
@@ -56,7 +55,7 @@ public class CertificateFactory3Test extends TestCase {
 
     private static String defaultType = CertificateFactory1Test.defaultType;
 
-    public static String fileCertPathPki = "CertPath.PkiPath";
+    public static String fileCertPathPki = "java/security/cert/CertPath.PkiPath";
 
     private static boolean X509Support = false;
 
@@ -89,15 +88,12 @@ public class CertificateFactory3Test extends TestCase {
      * Test for <code>generateCertificate(InputStream inStream)</code> method
      * Assertion: returns Certificate
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertificate",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify CertificateException.",
+        method = "generateCertificate",
+        args = {java.io.InputStream.class}
+    )
     public void testGenerateCertificate() throws Exception {
         CertificateFactory[] certFs = initCertFs();
         assertNotNull("CertificateFactory objects were not created", certFs);
@@ -114,26 +110,23 @@ public class CertificateFactory3Test extends TestCase {
      * Test for <code>generateCertificates(InputStream inStream)</code> method
      * Assertion: returns Collection which consists of 1 Certificate
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertificates",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
-    public void testeGnerateCertificates() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify CertificateException.",
+        method = "generateCertificates",
+        args = {java.io.InputStream.class}
+    )
+    public void testGenerateCertificates() throws Exception {
         CertificateFactory[] certFs = initCertFs();
         assertNotNull("CertificateFactory objects were not created", certFs);
         Certificate cert = certFs[0]
                 .generateCertificate(new ByteArrayInputStream(TestUtils
                         .getEncodedX509Certificate()));
         for (int i = 0; i < certFs.length; i++) {
-            Collection col = null;
+            Collection<? extends Certificate> col = null;
             col = certFs[i].generateCertificates(new ByteArrayInputStream(
                     TestUtils.getEncodedX509Certificate()));
-            Iterator it = col.iterator();
+            Iterator<? extends Certificate> it = col.iterator();
             assertEquals("Incorrect Collection size", col.size(), 1);
             assertEquals("Incorrect Certificate in Collection", cert, it.next());
         }
@@ -143,16 +136,13 @@ public class CertificateFactory3Test extends TestCase {
      * Test for <code>generateCertPath(List certificates)</code> method
      * Assertion: returns CertPath with 1 Certificate
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertPath",
-          methodArgs = {java.util.List.class}
-        )
-    })
-    public void _testGenerateCertPath01() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify CertificateException.",
+        method = "generateCertPath",
+        args = {java.util.List.class}
+    )
+    public void testGenerateCertPath01() throws Exception {
         CertificateFactory[] certFs = initCertFs();
         assertNotNull("CertificateFactory objects were not created", certFs);
         // create list of certificates with one certificate
@@ -165,9 +155,9 @@ public class CertificateFactory3Test extends TestCase {
             CertPath certPath = null;
             certPath = certFs[i].generateCertPath(list);
             assertEquals(cert.getType(), certPath.getType());
-            List list1 = certPath.getCertificates();
+            List<? extends Certificate> list1 = certPath.getCertificates();
             assertFalse("Result list is empty", list1.isEmpty());
-            Iterator it = list1.iterator();
+            Iterator<? extends Certificate> it = list1.iterator();
             assertEquals("Incorrect Certificate in CertPath", cert, it.next());
         }
     }
@@ -177,16 +167,13 @@ public class CertificateFactory3Test extends TestCase {
      * <code>generateCertPath(InputStream inStream, String encoding)</code>
      * method Assertion: returns CertPath with 1 Certificate
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertPath",
-          methodArgs = {java.io.InputStream.class, java.lang.String.class}
-        )
-    })
-    public void _testGenerateCertPath02() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify CertificateException.",
+        method = "generateCertPath",
+        args = {java.io.InputStream.class, java.lang.String.class}
+    )
+    public void testGenerateCertPath02() throws Exception {
         CertificateFactory[] certFs = initCertFs();
         assertNotNull("CertificateFactory objects were not created", certFs);
         for (int i = 0; i < certFs.length; i++) {
@@ -197,7 +184,7 @@ public class CertificateFactory3Test extends TestCase {
             fis.close();
             assertEquals(defaultType, certPath.getType());
 
-            List list1 = certPath.getCertificates();
+            List<? extends Certificate> list1 = certPath.getCertificates();
             assertFalse("Result list is empty", list1.isEmpty());
         }
     }
@@ -206,21 +193,18 @@ public class CertificateFactory3Test extends TestCase {
      * Test for <code>generateCertPath(InputStream inStream)</code> method
      * Assertion: returns CertPath with 1 Certificate
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertPath",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
-    public void _testGenerateCertPath03() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify CertificateException.",
+        method = "generateCertPath",
+        args = {java.io.InputStream.class}
+    )
+    public void testGenerateCertPath03() throws Exception {
         String certPathEncoding = "PkiPath";
         CertificateFactory[] certFs = initCertFs();
         assertNotNull("CertificateFactory objects were not created", certFs);
         for (int i = 0; i < certFs.length; i++) {
-            Iterator it = certFs[0].getCertPathEncodings();
+            Iterator<String> it = certFs[0].getCertPathEncodings();
 
             assertTrue("no CertPath encodings", it.hasNext());
 
@@ -234,7 +218,7 @@ public class CertificateFactory3Test extends TestCase {
             fis.close();
             assertEquals(defaultType, certPath.getType());
 
-            List list1 = certPath.getCertificates();
+            List<? extends Certificate> list1 = certPath.getCertificates();
             assertFalse("Result list is empty", list1.isEmpty());
         }
     }

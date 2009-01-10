@@ -17,14 +17,13 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.StringReader;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(LineNumberReader.class) 
 public class LineNumberReaderTest extends junit.framework.TestCase {
@@ -36,13 +35,12 @@ public class LineNumberReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.LineNumberReader#LineNumberReader(java.io.Reader)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "LineNumberReader", 
-                                    methodArgs = {java.io.Reader.class})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "LineNumberReader",
+        args = {java.io.Reader.class, int.class}
+    )      
     public void test_ConstructorLjava_io_Reader() {
         // Test for method java.io.LineNumberReader(java.io.Reader)
         lnr = new LineNumberReader(new StringReader(text), 4092);
@@ -52,13 +50,12 @@ public class LineNumberReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.LineNumberReader#LineNumberReader(java.io.Reader, int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "LineNumberReader", 
-                                    methodArgs = {java.io.Reader.class, int.class})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "LineNumberReader",
+        args = {java.io.Reader.class}
+    )      
     public void test_ConstructorLjava_io_ReaderI() {
         // Test for method java.io.LineNumberReader(java.io.Reader, int)
         lnr = new LineNumberReader(new StringReader(text));
@@ -68,13 +65,12 @@ public class LineNumberReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.LineNumberReader#getLineNumber()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "getLineNumber", 
-                                    methodArgs = {})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLineNumber",
+        args = {}
+    )      
     public void test_getLineNumber() {
         // Test for method int java.io.LineNumberReader.getLineNumber()
         lnr = new LineNumberReader(new StringReader(text));
@@ -93,147 +89,150 @@ public class LineNumberReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.LineNumberReader#mark(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "mark", 
-                                    methodArgs = {int.class})                                    
-            }
-        )         
-    public void test_markI() {
-        // Test for method void java.io.LineNumberReader.mark(int)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "mark",
+        args = {int.class}
+    )         
+    public void test_markI() throws IOException {
         lnr = new LineNumberReader(new StringReader(text));
         String line;
-        try {
-            lnr.skip(80);
-            lnr.mark(100);
-            line = lnr.readLine();
-            lnr.reset();
-            assertTrue("Failed to return to marked position", line.equals(lnr
-                    .readLine()));
-        } catch (IOException e) {
-            fail("Exception during mark test : " + e.getMessage());
-        }
+        lnr.skip(80);
+        lnr.mark(100);
+        line = lnr.readLine();
+        lnr.reset();
+        assertTrue("Test 1: Failed to return to marked position.", 
+                line.equals(lnr.readLine()));
 
+        lnr.close();
+        try {
+            lnr.mark(42);
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        
         // The spec does not say the mark has to be invalidated
     }
 
     /**
      * @tests java.io.LineNumberReader#read()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {})                                    
-            }
-        )    
-    public void test_read() {
-        // Test for method int java.io.LineNumberReader.read()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {}
+    )    
+    public void test_read() throws IOException {
         lnr = new LineNumberReader(new StringReader(text));
 
-        try {
-            int c = lnr.read();
-            assertEquals("Read returned incorrect character", '0', c);
-        } catch (IOException e) {
-            fail("Exception during read test : " + e.getMessage());
-        }
+        int c = lnr.read();
+        assertEquals("Test 1: Read returned incorrect character;", 
+                '0', c);
+        lnr.read();
+        assertEquals("Test 2: Read failed to increase the line number;",
+                1, lnr.getLineNumber());
+
+        lnr.close();
         try {
             lnr.read();
-            assertEquals("Read failed to inc lineNumber",
-                    1, lnr.getLineNumber());
+            fail("Test 3: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during read test:" + e.getMessage());
+            // Expected.
         }
-
     }
 
     /**
      * @tests java.io.LineNumberReader#read(char[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {char[].class, int.class, int.class})                                    
-            }
-        )    
-    public void test_read$CII() {
-        // Test for method int java.io.LineNumberReader.read(char [], int, int)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )    
+    public void test_read$CII() throws IOException {
         lnr = new LineNumberReader(new StringReader(text));
         char[] c = new char[100];
+        lnr.read(c, 0, 4);
+        assertTrue("Test 1: Read returned incorrect characters.", "0\n1\n"
+                .equals(new String(c, 0, 4)));
+        assertEquals("Test 2: Read failed to inc lineNumber", 
+                2, lnr.getLineNumber());
+
+        lnr.close();
         try {
             lnr.read(c, 0, 4);
-            assertTrue("Read returned incorrect characters", "0\n1\n"
-                    .equals(new String(c, 0, 4)));
+            fail("Test 3: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during read test : " + e.getMessage());
+            // Expected.
         }
-        assertEquals("Read failed to inc lineNumber", 2, lnr.getLineNumber());
     }
 
     /**
      * @tests java.io.LineNumberReader#readLine()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "readLine", 
-                                    methodArgs = {})                                    
-            }
-        )     
-    public void test_readLine() {
-        // Test for method java.lang.String java.io.LineNumberReader.readLine()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "readLine",
+        args = {}
+    )     
+    public void test_readLine() throws IOException {
         lnr = new LineNumberReader(new StringReader(text));
         assertEquals("Returned incorrect line number", 0, lnr.getLineNumber());
         String line = null;
+        lnr.readLine();
+        line = lnr.readLine();
+        assertEquals("Test 1: Returned incorrect string;", "1", line);
+        assertTrue("Test 2: Returned incorrect line number:" + lnr.getLineNumber(),
+                lnr.getLineNumber() == 2);
+
+        lnr.close();
         try {
             lnr.readLine();
-            line = lnr.readLine();
+            fail("Test 3: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during getLineNumberTest: " + e.toString());
+            // Expected.
         }
-        assertEquals("Returned incorrect string", "1", line);
-        assertTrue("Returned incorrect line number :" + lnr.getLineNumber(),
-                lnr.getLineNumber() == 2);
     }
 
     /**
      * @tests java.io.LineNumberReader#reset()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "reset", 
-                                    methodArgs = {})                                    
-            }
-        )    
-    public void test_reset() {
-        // Test for method void java.io.LineNumberReader.reset()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "reset",
+        args = {}
+    )    
+    public void test_reset() throws IOException {
         lnr = new LineNumberReader(new StringReader(text));
-        assertEquals("Returned incorrect line number", 0, lnr.getLineNumber());
+        assertEquals("Test 1: Returned incorrect line number;", 
+                0, lnr.getLineNumber());
         String line = null;
+        lnr.mark(100);
+        lnr.readLine();
+        lnr.reset();
+        line = lnr.readLine();
+        assertEquals("Test 2: Failed to reset reader", "0", line);
+
+        lnr.mark(100);
+        lnr.close();
         try {
-            lnr.mark(100);
-            lnr.readLine();
             lnr.reset();
-            line = lnr.readLine();
+            fail("Test 3: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during getLineNumberTest: " + e.toString());
+            // Expected.
         }
-        assertEquals("Failed to reset reader", "0", line);
     }
 
     /**
      * @tests java.io.LineNumberReader#setLineNumber(int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "setLineNumber", 
-                                    methodArgs = {int.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLineNumber",
+        args = {int.class}
+    )    
     public void test_setLineNumberI() {
         // Test for method void java.io.LineNumberReader.setLineNumber(int)
         lnr = new LineNumberReader(new StringReader(text));
@@ -244,38 +243,34 @@ public class LineNumberReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.LineNumberReader#skip(long)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IllegalArgumentException & IOException checking missed.",
-            targets = { @TestTarget(methodName = "skip", 
-                                    methodArgs = {long.class})                                    
-            }
-        )       
-    public void test_skipJ() {
-        // Test for method long java.io.LineNumberReader.skip(long)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "skip",
+        args = {long.class}
+    )       
+    public void test_skipJ() throws IOException {
         lnr = new LineNumberReader(new StringReader(text));
         char[] c = new char[100];
+        long skipped = lnr.skip(80);
+        assertEquals("Test 1: Incorrect number of characters skipped;", 
+                80, skipped);
+        lnr.read(c, 0, 100);
+        assertTrue("Test 2: Failed to skip to correct position.", 
+                text.substring(80, 180).equals(new String(c, 0, c.length)));
+
         try {
-            lnr.skip(80);
-            lnr.read(c, 0, 100);
-        } catch (IOException e) {
-            fail("Exception during skip test : " + e.getMessage());
+            lnr.skip(-1);
+            fail("Test 3: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
         }
-        assertTrue("Failed to skip to correct position", text
-                .substring(80, 180).equals(new String(c, 0, c.length)));
-    }
 
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
+        lnr.close();
+        try {
+            lnr.skip(1);
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 }

@@ -18,9 +18,9 @@
 package org.apache.harmony.sql.tests.java.sql;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.Serializable;
 import java.sql.BatchUpdateException;
@@ -37,15 +37,12 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "BatchUpdateException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "BatchUpdateException",
+        args = {}
+    )
     public void testBatchUpdateException() {
 
         int[] theFinalStates1 = { 0 }; // Error Code state
@@ -90,15 +87,12 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "BatchUpdateException",
-          methodArgs = {int[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "BatchUpdateException",
+        args = {int[].class}
+    )
     public void testBatchUpdateExceptionintArray() {
 
         int[][] init1 = { { 1, 2, 3 }, null };
@@ -145,15 +139,12 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "BatchUpdateException",
-          methodArgs = {String.class, int[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "BatchUpdateException",
+        args = {java.lang.String.class, int[].class}
+    )
     public void testBatchUpdateExceptionStringintArray() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, "",
@@ -209,15 +200,12 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "BatchUpdateException",
-          methodArgs = {String.class, String.class, int[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "BatchUpdateException",
+        args = {java.lang.String.class, java.lang.String.class, int[].class}
+    )
     public void testBatchUpdateExceptionStringStringintArray() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, "",
@@ -275,15 +263,12 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "BatchUpdateException",
-          methodArgs = {String.class, String.class, int.class, int[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "BatchUpdateException",
+        args = {java.lang.String.class, java.lang.String.class, int.class, int[].class}
+    )
     public void testBatchUpdateExceptionStringStringintintArray() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, "",
@@ -342,15 +327,12 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * Method test for getUpdateCounts
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getUpdateCounts",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getUpdateCounts",
+        args = {}
+    )
     public void testGetUpdateCounts() {
 
         BatchUpdateException aBatchUpdateException;
@@ -404,15 +386,12 @@ public class BatchUpdateExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Serialization test",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Serialization test",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
         BatchUpdateException object = new BatchUpdateException();
         SerializationTest.verifySelf(object, BATCHUPDATEEXCEPTION_COMPARATOR);
@@ -421,15 +400,12 @@ public class BatchUpdateExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Serialization test",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Serialization test",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
         int vendorCode = 10;
         int[] updateCounts = { 1, 2, 3, 4 };

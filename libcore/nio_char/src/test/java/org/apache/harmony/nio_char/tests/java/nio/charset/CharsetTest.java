@@ -17,8 +17,8 @@
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.nio.ByteBuffer;
@@ -61,15 +61,12 @@ public class CharsetTest extends TestCase {
     /**
      * @tests java.nio.charset.Charset#isRegistered()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isRegistered",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isRegistered",
+        args = {}
+    )
     public void test_isRegistered() {
         // Regression for HARMONY-45
         for (Iterator nameItr = knownRegisteredCharsets.iterator(); nameItr.hasNext();) {
@@ -87,15 +84,12 @@ public class CharsetTest extends TestCase {
     /**
      * @tests java.nio.charset.Charset#isSupported(String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks IllegalCharsetNameException",
-      targets = {
-        @TestTarget(
-          methodName = "isSupported",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks IllegalCharsetNameException",
+        method = "isSupported",
+        args = {java.lang.String.class}
+    )
     public void testIsSupported_EmptyString() {
         // Regression for HARMONY-113
         try {
@@ -109,15 +103,12 @@ public class CharsetTest extends TestCase {
     /**
      * @tests java.nio.charset.Charset#defaultCharset()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "defaultCharset",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "defaultCharset",
+        args = {}
+    )
     public void test_defaultCharset() {
         String charsetName = null;
         String defaultCharsetName = null;
@@ -167,15 +158,12 @@ public class CharsetTest extends TestCase {
     /**
      * @tests java.nio.charset.Charset#forName(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "forName",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Exceptions checking missed.",
+        method = "forName",
+        args = {java.lang.String.class}
+    )
     public void test_forNameLjava_lang_String() {
         /*
          * invoke forName two times with the same canonical name, it
@@ -197,15 +185,12 @@ public class CharsetTest extends TestCase {
     /*
      * test cached decoder
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "This test is quite useless for the rest it does, though.",
+        method = "Charset",
+        args = {java.lang.String.class, java.lang.String[].class}
+    )
     public void test_DecodeLjava_nio_ByteBuffer() throws Exception{
             MockCharsetForDecoder cs1 = new MockCharsetForDecoder("CachedCharset",null);
             MockCharsetForDecoder cs2 = new MockCharsetForDecoder("CachedCharset",null);
@@ -268,15 +253,12 @@ public class CharsetTest extends TestCase {
     /*
      * test cached encoder
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test.",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Functional test.",
+        method = "encode",
+        args = {java.nio.CharBuffer.class}
+    )
     public void test_EncodeLjava_nio_CharBuffer() throws Exception {
             MockCharsetForEncoder cs1 = new MockCharsetForEncoder("CachedCharset", null);
             MockCharsetForEncoder cs2 = new MockCharsetForEncoder("CachedCharset", null);

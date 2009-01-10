@@ -22,12 +22,15 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.TestCase;
+
+import org.apache.harmony.security.tests.support.TestCertUtils;
+import org.apache.harmony.security.tests.support.TestKeyPair;
+import org.apache.harmony.security.tests.support.cert.TestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.security.PublicKey;
@@ -39,9 +42,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 import javax.security.auth.x500.X500Principal;
-
-import org.apache.harmony.security.tests.support.cert.TestUtils;
-import org.apache.harmony.security.tests.support.TestKeyPair;
 
 /**
  * Unit tests for <code>TrustAnchor</code>
@@ -65,15 +65,12 @@ public class TrustAnchorTest extends TestCase {
      * Expected: must pass without any exceptions
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {java.lang.String.class, java.security.PublicKey.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "TrustAnchor",
+        args = {java.lang.String.class, java.security.PublicKey.class, byte[].class}
+    )
     public final void testTrustAnchorStringPublicKeybyteArray01()
             throws Exception {
 
@@ -96,15 +93,12 @@ public class TrustAnchorTest extends TestCase {
      * Expected: must pass without any exceptions
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {java.lang.String.class, java.security.PublicKey.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "TrustAnchor",
+        args = {java.lang.String.class, java.security.PublicKey.class, byte[].class}
+    )
     public final void testTrustAnchorStringPublicKeybyteArray02()
             throws Exception {
 
@@ -120,15 +114,12 @@ public class TrustAnchorTest extends TestCase {
      * Expected: modification must not change object internal state
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {java.lang.String.class, java.security.PublicKey.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "TrustAnchor",
+        args = {java.lang.String.class, java.security.PublicKey.class, byte[].class}
+    )
     public final void testTrustAnchorStringPublicKeybyteArray03()
             throws Exception {
 
@@ -152,15 +143,12 @@ public class TrustAnchorTest extends TestCase {
      * Test preconditions: pass <code>null</code> as mentioned parameter<br>
      * Expected: NullPointerException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {java.lang.String.class, java.security.PublicKey.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies exceptions.",
+        method = "TrustAnchor",
+        args = {java.lang.String.class, java.security.PublicKey.class, byte[].class}
+    )
     public final void testTrustAnchorStringPublicKeybyteArray04()
             throws Exception {
 
@@ -209,15 +197,12 @@ public class TrustAnchorTest extends TestCase {
      * Expected: must pass without any exceptions
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {javax.security.auth.x500.X500Principal.class, java.security.PublicKey.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "TrustAnchor",
+        args = {javax.security.auth.x500.X500Principal.class, java.security.PublicKey.class, byte[].class}
+    )
     public final void testTrustAnchorX500PrincipalPublicKeybyteArray01()
             throws Exception {
 
@@ -241,15 +226,12 @@ public class TrustAnchorTest extends TestCase {
      * Expected: must pass without any exceptions
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {javax.security.auth.x500.X500Principal.class, java.security.PublicKey.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "TrustAnchor",
+        args = {javax.security.auth.x500.X500Principal.class, java.security.PublicKey.class, byte[].class}
+    )
     public final void testTrustAnchorX500PrincipalPublicKeybyteArray02()
             throws Exception {
 
@@ -267,15 +249,12 @@ public class TrustAnchorTest extends TestCase {
      * Expected: modification must not change object internal state
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies TrustAnchor with copied byte array.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {javax.security.auth.x500.X500Principal.class, java.security.PublicKey.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies TrustAnchor with copied byte array.",
+        method = "TrustAnchor",
+        args = {javax.security.auth.x500.X500Principal.class, java.security.PublicKey.class, byte[].class}
+    )
     public final void testTrustAnchorX500PrincipalPublicKeybyteArray03()
             throws Exception {
 
@@ -301,15 +280,12 @@ public class TrustAnchorTest extends TestCase {
      * Expected: NullPointerException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {javax.security.auth.x500.X500Principal.class, java.security.PublicKey.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "TrustAnchor",
+        args = {javax.security.auth.x500.X500Principal.class, java.security.PublicKey.class, byte[].class}
+    )
     public final void testTrustAnchorX500PrincipalPublicKeybyteArray04()
             throws Exception {
 
@@ -348,15 +324,12 @@ public class TrustAnchorTest extends TestCase {
      * Test preconditions: valid parameters passed<br>
      * Expected: must pass without any exceptions
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {java.security.cert.X509Certificate.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "TrustAnchor",
+        args = {java.security.cert.X509Certificate.class, byte[].class}
+    )
     public final void testTrustAnchorX509CertificatebyteArray01()
             throws CertificateException {
 
@@ -406,15 +379,12 @@ public class TrustAnchorTest extends TestCase {
      * Test preconditions: <code>null</code> as X509Certificate passed<br>
      * Expected: <code>NullPointerException</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {java.security.cert.X509Certificate.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "TrustAnchor",
+        args = {java.security.cert.X509Certificate.class, byte[].class}
+    )
     public final void testTrustAnchorX509CertificatebyteArray02()
             throws Exception {
 
@@ -433,15 +403,12 @@ public class TrustAnchorTest extends TestCase {
      * Test preconditions: <code>null</code> as nameConstraints passed<br>
      * Expected: must pass without any exceptions
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies constructor with null as nameConstraints parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {java.security.cert.X509Certificate.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies constructor with null as nameConstraints parameter.",
+        method = "TrustAnchor",
+        args = {java.security.cert.X509Certificate.class, byte[].class}
+    )
     public final void testTrustAnchorX509CertificatebyteArray03()
             throws Exception {
         CertificateFactory certFact = CertificateFactory.getInstance("X509");
@@ -464,15 +431,12 @@ public class TrustAnchorTest extends TestCase {
      * IllegalArgumentException
      * 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {java.security.cert.X509Certificate.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "TrustAnchor",
+        args = {java.security.cert.X509Certificate.class, byte[].class}
+    )
     public final void testTrustAnchorX509CertificatebyteArray04()
             throws Exception {
 
@@ -497,15 +461,12 @@ public class TrustAnchorTest extends TestCase {
      * Test preconditions: both parameters are passed as null<br>
      * Expected: <code>NullPointerException</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "TrustAnchor",
-          methodArgs = {java.security.cert.X509Certificate.class, byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "TrustAnchor",
+        args = {java.security.cert.X509Certificate.class, byte[].class}
+    )
     public final void testTrustAnchorX509CertificatebyteArray05()
             throws Exception {
 
@@ -525,15 +486,12 @@ public class TrustAnchorTest extends TestCase {
      * Expected: the same name must be returned by the method<br>
      * 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCAPublicKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCAPublicKey",
+        args = {}
+    )
     public final void testGetCAPublicKey01() throws Exception {
 
         PublicKey pk = new TestKeyPair(keyAlg).getPublic();
@@ -557,15 +515,12 @@ public class TrustAnchorTest extends TestCase {
      * Expected: the same name must be returned by the method<br>
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCAName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCAName",
+        args = {}
+    )
     public final void testGetCAName01() throws Exception {
 
         PublicKey pk = new TestKeyPair(keyAlg).getPublic();
@@ -589,16 +544,11 @@ public class TrustAnchorTest extends TestCase {
      * Expected: <code>null</code> as return value<br>
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getTrustedCert returns null if TrustAnchor " +
-            "was not specified as trusted certificate.",
-      targets = {
-        @TestTarget(
-          methodName = "getTrustedCert",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "getTrustedCert",
+        args = {}
+    )
     public final void testGetTrustedCer02() throws Exception {
 
         PublicKey pk = new TestKeyPair(keyAlg).getPublic();
@@ -611,6 +561,10 @@ public class TrustAnchorTest extends TestCase {
         X500Principal x500p = new X500Principal(validCaNameRfc2253);
         ta = new TrustAnchor(x500p, pk, null);
         assertNull("null2", ta.getTrustedCert());
+        
+        X509Certificate cert = new TestCertUtils.TestX509Certificate(x500p, x500p);
+        TrustAnchor ta2 = new TrustAnchor(cert, null);
+        assertSame(cert, ta2.getTrustedCert());
     }
 
     /**
@@ -620,15 +574,12 @@ public class TrustAnchorTest extends TestCase {
      * Test preconditions: valid parameters are passed to the constructors<br>
      * Expected: the valid parameters must be returned by the method<br>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "getNameConstraints",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "getNameConstraints",
+        args = {}
+    )
     public final void testGetNameConstraints01() throws Exception {
         PublicKey pk = new TestKeyPair(keyAlg).getPublic();
         TrustAnchor ta1 = new TrustAnchor(validCaNameRfc2253, pk,
@@ -656,15 +607,12 @@ public class TrustAnchorTest extends TestCase {
      * Test preconditions: null parameters are passed to the constructors<br>
      * Expected: the null parameters must be returned by the method<br>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getNameConstraints returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getNameConstraints",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getNameConstraints returns null.",
+        method = "getNameConstraints",
+        args = {}
+    )
     public final void testGetNameConstraints02() throws Exception {
         PublicKey pk = new TestKeyPair(keyAlg).getPublic();
         TrustAnchor ta1 = new TrustAnchor(validCaNameRfc2253, pk, null);
@@ -690,15 +638,12 @@ public class TrustAnchorTest extends TestCase {
      * Test preconditions: valid parameters are passed to the constructors<br>
      * Expected: not null string<br>
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString() throws Exception {
         PublicKey pk = new TestKeyPair(keyAlg).getPublic();
         TrustAnchor ta1 = new TrustAnchor(validCaNameRfc2253, pk,
@@ -727,15 +672,12 @@ public class TrustAnchorTest extends TestCase {
      * by the method<br>
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCA",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCA",
+        args = {}
+    )
     public final void testGetCA01() throws Exception {
 
         PublicKey pk = new TestKeyPair(keyAlg).getPublic();

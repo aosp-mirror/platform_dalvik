@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class NumberFormatExceptionTest extends TestCase {
     /**
      * @tests java.lang.NumberFormatException#NumberFormatException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NumberFormatException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NumberFormatException",
+        args = {}
+    )
     public void test_Constructor() {
         NumberFormatException e = new NumberFormatException();
         assertNull(e.getMessage());
@@ -49,15 +46,12 @@ public class NumberFormatExceptionTest extends TestCase {
     /**
      * @tests java.lang.NumberFormatException#NumberFormatException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NumberFormatException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NumberFormatException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         NumberFormatException e = new NumberFormatException("fixture");
         assertEquals("fixture", e.getMessage());

@@ -17,9 +17,10 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 @TestTargetClass(StringBuffer.class) 
@@ -30,15 +31,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#StringBuffer()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StringBuffer",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StringBuffer",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.lang.StringBuffer()
         new StringBuffer();
@@ -48,15 +46,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#StringBuffer(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StringBuffer",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StringBuffer",
+        args = {int.class}
+    )
     public void test_ConstructorI() {
         // Test for method java.lang.StringBuffer(int)
         StringBuffer sb = new StringBuffer(8);
@@ -67,15 +62,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#StringBuffer(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StringBuffer",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StringBuffer",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.StringBuffer(java.lang.String)
 
@@ -96,15 +88,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(char[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {char[].class}
+    )
     public void test_append$C() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(char [])
@@ -118,15 +107,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values of offset and length.",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "append",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_append$CII() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(char [], int, int)
@@ -144,15 +130,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {char.class}
+    )
     public void test_appendC() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(char)
@@ -170,15 +153,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {double.class}
+    )
     public void test_appendD() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(double)
@@ -192,15 +172,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {float.class}
+    )
     public void test_appendF() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(float)
@@ -216,15 +193,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {int.class}
+    )
     public void test_appendI() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(int)
@@ -240,15 +214,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {long.class}
+    )
     public void test_appendJ() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(long)
@@ -264,15 +235,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.Object.class}
+    )
     public void test_appendLjava_lang_Object() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(java.lang.Object)
@@ -288,15 +256,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.String.class}
+    )
     public void test_appendLjava_lang_String() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(java.lang.String)
@@ -314,15 +279,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#append(boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {boolean.class}
+    )
     public void test_appendZ() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.append(boolean)
@@ -338,15 +300,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#capacity()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "capacity",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "capacity",
+        args = {}
+    )
     public void test_capacity() {
         // Test for method int java.lang.StringBuffer.capacity()
         StringBuffer sb = new StringBuffer(10);
@@ -358,15 +317,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#charAt(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "charAt",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "charAt",
+        args = {int.class}
+    )
     public void test_charAtI() {
         // Test for method char java.lang.StringBuffer.charAt(int)
         assertEquals("Returned incorrect char", 's', testBuffer.charAt(3));
@@ -385,15 +341,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#delete(int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "delete",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "delete",
+        args = {int.class, int.class}
+    )
     public void test_deleteII() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.delete(int, int)
@@ -425,55 +378,70 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#deleteCharAt(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "deleteCharAt",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "deleteCharAt",
+        args = {int.class}
+    )
     public void test_deleteCharAtI() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.deleteCharAt(int)
         testBuffer.deleteCharAt(3);
         assertEquals("Deleted incorrect char", 
                 "Thi is a test buffer", testBuffer.toString());
+        try {
+            testBuffer.deleteCharAt(testBuffer.length() + 1);
+            fail("StringIndexOutOfBoundsException was not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.deleteCharAt(-1);
+            fail("StringIndexOutOfBoundsException was not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#ensureCapacity(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "ensureCapacity",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ensureCapacity",
+        args = {int.class}
+    )
+    @KnownFailure("Google TODO 1481226") 
     public void test_ensureCapacityI() {
         // Test for method void java.lang.StringBuffer.ensureCapacity(int)
         StringBuffer sb = new StringBuffer(10);
 
+        sb.ensureCapacity(-2);
+        assertEquals("Failed to increase capacity.", 10, sb.capacity());
+        
         sb.ensureCapacity(100);
         assertTrue("Failed to increase capacity", sb.capacity() >= 100);
+        
+        try {
+            sb.ensureCapacity(Integer.MAX_VALUE);
+            fail("OutOfMemoryError should be thrown.");
+        } catch(java.lang.OutOfMemoryError oome) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#getChars(int, int, char[], int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getChars",
-          methodArgs = {int.class, int.class, char[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't check exceptions.",
+        method = "getChars",
+        args = {int.class, int.class, char[].class, int.class}
+    )
     public void test_getCharsII$CI() {
         // Test for method void java.lang.StringBuffer.getChars(int, int, char
         // [], int)
@@ -483,28 +451,59 @@ public class StringBuffer2Test extends junit.framework.TestCase {
         assertTrue("Returned incorrect chars", new String(buf, 2, 4)
                 .equals(testBuffer.toString().substring(4, 8)));
 
-        boolean exception = false;
+        StringBuffer buf2 = new StringBuffer("");
         try {
-            StringBuffer buf2 = new StringBuffer("");
-            buf2.getChars(0, 0, new char[5], 2);
+            buf2.getChars(-1, 0, new char[5], 2);
+            fail("IndexOutOfBoundsException is not thrown.");
         } catch (IndexOutOfBoundsException e) {
-            exception = true;
+            //expected
         }
-        assertTrue("did not expect IndexOutOfBoundsException", !exception);
+        
+        try {
+            buf2.getChars(0, -1, new char[5], 2);
+            fail("IndexOutOfBoundsException is not thrown.");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            buf2.getChars(0, -1, new char[5], 2);
+            fail("IndexOutOfBoundsException is not thrown.");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            buf2.getChars(2, 1, new char[5], 2);
+            fail("IndexOutOfBoundsException is not thrown.");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            buf2.getChars(0, 6, new char[5], 2);
+            fail("IndexOutOfBoundsException is not thrown.");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            buf2.getChars(0, 6, new char[10], 5);
+            fail("IndexOutOfBoundsException is not thrown.");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#insert(int, char[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, char[].class}
+    )
     public void test_insertI$C() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, char [])
@@ -528,15 +527,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#insert(int, char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, char[].class, int.class, int.class}
+    )
     public void test_insertI$CII() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, char [], int, int)
@@ -563,15 +559,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#insert(int, char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IndexOutOfBoundsException is not verified.",
+        method = "insert",
+        args = {int.class, char.class}
+    )
     public void test_insertIC() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, char)
@@ -583,35 +576,42 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#insert(int, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, double.class}
+    )
     public void test_insertID() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, double)
         testBuffer.insert(15, Double.MAX_VALUE);
         assertTrue("Insert test failed", testBuffer.toString().equals(
                 "This is a test " + Double.MAX_VALUE + "buffer"));
+        try {
+            testBuffer.insert(-1, Double.MAX_VALUE);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.insert(testBuffer.length() + 1, Double.MAX_VALUE);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#insert(int, float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, float.class}
+    )
     public void test_insertIF() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, float)
@@ -622,60 +622,93 @@ public class StringBuffer2Test extends junit.framework.TestCase {
         assertTrue("Insert test failed, got: " + "\'" + testBufferString + "\'"
                 + " but wanted: " + "\'" + expectedResult + "\'",
                 testBufferString.equals(expectedResult));
+        
+        try {
+            testBuffer.insert(-1, Float.MAX_VALUE);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.insert(testBuffer.length() + 1, Float.MAX_VALUE);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#insert(int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, int.class}
+    )
     public void test_insertII() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, int)
         testBuffer.insert(15, 100);
         assertEquals("Insert test failed", 
                 "This is a test 100buffer", testBuffer.toString());
+        
+        try {
+            testBuffer.insert(-1, Integer.MAX_VALUE);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.insert(testBuffer.length() + 1, Integer.MAX_VALUE);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#insert(int, long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, long.class}
+    )
     public void test_insertIJ() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, long)
         testBuffer.insert(15, 88888888888888888L);
         assertEquals("Insert test failed", 
                 "This is a test 88888888888888888buffer", testBuffer.toString());
+        
+        try {
+            testBuffer.insert(-1, Long.MAX_VALUE);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.insert(testBuffer.length() + 1, Long.MAX_VALUE);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }        
     }
 
     /**
      * @tests java.lang.StringBuffer#insert(int, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, java.lang.Object.class}
+    )
     public void test_insertILjava_lang_Object() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, java.lang.Object)
@@ -683,20 +716,31 @@ public class StringBuffer2Test extends junit.framework.TestCase {
         testBuffer.insert(15, obj1);
         assertTrue("Insert test failed", testBuffer.toString().equals(
                 "This is a test " + obj1.toString() + "buffer"));
+        
+        try {
+            testBuffer.insert(-1, obj1);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.insert(testBuffer.length() + 1, obj1);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#insert(int, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, java.lang.String.class}
+    )
     public void test_insertILjava_lang_String() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, java.lang.String)
@@ -704,40 +748,61 @@ public class StringBuffer2Test extends junit.framework.TestCase {
         testBuffer.insert(15, "STRING ");
         assertEquals("Insert test failed", 
                 "This is a test STRING buffer", testBuffer.toString());
+        
+        try {
+            testBuffer.insert(-1, "");
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.insert(testBuffer.length() + 1, "");
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }        
     }
 
     /**
      * @tests java.lang.StringBuffer#insert(int, boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "insert",
-          methodArgs = {int.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "insert",
+        args = {int.class, boolean.class}
+    )
     public void test_insertIZ() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.insert(int, boolean)
         testBuffer.insert(15, true);
         assertEquals("Insert test failed", 
                 "This is a test truebuffer", testBuffer.toString());
+        try {
+            testBuffer.insert(testBuffer.length() + 1, true);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.insert(-1, true);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#length()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "length",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "length",
+        args = {}
+    )
     public void test_length() {
         // Test for method int java.lang.StringBuffer.length()
         assertEquals("Incorrect length returned", 21, testBuffer.length());
@@ -746,15 +811,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#replace(int, int, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "replace",
-          methodArgs = {int.class, int.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "replace",
+        args = {int.class, int.class, java.lang.String.class}
+    )
     public void test_replaceIILjava_lang_String() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.replace(int, int, java.lang.String)
@@ -769,6 +831,35 @@ public class StringBuffer2Test extends junit.framework.TestCase {
                 .toString());
         assertEquals("insert2", "1text23", new StringBuffer("123").replace(1, 1, "text")
                 .toString());
+        
+        try {
+            testBuffer.replace(-1, 0, "text");
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.replace(0, -1, "text");
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.replace(2, 1, "text");
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.replace(testBuffer.length() + 1, testBuffer.length() + 1, 
+                    "text");
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException sioobe) {
+            //expected
+        }
     }
 
     private String writeString(String in) {
@@ -816,15 +907,12 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#reverse()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "reverse",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "reverse",
+        args = {}
+    )
     public void test_reverse() {
         // Test for method java.lang.StringBuffer
         // java.lang.StringBuffer.reverse()
@@ -846,34 +934,41 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#setCharAt(int, char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setCharAt",
-          methodArgs = {int.class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setCharAt",
+        args = {int.class, char.class}
+    )
     public void test_setCharAtIC() {
         // Test for method void java.lang.StringBuffer.setCharAt(int, char)
         StringBuffer s = new StringBuffer("HelloWorld");
         s.setCharAt(4, 'Z');
         assertEquals("Returned incorrect char", 'Z', s.charAt(4));
+        
+        try {
+            s.setCharAt(-1, 'Z');           
+            fail("IndexOutOfBoundsException is not thrown.");
+        } catch(IndexOutOfBoundsException ioobe) {
+            //expected
+        }
+        try {
+            s.setCharAt(s.length() + 1, 'Z');           
+            fail("IndexOutOfBoundsException is not thrown.");
+        } catch(IndexOutOfBoundsException ioobe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#setLength(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setLength",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IndexOutOfBoundsException is not verified.",
+        method = "setLength",
+        args = {int.class}
+    )
     public void test_setLengthI() {
         // Test for method void java.lang.StringBuffer.setLength(int)
         testBuffer.setLength(1000);
@@ -889,58 +984,121 @@ public class StringBuffer2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.StringBuffer#substring(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "StringIndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "substring",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "substring",
+        args = {int.class}
+    )
     public void test_substringI() {
         // Test for method java.lang.String
         // java.lang.StringBuffer.substring(int)
-        assertEquals("Returned incorrect substring", "is a test buffer", testBuffer.substring(5)
-                );
+        assertEquals("Returned incorrect substring", "is a test buffer",
+                testBuffer.substring(5));
+        
+        try {
+            testBuffer.substring(testBuffer.length() + 1);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException oobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.substring(-1);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException oobe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#substring(int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IndexOutOfBoundsException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "substring",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "substring",
+        args = {int.class, int.class}
+    )
     public void test_substringII() {
         // Test for method java.lang.String
         // java.lang.StringBuffer.substring(int, int)
-        assertEquals("Returned incorrect substring", "is", testBuffer.substring(5, 7)
-                );
+        assertEquals("Returned incorrect substring", "is", 
+                testBuffer.substring(5, 7));
+        
+        try {
+            testBuffer.substring(-1, testBuffer.length());
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException oobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.substring(0, -1);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException oobe) {
+            //expected
+        }
+        
+        try {
+            testBuffer.substring(2, 1);
+            fail("StringIndexOutOfBoundsException is not thrown.");
+        } catch(StringIndexOutOfBoundsException oobe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.lang.StringBuffer#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.lang.StringBuffer.toString()
         assertEquals("Incorrect string value returned", "This is a test buffer", testBuffer.toString()
                 );
     }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "subSequence",
+        args = {int.class, int.class}
+    )
+          public void test_subSequence() {
+
+              assertEquals("Incorrect substring returned", " is", 
+                      testBuffer.subSequence(4, 7));
+              assertEquals("Incorrect substring returned", "test buffer",
+                      testBuffer.subSequence(10, 21));
+              assertEquals("not identical", "This is a test buffer", 
+                      testBuffer.subSequence(0, testBuffer.length()));
+              
+              try {
+                  testBuffer.subSequence(0, Integer.MAX_VALUE);
+                  fail("IndexOutOfBoundsException was not thrown.");
+              } catch(IndexOutOfBoundsException ioobe) {
+                  //expected            
+              }   
+              
+              try {
+                  testBuffer.subSequence(Integer.MAX_VALUE, testBuffer.length());
+                  fail("IndexOutOfBoundsException was not thrown.");
+              } catch(IndexOutOfBoundsException ioobe) {
+                  //expected            
+              }  
+              
+              try {
+                  testBuffer.subSequence(-1, testBuffer.length());
+                  fail("IndexOutOfBoundsException was not thrown.");
+              } catch(IndexOutOfBoundsException ioobe) {
+                  //expected            
+              }
+          }
 
     @Override
     protected void setUp() {

@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All Logging test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Logging test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.logging.tests.java.util.logging.AllTests.suite());
         // $JUnit-END$

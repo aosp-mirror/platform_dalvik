@@ -17,30 +17,27 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(ByteArrayInputStream.class) 
 public class ByteArrayInputStreamTest extends junit.framework.TestCase {
 
-    private java.io.InputStream is;
+    private ByteArrayInputStream is;
 
     public String fileString = "Test_All_Tests\nTest_java_io_BufferedInputStream\nTest_java_io_BufferedOutputStream\nTest_ByteArrayInputStream\nTest_java_io_ByteArrayOutputStream\nTest_java_io_DataInputStream\n";
 
     /**
      * @tests java.io.ByteArrayInputStream#ByteArrayInputStream(byte[])
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies ByteArrayInputStream(byte[] buf) constructor.",
-            targets = { @TestTarget(methodName = "ByteArrayInputStream", 
-                                    methodArgs = {byte[].class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "ByteArrayInputStream",
+        args = {byte[].class}
     )       
     public void test_Constructor$B() {
         // Test for method java.io.ByteArrayInputStream(byte [])
@@ -61,12 +58,10 @@ public class ByteArrayInputStreamTest extends junit.framework.TestCase {
      * @tests java.io.ByteArrayInputStream#ByteArrayInputStream(byte[], int,
      *        int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies ByteArrayInputStream(byte[] buf, int offset, int length) constructor.",
-            targets = { @TestTarget(methodName = "ByteArrayInputStream", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "ByteArrayInputStream",
+        args = {byte[].class, int.class, int.class}
     )           
     public void test_Constructor$BII() throws IOException {
         // Test for method java.io.ByteArrayInputStream(byte [], int, int)
@@ -106,12 +101,11 @@ public class ByteArrayInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ByteArrayInputStream#available()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies available() method.",
-            targets = { @TestTarget(methodName = "available", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies available() method.",
+        method = "available",
+        args = {}
     )        
     public void test_available() {
         // Test for method int java.io.ByteArrayInputStream.available()
@@ -126,41 +120,33 @@ public class ByteArrayInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ByteArrayInputStream#close()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "close",
+        args = {}
     )      
     public void test_close() {
-        // Test for method void java.io.ByteArrayInputStream.close()
-        try {
-            is.read();
-        } catch (java.io.IOException e) {
-            fail("Failed reading from input stream");
-        }
+        is.read();
         try {
             is.close();
         } catch (java.io.IOException e) {
-            fail("Failed closing input stream");
+            fail("Test 1: Failed to close the input stream.");
         }
         try {
             is.read();
         } catch (Exception e) {
-            fail("Should be able to read from closed stream");
+            fail("Test 2: Should be able to read from closed stream.");
         }
     }
 
     /**
      * @tests java.io.ByteArrayInputStream#mark(int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies mark(int readAheadLimit) method.",
-            targets = { @TestTarget(methodName = "mark", 
-                                    methodArgs = {int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies mark(int readAheadLimit) method.",
+        method = "mark",
+        args = {int.class}
     )       
     public void test_markI() {
         // Test for method void java.io.ByteArrayInputStream.mark(int)
@@ -185,12 +171,11 @@ public class ByteArrayInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ByteArrayInputStream#markSupported()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies markSupported() method.",
-            targets = { @TestTarget(methodName = "markSupported", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies markSupported() method.",
+        method = "markSupported",
+        args = {}
     )       
     public void test_markSupported() {
         // Test for method boolean java.io.ByteArrayInputStream.markSupported()
@@ -200,12 +185,11 @@ public class ByteArrayInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ByteArrayInputStream#read()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies read() method.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies read() method.",
+        method = "read",
+        args = {}
     )  
     public void test_read() {
         // Test for method int java.io.ByteArrayInputStream.read()
@@ -223,38 +207,58 @@ public class ByteArrayInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ByteArrayInputStream#read(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies read(byte[] b, int off, int len) method.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {byte[].class, int.class, int.class}
     )      
-    public void test_read$BII() {
-        // Test for method int java.io.ByteArrayInputStream.read(byte [], int,
-        // int)
+    public void test_read$BII() throws IOException {
         byte[] buf1 = new byte[20];
-        try {
-            is.skip(50);
-            is.mark(100);
-            is.read(buf1, 0, buf1.length);
-            assertTrue("Failed to read correct data", new String(buf1, 0,
-                    buf1.length).equals(fileString.substring(50, 70)));
+        is.skip(50);
+        is.mark(100);
+        is.read(buf1, 0, buf1.length);
+        assertTrue("Test 1: Failed to read correct data.", 
+                new String(buf1, 0, buf1.length).equals(
+                        fileString.substring(50, 70)));
 
-        } catch (Exception e) {
-            fail("Exception during read test: " + e);
+        // Illegal argument checks.
+        try {
+            is.read(null, 1, 0);
+            fail("Test 2: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+
+        try {
+            is.read(buf1 , -1, 1);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        
+        try {
+            is.read(buf1 , 1, -1);
+            fail("Test 4: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
+        try {
+            is.read(buf1, 1, buf1.length);
+            fail("Test 5: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.ByteArrayInputStream#reset()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "The test verifies reset() method.",
-            targets = { @TestTarget(methodName = "reset", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "The test verifies reset() method.",
+        method = "reset",
+        args = {}
     )     
     public void test_reset() {
         // Test for method void java.io.ByteArrayInputStream.reset()
@@ -276,12 +280,11 @@ public class ByteArrayInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ByteArrayInputStream#skip(long)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "skip", 
-                                    methodArgs = {long.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "skip",
+        args = {long.class}
     )       
     public void test_skipJ() {
         // Test for method long java.io.ByteArrayInputStream.skip(long)

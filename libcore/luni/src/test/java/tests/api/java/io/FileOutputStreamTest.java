@@ -17,26 +17,43 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
-@TestTargetClass(FileOutputStream.class) 
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
+@TestTargetClass(
+        value = FileOutputStream.class,
+        untestedMethods = {
+            @TestTargetNew(
+                    method = "finalize",
+                    args = {},
+                    level = TestLevel.NOT_FEASIBLE,
+                    notes = "Hard to test since it requires that the " +
+                            "garbage collector runs; add test later."
+            )
+        }
+) 
 public class FileOutputStreamTest extends junit.framework.TestCase {
 
     public String fileName;
 
-    java.io.FileOutputStream fos;
+    FileOutputStream fos;
 
-    java.io.FileInputStream fis;
+    FileInputStream fis;
 
-    java.io.File f;
+    File f;
+    
+    String tmpDirName = System.getProperty("java.io.tmpdir");
+    
+    File tmpDir = new File(tmpDirName);
 
     byte[] ibuf = new byte[4096];
 
@@ -45,32 +62,76 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#FileOutputStream(java.io.File)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException & FileNotFoundException checking missed.",
-            targets = { @TestTarget(methodName = "FileOutputStream", 
-                                    methodArgs = {java.io.File.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "FileOutputStream",
+        args = {java.io.File.class}
+    )    
     public void test_ConstructorLjava_io_File() throws Exception {
-        // Test for method java.io.FileOutputStream(java.io.File)
-        f = new File(fileName = System.getProperty("user.home"), "fos.tst");
-        fos = new java.io.FileOutputStream(f);
+        try {
+            fos = new FileOutputStream(tmpDir);
+            fail("Test 1: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            // Expected.
+        }
+
+        f = new File(fileName = System.getProperty("java.io.tmpdir"), "fos.tst");
+        fos = new FileOutputStream(f);
+    }
+
+    /**
+     * @tests java.io.FileOutputStream#FileOutputStream(java.lang.String,
+     *        boolean)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "FileOutputStream",
+        args = {java.io.File.class, boolean.class}
+    )     
+    public void test_ConstructorLjava_io_FileZ() throws Exception {
+        try {
+            fos = new FileOutputStream(tmpDir, false);
+            fail("Test 1: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            // Expected.
+        }
+
+        f = new File(tmpDirName, "fos.tst");
+        fos = new FileOutputStream(f, false);
+        fos.write("FZ1".getBytes(), 0, 3);
+        fos.close();
+        // Append data to existing file
+        fos = new FileOutputStream(f, true);
+        fos.write(fileString.getBytes());
+        fos.close();
+        byte[] buf = new byte[fileString.length() + 3];
+        fis = new FileInputStream(f);
+        fis.read(buf, 0, buf.length);
+        assertTrue("Test 2: Failed to create appending stream.", new String(buf, 0,
+                buf.length).equals("FZ1" + fileString));
+        fis.close();
+        
+        // Check that the existing file is overwritten
+        fos = new FileOutputStream(f, false);
+        fos.write("FZ2".getBytes(), 0, 3);
+        fos.close();
+        fis = new FileInputStream(f);
+        int bytesRead = fis.read(buf, 0, buf.length);
+        assertTrue("Test 3: Failed to overwrite stream.", new String(buf, 0,
+                bytesRead).equals("FZ2"));
     }
 
     /**
      * @tests java.io.FileOutputStream#FileOutputStream(java.io.FileDescriptor)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "FileOutputStream", 
-                                    methodArgs = {java.io.FileDescriptor.class})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "FileOutputStream",
+        args = {java.io.FileDescriptor.class}
+    )      
     public void test_ConstructorLjava_io_FileDescriptor() throws Exception {
         // Test for method java.io.FileOutputStream(java.io.FileDescriptor)
-        f = new File(fileName = System.getProperty("user.home"), "fos.tst");
+        f = new File(tmpDirName, "fos.tst");
         fileName = f.getAbsolutePath();
         fos = new FileOutputStream(fileName);
         fos.write('l');
@@ -84,38 +145,47 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#FileOutputStream(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException & FileNotFoundException checking missed.",
-            targets = { @TestTarget(methodName = "FileOutputStream", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "FileOutputStream",
+        args = {java.lang.String.class}
+    )    
     public void test_ConstructorLjava_lang_String() throws Exception {
-        // Test for method java.io.FileOutputStream(java.lang.String)
-        f = new File(fileName = System.getProperty("user.home"), "fos.tst");
+        try {
+            fos = new FileOutputStream(tmpDirName);
+            fail("Test 1: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            // Expected.
+        }
+        
+        f = new File(tmpDirName, "fos.tst");
         fileName = f.getAbsolutePath();
-        fos = new java.io.FileOutputStream(f);
+        fos = new FileOutputStream(fileName);
     }
 
     /**
      * @tests java.io.FileOutputStream#FileOutputStream(java.lang.String,
      *        boolean)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException & FileNotFoundException checking missed.",
-            targets = { @TestTarget(methodName = "FileOutputStream", 
-                                    methodArgs = {java.lang.String.class, boolean.class})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "FileOutputStream",
+        args = {java.lang.String.class, boolean.class}
+    )     
     public void test_ConstructorLjava_lang_StringZ() throws Exception {
-        // Test for method java.io.FileOutputStream(java.lang.String, boolean)
-        f = new java.io.File(System.getProperty("user.home"), "fos.tst");
-        fos = new java.io.FileOutputStream(f.getPath(), false);
+        try {
+            fos = new FileOutputStream(tmpDirName, true);
+            fail("Test 1: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            // Expected.
+        }
+
+        f = new File(tmpDirName, "fos.tst");
+        fos = new FileOutputStream(f.getPath(), false);
         fos.write("HI".getBytes(), 0, 2);
         fos.close();
-        fos = new java.io.FileOutputStream(f.getPath(), true);
+        // Append data to existing file
+        fos = new FileOutputStream(f.getPath(), true);
         fos.write(fileString.getBytes());
         fos.close();
         byte[] buf = new byte[fileString.length() + 2];
@@ -123,48 +193,54 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
         fis.read(buf, 0, buf.length);
         assertTrue("Failed to create appending stream", new String(buf, 0,
                 buf.length).equals("HI" + fileString));
+        fis.close();
+        
+        // Check that the existing file is overwritten
+        fos = new FileOutputStream(f.getPath(), false);
+        fos.write("HI".getBytes(), 0, 2);
+        fos.close();
+        fis = new FileInputStream(f.getPath());
+        int bytesRead = fis.read(buf, 0, buf.length);
+        assertTrue("Failed to overwrite stream", new String(buf, 0,
+                bytesRead).equals("HI"));
     }
 
     /**
      * @tests java.io.FileOutputStream#close()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException not checked because it would be thrown" +
+                "by a native method.",
+        method = "close",
+        args = {}
+    )     
     public void test_close() throws Exception {
-        // Test for method void java.io.FileOutputStream.close()
-
-        f = new java.io.File(System.getProperty("user.home"), "output.tst");
-        fos = new java.io.FileOutputStream(f.getPath());
+        f = new File(System.getProperty("java.io.tmpdir"), "output.tst");
+        fos = new FileOutputStream(f.getPath());
         fos.close();
 
         try {
             fos.write(fileString.getBytes());
-            fail("Close test failed - wrote to closed stream");
+            fail("Test 1: IOException expected.");
         } catch (java.io.IOException e) {
-            // correct
+            // Expected.
         }
-
     }
 
     /**
      * @tests java.io.FileOutputStream#getFD()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "getFD", 
-                                    methodArgs = {})                         
-            }
-        )       
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException not checked because it never gets thrown.",
+        method = "getFD",
+        args = {}
+    )       
     public void test_getFD() throws Exception {
         // Test for method java.io.FileDescriptor
         // java.io.FileOutputStream.getFD()
-        f = new File(fileName = System.getProperty("user.home"), "testfd");
+        f = new File(fileName = System.getProperty("java.io.tmpdir"), "testfd");
         fileName = f.getAbsolutePath();
         fos = new FileOutputStream(f);
         assertTrue("Returned invalid fd", fos.getFD().valid());
@@ -175,42 +251,46 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#write(byte[])
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {byte[].class})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "write",
+        args = {byte[].class}
+    )     
     public void test_write$B() throws Exception {
         // Test for method void java.io.FileOutputStream.write(byte [])
-        f = new java.io.File(System.getProperty("user.home"), "output.tst");
-        fos = new java.io.FileOutputStream(f.getPath());
+        f = new File(System.getProperty("java.io.tmpdir"), "output.tst");
+        fos = new FileOutputStream(f.getPath());
         fos.write(fileString.getBytes());
-        fis = new java.io.FileInputStream(f.getPath());
+        fos.close();
+        try {
+            fos.write(fileString.getBytes());
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+
+        fis = new FileInputStream(f.getPath());
         byte rbytes[] = new byte[4000];
         fis.read(rbytes, 0, fileString.length());
-        assertTrue("Incorrect string returned", new String(rbytes, 0,
-                fileString.length()).equals(fileString));
+        assertTrue("Test 2: Incorrect string written or read.", 
+                new String(rbytes, 0, fileString.length()).equals(fileString));
     }
 
     /**
      * @tests java.io.FileOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
-        )        
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )        
     public void test_write$BII() throws Exception {
         // Test for method void java.io.FileOutputStream.write(byte [], int,
         // int)
-        f = new java.io.File(System.getProperty("user.home"), "output.tst");
-        fos = new java.io.FileOutputStream(f.getPath());
+        f = new File(System.getProperty("java.io.tmpdir"), "output.tst");
+        fos = new FileOutputStream(f.getPath());
         fos.write(fileString.getBytes(), 0, fileString.length());
-        fis = new java.io.FileInputStream(f.getPath());
+        fis = new FileInputStream(f.getPath());
         byte rbytes[] = new byte[4000];
         fis.read(rbytes, 0, fileString.length());
         assertTrue("Incorrect bytes written", new String(rbytes, 0, fileString
@@ -220,98 +300,115 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#write(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {int.class})                         
-            }
-        )        
-    public void test_writeI() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "write",
+        args = {int.class}
+    )        
+    public void test_writeI() throws IOException {
         // Test for method void java.io.FileOutputStream.write(int)
-        f = new java.io.File(System.getProperty("user.home"), "output.tst");
-        fos = new java.io.FileOutputStream(f.getPath());
+        f = new File(System.getProperty("java.io.tmpdir"), "output.tst");
+        fos = new FileOutputStream(f.getPath());
         fos.write('t');
-        fis = new java.io.FileInputStream(f.getPath());
-        assertEquals("Incorrect char written", 't', fis.read());
+        fos.close();
+        try {
+            fos.write(42);
+            fail("Test: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+
+        fis = new FileInputStream(f.getPath());
+        assertEquals("Test 1: Incorrect char written or read.", 
+                't', fis.read());
     }
 
     /**
      * @tests java.io.FileOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
-        )       
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Illegal argument and IOException checks.",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )       
     public void test_write$BII2() throws Exception {
-        // Regression for HARMONY-437
-
-        f = new java.io.File(System.getProperty("user.home"), "output.tst");
-        fos = new java.io.FileOutputStream(f.getPath());
+        f = new File(tmpDirName, "output.tst");
+        fos = new FileOutputStream(f.getPath());
 
         try {
-            fos.write(null, 1, 1);
-            fail("NullPointerException must be thrown");
+            fos.write(null, 0, 0);
+            fail("Test 1: NullPointerException expected.");
         } catch (NullPointerException e) {}
 
         try {
-            fos.write(new byte[1], -1, 1);
-            fail("IndexOutOfBoundsException must be thrown if off <0");
+            fos.write(new byte[1], -1, 0);
+            fail("Test 2: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException e) {}
 
         try {
             fos.write(new byte[1], 0, -1);
-            fail("IndexOutOfBoundsException must be thrown if len <0");
+            fail("Test 3: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException e) {}
 
         try {
             fos.write(new byte[1], 0, 5);
-            fail("IndexOutOfBoundsException must be thrown if off+len > b.lengh");
+            fail("Test 4: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException e) {}
 
         try {
             fos.write(new byte[10], Integer.MAX_VALUE, 5);
-            fail("IndexOutOfBoundsException expected");
+            fail("Test 5: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException e) {}
 
         try {
             fos.write(new byte[10], 5, Integer.MAX_VALUE);
-            fail("IndexOutOfBoundsException expected");
+            fail("Test 6: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException e) {}
+
         fos.close();
+        try {
+            fos.write(new byte[10], 5, 4);
+            fail("Test 7: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+
     }
 
     /**
      * @tests java.io.FileOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Regression test. IOException checking missed.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
-        )     
-    public void test_write$BII3() throws Exception {
-        // Regression for HARMONY-834
-        //no exception expected
-        new FileOutputStream(new FileDescriptor()).write(new byte[1], 0, 0);
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )     
+    public void test_write$BII3() {
+        try {
+            new FileOutputStream(new FileDescriptor()).write(new byte[1], 0, 0);
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
+        }
     }
 
     /**
      * @tests java.io.FileOutputStream#getChannel()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies getChannel() method.",
-            targets = { @TestTarget(methodName = "getChannel", 
-                                    methodArgs = {})                         
-            }
-        )       
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies getChannel() method.",
+        method = "getChannel",
+        args = {}
+    )
+    @AndroidOnly("The position of the FileChannel for a file opened in " +
+                 "append mode is 0 for the RI and corresponds to the " +
+                 "next position to write to on Android.")
     public void test_getChannel() throws Exception {
-        // Regression for HARMONY-508
+        // Make sure that system properties are set correctly
+        if (tmpDir == null) {
+            throw new Exception("System property java.io.tmpdir not defined.");
+        }
         File tmpfile = File.createTempFile("FileOutputStream", "tmp");
         tmpfile.deleteOnExit();
         FileOutputStream fos = new FileOutputStream(tmpfile);

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,22 +34,29 @@ public class SecurityPermissionsTest extends TestCase {
 
         suite.addTestSuite(tests.security.permissions.JavaIoFileInputStreamTest.class);
         suite.addTestSuite(tests.security.permissions.JavaIoFileOutputStreamTest.class);
-        suite.addTestSuite(tests.security.permissions.JavaIoRandomAccessFileTest.class);
         suite.addTestSuite(tests.security.permissions.JavaIoFileTest.class);
         suite.addTestSuite(tests.security.permissions.JavaIoObjectInputStreamTest.class);
         suite.addTestSuite(tests.security.permissions.JavaIoObjectOutputStreamTest.class);
-        suite.addTestSuite(tests.security.permissions.JavaLangSystemTest.class);
-        suite.addTestSuite(tests.security.permissions.JavaLangClassTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaIoRandomAccessFileTest.class);
         suite.addTestSuite(tests.security.permissions.JavaLangClassLoaderTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaLangClassTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaLangRuntimeTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaLangSystemTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaLangThreadTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaNetDatagramSocketTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaNetMulticastSocketTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaNetServerSocketTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaNetSocketTest.class);
         suite.addTestSuite(tests.security.permissions.JavaSecurityPolicyTest.class);
         suite.addTestSuite(tests.security.permissions.JavaSecuritySecurityTest.class);
         suite.addTestSuite(tests.security.permissions.JavaUtilLocale.class);
-        suite.addTestSuite(tests.security.permissions.JavaNetServerSocketTest.class);
-        suite.addTestSuite(tests.security.permissions.JavaNetDatagramSocketTest.class);
-        suite.addTestSuite(tests.security.permissions.JavaNetMulticastSocketTest.class);
-
+        suite.addTestSuite(tests.security.permissions.JavaUtilZipZipFile.class);
+        suite.addTestSuite(tests.security.permissions.JavaxSecurityAuthSubjectDomainCombiner.class);
+        suite.addTestSuite(tests.security.permissions.JavaxSecurityAuthSubject.class);
+        suite.addTestSuite(tests.security.permissions.JavaLangReflectAccessibleObjectTest.class);
+        
         return suite;
     }
-    
+
 }
 

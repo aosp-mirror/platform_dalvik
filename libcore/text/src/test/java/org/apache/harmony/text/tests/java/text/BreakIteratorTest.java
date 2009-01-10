@@ -17,9 +17,9 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -43,41 +43,45 @@ public class BreakIteratorTest extends TestCase {
         super.setUp();
         iterator = BreakIterator.getCharacterInstance(Locale.US);
     }
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Verifies constant.",
-      targets = {
-        @TestTarget(
-          methodName = "!Constants",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.TODO,
+        notes = "Verifies constant.",
+        method = "!Constants",
+        args = {}
+    )
     public void testConsts() {
         assertEquals(-1, BreakIterator.DONE);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCharacterInstance",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCharacterInstance",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getCharacterInstance",
-          methodArgs = {java.util.Locale.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCharacterInstance",
+            args = {java.util.Locale.class}
         ),
-        @TestTarget(
-          methodName = "getWordInstance",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getWordInstance",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getLineInstance",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getLineInstance",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getSentenceInstance",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getSentenceInstance",
+            args = {}
         )
     })
     public void testCache() {
@@ -100,29 +104,23 @@ public class BreakIteratorTest extends TestCase {
         BreakIterator senteIterator = BreakIterator.getSentenceInstance();
         assertFalse(senteIterator.equals(iterator));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void testClone() {
         BreakIterator cloned = (BreakIterator) iterator.clone();
         assertNotSame(cloned, iterator);
         assertEquals(cloned, iterator);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "current",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "current",
+        args = {}
+    )
     public void testCurrent() {
         assertEquals(0, iterator.current());
         iterator.setText(TEXT);
@@ -133,15 +131,12 @@ public class BreakIteratorTest extends TestCase {
      * @tests java.text.BreakIterator#BreakIterator() Test of method
      *        java.text.BreakIterator#BreakIterator().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "BreakIterator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "BreakIterator",
+        args = {}
+    )
     public void testConstructor() {
         try {
             new MockBreakIterator();
@@ -149,29 +144,23 @@ public class BreakIteratorTest extends TestCase {
             fail("Unexpected exception " + e.toString());
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "first",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "first",
+        args = {}
+    )
     public void testFirst() {
         assertEquals(0, iterator.first());
         iterator.setText(TEXT);
         assertEquals(0, iterator.first());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "following",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "following",
+        args = {int.class}
+    )
     public void testFollowing() {
         try {
             iterator.following(1);
@@ -191,15 +180,12 @@ public class BreakIteratorTest extends TestCase {
         } catch (IllegalArgumentException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isBoundary",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isBoundary",
+        args = {int.class}
+    )
     public void testIsBoundary() {
         try {
             iterator.isBoundary(2);
@@ -221,15 +207,12 @@ public class BreakIteratorTest extends TestCase {
         } catch (IllegalArgumentException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "last",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "last",
+        args = {}
+    )
     public void testLast() {
         assertEquals(0, iterator.last());
         iterator.setText(TEXT);
@@ -239,15 +222,12 @@ public class BreakIteratorTest extends TestCase {
     /*
      * Class under test for int next(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "next",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "next",
+        args = {int.class}
+    )
     public void testNextint() {
         assertEquals(BreakIterator.DONE, iterator.next(3));
         iterator.setText(TEXT);
@@ -256,15 +236,12 @@ public class BreakIteratorTest extends TestCase {
         assertEquals(23, iterator.next(-1));
         assertEquals(-1, iterator.next(TEXT.length()));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "preceding",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "preceding",
+        args = {int.class}
+    )
     public void testPreceding() {
         try {
             iterator.preceding(2);
@@ -288,15 +265,12 @@ public class BreakIteratorTest extends TestCase {
         } catch (IllegalArgumentException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "previous",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "previous",
+        args = {}
+    )
     public void testPrevious() {
         assertEquals(-1, iterator.previous());
         iterator.setText(TEXT);
@@ -309,15 +283,12 @@ public class BreakIteratorTest extends TestCase {
      * @tests java.text.BreakIterator#getAvailableLocales(). Test of method
      *        java.text.BreakIterator#getAvailableLocales().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAvailableLocales",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAvailableLocales",
+        args = {}
+    )
     public void testGetAvailableLocales() {
         try {
             Locale[] locales = BreakIterator.getAvailableLocales();
@@ -341,15 +312,12 @@ public class BreakIteratorTest extends TestCase {
     /*
      * Class under test for BreakIterator getCharacterInstance()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCharacterInstance",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCharacterInstance",
+        args = {}
+    )
     public void testGetCharacterInstance() {
         BreakIterator.getCharacterInstance();
     }
@@ -357,15 +325,12 @@ public class BreakIteratorTest extends TestCase {
     /*
      * Class under test for BreakIterator getCharacterInstance(Locale)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exception.",
-      targets = {
-        @TestTarget(
-          methodName = "getCharacterInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify exception.",
+        method = "getCharacterInstance",
+        args = {java.util.Locale.class}
+    )
     public void testGetCharacterInstanceLocale() {
         BreakIterator it = BreakIterator.getCharacterInstance(Locale.US);
         BreakIterator it2 = BreakIterator.getCharacterInstance(Locale.CHINA);
@@ -375,15 +340,12 @@ public class BreakIteratorTest extends TestCase {
     /*
      * Class under test for BreakIterator getLineInstance()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLineInstance",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLineInstance",
+        args = {}
+    )
     public void testGetLineInstance() {
         BreakIterator it = BreakIterator.getLineInstance();
         assertNotNull(it);
@@ -393,15 +355,12 @@ public class BreakIteratorTest extends TestCase {
      * @tests java.text.BreakIterator#getLineInstance(Locale) Class under test
      * for BreakIterator getLineInstance(Locale)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exception.",
-      targets = {
-        @TestTarget(
-          methodName = "getLineInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exception.",
+        method = "getLineInstance",
+        args = {java.util.Locale.class}
+    )
     public void testGetLineInstanceLocale() {
         try {
             BreakIterator it1 = BreakIterator
@@ -420,15 +379,12 @@ public class BreakIteratorTest extends TestCase {
     /*
      * Class under test for BreakIterator getSentenceInstance()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSentenceInstance",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSentenceInstance",
+        args = {}
+    )
     public void testGetSentenceInstance() {
         BreakIterator it = BreakIterator.getSentenceInstance();
         assertNotNull(it);
@@ -437,28 +393,22 @@ public class BreakIteratorTest extends TestCase {
     /*
      * Class under test for BreakIterator getSentenceInstance(Locale)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exception.",
-      targets = {
-        @TestTarget(
-          methodName = "getSentenceInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exception.",
+        method = "getSentenceInstance",
+        args = {java.util.Locale.class}
+    )
     public void testGetSentenceInstanceLocale() {
         BreakIterator it = BreakIterator.getSentenceInstance(Locale.US);
         assertNotNull(it);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getText",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getText",
+        args = {}
+    )
     public void testGetText() {
         assertEquals(new StringCharacterIterator(""), iterator.getText());
         iterator.setText(TEXT);
@@ -468,15 +418,12 @@ public class BreakIteratorTest extends TestCase {
     /*
      * Class under test for BreakIterator getWordInstance()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getWordInstance",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getWordInstance",
+        args = {}
+    )
     public void testGetWordInstance() {
         BreakIterator it = BreakIterator.getWordInstance();
         assertNotNull(it);
@@ -486,15 +433,12 @@ public class BreakIteratorTest extends TestCase {
      * @tests java.text.BreakIterator#getWordInstance(Locale) Class under test
      * for BreakIterator getWordInstance(Locale)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exception.",
-      targets = {
-        @TestTarget(
-          methodName = "getWordInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exception.",
+        method = "getWordInstance",
+        args = {java.util.Locale.class}
+    )
     public void testGetWordInstanceLocale() {
         try {
             BreakIterator it1 = BreakIterator
@@ -513,15 +457,12 @@ public class BreakIteratorTest extends TestCase {
     /*
      * Class under test for void setText(CharacterIterator)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setText",
-          methodArgs = {java.text.CharacterIterator.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setText",
+        args = {java.text.CharacterIterator.class}
+    )
     public void testSetTextCharacterIterator() {
         try {
             iterator.setText((CharacterIterator) null);
@@ -536,15 +477,12 @@ public class BreakIteratorTest extends TestCase {
     /*
      * Class under test for void setText(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setText",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setText",
+        args = {java.lang.String.class}
+    )
     public void testSetTextString() {
         try {
             iterator.setText((String) null);
@@ -555,15 +493,12 @@ public class BreakIteratorTest extends TestCase {
         CharacterIterator it = new StringCharacterIterator("abc");
         assertEquals(it, iterator.getText());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "next",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "next",
+        args = {}
+    )
     public void test_next() {
         // Regression test for HARMONY-30
         BreakIterator bi = BreakIterator.getWordInstance(Locale.US);
@@ -581,15 +516,12 @@ public class BreakIteratorTest extends TestCase {
      * @tests java.text.BreakIterator.getShort(byte[], int)
      * 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getShort",
-          methodArgs = {byte[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getShort",
+        args = {byte[].class, int.class}
+    )
     public void test_getShort() {
         try {
             MockBreakIterator.publicGetShort(null, 0);
@@ -648,15 +580,12 @@ public class BreakIteratorTest extends TestCase {
      * @tests java.text.BreakIterator.getInt(byte[], int)
      * 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInt",
-          methodArgs = {byte[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInt",
+        args = {byte[].class, int.class}
+    )
     public void test_getInt() {
         try {
             MockBreakIterator.publicGetInt(null, 0);
@@ -707,15 +636,12 @@ public class BreakIteratorTest extends TestCase {
      * @tests java.text.BreakIterator.getLong(byte[], int)
      * 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLong",
-          methodArgs = {byte[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLong",
+        args = {byte[].class, int.class}
+    )
     public void test_getLong() {
         try {
             MockBreakIterator.publicGetLong(null, 0);
@@ -768,15 +694,12 @@ public class BreakIteratorTest extends TestCase {
     /**
      * @tests java.text.BreakIterator#getCharacterInstance(Locale)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies exception.",
-      targets = {
-        @TestTarget(
-          methodName = "getCharacterInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies exception.",
+        method = "getCharacterInstance",
+        args = {java.util.Locale.class}
+    )
     public void testGetCharacterInstanceLocale_NPE() {
         // Regression for HARMONY-265
         try {
@@ -785,15 +708,12 @@ public class BreakIteratorTest extends TestCase {
         } catch (NullPointerException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies exception.",
-      targets = {
-        @TestTarget(
-          methodName = "getLineInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies exception.",
+        method = "getLineInstance",
+        args = {java.util.Locale.class}
+    )
     public void testGetLineInstanceLocale_NPE() {
         try {
             BreakIterator.getLineInstance(null);
@@ -801,15 +721,12 @@ public class BreakIteratorTest extends TestCase {
         } catch (NullPointerException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies exception.",
-      targets = {
-        @TestTarget(
-          methodName = "getSentenceInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies exception.",
+        method = "getSentenceInstance",
+        args = {java.util.Locale.class}
+    )
     public void testGetSentenceInstanceLocale_NPE() {
         try {
             BreakIterator.getSentenceInstance(null);
@@ -817,15 +734,12 @@ public class BreakIteratorTest extends TestCase {
         } catch (NullPointerException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies exception.",
-      targets = {
-        @TestTarget(
-          methodName = "getWordInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies exception.",
+        method = "getWordInstance",
+        args = {java.util.Locale.class}
+    )
     public void testGetWordInstanceLocale_NPE() {
         try {
             BreakIterator.getWordInstance(null);

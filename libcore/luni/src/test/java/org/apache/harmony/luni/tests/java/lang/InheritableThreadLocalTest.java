@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,28 +30,22 @@ public class InheritableThreadLocalTest extends TestCase {
     /**
      * @tests java.lang.InheritableThreadLocal#InheritableThreadLocal()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InheritableThreadLocal",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InheritableThreadLocal",
+        args = {}
+    )
     public void test_Constructor() {
         InheritableThreadLocal<String> itl = new InheritableThreadLocal<String>();
         assertNull(itl.get());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "initialValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "initialValue",
+        args = {}
+    )
     public void test_initialValue() {
         InheritableThreadLocal<String> itl = new InheritableThreadLocal<String>() {
             @Override
@@ -61,4 +55,24 @@ public class InheritableThreadLocalTest extends TestCase {
         };
         assertEquals("initial", itl.get());
     }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "childValue",
+        args = {java.lang.Object.class}
+    )
+    public void test_childValue() {
+        InheritableThreadLocal<String> itl = new InheritableThreadLocal<String>() {
+            @Override
+            protected String initialValue() {
+                return "initial";
+            }            
+            @Override
+            protected String childValue(String parentValue) {
+                return "childValue";
+            }
+        };
+        assertEquals("initial", itl.get());        
+    }  
+    
 }

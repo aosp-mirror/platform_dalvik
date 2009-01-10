@@ -17,13 +17,14 @@
 package tests.api.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 /**
  * Test UTF-8 charset.
  */
+
 @TestTargetClass(java.nio.charset.Charset.class)
 public class UTF8CharsetTest extends AbstractCharsetTestCase {
 
@@ -40,15 +41,12 @@ public class UTF8CharsetTest extends AbstractCharsetTestCase {
      * 
      * @see tests.api.java.nio.charset.ConcreteCharsetTest#testDecode_Normal()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test, text source: AbstractCharsetTestCase.internalTestDecode. Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Functional test, text source: AbstractCharsetTestCase.internalTestDecode. Exceptions checking missed.",
+        method = "decode",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testDecode_Normal() {
         byte[] input = new byte[] { 97, 98, -27, -76, -108, -26, -107, -113 };
         char[] output = "ab\u5D14\u654F".toCharArray();
@@ -60,15 +58,12 @@ public class UTF8CharsetTest extends AbstractCharsetTestCase {
      * 
      * @see tests.api.java.nio.charset.ConcreteCharsetTest#testEncode_Normal()
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "Functional test, text source: AbstractCharsetTestCase.internalTestEncode. Exceptions checking missed.",
-          targets = {
-            @TestTarget(
-              methodName = "encode",
-              methodArgs = {java.lang.String.class}
-        )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Functional test, text source: AbstractCharsetTestCase.internalTestEncode. Exceptions checking missed.",
+        method = "encode",
+        args = {java.lang.String.class}
+    )
     public void testEncode_Normal() {
         String input = "ab\u5D14\u654F";
         byte[] output = new byte[] { 97, 98, -27, -76, -108, -26, -107, -113 };

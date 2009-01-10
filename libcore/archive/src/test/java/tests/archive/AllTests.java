@@ -27,7 +27,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All Archive test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Archive test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.archive.tests.java.util.jar.AllTests
                 .suite());

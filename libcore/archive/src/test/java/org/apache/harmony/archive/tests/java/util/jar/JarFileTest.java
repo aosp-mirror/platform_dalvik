@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.harmony.archive.tests.java.util.jar;
 
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -28,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.Permission;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -37,32 +39,35 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 import junit.framework.TestCase;
 import tests.support.Support_PlatformFile;
 import tests.support.resource.Support_Resources;
 
 
-@TestTargetClass(JarFile.class) 
+@TestTargetClass(JarFile.class)
 public class JarFileTest extends TestCase {
 
-// BEGIN android-added
+    // BEGIN android-added
     public byte[] getAllBytesFromStream(InputStream is) throws IOException {
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
         byte[] buf = new byte[666];
-        int iRead; int off;
+        int iRead;
+        int off;
         while (is.available() > 0) {
             iRead = is.read(buf, 0, buf.length);
-            if (iRead > 0)
-                bs.write(buf, 0, iRead);
+            if (iRead > 0) bs.write(buf, 0, iRead);
         }
         return bs.toByteArray();
     }
-// END android-added
+
+    // END android-added
 
     private final String jarName = "hyts_patch.jar"; // a 'normal' jar file
 
-    private final String jarName2 = "hyts_patch2.jar"; 
+    private final String jarName2 = "hyts_patch2.jar";
 
     private final String jarName3 = "hyts_manifest1.jar";
 
@@ -73,7 +78,18 @@ public class JarFileTest extends TestCase {
     private final String entryName3 = "coucou/FileAccess.class";
 
     private File resources;
-    
+
+    // custom security manager
+    SecurityManager sm = new SecurityManager() {
+        final String forbidenPermissionName = "user.dir";
+
+        public void checkPermission(Permission perm) {
+            if (perm.getName().equals(forbidenPermissionName)) {
+                throw new SecurityException();
+            }
+        }
+    };
+
     @Override
     protected void setUp() {
         resources = Support_Resources.createTempFolder();
@@ -82,59 +98,213 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#JarFile(java.io.File)
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test contains empty brackets.",
-      targets = {
-        @TestTarget(
-          methodName = "JarFile",
-          methodArgs = {java.io.File.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarFile",
+        args = {java.io.File.class}
+    )
     public void test_ConstructorLjava_io_File() {
-        // Test for method java.util.jar.JarFile(java.io.File)
-        /*
-         * try { assertTrue("Error in created file", new JarFile(new
-         * java.io.File(jarName)).getEntry(entryName).getName().equals(entryName)); }
-         * catch (Exception e) { fail("Exception during test: " +
-         * e.toString()); }
-         */
+        try {
+            JarFile jarFile = new JarFile(new File("Wrong.file"));
+            fail("Should throw IOException");
+        } catch (IOException e) {
+            // expected
+        }
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            JarFile jarFile = new JarFile(new File("tmp.jar"));
+            fail("Should throw SecurityException");
+        } catch (IOException e) {
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+
+        try {
+            Support_Resources.copyFile(resources, null, jarName);
+            JarFile jarFile = new JarFile(new File(resources, jarName));
+        } catch (IOException e) {
+            fail("Should not throw IOException");
+        }
     }
 
     /**
      * @tests java.util.jar.JarFile#JarFile(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test contains empty brackets.",
-      targets = {
-        @TestTarget(
-          methodName = "JarFile",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarFile",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
-        // Test for method java.util.jar.JarFile(java.lang.String)
-        /*
-         * try { assertTrue("Error in created file", new
-         * JarFile(jarName).getEntry(entryName).getName().equals(entryName)); }
-         * catch (Exception e) { fail("Exception during test: " +
-         * e.toString()); }
-         */
+        try {
+            JarFile jarFile = new JarFile("Wrong.file");
+            fail("Should throw IOException");
+        } catch (IOException e) {
+            // expected
+        }
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            JarFile jarFile = new JarFile("tmp.jar");
+            fail("Should throw SecurityException");
+        } catch (IOException e) {
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+
+        try {
+            Support_Resources.copyFile(resources, null, jarName);
+            String fileName = (new File(resources, jarName)).getCanonicalPath();
+            JarFile jarFile = new JarFile(fileName);
+        } catch (IOException e) {
+            fail("Should not throw IOException");
+        }
+    }
+
+    /**
+     * @tests java.util.jar.JarFile#JarFile(java.lang.String, boolean)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarFile",
+        args = {java.lang.String.class, boolean.class}
+    )
+    public void test_ConstructorLjava_lang_StringZ() {
+        try {
+            JarFile jarFile = new JarFile("Wrong.file", false);
+            fail("Should throw IOException");
+        } catch (IOException e) {
+            // expected
+        }
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            JarFile jarFile = new JarFile("tmp.jar", true);
+            fail("Should throw SecurityException");
+        } catch (IOException e) {
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+
+        try {
+            Support_Resources.copyFile(resources, null, jarName);
+            String fileName = (new File(resources, jarName)).getCanonicalPath();
+            JarFile jarFile = new JarFile(fileName, true);
+        } catch (IOException e) {
+            fail("Should not throw IOException");
+        }
+    }
+
+    /**
+     * @tests java.util.jar.JarFile#JarFile(java.io.File, boolean)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarFile",
+        args = {java.io.File.class, boolean.class}
+    )
+    public void test_ConstructorLjava_io_FileZ() {
+        try {
+            JarFile jarFile = new JarFile(new File("Wrong.file"), true);
+            fail("Should throw IOException");
+        } catch (IOException e) {
+            // expected
+        }
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            JarFile jarFile = new JarFile(new File("tmp.jar"), false);
+            fail("Should throw SecurityException");
+        } catch (IOException e) {
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+
+        try {
+            Support_Resources.copyFile(resources, null, jarName);
+            JarFile jarFile = new JarFile(new File(resources, jarName), false);
+        } catch (IOException e) {
+            fail("Should not throw IOException");
+        }
+    }
+
+    /**
+     * @tests java.util.jar.JarFile#JarFile(java.io.File, boolean, int)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "JarFile",
+        args = {java.io.File.class, boolean.class, int.class}
+    )
+    public void test_ConstructorLjava_io_FileZI() {
+        try {
+            JarFile jarFile = new JarFile(new File("Wrong.file"), true,
+                    ZipFile.OPEN_READ);
+            fail("Should throw IOException");
+        } catch (IOException e) {
+            // expected
+        }
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            JarFile jarFile = new JarFile(new File("tmp.jar"), false,
+                    ZipFile.OPEN_READ);
+            fail("Should throw SecurityException");
+        } catch (IOException e) {
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+
+        try {
+            Support_Resources.copyFile(resources, null, jarName);
+            JarFile jarFile = new JarFile(new File(resources, jarName), false,
+                    ZipFile.OPEN_READ);
+        } catch (IOException e) {
+            fail("Should not throw IOException");
+        }
+
+        try {
+            Support_Resources.copyFile(resources, null, jarName);
+            JarFile jarFile = new JarFile(new File(resources, jarName), false,
+                    ZipFile.OPEN_READ | ZipFile.OPEN_DELETE + 33);
+            fail("Should throw IllegalArgumentException");
+        } catch (IOException e) {
+            fail("Should not throw IOException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.jar.JarFile#entries()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "entries",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entries",
+        args = {}
+    )
     public void test_entries() throws Exception {
         /*
          * Note only (and all of) the following should be contained in the file
@@ -151,16 +321,13 @@ public class JarFileTest extends TestCase {
         jarFile.close();
         assertEquals(6, i);
     }
-    
-@TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "entries",
-              methodArgs = {}
-            )
-        })
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entries",
+        args = {}
+    )
     public void test_entries2() throws Exception {
         Support_Resources.copyFile(resources, null, jarName);
         JarFile jarFile = new JarFile(new File(resources, jarName));
@@ -187,117 +354,107 @@ public class JarFileTest extends TestCase {
     }
 
     /**
+     * @throws IOException
      * @tests java.util.jar.JarFile#getJarEntry(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getJarEntry",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void test_getJarEntryLjava_lang_String() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getEntry",
+        args = {java.lang.String.class}
+    )
+    public void test_getEntryLjava_lang_String() throws IOException {
         try {
             Support_Resources.copyFile(resources, null, jarName);
             JarFile jarFile = new JarFile(new File(resources, jarName));
-            assertEquals("Error in returned entry", 311, jarFile.getEntry(entryName)
-                    .getSize());
+            assertEquals("Error in returned entry", 311, jarFile.getEntry(
+                    entryName).getSize());
             jarFile.close();
         } catch (Exception e) {
             fail("Exception during test: " + e.toString());
         }
 
-        // tests for signed jars
-        // test all signed jars in the /Testres/Internal/SignedJars directory
-        String jarDirUrl = Support_Resources
-                .getResourceURL("/../internalres/signedjars");
-        Vector<String> signedJars = new Vector<String>();
-        try {
-            InputStream is = new URL(jarDirUrl + "/jarlist.txt").openStream();
-            while (is.available() > 0) {
-                StringBuffer linebuff = new StringBuffer(80); // Typical line
-                // length
-                done: while (true) {
-                    int nextByte = is.read();
-                    switch (nextByte) {
-                    case -1:
-                        break done;
-                    case (byte) '\r':
-                        if (linebuff.length() == 0) {
-                            // ignore
-                        }
-                        break done;
-                    case (byte) '\n':
-                        if (linebuff.length() == 0) {
-                            // ignore
-                        }
-                        break done;
-                    default:
-                        linebuff.append((char) nextByte);
-                    }
-                }
-                if (linebuff.length() == 0) {
-                    break;
-                }
-                String line = linebuff.toString();
-                signedJars.add(line);
-            }
-            is.close();
-        } catch (IOException e) {
-            // no list of jars found
+        Support_Resources.copyFile(resources, null, jarName);
+        JarFile jarFile = new JarFile(new File(resources, jarName));
+        Enumeration<JarEntry> enumeration = jarFile.entries();
+        assertTrue(enumeration.hasMoreElements());
+        while (enumeration.hasMoreElements()) {
+            JarEntry je = enumeration.nextElement();
+            jarFile.getEntry(je.getName());
         }
 
-        for (int i = 0; i < signedJars.size(); i++) {
-            String jarName = signedJars.get(i);
-            try {
-                File file = Support_Resources.getExternalLocalFile(jarDirUrl
-                        + "/" + jarName);
-                JarFile jarFile = new JarFile(file, true);
-                boolean foundCerts = false;
-                Enumeration<JarEntry> e = jarFile.entries();
-                while (e.hasMoreElements()) {
-                    JarEntry entry = e.nextElement();
-                    InputStream is = jarFile.getInputStream(entry);
-                    is.skip(100000);
-                    is.close();
-                    Certificate[] certs = entry.getCertificates();
-                    if (certs != null && certs.length > 0) {
-                        foundCerts = true;
-                        break;
-                    }
-                }
-                assertTrue(
-                        "No certificates found during signed jar test for jar \""
-                                + jarName + "\"", foundCerts);
-            } catch (IOException e) {
-                fail("Exception during signed jar test for jar \""
-                        + jarName + "\": " + e.toString());
-            }
+        enumeration = jarFile.entries();
+        assertTrue(enumeration.hasMoreElements());
+        JarEntry je = enumeration.nextElement();
+        try {
+            jarFile.close();
+            jarFile.getEntry(je.getName());
+            // fail("IllegalStateException expected.");
+        } catch (IllegalStateException ee) { // Per documentation exception
+            // may be thrown.
+            // expected
+        }
+    }
+
+    /**
+     * @throws IOException
+     * @tests java.util.jar.JarFile#getJarEntry(java.lang.String)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getJarEntry",
+        args = {java.lang.String.class}
+    )
+    public void test_getJarEntryLjava_lang_String() throws IOException {
+        try {
+            Support_Resources.copyFile(resources, null, jarName);
+            JarFile jarFile = new JarFile(new File(resources, jarName));
+            assertEquals("Error in returned entry", 311, jarFile.getJarEntry(
+                    entryName).getSize());
+            jarFile.close();
+        } catch (Exception e) {
+            fail("Exception during test: " + e.toString());
+        }
+
+        Support_Resources.copyFile(resources, null, jarName);
+        JarFile jarFile = new JarFile(new File(resources, jarName));
+        Enumeration<JarEntry> enumeration = jarFile.entries();
+        assertTrue(enumeration.hasMoreElements());
+        while (enumeration.hasMoreElements()) {
+            JarEntry je = enumeration.nextElement();
+            jarFile.getJarEntry(je.getName());
+        }
+
+        enumeration = jarFile.entries();
+        assertTrue(enumeration.hasMoreElements());
+        JarEntry je = enumeration.nextElement();
+        try {
+            jarFile.close();
+            jarFile.getJarEntry(je.getName());
+            // fail("IllegalStateException expected.");
+        } catch (IllegalStateException ee) { // Per documentation exception
+            // may be thrown.
+            // expected
         }
     }
 
     /**
      * @tests java.util.jar.JarFile#getManifest()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getManifest",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getManifest",
+        args = {}
+    )
     public void test_getManifest() {
         // Test for method java.util.jar.Manifest
         // java.util.jar.JarFile.getManifest()
         try {
             Support_Resources.copyFile(resources, null, jarName);
             JarFile jarFile = new JarFile(new File(resources, jarName));
-            assertNotNull("Error--Manifest not returned",
-                    jarFile.getManifest());
+            assertNotNull("Error--Manifest not returned", jarFile.getManifest());
             jarFile.close();
         } catch (Exception e) {
             fail("Exception during 1st test: " + e.toString());
@@ -360,27 +517,35 @@ public class JarFileTest extends TestCase {
             JarFile jF = new JarFile(new File(resources, jarName2));
             jF.close();
             jF.getManifest();
-                fail("FAILED: expected IllegalStateException" ); 
+            fail("FAILED: expected IllegalStateException");
         } catch (IllegalStateException ise) {
-            //expected;
+            // expected;
         } catch (Exception e) {
             fail("Exception during 4th test: " + e.toString());
+        }
+
+        Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
+        JarFile jf;
+        try {
+            jf = new JarFile(new File(resources, "Broken_manifest.jar"));
+            jf.getManifest();
+            fail("IOException expected.");
+        } catch (IOException e) {
+            // expected.
         }
     }
 
     /**
+     * @throws IOException
      * @tests java.util.jar.JarFile#getInputStream(java.util.zip.ZipEntry)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exception checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getInputStream",
-          methodArgs = {java.util.zip.ZipEntry.class}
-        )
-    })
-    public void test_getInputStreamLjava_util_jar_JarEntry() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInputStream",
+        args = {java.util.zip.ZipEntry.class}
+    )
+    public void test_getInputStreamLjava_util_jar_JarEntry() throws IOException {
         File localFile = null;
         try {
             Support_Resources.copyFile(resources, null, jarName);
@@ -393,9 +558,9 @@ public class JarFileTest extends TestCase {
         try {
             JarFile jf = new JarFile(localFile);
             java.io.InputStream is = jf.getInputStream(jf.getEntry(entryName));
-// BEGIN android-removed
-//            jf.close();
-// END android-removed
+            // BEGIN android-removed
+            // jf.close();
+            // END android-removed
             assertTrue("Returned invalid stream", is.available() > 0);
             int r = is.read(b, 0, 1024);
             is.close();
@@ -405,9 +570,9 @@ public class JarFileTest extends TestCase {
             }
             String contents = sb.toString();
             assertTrue("Incorrect stream read", contents.indexOf("bar") > 0);
-// BEGIN android-added
+            // BEGIN android-added
             jf.close();
-// END android-added
+            // END android-added
         } catch (Exception e) {
             fail("Exception during test: " + e.toString());
         }
@@ -419,20 +584,45 @@ public class JarFileTest extends TestCase {
         } catch (Exception e) {
             fail("Exception during test 2: " + e);
         }
+
+        try {
+            Support_Resources.copyFile(resources, null, jarName);
+            File signedFile = new File(resources, jarName);
+            JarFile jf = new JarFile(signedFile);
+            JarEntry jre = new JarEntry("foo/bar/A.class");
+            jf.getInputStream(jre);
+            // InputStream returned in any way, exception can be thrown in case
+            // of reading from this stream only.
+            // fail("Should throw ZipException");
+        } catch (ZipException ee) {
+            // expected
+        }
+
+        try {
+            Support_Resources.copyFile(resources, null, jarName);
+            File signedFile = new File(resources, jarName);
+            JarFile jf = new JarFile(signedFile);
+            JarEntry jre = new JarEntry("foo/bar/A.class");
+            jf.close();
+            jf.getInputStream(jre);
+            // InputStream returned in any way, exception can be thrown in case
+            // of reading from this stream only.
+            // The same for IOException
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException ee) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.jar.JarFile#getInputStream(java.util.zip.ZipEntry)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "SecurityException and functionality checked.",
-          targets = {
-            @TestTarget(
-              methodName = "getInputStream",
-              methodArgs = {java.util.zip.ZipEntry.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException and functionality checked.",
+        method = "getInputStream",
+        args = {java.util.zip.ZipEntry.class}
+    )
     public void test_getInputStreamLjava_util_jar_JarEntry_subtest0() {
         File signedFile = null;
         try {
@@ -455,9 +645,9 @@ public class JarFileTest extends TestCase {
             JarFile jar = new JarFile(signedFile);
             JarEntry entry = new JarEntry(entryName3);
             InputStream in = jar.getInputStream(entry);
-// BEGIN android-added
+            // BEGIN android-added
             byte[] dummy = getAllBytesFromStream(in);
-// END android-added
+            // END android-added
             assertNull("found certificates", entry.getCertificates());
         } catch (Exception e) {
             fail("Exception during test 4: " + e);
@@ -469,9 +659,9 @@ public class JarFileTest extends TestCase {
             JarEntry entry = new JarEntry(entryName3);
             entry.setSize(1076);
             InputStream in = jar.getInputStream(entry);
-// BEGIN android-added
+            // BEGIN android-added
             byte[] dummy = getAllBytesFromStream(in);
-// END android-added
+            // END android-added
         } catch (SecurityException e) {
             exception = true;
         } catch (Exception e) {
@@ -484,15 +674,12 @@ public class JarFileTest extends TestCase {
      * The jar created by 1.4 which does not provide a
      * algorithm-Digest-Manifest-Main-Attributes entry in .SF file.
      */
-@TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "entries",
-              methodArgs = {}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entries",
+        args = {}
+    )
     public void test_Jar_created_before_java_5() throws IOException {
         String modifiedJarName = "Created_by_1_4.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -506,15 +693,12 @@ public class JarFileTest extends TestCase {
     }
 
     /* The jar is intact, then everything is all right. */
-@TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "entries",
-              methodArgs = {}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entries",
+        args = {}
+    )
     public void test_JarFile_Integrate_Jar() throws IOException {
         String modifiedJarName = "Integrate.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -531,15 +715,12 @@ public class JarFileTest extends TestCase {
      * If another entry is inserted into Manifest, no security exception will be
      * thrown out.
      */
-@TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "entries",
-              methodArgs = {}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entries",
+        args = {}
+    )
     public void test_JarFile_InsertEntry_in_Manifest_Jar() throws IOException {
         String modifiedJarName = "Inserted_Entry_Manifest.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -560,15 +741,12 @@ public class JarFileTest extends TestCase {
      * If another entry is inserted into Manifest, no security exception will be
      * thrown out.
      */
-@TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "entries",
-              methodArgs = {}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entries",
+        args = {}
+    )
     public void test_Inserted_Entry_Manifest_with_DigestCode()
             throws IOException {
         String modifiedJarName = "Inserted_Entry_Manifest_with_DigestCode.jar";
@@ -591,15 +769,12 @@ public class JarFileTest extends TestCase {
      * throw security Exception, but it will anytime before the inputStream got
      * from getInputStream method has been read to end.
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "SecurityException and functionality checked.",
-          targets = {
-            @TestTarget(
-              methodName = "getInputStream",
-              methodArgs = {java.util.zip.ZipEntry.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException and functionality checked.",
+        method = "getInputStream",
+        args = {java.util.zip.ZipEntry.class}
+    )
     public void test_JarFile_Modified_Class() throws IOException {
         String modifiedJarName = "Modified_Class.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -629,15 +804,12 @@ public class JarFileTest extends TestCase {
      * tampered manually. Hence the RI 5.0 JarFile.getInputStream of any
      * JarEntry will throw security exception, but the apache harmony will not.
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "SecurityException and functionality checked.",
-          targets = {
-            @TestTarget(
-              methodName = "getInputStream",
-              methodArgs = {java.util.zip.ZipEntry.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException and functionality checked.",
+        method = "getInputStream",
+        args = {java.util.zip.ZipEntry.class}
+    )
     public void test_JarFile_Modified_Manifest_MainAttributes()
             throws IOException {
         String modifiedJarName = "Modified_Manifest_MainAttributes.jar";
@@ -661,15 +833,12 @@ public class JarFileTest extends TestCase {
      * example Test.class in our jar, the jarFile.getInputStream will throw
      * Security Exception.
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "SecurityException and functionality checked.",
-          targets = {
-            @TestTarget(
-              methodName = "getInputStream",
-              methodArgs = {java.util.zip.ZipEntry.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException and functionality checked.",
+        method = "getInputStream",
+        args = {java.util.zip.ZipEntry.class}
+    )
     public void test_JarFile_Modified_Manifest_EntryAttributes()
             throws IOException {
         String modifiedJarName = "Modified_Manifest_EntryAttributes.jar";
@@ -692,15 +861,12 @@ public class JarFileTest extends TestCase {
      * If the content of the .SA file is modified, no matter what it resides,
      * JarFile.getInputStream of any JarEntry will throw Security Exception.
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "SecurityException and functionality checked.",
-          targets = {
-            @TestTarget(
-              methodName = "getInputStream",
-              methodArgs = {java.util.zip.ZipEntry.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException and functionality checked.",
+        method = "getInputStream",
+        args = {java.util.zip.ZipEntry.class}
+    )
     public void test_JarFile_Modified_SF_EntryAttributes() throws IOException {
         String modifiedJarName = "Modified_SF_EntryAttributes.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -716,5 +882,24 @@ public class JarFileTest extends TestCase {
                 // desired
             }
         }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
+    public void test_close() throws IOException {
+        String modifiedJarName = "Modified_SF_EntryAttributes.jar";
+        Support_Resources.copyFile(resources, null, modifiedJarName);
+        JarFile jarFile = new JarFile(new File(resources, modifiedJarName),
+                true);
+        Enumeration<JarEntry> entries = jarFile.entries();
+
+        jarFile.close();
+        jarFile.close();
+
+        // Can not check IOException
     }
 }

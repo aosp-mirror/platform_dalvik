@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -57,15 +57,12 @@ public class ECPointTest extends TestCase {
      * Test preconditions: valid parameters passed<br>
      * Expected: must pass without any exceptions
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive cases.",
-      targets = {
-        @TestTarget(
-          methodName = "ECPoint",
-          methodArgs = {java.math.BigInteger.class, java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive cases.",
+        method = "ECPoint",
+        args = {java.math.BigInteger.class, java.math.BigInteger.class}
+    )
     public final void testECPoint01() {
         new ECPoint(BigInteger.ZERO, BigInteger.ZERO);
         new ECPoint(BigInteger.valueOf(-23456L), BigInteger.valueOf(-23456L));
@@ -81,15 +78,12 @@ public class ECPointTest extends TestCase {
      * Test preconditions: pass <code>null</code> as mentioned parameters<br>
      * Expected: must throw <code>NullPointerException</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "ECPoint",
-          methodArgs = {java.math.BigInteger.class, java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies exceptions.",
+        method = "ECPoint",
+        args = {java.math.BigInteger.class, java.math.BigInteger.class}
+    )
     public final void testECPoint02() {
         // test case 1: x is null
         try {
@@ -124,15 +118,12 @@ public class ECPointTest extends TestCase {
      * which is equal to the one passed to the constructor;
      * (both must refer the same object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "getAffineX",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "getAffineX",
+        args = {}
+    )
     public final void testGetAffineX01() {
         BigInteger x = BigInteger.valueOf(-23456L);
         ECPoint p = new ECPoint(x, BigInteger.valueOf(23456L));
@@ -148,15 +139,12 @@ public class ECPointTest extends TestCase {
      * Expected: must return <code>null</code> for
      * <code>ECPoint.POINT_INFINITY</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getAffineX returns null for POINT_INFINITY.",
-      targets = {
-        @TestTarget(
-          methodName = "getAffineX",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getAffineX returns null for POINT_INFINITY.",
+        method = "getAffineX",
+        args = {}
+    )
     public final void testGetAffineX02() {
         assertNull(ECPoint.POINT_INFINITY.getAffineX());
     }
@@ -170,15 +158,12 @@ public class ECPointTest extends TestCase {
      * which is equal to the one passed to the constructor;
      * (both must refer the same object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "getAffineY",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "getAffineY",
+        args = {}
+    )
     public final void testGetAffineY01() {
         BigInteger y =  BigInteger.valueOf(23456L);
         ECPoint p = new ECPoint(BigInteger.valueOf(-23456L), y);
@@ -194,15 +179,12 @@ public class ECPointTest extends TestCase {
      * Expected: must return <code>null</code> for
      * <code>ECPoint.POINT_INFINITY</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getAffineY ruturns null for POINT_INFINITY.",
-      targets = {
-        @TestTarget(
-          methodName = "getAffineY",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getAffineY ruturns null for POINT_INFINITY.",
+        method = "getAffineY",
+        args = {}
+    )
     public final void testGetAffineY02() {
         assertNull(ECPoint.POINT_INFINITY.getAffineY());
     }
@@ -213,15 +195,12 @@ public class ECPointTest extends TestCase {
      * Test preconditions: see test comments<br>
      * Expected: all objects in this test must be equal
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive cases.",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive cases.",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public final void testEqualsObject01() {
         // test case 1: must be equal to itself
         ECPoint p2=null, p1 =
@@ -245,15 +224,12 @@ public class ECPointTest extends TestCase {
      * Test preconditions: see test comments<br>
      * Expected: all objects in this test must be not equal
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies negative cases.",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies negative cases.",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public final void testEqualsObject02() {
         // test case 1: must be not equal to null
         ECPoint p2=null, p1 =
@@ -282,15 +258,12 @@ public class ECPointTest extends TestCase {
      * Assertion: must return the same value if invoked
      * repeatedly on the same object. 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public final void testHashCode01() {
         ECPoint f = new ECPoint(BigInteger.valueOf(-23457L), BigInteger.ONE);
         int hc = f.hashCode();
@@ -322,15 +295,12 @@ public class ECPointTest extends TestCase {
      * Assertion: must return the same value if invoked
      * on equal (according to the <code>equals(Object)</code> method) objects. 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public final void testHashCode02() {
         ECPoint p1 = new ECPoint(BigInteger.valueOf(-23456L), BigInteger.ONE);
         ECPoint p2 = new ECPoint(BigInteger.valueOf(-23456L), BigInteger.valueOf(1L));

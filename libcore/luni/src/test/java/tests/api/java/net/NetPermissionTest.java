@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.NetPermission;
 
@@ -30,15 +30,12 @@ public class NetPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.NetPermission#NetPermission(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NetPermission",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NetPermission",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.net.NetPermission(java.lang.String)
         NetPermission n = new NetPermission("requestPasswordAuthentication");
@@ -50,15 +47,12 @@ public class NetPermissionTest extends junit.framework.TestCase {
      * @tests java.net.NetPermission#NetPermission(java.lang.String,
      *        java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NetPermission",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NetPermission",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.net.NetPermission(java.lang.String,
         // java.lang.String)
@@ -66,6 +60,9 @@ public class NetPermissionTest extends junit.framework.TestCase {
                 null);
         assertEquals("Returned incorrect name", 
                 "requestPasswordAuthentication", n.getName());
+        NetPermission n1 = new NetPermission("requestPasswordAuthentication",
+                "");
+        assertEquals("", n1.getActions());
     }
 
     /**

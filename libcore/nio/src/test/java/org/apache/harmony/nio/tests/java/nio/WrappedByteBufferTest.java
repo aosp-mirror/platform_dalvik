@@ -16,9 +16,8 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.ByteBuffer;
@@ -28,6 +27,7 @@ public class WrappedByteBufferTest extends ByteBufferTest {
     
     protected void setUp() throws Exception {
         super.setUp();
+        capacity = BUFFER_LENGTH;
         buf = ByteBuffer.wrap(new byte[BUFFER_LENGTH]);
         baseBuf = buf;
     }
@@ -42,15 +42,12 @@ public class WrappedByteBufferTest extends ByteBufferTest {
      * @tests java.nio.ByteBuffer#allocate(byte[],int,int)
      * 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IndexOutOfBoundsException, NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "wrap",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException, NullPointerException.",
+        method = "wrap",
+        args = {byte[].class, int.class, int.class}
+    )
     public void testWrappedByteBuffer_IllegalArg() {
         byte array[] = new byte[BUFFER_LENGTH];
         try {
@@ -96,39 +93,34 @@ public class WrappedByteBufferTest extends ByteBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies isDirect method for non direct ByteBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isDirect",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies isDirect method for non direct ByteBuffer.",
+        method = "isDirect",
+        args = {}
+    )
     public void testIsDirect() {
         assertFalse(buf.isDirect());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies hasArray method for wrapped ByteBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "hasArray",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies hasArray method for wrapped ByteBuffer.",
+        method = "hasArray",
+        args = {}
+    )
     public void testHasArray() {
         assertTrue(buf.hasArray());
+        assertNotNull(buf.array());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isReadOnly",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "isReadOnly",
+        args = {}
+    )
     public void testIsReadOnly() {
         assertFalse(buf.isReadOnly());
     }

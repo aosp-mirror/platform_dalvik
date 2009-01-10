@@ -16,14 +16,15 @@
  */
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
@@ -33,15 +34,12 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#Throwable()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Throwable",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Throwable",
+        args = {}
+    )
     public void test_Constructor() {
         Throwable e = new Throwable();
         assertNull(e.getMessage());
@@ -52,13 +50,18 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#Throwable(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Throwable",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "Throwable",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getMessage",
+            args = {}
         )
     })
     public void test_ConstructorLjava_lang_String() {
@@ -66,19 +69,83 @@ public class ThrowableTest extends TestCase {
         assertEquals("fixture", e.getMessage());
         assertNull(e.getCause());
     }
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "Throwable",
+            args = {java.lang.String.class, java.lang.Throwable.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCause",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getMessage",
+            args = {}
+        )
+    })
+    public void test_ConstructorLStringLThrowable() {
+        String message = "Test message";
+        NullPointerException npe = new NullPointerException();
+        Throwable thr = new Throwable(message, npe);
+        assertEquals("message is incorrect.", message, thr.getMessage());
+        assertEquals("cause is incorrect.", npe, thr.getCause());        
+        
+        thr = new Throwable(null, npe);
+        assertNull("message is not null.", thr.getMessage());
+        assertEquals("cause is incorrect.", npe, thr.getCause());  
+        
+        thr = new Throwable(message, null);
+        assertEquals("message is incorrect.", message, thr.getMessage());
+        assertNull("cause is not null.", thr.getCause());    
+    }
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "Throwable",
+            args = {java.lang.Throwable.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCause",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getMessage",
+            args = {}
+        )
+    })
+    public void test_ConstructorLThrowable() {
+        
+        NullPointerException npe = new NullPointerException();
+        Throwable thr = new Throwable(npe);
+        
+        assertEquals("Returned cause is incorrect.", npe, thr.getCause());
+        
+        thr = new Throwable((Throwable) null);
+        assertNull("The cause is not null.", thr.getCause());
+    }
 
     /**
      * @tests java.lang.Throwable#fillInStackTrace()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "fillInStackTrace",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "fillInStackTrace",
+        args = {}
+    )
     public void test_fillInStackTrace() {
         // Test for method java.lang.Throwable
         // java.lang.Throwable.fillInStackTrace()
@@ -157,15 +224,12 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#printStackTrace()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "printStackTrace",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "printStackTrace",
+        args = {}
+    )
     public void test_printStackTrace() {
         // Test for method void java.lang.Throwable.printStackTrace()
         Throwable x = new ClassNotFoundException("A Test Message");
@@ -184,15 +248,12 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#printStackTrace(java.io.PrintStream)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "printStackTrace",
-          methodArgs = {java.io.PrintStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "printStackTrace",
+        args = {java.io.PrintStream.class}
+    )
     public void test_printStackTraceLjava_io_PrintStream() {
         // Test for method void
         // java.lang.Throwable.printStackTrace(java.io.PrintStream)
@@ -209,15 +270,12 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#printStackTrace(java.io.PrintWriter)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "printStackTrace",
-          methodArgs = {java.io.PrintWriter.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "printStackTrace",
+        args = {java.io.PrintWriter.class}
+    )
     public void test_printStackTraceLjava_io_PrintWriter() {
         // Test for method void
         // java.lang.Throwable.printStackTrace(java.io.PrintWriter)
@@ -235,18 +293,121 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         Throwable e = new Throwable("Throw");
         assertEquals("java.lang.Throwable: Throw", e.toString());
 
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLocalizedMessage",
+        args = {}
+    )
+    public void test_getLocalizedMessage() {
+        String testMessage = "Test message";
+        Throwable e = new Throwable(testMessage);
+        assertEquals("Returned incorrect localized message.", 
+                testMessage, e.getLocalizedMessage());
+        
+        TestThrowable tt = new TestThrowable(testMessage);
+        assertEquals("localized message", tt.getLocalizedMessage());
+    }
+    
+    class TestThrowable extends Throwable {
+        
+        public TestThrowable(String message) {
+            super(message);
+        }
+        
+        public String getLocalizedMessage() {
+            return "localized message";
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getStackTrace",
+        args = {}
+    )
+    public void test_getStackTrace() {
+        String message = "Test message";
+        NullPointerException npe = new NullPointerException();
+        Throwable thr = new Throwable(message, npe);
+        StackTraceElement[] ste = thr.getStackTrace();
+        assertNotNull("Returned stack trace is empty", ste.length != 0);
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "initCause",
+        args = {java.lang.Throwable.class}
+    )
+    public void test_initCause() {
+        String message = "Test message";
+        NullPointerException npe = new NullPointerException();
+        IllegalArgumentException iae = new IllegalArgumentException();
+        Throwable thr = new Throwable();
+        thr.initCause(iae);
+        assertEquals("getCause returns incorrect cause.", iae, thr.getCause());
+        
+        thr = new Throwable("message");
+        thr.initCause(npe);
+        assertEquals("getCause returns incorrect cause.", npe, thr.getCause());        
+        
+        thr = new Throwable(message, npe);        
+        try {
+            thr.initCause(iae);
+            fail("IllegalStateException was not thrown.");
+        } catch(IllegalStateException ise) {
+            //expected
+        }
+        
+        thr = new Throwable(npe);
+        try {
+            thr.initCause(iae);
+            fail("IllegalStateException was not thrown.");
+        } catch(IllegalStateException ise) {
+            //expected
+        }
+        
+        thr = new Throwable();
+        try {
+            thr.initCause(thr);
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException ise) {
+            //expected
+        }        
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setStackTrace",
+        args = {java.lang.StackTraceElement[].class}
+    )
+    public void test_setStackTrace() {
+        NullPointerException npe = new NullPointerException();
+        Throwable thr = new Throwable(npe);
+        StackTraceElement[] ste = thr.getStackTrace();
+        Throwable thr1 = new Throwable(npe);
+        thr1.setStackTrace(ste);
+        assertEquals(ste.length, thr1.getStackTrace().length);
+        
+        try {
+            thr.setStackTrace(null);
+            fail("NullPointerException is not thrown.");
+        } catch(NullPointerException np) {
+            //expected
+        }
     }
 }

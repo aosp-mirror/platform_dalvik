@@ -14,40 +14,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 
 import tests.support.Support_Exec;
 import tests.support.resource.Support_Resources;
 
-@TestTargetClass(JarOutputStream.class) 
+@TestTargetClass(JarOutputStream.class)
 public class JarOutputStreamTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.jar.JarOutputStream#putNextEntry(java.util.zip.ZipEntry)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "putNextEntry",
-          methodArgs = {java.util.zip.ZipEntry.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putNextEntry",
+        args = {java.util.zip.ZipEntry.class}
+    )
     public void test_putNextEntryLjava_util_zip_ZipEntry() {
         // testClass file`s actual extension is .class, since having .class
         // extension files in source dir causes
@@ -61,8 +62,9 @@ public class JarOutputStreamTest extends junit.framework.TestCase {
 
         // test whether specifying the main class in the manifest
         // works using either /'s or .'s as a separator
-        final String[] manifestMain = { "foo.bar.execjartest.MainClass",
-                "foo/bar/execjartest/MainClass" };
+        final String[] manifestMain = {
+                "foo.bar.execjartest.MainClass",
+                "foo/bar/execjartest/MainClass"};
 
         for (String element : manifestMain) {
 
@@ -110,17 +112,90 @@ public class JarOutputStreamTest extends junit.framework.TestCase {
             args[0] = "-jar";
             args[1] = outputJar.getAbsolutePath();
 
-            try {
-                // execute the JAR and read the result
-                res = Support_Exec.execJava(args, null, true);
-            } catch (Exception e) {
-                fail("Exception executing test JAR: " + e);
-            }
-
-            assertTrue("Error executing JAR test on: " + element
-                    + ". Result returned was incorrect.", res
-                    .startsWith("TEST"));
+// It's not that simple to execute a JAR agains Dalvik VM (see JarExecTest):
+//
+//            try {
+//                // execute the JAR and read the result
+//                res = Support_Exec.execJava(args, null, true);
+//            } catch (Exception e) {
+//                fail("Exception executing test JAR: " + e);
+//            }
+//
+//            assertTrue("Error executing JAR test on: " + element
+//                    + ". Result returned was incorrect.", res
+//                    .startsWith("TEST"));
             outputJar.delete();
+
+            try {
+                // open the output jarfile
+                outputJar = File.createTempFile("hyts_", ".jar");
+                OutputStream os = new FileOutputStream(outputJar);
+                jout = new JarOutputStream(os, newman);
+                os.close();
+                jout.putNextEntry(new JarEntry(entryName));
+                fail("IOException expected");
+            } catch (IOException e) {
+                // expected
+            }
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks IOException",
+        method = "JarOutputStream",
+        args = {java.io.OutputStream.class, java.util.jar.Manifest.class}
+    )
+    public void test_JarOutputStreamLjava_io_OutputStreamLjava_util_jar_Manifest()
+            throws IOException {
+        File fooJar = File.createTempFile("hyts_", ".jar");
+        File barZip = File.createTempFile("hyts_", ".zip");
+
+        FileOutputStream fos = new FileOutputStream(fooJar);
+
+        Manifest man = new Manifest();
+        Attributes att = man.getMainAttributes();
+        att.put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        att.put(Attributes.Name.MAIN_CLASS, "foo.bar.execjartest.Foo");
+        att.put(Attributes.Name.CLASS_PATH, barZip.getName());
+
+        fos.close();
+        try {
+            JarOutputStream joutFoo = new JarOutputStream(fos, man);
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Can not check IOException",
+        method = "JarOutputStream",
+        args = {java.io.OutputStream.class}
+    )
+    public void test_JarOutputStreamLjava_io_OutputStream() throws IOException {
+        File fooJar = File.createTempFile("hyts_", ".jar");
+
+        FileOutputStream fos = new FileOutputStream(fooJar);
+        ZipEntry ze = new ZipEntry("Test");
+
+        try {
+            JarOutputStream joutFoo = new JarOutputStream(fos);
+            joutFoo.putNextEntry(ze);
+            joutFoo.write(33);
+        } catch (IOException ee) {
+            fail("IOException is not expected");
+        }
+
+        fos.close();
+        fooJar.delete();
+        try {
+            JarOutputStream joutFoo = new JarOutputStream(fos);
+            joutFoo.putNextEntry(ze);
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
         }
     }
 

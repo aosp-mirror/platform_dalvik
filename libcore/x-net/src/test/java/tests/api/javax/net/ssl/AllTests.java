@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,14 +30,12 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package tests.api.javax.net.ssl;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.api.javax.net.ssl;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(CertPathTrustManagerParametersTest.class);
-//        suite.addTestSuite(HandshakeCompletedEventTest.class);
+        suite.addTestSuite(HandshakeCompletedEventTest.class);
         suite.addTestSuite(HttpsURLConnectionTest.class);
-//	  suite.addTestSuite(HttpsURLConnectionTest1.class);
-//	  suite.addTestSuite(HttpURLConnectionTest.class);
         suite.addTestSuite(KeyManagerFactory1Test.class);
         suite.addTestSuite(KeyManagerFactory2Test.class);
         suite.addTestSuite(KeyManagerFactorySpiTest.class);
@@ -54,6 +52,24 @@ public class AllTests {
         suite.addTestSuite(TrustManagerFactory2Test.class);
         suite.addTestSuite(TrustManagerFactorySpiTest.class);
         suite.addTestSuite(X509ExtendedKeyManagerTest.class);
+        suite.addTestSuite(SSLSocketTest.class);
+        suite.addTestSuite(SSLServerSocketTest.class);
+        suite.addTestSuite(SSLProtocolExceptionTest.class);
+        suite.addTestSuite(SSLPeerUnverifiedExceptionTest.class);
+        suite.addTestSuite(SSLKeyExceptionTest.class);
+        suite.addTestSuite(SSLHandshakeExceptionTest.class);
+        suite.addTestSuite(SSLExceptionTest.class);
+        suite.addTestSuite(SSLEngineResultStatusTest.class);
+        suite.addTestSuite(SSLEngineResultHandshakeStatusTest.class);
+        suite.addTestSuite(SSLEngineResultTest.class);
+        suite.addTestSuite(KeyStoreBuilderParametersTest.class);
+        suite.addTestSuite(SSLSessionContextTest.class);
+        suite.addTestSuite(X509TrustManagerTest.class);
+        suite.addTestSuite(X509KeyManagerTest.class);
+        suite.addTestSuite(SSLSessionTest.class);
+        suite.addTestSuite(SSLSessionBindingListenerTest.class);
+        suite.addTestSuite(HandshakeCompletedListenerTest.class);
+        suite.addTestSuite(HostnameVerifierTest.class);
 
         // $JUnit-END$
         return suite;

@@ -17,9 +17,9 @@
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.NotSerializableException;
 import java.util.prefs.AbstractPreferences;
@@ -38,15 +38,12 @@ public class PreferenceChangeEventTest extends TestCase {
 
     PreferenceChangeEvent event;
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks exception.",
-      targets = {
-        @TestTarget(
-          methodName = "PreferenceChangeEvent",
-          methodArgs = {java.util.prefs.Preferences.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks exception.",
+        method = "PreferenceChangeEvent",
+        args = {java.util.prefs.Preferences.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testPreferenceChangeEventException() {
         try {
             event = new PreferenceChangeEvent(null, "key", "value");
@@ -55,15 +52,12 @@ public class PreferenceChangeEventTest extends TestCase {
         }
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PreferenceChangeEvent",
-          methodArgs = {java.util.prefs.Preferences.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PreferenceChangeEvent",
+        args = {java.util.prefs.Preferences.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testConstructorNullValue() {
         event = new PreferenceChangeEvent(Preferences.userRoot(), "key", null);
         assertEquals("key", event.getKey());
@@ -90,15 +84,12 @@ public class PreferenceChangeEventTest extends TestCase {
         assertSame(Preferences.userRoot(), event.getSource());
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PreferenceChangeEvent",
-          methodArgs = {java.util.prefs.Preferences.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PreferenceChangeEvent",
+        args = {java.util.prefs.Preferences.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testConstructor() {
         event = new PreferenceChangeEvent(Preferences.userRoot(), "key",
                 "value");
@@ -108,15 +99,12 @@ public class PreferenceChangeEventTest extends TestCase {
         assertSame(Preferences.userRoot(), event.getSource());
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization",
-      targets = {
-        @TestTarget(
-          methodName = "!Serialization",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization",
+        method = "!Serialization",
+        args = {}
+    )
     public void testSerialization() throws Exception {
         event = new PreferenceChangeEvent(Preferences.userRoot(), "key",
                 "value");
@@ -127,15 +115,12 @@ public class PreferenceChangeEventTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Test is correct, functionality checked in separate Mock class.",
-      targets = {
-        @TestTarget(
-          methodName = "getKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test is correct, functionality checked in separate Mock class.",
+        method = "getKey",
+        args = {}
+    )
     public void testGetKey() {
         AbstractPreferences parent = (AbstractPreferences) Preferences
                 .userNodeForPackage(Preferences.class);
@@ -155,15 +140,12 @@ public class PreferenceChangeEventTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Test is correct, functionality checked in separate Mock class.",
-      targets = {
-        @TestTarget(
-          methodName = "getNewValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test is correct, functionality checked in separate Mock class.",
+        method = "getNewValue",
+        args = {}
+    )
     public void testGetNewValue() {
         AbstractPreferences parent = (AbstractPreferences) Preferences
                 .userNodeForPackage(Preferences.class);
@@ -188,15 +170,12 @@ public class PreferenceChangeEventTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Test is correct, functionality checked in separate Mock class.",
-      targets = {
-        @TestTarget(
-          methodName = "getNode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test is correct, functionality checked in separate Mock class.",
+        method = "getNode",
+        args = {}
+    )
     public void testGetNode() {
         AbstractPreferences parent = (AbstractPreferences) Preferences
                 .userNodeForPackage(Preferences.class);

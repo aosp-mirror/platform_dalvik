@@ -17,10 +17,11 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.BrokenTest; 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,15 +49,13 @@ public class ExcludedProxyTest extends TestCase {
     /**
      * @tests java.net.HttpURLConnection#usingProxy()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Tests Proxy functionality. Indirect test.",
-      targets = {
-        @TestTarget(
-          methodName = "Proxy",
-          methodArgs = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Tests Proxy functionality. Indirect test.",
+        method = "Proxy",
+        args = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
+    )
+    @BrokenTest("the host address isn't working anymore")
     public void test_usingProxy() throws Exception {
         try {
             System.setProperty("http.proxyHost",
@@ -131,15 +130,13 @@ public class ExcludedProxyTest extends TestCase {
     /**
      * @tests java.net.SocketImpl#SocketImpl()
      */
-@TestInfo(
-        level = TestLevel.PARTIAL,
-        purpose = "Tests Proxy functionality. Indirect test.",
-        targets = {
-          @TestTarget(
-            methodName = "Proxy",
-            methodArgs = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
-          )
-      })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Tests Proxy functionality. Indirect test.",
+        method = "Proxy",
+        args = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
+    )
+    @BrokenTest("the host address isn't working anymore")
     public void test_Constructor() {
         try {
             try {
@@ -180,15 +177,13 @@ public class ExcludedProxyTest extends TestCase {
     /**
      * @tests java.net.URL#openConnection(Proxy)
      */
-@TestInfo(
-        level = TestLevel.PARTIAL,
-        purpose = "Tests Proxy functionality. Indirect test.",
-        targets = {
-          @TestTarget(
-            methodName = "Proxy",
-            methodArgs = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
-          )
-      })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Tests Proxy functionality. Indirect test.",
+        method = "Proxy",
+        args = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
+    )
+    @BrokenTest("the host address isn't working anymore")
     public void test_openConnectionLjava_net_Proxy() throws IOException {
         SocketAddress addr1 = new InetSocketAddress(
                 Support_Configuration.ProxyServerTestHost, 808);

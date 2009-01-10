@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,8 +30,9 @@ public class AllTests {
     }
 
     public static final Test suite() {
-        TestSuite suite = new TestSuite("Tests for java.lang");
-
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.lang");
+        
+        suite.addTestSuite(AbstractMethodErrorTest.class);
         suite.addTestSuite(ArithmeticExceptionTest.class);
         suite.addTestSuite(ArrayIndexOutOfBoundsExceptionTest.class);
         suite.addTestSuite(ArrayStoreExceptionTest.class);
@@ -43,9 +44,11 @@ public class AllTests {
         suite.addTestSuite(CharacterTest.class);
         suite.addTestSuite(Character_UnicodeBlockTest.class);
         suite.addTestSuite(ClassCastExceptionTest.class);
+        suite.addTestSuite(ClassCircularityErrorTest.class);
+        suite.addTestSuite(ClassFormatErrorTest.class); 
         suite.addTestSuite(ClassLoaderTest.class);
         suite.addTestSuite(ClassNotFoundExceptionTest.class);
-        suite.addTestSuite(ClassTest.class);
+        suite.addTestSuite(ClassTest.class); 
         suite.addTestSuite(ClassTest2.class);
         suite.addTestSuite(CloneNotSupportedExceptionTest.class);
         suite.addTestSuite(CompilerTest.class);
@@ -84,13 +87,13 @@ public class AllTests {
         suite.addTestSuite(NumberTest.class);
         suite.addTestSuite(ObjectTest.class);
         suite.addTestSuite(OutOfMemoryErrorTest.class);
-//        suite.addTestSuite(PackageTest.class);
+        suite.addTestSuite(PackageTest.class);
         suite.addTestSuite(ProcessBuilderTest.class);
         suite.addTestSuite(RuntimeExceptionTest.class);
         suite.addTestSuite(RuntimePermissionTest.class);
         suite.addTestSuite(RuntimeTest.class);
         suite.addTestSuite(SecurityExceptionTest.class);
-//        suite.addTestSuite(SecurityManager2Test.class);
+        suite.addTestSuite(SecurityManager2Test.class); 
         suite.addTestSuite(SecurityManagerTest.class);
         suite.addTestSuite(ShortTest.class);
         suite.addTestSuite(StackOverflowErrorTest.class);
@@ -102,22 +105,21 @@ public class AllTests {
         suite.addTestSuite(StringBuilderTest.class);
         suite.addTestSuite(StringIndexOutOfBoundsExceptionTest.class);
         suite.addTestSuite(StringTest.class);
-        suite.addTestSuite(SystemTest.class);
+        suite.addTestSuite(SystemTest.class); 
         suite.addTestSuite(ThreadDeathTest.class);
-
-// runs infinitely
-//        suite.addTestSuite(ThreadGroupTest.class);
-
+        suite.addTestSuite(ThreadGroupTest.class);
         suite.addTestSuite(ThreadLocalTest.class);
         suite.addTestSuite(ThreadTest.class);
+        suite.addTestSuite(ThreadStateTest.class);
         suite.addTestSuite(ThrowableTest.class);
         suite.addTestSuite(TypeNotPresentExceptionTest.class);
         suite.addTestSuite(UnknownErrorTest.class);
         suite.addTestSuite(UnsatisfiedLinkErrorTest.class);
         suite.addTestSuite(UnsupportedOperationExceptionTest.class);
+        suite.addTestSuite(UnsupportedClassVersionErrorTest.class); 
         suite.addTestSuite(VerifyErrorTest.class);
         suite.addTestSuite(VirtualMachineErrorTest.class);
 
-        return suite;
+    return suite;
     }
 }

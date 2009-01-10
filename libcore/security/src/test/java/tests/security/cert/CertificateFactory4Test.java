@@ -17,12 +17,15 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.TestCase;
+
+import tests.support.resource.Support_Resources;
+
+import tests.support.Support_GetResource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -38,9 +41,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.Collection;
 import java.util.List;
-
-import tests.support.Support_GetResource;
-import org.apache.harmony.security.tests.support.resource.Support_Resources;
 
 @TestTargetClass(CertificateFactory.class)
 public class CertificateFactory4Test extends TestCase {
@@ -59,16 +59,13 @@ public class CertificateFactory4Test extends TestCase {
     /**
      * @tests java.security.cert.CertificateFactory#generateCertificate(java.io.InputStream)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertificate",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
-    public void _test_generateCertificateLjava_io_InputStream() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "generateCertificate",
+        args = {java.io.InputStream.class}
+    )
+    public void test_generateCertificateLjava_io_InputStream() throws Exception {
         // Test 1
         // Test for method java.security.cert.Certificate
         // java.security.cert.CertificateFactory.generateCertificate(java.io.InputStream)
@@ -99,15 +96,12 @@ public class CertificateFactory4Test extends TestCase {
     /**
      * @tests java.security.cert.CertificateFactory#generateCertificates(java.io.InputStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertificates",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IOException.",
+        method = "generateCertificates",
+        args = {java.io.InputStream.class}
+    )
     public void test_generateCertificatesLjava_io_InputStream()
             throws Exception {
         CertificateFactory fact = CertificateFactory.getInstance("X.509");
@@ -115,7 +109,7 @@ public class CertificateFactory4Test extends TestCase {
             URL certUrl = new URL(BASE_URL + CERTIFICATE_URLS[i]);
             try {
                 InputStream is = certUrl.openStream();
-                Collection certs = fact.generateCertificates(is);
+                Collection<? extends Certificate> certs = fact.generateCertificates(is);
                 assertNotNull("The certificates in \""
                         + certUrl.toExternalForm()
                         + "\" were not parsed correctly", certs);
@@ -131,15 +125,12 @@ public class CertificateFactory4Test extends TestCase {
     /**
      * @tests java.security.cert.CertificateFactory#generateCRL(java.io.InputStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCRL",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IOException.",
+        method = "generateCRL",
+        args = {java.io.InputStream.class}
+    )
     public void test_generateCRLLjava_io_InputStream() throws Exception {
         CertificateFactory fact = CertificateFactory.getInstance("X.509");
         for (int i = 0; i < CRL_URLS.length; i++) {
@@ -161,22 +152,19 @@ public class CertificateFactory4Test extends TestCase {
     /**
      * @tests java.security.cert.CertificateFactory#generateCRLs(java.io.InputStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCRLs",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IOException.",
+        method = "generateCRLs",
+        args = {java.io.InputStream.class}
+    )
     public void test_generateCRLsLjava_io_InputStream() throws Exception {
         CertificateFactory fact = CertificateFactory.getInstance("X.509");
         for (int i = 0; i < CRLCOLLECTION_URLS.length; i++) {
             URL certUrl = new URL(BASE_URL + CRLCOLLECTION_URLS[i]);
             try {
                 InputStream is = certUrl.openStream();
-                Collection crls = fact.generateCRLs(is);
+                Collection<? extends CRL> crls = fact.generateCRLs(is);
                 assertTrue("The CRLs in \"" + certUrl.toExternalForm()
                         + "\" were not parsed correctly", crls != null
                         && crls.size() > 0);
@@ -189,15 +177,12 @@ public class CertificateFactory4Test extends TestCase {
     /**
      * @tests java.security.cert.CertificateFactory#getInstance(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify CertificateException.",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_String() throws Exception {
         // Test for method java.security.cert.CertificateFactory
         // java.security.cert.CertificateFactory.getInstance(java.lang.String)
@@ -209,15 +194,12 @@ public class CertificateFactory4Test extends TestCase {
      * @tests java.security.cert.CertificateFactory#getInstance(java.lang.String,
      *        java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_lang_String()
             throws Exception {
         // Test for method java.security.cert.CertificateFactory
@@ -248,15 +230,12 @@ public class CertificateFactory4Test extends TestCase {
     /**
      * @tests java.security.cert.CertificateFactory#getProvider()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getProvider",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getProvider",
+        args = {}
+    )
     public void test_getProvider() throws Exception {
         // Test for method java.security.Provider
         // java.security.cert.CertificateFactory.getProvider()
@@ -268,15 +247,12 @@ public class CertificateFactory4Test extends TestCase {
      * @tests java.security.cert.CertificateFactory#generateCRLs(InputStream
      *        inStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCRLs",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "generateCRLs",
+        args = {java.io.InputStream.class}
+    )
     public void testGenerateCRLs2() throws Exception {
         // Regression for HARMONY-814
         try {
@@ -290,15 +266,12 @@ public class CertificateFactory4Test extends TestCase {
      * @tests java.security.cert.CertificateFactory#generateCertificate(InputStream
      *        inStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as a parameter,s and CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertificate",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter,s and CertificateException.",
+        method = "generateCertificate",
+        args = {java.io.InputStream.class}
+    )
     public void testGenerateCertificate() throws Exception {
         // Regression for HARMONY-814
         try {
@@ -311,15 +284,12 @@ public class CertificateFactory4Test extends TestCase {
      * @tests java.security.cert.CertificateFactory#generateCertificates(InputStream
      *        inStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertificates",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "generateCertificates",
+        args = {java.io.InputStream.class}
+    )
     public void testGenerateCertificates2() throws Exception {
         // Regression for HARMONY-814
         try {
@@ -332,15 +302,12 @@ public class CertificateFactory4Test extends TestCase {
      * @tests java.security.cert.CertificateFactory#generateCertPath(InputStream
      *        inStream, String encoding)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as InputStream parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertPath",
-          methodArgs = {java.io.InputStream.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as InputStream parameter.",
+        method = "generateCertPath",
+        args = {java.io.InputStream.class, java.lang.String.class}
+    )
     public void testGenerateCertPath1() throws Exception {
         // Regression for HARMONY-814
         try {
@@ -354,15 +321,12 @@ public class CertificateFactory4Test extends TestCase {
      * @tests java.security.cert.CertificateFactory#generateCertPath(List<?
      *        extends Certificate> certificates)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertPath",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "generateCertPath",
+        args = {java.util.List.class}
+    )
     public void testGenerateCertPath2() throws Exception {
         // Regression for HARMONY-814
         try {
@@ -376,15 +340,12 @@ public class CertificateFactory4Test extends TestCase {
      * @tests java.security.cert.CertificateFactory#generateCertPath(InputStream
      *        inStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as  a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCertPath",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as  a parameter.",
+        method = "generateCertPath",
+        args = {java.io.InputStream.class}
+    )
     public void testGenerateCertPath3() throws Exception {
         // Regression for HARMONY-814
         try {
@@ -398,15 +359,12 @@ public class CertificateFactory4Test extends TestCase {
      * @tests java.security.cert.CertificateFactory#generateCRL(InputStream
      *        inStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "generateCRL",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "generateCRL",
+        args = {java.io.InputStream.class}
+    )
     public void testGenerateCRL() throws Exception {
         // Regression for HARMONY-814
         try {

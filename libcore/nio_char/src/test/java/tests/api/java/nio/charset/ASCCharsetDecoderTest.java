@@ -23,10 +23,11 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 @TestTargetClass(java.nio.charset.CharsetDecoder.class)
-public class ASCCharsetDecoderTest extends CharsetDecoderTest {
+public class ASCCharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
     protected void setUp() throws Exception {
         cs = Charset.forName("ascii");
+        unibytes = new byte[] { 32, 98, 117, 102, 102, 101, 114 };
         super.setUp();
     }
 

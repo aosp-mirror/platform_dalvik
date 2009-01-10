@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.NamedNodeMap;
@@ -57,15 +57,12 @@ public final class GetNamedItemNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "getNamedItem",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "getNamedItem",
+        args = {java.lang.String.class}
+    )
     public void testGetNamedItemNS1() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -82,15 +79,12 @@ public final class GetNamedItemNS extends DOMTestCase {
         attrName = domesticAttr.getNodeName();
         assertEquals("attrName", "dmstc:domestic", attrName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "getNamedItemNS",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "getNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetNamedItemNS2() throws Throwable {
         String namespaceURI = "http://www.usa.com";
         String localName = "domest";

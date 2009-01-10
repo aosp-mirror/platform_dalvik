@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.harmony.archive.tests.java.util.zip;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,7 +33,7 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-@TestTargetClass(ZipOutputStream.class) 
+@TestTargetClass(ZipOutputStream.class)
 public class ZipOutputStreamTest extends junit.framework.TestCase {
 
     ZipOutputStream zos;
@@ -46,15 +47,12 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#close()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Can not check IOException.",
+        method = "close",
+        args = {}
+    )
     public void test_close() throws Exception {
         try {
             zos.close();
@@ -78,15 +76,12 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#closeEntry()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "closeEntry",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "ZipException can not be checked.",
+        method = "closeEntry",
+        args = {}
+    )
     public void test_closeEntry() throws IOException {
         ZipEntry ze = new ZipEntry("testEntry");
         ze.setTime(System.currentTimeMillis());
@@ -95,21 +90,25 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
         zos.closeEntry();
         assertTrue("closeEntry failed to update required fields",
                 ze.getSize() == 11 && ze.getCompressedSize() == 13);
-
+        ze = new ZipEntry("testEntry1");
+        zos.close();
+        try {
+            zos.closeEntry();
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.zip.ZipOutputStream#finish()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ZipException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "finish",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "ZipException can not be checked.",
+        method = "finish",
+        args = {}
+    )
     public void test_finish() throws Exception {
         ZipEntry ze = new ZipEntry("test");
         zos.putNextEntry(ze);
@@ -132,15 +131,12 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#putNextEntry(java.util.zip.ZipEntry)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ZipException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "putNextEntry",
-          methodArgs = {java.util.zip.ZipEntry.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "ZipException can not be checked.",
+        method = "putNextEntry",
+        args = {java.util.zip.ZipEntry.class}
+    )
     public void test_putNextEntryLjava_util_zip_ZipEntry() throws IOException {
         ZipEntry ze = new ZipEntry("testEntry");
         ze.setTime(System.currentTimeMillis());
@@ -165,15 +161,12 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#setComment(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setComment",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setComment",
+        args = {java.lang.String.class}
+    )
     public void test_setCommentLjava_lang_String() {
         // There is no way to get the comment back, so no way to determine if
         // the comment is set correct
@@ -193,15 +186,12 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#setLevel(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setLevel",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLevel",
+        args = {int.class}
+    )
     public void test_setLevelI() throws IOException {
         ZipEntry ze = new ZipEntry("test");
         zos.putNextEntry(ze);
@@ -213,20 +203,23 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
         zos.write(data.getBytes());
         zos.closeEntry();
         assertTrue("setLevel failed", csize <= ze.getCompressedSize());
+        try {
+            zos.setLevel(-9); // Max Compression
+            fail("IllegalArgumentException ecpected.");
+        } catch (IllegalArgumentException ee) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.zip.ZipOutputStream#setMethod(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setMethod",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setMethod",
+        args = {int.class}
+    )
     public void test_setMethodI() throws IOException {
         ZipEntry ze = new ZipEntry("test");
         zos.setMethod(ZipOutputStream.STORED);
@@ -243,20 +236,23 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
         zos.write(data.getBytes());
         zos.closeEntry();
         assertTrue("setLevel failed", csize >= ze.getCompressedSize());
+        try {
+            zos.setMethod(-ZipOutputStream.DEFLATED);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException ee) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.zip.ZipOutputStream#write(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_write$BII() throws IOException {
         ZipEntry ze = new ZipEntry("test");
         zos.putNextEntry(ze);
@@ -310,15 +306,12 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#write(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Regression",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Regression",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_write$BII_2() throws IOException {
         // Regression for HARMONY-577
         File f1 = File.createTempFile("testZip1", "tst");
@@ -330,7 +323,7 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
         zip1.setMethod(ZipEntry.STORED);
 
         zip1.write(new byte[2]);
-        
+
         try {
             zip1.putNextEntry(new ZipEntry("Second"));
             fail("ZipException expected");
@@ -361,7 +354,18 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
             if (zis != null) {
                 zis.close();
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         super.tearDown();
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "See setUp procedure for more info.",
+        method = "ZipOutputStream",
+        args = {java.io.OutputStream.class}
+    )
+    public void test_ConstructorLjava_io_OutputStream() {
+        assertTrue(true);
     }
 }

@@ -18,9 +18,8 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,17 +34,31 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketImpl;
+import java.net.SocketImplFactory;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.nio.channels.IllegalBlockingModeException;
+import java.nio.channels.ServerSocketChannel;
+import java.security.Permission;
 import java.util.Date;
 import java.util.Properties;
 
 import tests.support.Support_Configuration;
-import tests.support.Support_Exec;
+import tests.support.Support_PortManager;
 
-@TestTargetClass(ServerSocket.class) 
+@TestTargetClass(value = ServerSocket.class, 
+                 untestedMethods = {
+                    @TestTargetNew(
+                        level = TestLevel.NOT_NECESSARY,
+                        notes = "Protected constructor.",
+                        method = "ServerSocket",
+                        args = {SocketImpl.class}
+                    )}
+                ) 
 public class ServerSocketTest extends SocketTestCase {
 
     boolean interrupted;
+    boolean isCreateCalled = false;
 
     ServerSocket s;
 
@@ -84,53 +97,100 @@ public class ServerSocketTest extends SocketTestCase {
             }
         }
     }
+    
+    SecurityManager sm = new SecurityManager() {
+
+        public void checkPermission(Permission perm) {
+        }
+        
+        public void checkListen(int port) {
+            throw new SecurityException();
+        }
+    };
 
     /**
      * @tests java.net.ServerSocket#ServerSocket()
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Dummy test",
-      targets = {
-        @TestTarget(
-          methodName = "ServerSocket",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "ServerSocket",
+      args = {}
+    )
     public void test_Constructor() {
-        // Test for method java.net.ServerSocket(int)
-        assertTrue("Used during tests", true);
+        ServerSocket ss = null;
+        try {
+            ss = new ServerSocket();
+            assertEquals(-1, ss.getLocalPort());
+        } catch (IOException e) {
+            fail("IOException was thrown.");
+        } finally {
+            try {
+                ss.close();
+            } catch(IOException ioe) {}
+        }
     }
 
     /**
      * @tests java.net.ServerSocket#ServerSocket(int)
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Dummy test",
-      targets = {
-        @TestTarget(
-          methodName = "ServerSocket",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_ConstructorI() {
-        // Test for method java.net.ServerSocket(int)
-        assertTrue("Used during tests", true);
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "ServerSocket",
+      args = {int.class}
+    )
+    public void test_ConstructorI() throws Exception {
+        int portNumber = Support_PortManager.getNextPort();
+        s = new ServerSocket(portNumber);
+        try {
+            new ServerSocket(portNumber);
+            fail("IOException was not thrown.");
+        } catch(IOException ioe) {
+            //expected
+        }
+        try {
+            startClient(s.getLocalPort());
+            sconn = s.accept();
+            assertNotNull("Was unable to accept connection", sconn);
+            sconn.close();
+        } finally {
+            s.close();
+        }
+        
+        s = new ServerSocket(0);
+        try {
+            startClient(s.getLocalPort());
+            sconn = s.accept();
+            assertNotNull("Was unable to accept connection", sconn);
+            sconn.close();
+        } finally {
+            s.close();
+        }
+
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new ServerSocket(0);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
     }
 
     /**
      * @tests java.net.ServerSocket#ServerSocket(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "ServerSocket",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.SUFFICIENT,
+      notes = "Regression test.",
+      method = "ServerSocket",
+      args = {int.class}
+    )
     public void test_ConstructorI_SocksSet() throws IOException {
         // Harmony-623 regression test
         ServerSocket ss = null;
@@ -150,59 +210,63 @@ public class ServerSocketTest extends SocketTestCase {
     /**
      * @tests java.net.ServerSocket#ServerSocket(int, int)
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test logic should be improved. Now it is succeed in case of exception and part of it not used in this case.",
-      targets = {
-        @TestTarget(
-          methodName = "ServerSocket",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.SUFFICIENT,
+      notes = "Doesn't check backlog.",
+      method = "ServerSocket",
+      args = {int.class, int.class}
+    )
     public void test_ConstructorII() throws IOException {
+        int freePortNumber = Support_PortManager.getNextPort();
         try {
-            s = new ServerSocket(0, 10);
+            s = new ServerSocket(freePortNumber, 1);
             s.setSoTimeout(2000);
-            startClient(s.getLocalPort());
+            startClient(freePortNumber);
             sconn = s.accept();
+            
         } catch (InterruptedIOException e) {
-            return;
-        }
-
-        ServerSocket s1 = new ServerSocket(0);
-        try {
-            try {
-                ServerSocket s2 = new ServerSocket(s1.getLocalPort());
-                s2.close();
-                fail("Was able to create two serversockets on same port");
-            } catch (BindException e) {
-                // Expected
-            }
+            fail("InterruptedIOException was thrown.");
         } finally {
-            s1.close();
+            try {
+                sconn.close();            
+                s.close();
+            } catch(IOException ioe) {}
         }
 
-        s1 = new ServerSocket(0);
-        int allocatedPort = s1.getLocalPort();
-        s1.close();
-        s1 = new ServerSocket(allocatedPort);
-        s1.close();
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new ServerSocket(0, 0);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+        
+        int portNumber = Support_PortManager.getNextPort();
+        new ServerSocket(portNumber, 0);
+        try {
+            new ServerSocket(portNumber, 0);
+            fail("IOExcepion was not thrown.");
+        } catch(IOException ioe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.net.ServerSocket#ServerSocket(int, int, java.net.InetAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "ServerSocket",
-          methodArgs = {int.class, int.class, java.net.InetAddress.class}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.SUFFICIENT,
+      notes = "Doesn't check backlog value.",
+      method = "ServerSocket",
+      args = {int.class, int.class, java.net.InetAddress.class}
+    )
     public void test_ConstructorIILjava_net_InetAddress()
-            throws UnknownHostException, IOException {
+                                    throws UnknownHostException, IOException {
         s = new ServerSocket(0, 10, InetAddress.getLocalHost());
         try {
             s.setSoTimeout(5000);
@@ -213,20 +277,59 @@ public class ServerSocketTest extends SocketTestCase {
         } finally {
             s.close();
         }
+        
+        int freePortNumber = Support_PortManager.getNextPort();
+        ServerSocket ss = new ServerSocket(freePortNumber, 10, 
+                InetAddress.getLocalHost());
+        
+        try {
+            new ServerSocket(freePortNumber, 10, 
+                    InetAddress.getLocalHost());
+            fail("IOException was not thrown.");
+        } catch(IOException ioe) {
+            //expected
+        }
+        
+        try {
+            new ServerSocket(65536, 10, 
+                    InetAddress.getLocalHost());
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new ServerSocket(0, 10, InetAddress.getLocalHost());
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+        
+        int portNumber = Support_PortManager.getNextPort();
+        new ServerSocket(portNumber, 0);
+        try {
+            new ServerSocket(portNumber, 0);
+            fail("IOExcepion was not thrown.");
+        } catch(IOException ioe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.net.ServerSocket#accept()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality tested. InterruptedIOException checked only.",
-      targets = {
-        @TestTarget(
-          methodName = "accept",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.SUFFICIENT,
+      notes = "IOException is not checked.",
+      method = "accept",
+      args = {}
+    )
     public void test_accept() throws IOException {
         s = new ServerSocket(0);
         try {
@@ -296,20 +399,71 @@ public class ServerSocketTest extends SocketTestCase {
         } catch (IOException e) {
             fail("Unexpected IOException : " + e.getMessage());
         }
+        
+        int portNumber = Support_PortManager.getNextPort();
+        ServerSocket serSocket = new ServerSocket(portNumber);
+        startClient(portNumber);
+        
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkAccept(String host,
+                    int port) {
+               throw new SecurityException();    
+            }
+        };
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            serSocket.accept();
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } finally {
+            System.setSecurityManager(oldSm);
+            serSocket.close();
+        }
+
+        ServerSocket newSocket = new ServerSocket(portNumber);
+        newSocket.setSoTimeout(500);
+        
+        try {
+            newSocket.accept();
+            fail("SocketTimeoutException was not thrown.");
+        } catch(SocketTimeoutException ste) {
+            //expected
+        } finally {
+            newSocket.close();
+        }
+        
+        ServerSocketChannel ssc = ServerSocketChannel.open();
+        ServerSocket ss = ssc.socket();
+                
+        try {
+            ss.accept();
+            fail("IllegalBlockingModeException was not thrown.");
+        } catch(IllegalBlockingModeException ibme) {
+            //expected
+        } finally {
+            ss.close();
+            ssc.close();
+        }
     }
 
     /**
      * @tests java.net.ServerSocket#close()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.SUFFICIENT,
+      notes = "IOException checking missed.",
+      method = "close",
+      args = {}
+    )
     public void test_close() throws IOException {
         try {
             s = new ServerSocket(0);
@@ -328,15 +482,12 @@ public class ServerSocketTest extends SocketTestCase {
     /**
      * @tests java.net.ServerSocket#getInetAddress()
      */
-@TestInfo(
+    @TestTargetNew(
       level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInetAddress",
-          methodArgs = {}
-        )
-    })
+      notes = "",
+      method = "getInetAddress",
+      args = {}
+    )
     public void test_getInetAddress() throws IOException {
         InetAddress addr = InetAddress.getLocalHost();
         s = new ServerSocket(0, 10, addr);
@@ -351,15 +502,12 @@ public class ServerSocketTest extends SocketTestCase {
     /**
      * @tests java.net.ServerSocket#getLocalPort()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalPort",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.PARTIAL_COMPLETE,
+      notes = "",
+      method = "getLocalPort",
+      args = {}
+    )
     public void test_getLocalPort() throws IOException {
         // Try a specific port number, but don't complain if we don't get it
         int portNumber = 63024; // I made this up
@@ -380,15 +528,12 @@ public class ServerSocketTest extends SocketTestCase {
     /**
      * @tests java.net.ServerSocket#getSoTimeout()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getSoTimeout",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "getSoTimeout",
+      args = {}
+    )
     public void test_getSoTimeout() throws IOException {
         s = new ServerSocket(0);
         try {
@@ -397,39 +542,29 @@ public class ServerSocketTest extends SocketTestCase {
         } finally {
             s.close();
         }
-    }
-
-    /**
-     * @tests java.net.ServerSocket#setSocketFactory(java.net.SocketImplFactory)
-     */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "setSocketFactory",
-          methodArgs = {java.net.SocketImplFactory.class}
-        )
-    })
-    public void test_setSocketFactoryLjava_net_SocketImplFactory() {
-        // Test for method void
-        // java.net.ServerSocket.setSocketFactory(java.net.SocketImplFactory)
-
-        // TODO : Implementation
+        try {
+            ServerSocket newSocket = new ServerSocket();
+            newSocket.close();
+            try {
+                newSocket.setSoTimeout(100);
+                fail("SocketException was not thrown.");
+            } catch(SocketException e) {
+                //expected
+            }
+        } catch(Exception e) {
+            fail("Unexpected exception.");
+        }             
     }
 
     /**
      * @tests java.net.ServerSocket#setSoTimeout(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setSoTimeout",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "setSoTimeout",
+      args = {int.class}
+    )
     public void test_setSoTimeoutI() throws IOException {
         // Timeout should trigger and throw InterruptedIOException
         try {
@@ -452,43 +587,50 @@ public class ServerSocketTest extends SocketTestCase {
         startClient(s.getLocalPort());
         s.setSoTimeout(10000);
         sconn = s.accept();
+        
+        ServerSocket newSocket = new ServerSocket();
+        newSocket.close();
+        try {
+            newSocket.setSoTimeout(100);
+            fail("SocketException was not thrown.");
+        } catch(SocketException se) {
+            //expected
+        }
     }
 
     /**
      * @tests java.net.ServerSocket#toString()
      */
-@TestInfo(
+    @TestTargetNew(
       level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+      notes = "",
+      method = "toString",
+      args = {}
+    )
     public void test_toString() throws Exception {
         s = new ServerSocket(0);
         try {
             int portNumber = s.getLocalPort();
-            assertEquals("ServerSocket[addr=0.0.0.0/0.0.0.0,port=0,localport="
-                    + portNumber + "]", s.toString());
+            assertTrue(s.toString().contains("" + portNumber));
         } finally {
-            s.close();
+            try {
+                s.close();
+            } catch(Exception e) {
+                
+            }
         }
     }
 
     /**
      * @tests java.net.ServerSocket#bind(java.net.SocketAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "bind",
-          methodArgs = {java.net.SocketAddress.class}
-        )
-    })
+
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "bind",
+      args = {java.net.SocketAddress.class}
+    )
     public void test_bindLjava_net_SocketAddress() throws IOException {
         class mySocketAddress extends SocketAddress {
             public mySocketAddress() {
@@ -566,20 +708,34 @@ public class ServerSocketTest extends SocketTestCase {
         } catch (IllegalArgumentException ex) {
         }
         theSocket.close();
+        
+        
+        ServerSocket serSocket = new ServerSocket();
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            serSocket.bind(theAddress);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } finally {
+            System.setSecurityManager(oldSm);
+            serSocket.close();
+        }
     }
 
     /**
      * @tests java.net.ServerSocket#bind(java.net.SocketAddress,int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "bind",
-          methodArgs = {java.net.SocketAddress.class, int.class}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "bind",
+      args = {java.net.SocketAddress.class, int.class}
+    )
     public void test_bindLjava_net_SocketAddressI() throws IOException {
         class mySocketAddress extends SocketAddress {
 
@@ -687,20 +843,33 @@ public class ServerSocketTest extends SocketTestCase {
 
         theSocket.close();
         servSock.close();
+        
+        ServerSocket serSocket = new ServerSocket();
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            serSocket.bind(theAddress, 5);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (SocketException e) {
+            fail("SocketException was thrown.");
+        } finally {
+            System.setSecurityManager(oldSm);
+            serSocket.close();
+        }
     }
 
     /**
      * @tests java.net.ServerSocket#getLocalSocketAddress()
      */
-@TestInfo(
+    @TestTargetNew(
       level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalSocketAddress",
-          methodArgs = {}
-        )
-    })
+      notes = "",
+      method = "getLocalSocketAddress",
+      args = {}
+    )
     public void test_getLocalSocketAddress() {
         // set up server connect and then validate that we get the right
         // response for the local address
@@ -741,15 +910,12 @@ public class ServerSocketTest extends SocketTestCase {
     /**
      * @tests java.net.ServerSocket#isBound()
      */
-@TestInfo(
+    @TestTargetNew(  
       level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isBound",
-          methodArgs = {}
-        )
-    })
+      notes = "",
+      method = "isBound",
+      args = {}
+    )
     public void test_isBound() throws IOException {
         InetAddress addr = InetAddress.getLocalHost();
         ServerSocket serverSocket = new ServerSocket();
@@ -782,15 +948,12 @@ public class ServerSocketTest extends SocketTestCase {
     /**
      * @tests java.net.ServerSocket#isClosed()
      */
-@TestInfo(
+    @TestTargetNew(
       level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isClosed",
-          methodArgs = {}
-        )
-    })
+      notes = "",
+      method = "isClosed",
+      args = {}
+    )
     public void test_isClosed() throws IOException {
         InetAddress addr = InetAddress.getLocalHost();
         ServerSocket serverSocket = new ServerSocket(0, 5, addr);
@@ -828,15 +991,12 @@ public class ServerSocketTest extends SocketTestCase {
     /**
      * @tests java.net.ServerSocket#setReuseAddress(boolean)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setReuseAddress",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "setReuseAddress",
+      args = {boolean.class}
+    )
     public void test_setReuseAddressZ() {
         try {
             // set up server and connect
@@ -925,7 +1085,12 @@ public class ServerSocketTest extends SocketTestCase {
             }
             stillActiveSocket.close();
             theSocket.close();
-
+            try {
+                theSocket.setReuseAddress(true);
+                fail("SocketException was not thrown.");
+            } catch(SocketException se) {
+                //expected
+            }
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_REUSEADDR);
         } catch (Exception e) {
             handleException(e, SO_REUSEADDR);
@@ -935,15 +1100,12 @@ public class ServerSocketTest extends SocketTestCase {
     /**
      * @tests java.net.ServerSocket#getReuseAddress()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getReuseAddress",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "getReuseAddress",
+      args = {}
+    )
     public void test_getReuseAddress() {
         try {
             ServerSocket theSocket = new ServerSocket();
@@ -957,20 +1119,30 @@ public class ServerSocketTest extends SocketTestCase {
         } catch (Exception e) {
             handleException(e, SO_REUSEADDR);
         }
+        
+        try {
+            ServerSocket newSocket = new ServerSocket();
+            newSocket.close();
+            try {
+                newSocket.getReuseAddress();
+                fail("SocketException was not thrown.");
+            } catch(SocketException e) {
+                //expected
+            }
+        } catch(Exception e) {
+            fail("Unexpected exception.");
+        }        
     }
 
     /**
      * @tests java.net.ServerSocket#setReceiveBufferSize(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setReceiveBufferSize",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "setReceiveBufferSize",
+      args = {int.class}
+    )
     public void test_setReceiveBufferSizeI() {
         try {
             // now validate case where we try to set to 0
@@ -996,6 +1168,12 @@ public class ServerSocketTest extends SocketTestCase {
             theSocket = new ServerSocket();
             theSocket.setReceiveBufferSize(1000);
             theSocket.close();
+            try {
+                theSocket.setReceiveBufferSize(10);
+                fail("SocketException was not thrown.");
+            } catch(SocketException se) {
+                //expected
+            }
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_RCVBUF);
         } catch (Exception e) {
             handleException(e, SO_RCVBUF);
@@ -1006,16 +1184,13 @@ public class ServerSocketTest extends SocketTestCase {
     /*
      * @tests java.net.ServerSocket#getReceiveBufferSize()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getReceiveBufferSize",
-          methodArgs = {}
-        )
-    })
-    public void test_getReceiveBufferSize() {
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "getReceiveBufferSize",
+      args = {}
+    )
+     public void test_getReceiveBufferSize() {
         try {
             ServerSocket theSocket = new ServerSocket();
 
@@ -1026,24 +1201,34 @@ public class ServerSocketTest extends SocketTestCase {
                     .getReceiveBufferSize());
             assertFalse("get Buffer size returns  a negative value:",
                     0 > theSocket.getReceiveBufferSize());
+           
             ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_RCVBUF);
         } catch (Exception e) {
             handleException(e, SO_RCVBUF);
+        }
+        try {
+            ServerSocket newSocket = new ServerSocket();
+            newSocket.close();
+            try {
+                newSocket.getReceiveBufferSize();
+                fail("SocketException was not thrown.");
+            } catch(SocketException e) {
+                //expected
+            }
+        } catch(Exception e) {
+            fail("Unexpected exception.");
         }
     }
 
     /**
      * @tests java.net.ServerSocket#getChannel()
      */
-@TestInfo(
+    @TestTargetNew(
       level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getChannel",
-          methodArgs = {}
-        )
-    })
+      notes = "",
+      method = "getChannel",
+      args = {}
+    )
     public void test_getChannel() throws Exception {
         assertNull(new ServerSocket().getChannel());
     }
@@ -1051,18 +1236,53 @@ public class ServerSocketTest extends SocketTestCase {
     /*
      * @tests java.net.ServerSocket#setPerformancePreference()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPerformancePreferences",
-          methodArgs = {int.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "",
+      method = "setPerformancePreferences",
+      args = {int.class, int.class, int.class}
+    )
     public void test_setPerformancePreference_Int_Int_Int() throws Exception {
+        performancePreferenceTest(1, 0, 0);
+        performancePreferenceTest(1, 1, 1);
+        performancePreferenceTest(0, 1, 2);
+        performancePreferenceTest(Integer.MAX_VALUE, Integer.MAX_VALUE, 
+                Integer.MAX_VALUE);
+    }
+    
+    void performancePreferenceTest(int connectionTime, int latency, 
+            int bandwidth) throws Exception {
         ServerSocket theSocket = new ServerSocket();
-        theSocket.setPerformancePreferences(1, 1, 1);
+        theSocket.setPerformancePreferences(connectionTime, latency, bandwidth);
+        
+        InetSocketAddress theAddress = new InetSocketAddress(InetAddress
+                .getLocalHost(), 0);
+        theSocket.bind(theAddress);
+        int portNumber = theSocket.getLocalPort();
+        assertTrue(
+                "Returned incorrect InetSocketAddress(2):"
+                        + theSocket.getLocalSocketAddress().toString()
+                        + "Expected: "
+                        + (new InetSocketAddress(InetAddress.getLocalHost(),
+                                portNumber)).toString(), theSocket
+                        .getLocalSocketAddress().equals(
+                                new InetSocketAddress(InetAddress
+                                        .getLocalHost(), portNumber)));
+        assertTrue("Server socket not bound when it should be:", theSocket
+                .isBound());
+
+        // now make sure that it is actually bound and listening on the
+        // address we provided
+        Socket clientSocket = new Socket();
+        InetSocketAddress clAddress = new InetSocketAddress(InetAddress
+                .getLocalHost(), portNumber);
+        clientSocket.connect(clAddress);
+        Socket servSock = theSocket.accept();
+
+        assertEquals(clAddress, clientSocket.getRemoteSocketAddress());
+        theSocket.close();
+        servSock.close();
+        clientSocket.close(); 
     }
 
     /**
@@ -1106,15 +1326,12 @@ public class ServerSocketTest extends SocketTestCase {
     /**
      * @tests java.net.ServerSocket#implAccept
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "implAccept",
-          methodArgs = {java.net.Socket.class}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.COMPLETE,
+      notes = "Regression test.",
+      method = "implAccept",
+      args = {java.net.Socket.class}
+    )
     public void test_implAcceptLjava_net_Socket() throws Exception {
         // regression test for Harmony-1235
         try {
@@ -1125,18 +1342,13 @@ public class ServerSocketTest extends SocketTestCase {
         }
     }
     
-    /**
-     * Regression for HARMONY-3265
-     * @throws Exception
-     */
-    public void _test_ServerSocket_init() throws Exception {
-        String[] args = new String[]{"tests.api.java.net.TestServerSocketInit"};
-        Support_Exec.execJava(args, null, true);
-    }
-
-    static class MockSocketImpl extends SocketImpl {
+    class MockSocketImpl extends SocketImpl {
+        public MockSocketImpl() {
+            isCreateCalled = true; 
+        }
+        
         protected void create(boolean arg0) throws IOException {
-            // empty
+            //empty
         }
 
         protected void connect(String arg0, int arg1) throws IOException {
@@ -1208,15 +1420,12 @@ public class ServerSocketTest extends SocketTestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalPort",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+      level = TestLevel.PARTIAL_COMPLETE,
+      notes = "",
+      method = "getLocalPort",
+      args = {}
+    )
     public void test_LocalPort() throws IOException {
         ServerSocket ss1 = new ServerSocket(4242);
         assertEquals(ss1.getLocalPort(), 4242);
@@ -1230,5 +1439,66 @@ public class ServerSocketTest extends SocketTestCase {
         ServerSocket ss3 = new ServerSocket(0);
         assertTrue(ss3.getLocalPort() != 0);
         ss3.close();
+    }
+    
+    /**
+     * @tests java.net.ServerSocket#setSocketFactory(java.net.SocketImplFactory)
+     */
+    @TestTargetNew(
+      level = TestLevel.SUFFICIENT,
+      notes = "",
+      method = "setSocketFactory",
+      args = {java.net.SocketImplFactory.class}
+    )
+    public void test_setSocketFactoryLjava_net_SocketImplFactory() {
+     
+        SecurityManager sm = new SecurityManager() {
+
+            public void checkPermission(Permission perm) {
+            }
+            
+            public void checkSetFactory() {
+                throw new SecurityException();
+            }
+        };
+        
+        MockSocketFactory sf = new MockSocketFactory();
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            ServerSocket.setSocketFactory(sf);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } catch (IOException e) {
+            fail("IOException was thrown.");
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+/*
+*        try {
+*            ServerSocket.setSocketFactory(sf);
+*            ServerSocket ss1 = new ServerSocket(); 
+*            assertTrue(isCreateCalled);
+*            isCreateCalled = false;
+*            ServerSocket ss2 = new ServerSocket(0); 
+*            assertTrue(isCreateCalled);            
+*        } catch(IOException ioe) {
+*            fail("IOException was thrown: " + ioe.toString());
+*        }
+        
+*        try {
+*            ServerSocket.setSocketFactory(null);
+*            fail("IOException was not thrown.");
+*        } catch(IOException ioe) {
+*            //expected
+*        }
+*/
+    }
+    
+    class MockSocketFactory implements SocketImplFactory {
+        public SocketImpl createSocketImpl() {
+            return new MockSocketImpl();
+        }
     }
 }

@@ -17,7 +17,9 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestTargetNew;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,6 +63,12 @@ public class SerializationStressTest5 extends SerializationStressTest {
         super(name);
     }
 
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "",
+        method = "!Serialization:test ThrowableClasses",
+        args = {}
+    )        
     public void _test_writeObject_Throwables() {
         try {
             oos.close();
@@ -96,10 +104,11 @@ public class SerializationStressTest5 extends SerializationStressTest {
 
     private File[] makeClassPathArray() {
         String classPath;
-        if (System.getProperty("java.vendor").startsWith("IBM"))
-            classPath = System.getProperty("org.apache.harmony.boot.class.path");
-        else
-            classPath = System.getProperty("sun.boot.class.path");
+        // if (System.getProperty("java.vendor").startsWith("IBM"))
+        //     classPath = System.getProperty("org.apache.harmony.boot.class.path");
+        // else
+        //     classPath = System.getProperty("sun.boot.class.path");
+        classPath = System.getProperty("java.boot.class.path");
         int instanceOfSep = -1;
         int nextInstance = classPath.indexOf(File.pathSeparatorChar,
                 instanceOfSep + 1);

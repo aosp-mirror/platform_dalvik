@@ -18,64 +18,43 @@
 package tests.api.java.io;
 
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.Enumeration;
 
+import tests.support.Support_ASimpleInputStream;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
 @TestTargetClass(SequenceInputStream.class) 
 public class SequenceInputStreamTest extends junit.framework.TestCase {
 
+    Support_ASimpleInputStream simple1, simple2;
     SequenceInputStream si;
-
     String s1 = "Hello";
-
     String s2 = "World";
 
-    /**
-     * @tests java.io.SequenceInputStream#SequenceInputStream(java.io.InputStream,
-     *        java.io.InputStream)
-     */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "See setUp.",
-      targets = {
-        @TestTarget(
-          methodName = "SequenceInputStream",
-          methodArgs = {java.io.InputStream.class, java.io.InputStream.class}
-        )
-    })
-    public void test_ConstructorLjava_io_InputStreamLjava_io_InputStream() {
-        // Test for method java.io.SequenceInputStream(java.io.InputStream,
-        // java.io.InputStream)
-        // Used in tests
-    }
-    
     /**
      * @tests SequenceInputStream#SequenceInputStream(java.io.InputStream,
      *        java.io.InputStream)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks NullPointerException",
-      targets = {
-        @TestTarget(
-          methodName = "SequenceInputStream",
-          methodArgs = {java.io.InputStream.class, java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Checks NullPointerException. A positive test of this " +
+                "constructor is implicitely done in setUp(); if it would " +
+                "fail, all other tests will also fail.",
+        method = "SequenceInputStream",
+        args = {java.io.InputStream.class, java.io.InputStream.class}
+    )
     public void test_Constructor_LInputStreamLInputStream_Null() {        
         try {
             si = new SequenceInputStream(null , null);
-            fail("should throw NullPointerException");
+            fail("Test 1: NullPointerException expected.");
         } catch (NullPointerException e) {
-            //expected
+            // Expected.
         }
         
         //will not throw NullPointerException if the first InputStream is not null
@@ -86,18 +65,15 @@ public class SequenceInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.SequenceInputStream#SequenceInputStream(java.util.Enumeration)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SequenceInputStream",
-          methodArgs = {java.util.Enumeration.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SequenceInputStream",
+        args = {java.util.Enumeration.class}
+    )
     public void test_ConstructorLjava_util_Enumeration() {
         // Test for method java.io.SequenceInputStream(java.util.Enumeration)
-        class StreamEnumerator implements Enumeration {
+        class StreamEnumerator implements Enumeration<InputStream> {
             InputStream streams[] = new InputStream[2];
 
             int count = 0;
@@ -111,7 +87,7 @@ public class SequenceInputStreamTest extends junit.framework.TestCase {
                 return count < streams.length;
             }
 
-            public Object nextElement() {
+            public InputStream nextElement() {
                 return streams[count++];
             }
         }
@@ -130,85 +106,153 @@ public class SequenceInputStreamTest extends junit.framework.TestCase {
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.SequenceInputStream#available()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "available",
-          methodArgs = {}
-        )
-    })
-    public void test_available() {
-        // Test for method int java.io.SequenceInputStream.available()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "available",
+        args = {}
+    )
+    public void test_available() throws IOException {
+        assertEquals("Returned incorrect number of bytes!", s1.length(), si.available());
+        simple2.throwExceptionOnNextUse = true;
+        assertTrue("IOException on second stream should not affect at this time!",
+                si.available() == s1.length());
+        simple1.throwExceptionOnNextUse = true;
         try {
-
-            assertTrue("Returned incorrect number of bytes: " + si.available(),
-                    si.available() == s1.length());
+            si.available();
+            fail("IOException not thrown!");
         } catch (IOException e) {
-            fail("IOException during available test : " + e.getMessage());
+            // expected
         }
     }
 
     /**
      * @tests java.io.SequenceInputStream#close()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
     public void test_close() throws IOException {
-        si.close();        
+        assertTrue("Something is available!", si.available() > 0);
+        si.close();
         //will not throw IOException to close a stream which is closed already
         si.close();
+        assertTrue("Nothing is available, now!", si.available() <= 0);
+//        assertEquals("And not on the underlying streams either!", 0, simple1.available());
+//        assertTrue("And not on the underlying streams either!", simple1.available() <= 0);
+//        assertTrue("And not on the underlying streams either!", simple2.available() <= 0);
+    }
+
+    /**
+     * @tests java.io.SequenceInputStream#close()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
+    public void test_close2() throws IOException {
+        simple1.throwExceptionOnNextUse = true;
+        try {
+            si.close();
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
     }
 
     /**
      * @tests java.io.SequenceInputStream#read()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "read",
+        args = {}
+    )
     public void test_read() throws IOException {
-        // Test for method int java.io.SequenceInputStream.read()
+        si.read();
+        assertEquals("Test 1: Incorrect char read;", 
+                s1.charAt(1), (char) si.read());
+        
+        // We are still reading from the first input stream, should be ok.
+        simple2.throwExceptionOnNextUse = true;
+        try {
+            assertEquals("Test 2: Incorrect char read;", 
+                    s1.charAt(2), (char) si.read());
+        } catch (IOException e) {
+            fail("Test 3: Unexpected IOException.");
+        }
+
+        simple1.throwExceptionOnNextUse = true;
         try {
             si.read();
-            assertTrue("Read incorrect char", (char) si.read() == s1.charAt(1));
+            fail("Test 4: IOException expected.");
         } catch (IOException e) {
-            fail("IOException during read test: " + e.getMessage());
+            // Expected.
+        }
+        simple1.throwExceptionOnNextUse = false;
+        
+        // Reading bytes 4 and 5 of the first input stream should be ok again.
+        si.read();
+        si.read();
+
+        // Reading the first byte of the second input stream should fail.
+        try {
+            si.read();
+            fail("Test 5: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
         
-        //returns -1 if the stream is closed , do not throw IOException
+        // Reading from the second input stream should be ok now.
+        simple2.throwExceptionOnNextUse = false;
+        try {
+            assertEquals("Test 6: Incorrect char read;", 
+                    s2.charAt(0), (char) si.read());
+        } catch (IOException e) {
+            fail("Test 7: Unexpected IOException.");
+        }
+
         si.close();
-        int result = si.read();
-        assertEquals(-1 , result);        
+        assertTrue("Test 8: -1 expected when reading from a closed " + 
+                   "sequence input stream.", si.read() == -1);        
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
+    public void test_read_exc() throws IOException {
+        simple2.throwExceptionOnNextUse = true;
+        assertEquals("IOException on second stream should not affect at this time!", 72, si.read());
+        simple1.throwExceptionOnNextUse = true;
+        try {
+            si.read();
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
     }
 
     /**
      * @tests java.io.SequenceInputStream#read(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_read$BII() throws IOException {
         // Test for method int java.io.SequenceInputStream.read(byte [], int,
         // int)
@@ -229,18 +273,46 @@ public class SequenceInputStreamTest extends junit.framework.TestCase {
         SequenceInputStream sis = new SequenceInputStream(bis1, bis2);
 
         try {
-            sis.read(null, 0, -1);
+            sis.read(null, 0, 2);
             fail("Expected NullPointerException exception");
         } catch (NullPointerException e) {
             // expected
         }
+        
+        assertEquals(4, sis.read(new byte[10], 0, 8));
+        // The call to read will return after the end of the first substream is
+        // reached. So the next call to read will close the first substream
+        // because the read call to that substream will return -1, and
+        // it will continue reading from the second substream.
+        assertEquals(5, sis.read());
         
         //returns -1 if the stream is closed , do not throw IOException
         byte[] array = new byte[] { 1 , 2 , 3 ,4 };
         sis.close();
         int result = sis.read(array , 0 , 5);
         assertEquals(-1 , result);    
-        
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
+    public void test_read$BII_exc() throws IOException {
+        byte[] buf = new byte[4];
+        si.read(buf, 0, 2);
+        si.read(buf, 2, 1);
+        simple2.throwExceptionOnNextUse = true;
+        si.read(buf, 3, 1);
+        assertEquals("Wrong stuff read!", "Hell", new String(buf));
+        simple1.throwExceptionOnNextUse = true;
+        try {
+            si.read(buf, 3, 1);
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
     }
 
     /**
@@ -248,8 +320,9 @@ public class SequenceInputStreamTest extends junit.framework.TestCase {
      * is called before a test is executed.
      */
     protected void setUp() {
-        si = new SequenceInputStream(new ByteArrayInputStream(s1.getBytes()),
-                new ByteArrayInputStream(s2.getBytes()));
+        simple1 = new Support_ASimpleInputStream(s1);
+        simple2 = new Support_ASimpleInputStream(s2);
+        si = new SequenceInputStream(simple1, simple2);
     }
 
     /**

@@ -16,10 +16,10 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import java.text.CollationKey;
 import java.text.Collator;
@@ -34,15 +34,12 @@ public class CollationKeyTest extends junit.framework.TestCase {
     /**
      * @tests java.text.CollationKey#compareTo(java.text.CollationKey)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.text.CollationKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.text.CollationKey.class}
+    )
     public void test_compareToLjava_text_CollationKey() {
         Collator collator = Collator.getInstance();
         collator.setStrength(Collator.PRIMARY);
@@ -54,15 +51,12 @@ public class CollationKeyTest extends junit.framework.TestCase {
     /**
      * @tests java.text.CollationKey#compareTo(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.lang.Object.class}
+    )
     public void test_compareToLjava_lang_Object() {
         // Test for method int
         // java.text.CollationKey.compareTo(java.lang.Object)
@@ -76,15 +70,12 @@ public class CollationKeyTest extends junit.framework.TestCase {
     /**
      * @tests java.text.CollationKey#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         Collator collator = Collator.getInstance();
         collator.setStrength(Collator.PRIMARY);
@@ -96,15 +87,12 @@ public class CollationKeyTest extends junit.framework.TestCase {
     /**
      * @tests java.text.CollationKey#getSourceString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSourceString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSourceString",
+        args = {}
+    )
     public void test_getSourceString() {
         Collator collator = Collator.getInstance();
         collator.setStrength(Collator.PRIMARY);
@@ -117,15 +105,12 @@ public class CollationKeyTest extends junit.framework.TestCase {
     /**
      * @tests java.text.CollationKey#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         Collator collator = Collator.getInstance();
         collator.setStrength(Collator.PRIMARY);
@@ -137,17 +122,13 @@ public class CollationKeyTest extends junit.framework.TestCase {
     /**
      * @tests java.text.CollationKey#toByteArray()
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "This test fails on Harmony ClassLibrary.",
-      targets = {
-        @TestTarget(
-          methodName = "toByteArray",
-          methodArgs = {}
-        )
-    })
-    // FIXME This test fails on Harmony ClassLibrary
-    public void failing_test_toByteArray() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "toByteArray",
+        args = {}
+    )
+    @KnownFailure("This test fails on Harmony ClassLibrary.")
+    public void test_toByteArray() {
         // Test for method byte [] java.text.CollationKey.toByteArray()
         Collator collator = Collator.getInstance();
         collator.setStrength(Collator.PRIMARY);

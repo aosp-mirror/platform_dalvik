@@ -17,9 +17,8 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.BufferOverflowException;
@@ -42,6 +41,7 @@ public class DoubleBufferTest extends AbstractBufferTest {
     protected DoubleBuffer buf;
 
     protected void setUp() throws Exception {
+        capacity = BUFFER_LENGTH;
         buf = DoubleBuffer.allocate(BUFFER_LENGTH);
         loadTestData1(buf);
         baseBuf = buf;
@@ -57,22 +57,28 @@ public class DoubleBufferTest extends AbstractBufferTest {
      * following usecases: 1. case for check DoubleBuffer testBuf properties 2.
      * case expected IllegalArgumentException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verifies boundary value.",
-      targets = {
-        @TestTarget(
-          methodName = "allocate",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "allocate",
+        args = {int.class}
+    )
     public void test_AllocateI() {
         // case: DoubleBuffer testBuf properties is satisfy the conditions
         // specification
         DoubleBuffer testBuf = DoubleBuffer.allocate(20);
-        assertEquals(testBuf.position(), 0);
-        assertEquals(testBuf.limit(), testBuf.capacity());
-        assertEquals(testBuf.arrayOffset(), 0);
+        assertEquals(0, testBuf.position());
+        assertNotNull(testBuf.array());
+        assertEquals(0, testBuf.arrayOffset());
+        assertEquals(20, testBuf.limit());
+        assertEquals(20, testBuf.capacity());
+
+        testBuf = DoubleBuffer.allocate(0);
+        assertEquals(0, testBuf.position());
+        assertNotNull(testBuf.array());
+        assertEquals(0, testBuf.arrayOffset());
+        assertEquals(0, testBuf.limit());
+        assertEquals(0, testBuf.capacity());
 
         // case: expected IllegalArgumentException
         try {
@@ -87,15 +93,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
      * Test with bit sequences that represent the IEEE754 doubles Positive
      * infinity, negative infinity, and NaN.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies boundary values.",
+        method = "put",
+        args = {double.class}
+    )
     public void testNaNs() {
         long[] nans = new long[] { 0x7ff0000000000000L, 0xfff0000000000000L,
                 0x7ff8000000000000L };
@@ -116,15 +119,13 @@ public class DoubleBufferTest extends AbstractBufferTest {
             assertTrue(longBitsIn == bufLongOut);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "The same test as testArrayOffset.",
-      targets = {
-        @TestTarget(
-          methodName = "array",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "array",
+        args = {}
+    )
     public void testArray() {
         double array[] = buf.array();
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
@@ -141,40 +142,36 @@ public class DoubleBufferTest extends AbstractBufferTest {
         loadTestData2(buf);
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "The same test as testArray.",
-      targets = {
-        @TestTarget(
-          methodName = "arrayOffset",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "arrayOffset",
+        args = {}
+    )
     public void testArrayOffset() {
         double array[] = buf.array();
-        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
+        for(int i = 0; i < buf.capacity(); i++) {
+            array[i] = i;
+        }
+        int offset = buf.arrayOffset();
+        assertContentEquals(buf, array, offset, buf.capacity());
 
-        loadTestData1(array, buf.arrayOffset(), buf.capacity());
-        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
+        DoubleBuffer wrapped = DoubleBuffer.wrap(array, 3, array.length - 3);
+        
+        loadTestData1(array, wrapped.arrayOffset(), wrapped.capacity());
+        assertContentEquals(buf, array, offset, buf.capacity());
 
-        loadTestData2(array, buf.arrayOffset(), buf.capacity());
-        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
-
-        loadTestData1(buf);
-        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
-
-        loadTestData2(buf);
-        assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
+        loadTestData2(array, wrapped.arrayOffset(), wrapped.capacity());
+        assertContentEquals(buf, array, offset, buf.capacity());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asReadOnlyBuffer",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "asReadOnlyBuffer",
+        args = {}
+    )
     public void testAsReadOnlyBuffer() {
         buf.clear();
         buf.mark();
@@ -197,16 +194,28 @@ public class DoubleBufferTest extends AbstractBufferTest {
         assertEquals(buf.position(), buf.limit());
         buf.reset();
         assertEquals(buf.position(), 0);
+
+        // BEGIN android-added
+        // copied from a newer version of Harmony
+        DoubleBuffer dbuffer1 = DoubleBuffer.wrap(new double[] { Double.NaN });
+        DoubleBuffer dbuffer2 = DoubleBuffer.wrap(new double[] { Double.NaN });
+        DoubleBuffer dbuffer3 = DoubleBuffer.wrap(new double[] { 42d });
+
+        assertEquals("Failed equal comparison with NaN entry", 0, dbuffer1
+                .compareTo(dbuffer2));
+        assertEquals("Failed greater than comparison with NaN entry", 1, dbuffer3
+                .compareTo(dbuffer1));
+        assertEquals("Failed greater than comparison with NaN entry", 1, dbuffer1
+                .compareTo(dbuffer3));
+        // END android-added
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compact",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "compact",
+        args = {}
+    )
     public void testCompact() {
         // case: buffer is full
         buf.clear();
@@ -257,15 +266,13 @@ public class DoubleBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.nio.DoubleBuffer.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.nio.DoubleBuffer.class}
+    )
     public void testCompareTo() {
         DoubleBuffer other = DoubleBuffer.allocate(buf.capacity());
         loadTestData1(other);
@@ -281,27 +288,14 @@ public class DoubleBufferTest extends AbstractBufferTest {
         other.limit(5);
         assertTrue(buf.compareTo(other) > 0);
         assertTrue(other.compareTo(buf) < 0);
-
-        DoubleBuffer dbuffer1 = DoubleBuffer.wrap(new double[] { Double.NaN });
-        DoubleBuffer dbuffer2 = DoubleBuffer.wrap(new double[] { Double.NaN });
-        DoubleBuffer dbuffer3 = DoubleBuffer.wrap(new double[] { 42d });
-
-        assertEquals("Failed equal comparison with NaN entry", 0, dbuffer1
-                .compareTo(dbuffer2));
-        assertEquals("Failed greater than comparison with NaN entry", 1, dbuffer3
-                .compareTo(dbuffer1));
-        assertEquals("Failed greater than comparison with NaN entry", 1, dbuffer1
-                .compareTo(dbuffer3));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "duplicate",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "duplicate",
+        args = {}
+    )
     public void testDuplicate() {
         buf.clear();
         buf.mark();
@@ -334,15 +328,13 @@ public class DoubleBufferTest extends AbstractBufferTest {
             assertContentEquals(buf, duplicate);
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void testEquals() {
         // equal to self
         assertTrue(buf.equals(buf));
@@ -368,15 +360,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
     /*
      * Class under test for double get()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "get",
+        args = {}
+    )
     public void testGet() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -394,15 +383,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.DoubleBuffer get(double[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {double[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "get",
+        args = {double[].class}
+    )
     public void testGetdoubleArray() {
         double array[] = new double[1];
         buf.clear();
@@ -412,10 +398,20 @@ public class DoubleBufferTest extends AbstractBufferTest {
             assertEquals(array[0], buf.get(i), 0.01);
             assertSame(ret, buf);
         }
+
+        buf.get(new double[0]);
+
         try {
             buf.get(array);
             fail("Should throw Exception"); //$NON-NLS-1$
         } catch (BufferUnderflowException e) {
+            // expected
+        }
+
+        try {
+            buf.get((double[])null);
+            fail("Should throw Exception"); //$NON-NLS-1$
+        } catch (NullPointerException e) {
             // expected
         }
     }
@@ -423,15 +419,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.DoubleBuffer get(double[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {double[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "get",
+        args = {double[].class, int.class, int.class}
+    )
     public void testGetdoubleArrayintint() {
         buf.clear();
         double array[] = new double[buf.capacity()];
@@ -499,15 +492,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
     /*
      * Class under test for double get(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "get",
+        args = {int.class}
+    )
     public void testGetint() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -527,27 +517,35 @@ public class DoubleBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify false returned value.",
-      targets = {
-        @TestTarget(
-          methodName = "hasArray",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "hasArray",
+        args = {}
+    )
     public void testHasArray() {
-        assertTrue(buf.hasArray());
+        if (buf.hasArray()) {
+            assertNotNull(buf.array());
+        } else {
+            try {
+                buf.array();
+                fail("Should throw Exception"); //$NON-NLS-1$
+            } catch (UnsupportedOperationException e) {
+                // expected
+                // Note:can not tell when to catch 
+                // UnsupportedOperationException or
+                // ReadOnlyBufferException, so catch all.
+            }
+        }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void testHashCode() {
         buf.clear();
         DoubleBuffer readonly = buf.asReadOnlyBuffer();
@@ -558,27 +556,23 @@ public class DoubleBufferTest extends AbstractBufferTest {
         duplicate.position(buf.capacity() / 2);
         assertTrue(buf.hashCode() != duplicate.hashCode());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify direct buffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isDirect",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify direct buffer.",
+        method = "isDirect",
+        args = {}
+    )
     public void testIsDirect() {
         assertFalse(buf.isDirect());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "order",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "order",
+        args = {}
+    )
     public void testOrder() {
         assertEquals(ByteOrder.nativeOrder(), buf.order());
     }
@@ -586,15 +580,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.DoubleBuffer put(double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify boundary values, and ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify boundary values, and ReadOnlyBufferException.",
+        method = "put",
+        args = {double.class}
+    )
     public void testPutdouble() {
 
         buf.clear();
@@ -615,15 +606,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.DoubleBuffer put(double[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {double[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ReadOnlyBufferException.",
+        method = "put",
+        args = {double[].class}
+    )
     public void testPutdoubleArray() {
         double array[] = new double[1];
 
@@ -646,15 +634,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.DoubleBuffer put(double[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {double[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ReadOnlyBufferException.",
+        method = "put",
+        args = {double[].class, int.class, int.class}
+    )
     public void testPutdoubleArrayintint() {
         buf.clear();
         double array[] = new double[buf.capacity()];
@@ -722,15 +707,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.DoubleBuffer put(java.nio.DoubleBuffer)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {java.nio.DoubleBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ReadOnlyBufferException.",
+        method = "put",
+        args = {java.nio.DoubleBuffer.class}
+    )
     public void testPutDoubleBuffer() {
         DoubleBuffer other = DoubleBuffer.allocate(buf.capacity());
 
@@ -760,15 +742,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.DoubleBuffer put(int, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {int.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ReadOnlyBufferException.",
+        method = "put",
+        args = {int.class, double.class}
+    )
     public void testPutintdouble() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -790,15 +769,13 @@ public class DoubleBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "slice",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "slice",
+        args = {}
+    )
     public void testSlice() {
         assertTrue(buf.capacity() > 5);
         buf.position(1);
@@ -827,15 +804,13 @@ public class DoubleBufferTest extends AbstractBufferTest {
             assertEquals(slice.get(1), 500, 0.0);
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         String str = buf.toString();
         assertTrue(str.indexOf("Double") >= 0 || str.indexOf("double") >= 0);
@@ -850,15 +825,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
      * case for check equal between buf2 and double array[] 3. case for check a
      * buf2 dependens to array[]
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "wrap",
-          methodArgs = {double[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "wrap",
+        args = {double[].class}
+    )
     public void test_Wrap$D() {
         double array[] = new double[BUFFER_LENGTH];
         loadTestData1(array, 0, BUFFER_LENGTH);
@@ -885,15 +857,12 @@ public class DoubleBufferTest extends AbstractBufferTest {
      * 3. case for check a buf2 dependens to array[] 4. case expected
      * IndexOutOfBoundsException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "wrap",
-          methodArgs = {double[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "wrap",
+        args = {double[].class, int.class, int.class}
+    )
     public void test_Wrap$DII() {
         double array[] = new double[BUFFER_LENGTH];
         int offset = 5;

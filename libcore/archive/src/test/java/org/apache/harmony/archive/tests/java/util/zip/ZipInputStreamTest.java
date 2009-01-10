@@ -14,31 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.harmony.archive.tests.java.util.zip;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
+import junit.framework.TestCase;
+
+import tests.support.resource.Support_Resources;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import junit.framework.TestCase;
-import tests.support.resource.Support_Resources;
-
-@TestTargetClass(ZipInputStream.class) 
+@TestTargetClass(ZipInputStream.class)
 public class ZipInputStreamTest extends TestCase {
     // the file hyts_zipFile.zip used in setup needs to included as a resource
     private ZipEntry zentry;
 
     private ZipInputStream zis;
-    
+
     private byte[] zipBytes;
 
     private byte[] dataBytes = "Some data in my file".getBytes();
@@ -79,15 +84,12 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#ZipInputStream(java.io.InputStream)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ZipInputStream",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ZipInputStream",
+        args = {java.io.InputStream.class}
+    )
     public void test_ConstructorLjava_io_InputStream() throws Exception {
         zentry = zis.getNextEntry();
         zis.closeEntry();
@@ -96,15 +98,12 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#close()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
     public void test_close() {
         try {
             zis.close();
@@ -119,15 +118,12 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#close()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks calling method two times",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks calling method two times",
+        method = "close",
+        args = {}
+    )
     public void test_close2() throws Exception {
         // Regression for HARMONY-1101
         zis.close();
@@ -138,68 +134,160 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#closeEntry()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "closeEntry",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "closeEntry",
+        args = {}
+    )
     public void test_closeEntry() throws Exception {
         zentry = zis.getNextEntry();
         zis.closeEntry();
+        zentry = zis.getNextEntry();
+        zis.close();
+        try {
+            zis.closeEntry();
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
+        File resources = Support_Resources.createTempFolder();
+        Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
+        FileInputStream fis = new FileInputStream(new File(resources,
+                "Broken_manifest.jar"));
+
+        ZipInputStream zis1 = new ZipInputStream(fis);
+
+        try {
+            for (int i = 0; i < 6; i++) {
+                zis1.getNextEntry();
+                zis1.closeEntry();
+            }
+            fail("ZipException expected");
+        } catch (ZipException ee) {
+            // expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "close",
+        args = {}
+    )
+    @KnownFailure("The behaviour is different from RI, but not neccessarily wrong.")
+    public void test_closeAfterException() throws Exception {
+        File resources = Support_Resources.createTempFolder();
+        Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
+        FileInputStream fis = new FileInputStream(new File(resources,
+                "Broken_manifest.jar"));
+
+        ZipInputStream zis1 = new ZipInputStream(fis);
+
+        try {
+            for (int i = 0; i < 6; i++) {
+                zis1.getNextEntry();
+            }
+            fail("ZipException expected");
+        } catch (ZipException ee) {
+            // expected
+        }
+
+        zis1.close();  // Android throws exception here, but RI only when getNextEntry/read/skip are called.
+        try {
+            zis1.getNextEntry();
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.zip.ZipInputStream#getNextEntry()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getNextEntry",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "getNextEntry",
+        args = {}
+    )
     public void test_getNextEntry() throws Exception {
         assertNotNull("getNextEntry failed", zis.getNextEntry());
+
+        File resources = Support_Resources.createTempFolder();
+        Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
+        FileInputStream fis = new FileInputStream(new File(resources,
+                "Broken_manifest.jar"));
+
+        ZipInputStream zis1 = new ZipInputStream(fis);
+
+        try {
+            for (int i = 0; i < 6; i++) {
+                zis1.getNextEntry();
+            }
+            fail("ZipException expected");
+        } catch (ZipException ee) {
+            // expected
+        }
+
+        try {
+            zis1.close();  // Android throws exception here, already!
+            zis1.getNextEntry();  // But RI here, only!
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.zip.ZipInputStream#read(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_read$BII() throws Exception {
         zentry = zis.getNextEntry();
         byte[] rbuf = new byte[(int) zentry.getSize()];
         int r = zis.read(rbuf, 0, rbuf.length);
         new String(rbuf, 0, r);
         assertEquals("Failed to read entry", 12, r);
+
+        File resources = Support_Resources.createTempFolder();
+        Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
+        FileInputStream fis = new FileInputStream(new File(resources,
+                "Broken_manifest.jar"));
+
+        ZipInputStream zis1 = new ZipInputStream(fis);
+
+        zis1.getNextEntry();
+        zis1.getNextEntry();
+
+        rbuf = new byte[100];
+
+        try {
+            zis1.read(rbuf, 10, 90);
+            fail("ZipException expected");
+        } catch (ZipException ee) {
+            // expected
+        }
+
+        try {
+            zis1.close();  // Android throws exception here, already!
+            zis1.read(rbuf, 10, 90);  // But RI here, only!
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.zip.ZipInputStream#skip(long)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ZipException IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "skip",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "skip",
+        args = {long.class}
+    )
     public void test_skipJ() throws Exception {
         zentry = zis.getNextEntry();
         byte[] rbuf = new byte[(int) zentry.getSize()];
@@ -212,7 +300,8 @@ public class ZipInputStreamTest extends TestCase {
         long s = zis.skip(1025);
         assertTrue("invalid skip: " + s, s == 1025);
 
-        ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes));
+        ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(
+                zipBytes));
         zis.getNextEntry();
         long skipLen = dataBytes.length / 2;
         assertEquals("Assert 0: failed valid skip", skipLen, zis.skip(skipLen));
@@ -225,5 +314,106 @@ public class ZipInputStreamTest extends TestCase {
         } catch (IllegalArgumentException e) {
             // Expected
         }
+
+        File resources = Support_Resources.createTempFolder();
+        Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
+        FileInputStream fis = new FileInputStream(new File(resources,
+                "Broken_manifest.jar"));
+
+        ZipInputStream zis1 = new ZipInputStream(fis);
+
+        zis1.getNextEntry();
+        zis1.getNextEntry();
+
+        try {
+            zis1.skip(10);
+            fail("ZipException expected");
+        } catch (ZipException ee) {
+            // expected
+        }
+
+        try {
+            zis1.close();  // Android throws exception here, already!
+            zis1.skip(10);  // But RI here, only!
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "available",
+        args = {}
+    )
+    @KnownFailure("Needs investigation!!!")
+    public void test_available() throws Exception {
+
+        File resources = Support_Resources.createTempFolder();
+        Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
+        File fl = new File(resources, "Broken_manifest.jar");
+        FileInputStream fis = new FileInputStream(fl);
+
+        ZipInputStream zis1 = new ZipInputStream(fis);
+        int i = 0;
+System.out.println(fl.length());
+        for (i = 0; i < fl.length(); i++) {
+//System.out.println(i);
+            zis1.skip(1);
+//System.out.println("Skipped 1");
+int avail = zis1.available();
+//System.out.println(avail);
+            if (zis1.available() == 0) break; // RI breaks at i = 0 already; Android loops till the end!
+//System.out.println("Looping...");
+        }
+        if (i == fl.length()) {
+            fail("ZipInputStream.available or ZipInputStream.skip does not working properly");
+        }
+        assertTrue(zis1.available() == 0);
+        zis1.skip(1);
+        assertFalse(zis.available() == 0);
+        zis1.close();
+        try {
+            zis1.available();
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
+    }
+
+    class Mock_ZipInputStream extends ZipInputStream {
+        boolean createFlag = false;
+
+        public Mock_ZipInputStream(InputStream arg0) {
+            super(arg0);
+        }
+
+        boolean getCreateFlag() {
+            return createFlag;
+        }
+
+        protected ZipEntry createZipEntry(String name) {
+            createFlag = true;
+            return super.createZipEntry(name);
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "createZipEntry",
+        args = {java.lang.String.class}
+    )
+    public void test_createZipEntryLjava_lang_String() throws Exception {
+
+        File resources = Support_Resources.createTempFolder();
+        Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
+        File fl = new File(resources, "Broken_manifest.jar");
+        FileInputStream fis = new FileInputStream(fl);
+
+        Mock_ZipInputStream zis1 = new Mock_ZipInputStream(fis);
+        assertFalse(zis1.getCreateFlag());
+        zis1.getNextEntry();
+        assertTrue(zis1.getCreateFlag());
     }
 }

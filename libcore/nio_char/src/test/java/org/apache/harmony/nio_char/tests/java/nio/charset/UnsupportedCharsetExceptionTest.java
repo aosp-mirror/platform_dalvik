@@ -17,8 +17,8 @@
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.io.Serializable;
@@ -35,18 +35,19 @@ import org.apache.harmony.testframework.serialization.SerializationTest.Serializ
  */
 public class UnsupportedCharsetExceptionTest extends TestCase {
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnsupportedCharsetException",
-          methodArgs = {java.lang.String.class}
-        ),@TestTarget(
-          methodName = "getCharsetName",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "UnsupportedCharsetException",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCharsetName",
+            args = {}
         )
-
     })
     public void testConstructor() {
         UnsupportedCharsetException ex = new UnsupportedCharsetException(
@@ -95,15 +96,12 @@ public class UnsupportedCharsetExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new UnsupportedCharsetException(
@@ -113,15 +111,12 @@ public class UnsupportedCharsetExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-@TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "Verifies serialization.",
-          targets = {
-            @TestTarget(
-              methodName = "!SerializationGolden",
-              methodArgs = {}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new UnsupportedCharsetException(

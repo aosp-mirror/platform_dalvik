@@ -16,17 +16,15 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 /**
  * TODO Type description
@@ -41,15 +39,12 @@ public class OpenRandomFileTest extends TestCase {
     public OpenRandomFileTest() {
         super();
     }
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "Exceptions checking missed.",
-              targets = {
-                @TestTarget(
-                  methodName = "RandomAccessFile",
-                  methodArgs = {java.lang.String.class, java.lang.String.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "RandomAccessFile",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testOpenNonEmptyFile() {
         try {
             File file = File.createTempFile("test", "tmp");
@@ -66,15 +61,12 @@ public class OpenRandomFileTest extends TestCase {
             fail(ex.getLocalizedMessage());
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "RandomAccessFile",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "RandomAccessFile",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testOpenEmptyFile() {
         try {
             File file = File.createTempFile("test", "tmp");

@@ -16,35 +16,44 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.KnownFailure; 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.CookieHandler;
+import java.net.MalformedURLException;
 import java.net.NetPermission;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.Permission;
 import java.util.Map;
 
 import junit.framework.TestCase;
 
+import tests.support.Support_Configuration;
+
 @TestTargetClass(CookieHandler.class) 
 public class CookieHandlerTest extends TestCase {
+    
+    URI getURI, putURI;
+    String link = "http://" + Support_Configuration.SpecialInetTestAddress + "/";
+    boolean isGetCalled = false;
+    boolean isPutCalled = false;
 
     /**
      * @tests java.net.CookieHandler#getDefault()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for getDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "getDefault",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for getDefault method.",
+        method = "getDefault",
+        args = {}
+    )
     public void test_GetDefault() {
         assertNull(CookieHandler.getDefault());
     }
@@ -52,15 +61,12 @@ public class CookieHandlerTest extends TestCase {
     /**
      * @tests java.net.CookieHandler#setDefault(CookieHandler)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for setDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "setDefault",
-          methodArgs = {CookieHandler.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for setDefault method.",
+        method = "setDefault",
+        args = {java.net.CookieHandler.class}
+    )
     public void test_SetDefault_java_net_cookieHandler() {
         MockCookieHandler rc1 = new MockCookieHandler();
         MockCookieHandler rc2 = new MockCookieHandler();
@@ -75,15 +81,12 @@ public class CookieHandlerTest extends TestCase {
     /**
      * @tests java.net.CookieHandler#getDefault()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for getDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "getDefault",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for getDefault method.",
+        method = "getDefault",
+        args = {}
+    )
     public void testGetDefault_Security() {
         SecurityManager old = System.getSecurityManager();
         try {
@@ -105,15 +108,12 @@ public class CookieHandlerTest extends TestCase {
     /**
      * @tests java.net.CookieHandler#setDefault(CookieHandler)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for setDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "setDefault",
-          methodArgs = {CookieHandler.class}
-        )
-    })    public void testSetDefault_Security() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for setDefault method.",
+        method = "setDefault",
+        args = {java.net.CookieHandler.class}
+    )    public void testSetDefault_Security() {
         CookieHandler rc = new MockCookieHandler();
         SecurityManager old = System.getSecurityManager();
         try {
@@ -133,14 +133,81 @@ public class CookieHandlerTest extends TestCase {
         }
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CookieHandler",
+        args = {}
+    )
+    public void test_CookieHandler() {
+        MockCookieHandler mch = new MockCookieHandler();
+        assertNull(mch.getDefault());
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "get",
+            args = {java.net.URI.class, java.util.Map.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "put",
+            args = {java.net.URI.class, java.util.Map.class}
+        )
+    })
+    @KnownFailure("Cache is not used")
+    public void test_get_put() {
+        MockCookieHandler mch = new MockCookieHandler();
+        CookieHandler defaultHandler = CookieHandler.getDefault();
+        CookieHandler.setDefault(mch);
+        
+        class TestThread extends Thread {
+            public void run() {
+                try {
+                    URL url = new URL(link);
+                    URLConnection conn = url.openConnection();
+                    Object obj = conn.getContent();
+                    url = new URL(link);
+                    conn = url.openConnection();
+                    obj = conn.getContent();
+                } catch (MalformedURLException e) {
+                    fail("MalformedURLException was thrown: " + e.toString());
+                } catch (IOException e) {
+                    fail("IOException was thrown.");
+               }                
+            }
+        };
+        try {
+            TestThread thread = new TestThread();
+        
+            thread.start();
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                fail("InterruptedException was thrown.");
+            }
+        
+            assertTrue(isGetCalled);
+            assertTrue(isPutCalled);
+        } finally {
+            CookieHandler.setDefault(defaultHandler);
+        }
+    }
+    
     class MockCookieHandler extends CookieHandler {
 
         public Map get(URI uri, Map requestHeaders) throws IOException {
-            return null;
+            getURI = uri;
+            isGetCalled = true;
+            return requestHeaders;
         }
 
         public void put(URI uri, Map responseHeaders) throws IOException {
-            // empty
+            putURI = uri;
+            isPutCalled = true;
         }
 
     }

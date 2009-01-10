@@ -22,10 +22,9 @@
 
 package tests.api.javax.security.cert;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -43,7 +42,17 @@ import javax.security.cert.CertificateException;
 
 /**
  */
-@TestTargetClass(Certificate.class)
+@TestTargetClass(
+        value = Certificate.class,
+        untestedMethods = {
+            @TestTargetNew(
+                    level = TestLevel.NOT_FEASIBLE,
+                    notes = "not specific enough for black-box testing",
+                    method = "toString",
+                    args = {}
+                  )
+        }
+)
 public class CertificateTest extends TestCase {
 
     /**
@@ -77,15 +86,12 @@ public class CertificateTest extends TestCase {
     /**
      * Test for <code>Certificate()</code> constructor<br>
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Certificate",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Certificate",
+        args = {}
+    )
     public final void testCertificate() {
         TBTCert tbt_cert = new TBTCert();
 
@@ -98,15 +104,12 @@ public class CertificateTest extends TestCase {
      * operation: it should be reflexive, symmetric, transitive, consistent and
      * should be false on null object.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void testEquals() {
         TBTCert tbt_cert = new TBTCert() {
             public byte[] getEncoded() {
@@ -163,15 +166,12 @@ public class CertificateTest extends TestCase {
     /**
      * hashCode() method testing.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void testHashCode() {
         TBTCert tbt_cert = new TBTCert() {
             public byte[] getEncoded() {
@@ -187,7 +187,7 @@ public class CertificateTest extends TestCase {
         assertTrue("Equal objects should have the same hash codes.", tbt_cert
                 .hashCode() == tbt_cert_1.hashCode());
     }
-
+    
     public static Test suite() {
         return new TestSuite(CertificateTest.class);
     }

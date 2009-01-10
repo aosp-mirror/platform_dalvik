@@ -30,12 +30,15 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Test for java.lang");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Test for java.lang");
 
         // $JUnit-BEGIN$
         
-        // suite.addTestSuite(Process2Test.class);
-        // suite.addTestSuite(ProcessTest.class);
+        suite.addTestSuite(Process2Test.class);
+        suite.addTestSuite(ProcessTest.class);
+        suite.addTestSuite(ProcessManagerTest.class);
+        suite.addTestSuite(BooleanTest.class);
+        suite.addTestSuite(StringTest.class);
 
         // $JUnit-END$
 

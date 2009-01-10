@@ -18,9 +18,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.NamedNodeMap;
@@ -72,16 +72,12 @@ public final class HCNamedNodeMapInvalidType extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that setNamedItem method throws DOMException with " +
-            "HIERARCHY_REQUEST_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItem",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that setNamedItem method throws DOMException with HIERARCHY_REQUEST_ERR code.",
+        method = "setNamedItem",
+        args = {org.w3c.dom.Node.class}
+    )
     public void testNamedNodeMapInvalidType() throws Throwable {
         Document doc;
         NamedNodeMap attributes;

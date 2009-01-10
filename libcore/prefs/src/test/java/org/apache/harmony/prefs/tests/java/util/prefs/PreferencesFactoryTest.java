@@ -17,9 +17,9 @@
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.util.prefs.Preferences;
 import java.util.prefs.PreferencesFactory;
@@ -42,28 +42,22 @@ public class PreferencesFactoryTest extends TestCase {
         f = new PreferencesFactoryImpl();
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Testing Interface",
-      targets = {
-        @TestTarget(
-          methodName = "userRoot",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Testing Interface",
+        method = "userRoot",
+        args = {}
+    )
     public void testUserRoot() {
         f.userRoot();
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Testing Interface",
-      targets = {
-        @TestTarget(
-          methodName = "userRoot",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Testing Interface",
+        method = "systemRoot",
+        args = {}
+    )
     public void testSystemRoot() {
         f.systemRoot();
     }

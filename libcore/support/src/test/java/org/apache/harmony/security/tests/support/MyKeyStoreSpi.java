@@ -44,6 +44,7 @@ import java.util.Enumeration;
 
 public class MyKeyStoreSpi extends KeyStoreSpi {
 
+    @SuppressWarnings("unused")
     public Key engineGetKey(String alias, char[] password)
             throws NoSuchAlgorithmException, UnrecoverableKeyException {
         return null;
@@ -92,6 +93,10 @@ public class MyKeyStoreSpi extends KeyStoreSpi {
     }
 
     public boolean engineContainsAlias(String alias) {
+        if (alias != null)
+        {
+            return alias.startsWith("test_engineEntry");
+        }
         return false;
     }
 
@@ -120,6 +125,7 @@ public class MyKeyStoreSpi extends KeyStoreSpi {
         return "";
     }
 
+    @SuppressWarnings("unused")
     public void engineStore(OutputStream stream, char[] password)
             throws IOException, NoSuchAlgorithmException, CertificateException {
         if (!(stream instanceof ByteArrayOutputStream)) {
@@ -132,6 +138,7 @@ public class MyKeyStoreSpi extends KeyStoreSpi {
 
     }
 
+    @SuppressWarnings("unused")
     public void engineLoad(InputStream stream, char[] password)
             throws IOException, NoSuchAlgorithmException, CertificateException {
     }

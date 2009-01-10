@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.io.ByteArrayInputStream;
@@ -30,17 +30,19 @@ import junit.framework.TestCase;
 @TestTargetClass(InputStreamReader.class)
 public class InputStreamReaderTest extends TestCase {
     
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InputStreamReader",
-          methodArgs = {java.io.InputStream.class, java.lang.String.class}
-        ), @TestTarget(
-          methodName = "getEncoding",
-          methodArgs = {}
-        ) 
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "InputStreamReader",
+            args = {java.io.InputStream.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getEncoding",
+            args = {}
+        )
     })
     public void testGetEncoding_StreamClosed() throws IOException {
         InputStreamReader in = null;
@@ -51,18 +53,20 @@ public class InputStreamReaderTest extends TestCase {
         assertNull(result);
     }
 
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "InputStreamReader",
-                  methodArgs = {java.io.InputStream.class, java.lang.String.class}
-                ), @TestTarget(
-                        methodName = "getEncoding",
-                        methodArgs = {}
-                )
-            })
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "InputStreamReader",
+            args = {java.io.InputStream.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getEncoding",
+            args = {}
+        )
+    })
     public void testGetEncoding_NotHistorical() {
         InputStreamReader in = null;
         try {

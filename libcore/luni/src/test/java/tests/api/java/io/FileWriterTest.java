@@ -17,11 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,6 +24,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(FileWriter.class) 
 public class FileWriterTest extends junit.framework.TestCase {
@@ -48,13 +49,11 @@ public class FileWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileWriter#FileWriter(java.io.File)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "FileWriter", 
-                                    methodArgs = {java.io.File.class})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "FileWriter",
+        args = {java.io.File.class}
+    )      
     public void test_ConstructorLjava_io_File() {
         // Test for method java.io.FileWriter(java.io.File)
         try {
@@ -74,18 +73,36 @@ public class FileWriterTest extends junit.framework.TestCase {
             fail("Exception during Constructor test " + e.toString());
         }
     }
+    
+    /**
+     * @tests java.io.FileWriter#FileWriter(java.io.File)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks IOException.",
+        method = "FileWriter",
+        args = {java.io.File.class}
+    )      
+    public void test_ConstructorLjava_io_File_IOException() {
+        File dir = new File(System.getProperty("java.io.tmpdir"));
+        
+        try {
+            fw = new FileWriter(dir);
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
 
     /**
      * @tests java.io.FileWriter#FileWriter(java.io.File, boolean)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies FileWriter(java.io.File, boolean) constructor.",
-            targets = { @TestTarget(methodName = "FileWriter", 
-                                    methodArgs = {java.io.File.class,
-                                                  boolean.class})                         
-            }
-        )              
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies FileWriter(java.io.File, boolean) constructor.",
+        method = "FileWriter",
+        args = {java.io.File.class, boolean.class}
+    )              
     public void test_ConstructorLjava_io_FileZ() throws Exception {
         // Test for method java.io.FileWriter(java.io.File)
         //append = true
@@ -128,15 +145,34 @@ public class FileWriterTest extends junit.framework.TestCase {
     }
     
     /**
+     * @tests java.io.FileWriter#FileWriter(java.io.File, boolean)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks IOException.",
+        method = "FileWriter",
+        args = {java.io.File.class, boolean.class}
+    )      
+    public void test_ConstructorLjava_io_FileZ_IOException() {
+        File dir = new File(System.getProperty("java.io.tmpdir"));
+        
+        try {
+            fw = new FileWriter(dir, true);
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
      * @tests java.io.FileWriter#FileWriter(java.io.FileDescriptor)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies FileWriter(java.io.FileDescriptor) constructor.",
-            targets = { @TestTarget(methodName = "FileWriter", 
-                                    methodArgs = {java.io.FileDescriptor.class})                         
-            }
-        )          
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies FileWriter(java.io.FileDescriptor) constructor.",
+        method = "FileWriter",
+        args = {java.io.FileDescriptor.class}
+    )          
     public void test_ConstructorLjava_io_FileDescriptor() {
         // Test for method java.io.FileWriter(java.io.FileDescriptor)
         try {
@@ -160,13 +196,11 @@ public class FileWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileWriter#FileWriter(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "FileWriter", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "FileWriter",
+        args = {java.lang.String.class}
+    )     
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.io.FileWriter(java.lang.String)
         try {
@@ -188,16 +222,31 @@ public class FileWriterTest extends junit.framework.TestCase {
     }
 
     /**
+     * @tests java.io.FileWriter#FileWriter(java.lang.String)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks IOException.",
+        method = "FileWriter",
+        args = {java.lang.String.class}
+    )      
+    public void test_ConstructorLjava_lang_String_IOException() {
+        try {
+            fw = new FileWriter(System.getProperty("java.io.tmpdir"));
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
      * @tests java.io.FileWriter#FileWriter(java.lang.String, boolean)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "FileWriter", 
-                                    methodArgs = {java.lang.String.class,
-                                                  boolean.class})                         
-            }
-        )       
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "FileWriter",
+        args = {java.lang.String.class, boolean.class}
+    )       
     public void test_ConstructorLjava_lang_StringZ() {
         // Test for method java.io.FileWriter(java.lang.String, boolean)
 
@@ -234,12 +283,107 @@ public class FileWriterTest extends junit.framework.TestCase {
     }
 
     /**
+     * @tests java.io.FileWriter#FileWriter(java.lang.String, boolean)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks IOException.",
+        method = "FileWriter",
+        args = {java.lang.String.class, boolean.class}
+    )      
+    public void test_ConstructorLjava_lang_StringZ_IOException() {
+        try {
+            fw = new FileWriter(System.getProperty("java.io.tmpdir"), false);
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {char[].class, int.class, int.class}
+    )
+    public void test_handleEarlyEOFChar_1() {
+        String str = "All work and no play makes Jack a dull boy\n"; //$NON-NLS-1$
+        int NUMBER = 2048;
+        int j = 0;
+        int len = str.length() * NUMBER;
+        /* == 88064 *//* NUMBER compulsively written copies of the same string */
+        char[] strChars = new char[len];
+        for (int i = 0; i < NUMBER; ++i) {
+            for (int k = 0; k < str.length(); ++k) {
+                strChars[j++] = str.charAt(k);
+            }
+        }
+        File f = null;
+        FileWriter fw = null;
+        try {
+            f = File.createTempFile("ony", "by_one");
+            fw = new FileWriter(f);
+            fw.write(strChars);
+            fw.close();
+            InputStreamReader in = null;
+            FileInputStream fis = new FileInputStream(f);
+            in = new InputStreamReader(fis);
+            int b;
+            int errors = 0;
+            for (int offset = 0; offset < strChars.length; ++offset) {
+                b = in.read();
+                if (b == -1) {
+                    fail("Early EOF at offset " + offset + "\n");
+                    return;
+                }
+            }
+            assertEquals(0, errors);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+          
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {char[].class, int.class, int.class}
+    )
+    public void test_handleEarlyEOFChar_2() throws IOException {
+        int capacity = 65536;
+        byte[] bytes = new byte[capacity];
+        byte[] bs = {
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'
+        };
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = bs[i / 8192];
+        }
+        String inputStr = new String(bytes);
+        int len = inputStr.length();
+        File f = File.createTempFile("FileWriterBugTest ", null); //$NON-NLS-1$
+        FileWriter writer = new FileWriter(f);
+        writer.write(inputStr);
+        writer.close();
+        long flen = f.length();
+
+        FileReader reader = new FileReader(f);
+        char[] outChars = new char[capacity];
+        int outCount = reader.read(outChars);
+        String outStr = new String(outChars, 0, outCount);
+
+        f.deleteOnExit();
+        assertEquals(len, flen);
+        assertEquals(inputStr, outStr);
+    }
+          
+
+    /**
      * Sets up the fixture, for example, open a network connection. This method
      * is called before a test is executed.
      */
-    protected void setUp() {
+    protected void setUp() throws Exception {
 
-        f = new File(System.getProperty("user.home"), "writer.tst");
+        f = File.createTempFile("writer", ".tst");
 
         if (f.exists())
             if (!f.delete()) {

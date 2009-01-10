@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class ArrayStoreExceptionTest extends TestCase {
     /**
      * @tests java.lang.ArrayStoreException#ArrayStoreException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ArrayStoreException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ArrayStoreException",
+        args = {}
+    )
     public void test_Constructor() {
         ArrayStoreException e = new ArrayStoreException();
         assertNull(e.getMessage());
@@ -49,15 +46,12 @@ public class ArrayStoreExceptionTest extends TestCase {
     /**
      * @tests java.lang.ArrayStoreException#ArrayStoreException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ArrayStoreException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ArrayStoreException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         ArrayStoreException e = new ArrayStoreException("fixture");
         assertEquals("fixture", e.getMessage());

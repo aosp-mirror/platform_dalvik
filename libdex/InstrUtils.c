@@ -766,10 +766,10 @@ InstructionFormat* dexCreateInstrFormatTable(void)
             fmt = kFmt12x;
             break;
         case OP_GOTO_16:
-            fmt = kFmt30t;
+            fmt = kFmt20t;
             break;
         case OP_GOTO_32:
-            fmt = kFmt31t;
+            fmt = kFmt30t;
             break;
         case OP_CONST_STRING:
         case OP_CONST_CLASS:

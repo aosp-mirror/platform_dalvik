@@ -18,9 +18,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.Provider;
 
@@ -54,15 +54,12 @@ public class Provider2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Provider#entrySet()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "UnsupportedOperationException verification",
-      targets = {
-        @TestTarget(
-          methodName = "entrySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "UnsupportedOperationException verification",
+        method = "entrySet",
+        args = {}
+    )
     public void test_entrySet() {
         // test method of java.security.provider.entrySet
         provTest.put("test.prop", "this is a test property");
@@ -78,15 +75,12 @@ public class Provider2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Provider#getInfo()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInfo",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInfo",
+        args = {}
+    )
     public void test_getInfo() {
         // test method of java.security.provider.getInfo
         assertEquals("the information of the provider is not stored properly",
@@ -97,15 +91,12 @@ public class Provider2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Provider#getName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         // test method of java.security.provider.getName
         assertEquals("the name of the provider is not stored properly",
@@ -115,15 +106,12 @@ public class Provider2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Provider#getVersion()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getVersion",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getVersion",
+        args = {}
+    )
     public void test_getVersion() {
         // test method of java.security.provider.getVersion
         assertEquals("the version of the provider is not stored properly",
@@ -133,15 +121,12 @@ public class Provider2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Provider#keySet()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "UnsupportedOperationException verification",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "UnsupportedOperationException verification",
+        method = "keySet",
+        args = {}
+    )
     public void test_keySet() {
         // test method of java.security.provider.keySet
         provTest.put("test.prop", "this is a test property");
@@ -156,15 +141,12 @@ public class Provider2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Provider#values()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "UnsupportedOperationException verification",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "UnsupportedOperationException verification",
+        method = "values",
+        args = {}
+    )
     public void test_values() {
         // test method of java.security.provider.values
         provTest.put("test.prop", "this is a test property");
@@ -180,15 +162,12 @@ public class Provider2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Provider#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Regression test",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Regression test",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Regression for HARMONY-3734
         assertEquals("provTest version 1.2", provTest.toString());

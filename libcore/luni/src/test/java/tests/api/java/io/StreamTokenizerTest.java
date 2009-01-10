@@ -17,13 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestLevel;
-
-import junit.framework.Assert;
-
 import java.io.ByteArrayInputStream;
 import java.io.CharArrayReader;
 import java.io.IOException;
@@ -34,7 +27,13 @@ import java.io.StreamTokenizer;
 import java.io.StringBufferInputStream;
 import java.io.StringReader;
 
+import junit.framework.Assert;
 import tests.support.Support_StringReader;
+import tests.support.Support_ASimpleInputStream;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 // TODO: most of the assertTrue calls in this test case should be
 // replaced with assertEquals (possibly two assertEquals) see
 // test_ConstructorLjava_io_InputStream for example.
@@ -51,15 +50,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#StreamTokenizer(java.io.InputStream)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StreamTokenizer",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StreamTokenizer",
+        args = {java.io.InputStream.class}
+    )
     public void test_ConstructorLjava_io_InputStream() throws IOException {
         st = new StreamTokenizer(new StringBufferInputStream(
                 "/comments\n d 8 'h'"));
@@ -83,15 +79,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#StreamTokenizer(java.io.Reader)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StreamTokenizer",
-          methodArgs = {java.io.Reader.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StreamTokenizer",
+        args = {java.io.Reader.class}
+    )
     public void test_ConstructorLjava_io_Reader() throws IOException {
         setTest("/testing\n d 8 'h' ");
         assertEquals("the next token returned should be the letter d skipping the comments",
@@ -113,15 +106,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#commentChar(int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "commentChar",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "commentChar",
+        args = {int.class}
+    )
     public void test_commentCharI() throws IOException {
         setTest("*comment \n / 8 'h' ");
         st.ordinaryChar('/');
@@ -138,15 +128,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#eolIsSignificant(boolean)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "eolIsSignificant",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "eolIsSignificant",
+        args = {boolean.class}
+    )
     public void test_eolIsSignificantZ() throws IOException {
         setTest("d 8\n");
         // by default end of line characters are not significant
@@ -171,15 +158,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#lineno()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "lineno",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "lineno",
+        args = {}
+    )
     public void test_lineno() throws IOException {
         setTest("d\n 8\n");
         assertEquals("the lineno should be 1", 1, st.lineno());
@@ -193,15 +177,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#lowerCaseMode(boolean)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "lowerCaseMode",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "lowerCaseMode",
+        args = {boolean.class}
+    )
     public void test_lowerCaseModeZ() throws Exception {
         // SM.
         setTest("HELLOWORLD");
@@ -215,17 +196,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#nextToken()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextToken",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "nextToken",
+        args = {}
+    )
     public void test_nextToken() throws IOException {
-        // SM.
         setTest("\r\n/* fje fje 43.4 f \r\n f g */  456.459 \r\n"
                 + "Hello  /     \r\n \r\n \n \r \257 Hi \'Hello World\'");
         st.ordinaryChar('/');
@@ -254,38 +230,45 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
         final PipedInputStream pin = new PipedInputStream();
         PipedOutputStream pout = new PipedOutputStream(pin);
         pout.write("hello\n\r\r".getBytes());
-        StreamTokenizer s = new StreamTokenizer(pin);
-        s.eolIsSignificant(true);
+        st = new StreamTokenizer(pin);
+        st.eolIsSignificant(true);
         assertTrue("Wrong token 1,1",
-               s.nextToken() == StreamTokenizer.TT_WORD
-               && s.sval.equals("hello"));
-        assertTrue("Wrong token 1,2", s.nextToken() == '\n');
-        assertTrue("Wrong token 1,3", s.nextToken() == '\n');
-        assertTrue("Wrong token 1,4", s.nextToken() == '\n');
+               st.nextToken() == StreamTokenizer.TT_WORD
+               && st.sval.equals("hello"));
+        assertTrue("Wrong token 1,2", st.nextToken() == '\n');
+        assertTrue("Wrong token 1,3", st.nextToken() == '\n');
+        assertTrue("Wrong token 1,4", st.nextToken() == '\n');
         pout.close();
         assertTrue("Wrong token 1,5",
-               s.nextToken() == StreamTokenizer.TT_EOF);
-        StreamTokenizer tokenizer = new StreamTokenizer(
-                                new Support_StringReader("\n \r\n#"));
-        tokenizer.ordinaryChar('\n'); // make \n ordinary
-        tokenizer.eolIsSignificant(true);
-        assertTrue("Wrong token 2,1", tokenizer.nextToken() == '\n');
-        assertTrue("Wrong token 2,2", tokenizer.nextToken() == '\n');
-        assertEquals("Wrong token 2,3", '#', tokenizer.nextToken());
+               st.nextToken() == StreamTokenizer.TT_EOF);
+        
+        st = new StreamTokenizer(new Support_StringReader("\n \r\n#"));
+        st.ordinaryChar('\n'); // make \n ordinary
+        st.eolIsSignificant(true);
+        assertTrue("Wrong token 2,1", st.nextToken() == '\n');
+        assertTrue("Wrong token 2,2", st.nextToken() == '\n');
+        assertEquals("Wrong token 2,3", '#', st.nextToken());
+        
+        Support_ASimpleInputStream sis = new Support_ASimpleInputStream();
+        sis.throwExceptionOnNextUse = true;
+        st = new StreamTokenizer(sis);
+        try {
+            st.nextToken();
+            fail("IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.StreamTokenizer#ordinaryChar(int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ordinaryChar",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ordinaryChar",
+        args = {int.class}
+    )
     public void test_ordinaryCharI() throws IOException {
         // SM.
         setTest("Ffjein 893");
@@ -298,15 +281,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#ordinaryChars(int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ordinaryChars",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ordinaryChars",
+        args = {int.class, int.class}
+    )
     public void test_ordinaryCharsII() throws IOException {
         // SM.
         setTest("azbc iof z 893");
@@ -318,15 +298,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#parseNumbers()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parseNumbers",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parseNumbers",
+        args = {}
+    )
     public void test_parseNumbers() throws IOException {
         // SM
         setTest("9.9 678");
@@ -342,15 +319,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#pushBack()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "pushBack",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "pushBack",
+        args = {}
+    )
     public void test_pushBack() throws IOException {
         // SM.
         setTest("Hello 897");
@@ -363,15 +337,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#quoteChar(int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "quoteChar",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "quoteChar",
+        args = {int.class}
+    )
     public void test_quoteCharI() throws IOException {
         // SM
         setTest("<Hello World<    HelloWorldH");
@@ -387,15 +358,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#resetSyntax()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "resetSyntax",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "resetSyntax",
+        args = {}
+    )
     public void test_resetSyntax() throws IOException {
         // SM
         setTest("H 9\' ello World");
@@ -413,15 +381,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#slashSlashComments(boolean)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "slashSlashComments",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "slashSlashComments",
+        args = {boolean.class}
+    )
     public void test_slashSlashCommentsZ() throws IOException {
         // SM.
         setTest("// foo \r\n /fiji \r\n -456");
@@ -435,15 +400,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#slashSlashComments(boolean)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "slashSlashComments",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "slashSlashComments",
+        args = {boolean.class}
+    )
     public void test_slashSlashComments_withSSOpen() throws IOException {
         Reader reader = new CharArrayReader( "t // t t t".toCharArray());
 
@@ -457,15 +419,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#slashSlashComments(boolean)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "slashSlashComments",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "slashSlashComments",
+        args = {boolean.class}
+    )
     public void test_slashSlashComments_withSSOpen_NoComment() throws IOException {
         Reader reader = new CharArrayReader( "// t".toCharArray());
 
@@ -479,15 +438,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#slashSlashComments(boolean)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "slashSlashComments",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "slashSlashComments",
+        args = {boolean.class}
+    )
     public void test_slashSlashComments_withSSClosed() throws IOException {
         Reader reader = new CharArrayReader( "// t".toCharArray());
 
@@ -503,15 +459,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#slashStarComments(boolean)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "slashStarComments",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "slashStarComments",
+        args = {boolean.class}
+    )
     public void test_slashStarCommentsZ() throws IOException {
         setTest("/* foo \r\n /fiji \r\n*/ -456");
         st.ordinaryChar('/');
@@ -523,15 +476,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#slashStarComments(boolean)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "slashStarComments",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "slashStarComments",
+        args = {boolean.class}
+    )
     public void test_slashStarComments_withSTOpen() throws IOException {
         Reader reader = new CharArrayReader( "t /* t */ t".toCharArray());
 
@@ -546,15 +496,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#slashStarComments(boolean)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "slashStarComments",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "slashStarComments",
+        args = {boolean.class}
+    )
     public void test_slashStarComments_withSTClosed() throws IOException {
         Reader reader = new CharArrayReader( "t /* t */ t".toCharArray());
 
@@ -568,15 +515,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#toString()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() throws IOException {
         setTest("ABC Hello World");
         st.nextToken();
@@ -588,15 +532,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#whitespaceChars(int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "whitespaceChars",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "whitespaceChars",
+        args = {int.class, int.class}
+    )
     public void test_whitespaceCharsII() throws IOException {
         setTest("azbc iof z 893");
         st.whitespaceChars('a', 'z');
@@ -607,15 +548,12 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StreamTokenizer#wordChars(int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "wordChars",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "wordChars",
+        args = {int.class, int.class}
+    )
     public void test_wordCharsII() throws IOException {
         setTest("A893 -9B87");
         st.wordChars('0', '9');
@@ -656,34 +594,54 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
     protected void tearDown() {
     }
     
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "General functionality of these methods tested in separate tests.",
-      targets = {
-        @TestTarget(
-          methodName = "lineno",
-          methodArgs = {}
-        ),@TestTarget(
-          methodName = "nextToken",
-          methodArgs = {}
-        ),@TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        ),@TestTarget(
-          methodName = "commentChar",
-          methodArgs = {int.class}
-        ),@TestTarget(
-          methodName = "eolIsSignificant",
-          methodArgs = {boolean.class}
-        ),@TestTarget(
-          methodName = "lowerCaseMode",
-          methodArgs = {boolean.class}
-        ),@TestTarget(
-          methodName = "ordinaryChar",
-          methodArgs = {int.class}
-        ),@TestTarget(
-          methodName = "slashStarComments",
-          methodArgs = {boolean.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "General functionality of these methods tested in separate tests.",
+            method = "lineno",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "General functionality of these methods tested in separate tests.",
+            method = "nextToken",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "General functionality of these methods tested in separate tests.",
+            method = "toString",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "General functionality of these methods tested in separate tests.",
+            method = "commentChar",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "General functionality of these methods tested in separate tests.",
+            method = "eolIsSignificant",
+            args = {boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "General functionality of these methods tested in separate tests.",
+            method = "lowerCaseMode",
+            args = {boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "General functionality of these methods tested in separate tests.",
+            method = "ordinaryChar",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "General functionality of these methods tested in separate tests.",
+            method = "slashStarComments",
+            args = {boolean.class}
         )
     })
     public void test_basicStringTokenizerMethods()
@@ -739,18 +697,19 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextToken",
-          methodArgs = {}
-        ),@TestTarget(
-          methodName = "toString",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "nextToken",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "",
+            method = "toString",
+            args = {}
         )
-
     })
     public void test_harmonyRegressionTest() {
         byte[] data = new byte[] {(byte) '-'};
@@ -764,19 +723,20 @@ public class StreamTokenizerTest extends junit.framework.TestCase {
         Assert.assertEquals("Token['-'], line 1", result);
     }
     
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "nextToken",
-              methodArgs = {}
-            ),@TestTarget(
-              methodName = "toString",
-              methodArgs = {}
-            )
-
-        })
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "nextToken",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "",
+            method = "toString",
+            args = {}
+        )
+    })
     public void test_harmonyRegressionTest2() {
         byte[] data = new byte[] {(byte) '"',
                                   (byte) 'H',

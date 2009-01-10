@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class IllegalMonitorStateExceptionTest extends TestCase {
     /**
      * @tests java.lang.IllegalMonitorStateException#IllegalMonitorStateException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "IllegalMonitorStateException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IllegalMonitorStateException",
+        args = {}
+    )
     public void test_Constructor() {
         IllegalMonitorStateException e = new IllegalMonitorStateException();
         assertNull(e.getMessage());
@@ -49,15 +46,12 @@ public class IllegalMonitorStateExceptionTest extends TestCase {
     /**
      * @tests java.lang.IllegalMonitorStateException#IllegalMonitorStateException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "IllegalMonitorStateException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IllegalMonitorStateException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         IllegalMonitorStateException e = new IllegalMonitorStateException("fixture");
         assertEquals("fixture", e.getMessage());

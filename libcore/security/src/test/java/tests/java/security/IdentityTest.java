@@ -23,9 +23,9 @@
 package tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.Identity;
 import java.security.IdentityScope;
@@ -68,28 +68,22 @@ public class IdentityTest extends TestCase {
         super(name);
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Method's returned variable is not checked",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Method's returned variable is not checked",
+        method = "hashCode",
+        args = {}
+    )
     public void testHashCode() {
         new IdentityStub("testHashCode").hashCode();
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void testEquals() throws Exception {
         IdentityStub i1 = new IdentityStub("testEquals");
         Object value[] =  {
@@ -114,15 +108,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify Identity.toString() throws Exception is permission is denied
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString1() {
         MySecurityManager sm = new MySecurityManager();
         sm.denied.add(new SecurityPermission("printIdentity"));
@@ -138,15 +129,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify Identity.toString() 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
      public void testToString2() {    
         assertNotNull(new IdentityStub("testToString2").toString());
     }
@@ -154,15 +142,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify Identity() creates instance
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Identity",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Identity",
+        args = {}
+    )
     public void testIdentity() {
         assertNotNull(new IdentityStub());
     }
@@ -170,15 +155,12 @@ public class IdentityTest extends TestCase {
     /*
      * verify Identity(String) creates instance with given name
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Empty string for parameter is not tested",
-      targets = {
-        @TestTarget(
-          methodName = "Identity",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Empty string for parameter is not tested",
+        method = "Identity",
+        args = {java.lang.String.class}
+    )
     public void testIdentityString() {
         Identity i = new IdentityStub("iii");
         assertNotNull(i);
@@ -191,16 +173,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify Identity(String, IdentityScope) creates instance with given name and in give scope
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "KeyManagementException checking missed. " +
-                  "Null parameters are not checked.",
-      targets = {
-        @TestTarget(
-          methodName = "Identity",
-          methodArgs = {String.class, IdentityScope.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "KeyManagementException checking missed. Null parameters are not checked.",
+        method = "Identity",
+        args = {java.lang.String.class, java.security.IdentityScope.class}
+    )
     public void testIdentityStringIdentityScope() throws Exception {
         IdentityScope s = IdentityScope.getSystemScope();        
         Identity i = new IdentityStub("iii2", s);
@@ -215,15 +193,12 @@ public class IdentityTest extends TestCase {
      * If the identity has a public key, the public key in the certificate must be the same
      *  
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addCertificate",
-          methodArgs = {java.security.Certificate.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "addCertificate",
+        args = {java.security.Certificate.class}
+    )
     public void testAddCertificate1() throws Exception {
         Identity i = new IdentityStub("iii");
         PublicKeyStub pk1 = new PublicKeyStub("kkk", "fff", new byte[]{1,2,3,4,5});
@@ -243,15 +218,12 @@ public class IdentityTest extends TestCase {
      * verify addCertificate(Certificate certificate) adds a certificate for this identity.
      * if the identity does not have a public key, the identity's public key is set to be that specified in the certificate.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addCertificate",
-          methodArgs = {java.security.Certificate.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "addCertificate",
+        args = {java.security.Certificate.class}
+    )
     public void testAddCertificate2() throws Exception {
         Identity i = new IdentityStub("iii");
         PublicKeyStub pk1 = new PublicKeyStub("kkk", "fff", null);        
@@ -265,15 +237,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify addCertificate(Certificate certificate) throws SecurityException is permission is denied
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addCertificate",
-          methodArgs = {java.security.Certificate.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "addCertificate",
+        args = {java.security.Certificate.class}
+    )
     public void testAddCertificate3() throws Exception {
         MySecurityManager sm = new MySecurityManager();
         sm.denied.add(new SecurityPermission("addIdentityCertificate"));
@@ -290,15 +259,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify addCertificate(Certificate certificate) throws KeyManagementException if certificate is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addCertificate",
-          methodArgs = {java.security.Certificate.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "addCertificate",
+        args = {java.security.Certificate.class}
+    )
     public void testAddCertificate4() throws Exception {
         try {
             new IdentityStub("aaa").addCertificate(null);
@@ -336,15 +302,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify removeCertificate(Certificate certificate) throws SecurityException if permission is denied
      */ 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "KeyManagementException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "removeCertificate",
-          methodArgs = {java.security.Certificate.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks SecurityException.",
+        method = "removeCertificate",
+        args = {java.security.Certificate.class}
+    )
     public void testRemoveCertificate2() throws Exception{
         MySecurityManager sm = new MySecurityManager();
         sm.denied.add(new SecurityPermission("removeIdentityCertificate"));
@@ -364,15 +327,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify certificates() returns a copy of all certificates for this identity
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "certificates",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "certificates",
+        args = {}
+    )
     public void testCertificates() throws Exception {
         Identity i = new IdentityStub("iii");
         PublicKeyStub pk1 = new PublicKeyStub("kkk", "fff", null);        
@@ -396,15 +356,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify Identity.identityEquals(Identity) return true, only if names and public keys are equal 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "identityEquals",
-          methodArgs = {Identity.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "identityEquals",
+        args = {java.security.Identity.class}
+    )
     public void testIdentityEquals() throws Exception {
         String name = "nnn";
         PublicKey pk = new PublicKeyStub("aaa", "fff", new byte[]{1,2,3,4,5});
@@ -431,16 +388,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify Identity.toString(boolean) return string representation of identity
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Method's returned value is not checked. " +
-                  "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Method's returned value is not checked. SecurityException checking missed.",
+        method = "toString",
+        args = {boolean.class}
+    )
     public void testToStringboolean() throws Exception {
         new IdentityStub("aaa").toString(false);
         new IdentityStub("aaa2", IdentityScope.getSystemScope()).toString(false);
@@ -451,15 +404,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify Identity.getScope() returns identity's scope
      */ 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getScope",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getScope",
+        args = {}
+    )
     public void testGetScope() throws Exception {
        Identity i = new IdentityStub("testGetScope");
        assertNull(i.getScope());
@@ -473,15 +423,12 @@ public class IdentityTest extends TestCase {
      * 
      * verify Identity.setPublicKey() throws SecurityException if permission is denied
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPublicKey",
-          methodArgs = {PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "setPublicKey",
+        args = {java.security.PublicKey.class}
+    )
     public void testSetPublicKey1() throws Exception {
         MySecurityManager sm = new MySecurityManager();
         sm.denied.add(new SecurityPermission("setIdentityPublicKey"));
@@ -500,15 +447,12 @@ public class IdentityTest extends TestCase {
      * verify Identity.setPublicKey() throws KeyManagementException if key is invalid 
      *
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPublicKey",
-          methodArgs = {PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "setPublicKey",
+        args = {java.security.PublicKey.class}
+    )
     public void testSetPublicKey2() throws Exception {
         Identity i2 = new IdentityStub("testSetPublicKey2_2", IdentityScope.getSystemScope());
         new PublicKeyStub("kkk", "testSetPublicKey2", new byte[]{1,2,3,4,5});
@@ -540,15 +484,12 @@ public class IdentityTest extends TestCase {
      * verify Identity.setPublicKey()  removes old key and all identity's certificates
      *
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPublicKey",
-          methodArgs = {PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "setPublicKey",
+        args = {java.security.PublicKey.class}
+    )
     public void testSetPublicKey4() throws Exception {
         Identity i = new IdentityStub("testSetPublicKey4");
         PublicKeyStub pk1 = new PublicKeyStub("kkk", "Identity.testSetPublicKey4", null);        
@@ -568,15 +509,12 @@ public class IdentityTest extends TestCase {
     /**
      * verify Identity.getPublicKey() returns public key
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPublicKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPublicKey",
+        args = {}
+    )
     public void testGetPublicKey() throws Exception {
         Identity i = new IdentityStub("testGetPublicKey");
         assertNull(i.getPublicKey());
@@ -591,15 +529,12 @@ public class IdentityTest extends TestCase {
      *
      *
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Just SecurityException verification",
-      targets = {
-        @TestTarget(
-          methodName = "setInfo",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Just SecurityException verification",
+        method = "setInfo",
+        args = {java.lang.String.class}
+    )
     public void testSetInfo() throws Exception {
         MySecurityManager sm = new MySecurityManager();
         sm.denied.add(new SecurityPermission("setIdentityInfo"));
@@ -613,17 +548,18 @@ public class IdentityTest extends TestCase {
         }        
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Both method were verified",
-      targets = {
-        @TestTarget(
-          methodName = "getInfo",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Both method were verified",
+            method = "getInfo",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setInfo",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Both method were verified",
+            method = "setInfo",
+            args = {java.lang.String.class}
         )
     })
     public void testGetInfo() {
@@ -633,15 +569,12 @@ public class IdentityTest extends TestCase {
         assertEquals("some info", i.getInfo());
     }
     
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void testGetName() {
         Identity i = new IdentityStub("testGetName");
         assertEquals ("testGetName", i.getName());

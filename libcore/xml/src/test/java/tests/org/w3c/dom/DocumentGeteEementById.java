@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Document;
@@ -54,15 +54,12 @@ public final class DocumentGeteEementById extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify getElementById method for existent element.",
-      targets = {
-        @TestTarget(
-          methodName = "getElementById",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify getElementById method for existent element.",
+        method = "getElementById",
+        args = {java.lang.String.class}
+    )
     public void testGetElementById() throws Throwable {
         Document doc;
         Element element;

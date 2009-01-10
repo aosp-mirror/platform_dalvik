@@ -17,9 +17,8 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
 
 import java.io.FileNotFoundException;
@@ -30,45 +29,38 @@ public class FileNotFoundExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileNotFoundException#FileNotFoundException()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies FileNotFoundException() constructor.",
-            targets = { @TestTarget(methodName = "FileNotFoundException", 
-                                    methodArgs = {})                         
-            }
-        )        
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "FileNotFoundException",
+        args = {}
+    )        
     public void test_Constructor() {
-        FileNotFoundException e = new FileNotFoundException();
-        assertNull(e.getMessage());
+        try {
+            if (true) // To avoid unreachable code compilation error.
+                throw new FileNotFoundException();
+            fail("Test 1: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            assertNull("Test 2: Null expected for exceptions constructed without a message.",
+                    e.getMessage());
+        }
     }
 
     /**
      * @tests java.io.FileNotFoundException#FileNotFoundException(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies FileNotFoundException(java.lang.String) constructor.",
-            targets = { @TestTarget(methodName = "FileNotFoundException", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
-        )        
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "FileNotFoundException",
+        args = {java.lang.String.class}
+    )        
     public void test_ConstructorLjava_lang_String() {
-        String message = "Cannot found file: 9://0//l";
-        FileNotFoundException e = new FileNotFoundException(message);
-        assertSame(message, e.getMessage());
-    }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
+        try {
+            if (true) // To avoid unreachable code compilation error.
+                throw new FileNotFoundException("Something went wrong.");
+            fail("Test 1: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            assertEquals("Test 2: Incorrect message;",
+                    "Something went wrong.", e.getMessage());
+        }
     }
 }

@@ -17,9 +17,8 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
 
 import java.io.ByteArrayInputStream;
@@ -32,47 +31,41 @@ public class EOFExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.EOFException#EOFException()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies EOFException() constructor.",
-            targets = { @TestTarget(methodName = "EOFException", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "EOFException",
+        args = {}
     )   
     public void test_Constructor() {
-        // Test for method java.io.EOFException()
         try {
             new DataInputStream(new ByteArrayInputStream(new byte[1]))
                     .readShort();
+            fail("Test 1: EOFException expected.");
         } catch (EOFException e) {
-            return;
+            assertNull("Test 2: Null expected for exceptions constructed without a message.",
+                    e.getMessage());
         } catch (Exception e) {
-            fail("Exception during EOFException test" + e.toString());
+            fail("Test 3: Unexpected exception: " + e.toString());
         }
-        fail("Failed to generate exception");
     }
 
     /**
      * @tests java.io.EOFException#EOFException(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies EOFException(java.lang.String) constructor.",
-            targets = { @TestTarget(methodName = "EOFException", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "EOFException",
+        args = {java.lang.String.class}
     )      
     public void test_ConstructorLjava_lang_String() {
-        // Test for method java.io.EOFException(java.lang.String)
         try {
-            new DataInputStream(new ByteArrayInputStream(new byte[1]))
-                    .readShort();
+            if (true) // Needed to avoid unreachable code compilation error.
+                throw new EOFException("Something went wrong.");
+            fail("Test 1: EOFException expected.");
         } catch (EOFException e) {
-            return;
-        } catch (Exception e) {
-            fail("Exception during EOFException test" + e.toString());
+            assertEquals("Test 2: Incorrect message;",
+                    "Something went wrong.", e.getMessage());
         }
-        fail("Failed to generate exception");
     }
 
     /**

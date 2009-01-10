@@ -17,8 +17,8 @@
 package tests.api.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.nio.charset.CodingErrorAction;
@@ -47,15 +47,12 @@ public class CodingErrorActionTest extends TestCase {
     /*
      * Test the constants.
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verify constant",
-      targets = {
-        @TestTarget(
-          methodName = "!Constants",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verify constant",
+        method = "!Constants",
+        args = {}
+    )
     public void testIGNORE() {
         assertNotNull(CodingErrorAction.IGNORE);
         assertNotNull(CodingErrorAction.REPLACE);
@@ -68,15 +65,12 @@ public class CodingErrorActionTest extends TestCase {
     /*
      * Test the method toString().
      */
-@TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "Verify constant",
-          targets = {
-            @TestTarget(
-              methodName = "toString",
-              methodArgs = {}
-        )
-        })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verify constant",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         assertTrue(CodingErrorAction.IGNORE.toString().indexOf("IGNORE") != -1);
         assertTrue(CodingErrorAction.REPLACE.toString().indexOf("REPLACE") != -1);

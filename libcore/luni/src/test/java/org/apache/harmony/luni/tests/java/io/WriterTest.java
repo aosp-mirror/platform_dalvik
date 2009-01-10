@@ -16,42 +16,54 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.IOException;
 import java.io.Writer;
 
 import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(Writer.class) 
 public class WriterTest extends TestCase {
 
-    /**
-     * @tests java.io.Writer#write(String)
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed. Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.lang.String.class}
+    @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            method = "Writer",
+            args = {}
         )
-    })
-    public void test_writeLjava_lang_String() throws IOException {
-        // Regression for HARMONY-51
-        Object lock = new Object();
-        Writer wr = new MockWriter(lock);
-        wr.write("Some string");
-        wr.close();
+    public void test_Writer() {
+        MockWriter w = new MockWriter();
+        assertTrue("Test 1: Lock has not been set correctly.", w.lockSet(w));
+    }
+    
+    @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            method = "Writer",
+            args = {java.lang.Object.class}
+        )
+    public void test_WriterLjava_lang_Object() {
+        Object o = new Object();
+        MockWriter w;
+        
+        try {
+            w = new MockWriter(null);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+        w = new MockWriter(o);
+        assertTrue("Test 2: Lock has not been set correctly.", w.lockSet(o));
     }
 
     class MockWriter extends Writer {
         final Object myLock;
 
+        MockWriter() {
+            super();
+            myLock = this;
+        }
+        
         MockWriter(Object lock) {
             super(lock);
             myLock = lock;
@@ -70,6 +82,10 @@ public class WriterTest extends TestCase {
         @Override
         public void write(char[] arg0, int arg1, int arg2) throws IOException {
             assertTrue(Thread.holdsLock(myLock));
+        }
+
+        public boolean lockSet(Object o) {
+            return (lock == o);
         }
     }
 }

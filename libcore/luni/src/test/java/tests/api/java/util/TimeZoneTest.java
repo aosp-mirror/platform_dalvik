@@ -17,13 +17,17 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.AndroidOnly;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
@@ -37,15 +41,12 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#getDefault()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDefault",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefault",
+        args = {}
+    )
     public void test_getDefault() {
         assertNotSame("returns identical",
                               TimeZone.getDefault(), TimeZone.getDefault());
@@ -54,20 +55,18 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#getDSTSavings()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDSTSavings",
-          methodArgs = {}
-        )
-    })
-    public void _test_getDSTSavings() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDSTSavings",
+        args = {}
+    )
+    @KnownFailure("method returns wrong time shift")
+    public void test_getDSTSavings() {
         // Test for method int java.util.TimeZone.getDSTSavings()
 
         // test on subclass SimpleTimeZone
-        TimeZone st1 = TimeZone.getTimeZone("EST");
+        TimeZone st1 = TimeZone.getTimeZone("America/New_York");
         assertEquals("T1A. Incorrect daylight savings returned",
                              ONE_HOUR, st1.getDSTSavings());
 
@@ -90,16 +89,13 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#getOffset(long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getOffset",
-          methodArgs = {long.class}
-        )
-    })
-    public void _test_getOffset_long() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getOffset",
+        args = {long.class}
+    )
+    public void test_getOffset_long() {
         // Test for method int java.util.TimeZone.getOffset(long time)
 
         // test on subclass SimpleTimeZone
@@ -111,9 +107,10 @@ public class TimeZoneTest extends junit.framework.TestCase {
 
         long time2 = new GregorianCalendar(1998, Calendar.JUNE, 11)
                 .getTimeInMillis();
-        st1 = TimeZone.getTimeZone("EST");
-        assertEquals("T2. Incorrect offset returned",
-                             -(4 * ONE_HOUR), st1.getOffset(time2));
+//      Not working as expected on RI.
+//        st1 = TimeZone.getTimeZone("EST");
+//        assertEquals("T2. Incorrect offset returned",
+//                             -(4 * ONE_HOUR), st1.getOffset(time2));
 
         // test on subclass Support_TimeZone, an instance with daylight savings
         TimeZone tz1 = new Support_TimeZone(-5 * ONE_HOUR, true);
@@ -133,15 +130,12 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#getTimeZone(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTimeZone",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTimeZone",
+        args = {java.lang.String.class}
+    )
     public void test_getTimeZoneLjava_lang_String() {
         assertEquals("Must return GMT when given an invalid TimeZone id SMT-8.",
                              "GMT", TimeZone.getTimeZone("SMT-8").getID());
@@ -194,15 +188,12 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#setDefault(java.util.TimeZone)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setDefault",
-          methodArgs = {java.util.TimeZone.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDefault",
+        args = {java.util.TimeZone.class}
+    )
     public void test_setDefaultLjava_util_TimeZone() {
         TimeZone oldDefault = TimeZone.getDefault();
         TimeZone zone = new SimpleTimeZone(45, "TEST");
@@ -212,10 +203,199 @@ public class TimeZoneTest extends junit.framework.TestCase {
         assertEquals("default not restored",
                              oldDefault, TimeZone.getDefault());
     }
+    
+    class Mock_TimeZone extends TimeZone {
+        @Override
+        public int getOffset(int era, int year, int month, int day, int dayOfWeek, int milliseconds) {
+            return 0;
+        }
+
+        @Override
+        public int getRawOffset() {
+            return 0;
+        }
+
+        @Override
+        public boolean inDaylightTime(Date date) {
+            return false;
+        }
+
+        @Override
+        public void setRawOffset(int offsetMillis) {
+            
+        }
+
+        @Override
+        public boolean useDaylightTime() {
+            return false;
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "TimeZone",
+        args = {}
+    )
+    public void test_constructor() {
+        assertNotNull(new Mock_TimeZone());
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
+    public void test_clone() {
+        TimeZone tz1 = TimeZone.getDefault();
+        TimeZone tz2 = (TimeZone)tz1.clone();
+        
+        assertTrue(tz1.equals(tz2));
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAvailableIDs",
+        args = {}
+    )
+    public void test_getAvailableIDs() {
+        String[] str = TimeZone.getAvailableIDs();
+        assertNotNull(str);
+        assertTrue(str.length != 0);
+        for(int i = 0; i < str.length; i++) {
+            assertNotNull(TimeZone.getTimeZone(str[i]));
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAvailableIDs",
+        args = {int.class}
+    )
+    public void test_getAvailableIDsI() {
+        String[] str = TimeZone.getAvailableIDs(0);
+        assertNotNull(str);
+        assertTrue(str.length != 0);
+        for(int i = 0; i < str.length; i++) {
+            assertNotNull(TimeZone.getTimeZone(str[i]));
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDisplayName",
+        args = {}
+    )
+    public void test_getDisplayName() {
+        TimeZone tz = TimeZone.getTimeZone("GMT-6");
+        assertEquals("GMT-06:00", tz.getDisplayName());
+        tz = TimeZone.getTimeZone("America/Los_Angeles");
+        assertEquals("Pacific Standard Time", tz.getDisplayName());
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDisplayName",
+        args = {java.util.Locale.class}
+    )
+    public void test_getDisplayNameLjava_util_Locale() {
+        TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
+        assertEquals("Pacific Standard Time", tz.getDisplayName(new Locale("US")));
+        assertEquals("Heure normale du Pacifique", tz.getDisplayName(Locale.FRANCE));
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDisplayName",
+        args = {boolean.class, int.class}
+    )
+    public void test_getDisplayNameZI() {
+        TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
+        assertEquals("PST",                   tz.getDisplayName(false, 0));
+        assertEquals("Pacific Daylight Time", tz.getDisplayName(true, 1));
+        assertEquals("Pacific Standard Time", tz.getDisplayName(false, 1));
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDisplayName",
+        args = {boolean.class, int.class, java.util.Locale.class}
+    )
+    @AndroidOnly("fail on RI. See comment below")
+    public void test_getDisplayNameZILjava_util_Locale() {
+        TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
+        assertEquals("PST",                   tz.getDisplayName(false, 0, Locale.US));
+        assertEquals("Pacific Daylight Time", tz.getDisplayName(true,  1, Locale.US));
+        assertEquals("Pacific Standard Time", tz.getDisplayName(false, 1, Locale.UK));
+        //RI fails on following line. RI always returns short time zone name as "PST" 
+        assertEquals("HMG-08:00",             tz.getDisplayName(false, 0, Locale.FRANCE));
+        assertEquals("Heure avanc\u00e9e du Pacifique", tz.getDisplayName(true,  1, Locale.FRANCE));
+        assertEquals("Heure normale du Pacifique", tz.getDisplayName(false, 1, Locale.FRANCE));
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getID",
+        args = {}
+    )
+    public void test_getID() {
+        TimeZone tz = TimeZone.getTimeZone("GMT-6");
+        assertEquals("GMT-06:00", tz.getID());
+        tz = TimeZone.getTimeZone("America/Denver");
+        assertEquals("America/Denver", tz.getID());
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasSameRules",
+        args = {java.util.TimeZone.class}
+    )
+    @KnownFailure("Arizona doesn't observe DST")
+    public void test_hasSameRulesLjava_util_TimeZone() {
+        TimeZone tz1 = TimeZone.getTimeZone("America/Denver");
+        TimeZone tz2 = TimeZone.getTimeZone("America/Phoenix");
+        assertEquals(tz1.getDisplayName(false, 0), tz2.getDisplayName(false, 0));
+        // Arizona doesn't observe DST. See http://phoenix.about.com/cs/weather/qt/timezone.htm
+        assertFalse(tz1.hasSameRules(tz2));
+        assertFalse(tz1.hasSameRules(null));
+        tz1 = TimeZone.getTimeZone("America/Montreal");
+        tz2 = TimeZone.getTimeZone("America/New_York");
+        assertEquals(tz1.getDisplayName(), tz2.getDisplayName());
+        assertFalse(tz1.getID().equals(tz2.getID()));
+        assertTrue(tz2.hasSameRules(tz1));
+        assertTrue(tz1.hasSameRules(tz1));
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setID",
+        args = {java.lang.String.class}
+    )
+    public void test_setIDLjava_lang_String() {
+        TimeZone tz = TimeZone.getTimeZone("GMT-6");
+        assertEquals("GMT-06:00", tz.getID());
+        tz.setID("New ID for GMT-6");
+        assertEquals("New ID for GMT-6", tz.getID());
+    }
+    
+    Locale loc = null;
 
     protected void setUp() {
+        loc = Locale.getDefault();
+        Locale.setDefault(Locale.US);
     }
 
     protected void tearDown() {
+        Locale.setDefault(loc);
     }
 }

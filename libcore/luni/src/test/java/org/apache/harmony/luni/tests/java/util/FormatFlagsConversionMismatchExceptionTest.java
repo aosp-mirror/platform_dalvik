@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -36,15 +36,12 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
      * @tests java.util.FormatFlagsConversionMismatchException#FormatFlagsConversionMismatchException(String,
      *        char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "FormatFlagsConversionMismatchException",
-          methodArgs = {java.lang.String.class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "FormatFlagsConversionMismatchException",
+        args = {java.lang.String.class, char.class}
+    )
     public void test_formatFlagsConversionMismatchException() {
         try {
             new FormatFlagsConversionMismatchException(null, ' ');
@@ -53,20 +50,18 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
             // expected
         }
 
+        assertNotNull(new FormatFlagsConversionMismatchException("String", ' '));
     }
 
     /**
      * @tests java.util.FormatFlagsConversionMismatchException#getFlags()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFlags",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFlags",
+        args = {}
+    )
     public void test_getFlags() {
         String flags = "MYTESTFLAGS";
         char conversion = 'T';
@@ -78,15 +73,12 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
     /**
      * @tests java.util.FormatFlagsConversionMismatchException#getConversion()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getConversion",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getConversion",
+        args = {}
+    )
     public void test_getConversion() {
         String flags = "MYTESTFLAGS";
         char conversion = 'T';
@@ -102,15 +94,12 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
     /**
      * @tests java.util.FormatFlagsConversionMismatchException#getMessage()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMessage",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMessage",
+        args = {}
+    )
     public void test_getMessage() {
         String flags = "MYTESTFLAGS";
         char conversion = 'T';
@@ -140,15 +129,12 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(
@@ -159,15 +145,12 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

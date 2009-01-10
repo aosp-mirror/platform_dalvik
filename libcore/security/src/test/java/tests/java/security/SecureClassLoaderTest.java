@@ -22,22 +22,40 @@
 
 package tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
+import junit.framework.TestCase;
 
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.security.CodeSource;
+import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.security.cert.Certificate;
-
-import junit.framework.TestCase;
-@TestTargetClass(SecureClassLoader.class)
+@TestTargetClass(value=SecureClassLoader.class,
+        untestedMethods={
+            @TestTargetNew(
+                    level = TestLevel.NOT_FEASIBLE,
+                    notes = "cannot be tested",
+                    method = "defineClass",
+                    args = {
+                        java.lang.String.class, byte[].class, int.class, 
+                        int.class, java.security.CodeSource.class}
+            ),
+            @TestTargetNew(
+                    level = TestLevel.NOT_FEASIBLE,
+                    notes = "cannot be tested",
+                    method = "defineClass",
+                    args = {
+                        java.lang.String.class, java.nio.ByteBuffer.class,
+                        java.security.CodeSource.class}
+            )           
+})
 /**
  * Unit test for SecureClassLoader.
  * 
@@ -55,7 +73,7 @@ public class SecureClassLoaderTest extends TestCase {
     }
 
     /**
-     * A class name for the class presented as {@link klassData bytecode below}
+     * A class name for the class presented as {@link #klassData bytecode below}
      */
     private static final String klassName = "HiWorld";
 
@@ -180,49 +198,107 @@ public class SecureClassLoaderTest extends TestCase {
     /**
      * Tests default ctor
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "SecureClassLoader",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SecureClassLoader",
+        args = {}
+    )
     public void testSecureClassLoader() {
         new MyClassLoader();
+        
+        class TestSecurityManager extends SecurityManager {
+            boolean called;
+            @Override
+            public void checkCreateClassLoader() {
+                called = true;
+                super.checkCreateClassLoader();
+            }
+            
+            @Override
+            public void checkPermission(Permission permission) {
+                if (permission instanceof RuntimePermission) {
+                    if (permission.getName().equals("createClassLoader")) {
+                        throw new SecurityException();
+                    }
+                }
+            }
+        }
+        
+        TestSecurityManager sm = new TestSecurityManager();
+        try {
+            System.setSecurityManager(sm);
+            new MyClassLoader();
+            fail("expected SecurityException");
+        } catch (SecurityException e) {
+            assertTrue("checkCreateClassLoader was not called", sm.called);
+            // ok
+        } finally {
+            System.setSecurityManager(null);
+        }
     }
 
     /**
      * Tests SecureClassLoader(ClassLoader)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with null parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "SecureClassLoader",
-          methodArgs = {ClassLoader.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verification with null parameter missed",
+        method = "SecureClassLoader",
+        args = {java.lang.ClassLoader.class}
+    )
     public void testSecureClassLoaderClassLoader() throws Exception {
         URL[] urls = new URL[] { new URL("http://localhost") };
         URLClassLoader ucl = URLClassLoader.newInstance(urls);
         new MyClassLoader(ucl);
+        
+        try {
+            new MyClassLoader(null);
+        } catch (Exception e) {
+            fail("unexpected exception: " + e);
+        }
+        
+        class TestSecurityManager extends SecurityManager {
+            boolean called;
+            @Override
+            public void checkCreateClassLoader() {
+                called = true;
+                super.checkCreateClassLoader();
+            }
+            
+            @Override
+            public void checkPermission(Permission permission) {
+                if (permission instanceof RuntimePermission) {
+                    if (permission.getName().equals("createClassLoader")) {
+                        throw new SecurityException();
+                    }
+                }
+            }
+        }
+        
+        TestSecurityManager sm = new TestSecurityManager();
+        try {
+            System.setSecurityManager(sm);
+            new MyClassLoader(ucl);
+            fail("expected SecurityException");
+        } catch (SecurityException e) {
+            // ok
+            assertTrue("checkCreateClassLoader was not called", sm.called);
+            
+        } finally {
+            System.setSecurityManager(null);
+        }
     }
 
     /**
      * Tests getPermission
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification of returned value missed",
-      targets = {
-        @TestTarget(
-          methodName = "getPermissions",
-          methodArgs = {CodeSource.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "",
+        method = "getPermissions",
+        args = {java.security.CodeSource.class}
+    )
     public void testGetPermissions() throws Exception {
         URL url = new URL("http://localhost");
         CodeSource cs = new CodeSource(url, (Certificate[]) null);
@@ -234,15 +310,12 @@ public class SecureClassLoaderTest extends TestCase {
     /**
      * Tests defineClass(String, byte[], int, int, CodeSource)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ClassFormatError, IndexOutOfBoundsException, SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "defineClass",
-          methodArgs = {String.class, byte[].class, int.class, int.class, CodeSource.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "ClassFormatError, IndexOutOfBoundsException, SecurityException checking missed",
+        method = "defineClass",
+        args = {java.lang.String.class, byte[].class, int.class, int.class, java.security.CodeSource.class}
+    )
     public void _testDefineClassStringbyteArrayintintCodeSource() {
         MyClassLoader ldr = new MyClassLoader();
         Class klass = ldr.define(null, klassData, 0, klassData.length, null);
@@ -252,15 +325,12 @@ public class SecureClassLoaderTest extends TestCase {
     /**
      * Tests defineClass(String, ByteBuffer, CodeSource)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ClassFormatError, SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "defineClass",
-          methodArgs = {String.class, ByteBuffer.class, CodeSource.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "ClassFormatError, SecurityException checking missed",
+        method = "defineClass",
+        args = {java.lang.String.class, java.nio.ByteBuffer.class, java.security.CodeSource.class}
+    )
     public void _testDefineClassStringByteBufferCodeSource() {
         MyClassLoader ldr = new MyClassLoader();
         ByteBuffer bbuf = ByteBuffer.wrap(klassData);

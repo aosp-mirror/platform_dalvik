@@ -17,9 +17,9 @@
 package tests.api.java.lang.reflect;
 
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.lang.reflect.Method;
@@ -50,15 +50,12 @@ public class GenericMethodsTests extends GenericReflectionTestsBase{
     /**
      * Tests that there are no Type Parameters on the Class itself.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTypeParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getTypeParameters",
+        args = {}
+    )
     public void testGenericMethods() {
         assertLenghtZero(clazz.getTypeParameters());
     }
@@ -98,34 +95,35 @@ public class GenericMethodsTests extends GenericReflectionTestsBase{
         assertInstanceOf(TypeVariable.class, genericReturnType);
         assertEquals(method, ((TypeVariable<?>) genericReturnType).getGenericDeclaration());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTypeParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getTypeParameters",
+        args = {}
+    )
     public void testNoParamNoReturn() throws Exception {
         Method method = clazz.getMethod("noParamNoReturn");
         checkTypeParameter(method);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTypeParameters",
-          methodArgs = {}
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getTypeParameters",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getGenericParameterTypes",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getGenericParameterTypes",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getParameterTypes",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getParameterTypes",
+            args = {}
         )
     })
     public void testParamNoReturn() throws Exception {
@@ -133,13 +131,19 @@ public class GenericMethodsTests extends GenericReflectionTestsBase{
         checkTypeParameter(method);
         checkParameterType(method);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getGenericParameterTypes",
-          methodArgs = {}
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getGenericParameterTypes",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getGenericReturnType",
+            args = {}
         )
     })
     public void testNoParamReturn() throws Exception {
@@ -148,17 +152,24 @@ public class GenericMethodsTests extends GenericReflectionTestsBase{
         assertLenghtZero(method.getGenericParameterTypes());
         checkReturnType(method);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTypeParameters",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getTypeParameters",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getParameterTypes",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getParameterTypes",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getGenericReturnType",
+            args = {}
         )
     })
     public void testParamReturn() throws Exception {
@@ -167,15 +178,12 @@ public class GenericMethodsTests extends GenericReflectionTestsBase{
         checkParameterType(method);
         checkReturnType(method);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTypeParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "getTypeParameters",
+        args = {}
+    )
     public void testIndependencyOfMethodTypeParameters() throws Exception {
         Method method0 = clazz.getMethod("paramNoReturn", Object.class);
         TypeVariable<Method> typeParameter0 = method0.getTypeParameters()[0];

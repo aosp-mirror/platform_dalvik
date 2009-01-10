@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidParameterException;
@@ -58,26 +58,30 @@ public class KeyPairGeneratorSpiTest extends TestCase {
      * Test for <code>KeyPairGeneratorSpi</code> constructor 
      * Assertion: constructs KeyPairGeneratorSpi
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InvalidAlgorithmParameterException and InvalidParameterException " +
-                  "checking missed for initialize methods",
-      targets = {
-        @TestTarget(
-          methodName = "KeyPairGeneratorSpi",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "KeyPairGeneratorSpi",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "generateKeyPair",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "generateKeyPair",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "initialize",
-          methodArgs = {AlgorithmParameterSpec.class, SecureRandom.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "initialize",
+            args = {java.security.spec.AlgorithmParameterSpec.class, java.security.SecureRandom.class}
         ),
-        @TestTarget(
-          methodName = "initialize",
-          methodArgs = {int.class, SecureRandom.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "initialize",
+            args = {int.class, java.security.SecureRandom.class}
         )
     })
     public void testKeyPairGeneratorSpi01()
@@ -91,6 +95,7 @@ public class KeyPairGeneratorSpiTest extends TestCase {
             fail("UnsupportedOperationException must be thrown");
         } catch (UnsupportedOperationException e) {
         }
+        
         keyPairGen.initialize(pp, new SecureRandom());
         keyPairGen.initialize(1024, new SecureRandom());
         try {
@@ -111,5 +116,7 @@ public class KeyPairGeneratorSpiTest extends TestCase {
     public static void main(String args[]) {
         junit.textui.TestRunner.run(KeyPairGeneratorSpiTest.class);
     }
+    
+    class MyAlgorithmParameterSpec implements AlgorithmParameterSpec {}
 
 }

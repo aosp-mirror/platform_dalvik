@@ -29,7 +29,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
                 "All javax.net and javax.net.ssl test suites");
         // $JUnit-BEGIN$
         suite.addTest(tests.api.javax.net.AllTests.suite());

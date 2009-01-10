@@ -63,7 +63,7 @@ public class FileInputStream extends InputStream implements Closeable {
      *            the file from which this stream reads.
      * @throws FileNotFoundException
      *             if {@code file} does not exist.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             read request.
      * @since Android 1.0
@@ -95,7 +95,7 @@ public class FileInputStream extends InputStream implements Closeable {
      *            the FileDescriptor from which this stream reads.
      * @throws NullPointerException
      *             if {@code fd} is {@code null}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             read request.
      * @since Android 1.0
@@ -126,7 +126,7 @@ public class FileInputStream extends InputStream implements Closeable {
      *            the path and name of the file from which this stream reads.
      * @throws FileNotFoundException
      *             if there is no file named {@code fileName}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             read request.
      * @since Android 1.0
@@ -192,7 +192,7 @@ public class FileInputStream extends InputStream implements Closeable {
                 channel.close();
                 channel = null;
             }
-            if (fd != null && fd.descriptor >= 0) {
+            if (fd != null && fd.descriptor >= 0 && innerFD) {
                 fileSystem.close(fd.descriptor);
                 fd.descriptor = -1;
             }

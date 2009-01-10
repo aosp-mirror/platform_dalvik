@@ -16,9 +16,9 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -29,11 +29,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 /*
- * This class tests the secrity permissions which are documented in
+ * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.io.FileInputStream and java.io.FileOutputStream
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(java.io.FileInputStream.class)
 public class JavaIoFileInputStreamTest extends TestCase {
     
     SecurityManager old;
@@ -49,18 +49,24 @@ public class JavaIoFileInputStreamTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-   @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that FileDescriptor() constructor calls checkRead " +
-            "method of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkRead",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that FileInputStream() constructor calls checkRead method on security manager.",
+            method = "FileInputStream",
+            args = {java.io.FileDescriptor.class}
         ),
-        @TestTarget(
-          methodName = "checkRead",
-          methodArgs = {java.lang.String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that FileInputStream() constructor calls checkRead method on security manager.",
+            method = "FileInputStream",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that FileInputStream() constructor calls checkRead method on security manager.",
+            method = "FileInputStream",
+            args = {java.io.File.class}
         )
     })
     public void test_FileInputStream() throws IOException {
@@ -99,17 +105,17 @@ public class JavaIoFileInputStreamTest extends TestCase {
         s.reset();
         FileDescriptor fd = new FileDescriptor();
         new FileInputStream(fd);
-        assertTrue("FileDescriptor() ctor must call checkRead on security manager", s.called);
+        assertTrue("FileInputStream(FileDescriptor) ctor must call checkRead on security manager", s.called);
         assertEquals("Argument of checkRead is not correct", fd, s.fd);
         
         s.reset();
         new FileInputStream(filename);
-        assertTrue("FileDescriptor() ctor must call checkRead on security manager", s.called);
+        assertTrue("FileInputStream(String) ctor must call checkRead on security manager", s.called);
         assertEquals("Argument of checkRead is not correct", filename, s.file);
         
         s.reset();
         new FileInputStream(f);
-        assertTrue("FileDescriptor() ctor must call checkRead on security manager", s.called);
+        assertTrue("FileInputStream(File) ctor must call checkRead on security manager", s.called);
         assertEquals("Argument of checkRead is not correct", filename, s.file);
     }
     

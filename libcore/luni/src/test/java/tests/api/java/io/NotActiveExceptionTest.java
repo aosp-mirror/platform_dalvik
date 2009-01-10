@@ -17,14 +17,11 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
-import java.io.ByteArrayOutputStream;
 import java.io.NotActiveException;
-import java.io.ObjectOutputStream;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(NotActiveException.class) 
 public class NotActiveExceptionTest extends junit.framework.TestCase {
@@ -32,47 +29,39 @@ public class NotActiveExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.NotActiveException#NotActiveException()
      */
-    @TestInfo(
+    @TestTargetNew(
             level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "NotActiveException", 
-                                    methodArgs = {})                                    
-            }
-        )        
+            method = "NotActiveException",
+            args = {}
+        )     
     public void test_Constructor() {
-        // Test for method java.io.NotActiveException()
-        NotActiveException e = new NotActiveException();
-        assertNull(e.getMessage());
+        try {
+            if (true) // To avoid unreachable code compilation error.
+                throw new NotActiveException();
+            fail("Test 1: NotActiveException expected.");
+        } catch (NotActiveException e) {
+            assertNull("Test 2: Null expected for exceptions constructed without a message.",
+                    e.getMessage());
+        }
     }
 
     /**
      * @tests java.io.NotActiveException#NotActiveException(java.lang.String)
      */
-    @TestInfo(
+    @TestTargetNew(
             level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "NotActiveException", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )        
+            method = "NotActiveException",
+            args = {java.lang.String.class}
+        )     
     public void test_ConstructorLjava_lang_String() {
-        // Test for method java.io.NotActiveException(java.lang.String)
-        String message = "Exception message";
-        NotActiveException e = new NotActiveException(message);
-        assertSame(message, e.getMessage());
+        try {
+            if (true) // To avoid unreachable code compilation error.
+                throw new NotActiveException("Something went wrong.");
+            fail("Test 1: NotActiveException expected.");
+        } catch (NotActiveException e) {
+            assertEquals("Test 2: Incorrect message;",
+                    "Something went wrong.", e.getMessage());
+        }
     }
 
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
-    }
 }

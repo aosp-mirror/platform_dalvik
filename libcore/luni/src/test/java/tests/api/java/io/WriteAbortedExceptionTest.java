@@ -18,10 +18,11 @@
 package tests.api.java.io;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
+import java.io.IOException;
 import java.io.WriteAbortedException;
 
 @TestTargetClass(WriteAbortedException.class) 
@@ -31,15 +32,12 @@ public class WriteAbortedExceptionTest extends junit.framework.TestCase {
      * @tests java.io.WriteAbortedException#WriteAbortedException(java.lang.String,
      *        java.lang.Exception)
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "WriteAbortedException",
-                  methodArgs = {java.lang.String.class, java.lang.Exception.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "WriteAbortedException",
+        args = {java.lang.String.class, java.lang.Exception.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_Exception() {
         // Test for method java.io.WriteAbortedException(java.lang.String,
         // java.lang.Exception)
@@ -56,15 +54,36 @@ public class WriteAbortedExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.WriteAbortedException#getMessage()
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "getMessage",
-                  methodArgs = {}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCause",
+        args = {}
+    )
+    public void test_getCause() {
+        try {
+            if (true) {
+                throw new WriteAbortedException("HelloWorld",
+                        new IOException("Something went wrong."));
+            }
+            fail("Test 1: WriteAbortedException expected.");
+        } catch (WriteAbortedException e) {
+            Throwable cause = e.getCause();
+            assertTrue("Test 2: Incorrect exception cause: " + cause,
+                    cause.getClass().equals(IOException.class) && 
+                    cause.getMessage().equals("Something went wrong."));
+        }
+    }
+
+    /**
+     * @tests java.io.WriteAbortedException#getMessage()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMessage",
+        args = {}
+    )
     public void test_getMessage() {
         // Test for method java.lang.String
         // java.io.WriteAbortedException.getMessage()
@@ -79,19 +98,5 @@ public class WriteAbortedExceptionTest extends junit.framework.TestCase {
             return;
         }
         fail("Failed to generate expected Exception");
-    }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
     }
 }

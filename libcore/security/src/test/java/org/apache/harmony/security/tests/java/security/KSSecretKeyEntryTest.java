@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.KeyStore;
 
@@ -51,21 +51,28 @@ public class KSSecretKeyEntryTest extends TestCase {
      * Test for <code>SecretKeyEntry(SecretKey secretKey)</code> constructor
      * Assertion: throws NullPointerException when secretKey is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification of positive case with non null parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "SecretKeyEntry",
-          methodArgs = {SecretKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SecretKeyEntry",
+        args = {javax.crypto.SecretKey.class}
+    )
     public void testSecretKeyEntry() {
         SecretKey sk = null;
         try {
             new KeyStore.SecretKeyEntry(sk);
             fail("NullPointerException must be thrown when secretKey is null");
         } catch(NullPointerException e) {
+            //expected
+        }
+        
+        sk = new tmpSecretKey();
+        try {
+            KeyStore.SecretKeyEntry ske = new KeyStore.SecretKeyEntry(sk);
+            assertNotNull(ske);
+            assertTrue(ske instanceof KeyStore.SecretKeyEntry);
+        } catch(Exception e) {
+            fail("Unexpected exception was thrown when secretKey is not null");
         }
     }
     
@@ -73,15 +80,12 @@ public class KSSecretKeyEntryTest extends TestCase {
      * Test for <code>getSecretKey()</code> method
      * Assertion: returns SecretKey from the given entry
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSecretKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSecretKey",
+        args = {}
+    )
     public void testGetSecretKey() {
         SecretKey sk = new tmpSecretKey();
         KeyStore.SecretKeyEntry ske = new KeyStore.SecretKeyEntry(sk);
@@ -92,15 +96,12 @@ public class KSSecretKeyEntryTest extends TestCase {
      * Test for <code>toString()</code> method
      * Assertion: returns non null string
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         SecretKey sk = new tmpSecretKey();
         KeyStore.SecretKeyEntry ske = new KeyStore.SecretKeyEntry(sk);
