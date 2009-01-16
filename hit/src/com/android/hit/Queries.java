@@ -26,6 +26,36 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class Queries {
+    /*
+     * NOTES:  Here's a list of the queries that can be done in hat and 
+     * how you'd perform a similar query here in hit:
+     *
+     * hat                      hit
+     * ------------------------------------------------------------------------
+     * allClasses               classes
+     * allClassesWithPlatform   allClasses
+     * class                    findClass
+     * instances                instancesOf
+     * allInstances             allInstancesOf
+     * object                   findObject
+     * showRoots                getRoots
+     * newInstances             newInstances
+     *
+     * reachableFrom            make a call to findObject to get the target
+     *                          parent object, this will give you an Instance.
+     *                          Then call visit(Set, Filter) on that to have
+     *                          it build the set of objects in its subgraph.
+     *
+     * rootsTo                  make a call to findObject on the leaf node
+     *                          in question, this will give you an Instance.
+     *                          Instances have an ArrayList of all of the
+     *                          parent objects that refer to it.  You can
+     *                          follow those parent links until you hit an
+     *                          object whose parent is null or a ThreadObj.
+     *                          You've not successfully traced the paths to
+     *                          the roots.
+     */
+
     private static final String DEFAULT_PACKAGE = "<default>";
 
     /*

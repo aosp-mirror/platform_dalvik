@@ -22,6 +22,9 @@ LOCAL_JAVA_RESOURCE_DIRS := $(call all-core-resource-dirs,main)
 LOCAL_NO_STANDARD_LIBRARIES := true
 LOCAL_DX_FLAGS := --core-library
 
+LOCAL_NO_EMMA_INSTRUMENT := true
+LOCAL_NO_EMMA_COMPILE := true
+
 LOCAL_MODULE := core
 
 include $(BUILD_JAVA_LIBRARY)

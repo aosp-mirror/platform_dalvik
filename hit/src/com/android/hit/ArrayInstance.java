@@ -134,4 +134,55 @@ public class ArrayInstance extends Instance {
     public final String toString() {
         return String.format("%s@0x08x", getTypeName(), mId);
     }
+
+    @Override
+    public String describeReferenceTo(long referent) {
+        //  If this isn't an object array then we can't refer to an object
+        if (mType != Types.OBJECT) {
+            return super.describeReferenceTo(referent);
+        }
+        
+        int idSize = Types.getTypeSize(mType);
+        final int N = mNumEntries;
+        int numRefs = 0;
+        StringBuilder result = new StringBuilder("Elements [");
+        ByteArrayInputStream bais = new ByteArrayInputStream(mData);
+        DataInputStream dis = new DataInputStream(bais);
+        
+        /*
+         * Spin through all the objects and build up a string describing
+         * all of the array elements that refer to the target object.
+         */
+        for (int i = 0; i < N; i++) {
+            long id;
+            
+            try {
+                if (idSize == 4) {
+                    id = dis.readInt();
+                } else {
+                    id = dis.readLong();
+                }
+                
+                if (id == referent) {
+                    numRefs++;
+                    
+                    if (numRefs > 1) {
+                        result.append(", ");
+                    }
+                    
+                    result.append(i);
+                }
+            } catch (java.io.IOException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if (numRefs == 0) {
+            return super.describeReferenceTo(referent);
+        }
+
+        result.append("]");
+        
+        return result.toString();
+    }
 }

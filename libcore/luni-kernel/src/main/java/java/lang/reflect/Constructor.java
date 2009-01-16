@@ -32,6 +32,8 @@
 
 package java.lang.reflect;
 
+import dalvik.system.VMStack;
+
 import java.lang.annotation.Annotation;
 
 import org.apache.harmony.kernel.vm.StringUtils;
@@ -64,7 +66,8 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     private synchronized void initGenericTypes() {
         if (!genericTypesAreInitialized) {
             String signatureAttribute = getSignatureAttribute();
-            GenericSignatureParser parser = new GenericSignatureParser();
+            GenericSignatureParser parser = new GenericSignatureParser(
+                    VMStack.getCallingClassLoader2());
             parser.parseForConstructor(this, signatureAttribute);
             formalTypeParameters = parser.formalTypeParameters;
             genericParameterTypes = parser.parameterTypes;

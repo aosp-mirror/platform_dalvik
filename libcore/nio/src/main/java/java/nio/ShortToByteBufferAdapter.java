@@ -194,22 +194,17 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
     }
     
     // BEGIN android-added
+    @Override
     public ShortBuffer put(short[] s, int off, int len) {
         if (byteBuffer instanceof ReadWriteDirectByteBuffer) {
+            byteBuffer.limit(limit << 1);
+            byteBuffer.position(position << 1);
             ((ReadWriteDirectByteBuffer) byteBuffer).put(s, off, len);
             this.position += len;
             return this;
         } else {
             return super.put(s, off, len);
         }
-    }
-    
-    @Override
-    void internalClear() {
-        if (byteBuffer instanceof ReadWriteDirectByteBuffer) {
-            byteBuffer.clear();
-        }
-        super.internalClear();
     }
     // END android-added
 

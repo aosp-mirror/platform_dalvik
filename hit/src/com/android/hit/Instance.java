@@ -106,4 +106,12 @@ public abstract class Instance {
         
         return mParents;
     }
+
+    /*
+     * If this object has a reference to the object identified by id, return
+     * a String describing the reference in detail.
+     */
+    public String describeReferenceTo(long id) {
+        return "No reference to 0x" + Long.toHexString(id); 
+    }
 }

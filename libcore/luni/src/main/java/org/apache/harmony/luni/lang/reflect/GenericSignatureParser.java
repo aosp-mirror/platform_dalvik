@@ -73,6 +73,7 @@ public class GenericSignatureParser {
     public Type fieldType;
     public ListOfTypes interfaceTypes;
     public Type superclassType;
+    public ClassLoader loader;
     
     GenericDeclaration genericDecl;
 
@@ -92,6 +93,10 @@ public class GenericSignatureParser {
 
     char[] buffer;
     int pos;
+
+    public GenericSignatureParser(ClassLoader loader) {
+        this.loader = loader;
+    }
 
     void setInput(GenericDeclaration genericDecl, String input) {
         if (input != null) {
@@ -297,7 +302,7 @@ public class GenericSignatureParser {
 
         ListOfTypes typeArgs = parseOptTypeArguments();
         ImplForType parentType = 
-                new ImplForType(null, qualIdent.toString(), typeArgs);
+                new ImplForType(null, qualIdent.toString(), typeArgs, loader);
         ImplForType type = parentType;
 
         while (symbol == '.') {
@@ -306,7 +311,8 @@ public class GenericSignatureParser {
             scanIdentifier();
             qualIdent.append("$").append(identifier); // FIXME: is "$" correct?
             typeArgs = parseOptTypeArguments();
-            type = new ImplForType(parentType, qualIdent.toString(), typeArgs);
+            type = new ImplForType(parentType, qualIdent.toString(), typeArgs, 
+                    loader);
         }
 
         expect(';');
