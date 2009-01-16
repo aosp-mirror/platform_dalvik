@@ -152,4 +152,57 @@ public class ClassInstance extends Instance {
     public final String toString() {
         return String.format("%s@0x%08x", getTypeName(), mId);
     }
+
+    @Override
+    public String describeReferenceTo(long referent) {
+        ClassObj isa = mHeap.mState.findClass(mClassId);
+        int[] types = isa.mFieldTypes;
+        String[] fieldNames = isa.mFieldNames;
+        ByteArrayInputStream bais = new ByteArrayInputStream(mFieldValues);
+        DataInputStream dis = new DataInputStream(bais);
+        final int N = types.length;
+        StringBuilder result = new StringBuilder("Referenced in field(s):");
+        int numReferences = 0;
+        
+        /*
+         * Spin through the list of fields, add info about the field
+         * references to the output text.
+         */
+        try {
+            for (int i = 0; i < N; i++) {
+                int type = types[i];
+                int size = Types.getTypeSize(type);
+                
+                if (type == Types.OBJECT) {
+                    long id;
+                    
+                    if (size == 4) {
+                        id = dis.readInt();
+                    } else {
+                        id = dis.readLong();
+                    }
+                    
+                    if (id == referent) {
+                        numReferences++;
+                        result.append("\n    ");
+                        result.append(fieldNames[i]);
+                    }
+                } else {
+                    dis.skipBytes(size);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        /*
+         *  TODO:  perform a similar loop over the static fields of isa
+         */
+
+        if (numReferences == 0) {
+            return super.describeReferenceTo(referent);
+        }
+        
+        return result.toString();
+    }
 }

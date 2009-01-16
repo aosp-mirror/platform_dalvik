@@ -72,7 +72,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "setAttributes",
         args = { Attributes.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testSetAttributes() {
         // Ordinary case with Attributes2Impl
         Attributes2Impl attrs = new Attributes2Impl();
@@ -130,7 +129,6 @@ public class Attributes2ImplTest extends TestCase {
         args = { String.class, String.class, String.class, String.class,
                  String.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testAddAttribute() {
         Attributes2Impl attrs = new Attributes2Impl();
         
@@ -170,7 +168,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "removeAttribute",
         args = { int.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testRemoveAttribute() {
         Attributes2Impl attrs = new Attributes2Impl(multi);
         
@@ -216,7 +213,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "Attributes2Impl",
         args = {  }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testAttributes2Impl() {
         assertEquals(0, empty.getLength());
     }
@@ -226,7 +222,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "Attributes2Impl",
         args = { Attributes.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testAttributes2ImplAttributes() {
         // Ordinary case with Attributes2Impl
         Attributes2Impl attrs = new Attributes2Impl(multi);
@@ -279,7 +274,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "isDeclared",
         args = { int.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testIsDeclaredInt() {
         // Ordinary cases
         assertEquals(false, multi.isDeclared(0));
@@ -306,7 +300,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "isDeclared",
         args = { String.class, String.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testIsDeclaredStringString() {
         // Ordinary cases
         assertEquals(false, multi.isDeclared("http://some.uri", "foo"));
@@ -326,7 +319,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "isDeclared",
         args = { String.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testIsDeclaredString() {
         // Ordinary cases
         assertEquals(false, multi.isDeclared("ns1:foo"));
@@ -346,7 +338,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "isSpecified",
         args = { int.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testIsSpecifiedInt() {
         // Ordinary cases
         assertEquals(false, multi.isSpecified(1));
@@ -373,7 +364,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "isSpecified",
         args = { String.class, String.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testIsSpecifiedStringString() {
         // Ordinary cases
         assertEquals(false, multi.isSpecified("http://some.uri", "bar"));
@@ -393,7 +383,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "isSpecified",
         args = { String.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testIsSpecifiedString() {
         // Ordinary cases
         assertEquals(false, multi.isSpecified("ns1:bar"));
@@ -413,7 +402,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "setDeclared",
         args = { int.class, boolean.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testSetDeclared() {
         // Ordinary cases
         multi.setSpecified(0, false);
@@ -446,7 +434,6 @@ public class Attributes2ImplTest extends TestCase {
         method = "setSpecified",
         args = { int.class, boolean.class }
     )
-    @KnownFailure("SAX2 RI of Attributes2Impl severely broken; needs fixing.")
     public void testSetSpecified() {
         // Ordinary cases
         multi.setSpecified(0, false);

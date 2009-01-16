@@ -25,13 +25,15 @@ public final class ImplForType implements ParameterizedType {
     private Type ownerTypeRes;
     private Class rawType; // Already resolved.
     private final String rawTypeName;
+    private ClassLoader loader;
 
 
     public ImplForType(ImplForType ownerType, String rawTypeName, 
-            ListOfTypes args) {
+            ListOfTypes args, ClassLoader loader) {
         this.ownerType0 = ownerType;
         this.rawTypeName = rawTypeName;
         this.args = args;
+        this.loader = loader;
     }
 
 
@@ -53,12 +55,11 @@ public final class ImplForType implements ParameterizedType {
 
     public Class getRawType() {
         if (rawType == null) {
-        // TODO which ClassLoader to use?
-        // Here the actual loading of the class has to be performed and the 
-        // Exceptions have to be re-thrown TypeNotPresent...
-        // How to deal with member (nested) classes?
+            // Here the actual loading of the class has to be performed and the 
+            // Exceptions have to be re-thrown TypeNotPresent...
+            // How to deal with member (nested) classes?
             try {
-                rawType = Class.forName(rawTypeName);
+                rawType = Class.forName(rawTypeName, false, loader);
             } catch (ClassNotFoundException e) {
                 throw new TypeNotPresentException(rawTypeName, e);
             }

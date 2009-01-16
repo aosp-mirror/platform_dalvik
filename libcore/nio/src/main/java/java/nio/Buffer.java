@@ -150,21 +150,11 @@ public abstract class Buffer {
      * @since Android 1.0
      */
     public final Buffer clear() {
-        // BEGIN android-changed
-        internalClear();
-        // END android-changed
-        return this;
-    }
-
-    // BEGIN android-added
-    // We need a possibility to change the behavior of clear in some optimized
-    // DirectByteBuffer adapters.
-    void internalClear() {
         position = 0;
         mark = UNSET_MARK;
         limit = capacity;
+        return this;
     }
-    // END android-added
 
     /**
      * Flips this buffer.

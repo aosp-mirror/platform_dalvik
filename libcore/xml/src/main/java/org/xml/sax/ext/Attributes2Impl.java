@@ -44,7 +44,12 @@ public class Attributes2Impl extends AttributesImpl implements Attributes2
     /**
      * Construct a new, empty Attributes2Impl object.
      */
-    public Attributes2Impl () { }
+    public Attributes2Impl () {
+        // BEGIN android-added
+        declared = new boolean[0];
+        specified = new boolean[0];
+        // END android-added
+    }
 
 
     /**
@@ -241,7 +246,9 @@ public class Attributes2Impl extends AttributesImpl implements Attributes2
 
     int length = getLength ();
 
-    if (length < specified.length) {
+    // BEGIN android-changed
+    if (length > specified.length) {
+    // END android-changed
         boolean    newFlags [];
 
         newFlags = new boolean [length];

@@ -17,7 +17,7 @@ package com.ibm.icu4jni.charset;
 import com.ibm.icu4jni.common.ErrorCode;
 // BEGIN android-removed
 // import com.ibm.icu4jni.converters.NativeConverter;
-// ENd android-removed
+// END android-removed
 
 
 import java.nio.CharBuffer;
@@ -253,9 +253,9 @@ public final class CharsetDecoderICU extends CharsetDecoder{
             if(ec == ErrorCode.U_BUFFER_OVERFLOW_ERROR){
                 return CoderResult.OVERFLOW;
             }else if(ec==ErrorCode.U_INVALID_CHAR_FOUND){
-                return CoderResult.unmappableForLength(data[INVALID_BYTES]);
+                return CoderResult.malformedForLength(data[INVALID_BYTES]);
             }else if(ec==ErrorCode.U_ILLEGAL_CHAR_FOUND){
-                return CoderResult.unmappableForLength(data[INVALID_BYTES]);
+                return CoderResult.malformedForLength(data[INVALID_BYTES]);
             }
             /* decoding action succeded */
             return CoderResult.UNDERFLOW;
