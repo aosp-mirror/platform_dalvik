@@ -7,7 +7,7 @@
     movzbl   rINST_HI,%ecx         # ecx<- AA
     FETCH_INST_WORD(2)
 1:
-    fprem1
+    fprem
     fstsw     %ax
     sahf
     jp        1b

@@ -19,9 +19,10 @@ package java.util;
 
 
 /**
- * LinkedHashMap is a variant on HashMap. Its entries are kept in a
+ * LinkedHashMap is a variant of HashMap. Its entries are kept in a
  * doubly-linked list. The iteration order is, by default, the order in which
- * keys were inserted.
+ * keys were inserted. Reinserting an already existing key doesn't change the
+ * order. A key is existing if a call to {@code containsKey} would return true.
  * <p>
  * If the three argument constructor is used, and {@code order} is specified as
  * {@code true}, the iteration will be in the order that entries were accessed.
@@ -30,6 +31,21 @@ package java.util;
  * <p>
  * Null elements are allowed, and all the optional map operations are supported.
  * <p>
+ * <b>Note:</b> The implementation of {@code LinkedHashMap} is not synchronized.
+ * If one thread of several threads accessing an instance modifies the map
+ * structurally, access to the map needs to be synchronized. For
+ * insertion-ordered instances a structural modification is an operation that
+ * removes or adds an entry. Access-ordered instances also are structurally
+ * modified by put(), get() and putAll() since these methods change the order of
+ * the entries. Changes in the value of an entry are not structural changes.
+ * <p>
+ * The Iterator that can be created by calling the {@code iterator} method
+ * throws a {@code ConcurrentModificationException} if the map is structurally
+ * changed while an iterator is used to iterate over the elements. Only the
+ * {@code remove} method that is provided by the iterator allows for removal of
+ * elements during iteration. It is not possible to guarantee that this
+ * mechanism works in all cases of unsynchronized concurrent modification. It
+ * should only be used for debugging purposes.
  * 
  * @since Android 1.0
  */
@@ -115,7 +131,7 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
 
     /**
      * Constructs a new {@code LinkedHashMap} instance containing the mappings
-     * from the specified map.
+     * from the specified map. The order of the elements is preserved.
      * 
      * @param m
      *            the mappings to add.
@@ -314,6 +330,7 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     // BEGIN android-changed
+    // copied from newer version of harmony
     /**
      * Maps the specified key to the specified value.
      * 
@@ -352,7 +369,7 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
                 if (++elementCount > threshold) {
                     rehash();
                 }
-                    m = (LinkedHashMapEntry<K, V>) createHashedEntry(key, 0, 0);
+                    m = (LinkedHashMapEntry<K, V>) createHashedEntry(null, 0, 0);
             } else {
                 linkEntry(m);
             }
@@ -595,6 +612,7 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
         return false;
     }
 
+    // BEGIN android-changed
     /**
      * Removes all elements from this map, leaving it empty.
      * 
@@ -604,11 +622,18 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
      */
     @Override
     public void clear() {
-        super.clear();
-        head = tail = null;
+        internalClear();
     }
 
+    @Override
+    void internalClear() {
+        super.internalClear();
+        head = tail = null;
+    }
+    // END android-changed
+
     // BEGIN android-removed
+    // copied from newer version of harmony
     // /**
     //  * Answers a new HashMap with the same mappings and size as this HashMap.
     //  * 

@@ -1657,7 +1657,7 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
     bool allowed = dvmCheckClassAccess(referrer, resClass);
     untweakLoader(referrer, resClass);
     if (!allowed) {
-        LOGI("DexOpt: resolve class illegal access: %s -> %s\n",
+        LOGW("DexOpt: resolve class illegal access: %s -> %s\n",
             referrer->descriptor, resClass->descriptor);
         return NULL;
     }

@@ -331,13 +331,20 @@ static void decodeInstruction(const Method* meth, int insnIdx,
  */
 static bool checkNewInstance(const Method* meth, int insnIdx)
 {
-    DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
+    DvmDex* pDvmDex = meth->clazz->pDvmDex;
     DecodedInstruction decInsn;
     const char* classDescriptor;
+    u4 idx;
 
     decodeInstruction(meth, insnIdx, &decInsn);
-    classDescriptor = dexStringByTypeIdx(pDexFile, decInsn.vB); // 2nd item
+    idx = decInsn.vB;       // 2nd item
+    if (idx >= pDvmDex->pHeader->typeIdsSize) {
+        LOG_VFY_METH(meth, "VFY: bad type index %d (max %d)\n",
+            idx, pDvmDex->pHeader->typeIdsSize);
+        return false;
+    }
 
+    classDescriptor = dexStringByTypeIdx(pDvmDex->pDexFile, idx);
     if (classDescriptor[0] != 'L') {
         LOG_VFY_METH(meth, "VFY: can't call new-instance on type '%s'\n",
             classDescriptor);
@@ -354,12 +361,20 @@ static bool checkNewInstance(const Method* meth, int insnIdx)
  */
 static bool checkNewArray(const Method* meth, int insnIdx)
 {
-    DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
+    DvmDex* pDvmDex = meth->clazz->pDvmDex;
     DecodedInstruction decInsn;
     const char* classDescriptor;
+    u4 idx;
 
     decodeInstruction(meth, insnIdx, &decInsn);
-    classDescriptor = dexStringByTypeIdx(pDexFile, decInsn.vC); // 3rd item
+    idx = decInsn.vC;       // 3rd item
+    if (idx >= pDvmDex->pHeader->typeIdsSize) {
+        LOG_VFY_METH(meth, "VFY: bad type index %d (max %d)\n",
+            idx, pDvmDex->pHeader->typeIdsSize);
+        return false;
+    }
+
+    classDescriptor = dexStringByTypeIdx(pDvmDex->pDexFile, idx);
 
     int bracketCount = 0;
     const char* cp = classDescriptor;
@@ -589,7 +604,7 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
             break;
 
         case OP_FILLED_NEW_ARRAY:
-            if (!checkTypeIndex(meth, i, false))
+            if (!checkTypeIndex(meth, i, true))
                 return false;
             break;
         case OP_FILLED_NEW_ARRAY_RANGE:

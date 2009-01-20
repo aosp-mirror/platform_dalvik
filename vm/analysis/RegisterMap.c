@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+// ** UNDER CONSTRUCTION **
+
 /*
  * This code generate "register maps" for Dalvik bytecode.  In a stack-based
- * VM we would call these "stack maps".  They are used to increase the
- * precision in the garbage collector when finding references in the
- * interpreter call stack.
+ * VM we might call these "stack maps".  They are used to increase the
+ * precision in the garbage collector when scanning references in the
+ * interpreter thread stacks.
  */
 #include "Dalvik.h"
 #include "analysis/CodeVerify.h"
@@ -35,6 +37,11 @@ can't do this at verification time unless we're willing to store the
 results in the optimized DEX file, which increases their size by about 25%
 unless we use compression, and for performance reasons we don't want to
 just re-run the verifier.
+
+On the plus side, we know that verification has completed successfully --
+or at least are allowed to assume that it would -- so we skip a lot of
+the checks (like verifying that the register indices in instructions
+are reasonable).
 
 Both type-precise and live-precise information can be generated knowing
 only whether or not a register holds a reference.  We don't need to
@@ -64,7 +71,7 @@ typedef u1 SRegType;
  * can be category 1 or 2, so we need two slots.
  */
 #define kExtraRegs  2
-#define RESULT_REGISTER(_insnRegCount)  (_insnRegCount)
+#define RESULT_REGISTER(_insnRegCountPlus)  (_insnRegCountPlus - kExtraRegs)
 
 /*
  * Working state.
@@ -84,7 +91,7 @@ typedef struct WorkState {
      * Number of registers we track for each instruction.  This is equal
      * to the method's declared "registersSize" plus kExtraRegs.
      */
-    int         insnRegCount;
+    int         insnRegCountPlus;
 
     /*
      * Instruction widths and flags, one entry per code unit.
@@ -197,7 +204,7 @@ RegisterMap* dvmGenerateRegisterMap(const Method* meth)
 
     pState->method = meth;
     pState->insnsSize = dvmGetMethodInsnsSize(meth);
-    pState->insnRegCount = meth->registersSize + kExtraRegs;
+    pState->insnRegCountPlus = meth->registersSize + kExtraRegs;
 
     pState->insnFlags = calloc(sizeof(InsnFlags), pState->insnsSize);
     pState->addrRegs = calloc(sizeof(SRegType*), pState->insnsSize);
@@ -228,7 +235,7 @@ RegisterMap* dvmGenerateRegisterMap(const Method* meth)
     for (offset = 0; offset < pState->insnsSize; offset++) {
         if (dvmInsnIsGcPoint(pState->insnFlags, offset)) {
             pState->addrRegs[offset] = regPtr;
-            regPtr += pState->insnRegCount;
+            regPtr += pState->insnRegCountPlus;
         }
     }
     assert(regPtr - pState->regAlloc == pState->insnsSize * gcPointCount);
@@ -313,7 +320,7 @@ static bool setTypesFromSignature(WorkState* pState)
     while (*ccp != 0) {
         switch (*ccp) {
         case 'L':
-        case '[':
+        //case '[':
             *pCurReg++ = kRegTypeReference;
             break;
         case 'Z':
@@ -386,7 +393,7 @@ static inline int compareRegisters(const SRegType* src1, const SRegType* src2,
 static bool analyzeMethod(WorkState* pState)
 {
     const Method* meth = pState->method;
-    SRegType workRegs[pState->insnRegCount];
+    SRegType workRegs[pState->insnRegCountPlus];
     InsnFlags* insnFlags = pState->insnFlags;
     int insnsSize = pState->insnsSize;
     int insnIdx, startGuess;
@@ -454,7 +461,7 @@ static bool analyzeMethod(WorkState* pState)
         if (dvmInsnIsBranchTarget(insnFlags, insnIdx)) {
             SRegType* insnRegs = getRegisterLine(pState, insnIdx);
             assert(insnRegs != NULL);
-            copyRegisters(workRegs, insnRegs, pState->insnRegCount);
+            copyRegisters(workRegs, insnRegs, pState->insnRegCountPlus);
 
         } else {
 #ifndef NDEBUG
@@ -464,7 +471,8 @@ static bool analyzeMethod(WorkState* pState)
              */
             SRegType* insnRegs = getRegisterLine(pState, insnIdx);
             if (insnRegs != NULL &&
-                compareRegisters(workRegs, insnRegs, pState->insnRegCount) != 0)
+                compareRegisters(workRegs, insnRegs,
+                                 pState->insnRegCountPlus) != 0)
             {
                 char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
                 LOG_VFY("HUH? workRegs diverged in %s.%s %s\n",
@@ -491,6 +499,129 @@ static bool analyzeMethod(WorkState* pState)
 
 bail:
     return result;
+}
+
+/*
+ * Get a pointer to the method being invoked.
+ *
+ * Returns NULL on failure.
+ */
+static Method* getInvokedMethod(const Method* meth,
+    const DecodedInstruction* pDecInsn, MethodType methodType)
+{
+    Method* resMethod;
+    char* sigOriginal = NULL;
+
+    /*
+     * Resolve the method.  This could be an abstract or concrete method
+     * depending on what sort of call we're making.
+     */
+    if (methodType == METHOD_INTERFACE) {
+        resMethod = dvmOptResolveInterfaceMethod(meth->clazz, pDecInsn->vB);
+    } else {
+        resMethod = dvmOptResolveMethod(meth->clazz, pDecInsn->vB, methodType);
+    }
+    if (resMethod == NULL) {
+        /* failed; print a meaningful failure message */
+        DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
+        const DexMethodId* pMethodId;
+        const char* methodName;
+        char* methodDesc;
+        const char* classDescriptor;
+
+        pMethodId = dexGetMethodId(pDexFile, pDecInsn->vB);
+        methodName = dexStringById(pDexFile, pMethodId->nameIdx);
+        methodDesc = dexCopyDescriptorFromMethodId(pDexFile, pMethodId);
+        classDescriptor = dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
+
+        LOG_VFY("VFY: unable to resolve %s method %u: %s.%s %s\n",
+            dvmMethodTypeStr(methodType), pDecInsn->vB,
+            classDescriptor, methodName, methodDesc);
+        free(methodDesc);
+        return NULL;
+    }
+
+    return resMethod;
+}
+
+/*
+ * Return the register type for the method.  Since we don't care about
+ * the actual type, we can just look at the "shorty" signature.
+ *
+ * Returns kRegTypeUnknown for "void".
+ */
+static SRegType getMethodReturnType(const Method* meth)
+{
+    SRegType type;
+
+    switch (meth->shorty[0]) {
+    case 'I':
+        type = kRegTypeInteger;
+        break;
+    case 'C':
+        type = kRegTypeChar;
+        break;
+    case 'S':
+        type = kRegTypeShort;
+        break;
+    case 'B':
+        type = kRegTypeByte;
+        break;
+    case 'Z':
+        type = kRegTypeBoolean;
+        break;
+    case 'V':
+        type = kRegTypeUnknown;
+        break;
+    case 'F':
+        type = kRegTypeFloat;
+        break;
+    case 'D':
+        type = kRegTypeDoubleLo;
+        break;
+    case 'J':
+        type = kRegTypeLongLo;
+        break;
+    case 'L':
+    //case '[':
+        type = kRegTypeReference;
+        break;
+    default:
+        /* we verified signature return type earlier, so this is impossible */
+        assert(false);
+        type = kRegTypeConflict;
+        break;
+    }
+
+    return type;
+}
+
+/*
+ * Copy a category 1 register.
+ */
+static inline void copyRegister1(SRegType* insnRegs, u4 vdst, u4 vsrc)
+{
+    insnRegs[vdst] = insnRegs[vsrc];
+}
+
+/*
+ * Copy a category 2 register.  Note the source and destination may overlap.
+ */
+static inline void copyRegister2(SRegType* insnRegs, u4 vdst, u4 vsrc)
+{
+    //memmove(&insnRegs[vdst], &insnRegs[vsrc], sizeof(SRegType) * 2);
+    SRegType r1 = insnRegs[vsrc];
+    SRegType r2 = insnRegs[vsrc+1];
+    insnRegs[vdst] = r1;
+    insnRegs[vdst+1] = r2;
+}
+
+/*
+ * Set the type of a category 1 register.
+ */
+static inline void setRegisterType(SRegType* insnRegs, u4 vdst, SRegType type)
+{
+    insnRegs[vdst] = type;
 }
 
 /*
@@ -524,13 +655,14 @@ static bool handleInstruction(WorkState* pState, SRegType* workRegs,
      * The behavior can be determined from the InstrFlags.
      */
     DecodedInstruction decInsn;
-    SRegType entryRegs[pState->insnRegCount];
+    SRegType entryRegs[pState->insnRegCountPlus];
+    const int insnRegCountPlus = pState->insnRegCountPlus;
     bool justSetResult = false;
     int branchTarget = 0;
+    SRegType tmpType;
 
     dexDecodeInstruction(gDvm.instrFormat, insns, &decInsn);
     const int nextFlags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
-
 
     /*
      * Make a copy of the previous register state.  If the instruction
@@ -541,14 +673,537 @@ static bool handleInstruction(WorkState* pState, SRegType* workRegs,
      */
     if ((nextFlags & kInstrCanThrow) != 0 && dvmInsnIsInTry(insnFlags, insnIdx))
     {
-        copyRegisters(entryRegs, workRegs, pState->insnRegCount);
+        copyRegisters(entryRegs, workRegs, insnRegCountPlus);
     }
 
     switch (decInsn.opCode) {
     case OP_NOP:
         break;
 
-    default: break; // TODO: fill this in
+    case OP_MOVE:
+    case OP_MOVE_FROM16:
+    case OP_MOVE_16:
+    case OP_MOVE_OBJECT:
+    case OP_MOVE_OBJECT_FROM16:
+    case OP_MOVE_OBJECT_16:
+        copyRegister1(workRegs, decInsn.vA, decInsn.vB);
+        break;
+    case OP_MOVE_WIDE:
+    case OP_MOVE_WIDE_FROM16:
+    case OP_MOVE_WIDE_16:
+        copyRegister2(workRegs, decInsn.vA, decInsn.vB);
+        break;
+
+    /*
+     * The move-result instructions copy data out of a "pseudo-register"
+     * with the results from the last method invocation.  In practice we
+     * might want to hold the result in an actual CPU register, so the
+     * Dalvik spec requires that these only appear immediately after an
+     * invoke or filled-new-array.
+     *
+     * These calls invalidate the "result" register.  (This is now
+     * redundant with the reset done below, but it can make the debug info
+     * easier to read in some cases.)
+     */
+    case OP_MOVE_RESULT:
+    case OP_MOVE_RESULT_OBJECT:
+        copyRegister1(workRegs, decInsn.vA, RESULT_REGISTER(insnRegCountPlus));
+        break;
+    case OP_MOVE_RESULT_WIDE:
+        copyRegister2(workRegs, decInsn.vA, RESULT_REGISTER(insnRegCountPlus));
+        break;
+
+    case OP_MOVE_EXCEPTION:
+        /*
+         * This statement can only appear as the first instruction in an
+         * exception handler (though not all exception handlers need to
+         * have one of these).  We verify that as part of extracting the
+         * exception type from the catch block list.
+         */
+        setRegisterType(workRegs, decInsn.vA, kRegTypeReference);
+        break;
+
+    case OP_RETURN_VOID:
+    case OP_RETURN:
+    case OP_RETURN_WIDE:
+    case OP_RETURN_OBJECT:
+        break;
+
+    case OP_CONST_4:
+    case OP_CONST_16:
+    case OP_CONST:
+        /* could be boolean, int, float, or a null reference */
+        setRegisterType(workRegs, decInsn.vA,
+            dvmDetermineCat1Const((s4)decInsn.vB));
+        break;
+    case OP_CONST_HIGH16:
+        /* could be boolean, int, float, or a null reference */
+        setRegisterType(workRegs, decInsn.vA,
+            dvmDetermineCat1Const((s4) decInsn.vB << 16));
+        break;
+    case OP_CONST_WIDE_16:
+    case OP_CONST_WIDE_32:
+    case OP_CONST_WIDE:
+    case OP_CONST_WIDE_HIGH16:
+        /* could be long or double; default to long and allow conversion */
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+    case OP_CONST_STRING:
+    case OP_CONST_STRING_JUMBO:
+    case OP_CONST_CLASS:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeReference);
+        break;
+
+    case OP_MONITOR_ENTER:
+    case OP_MONITOR_EXIT:
+        break;
+
+    case OP_CHECK_CAST:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeReference);
+        break;
+    case OP_INSTANCE_OF:
+        /* result is boolean */
+        setRegisterType(workRegs, decInsn.vA, kRegTypeBoolean);
+        break;
+
+    case OP_ARRAY_LENGTH:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeInteger);
+        break;
+
+    case OP_NEW_INSTANCE:
+    case OP_NEW_ARRAY:
+        /* add the new uninitialized reference to the register ste */
+        setRegisterType(workRegs, decInsn.vA, kRegTypeReference);
+        break;
+    case OP_FILLED_NEW_ARRAY:
+    case OP_FILLED_NEW_ARRAY_RANGE:
+        setRegisterType(workRegs, RESULT_REGISTER(insnRegCountPlus),
+            kRegTypeReference);
+        justSetResult = true;
+        break;
+
+    case OP_CMPL_FLOAT:
+    case OP_CMPG_FLOAT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeBoolean);
+        break;
+    case OP_CMPL_DOUBLE:
+    case OP_CMPG_DOUBLE:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeBoolean);
+        break;
+    case OP_CMP_LONG:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeBoolean);
+        break;
+
+    case OP_THROW:
+    case OP_GOTO:
+    case OP_GOTO_16:
+    case OP_GOTO_32:
+    case OP_PACKED_SWITCH:
+    case OP_SPARSE_SWITCH:
+        break;
+
+    case OP_FILL_ARRAY_DATA:
+        break;
+
+    case OP_IF_EQ:
+    case OP_IF_NE:
+    case OP_IF_LT:
+    case OP_IF_GE:
+    case OP_IF_GT:
+    case OP_IF_LE:
+    case OP_IF_EQZ:
+    case OP_IF_NEZ:
+    case OP_IF_LTZ:
+    case OP_IF_GEZ:
+    case OP_IF_GTZ:
+    case OP_IF_LEZ:
+        break;
+
+    case OP_AGET:
+        tmpType = kRegTypeInteger;
+        goto aget_1nr_common;
+    case OP_AGET_BOOLEAN:
+        tmpType = kRegTypeBoolean;
+        goto aget_1nr_common;
+    case OP_AGET_BYTE:
+        tmpType = kRegTypeByte;
+        goto aget_1nr_common;
+    case OP_AGET_CHAR:
+        tmpType = kRegTypeChar;
+        goto aget_1nr_common;
+    case OP_AGET_SHORT:
+        tmpType = kRegTypeShort;
+        goto aget_1nr_common;
+aget_1nr_common:
+        setRegisterType(workRegs, decInsn.vA, tmpType);
+        break;
+
+    case OP_AGET_WIDE:
+        /*
+         * We know this is either long or double, and we don't really
+         * discriminate between those during verification, so we
+         * call it a long.
+         */
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+
+    case OP_AGET_OBJECT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeReference);
+        break;
+
+    case OP_APUT:
+    case OP_APUT_BOOLEAN:
+    case OP_APUT_BYTE:
+    case OP_APUT_CHAR:
+    case OP_APUT_SHORT:
+    case OP_APUT_WIDE:
+    case OP_APUT_OBJECT:
+        break;
+
+    case OP_IGET:
+        tmpType = kRegTypeInteger;
+        goto iget_1nr_common;
+    case OP_IGET_BOOLEAN:
+        tmpType = kRegTypeBoolean;
+        goto iget_1nr_common;
+    case OP_IGET_BYTE:
+        tmpType = kRegTypeByte;
+        goto iget_1nr_common;
+    case OP_IGET_CHAR:
+        tmpType = kRegTypeChar;
+        goto iget_1nr_common;
+    case OP_IGET_SHORT:
+        tmpType = kRegTypeShort;
+        goto iget_1nr_common;
+iget_1nr_common:
+        setRegisterType(workRegs, decInsn.vA, tmpType);
+        break;
+
+    case OP_IGET_WIDE:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+
+    case OP_IGET_OBJECT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeReference);
+        break;
+
+    case OP_IPUT:
+    case OP_IPUT_BOOLEAN:
+    case OP_IPUT_BYTE:
+    case OP_IPUT_CHAR:
+    case OP_IPUT_SHORT:
+    case OP_IPUT_WIDE:
+    case OP_IPUT_OBJECT:
+        break;
+
+    case OP_SGET:
+        tmpType = kRegTypeInteger;
+        goto sget_1nr_common;
+    case OP_SGET_BOOLEAN:
+        tmpType = kRegTypeBoolean;
+        goto sget_1nr_common;
+    case OP_SGET_BYTE:
+        tmpType = kRegTypeByte;
+        goto sget_1nr_common;
+    case OP_SGET_CHAR:
+        tmpType = kRegTypeChar;
+        goto sget_1nr_common;
+    case OP_SGET_SHORT:
+        tmpType = kRegTypeShort;
+        goto sget_1nr_common;
+sget_1nr_common:
+        setRegisterType(workRegs, decInsn.vA, tmpType);
+        break;
+
+    case OP_SGET_WIDE:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+
+    case OP_SGET_OBJECT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeReference);
+        break;
+
+    case OP_SPUT:
+    case OP_SPUT_BOOLEAN:
+    case OP_SPUT_BYTE:
+    case OP_SPUT_CHAR:
+    case OP_SPUT_SHORT:
+    case OP_SPUT_WIDE:
+    case OP_SPUT_OBJECT:
+        break;
+
+    case OP_INVOKE_VIRTUAL:
+    case OP_INVOKE_VIRTUAL_RANGE:
+    case OP_INVOKE_SUPER:
+    case OP_INVOKE_SUPER_RANGE:
+        {
+            Method* calledMethod;
+
+            calledMethod = getInvokedMethod(meth, &decInsn, METHOD_VIRTUAL);
+            if (calledMethod == NULL)
+                goto bail;
+            setRegisterType(workRegs, RESULT_REGISTER(insnRegCountPlus),
+                getMethodReturnType(calledMethod));
+            justSetResult = true;
+        }
+        break;
+    case OP_INVOKE_DIRECT:
+    case OP_INVOKE_DIRECT_RANGE:
+        {
+            Method* calledMethod;
+
+            calledMethod = getInvokedMethod(meth, &decInsn, METHOD_DIRECT);
+            if (calledMethod == NULL)
+                goto bail;
+            setRegisterType(workRegs, RESULT_REGISTER(insnRegCountPlus),
+                getMethodReturnType(calledMethod));
+            justSetResult = true;
+        }
+        break;
+    case OP_INVOKE_STATIC:
+    case OP_INVOKE_STATIC_RANGE:
+        {
+            Method* calledMethod;
+
+            calledMethod = getInvokedMethod(meth, &decInsn, METHOD_STATIC);
+            if (calledMethod == NULL)
+                goto bail;
+            setRegisterType(workRegs, RESULT_REGISTER(insnRegCountPlus),
+                getMethodReturnType(calledMethod));
+            justSetResult = true;
+        }
+        break;
+    case OP_INVOKE_INTERFACE:
+    case OP_INVOKE_INTERFACE_RANGE:
+        {
+            Method* absMethod;
+
+            absMethod = getInvokedMethod(meth, &decInsn, METHOD_INTERFACE);
+            if (absMethod == NULL)
+                goto bail;
+            setRegisterType(workRegs, RESULT_REGISTER(insnRegCountPlus),
+                getMethodReturnType(absMethod));
+            justSetResult = true;
+        }
+        break;
+
+    case OP_NEG_INT:
+    case OP_NOT_INT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeInteger);
+        break;
+    case OP_NEG_LONG:
+    case OP_NOT_LONG:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+    case OP_NEG_FLOAT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeFloat);
+        break;
+    case OP_NEG_DOUBLE:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeDoubleLo);
+        break;
+    case OP_INT_TO_LONG:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+    case OP_INT_TO_FLOAT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeFloat);
+        break;
+    case OP_INT_TO_DOUBLE:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeDoubleLo);
+        break;
+    case OP_LONG_TO_INT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeInteger);
+        break;
+    case OP_LONG_TO_FLOAT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeFloat);
+        break;
+    case OP_LONG_TO_DOUBLE:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeDoubleLo);
+        break;
+    case OP_FLOAT_TO_INT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeInteger);
+        break;
+    case OP_FLOAT_TO_LONG:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+    case OP_FLOAT_TO_DOUBLE:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeDoubleLo);
+        break;
+    case OP_DOUBLE_TO_INT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeInteger);
+        break;
+    case OP_DOUBLE_TO_LONG:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+    case OP_DOUBLE_TO_FLOAT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeFloat);
+        break;
+    case OP_INT_TO_BYTE:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeByte);
+        break;
+    case OP_INT_TO_CHAR:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeChar);
+        break;
+    case OP_INT_TO_SHORT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeShort);
+        break;
+
+    case OP_ADD_INT:
+    case OP_SUB_INT:
+    case OP_MUL_INT:
+    case OP_REM_INT:
+    case OP_DIV_INT:
+    case OP_SHL_INT:
+    case OP_SHR_INT:
+    case OP_USHR_INT:
+    case OP_AND_INT:
+    case OP_OR_INT:
+    case OP_XOR_INT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeInteger);
+        break;
+    case OP_ADD_LONG:
+    case OP_SUB_LONG:
+    case OP_MUL_LONG:
+    case OP_DIV_LONG:
+    case OP_REM_LONG:
+    case OP_AND_LONG:
+    case OP_OR_LONG:
+    case OP_XOR_LONG:
+    case OP_SHL_LONG:
+    case OP_SHR_LONG:
+    case OP_USHR_LONG:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+    case OP_ADD_FLOAT:
+    case OP_SUB_FLOAT:
+    case OP_MUL_FLOAT:
+    case OP_DIV_FLOAT:
+    case OP_REM_FLOAT:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeFloat);
+        break;
+    case OP_ADD_DOUBLE:
+    case OP_SUB_DOUBLE:
+    case OP_MUL_DOUBLE:
+    case OP_DIV_DOUBLE:
+    case OP_REM_DOUBLE:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeDoubleLo);
+        break;
+    case OP_ADD_INT_2ADDR:
+    case OP_SUB_INT_2ADDR:
+    case OP_MUL_INT_2ADDR:
+    case OP_REM_INT_2ADDR:
+    case OP_SHL_INT_2ADDR:
+    case OP_SHR_INT_2ADDR:
+    case OP_USHR_INT_2ADDR:
+    case OP_AND_INT_2ADDR:
+    case OP_OR_INT_2ADDR:
+    case OP_XOR_INT_2ADDR:
+    case OP_DIV_INT_2ADDR:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeInteger);
+        break;
+    case OP_ADD_LONG_2ADDR:
+    case OP_SUB_LONG_2ADDR:
+    case OP_MUL_LONG_2ADDR:
+    case OP_DIV_LONG_2ADDR:
+    case OP_REM_LONG_2ADDR:
+    case OP_AND_LONG_2ADDR:
+    case OP_OR_LONG_2ADDR:
+    case OP_XOR_LONG_2ADDR:
+    case OP_SHL_LONG_2ADDR:
+    case OP_SHR_LONG_2ADDR:
+    case OP_USHR_LONG_2ADDR:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeLongLo);
+        break;
+    case OP_ADD_FLOAT_2ADDR:
+    case OP_SUB_FLOAT_2ADDR:
+    case OP_MUL_FLOAT_2ADDR:
+    case OP_DIV_FLOAT_2ADDR:
+    case OP_REM_FLOAT_2ADDR:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeFloat);
+        break;
+    case OP_ADD_DOUBLE_2ADDR:
+    case OP_SUB_DOUBLE_2ADDR:
+    case OP_MUL_DOUBLE_2ADDR:
+    case OP_DIV_DOUBLE_2ADDR:
+    case OP_REM_DOUBLE_2ADDR:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeDoubleLo);
+        break;
+    case OP_ADD_INT_LIT16:
+    case OP_RSUB_INT:
+    case OP_MUL_INT_LIT16:
+    case OP_DIV_INT_LIT16:
+    case OP_REM_INT_LIT16:
+    case OP_AND_INT_LIT16:
+    case OP_OR_INT_LIT16:
+    case OP_XOR_INT_LIT16:
+    case OP_ADD_INT_LIT8:
+    case OP_RSUB_INT_LIT8:
+    case OP_MUL_INT_LIT8:
+    case OP_DIV_INT_LIT8:
+    case OP_REM_INT_LIT8:
+    case OP_SHL_INT_LIT8:
+    case OP_SHR_INT_LIT8:
+    case OP_USHR_INT_LIT8:
+    case OP_AND_INT_LIT8:
+    case OP_OR_INT_LIT8:
+    case OP_XOR_INT_LIT8:
+        setRegisterType(workRegs, decInsn.vA, kRegTypeInteger);
+        break;
+
+
+    /*
+     * See comments in analysis/CodeVerify.c re: why some of these are
+     * annoying to deal with.  In here, "annoying" turns into "impossible",
+     * since we make no effort to keep reference type info.
+     *
+     * Handling most of these would require retaining the field/method
+     * reference info that we discarded when the instructions were
+     * quickened.
+     */
+    case OP_EXECUTE_INLINE:
+    case OP_INVOKE_DIRECT_EMPTY:
+    case OP_IGET_QUICK:
+    case OP_IGET_WIDE_QUICK:
+    case OP_IGET_OBJECT_QUICK:
+    case OP_IPUT_QUICK:
+    case OP_IPUT_WIDE_QUICK:
+    case OP_IPUT_OBJECT_QUICK:
+    case OP_INVOKE_VIRTUAL_QUICK:
+    case OP_INVOKE_VIRTUAL_QUICK_RANGE:
+    case OP_INVOKE_SUPER_QUICK:
+    case OP_INVOKE_SUPER_QUICK_RANGE:
+        dvmAbort();     // can't work
+        break;
+
+
+    /* these should never appear */
+    case OP_UNUSED_3E:
+    case OP_UNUSED_3F:
+    case OP_UNUSED_40:
+    case OP_UNUSED_41:
+    case OP_UNUSED_42:
+    case OP_UNUSED_43:
+    case OP_UNUSED_73:
+    case OP_UNUSED_79:
+    case OP_UNUSED_7A:
+    case OP_UNUSED_E3:
+    case OP_UNUSED_E4:
+    case OP_UNUSED_E5:
+    case OP_UNUSED_E6:
+    case OP_UNUSED_E7:
+    case OP_UNUSED_E8:
+    case OP_UNUSED_E9:
+    case OP_UNUSED_EA:
+    case OP_UNUSED_EB:
+    case OP_UNUSED_EC:
+    case OP_UNUSED_ED:
+    case OP_UNUSED_EF:
+    case OP_UNUSED_F1:
+    case OP_UNUSED_FC:
+    case OP_UNUSED_FD:
+    case OP_UNUSED_FE:
+    case OP_UNUSED_FF:
+        dvmAbort();
+        break;
 
     /*
      * DO NOT add a "default" clause here.  Without it the compiler will
@@ -563,7 +1218,7 @@ static bool handleInstruction(WorkState* pState, SRegType* workRegs,
      * the verifier.
      */
     if (!justSetResult) {
-        int reg = RESULT_REGISTER(pState->insnRegCount);
+        int reg = RESULT_REGISTER(pState->insnRegCountPlus);
         workRegs[reg] = workRegs[reg+1] = kRegTypeUnknown;
     }
 
@@ -585,7 +1240,7 @@ static bool handleInstruction(WorkState* pState, SRegType* workRegs,
             /* if not yet visited, or regs were updated, set "changed" */
             if (!dvmInsnIsVisited(insnFlags, insnIdx+insnWidth) ||
                 compareRegisters(workRegs, entryRegs,
-                    pState->insnRegCount) != 0)
+                    pState->insnRegCountPlus) != 0)
             {
                 dvmInsnSetChanged(insnFlags, insnIdx+insnWidth, true);
             }
@@ -747,7 +1402,7 @@ static void updateRegisters(WorkState* pState, int nextInsn,
 {
     const Method* meth = pState->method;
     InsnFlags* insnFlags = pState->insnFlags;
-    const int insnRegCount = pState->insnRegCount;
+    const int insnRegCountPlus = pState->insnRegCountPlus;
     SRegType* targetRegs = getRegisterLine(pState, nextInsn);
 
     if (!dvmInsnIsVisitedOrChanged(insnFlags, nextInsn)) {
@@ -759,7 +1414,7 @@ static void updateRegisters(WorkState* pState, int nextInsn,
          * just an optimization.)
          */
         LOGVV("COPY into 0x%04x\n", nextInsn);
-        copyRegisters(targetRegs, workRegs, insnRegCount);
+        copyRegisters(targetRegs, workRegs, insnRegCountPlus);
         dvmInsnSetChanged(insnFlags, nextInsn, true);
     } else {
         /* merge registers, set Changed only if different */
@@ -767,7 +1422,7 @@ static void updateRegisters(WorkState* pState, int nextInsn,
         bool changed = false;
         int i;
 
-        for (i = 0; i < insnRegCount; i++) {
+        for (i = 0; i < insnRegCountPlus; i++) {
             targetRegs[i] = mergeTypes(targetRegs[i], workRegs[i], &changed);
         }
 

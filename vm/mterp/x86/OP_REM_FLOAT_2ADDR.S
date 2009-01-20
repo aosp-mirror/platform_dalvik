@@ -7,7 +7,7 @@
     flds     (rFP,%ecx,4)               # vAA to fp stack
     FETCH_INST_WORD(1)
 1:
-    fprem1
+    fprem
     fstsw     %ax
     sahf
     jp        1b

@@ -2799,48 +2799,48 @@ static bool createIftable(ClassObject* clazz)
 
     assert(idx == ifCount);
 
-    /*
-     * Remove anything redundant from our recent additions.  Note we have
-     * to traverse the recent adds when looking for duplicates, because
-     * it's possible the recent additions are self-redundant.  This
-     * reduces the memory footprint of classes with lots of inherited
-     * interfaces.
-     *
-     * (I don't know if this will cause problems later on when we're trying
-     * to find a static field.  It looks like the proper search order is
-     * (1) current class, (2) interfaces implemented by current class,
-     * (3) repeat with superclass.  A field implemented by an interface
-     * and by a superclass might come out wrong if the superclass also
-     * implements the interface.  The javac compiler will reject the
-     * situation as ambiguous, so the concern is somewhat artificial.)
-     *
-     * UPDATE: this makes ReferenceType.Interfaces difficult to implement,
-     * because it wants to return just the interfaces declared to be
-     * implemented directly by the class.  I'm excluding this code for now.
-     */
     if (false) {
-    for (i = superIfCount; i < ifCount; i++) {
-        int j;
+        /*
+         * Remove anything redundant from our recent additions.  Note we have
+         * to traverse the recent adds when looking for duplicates, because
+         * it's possible the recent additions are self-redundant.  This
+         * reduces the memory footprint of classes with lots of inherited
+         * interfaces.
+         *
+         * (I don't know if this will cause problems later on when we're trying
+         * to find a static field.  It looks like the proper search order is
+         * (1) current class, (2) interfaces implemented by current class,
+         * (3) repeat with superclass.  A field implemented by an interface
+         * and by a superclass might come out wrong if the superclass also
+         * implements the interface.  The javac compiler will reject the
+         * situation as ambiguous, so the concern is somewhat artificial.)
+         *
+         * UPDATE: this makes ReferenceType.Interfaces difficult to implement,
+         * because it wants to return just the interfaces declared to be
+         * implemented directly by the class.  I'm excluding this code for now.
+         */
+        for (i = superIfCount; i < ifCount; i++) {
+            int j;
 
-        for (j = 0; j < ifCount; j++) {
-            if (i == j)
-                continue;
-            if (clazz->iftable[i].clazz == clazz->iftable[j].clazz) {
-                LOGVV("INTF: redundant interface %s in %s\n",
-                    clazz->iftable[i].clazz->descriptor,
-                    clazz->descriptor);
+            for (j = 0; j < ifCount; j++) {
+                if (i == j)
+                    continue;
+                if (clazz->iftable[i].clazz == clazz->iftable[j].clazz) {
+                    LOGVV("INTF: redundant interface %s in %s\n",
+                        clazz->iftable[i].clazz->descriptor,
+                        clazz->descriptor);
 
-                if (i != ifCount-1)
-                    memmove(&clazz->iftable[i], &clazz->iftable[i+1],
-                        (ifCount - i -1) * sizeof(InterfaceEntry));
-                ifCount--;
-                i--;        // adjust for i++ above
-                break;
+                    if (i != ifCount-1)
+                        memmove(&clazz->iftable[i], &clazz->iftable[i+1],
+                            (ifCount - i -1) * sizeof(InterfaceEntry));
+                    ifCount--;
+                    i--;        // adjust for i++ above
+                    break;
+                }
             }
         }
-    }
-    LOGVV("INTF: class '%s' nodupes=%d\n", clazz->descriptor, ifCount);
-    }   // if (false)
+        LOGVV("INTF: class '%s' nodupes=%d\n", clazz->descriptor, ifCount);
+    } // if (false)
 
     clazz->iftableCount = ifCount;
 
@@ -2956,6 +2956,13 @@ static bool createIftable(ClassObject* clazz)
                     == 0)
                 {
                     LOGVV("INTF:   matched at %d\n", j);
+                    if (!dvmIsPublicMethod(clazz->vtable[j])) {
+                        LOGW("Implementation of %s.%s is not public\n",
+                            clazz->descriptor, clazz->vtable[j]->name);
+                        dvmThrowException("Ljava/lang/IllegalAccessError;",
+                            "interface implementation not public");
+                        goto bail;
+                    }
                     clazz->iftable[i].methodIndexArray[methIdx] = j;
                     break;
                 }

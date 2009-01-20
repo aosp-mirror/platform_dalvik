@@ -84,8 +84,8 @@
      */
 .L${opcode}_abstract:
     movl    offClassObject_descriptor(%ecx),%eax
-    movl    $$.LstrInstantiationError,OUT_ARG1(%esp)
-    movl    %eax,OUT_ARG0(%esp)
+    movl    $$.LstrInstantiationError,OUT_ARG0(%esp)
+    movl    %eax,OUT_ARG1(%esp)
     call    dvmThrowExceptionWithClassMessage
     UNSPILL(rPC)
     jmp     common_exceptionThrown

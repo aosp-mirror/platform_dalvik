@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.testDouble:()V:
 regs: 0002; ins: 0000; outs: 0002
   0000: const-wide/high16 v0, #double -Infinity // #fff0000000000000

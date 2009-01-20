@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.test1:()V:
 regs: 0005; ins: 0000; outs: 0002
   0000: const-string v1, "x"

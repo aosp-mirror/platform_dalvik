@@ -1,4 +1,4 @@
-%default {"result":"eax"}
+%default {"result":"%eax"}
     /*
      * Generic 32-bit "lit16" binary operation.  Provide an "instr" line
      * that specifies an instruction that performs "result = eax op ecx".
@@ -15,8 +15,8 @@
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
     movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
     andb     $$0xf,rINST_LO             # rINST_FULL<- A
-    $instr                              # ex: addl %ecx, %eax
-    SET_VREG(%eax,rINST_FULL)
+    $instr                              # for example: addl %ecx, %eax
+    SET_VREG($result,rINST_FULL)
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
     GOTO_NEXT

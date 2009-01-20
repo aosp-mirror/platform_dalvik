@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.test1:()I:
 regs: 0002; ins: 0000; outs: 0000
   0000: invoke-static {}, Blort.call1:()V

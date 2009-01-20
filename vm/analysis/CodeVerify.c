@@ -327,32 +327,6 @@ static bool isTypeWidthEqual1nr(RegType type1, RegType type2)
 }
 
 /*
- * Given a 32-bit constant, return the most-restricted RegType that can hold
- * the value.
- */
-static RegType determineCat1Const(s4 value)
-{
-    if (value < -32768)
-        return kRegTypeInteger;
-    else if (value < -128)
-        return kRegTypeShort;
-    else if (value < 0)
-        return kRegTypeByte;
-    else if (value == 0)
-        return kRegTypeZero;
-    else if (value == 1)
-        return kRegTypeOne;
-    else if (value < 128)
-        return kRegTypePosByte;
-    else if (value < 32768)
-        return kRegTypePosShort;
-    else if (value < 65536)
-        return kRegTypeChar;
-    else
-        return kRegTypeInteger;
-}
-
-/*
  * Convert a VM PrimitiveType enum value to the equivalent RegType value.
  */
 static RegType primitiveTypeToRegType(PrimitiveType primType)
@@ -923,7 +897,6 @@ bad_sig:
 static RegType getMethodReturnType(const Method* meth)
 {
     RegType type;
-    bool okay = true;
     const char* descriptor = dexProtoGetReturnType(&meth->prototype);
 
     switch (*descriptor) {
@@ -957,6 +930,7 @@ static RegType getMethodReturnType(const Method* meth)
     case 'L':
     case '[':
         {
+            bool okay = true;
             ClassObject* clazz =
                 lookupClassByDescriptor(meth, descriptor, &okay);
             assert(okay);
@@ -2455,7 +2429,7 @@ static void checkFinalFieldAccess(const Method* meth, const Field* field,
 
     /* make sure we're in the same class */
     if (meth->clazz != field->clazz) {
-        LOG_VFY_METH(meth, "VFY: can't modify final field %s.%\n",
+        LOG_VFY_METH(meth, "VFY: can't modify final field %s.%s\n",
             field->clazz->descriptor, field->name);
         *pOkay = false;
         return;
@@ -2712,6 +2686,54 @@ static bool initRegisterTable(const Method* meth, const InsnFlags* insnFlags,
 
     assert(regTable->addrRegs[0] != NULL);
     return true;
+}
+
+
+/*
+ * Verify that the arguments in a filled-new-array instruction are valid.
+ *
+ * "resClass" is the class refered to by pDecInsn->vB.
+ */
+static void verifyFilledNewArrayRegs(const Method* meth,
+    const RegType* insnRegs, const int insnRegCount,
+    const DecodedInstruction* pDecInsn, ClassObject* resClass, bool isRange,
+    bool* pOkay)
+{
+    u4 argCount = pDecInsn->vA;
+    RegType expectedType;
+    PrimitiveType elemType;
+    unsigned int ui;
+
+    assert(dvmIsArrayClass(resClass));
+    elemType = resClass->elementClass->primitiveType;
+    if (elemType == PRIM_NOT) {
+        LOG_VFY("VFY: filled-new-array not yet supported on reference types\n");
+        *pOkay = false;
+        return;
+    }
+
+    expectedType = primitiveTypeToRegType(elemType);
+    //LOGI("filled-new-array: %s -> %d\n", resClass->descriptor, expectedType);
+
+    /*
+     * Verify each register.  If "argCount" is bad, verifyRegisterType()
+     * will run off the end of the list and fail.  It's legal, if silly,
+     * for argCount to be zero.
+     */
+    for (ui = 0; ui < argCount; ui++) {
+        u4 getReg;
+
+        if (isRange)
+            getReg = pDecInsn->vC + ui;
+        else
+            getReg = pDecInsn->arg[ui];
+
+        verifyRegisterType(insnRegs, insnRegCount, getReg, expectedType, pOkay);
+        if (!*pOkay) {
+            LOG_VFY("VFY: filled-new-array arg %u(%u) not valid\n", ui, getReg);
+            return;
+        }
+    }
 }
 
 
@@ -3309,12 +3331,12 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_CONST:
         /* could be boolean, int, float, or a null reference */
         setRegisterType(workRegs, insnRegCount, decInsn.vA,
-            determineCat1Const((s4)decInsn.vB), &okay);
+            dvmDetermineCat1Const((s4)decInsn.vB), &okay);
         break;
     case OP_CONST_HIGH16:
         /* could be boolean, int, float, or a null reference */
         setRegisterType(workRegs, insnRegCount, decInsn.vA,
-            determineCat1Const((s4) decInsn.vB << 16), &okay);
+            dvmDetermineCat1Const((s4) decInsn.vB << 16), &okay);
         break;
     case OP_CONST_WIDE_16:
     case OP_CONST_WIDE_32:
@@ -3332,8 +3354,18 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         break;
     case OP_CONST_CLASS:
         assert(gDvm.classJavaLangClass != NULL);
-        setRegisterType(workRegs, insnRegCount, decInsn.vA,
-            regTypeFromClass(gDvm.classJavaLangClass), &okay);
+        /* make sure we can resolve the class; access check is important */
+        resClass = dvmOptResolveClass(meth->clazz, decInsn.vB);
+        if (resClass == NULL) {
+            const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
+            dvmLogUnableToResolveClass(badClassDesc, meth);
+            LOG_VFY("VFY: unable to resolve const-class %d (%s) in %s\n",
+                decInsn.vB, badClassDesc, meth->clazz->descriptor);
+            okay = false;
+        } else {
+            setRegisterType(workRegs, insnRegCount, decInsn.vA,
+                regTypeFromClass(gDvm.classJavaLangClass), &okay);
+        }
         break;
 
     case OP_MONITOR_ENTER:
@@ -3378,17 +3410,29 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         }
         break;
     case OP_INSTANCE_OF:
+        /* make sure we're checking a reference type */
         tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vB, &okay);
         if (!okay)
             break;
         if (!regTypeIsReference(tmpType)) {
-            LOG_VFY("VFY: vB not a reference\n");
+            LOG_VFY("VFY: vB not a reference (%d)\n", tmpType);
             okay = false;
             break;
         }
-        /* result is boolean */
-        setRegisterType(workRegs, insnRegCount, decInsn.vA,
-            kRegTypeBoolean, &okay);
+
+        /* make sure we can resolve the class; access check is important */
+        resClass = dvmOptResolveClass(meth->clazz, decInsn.vC);
+        if (resClass == NULL) {
+            const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vC);
+            dvmLogUnableToResolveClass(badClassDesc, meth);
+            LOG_VFY("VFY: unable to resolve instanceof %d (%s) in %s\n",
+                decInsn.vC, badClassDesc, meth->clazz->descriptor);
+            okay = false;
+        } else {
+            /* result is boolean */
+            setRegisterType(workRegs, insnRegCount, decInsn.vA,
+                kRegTypeBoolean, &okay);
+        }
         break;
 
     case OP_ARRAY_LENGTH:
@@ -3442,7 +3486,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_NEW_ARRAY:
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vC);
         if (resClass == NULL) {
-            const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
+            const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vC);
             dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve new-array %d (%s) in %s\n",
                 decInsn.vC, badClassDesc, meth->clazz->descriptor);
@@ -3451,6 +3495,9 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             LOG_VFY("VFY: new-array on non-array class\n");
             okay = false;
         } else {
+            /* make sure "size" register is valid type */
+            verifyRegisterType(workRegs, insnRegCount, decInsn.vB,
+                kRegTypeInteger, &okay);
             /* set register type to array class */
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
                 regTypeFromClass(resClass), &okay);
@@ -3458,7 +3505,6 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         break;
     case OP_FILLED_NEW_ARRAY:
     case OP_FILLED_NEW_ARRAY_RANGE:
-        /* (decInsn.vA == 0) is silly, but not illegal */
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vB);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
@@ -3470,13 +3516,11 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             LOG_VFY("VFY: filled-new-array on non-array class\n");
             okay = false;
         } else {
-            /*
-             * TODO: verify decInsn.vA range
-             * TODO: if resClass is array of references, verify the registers
-             * in the argument list against the array type.
-             * TODO: if resClass is array of primitives, verify that the
-             * contents of the registers are appropriate.
-             */
+            bool isRange = (decInsn.opCode == OP_FILLED_NEW_ARRAY_RANGE);
+
+            /* check the arguments to the instruction */
+            verifyFilledNewArrayRegs(meth, workRegs, insnRegCount, &decInsn,
+                resClass, isRange, &okay);
             /* filled-array result goes into "result" register */
             setResultRegisterType(workRegs, insnRegCount,
                 regTypeFromClass(resClass), &okay);
@@ -3802,6 +3846,7 @@ aget_1nr_common:
             if (!okay)
                 break;
 
+            /* get the class of the array we're pulling an object from */
             resClass = getClassFromRegister(workRegs, insnRegCount,
                             decInsn.vB, &okay);
             if (!okay)
@@ -3811,7 +3856,7 @@ aget_1nr_common:
 
                 assert(resClass != NULL);
                 if (!dvmIsArrayClass(resClass)) {
-                    LOG_VFY("VFY: aget-object on non-ref array class\n");
+                    LOG_VFY("VFY: aget-object on non-array class\n");
                     okay = false;
                     break;
                 }
@@ -3826,9 +3871,14 @@ aget_1nr_common:
                     assert(resClass->arrayDim > 1);
                     elementClass = dvmFindArrayClass(&resClass->descriptor[1],
                                         resClass->classLoader);
-                } else {
+                } else if (resClass->descriptor[1] == 'L') {
                     assert(resClass->arrayDim == 1);
                     elementClass = resClass->elementClass;
+                } else {
+                    LOG_VFY("VFY: aget-object on non-ref array class (%s)\n",
+                        resClass->descriptor);
+                    okay = false;
+                    break;
                 }
 
                 dstType = regTypeFromClass(elementClass);
@@ -4655,7 +4705,7 @@ sput_1nr_common:
     case OP_INVOKE_INTERFACE:
     case OP_INVOKE_INTERFACE_RANGE:
         {
-            RegType thisType, returnType;
+            RegType /*thisType,*/ returnType;
             Method* absMethod;
             bool isRange;
 
@@ -4666,6 +4716,7 @@ sput_1nr_common:
             if (!okay)
                 break;
 
+#if 0       /* can't do this here, fails on dalvik test 052-verifier-fun */
             /*
              * Get the type of the "this" arg, which should always be an
              * interface class.  Because we don't do a full merge on
@@ -4676,7 +4727,6 @@ sput_1nr_common:
             if (!okay)
                 break;
 
-#if 0       /* can't do this here, fails on dalvik test 052-verifier-fun */
             if (thisType == kRegTypeZero) {
                 /* null pointer always passes (and always fails at runtime) */
             } else {
@@ -4934,10 +4984,40 @@ sput_1nr_common:
         break;
 
 
+    /*
+     * Verifying "quickened" instructions is tricky, because we have
+     * discarded the original field/method information.  The byte offsets
+     * and vtable indices only have meaning in the context of an object
+     * instance.
+     *
+     * If a piece of code declares a local reference variable, assigns
+     * null to it, and then issues a virtual method call on it, we
+     * cannot evaluate the method call during verification.  This situation
+     * isn't hard to handle, since we know the call will always result in an
+     * NPE, and the arguments and return value don't matter.  Any code that
+     * depends on the result of the method call is inaccessible, so the
+     * fact that we can't fully verify anything that comes after the bad
+     * call is not a problem.
+     *
+     * We must also consider the case of multiple code paths, only some of
+     * which involve a null reference.  We can completely verify the method
+     * if we sidestep the results of executing with a null reference.
+     * For example, if on the first pass through the code we try to do a
+     * virtual method invocation through a null ref, we have to skip the
+     * method checks and have the method return a "wildcard" type (which
+     * merges with anything to become that other thing).  The move-result
+     * will tell us if it's a reference, single-word numeric, or double-word
+     * value.  We continue to perform the verification, and at the end of
+     * the function any invocations that were never fully exercised are
+     * marked as null-only.
+     *
+     * We would do something similar for the field accesses.  The field's
+     * type, once known, can be used to recover the width of short integers.
+     * If the object reference was null, the field-get returns the "wildcard"
+     * type, which is acceptable for any operation.
+     */
     case OP_EXECUTE_INLINE:
     case OP_INVOKE_DIRECT_EMPTY:
-        okay = false;               // TODO - implement optimized opcodes
-        break;
     case OP_IGET_QUICK:
     case OP_IGET_WIDE_QUICK:
     case OP_IGET_OBJECT_QUICK:
@@ -4948,7 +5028,7 @@ sput_1nr_common:
     case OP_INVOKE_VIRTUAL_QUICK_RANGE:
     case OP_INVOKE_SUPER_QUICK:
     case OP_INVOKE_SUPER_QUICK_RANGE:
-        okay = false;               // TODO - implement optimized opcodes
+        okay = false;
         break;
 
     /* these should never appear */

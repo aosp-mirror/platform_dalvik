@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.test1:(I)I:
 regs: 0015; ins: 0001; outs: 0000
   0000: move/from16 v1, v20
