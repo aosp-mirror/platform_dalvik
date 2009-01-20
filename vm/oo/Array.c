@@ -559,6 +559,8 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
  * class in arrays of primitives.
  *
  * "type" should be 'I', 'J', 'Z', etc.
+ *
+ * Returns NULL if the type doesn't correspond to a known primitive type.
  */
 ClassObject* dvmFindPrimitiveClass(char type)
 {
@@ -593,8 +595,7 @@ ClassObject* dvmFindPrimitiveClass(char type)
         idx = PRIM_VOID;
         break;
     default:
-        LOGE("Unknown primitive type '%c'\n", type);
-        assert(false);
+        LOGW("Unknown primitive type '%c'\n", type);
         return NULL;
     }
 

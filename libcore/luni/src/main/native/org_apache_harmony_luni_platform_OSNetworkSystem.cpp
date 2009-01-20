@@ -1469,18 +1469,48 @@ static jint osNetworkSystem_writeSocketDirectImpl(JNIEnv* env, jclass clazz,
         return 0;
     }
 
-    while (sent < count) {
-        result = send(handle, (jbyte *) message + sent, (int) count - sent, SOCKET_NOFLAGS);
-        if (result == -1) {
-            int err = convertError(errno);
-            log_socket_close(handle, err);
-            throwSocketException(env, err);
+    result = send(handle, (jbyte *) message, (int) count, SOCKET_NOFLAGS);
+    if (result < 0) {
+        int err = convertError(errno);
+        log_socket_close(handle, err);
+
+        if (SOCKERR_WOULDBLOCK == err){
+            jclass socketExClass,errorCodeExClass;
+            jmethodID errorCodeExConstructor, socketExConstructor,socketExCauseMethod;
+            jobject errorCodeEx, socketEx;
+            const char* errorMessage = netLookupErrorString(err);
+            jstring errorMessageString = env->NewStringUTF(errorMessage);
+
+            errorCodeExClass = env->FindClass("org/apache/harmony/luni/util/ErrorCodeException");
+            if (!errorCodeExClass){
+                return 0;
+            }
+            errorCodeExConstructor = env->GetMethodID(errorCodeExClass,"<init>","(I)V");
+            if (!errorCodeExConstructor){
+                return 0;
+            }
+            errorCodeEx = env->NewObject(errorCodeExClass,errorCodeExConstructor,err);
+
+            socketExClass = env->FindClass("java/net/SocketException");
+            if (!socketExClass) {
+                return 0;
+            }
+            socketExConstructor = env->GetMethodID(socketExClass,"<init>","(Ljava/lang/String;)V");
+            if (!socketExConstructor) {
+                return 0;
+            }
+            socketEx = env->NewObject(socketExClass, socketExConstructor, errorMessageString); 
+            socketExCauseMethod = env->GetMethodID(socketExClass,"initCause","(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
+            env->CallObjectMethod(socketEx,socketExCauseMethod,errorCodeEx);
+            env->Throw((jthrowable)socketEx);
             return 0;
         }
-        sent += result;
+        throwSocketException(env, err);
+        return 0;
     }
-    add_send_stats(handle, sent);
-    return sent;
+
+    add_send_stats(handle, result);
+    return result;
 }
 
 static jint osNetworkSystem_writeSocketImpl(JNIEnv* env, jclass clazz,

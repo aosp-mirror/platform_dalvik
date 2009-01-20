@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
   catches
       try 0024..00010017
       catch java.lang.RuntimeException -> 00011260

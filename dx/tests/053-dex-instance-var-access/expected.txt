@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.test1:()Ljava/lang/Object;:
 regs: 0006; ins: 0001; outs: 0000
   0000: move-object v0, v5

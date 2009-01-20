@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.test:(LZorch;D)I:
 regs: 000b; ins: 0003; outs: 0003
   0000: move-object v0, v8

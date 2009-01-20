@@ -3146,9 +3146,9 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    testl %eax,%eax
-    sete %al
-    movzbl %al,%eax
+    
+    
+    notl %eax
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
 
@@ -3184,11 +3184,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb      $0xf,rINST_LO           # rINST_FULL<- A
     GET_VREG_WORD(%eax,%ecx,0)         # eax<- v[B+0]
     GET_VREG_WORD(%ecx,%ecx,1)         # ecx<- v[B+1]
-    orl       %ecx,%eax
-    testl     %eax,%eax                # any bits set?
-    sete      %cl
-    movzbl    %cl,%eax
-    movl      $0,%ecx
+    notl      %eax
+    notl      %ecx
     SET_VREG_WORD(%eax,rINST_FULL,0)   # v[A+0]<- eax
     SET_VREG_WORD(%ecx,rINST_FULL,1)   # v[A+1]<- ecx
     FETCH_INST_WORD(1)
@@ -4306,7 +4303,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movzbl   rINST_HI,%ecx         # ecx<- AA
     FETCH_INST_WORD(2)
 1:
-    fprem1
+    fprem
     fstsw     %ax
     sahf
     jp        1b
@@ -4419,7 +4416,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movzbl   rINST_HI,%ecx          # ecx<- AA
     FETCH_INST_WORD(2)
 1:
-    fprem1
+    fprem
     fstsw     %ax
     sahf
     jp        1b
@@ -5108,7 +5105,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     flds     (rFP,%ecx,4)               # vAA to fp stack
     FETCH_INST_WORD(1)
 1:
-    fprem1
+    fprem
     fstsw     %ax
     sahf
     jp        1b
@@ -5221,7 +5218,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     fldl     (rFP,%ecx,4)               # vAA to fp stack
     FETCH_INST_WORD(1)
 1:
-    fprem1
+    fprem
     fstsw     %ax
     sahf
     jp        1b
@@ -5251,7 +5248,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
     movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
     andb     $0xf,rINST_LO             # rINST_FULL<- A
-    addl %ecx,%eax                              # ex: addl %ecx, %eax
+    addl %ecx,%eax                              # for example: addl %ecx, %eax
     SET_VREG(%eax,rINST_FULL)
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
@@ -5262,21 +5259,27 @@ dvmAsmInstructionStart = .L_OP_NOP
     .balign 64
 .L_OP_RSUB_INT: /* 0xd1 */
 /* File: x86/OP_RSUB_INT.S */
-/* File: x86/binop1.S */
+/* File: x86/binopLit16.S */
     /*
-     * Generic 32-bit binary operation in which both operands loaded to
-     * registers (op0 in eax, op1 in ecx).
+     * Generic 32-bit "lit16" binary operation.  Provide an "instr" line
+     * that specifies an instruction that performs "result = eax op ecx".
+     * This could be an x86 instruction or a function call.  (If the result
+     * comes back in a register other than eax, you can override "result".)
+     *
+     * For: add-int/lit16, rsub-int,
+     *      and-int/lit16, or-int/lit16, xor-int/lit16
      */
-    /* binop vAA, vBB, vCC */
-    movzbl   2(rPC),%eax            # eax<- BB
-    movzbl   3(rPC),%ecx            # ecx<- CC
-    GET_VREG(%eax,%eax)             # eax<- vBB
-    GET_VREG(%ecx,%ecx)             # eax<- vBB
-    subl %eax,%ecx                          # ex: addl    %ecx,%eax
-    movzbl   rINST_HI,%eax          # tmp<- AA
+    /* binop/lit16 vA, vB, #+CCCC */
+    movzbl   rINST_HI,%eax              # eax<- 000000BA
+    sarl     $4,%eax                   # eax<- B
+    GET_VREG(%eax,%eax)                 # eax<- vB
+    movswl   2(rPC),%ecx                # ecx<- ssssCCCC
+    movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
+    andb     $0xf,rINST_LO             # rINST_FULL<- A
+    subl %eax,%ecx                              # for example: addl %ecx, %eax
+    SET_VREG(%ecx,rINST_FULL)
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
-    SET_VREG(%ecx,%eax)
     GOTO_NEXT
 
 
@@ -5379,7 +5382,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
     movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
     andb     $0xf,rINST_LO             # rINST_FULL<- A
-    andl %ecx,%eax                              # ex: addl %ecx, %eax
+    andl %ecx,%eax                              # for example: addl %ecx, %eax
     SET_VREG(%eax,rINST_FULL)
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
@@ -5407,7 +5410,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
     movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
     andb     $0xf,rINST_LO             # rINST_FULL<- A
-    orl     %ecx,%eax                              # ex: addl %ecx, %eax
+    orl     %ecx,%eax                              # for example: addl %ecx, %eax
     SET_VREG(%eax,rINST_FULL)
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
@@ -5436,7 +5439,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movswl   2(rPC),%ecx                # ecx<- ssssCCCC
     movzbl   rINST_HI,rINST_FULL        # rINST_FULL<- BA
     andb     $0xf,rINST_LO             # rINST_FULL<- A
-    xor    %ecx,%eax                              # ex: addl %ecx, %eax
+    xor    %ecx,%eax                              # for example: addl %ecx, %eax
     SET_VREG(%eax,rINST_FULL)
     FETCH_INST_WORD(2)
     ADVANCE_PC(2)
@@ -6461,8 +6464,8 @@ dvmAsmSisterStart:
      */
 .LOP_NEW_INSTANCE_abstract:
     movl    offClassObject_descriptor(%ecx),%eax
-    movl    $.LstrInstantiationError,OUT_ARG1(%esp)
-    movl    %eax,OUT_ARG0(%esp)
+    movl    $.LstrInstantiationError,OUT_ARG0(%esp)
+    movl    %eax,OUT_ARG1(%esp)
     call    dvmThrowExceptionWithClassMessage
     UNSPILL(rPC)
     jmp     common_exceptionThrown
@@ -6582,9 +6585,9 @@ dvmAsmSisterStart:
     testl  rINST_FULL,rINST_FULL
     je     4f
     UNSPILL_TMP(rPC)
-    andl   $0xf0,rPC            # rPC<- 000000B0
-    sall   $12,rPC              # rPC<- 000B0000
-    orl    %ecx,rPC              # rpc<- 000BFEDC
+    andl   $0x0f,rPC            # rPC<- 0000000A
+    sall   $16,rPC              # rPC<- 000A0000
+    orl    %ecx,rPC              # rpc<- 000AFEDC
 3:
     movl   $0xf,%ecx
     andl   rPC,%ecx           # ecx<- next reg to load
@@ -6682,9 +6685,9 @@ dvmAsmSisterStart:
     testl  rINST_FULL,rINST_FULL
     je     4f
     UNSPILL_TMP(rPC)
-    andl   $0xf0,rPC            # rPC<- 000000B0
-    sall   $12,rPC              # rPC<- 000B0000
-    orl    %ecx,rPC              # rpc<- 000BFEDC
+    andl   $0x0f,rPC            # rPC<- 0000000A
+    sall   $16,rPC              # rPC<- 000A0000
+    orl    %ecx,rPC              # rpc<- 000AFEDC
 3:
     movl   $0xf,%ecx
     andl   rPC,%ecx           # ecx<- next reg to load

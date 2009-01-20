@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.test:()I:
 regs: 0001; ins: 0000; outs: 0001
   0000: invoke-static {}, Zorch.zorch1:()V

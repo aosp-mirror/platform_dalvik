@@ -299,6 +299,7 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
         putAllImpl(map);
     }
 
+    // BEGIN android-changed
     /**
      * Removes all mappings from this hash map, leaving it empty.
      * 
@@ -308,12 +309,17 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
      */
     @Override
     public void clear() {
+        internalClear();
+    }
+
+    void internalClear() {
         if (elementCount > 0) {
             elementCount = 0;
             Arrays.fill(elementData, null);
             modCount++;
         }
     }
+    // END android-changed
 
     /**
      * Returns a shallow copy of this map.
@@ -326,9 +332,10 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     public Object clone() {
         try {
             // BEGIN android-changed
+            // copied from newer version of harmony
             HashMap<K, V> map = (HashMap<K, V>) super.clone();
-            map.elementCount = 0;
             map.elementData = newElementArray(elementData.length);
+            map.internalClear();
             Entry<K, V> entry;
             for (int i = 0; i < elementData.length; i++) {
                 if ((entry = elementData[i]) != null){
@@ -448,20 +455,26 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     final Entry<K,V> findNonNullKeyEntry(Object key, int index, int keyHash) {
         Entry<K,V> m = elementData[index];
         // BEGIN android-changed
-        while (m != null) {
-            if (m.origKeyHash == keyHash) {
-                if (key instanceof String) {
-                    // The VM can optimize String.equals but not Object.equals
-                    if (((String) key).equals(m.key)) {
+        // The VM can optimize String.equals but not Object.equals
+        if (key instanceof String) {
+            String keyString = (String) key;
+            while (m != null) {
+                if (m.origKeyHash == keyHash) {
+                    if (keyString.equals(m.key)) {
                         return m;
                     }
-                } else {
+                }
+                m = m.next;
+            }
+        } else {
+            while (m != null) {
+                if (m.origKeyHash == keyHash) {
                     if (key.equals(m.key)) {
                         return m;
                     }
                 }
+                m = m.next;
             }
-            m = m.next;
         }
         return null;
         // END android-changed

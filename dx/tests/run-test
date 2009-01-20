@@ -33,7 +33,10 @@ cd "${progdir}"
 progdir=`pwd`
 prog="${progdir}"/`basename "${prog}"`
 
-export JAVAC="${progdir}/../../../prebuilt/common/openjdk/bin/javac -version"
+export JAVAC="${progdir}/../../../prebuilt/common/openjdk/bin/javac"
+if [ "!" -e "$JAVAC" ]; then
+    JAVAC="javac"
+fi
 
 info="info.txt"
 run="run"

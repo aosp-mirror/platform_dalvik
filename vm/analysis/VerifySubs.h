@@ -67,4 +67,7 @@ void dvmLogUnableToResolveClass(const char* missingClassDescr,
 bool dvmGetBranchTarget(const Method* meth, InsnFlags* insnFlags,
     int curOffset, int* pOffset, bool* pConditional);
 
+/* return a RegType enumeration value that "value" just fits into */
+char dvmDetermineCat1Const(s4 value);
+
 #endif /*_DALVIK_VERIFYSUBS*/

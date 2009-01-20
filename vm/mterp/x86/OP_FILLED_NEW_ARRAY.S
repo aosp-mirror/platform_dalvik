@@ -89,9 +89,9 @@
     testl  rINST_FULL,rINST_FULL
     je     4f
     UNSPILL_TMP(rPC)
-    andl   $$0xf0,rPC            # rPC<- 000000B0
-    sall   $$12,rPC              # rPC<- 000B0000
-    orl    %ecx,rPC              # rpc<- 000BFEDC
+    andl   $$0x0f,rPC            # rPC<- 0000000A
+    sall   $$16,rPC              # rPC<- 000A0000
+    orl    %ecx,rPC              # rpc<- 000AFEDC
 3:
     movl   $$0xf,%ecx
     andl   rPC,%ecx           # ecx<- next reg to load

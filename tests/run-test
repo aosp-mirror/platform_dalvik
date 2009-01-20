@@ -83,6 +83,7 @@ while true; do
         run_args="${run_args} --valgrind"
         shift
     elif [ "x$1" = "x--dev" ]; then
+        run_args="${run_args} --dev"
         dev_mode="yes"
         shift
     elif [ "x$1" = "x--update" ]; then

@@ -195,6 +195,7 @@ bool dvmCheckSwitchTargets(const Method* meth, InsnFlags* insnFlags,
     const int insnCount = dvmGetMethodInsnsSize(meth);
     const u2* insns = meth->insns + curOffset;
     const u2* switchInsns;
+    u2 expectedSignature;
     int switchCount, tableSize;
     int offsetToSwitch, offsetToKeys, offsetToTargets, targ;
     int offset, absOffset;
@@ -229,12 +230,21 @@ bool dvmCheckSwitchTargets(const Method* meth, InsnFlags* insnFlags,
         /* 0=sig, 1=count, 2/3=firstKey */
         offsetToTargets = 4;
         offsetToKeys = -1;
+        expectedSignature = kPackedSwitchSignature;
     } else {
         /* 0=sig, 1=count, 2..count*2 = keys */
         offsetToKeys = 2;
         offsetToTargets = 2 + 2*switchCount;
+        expectedSignature = kSparseSwitchSignature;
     }
     tableSize = offsetToTargets + switchCount*2;
+
+    if (switchInsns[0] != expectedSignature) {
+        LOG_VFY_METH(meth,
+            "VFY: wrong signature for switch table (0x%04x, wanted 0x%04x)\n",
+            switchInsns[0], expectedSignature);
+        return false;
+    }
 
     /* make sure the end of the switch is in range */
     if (curOffset + offsetToSwitch + tableSize > insnCount) {
@@ -368,6 +378,9 @@ void dvmLogVerifyFailure(const Method* meth, const char* format, ...)
 /*
  * Show a relatively human-readable message describing the failure to
  * resolve a class.
+ *
+ * TODO: this is somewhat misleading when resolution fails because of
+ * illegal access rather than nonexistent class.
  */
 void dvmLogUnableToResolveClass(const char* missingClassDescr,
     const Method* meth)
@@ -434,4 +447,29 @@ bool dvmGetBranchTarget(const Method* meth, InsnFlags* insnFlags,
     return true;
 }
 
+/*
+ * Given a 32-bit constant, return the most-restricted RegType enum entry
+ * that can hold the value.
+ */
+char dvmDetermineCat1Const(s4 value)
+{
+    if (value < -32768)
+        return kRegTypeInteger;
+    else if (value < -128)
+        return kRegTypeShort;
+    else if (value < 0)
+        return kRegTypeByte;
+    else if (value == 0)
+        return kRegTypeZero;
+    else if (value == 1)
+        return kRegTypeOne;
+    else if (value < 128)
+        return kRegTypePosByte;
+    else if (value < 32768)
+        return kRegTypePosShort;
+    else if (value < 65536)
+        return kRegTypeChar;
+    else
+        return kRegTypeInteger;
+}
 

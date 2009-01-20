@@ -17,14 +17,10 @@
 
 package java.lang.annotation;
 
-// BEGIN android-note
-// Un-linked RetentionPolicy#RUNTIME due to clearjavadoc problem (it doesn't
-// yet deal with links to enums).
-// END android-note
-
 /**
  * Defines a meta-annotation for determining the scope of retention for an
- * annotation. The default value is {@code RetentionPolicy.RUNTIME}.
+ * annotation. If the retention annotation is not set {@code
+ * RetentionPolicy.CLASS} is used as default retention.
  * 
  * @since Android 1.0
  */
@@ -32,5 +28,8 @@ package java.lang.annotation;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
 public @interface Retention {
-    RetentionPolicy value() default RetentionPolicy.CLASS;
+    // BEGIN android-changed
+    // copied from newer version of harmony
+    RetentionPolicy value();
+    // END android-changed
 }

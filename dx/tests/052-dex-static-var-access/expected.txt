@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.test1:()Ljava/lang/Object;:
 regs: 0004; ins: 0000; outs: 0000
   0000: sget-byte v1, Blort.staticByte:B

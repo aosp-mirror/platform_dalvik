@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.test:()V:
 regs: 0018; ins: 0000; outs: 0000
   0000: const/16 v22, #int 0 // #0000

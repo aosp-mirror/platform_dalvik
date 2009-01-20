@@ -1,4 +1,3 @@
-javac 1.7.0-internal_bootstrap
 Blort.blort:(DD)V:
 regs: 000f; ins: 0005; outs: 0000
   0000: move-object v0, v10

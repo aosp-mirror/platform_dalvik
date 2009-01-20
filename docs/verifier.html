@@ -139,6 +139,12 @@ some amount of additional memory or spending additional cycles
 on non-DEX-optimized instructions.  We don't want to throw an
 IllegalAccessError at verification time, since that would indicate that
 access to the class being verified was illegal.
+<p>
+One approach that might be worth pursuing: for situations like illegal
+accesses, the verifier makes an in-RAM private copy of the method, and
+alters the instructions there.  The class object is altered to point at
+the new copy of the instructions.  This requires minimal memory overhead
+and provides a better experience for developers.
 
 <p>
 The VerifyError is accompanied by detailed, if somewhat cryptic,

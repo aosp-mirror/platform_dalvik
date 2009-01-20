@@ -2726,6 +2726,7 @@ int dexFixByteOrdering(u1* addr, int len)
     CheckState state;
     bool okay = true;
 
+    memset(&state, 0, sizeof(state));
     LOGV("+++ swapping and verifying\n");
 
     /*

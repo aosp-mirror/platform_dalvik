@@ -1,3 +1,2 @@
-java.lang.VerifyError: PublicAccess
-	at Main.main(Main.java:3)
-	at dalvik.system.NativeStart.main(Native Method)
+Got expected failure 1
+Got expected failure 2

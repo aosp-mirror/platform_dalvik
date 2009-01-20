@@ -15,17 +15,21 @@
  */
 
 /*
- * Register map declaration.
+ * Declaration of register map data structure and related functions.
  */
 #ifndef _DALVIK_REGISTERMAP
 #define _DALVIK_REGISTERMAP
 
+/*
+ * This is a single variable-size structure.  It may be allocated on the
+ * heap or mapped out of a DEX file.
+ */
 typedef struct RegisterMap {
     /* header */
     char    addrWidth;      /* bytes per address, 1 or 2 */
     char    regWidth;       /* bytes per register line, 1+ */
-    char    pad0;
-    char    pad1;
+
+    /* char pad0, pad1; */
 
     /* entries start here; 32-bit align guaranteed */
     u4      entries[1];
