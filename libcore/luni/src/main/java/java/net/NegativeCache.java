@@ -33,13 +33,16 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
 
     private static final long serialVersionUID = 1L;
 
-    static NegativeCache<String, NegCacheElement> negCache;
+    // BEGIN android-changed
+    // Copied from a newer version of harmony
+    private static NegativeCache<String, NegCacheElement> negCache;
 
     // maximum number of entries in the cache
-    static final int MAX_NEGATIVE_ENTRIES = 5;
+    private static final int MAX_NEGATIVE_ENTRIES = 5;
 
     // the loading for the cache
-    static final float LOADING = 0.75F;
+    private static final float LOADING = 0.75F;
+    // END android-changed
 
     /**
      * Returns the hostname for the cache element.
@@ -76,7 +79,10 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
      *            the message returned when the lookup fails.
      * @since Android 1.0
      */
-    static void put(String hostName, String failedMessage) {
+    static synchronized void put(String hostName, String failedMessage) {
+        // BEGIN android-note
+        // Made synchronized. copied from a newer version of harmony
+        // END android-note
         checkCacheExists();
         negCache.put(hostName, new NegCacheElement(failedMessage));
     }
@@ -91,7 +97,10 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
      *         entry has not yet expired.
      * @since Android 1.0
      */
-    static String getFailedMessage(String hostName) {
+    static synchronized String getFailedMessage(String hostName) {
+        // BEGIN android-note
+        // Made synchronized. copied from a newer version of harmony
+        // END android-note
         checkCacheExists();
         NegCacheElement element = negCache.get(hostName);
         if (element != null) {
@@ -121,7 +130,10 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
             }
         }
         if (element != null) {
-            return element.hostName();
+            // BEGIN android-changed
+            // Copied from a newer version of harmony
+            return element.hostName;
+            // END android-changed
         }
         return null;
     }
@@ -139,7 +151,10 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
      * This method checks whether the cache was already created and if not
      * creates it.
      */
-    static void checkCacheExists() {
+    static synchronized void checkCacheExists() {
+        // BEGIN android-note
+        // Made synchronized. copied from a newer version of harmony
+        // END android-note
         if (negCache == null) {
             /*
              * Create with the access order set so ordering is based on when the

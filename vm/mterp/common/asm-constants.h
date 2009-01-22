@@ -189,11 +189,11 @@ MTERP_OFFSET(offArrayObject_contents,   ArrayObject, contents, 12)
 /* ClassObject fields */
 MTERP_OFFSET(offClassObject_descriptor, ClassObject, descriptor, 24)
 MTERP_OFFSET(offClassObject_accessFlags, ClassObject, accessFlags, 32)
-MTERP_OFFSET(offClassObject_pDvmDex,    ClassObject, pDvmDex, 36)
-MTERP_OFFSET(offClassObject_status,     ClassObject, status, 40)
-MTERP_OFFSET(offClassObject_super,      ClassObject, super, 72)
-MTERP_OFFSET(offClassObject_vtableCount, ClassObject, vtableCount, 112)
-MTERP_OFFSET(offClassObject_vtable,     ClassObject, vtable, 116)
+MTERP_OFFSET(offClassObject_pDvmDex,    ClassObject, pDvmDex, 40)
+MTERP_OFFSET(offClassObject_status,     ClassObject, status, 44)
+MTERP_OFFSET(offClassObject_super,      ClassObject, super, 76)
+MTERP_OFFSET(offClassObject_vtableCount, ClassObject, vtableCount, 116)
+MTERP_OFFSET(offClassObject_vtable,     ClassObject, vtable, 120)
 
 /* InterpEntry enumeration */
 MTERP_SIZEOF(sizeofClassStatus,         InterpEntry, MTERP_SMALL_ENUM)

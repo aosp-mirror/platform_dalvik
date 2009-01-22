@@ -274,6 +274,9 @@ struct ClassObject {
     /* access flags; low 16 bits are defined by VM spec */
     u4              accessFlags;
 
+    /* VM-unique class serial number, nonzero, set very early */
+    u4              serialNumber;
+
     /* DexFile from which we came; needed to resolve constant pool entries */
     /* (will be NULL for VM-generated, e.g. arrays and primitive classes) */
     DvmDex*         pDvmDex;
@@ -382,10 +385,6 @@ struct ClassObject {
 
     /* source file name, if known */
     const char*     sourceFile;
-
-#if WITH_HPROF && WITH_HPROF_STACK
-    int             hprofSerialNumber;
-#endif
 };
 
 /*

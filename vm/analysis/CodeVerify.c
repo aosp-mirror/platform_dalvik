@@ -2406,7 +2406,15 @@ static StaticField* getStaticField(const Method* meth, int fieldIdx,
 
     staticField = dvmOptResolveStaticField(meth->clazz, fieldIdx);
     if (staticField == NULL) {
-        LOG_VFY("VFY: unable to resolve static field %u\n", fieldIdx);
+        DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
+        const DexFieldId* pFieldId;
+
+        pFieldId = dexGetFieldId(pDexFile, fieldIdx);
+
+        LOG_VFY("VFY: unable to resolve static field %u (%s) in %s\n", fieldIdx,
+            dexStringById(pDexFile, pFieldId->nameIdx),
+            dexStringByTypeIdx(pDexFile, pFieldId->classIdx));
+
         *pOkay = false;
         goto bail;
     }

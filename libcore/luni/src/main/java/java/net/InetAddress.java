@@ -124,22 +124,25 @@ public class InetAddress extends Object implements Serializable {
         this.hostName = hostName;
     }
 
-    /**
-     * Returns the IP address of the argument {@code addr} as a byte array. The
-     * elements are in network order (the highest order address byte is in the
-     * zeroth element).
-     * 
-     * @return the network address as a byte array.
-     */
-    static byte[] addressOf(int addr) {
-        int temp = addr;
-        byte array[] = new byte[4];
-        array[3] = (byte) (temp & 0xFF);
-        array[2] = (byte) ((temp >>>= 8) & 0xFF);
-        array[1] = (byte) ((temp >>>= 8) & 0xFF);
-        array[0] = (byte) ((temp >>>= 8) & 0xFF);
-        return array;
-    }
+    // BEGIN android-removed
+    // Removed in newer version of harmony
+    // /**
+    //  * Returns the IP address of the argument {@code addr} as a byte array. The
+    //  * elements are in network order (the highest order address byte is in the
+    //  * zeroth element).
+    //  * 
+    //  * @return the network address as a byte array.
+    //  */
+    // static byte[] addressOf(int addr) {
+    //     int temp = addr;
+    //     byte array[] = new byte[4];
+    //     array[3] = (byte) (temp & 0xFF);
+    //     array[2] = (byte) ((temp >>>= 8) & 0xFF);
+    //     array[1] = (byte) ((temp >>>= 8) & 0xFF);
+    //     array[0] = (byte) ((temp >>>= 8) & 0xFF);
+    //     return array;
+    // }
+    // BEGIN android-removed
 
     CacheElement cacheElement() {
         return new CacheElement();
@@ -147,7 +150,8 @@ public class InetAddress extends Object implements Serializable {
 
     /**
      * Compares this {@code InetAddress} instance against the specified address
-     * in {@code obj}.
+     * in {@code obj}. Two addresses are equal if their address byte arrays have
+     * the same length and if the bytes in the arrays are equal.
      * 
      * @param obj
      *            the object to be tested for equality.
@@ -159,12 +163,19 @@ public class InetAddress extends Object implements Serializable {
         if (obj == null) {
             return false;
         }
-        if (obj.getClass() != this.getClass()) {
+        // BEGIN android-changed
+        if (!(obj instanceof InetAddress)) {
             return false;
         }
+        // END android-changed
 
         // now check if their byte arrays match...
         byte[] objIPaddress = ((InetAddress) obj).ipaddress;
+        // BEGIN android-added
+        if (objIPaddress.length != ipaddress.length) {
+            return false;
+        }
+        // END android-added
         for (int i = 0; i < objIPaddress.length; i++) {
             if (objIPaddress[i] != this.ipaddress[i]) {
                 return false;
@@ -265,6 +276,14 @@ public class InetAddress extends Object implements Serializable {
         }
 
         byte[] hBytes = Inet6Util.createByteArrayFromIPAddressString(host);
+        // BEGIN android-added
+        // Copied from a newer version of harmony
+        if (hBytes.length == 4) {
+            return (new InetAddress[] { new Inet4Address(hBytes) });
+        } else if (hBytes.length == 16) {
+            return (new InetAddress[] { new Inet6Address(hBytes) });
+        }
+        // END android-added
         return (new InetAddress[] { new InetAddress(hBytes) });
     }
 
@@ -407,9 +426,6 @@ public class InetAddress extends Object implements Serializable {
      * @since Android 1.0
      */
     public static InetAddress getLocalHost() throws UnknownHostException {
-        // BEGIN android-changed
-        return InetAddress.LOOPBACK;
-        /*
         String host = getHostNameImpl();
         SecurityManager security = System.getSecurityManager();
         try {
@@ -420,8 +436,6 @@ public class InetAddress extends Object implements Serializable {
             return InetAddress.LOOPBACK;
         }
         return lookupHostByName(host);
-        */
-        // END android-changed
     }
 
     /**
@@ -705,14 +719,15 @@ public class InetAddress extends Object implements Serializable {
 
     class CacheElement {
         // BEGIN android-changed
-        long nanoTimeAdded = System.nanoTime();
-        // END android-changed
+        // Partly copied from a newer version of harmony
+        final long nanoTimeAdded = System.nanoTime();
 
         CacheElement next;
 
-        public CacheElement() {
+        CacheElement() {
             super();
         }
+        // END android-changed
 
         String hostName() {
             return hostName;
@@ -723,19 +738,21 @@ public class InetAddress extends Object implements Serializable {
         }
     }
 
+    // BEGIN android-changed
+    // Copied from a newer version of harmony
     static class Cache {
-        static int maxSize = 5;
+        private static int maxSize = 5;
 
         private static int size = 0;
 
         private static CacheElement head;
 
-        static void clear() {
+        static synchronized void clear() {
             size = 0;
             head = null;
         }
 
-        static void add(InetAddress value) {
+        static synchronized void add(InetAddress value) {
             CacheElement newElement = value.cacheElement();
             if (size < maxSize) {
                 size++;
@@ -746,7 +763,7 @@ public class InetAddress extends Object implements Serializable {
             head = newElement;
         }
 
-        static CacheElement get(String name) {
+        static synchronized CacheElement get(String name) {
             CacheElement previous = null;
             CacheElement current = head;
             boolean notFound = true;
@@ -762,7 +779,7 @@ public class InetAddress extends Object implements Serializable {
             return current;
         }
 
-        private static void deleteTail() {
+        private synchronized static void deleteTail() {
             if (0 == size) {
                 return;
             }
@@ -779,7 +796,7 @@ public class InetAddress extends Object implements Serializable {
             previous.next = null;
         }
 
-        private static void moveToHead(CacheElement element,
+        private synchronized static void moveToHead(CacheElement element,
                 CacheElement elementPredecessor) {
             if (null == elementPredecessor) {
                 head = element;
@@ -790,6 +807,7 @@ public class InetAddress extends Object implements Serializable {
             }
         }
     }
+    // END android-changed
 
     /**
      * Returns true if the string is a host name, false if it is an IP Address.
@@ -1229,7 +1247,10 @@ public class InetAddress extends Object implements Serializable {
             for (int i = 0; i < 4; i++) {
                 copy_address[i] = ipAddress[i];
             }
-            return new Inet4Address(ipAddress);
+            // BEGIN adnroid-changed
+            // Copied from a newer version of harmony
+            return new Inet4Address(copy_address);
+            // END android-changed
         }
 
         if (ipAddress != null && ipAddress.length == 16) {

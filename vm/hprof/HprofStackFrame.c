@@ -231,7 +231,7 @@ hprofDumpStackFrames(hprof_context_t *ctx)
         hprofAddIdToRecord(rec, hprofLookupStringId(method->name));
         hprofAddIdToRecord(rec, hprofLookupStringId(descriptor));
         hprofAddIdToRecord(rec, hprofLookupStringId(sourceFile));
-        hprofAddU4ToRecord(rec, (u4) clazz->hprofSerialNumber);
+        hprofAddU4ToRecord(rec, (u4) clazz->serialNumber);
         hprofAddU4ToRecord(rec, (u4) lineNum);
 
         dexStringCacheRelease(&cache);

@@ -145,7 +145,6 @@ getPrettyClassNameId(const char *descriptor)
     return classNameId;
 }
 
-static u4 gSerialNumber = 0x50000000;
 
 hprof_class_object_id
 hprofLookupClassId(const ClassObject *clazz)
@@ -167,12 +166,6 @@ hprofLookupClassId(const ClassObject *clazz)
     val = dvmHashTableLookup(gClassHashTable, computeClassHash(clazz),
             (void *)clazz, classCmp, true);
     assert(val != NULL);
-#if WITH_HPROF_STACK
-    /* Assign a serial number to the class */
-    if (clazz->hprofSerialNumber == 0) {
-        ((ClassObject *) clazz)->hprofSerialNumber = ++gSerialNumber;
-    }
-#endif
 
     dvmHashTableUnlock(gClassHashTable);
 
@@ -215,11 +208,7 @@ hprofDumpClasses(hprof_context_t *ctx)
              * 
              * We use the address of the class object structure as its ID.
              */
-#if WITH_HPROF_STACK
-            hprofAddU4ToRecord(rec, clazz->hprofSerialNumber);
-#else
-            hprofAddU4ToRecord(rec, ++gSerialNumber);
-#endif
+            hprofAddU4ToRecord(rec, clazz->serialNumber);
             hprofAddIdToRecord(rec, (hprof_class_object_id)clazz);
             hprofAddU4ToRecord(rec, HPROF_NULL_STACK_TRACE);
             hprofAddIdToRecord(rec, getPrettyClassNameId(clazz->descriptor));

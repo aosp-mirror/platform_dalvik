@@ -64,6 +64,11 @@ void dvmDumpBootClassPath(void);
 bool dvmClassPathContains(const ClassPathEntry* cpe, const char* path);
 
 /*
+ * Set clazz->serialNumber to the next available value.
+ */
+void dvmSetClassSerialNumber(ClassObject* clazz);
+
+/*
  * Find the class with the given descriptor.  Load it if it hasn't already
  * been.
  * 

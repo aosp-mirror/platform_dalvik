@@ -1882,8 +1882,9 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
 
         /* see if this is a pure-abstract method */
         if (dvmIsAbstractMethod(resMethod) && !dvmIsAbstractClass(resClass)) {
-            LOGW("DexOpt: pure-abstract method '%s'\n",
-                dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx));
+            LOGW("DexOpt: pure-abstract method '%s' in %s\n",
+                dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx),
+                resClass->descriptor);
             return NULL;
         }
 
