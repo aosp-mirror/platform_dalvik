@@ -432,6 +432,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
     if (newClass == NULL)
         return NULL;
     DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
+    dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = strdup(descriptor);
     newClass->descriptor = newClass->descriptorAlloc;
     newClass->super = gDvm.classJavaLangObject;
@@ -443,7 +444,6 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
     newClass->arrayDim = arrayDim;
     newClass->status = CLASS_INITIALIZED;
 #if WITH_HPROF && WITH_HPROF_STACK
-    newClass->hprofSerialNumber = 0;
     hprofFillInStackTrace(newClass);
 #endif
 
@@ -650,6 +650,7 @@ static ClassObject* createPrimitiveClass(int idx)
     if (newClass == NULL)
         return NULL;
     DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
+    dvmSetClassSerialNumber(newClass);
     newClass->accessFlags = ACC_PUBLIC | ACC_FINAL | ACC_ABSTRACT;
     newClass->primitiveType = idx;
     newClass->descriptorAlloc = NULL;
@@ -657,7 +658,6 @@ static ClassObject* createPrimitiveClass(int idx)
     //newClass->super = gDvm.classJavaLangObject;
     newClass->status = CLASS_INITIALIZED;
 #if WITH_HPROF && WITH_HPROF_STACK
-    newClass->hprofSerialNumber = 0;
     hprofFillInStackTrace(newClass);
 #endif
 

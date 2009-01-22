@@ -1,6 +1,3 @@
-This is a miscellaneous test that was imported into the new-at-the-time
-runtime test framework. The test is intended to exercise basic features,
-and as such cannot be build on top of junit, since failure of such basic
-features might disrupt junit.
-
-TODO: Real description goes here.
+This tests some facets of abstract method handling, notably situations
+where a concrete class and its abstract superclass were compiled with
+different notions about which methods are abstract.

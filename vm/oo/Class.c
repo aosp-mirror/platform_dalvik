@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Class loading, including bootstrap class loader, linking, and
  * initialization.
@@ -284,6 +285,12 @@ bool dvmClassStartup(void)
         exit(0);
     }
 
+    /*
+     * Class serial number.  We start with a high value to make it distinct
+     * in binary dumps (e.g. hprof).
+     */
+    gDvm.classSerialNumber = 0x50000000;
+
 
     /* This placeholder class is used while a ClassObject is
      * loading/linking so those not in the know can still say
@@ -298,6 +305,7 @@ bool dvmClassStartup(void)
      */
     DVM_OBJECT_INIT(&unlinkedClass->obj, NULL);
     unlinkedClass->descriptor = "!unlinkedClass";
+    dvmSetClassSerialNumber(unlinkedClass);
 
     gDvm.unlinkedJavaLangClass = unlinkedClass;
 
@@ -1061,6 +1069,27 @@ static void removeClassFromHash(ClassObject* clazz)
  */
 
 /*
+ * Set clazz->serialNumber to the next available value.
+ *
+ * This usually happens *very* early in class creation, so don't expect
+ * anything else in the class to be ready.
+ */
+void dvmSetClassSerialNumber(ClassObject* clazz)
+{
+    u4 oldValue, newValue;
+
+    assert(clazz->serialNumber == 0);
+
+    do {
+        oldValue = gDvm.classSerialNumber;
+        newValue = oldValue + 1;
+    } while (!ATOMIC_CMP_SWAP(&gDvm.classSerialNumber, oldValue, newValue));
+
+    clazz->serialNumber = (u4) oldValue;
+}
+
+
+/*
  * Find the named class (by descriptor), using the specified
  * initiating ClassLoader.
  *
@@ -1600,6 +1629,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
      */
     DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
 
+    dvmSetClassSerialNumber(newClass);
     newClass->descriptor = descriptor;
     assert(newClass->descriptorAlloc == NULL);
     newClass->accessFlags = pClassDef->accessFlags;
@@ -4291,6 +4321,7 @@ Object* dvmGetSystemClassLoader(void)
 static int dumpClass(void* vclazz, void* varg)
 {
     const ClassObject* clazz = (const ClassObject*) vclazz;
+    const ClassObject* super;
     int flags = (int) varg;
     char* desc;
     int i;
@@ -4319,16 +4350,21 @@ static int dumpClass(void* vclazz, void* varg)
         return 0;
     }
 
-    LOGI("----- %s '%s' cl=%p -----\n",
+    /* clazz->super briefly holds the superclass index during class prep */
+    if ((u4)clazz->super > 0x10000 && (u4) clazz->super != (u4)-1)
+        super = clazz->super;
+    else
+        super = NULL;
+
+    LOGI("----- %s '%s' cl=%p ser=0x%08x -----\n",
         dvmIsInterfaceClass(clazz) ? "interface" : "class",
-        clazz->descriptor, clazz->classLoader);
+        clazz->descriptor, clazz->classLoader, clazz->serialNumber);
     LOGI("  objectSize=%d (%d from super)\n", (int) clazz->objectSize,
-        clazz->super != NULL ? (int) clazz->super->objectSize : 0);
+        super != NULL ? (int) super->objectSize : -1);
     LOGI("  access=0x%04x.%04x\n", clazz->accessFlags >> 16,
         clazz->accessFlags & JAVA_FLAGS_MASK);
-    if (clazz->super != NULL)
-        LOGI("  super='%s' (cl=%p)\n",
-            clazz->super->descriptor, clazz->super->classLoader);
+    if (super != NULL)
+        LOGI("  super='%s' (cl=%p)\n", super->descriptor, super->classLoader);
     if (dvmIsArrayClass(clazz)) {
         LOGI("  dimensions=%d elementClass=%s\n",
             clazz->arrayDim, clazz->elementClass->descriptor);
@@ -4354,7 +4390,7 @@ static int dumpClass(void* vclazz, void* varg)
     }
     if (!dvmIsInterfaceClass(clazz)) {
         LOGI("  vtable (%d entries, %d in super):\n", clazz->vtableCount,
-            clazz->super != NULL ? clazz->super->vtableCount : 0);
+            super != NULL ? super->vtableCount : 0);
         for (i = 0; i < clazz->vtableCount; i++) {
             desc = dexProtoCopyMethodDescriptor(&clazz->vtable[i]->prototype);
             LOGI("    %s%2d: %p %20s %s\n",

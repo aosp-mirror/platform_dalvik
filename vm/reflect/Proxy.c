@@ -181,6 +181,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     if (newClass == NULL)
         goto bail;
     DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
+    dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = dvmNameToDescriptor(nameStr);
     newClass->descriptor = newClass->descriptorAlloc;
     newClass->accessFlags = ACC_PUBLIC | ACC_FINAL;
@@ -188,7 +189,6 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     newClass->primitiveType = PRIM_NOT;
     newClass->classLoader = loader;
 #if WITH_HPROF && WITH_HPROF_STACK
-    newClass->hprofSerialNumber = 0;
     hprofFillInStackTrace(newClass);
 #endif
 

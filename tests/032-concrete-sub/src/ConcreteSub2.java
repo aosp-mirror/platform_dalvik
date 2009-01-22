@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,13 @@
  */
 
 /**
- * Abstract base class.
+ * Test conversion of a concrete method to an abstract method.  This class
+ * will fail verification because there is no implementation of the
+ * abstractOrNot() method.
  */
-public abstract class AbstractBase {
+public class ConcreteSub2 extends AbstractBase {
     public void doStuff() {
-        System.out.println("In AbstractBase.doStuff (src2)");
-        redefineMe();
+        abstractOrNot();
     }
-
-    public abstract void redefineMe();
-
-    public abstract void abstractOrNot();
 }
 

@@ -144,6 +144,9 @@ public class Socket {
      *             if the host name could not be resolved into an IP address.
      * @throws IOException
      *             if an error occurs while creating the socket.
+     * @throws SecurityException
+     *             if a security manager exists and it denies the permission to
+     *             connect to the given address and port.
      * @since Android 1.0
      */
     public Socket(String dstName, int dstPort) throws UnknownHostException,
@@ -160,6 +163,8 @@ public class Socket {
      * the socket is bound to the given address {@code localAddress} on port
      * {@code localPort}.
      * 
+     * If {@code host} is {@code null} a loopback address is used to connect to.
+     * 
      * @param dstName
      *            the target host name or IP address to connect to.
      * @param dstPort
@@ -172,6 +177,9 @@ public class Socket {
      *             if the host name could not be resolved into an IP address.
      * @throws IOException
      *             if an error occurs while creating the socket.
+     * @throws SecurityException
+     *             if a security manager exists and it denies the permission to
+     *             connect to the given address and port.
      * @since Android 1.0
      */
     public Socket(String dstName, int dstPort, InetAddress localAddress,
@@ -198,6 +206,9 @@ public class Socket {
      *             if the host name could not be resolved into an IP address.
      * @throws IOException
      *             if an error occurs while creating the socket.
+     * @throws SecurityException
+     *             if a security manager exists and it denies the permission to
+     *             connect to the given address and port.
      * @deprecated Use {@code Socket(String, int)} instead of this for streaming
      *             sockets or an appropriate constructor of {@code
      *             DatagramSocket} for UDP transport.
@@ -223,6 +234,9 @@ public class Socket {
      *            the port on the target host to connect to.
      * @throws IOException
      *             if an error occurs while creating the socket.
+     * @throws SecurityException
+     *             if a security manager exists and it denies the permission to
+     *             connect to the given address and port.
      * @since Android 1.0
      */
     public Socket(InetAddress dstAddress, int dstPort) throws IOException {
@@ -247,6 +261,9 @@ public class Socket {
      *            the port on the local host to bind to.
      * @throws IOException
      *             if an error occurs while creating the socket.
+     * @throws SecurityException
+     *             if a security manager exists and it denies the permission to
+     *             connect to the given address and port.
      * @since Android 1.0
      */
     public Socket(InetAddress dstAddress, int dstPort,
@@ -270,6 +287,9 @@ public class Socket {
      *            socket otherwise.
      * @throws IOException
      *             if an error occurs while creating the socket.
+     * @throws SecurityException
+     *             if a security manager exists and it denies the permission to
+     *             connect to the given address and port.
      * @deprecated Use {@code Socket(InetAddress, int)} instead of this for
      *             streaming sockets or an appropriate constructor of {@code
      *             DatagramSocket} for UDP transport.
@@ -309,7 +329,9 @@ public class Socket {
         if (dstPort < 0 || dstPort > 65535) {
             throw new IllegalArgumentException(Msg.getString("K0032")); //$NON-NLS-1$
         }
-        checkConnectPermission(destAddr.getHostName(), dstPort);
+        // BEGIN android-changed
+        checkConnectPermission(destAddr.getHostAddress(), dstPort);
+        // END android-changed
     }
 
     /**

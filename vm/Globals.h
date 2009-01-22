@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Variables with library scope.
  *
@@ -130,6 +131,15 @@ struct DvmGlobals {
      * allocated in GC space.
      */
     HashTable*  loadedClasses;
+
+    /*
+     * Value for the next class serial number to be assigned.  This is
+     * incremented as we load classes.  Failed loads and races may result
+     * in some numbers being skipped, and the serial number is not
+     * guaranteed to start at 1, so the current value should not be used
+     * as a count of loaded classes.
+     */
+    volatile int classSerialNumber;
 
     /*
      * Interned strings.

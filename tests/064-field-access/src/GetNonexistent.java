@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-/**
- * Abstract base class.
- */
-public abstract class AbstractBase {
-    public void doStuff() {
-        System.out.println("In AbstractBase.doStuff (src2)");
-        redefineMe();
+public class GetNonexistent {
+    public static void main(String[] args) {
+        Object obj = Holder.mObject;
     }
-
-    public abstract void redefineMe();
-
-    public abstract void abstractOrNot();
 }
 
