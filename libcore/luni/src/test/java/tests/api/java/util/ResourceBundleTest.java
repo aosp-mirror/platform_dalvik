@@ -21,7 +21,6 @@ import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.KnownFailure;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -139,7 +138,6 @@ public class ResourceBundleTest extends junit.framework.TestCase {
         method = "getBundle",
         args = {java.lang.String.class, java.util.Locale.class, java.lang.ClassLoader.class}
     )
-    @KnownFailure("ToT fixed")
     public void test_getBundleLjava_lang_StringLjava_util_LocaleLjava_lang_ClassLoader() {
         String classPath = System.getProperty("java.class.path");
         StringTokenizer tok = new StringTokenizer(classPath, File.pathSeparator);

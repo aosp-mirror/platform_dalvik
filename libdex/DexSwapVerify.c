@@ -2794,6 +2794,21 @@ int dexFixByteOrdering(u1* addr, int len)
 
     if (okay) {
         /*
+         * Compute the adler32 checksum and compare it to what's stored in
+         * the file.  This isn't free, but chances are good that we just
+         * unpacked this from a jar file and have all of the pages sitting
+         * in memory, so it's pretty quick.
+         */
+        u4 adler = dexComputeChecksum(pHeader);
+        if (adler != pHeader->checksum) {
+            LOGE("ERROR: bad checksum (%08x vs %08x)\n",
+                adler, pHeader->checksum);
+            okay = false;
+        }
+    }
+
+    if (okay) {
+        /*
          * Look for the map. Swap it and then use it to find and swap
          * everything else.
          */

@@ -408,7 +408,6 @@ public class ProviderTest extends TestCase {
         method = "remove",
         args = {java.lang.Object.class}
     )
-    @KnownFailure("AccessController/AccessControlContext grants Permissions by default")    
     public final void testRemoveObject() {
         Object o = p.remove("MessageDigest.SHA-1");
         if (!"SomeClassName".equals(o)) {

@@ -65,10 +65,6 @@ public class SerializationStressTest4 extends SerializationStressTest {
         }
     }
 
-    public SerializationStressTest4(String name) {
-        super(name);
-    }
-
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "Verifies serialization.",

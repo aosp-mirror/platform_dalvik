@@ -1909,6 +1909,8 @@ static void freeMethodInnards(Method* meth)
     free(meth->lines);
     free(meth->locals);
 #else
+    // TODO: call dvmFreeRegisterMap() if meth->registerMap was allocated
+    //       on the system heap
     UNUSED_PARAMETER(meth);
 #endif
 }
@@ -4249,6 +4251,32 @@ void dvmSetNativeFunc(const Method* method, DalvikBridgeFunc func,
 
     ((Method*)method)->nativeFunc = func;
     ((Method*)method)->insns = insns;
+
+    dvmLinearReadOnly(clazz->classLoader, clazz->virtualMethods);
+    dvmLinearReadOnly(clazz->classLoader, clazz->directMethods);
+}
+
+/*
+ * Add a RegisterMap to a Method.  This is done when we verify the class
+ * and compute the register maps at class initialization time, which means
+ * that "pMap" is on the heap and should be freed when the Method is
+ * discarded.
+ */
+void dvmSetRegisterMap(Method* method, const RegisterMap* pMap)
+{
+    ClassObject* clazz = method->clazz;
+
+    if (method->registerMap != NULL) {
+        LOGW("WARNING: registerMap already set for %s.%s\n",
+            method->clazz->descriptor, method->name);
+        /* keep going */
+    }
+
+    /* might be virtual or direct */
+    dvmLinearReadWrite(clazz->classLoader, clazz->virtualMethods);
+    dvmLinearReadWrite(clazz->classLoader, clazz->directMethods);
+
+    method->registerMap = pMap;
 
     dvmLinearReadOnly(clazz->classLoader, clazz->virtualMethods);
     dvmLinearReadOnly(clazz->classLoader, clazz->directMethods);

@@ -17,10 +17,18 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-//import android.access.IPropertyChangeEvent;
-//import android.access.;
-import dalvik.annotation.*;
 
+
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
+
+import junit.framework.TestCase;
+
+import org.apache.harmony.logging.tests.java.util.logging.HandlerTest.NullOutputStream;
+import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,12 +43,6 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.LoggingPermission;
-
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
-
-import org.apache.harmony.logging.tests.java.util.logging.HandlerTest.NullOutputStream;
-import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
 
 /**
  * 
@@ -426,7 +428,12 @@ public class LogManagerTest extends TestCase {
     public void test_addLoggerLLogger_Security() throws Exception {
         // regression test for Harmony-1286
         SecurityManager originalSecurityManager = System.getSecurityManager();
-        System.setSecurityManager(new SecurityManager());
+        System.setSecurityManager(new SecurityManager() {
+            @Override
+            public void checkPermission(Permission perm) {
+                
+            }
+        });
         try {
             LogManager manager = LogManager.getLogManager();
             manager.addLogger(new MockLogger("mock", null));
@@ -461,6 +468,7 @@ public class LogManagerTest extends TestCase {
         assertEquals(Level.FINE, root.getLevel());
         assertEquals("", root.getName());
         assertSame(root.getParent(), null);
+        // This test sometimes fails if other tests are run before this one.
         assertNull(root.getResourceBundle());
         assertNull(root.getResourceBundleName());
         assertTrue(root.getUseParentHandlers());
@@ -777,6 +785,7 @@ public class LogManagerTest extends TestCase {
         assertEquals(0, root.getHandlers().length);
         assertEquals(Level.INFO, root.getLevel());
         manager.readConfiguration(EnvironmentHelper.PropertiesToInputStream(props));
+        manager.reset();
     }
 
     @TestTargetNew(
@@ -858,33 +867,32 @@ public class LogManagerTest extends TestCase {
         args = {java.io.InputStream.class}
     )
     public void testReadConfigurationInputStream() throws IOException {
-        // mock LogManager
-        InputStream stream = EnvironmentHelper.PropertiesToInputStream(props);
-        
+
         Logger foo = new MockLogger(FOO, null);
         assertNull(foo.getLevel());
         assertTrue(mockManager.addLogger(foo));
 
-        Logger fo = new MockLogger("LogManagerTestFoo2", null);
+        Logger fo = new MockLogger(FOO + "2", null);
         fo.setLevel(Level.ALL);
         assertTrue(mockManager.addLogger(fo));
 
         Handler h = new ConsoleHandler();
         Level l = h.getLevel();
-        assertSame(Level.OFF, h.getLevel());
+        assertSame(Level.INFO, h.getLevel());
 
         // read configuration from stream
+        InputStream stream = EnvironmentHelper.PropertiesToInputStream(props);
         mockManager.readConfiguration(stream);
         stream.close();
 
-        // level DO has effect
+        // level DOES have an effect on LogManagerTestFoo
         assertEquals(Level.WARNING, foo.getLevel());
 
         // for non specified logger, level is reset to null
         assertNull(fo.getLevel());
 
         // read properties don't affect handler
-        assertSame(Level.OFF, h.getLevel());
+        assertSame(Level.INFO, h.getLevel());
         assertSame(l, h.getLevel());
     }
 
@@ -925,7 +933,6 @@ public class LogManagerTest extends TestCase {
         args = {java.io.InputStream.class}
     )
     public void testReadConfigurationInputStream_root() throws IOException {
-        InputStream stream = EnvironmentHelper.PropertiesToInputStream(props);
         manager.readConfiguration(EnvironmentHelper.PropertiesToInputStream(props));
 
         Logger logger = new MockLogger("testReadConfigurationInputStream_root.foo", null);
@@ -946,12 +953,14 @@ public class LogManagerTest extends TestCase {
         // }
 
         // after read stream
+        InputStream stream = EnvironmentHelper.PropertiesToInputStream(props);
         manager.readConfiguration(stream);
+        stream.close();
         assertEquals(Level.FINE, root.getLevel());
         assertEquals(2, root.getHandlers().length);
         assertNull(logger.getLevel());
         assertEquals(0, logger.getHandlers().length);
-        stream.close();
+        manager.reset();
     }
 
     //    public void testAddRemovePropertyChangeListener() throws Exception {
@@ -1126,6 +1135,7 @@ public class LogManagerTest extends TestCase {
             assertEquals(Level.FINE, manager.getLogger("").getLevel());
         } finally {
             System.setErr(err);
+            manager.reset();
         }
 
     }
@@ -1219,6 +1229,7 @@ public class LogManagerTest extends TestCase {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            manager.reset();
         }
     }
 
@@ -1250,6 +1261,7 @@ public class LogManagerTest extends TestCase {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            manager.reset();
         }
     }
 
@@ -1295,6 +1307,7 @@ public class LogManagerTest extends TestCase {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            manager.reset();
         }
     }
 

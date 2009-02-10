@@ -244,7 +244,8 @@ public class Identity2Test extends junit.framework.TestCase {
         args = {java.lang.String.class, java.security.IdentityScope.class}
     )
     public void test_ConstructorLjava_lang_StringLjava_security_IdentityScope() {
-        String[] str = {"test", "", "!@#$%^&*()", "identity name", null};
+        String nameNull = null;
+        String[] str = {"test", "", "!@#$%^&*()", "identity name"};
         IdentityScopeSubclass iss = new IdentityScopeSubclass("name");
         IdentitySubclass is;
         
@@ -254,8 +255,16 @@ public class Identity2Test extends junit.framework.TestCase {
                 assertNotNull(is);
                 assertTrue(is instanceof Identity);
             } catch (Exception e) {
+                System.out.println(e);
                 fail("Unexpected exception for parameter " + str[i]);
             }
+        }
+        
+        try {
+            is = new IdentitySubclass(nameNull, new IdentityScopeSubclass());
+        } catch (NullPointerException npe) {
+        } catch (Exception e) {
+            fail("Incorrect exception " + e + " was thrown");
         }
         
         try {

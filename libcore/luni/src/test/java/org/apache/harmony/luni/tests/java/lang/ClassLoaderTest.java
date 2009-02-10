@@ -18,6 +18,7 @@
 package org.apache.harmony.luni.tests.java.lang;
 
 import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -123,7 +124,9 @@ public class ClassLoaderTest extends TestCase {
         method = "clearAssertionStatus",
         args = {}
     )
-    @KnownFailure("clearAssertionStatus method is not supported.")
+    @AndroidOnly("clearAssertionStatus method is not supported.")
+    @BrokenTest("Android doesn't support assertions to be activated through " +
+            "the api")
     public void test_clearAssertionStatus() {
         String className = getClass().getPackage().getName() + ".TestAssertions";
         String className1 = getClass().getPackage().getName() + ".TestAssertions1";
@@ -399,8 +402,8 @@ public class ClassLoaderTest extends TestCase {
         method = "loadClass",
         args = {java.lang.String.class}
     )
-    @KnownFailure("Both threads try to define class; " +
-            "findClass method is not supported.")
+    @BrokenTest("Both threads try to define class. But defineClass is not " +
+            "supported on Adnroid. so both seem to succeed defining the class.")
     public void test_loadClass_concurrentLoad() throws Exception 
     {    
         Object lock = new Object();
@@ -552,6 +555,8 @@ public class ClassLoaderTest extends TestCase {
             fail("IOException getting stream for resource : " + e.getMessage());
         }
         
+        
+        
         assertNull(ClassLoader.getSystemClassLoader().
                 getResource("not.found.resource"));
     }
@@ -602,7 +607,7 @@ public class ClassLoaderTest extends TestCase {
      * @tests java.lang.ClassLoader#getSystemClassLoader()
      */
     @TestTargetNew(
-        level = TestLevel.COMPLETE,
+        level = TestLevel.SUFFICIENT,
         notes = "",
         method = "getSystemClassLoader",
         args = {}
@@ -611,6 +616,7 @@ public class ClassLoaderTest extends TestCase {
         // Test for method java.lang.ClassLoader
         // java.lang.ClassLoader.getSystemClassLoader()
         ClassLoader cl = ClassLoader.getSystemClassLoader();
+
         java.io.InputStream is = cl.getResourceAsStream("hyts_Foo.c");
         assertNotNull("Failed to find resource from system classpath", is);
         try {
@@ -618,6 +624,44 @@ public class ClassLoaderTest extends TestCase {
         } catch (java.io.IOException e) {
         }
 
+        SecurityManager sm = new SecurityManager() {
+            public void checkPermission(Permission perm) {
+                if(perm.getName().equals("getClassLoader")) {
+                   throw new SecurityException(); 
+                }
+            }
+        };    
+        
+        SecurityManager oldManager = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            ClassLoader.getSystemClassLoader();
+        } catch(SecurityException se) {
+            //expected
+        } finally {
+            System.setSecurityManager(oldManager);
+        }
+/* 
+ *       // java.lang.Error is not thrown on RI, but it's specified.  
+ *       
+ *       String keyProp = "java.system.class.loader";
+ *       String oldProp = System.getProperty(keyProp);
+ *       System.setProperty(keyProp, "java.test.UnknownClassLoader");
+ *       boolean isFailed = false;
+ *       try {
+ *           ClassLoader.getSystemClassLoader();
+ *           isFailed = true;
+ *       } catch(java.lang.Error e) {
+ *           //expected
+ *       } finally {
+ *           if(oldProp == null) {
+ *               System.clearProperty(keyProp);
+ *           }  else {
+ *               System.setProperty(keyProp, oldProp);
+ *           }
+ *       }
+ *       assertFalse("java.lang.Error was not thrown.", isFailed);
+ */       
     }
 
     /**
@@ -700,7 +744,6 @@ public class ClassLoaderTest extends TestCase {
         method = "getSystemResources",
         args = {java.lang.String.class}
     )
-    @KnownFailure("Can't find existent resource.")
     public void test_getSystemResources() {
         
         String textResource = "HelloWorld.txt";
@@ -726,6 +769,7 @@ public class ClassLoaderTest extends TestCase {
         method = "getPackage",
         args = {java.lang.String.class}
     )
+    @KnownFailure("PackageClassLoader.getPackage returns null.")
     public void test_getPackageLjava_lang_String() {
         PackageClassLoader pcl = new PackageClassLoader();
         
@@ -761,8 +805,9 @@ public class ClassLoaderTest extends TestCase {
         method = "getPackages",
         args = {}
     )
-    @KnownFailure("ClassCastException is thrown during casting Object " +
-            "to Package.")
+    @KnownFailure("The package canot be found. Seems like the cache is not"
+            + "shared between the class loaders. But this test seems to"
+            + "expect exactly that. this tests works on the RI.")
     public void test_getPackages() {
         
         PackageClassLoader pcl = new PackageClassLoader();
@@ -842,7 +887,6 @@ public class ClassLoaderTest extends TestCase {
         method = "getResources",
         args = {java.lang.String.class}
     )
-    @KnownFailure("Can't find existent resource.")
     public void test_getResourcesLjava_lang_String() {
         Enumeration<java.net.URL> urls = null;
         FileInputStream fis = null;
@@ -939,6 +983,7 @@ public class ClassLoaderTest extends TestCase {
         method = "findClass",
         args = {java.lang.String.class}
     )
+    @AndroidOnly("findClass method throws ClassNotFoundException exception.")
     public void test_findClass(){
         
         try {
@@ -964,6 +1009,7 @@ public class ClassLoaderTest extends TestCase {
         method = "findLibrary",
         args = {java.lang.String.class}
     )
+    @AndroidOnly("findLibrary method is not supported, it returns null.")
     public void test_findLibrary() {
         PackageClassLoader pcl = new PackageClassLoader();
         assertNull(pcl.findLibrary("libjvm.so"));
@@ -975,6 +1021,7 @@ public class ClassLoaderTest extends TestCase {
         method = "findResource",
         args = {java.lang.String.class}
     )
+    @AndroidOnly("findResource method is not supported, it returns null.")    
     public void test_findResourceLjava_lang_String() {
         assertNull(new PackageClassLoader().findResource("hyts_Foo.c"));
     }
@@ -985,6 +1032,8 @@ public class ClassLoaderTest extends TestCase {
         method = "findResources",
         args = {java.lang.String.class}
     )
+    @AndroidOnly("findResources method is not supported, it returns " +
+            "empty Enumeration.")      
     public void test_findResourcesLjava_lang_String() throws IOException {
         assertFalse(new PackageClassLoader().findResources("hyts_Foo.c").
                 hasMoreElements());

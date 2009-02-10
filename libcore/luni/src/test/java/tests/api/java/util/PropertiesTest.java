@@ -17,11 +17,10 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -202,7 +201,6 @@ public class PropertiesTest extends junit.framework.TestCase {
         method = "load",
         args = {java.io.InputStream.class}
     )
-    @KnownFailure("ToT fixed")
     public void test_loadLjava_io_InputStream() throws IOException {
         Properties prop = new Properties();
         InputStream is = new ByteArrayInputStream(writeProperties());
@@ -389,7 +387,7 @@ public class PropertiesTest extends junit.framework.TestCase {
         method = "loadFromXML",
         args = {java.io.InputStream.class}
     )
-    @KnownFailure("ToT fixed")
+    @KnownFailure("ToT fixed?")
     public void test_loadFromXMLLjava_io_InputStream() throws IOException {
         Properties myProps = new Properties();
         myProps.put("Property A", " aye\\\f\t\n\r\b");

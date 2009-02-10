@@ -251,5 +251,5 @@ public class ProcessManagerTest extends TestCase {
             String[] commands = { "doesnotexist" };
             Runtime.getRuntime().exec(commands, null, null);
         } catch (IOException e) { /* expected */ }
-    }    
+    }
 }

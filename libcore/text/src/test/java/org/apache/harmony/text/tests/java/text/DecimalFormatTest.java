@@ -61,6 +61,82 @@ public class DecimalFormatTest extends TestCase {
                 .isEmpty());
     }
 
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "formatToCharacterIterator",
+        args = {java.lang.Object.class}
+    )
+    @KnownFailure("formatting numbers with more than ~300 digits doesn't work."
+            + " Also the third test doesn't round the string like the RI does")
+    public void test_formatToCharacterIterator() throws Exception {
+        AttributedCharacterIterator iterator;
+        int[] runStarts;
+        int[] runLimits;
+        String result;
+        char current;
+
+        iterator = new DecimalFormat()
+                .formatToCharacterIterator(new BigDecimal("1.23456789E1234"));
+        runStarts = new int[] {0, 0, 2, 3, 3, 3, 6, 7, 7, 7, 10, 11, 11, 11, 14};
+        runLimits = new int[] {2, 2, 3, 6, 6, 6, 7, 10, 10, 10, 11, 14, 14, 14, 15};
+        result = "12,345,678,900,"; // 000,000,000,000....
+        current = iterator.current();
+        for (int i = 0; i < runStarts.length; i++) {
+            assertEquals("wrong start @" + i, runStarts[i], iterator.getRunStart());
+            assertEquals("wrong limit @" + i, runLimits[i], iterator.getRunLimit());
+            assertEquals("wrong char @" + i, result.charAt(i), current);
+            current = iterator.next();
+        }
+        assertEquals(0, iterator.getBeginIndex());
+        assertEquals(1646, iterator.getEndIndex());
+
+        iterator = new DecimalFormat()
+                .formatToCharacterIterator(new BigDecimal("1.23456789E301"));
+        runStarts = new int[] {0, 0, 2, 3, 3, 3, 6, 7, 7, 7, 10, 11, 11, 11, 14};
+        runLimits = new int[] {2, 2, 3, 6, 6, 6, 7, 10, 10, 10, 11, 14, 14, 14, 15};
+        result = "12,345,678,900,"; // 000,000,000,000....
+        current = iterator.current();
+        for (int i = 0; i < runStarts.length; i++) {
+            assertEquals("wrong start @" + i, runStarts[i], iterator.getRunStart());
+            assertEquals("wrong limit @" + i, runLimits[i], iterator.getRunLimit());
+            assertEquals("wrong char @" + i, result.charAt(i), current);
+            current = iterator.next();
+        }
+        assertEquals(0, iterator.getBeginIndex());
+        assertEquals(402, iterator.getEndIndex());
+
+        iterator = new DecimalFormat()
+                .formatToCharacterIterator(new BigDecimal("1.2345678E4"));
+        runStarts = new int[] {0, 0, 2, 3, 3, 3, 6, 7, 7, 7};
+        runLimits = new int[] {2, 2, 3, 6, 6, 6, 7, 10, 10, 10};
+        result = "12,345.678";
+        current = iterator.current();
+        for (int i = 0; i < runStarts.length; i++) {
+            assertEquals("wrong start @" + i, runStarts[i], iterator.getRunStart());
+            assertEquals("wrong limit @" + i, runLimits[i], iterator.getRunLimit());
+            assertEquals("wrong char @" + i, result.charAt(i), current);
+            current = iterator.next();
+        }
+        assertEquals(0, iterator.getBeginIndex());
+        assertEquals(10, iterator.getEndIndex());
+
+        iterator = new DecimalFormat()
+                .formatToCharacterIterator(new BigInteger("123456789"));
+        runStarts = new int[] {0, 0, 0, 3, 4, 4, 4, 7, 8, 8, 8};
+        runLimits = new int[] {3, 3, 3, 4, 7, 7, 7, 8, 11, 11, 11};
+        result = "123,456,789";
+        current = iterator.current();
+        for (int i = 0; i < runStarts.length; i++) {
+            assertEquals("wrong start @" + i, runStarts[i], iterator.getRunStart());
+            assertEquals("wrong limit @" + i, runLimits[i], iterator.getRunLimit());
+            assertEquals("wrong char @" + i, result.charAt(i), current);
+            current = iterator.next();
+        }
+        assertEquals(0, iterator.getBeginIndex());
+        assertEquals(11, iterator.getEndIndex());
+    }
+
     /*
      * Test the getter and setter of parseBigDecimal and parseIntegerOnly and
      * test the default value of them.
@@ -673,12 +749,12 @@ public class DecimalFormatTest extends TestCase {
         } catch (IllegalArgumentException e) {
             // expected
         }
-
+        
         FieldPosition pos;
         StringBuffer out;
         DecimalFormat format = (DecimalFormat) NumberFormat
                 .getInstance(Locale.US);
-
+        
         // format maxLong
         pos = new FieldPosition(0);
         out = format.format(new Long(Long.MAX_VALUE), new StringBuffer(), pos);
@@ -1745,33 +1821,34 @@ public class DecimalFormatTest extends TestCase {
         method = "format",
         args = {double.class}
     )
-    @BrokenTest("This test should take into account (inexact) double representation. Fails on Both RI and Android at different places.")
+    @KnownFailure("This test should take into account (inexact) double " +
+            "representation. Fails on Both RI and Android at different places." +
+            "There is ticket for this failure because of parseDouble method " +
+            "returns different values on Android and RI.")
     public void test_formatD() {
         DecimalFormat format = (DecimalFormat) NumberFormat
                 .getInstance(Locale.ENGLISH);
         format.setGroupingUsed(false);
         format.setMaximumFractionDigits(400);
 
-// Funny! This one fails against RI, but succeeds with us:
-//
-//        for (int i = 0; i < 309; i++) {
-//            String tval = "1";
-//            for (int j = 0; j < i; j++)
-//                tval += "0";
-//            double d = Double.parseDouble(tval);
-//            String result = format.format(d);
-//            assertEquals(i + ") e:" + tval + " r:" + result, tval, result);
-//        }
+        for (int i = 0; i < 309; i++) {
+            String tval = "1";
+            for (int j = 0; j < i; j++)
+                tval += "0";
+            double d = Double.parseDouble(tval);
+            String result = format.format(d);
+            assertEquals(i + ") e:" + tval + " r:" + result, tval, result);
+        }
 
-//        for (int i = 0; i < 322; i++) {
-//            String tval = "0.";
-//            for (int j = 0; j < i; j++)
-//                tval += "0";
-//            tval += "1";
-//            double d = Double.parseDouble(tval);
-//            String result = format.format(d);
-//            assertEquals(i + ") e:" + tval + " r:" + result, tval, result);
-//        }
+        for (int i = 0; i < 322; i++) {
+            String tval = "0.";
+            for (int j = 0; j < i; j++)
+                tval += "0";
+            tval += "1";
+            double d = Double.parseDouble(tval);
+            String result = format.format(d);
+            assertEquals(i + ") e:" + tval + " r:" + result, tval, result);
+        }
         assertEquals("123456789012345", format.format(123456789012345.));
         assertEquals("1", "12345678901234.5", format.format(12345678901234.5));
         assertEquals("2", "1234567890123.25", format.format(1234567890123.25));

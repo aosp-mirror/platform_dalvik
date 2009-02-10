@@ -2338,7 +2338,7 @@ public class FileTest extends junit.framework.TestCase {
     )
     public void test_toURI2() {
 
-        File f = new File(System.getProperty("ctsdir"), "a/b/c/../d/e/./f");
+        File f = new File(System.getProperty("java.io.tmpdir"), "a/b/c/../d/e/./f");
 
         String path = f.getAbsolutePath();
         path = path.replace(File.separatorChar, '/');

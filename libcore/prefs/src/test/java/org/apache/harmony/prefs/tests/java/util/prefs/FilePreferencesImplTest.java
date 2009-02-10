@@ -16,7 +16,9 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -107,8 +109,11 @@ public class FilePreferencesImplTest extends TestCase {
         method = "childrenNames",
         args = {}
     )
-    @BrokenTest("Checking of childNames.length is not valid because of " +
-            "it depends on .userPrefs")
+    @AndroidOnly("Checking of childNames.length doesn't pass on RI because of " +
+            "it depends on .userPrefs properties.")
+    @KnownFailure("This test fails on emulator. " +
+            "java.util.prefs.BackingStoreException is thrown during calling of" +
+            "childrenNames() method.")
     public void testChildNodes() throws Exception {
         
         Preferences child1 = uroot.node("child1");

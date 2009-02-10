@@ -18,7 +18,6 @@
 package org.apache.harmony.luni.tests.java.lang;
 
 import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -83,8 +82,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "ThreadGroup",
         args = {java.lang.String.class}
     )
-    @KnownFailure("Security checking is missed. " +
-            "checkAccess method should be invoked.")
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.ThreadGroup(java.lang.String)
 
@@ -131,8 +128,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "ThreadGroup",
         args = {java.lang.ThreadGroup.class, java.lang.String.class}
     )
-    @KnownFailure("Security checking is missed. " +
-            "checkAccess method should be invoked.")
     public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_String() {
         // Test for method java.lang.ThreadGroup(java.lang.ThreadGroup,
         // java.lang.String)
@@ -207,8 +202,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "activeCount",
         args = {}
     )
-    @KnownFailure("Active thread count is not increased after starting of " +
-            "the thread from ThreadGroup.")
     public void test_activeCount() {
         // Test for method int java.lang.ThreadGroup.activeCount()
         ThreadGroup tg = new ThreadGroup("activeCount");
@@ -250,7 +243,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
                 0, tg.activeGroupCount());
         Thread t1 = new Thread(tg, new Runnable() {
             public void run() {
-                // TODO Auto-generated method stub
+
             }
         });
         assertEquals("Incorrect number of groups",
@@ -293,8 +286,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "checkAccess",
         args = {}
     )
-    @KnownFailure("Security checking is missed. " +
-            "checkAccess method should be invoked.")
     public void test_checkAccess() {
         // Test for method void java.lang.ThreadGroup.checkAccess()
 
@@ -334,8 +325,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "enumerate",
         args = {java.lang.Thread[].class}
     )
-    @KnownFailure("Security checking is missed. " +
-            "checkAccess method should be invoked.")    
     public void test_enumerateLThreadArray() {
         int numThreads = initialThreadGroup.activeCount();
         Thread[] listOfThreads = new Thread[numThreads];
@@ -362,7 +351,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "enumerate",
         args = {java.lang.Thread[].class, boolean.class}
     )
-    @KnownFailure("Depends of activeCount failure.")     
     public void test_enumerateLThreadArrayLZ() {
         int numThreads = initialThreadGroup.activeCount();
         Thread[] listOfThreads = new Thread[numThreads];
@@ -440,8 +428,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "enumerate",
         args = {java.lang.ThreadGroup[].class}
     )
-    @KnownFailure("Security checking is missed. " +
-            "checkAccess method should be invoked.")     
     public void test_enumerateLThreadGroupArray() {
         int numGroupThreads = initialThreadGroup.activeGroupCount();
         ThreadGroup[] listOfGroups = new ThreadGroup[numGroupThreads];
@@ -480,8 +466,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "enumerate",
         args = {java.lang.ThreadGroup[].class, boolean.class}
     )
-    @KnownFailure("Security checking is missed. " +
-            "checkAccess method should be invoked.")     
     public void test_enumerateLThreadGroupArrayLZ() {
         ThreadGroup thrGroup = new ThreadGroup("Test Group 1");
         Vector<MyThread> subThreads = populateGroupsWithThreads(thrGroup, 3);
@@ -551,8 +535,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "destroy",
         args = {}
     )
-    @KnownFailure("the daemon thread group is not get destroyed " + 
-            " if the last daemon's child is destroyed.")
     public void test_destroy() {
         // Test for method void java.lang.ThreadGroup.destroy()
 
@@ -773,7 +755,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "getParent",
         args = {}
     )
-    @KnownFailure("checkAccess method is called with incorrect group???")  
     public void test_getParent() {
         // Test for method java.lang.ThreadGroup
         // java.lang.ThreadGroup.getParent()
@@ -838,8 +819,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "interrupt",
         args = {}
     )    
-    @KnownFailure("Security checking is missed. " +
-            "checkAccess method should be invoked.")     
     public void test_interrupt() {
 
         Thread.setDefaultUncaughtExceptionHandler(this);
@@ -1019,7 +998,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "resume",
         args = {}
     )
-   @KnownFailure("Failure depends on activeCount().")  
    @SuppressWarnings("deprecation")
    @AndroidOnly("Thread.resume is implemented on some RI")
     public void test_resume() throws OutOfMemoryError {
@@ -1087,8 +1065,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "setDaemon",
         args = {boolean.class}
     )
-    @KnownFailure("Security checking is missed. " +
-            "checkAccess method should be invoked.")     
     public void test_setDaemonZ() {
         // Test for method void java.lang.ThreadGroup.setDaemon(boolean)
         daemonTests();
@@ -1119,8 +1095,6 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "setMaxPriority",
         args = {int.class}
     )
-    @KnownFailure("Security checking is missed. " +
-            "checkAccess method should be invoked.")      
     public void test_setMaxPriorityI() {
         // Test for method void java.lang.ThreadGroup.setMaxPriority(int)
         final ThreadGroup originalCurrent = getInitialThreadGroup();

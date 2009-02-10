@@ -31,6 +31,6 @@
  * way classes load changes, e.g. field ordering or vtable layout.  Changing
  * this guarantees that the optimized form of the DEX file is regenerated.
  */
-#define DALVIK_VM_BUILD         13
+#define DALVIK_VM_BUILD         14
 
 #endif /*_DALVIK_VERSION*/

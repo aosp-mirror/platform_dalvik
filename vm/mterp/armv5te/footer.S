@@ -694,7 +694,7 @@ strPrintLong:
 .LstrDivideByZero:
     .asciz  "divide by zero"
 .LstrFilledNewArrayNotImpl:
-    .asciz  "filled-new-array only implemented for 'int'"
+    .asciz  "filled-new-array only implemented for objects and 'int'"
 .LstrInternalError:
     .asciz  "Ljava/lang/InternalError;"
 .LstrInstantiationError:

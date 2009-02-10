@@ -22,6 +22,7 @@
 
 package tests.security.cert;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -644,6 +645,8 @@ public class TrustAnchorTest extends TestCase {
         method = "toString",
         args = {}
     )
+    @KnownFailure("java.lang.RuntimeException is thrown during " +
+            "TrustAnchor.toString() method.")
     public final void testToString() throws Exception {
         PublicKey pk = new TestKeyPair(keyAlg).getPublic();
         TrustAnchor ta1 = new TrustAnchor(validCaNameRfc2253, pk,

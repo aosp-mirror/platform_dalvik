@@ -238,6 +238,7 @@ static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getciphe
 
     SSL_free(ssl);
     SSL_CTX_free(ssl_ctx);
+    return result;
 }
 
 /**
@@ -261,6 +262,7 @@ static JNINativeMethod sMethods[] =
     {"nativegetpeerhost", "()Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeerhost},
     {"nativegetpeerport", "()Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeerport},
     {"nativegetprotocol", "()Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getprotocol},
+    {"nativegetciphersuite", "()Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getciphersuite},
     {"nativegetpeercertificates", "()[[B", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeercertificates},
     {"nativefree", "(I)V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_free}
 };

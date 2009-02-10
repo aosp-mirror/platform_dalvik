@@ -225,7 +225,6 @@ public class CollatorTest extends junit.framework.TestCase {
         method = "getAvailableLocales",
         args = {}
     )
-    @KnownFailure("Already fixed?")
     public void test_getAvailableLocales() {
         Locale[] locales = Collator.getAvailableLocales();
         assertTrue("No locales", locales.length > 0);
@@ -277,7 +276,6 @@ public class CollatorTest extends junit.framework.TestCase {
         method = "getDecomposition",
         args = {}
     )
-    @KnownFailure("Already fixed?")
     public void test_getDecomposition() {
         RuleBasedCollator collator;
         try {

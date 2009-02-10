@@ -2035,7 +2035,6 @@ public class BidiTest extends TestCase {
         String RTL = "\u05DC\u05DD";
         String newLine = "\n";
         String defText = LTR + newLine + RTL + LTR + RTL;
-        System.out.println(defText);
 
         int[][] expectedRuns = { { 0, 3 }, { 3, 5 }, { 5, 7 }, { 7, 9 }, };
 
