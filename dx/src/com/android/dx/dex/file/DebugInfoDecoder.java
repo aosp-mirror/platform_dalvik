@@ -478,7 +478,7 @@ public class DebugInfoDecoder {
                 /*
                  * If an entry is a method parameter, then the original
                  * entry may not be marked as starting at 0. However, the
-                 * end address shuld still match.
+                 * end address should still match.
                  */
                 if ((entry.start == le.getStart()
                         || (entry.start == 0 && entry.reg >= paramBase))

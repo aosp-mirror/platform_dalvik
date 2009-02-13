@@ -28,6 +28,8 @@
 #include <string.h>
 #include "cutils/log.h"
 
+#define LOG_TAG "DecimalFormatInterface"
+
 static UBool icuError(JNIEnv *env, UErrorCode errorcode)
 {
     const char *emsg = u_errorName(errorcode);
@@ -499,26 +501,18 @@ static jstring formatDouble(JNIEnv *env, jclass clazz, jint addr, jdouble value,
 
     return resulting;
 }
-    
+
 static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring value, 
         jobject field, jstring fieldType, jobject attributes, jint scale) {
 
-    //const char * valueUTF = env->GetStringUTFChars(value, NULL);
-    //LOGI("ENTER formatDigitList: %s", valueUTF);
-    //env->ReleaseStringUTFChars(value, valueUTF);
+    // const char * valueUTF = env->GetStringUTFChars(value, NULL);
+    // LOGI("ENTER formatDigitList: %s, scale: %d", valueUTF, scale);
+    // env->ReleaseStringUTFChars(value, valueUTF);
 
-    // prepare the classes and method ids
-    const char * fieldPositionClassName = "java/text/FieldPosition";
-    const char * stringBufferClassName = "java/lang/StringBuffer";
-    jclass fieldPositionClass = env->FindClass(fieldPositionClassName);
-    jclass stringBufferClass = env->FindClass(stringBufferClassName);
-    jmethodID setBeginIndexMethodID = env->GetMethodID(fieldPositionClass, 
-            "setBeginIndex", "(I)V");
-    jmethodID setEndIndexMethodID = env->GetMethodID(fieldPositionClass, 
-            "setEndIndex", "(I)V");
-    jmethodID appendMethodID = env->GetMethodID(stringBufferClass, 
-            "append", "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
-
+    if (scale < 0) {
+        icuError(env, U_ILLEGAL_ARGUMENT_ERROR);
+        return NULL;
+    }
 
     const char * fieldName = NULL;
     if(fieldType != NULL) {
@@ -527,21 +521,22 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
 
     uint32_t reslenneeded;
 
-    jboolean isInteger = (scale == 0);
+    bool isInteger = (scale == 0);
 
     // prepare digit list
 
     const char *digits = env->GetStringUTFChars(value, NULL);
+
     // length must be string lengt + 2 because there's an additional
     // character in front of the string ("+" or "-") and a \0 at the end
-    DigitList *digitList = new DigitList(strlen(digits) + 2);
-    digitList->fCount = strlen(digits);
-    strcpy(digitList->fDigits, digits);
+    DigitList digitList(strlen(digits) + 2);
+    digitList.fCount = strlen(digits);
+    strcpy(digitList.fDigits, digits);
     env->ReleaseStringUTFChars(value, digits);
 
-    digitList->fDecimalAt = digitList->fCount - scale;
-    digitList->fIsPositive = (*digits != '-');
-    digitList->fRoundingMode = DecimalFormat::kRoundHalfUp;
+    digitList.fDecimalAt = digitList.fCount - scale;
+    digitList.fIsPositive = (*digits != '-');
+    digitList.fRoundingMode = DecimalFormat::kRoundHalfUp;
 
     UChar *result = NULL;
 
@@ -560,32 +555,35 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
 
     DecimalFormat *fmt = (DecimalFormat *)(int)addr;
 
-    UnicodeString *res = new UnicodeString();
+    UnicodeString res;
 
-    fmt->subformat(*res, fp, attrBuffer, *digitList, isInteger);
-    delete digitList;
+    fmt->subformat(res, fp, attrBuffer, digitList, isInteger);
 
-    reslenneeded = res->extract(NULL, 0, status);
+    reslenneeded = res.extract(NULL, 0, status);
 
     if(status==U_BUFFER_OVERFLOW_ERROR) {
         status=U_ZERO_ERROR;
 
         result = (UChar*)malloc(sizeof(UChar) * (reslenneeded + 1));    
 
-        res->extract(result, reslenneeded + 1, status);
+        res.extract(result, reslenneeded + 1, status);
 
         if (icuError(env, status) != FALSE) {
+            if(fieldType != NULL) {
+                env->ReleaseStringUTFChars(fieldType, fieldName);
+            }
             free(result);
             free(attrBuffer->buffer);
             free(attrBuffer);
-            delete(res);
             return NULL;
         }
 
     } else {
+        if(fieldType != NULL) {
+            env->ReleaseStringUTFChars(fieldType, fieldName);
+        }
         free(attrBuffer->buffer);
         free(attrBuffer);
-        delete(res);
         return NULL;        
     }
 
@@ -595,6 +593,12 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
 
         // check if we want to get all attributes
         if(attributes != NULL) {
+            // prepare the classes and method ids
+            const char * stringBufferClassName = "java/lang/StringBuffer";
+            jclass stringBufferClass = env->FindClass(stringBufferClassName);
+            jmethodID appendMethodID = env->GetMethodID(stringBufferClass, 
+                    "append", "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+
             jstring attrString = env->NewStringUTF(attrBuffer->buffer + 1);  // cut off the leading ';'
             env->CallObjectMethod(attributes, appendMethodID, attrString);
         }
@@ -612,6 +616,18 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
             }
 
             if(resattr != NULL && strcmp(resattr, fieldName) == 0) {
+
+                // prepare the classes and method ids
+                const char * fieldPositionClassName =
+                        "java/text/FieldPosition";
+                jclass fieldPositionClass = env->FindClass(
+                        fieldPositionClassName);
+                jmethodID setBeginIndexMethodID = env->GetMethodID(
+                        fieldPositionClass, "setBeginIndex", "(I)V");
+                jmethodID setEndIndexMethodID = env->GetMethodID(
+                       fieldPositionClass, "setEndIndex", "(I)V");
+
+
                 resattr = strtok(NULL, delimiter);
                 begin = (int) strtol(resattr, NULL, 10);
                 resattr = strtok(NULL, delimiter);
@@ -632,11 +648,9 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
     free(attrBuffer->buffer);
     free(attrBuffer);
     free(result);
-    delete(res);
-
-    //const char * resultUTF = env->GetStringUTFChars(resulting, NULL);
-    //LOGI("RETURN formatDigitList: %s", resultUTF);
-    //env->ReleaseStringUTFChars(resulting, resultUTF);
+    // const char * resultUTF = env->GetStringUTFChars(resulting, NULL);
+    // LOGI("RETURN formatDigitList: %s", resultUTF);
+    // env->ReleaseStringUTFChars(resulting, resultUTF);
 
     return resulting;
 }

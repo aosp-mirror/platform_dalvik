@@ -55,8 +55,12 @@ import static com.android.dx.dex.file.DebugInfoConstants.*;
 public final class DebugInfoEncoder {
     private static final boolean DEBUG = false;
 
+    /** null-ok; positions (line numbers) to encode */
     private final PositionList positionlist;
+
+    /** null-ok; local variables to encode */
     private final LocalList locallist;
+
     private final ByteArrayAnnotatedOutput output;
     private final DexFile file;
     private final int codeSize;
@@ -92,8 +96,8 @@ public final class DebugInfoEncoder {
     /**
      * Creates an instance.
      *
-     * @param pl null-ok
-     * @param ll null-ok
+     * @param pl null-ok; positions (line numbers) to encode
+     * @param ll null-ok; local variables to encode
      * @param file null-ok; may only be <code>null</code> if simply using
      * this class to do a debug print
      * @param codeSize
@@ -104,7 +108,6 @@ public final class DebugInfoEncoder {
     public DebugInfoEncoder(PositionList pl, LocalList ll,
             DexFile file, int codeSize, int regSize,
             boolean isStatic, CstMethodRef ref) {
-
         this.positionlist = pl;
         this.locallist = ll;
         this.file = file;
@@ -242,9 +245,9 @@ public final class DebugInfoEncoder {
              * Figure out what the next important address is.
              */
 
-            int nextAddrLS = Integer.MAX_VALUE;
-            int nextAddrLE = Integer.MAX_VALUE;
-            int nextAddrP = Integer.MAX_VALUE;
+            int nextAddrLS = Integer.MAX_VALUE; // local start
+            int nextAddrLE = Integer.MAX_VALUE; // local end
+            int nextAddrP = Integer.MAX_VALUE;  // position (line number)
 
             if (curls < szl) {
                 nextAddrLS = sortedLocalsStart.get(curls).getStart();
@@ -285,26 +288,7 @@ public final class DebugInfoEncoder {
 
         emitEndSequence();
 
-        byte[] result = output.toByteArray();
-        
-        if (DEBUG) {
-            int origSize = 0;
-            int newSize = result.length;
-
-            if (positionlist != null) {
-                origSize +=  (positionlist.size() * 6);
-            }
-
-            if (locallist != null) {
-                origSize += (4 * 5 * locallist.size());
-            }
-
-            System.err.printf(
-                    "Lines+Locals table was %d bytes is now %d bytes\n",
-                    origSize, newSize);
-        }
-        
-        return result;
+        return output.toByteArray();
     }
 
     /**
@@ -348,14 +332,15 @@ public final class DebugInfoEncoder {
                         System.err.printf("skip local end v%d\n",
                                 sortedLocalsEnd.get(curle).getRegister());
                     }
-                    curle++;
                     break;
                 }
             }
 
             if (!skipLocalEnd) {
-                emitLocalEnd(sortedLocalsEnd.get(curle++));
+                emitLocalEnd(sortedLocalsEnd.get(curle));
             }
+
+            curle++;
         }
         return curle;
     }
@@ -377,7 +362,8 @@ public final class DebugInfoEncoder {
         while (curls < szl
                 && sortedLocalsStart.get(curls).getStart() == address) {
             LocalList.Entry lle = sortedLocalsStart.get(curls++);
-            LocalList.Entry prevlle = lastEntryForReg[lle.getRegister()];
+            int reg = lle.getRegister();
+            LocalList.Entry prevlle = lastEntryForReg[reg];
 
             if (lle == prevlle) {
                 /*
@@ -386,19 +372,24 @@ public final class DebugInfoEncoder {
                  * lastEntryForReg array.
                  */
                 continue;
-            } else if (prevlle != null && lle.matches(prevlle)) {
+            } 
+
+            // At this point we have a new live entry one way or another.
+            lastEntryForReg[reg] = lle;
+
+            if ((prevlle != null) && lle.matches(prevlle)) {
                 if (prevlle.getEnd() == lle.getStart()) {
                     /*
-                     * An adjacent range with the same register.
-                     * The previous emitLocalEndsAtAddress() call skipped
-                     * this local end, so we'll skip this local start as well.
+                     * There is nothing more to do in this case: It's
+                     * an adjacent range with the same register. The
+                     * previous emitLocalEndsAtAddress() call skipped
+                     * this local end, so we'll skip this local start
+                     * as well.
                      */
-                    continue;
                 } else {
                     emitLocalRestart(lle);
                 }
             } else {
-                lastEntryForReg[lle.getRegister()] = lle;
                 emitLocalStart(lle);
             }
         }
@@ -817,7 +808,7 @@ public final class DebugInfoEncoder {
 
         output.writeByte(DBG_START_LOCAL);
 
-        emitUnsignedLeb128 (entry.getRegister());
+        emitUnsignedLeb128(entry.getRegister());
         emitStringIndex(entry.getName());
         emitTypeIndex(entry.getType());
 
@@ -846,7 +837,7 @@ public final class DebugInfoEncoder {
 
         output.writeByte(DBG_START_LOCAL_EXTENDED);
 
-        emitUnsignedLeb128 (entry.getRegister());
+        emitUnsignedLeb128(entry.getRegister());
         emitStringIndex(entry.getName());
         emitTypeIndex(entry.getType());
         emitStringIndex(entry.getSignature());
@@ -939,7 +930,7 @@ public final class DebugInfoEncoder {
 
         if (annotateTo != null || debugPrint != null) {
             annotate(1,
-                    String.format ("%04x: line %d", address, line));
+                    String.format("%04x: line %d", address, line));
         }
     }
 
@@ -958,10 +949,10 @@ public final class DebugInfoEncoder {
         if (deltaLines < DBG_LINE_BASE
                 || deltaLines > (DBG_LINE_BASE + DBG_LINE_RANGE -1)) {
 
-            throw new RuntimeException ("Parameter out of range");            
+            throw new RuntimeException("Parameter out of range");            
         }
 
-        return  (deltaLines - DBG_LINE_BASE)
+        return (deltaLines - DBG_LINE_BASE)
             + (DBG_LINE_RANGE * deltaAddress) + DBG_FIRST_SPECIAL;
     }
 
