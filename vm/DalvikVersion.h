@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Dalvik VM version info.
  */
@@ -24,7 +25,7 @@
  */
 #define DALVIK_MAJOR_VERSION    1
 #define DALVIK_MINOR_VERSION    0
-#define DALVIK_BUG_VERSION      0
+#define DALVIK_BUG_VERSION      1
 
 /*
  * VM build number.  This must change whenever something that affects the

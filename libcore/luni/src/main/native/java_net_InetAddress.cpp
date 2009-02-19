@@ -104,11 +104,16 @@ static jobjectArray getAllByNameUsingDns(JNIEnv* env, const char* name,
 
     memset(&hints, 0, sizeof(hints));
     /*
+     * IPv4 only for now until the socket code supports IPv6; otherwise, the
+     * resolver will create two separate requests, one for IPv4 and one,
+     * currently unnecessary, for IPv6.
+     */
+    hints.ai_family = AF_INET;
+    /*
      * If we don't specify a socket type, every address will appear twice, once
      * for SOCK_STREAM and one for SOCK_DGRAM. Since we do not return the family
      * anyway, just pick one.
      */
-    hints.ai_family = preferIPv4Stack ? AF_INET : AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
     int result = getaddrinfo(name, NULL, &hints, &addressList);

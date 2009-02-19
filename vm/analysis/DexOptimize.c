@@ -799,7 +799,8 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
 
     magic = optHdr.magic;
     if (memcmp(magic, DEX_OPT_MAGIC, 4) != 0) {
-        LOGW("DexOpt: incorrect opt magic number (0x%02x %02x %02x %02x)\n",
+        /* not a DEX file, or previous attempt was interrupted */
+        LOGD("DexOpt: incorrect opt magic number (0x%02x %02x %02x %02x)\n",
             magic[0], magic[1], magic[2], magic[3]);
         goto bail;
     }

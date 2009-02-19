@@ -99,8 +99,8 @@ public final class LocalList extends FixedSizeList {
                 }
 
                 state = newState;
-            } else if (insn instanceof LocalIntroduction) {
-                RegisterSpec newSpec = ((LocalIntroduction) insn).getLocal();
+            } else if (insn instanceof LocalStart) {
+                RegisterSpec newSpec = ((LocalStart) insn).getLocal();
                 RegisterSpec oldSpec = state.get(newSpec);
 
                 boolean oldEnds = false;

@@ -227,7 +227,7 @@ public class InetAddress extends Object implements Serializable {
             if (security != null) {
                 security.checkConnect(host, -1);
             }
-
+            // BEGIN android-changed
             byte[][] rawAddresses = getallbyname(host,
                                                  Socket.preferIPv4Stack());
             InetAddress[] returnedAddresses = new
@@ -248,6 +248,7 @@ public class InetAddress extends Object implements Serializable {
 
             // ok we may have to re-order to make sure the
             // preferIPv6Addresses is respected
+            // END android-changed
             InetAddress[] orderedAddresses = null;
             if (returnedAddresses != null) {
                 orderedAddresses = new InetAddress[returnedAddresses.length];
@@ -525,20 +526,21 @@ public class InetAddress extends Object implements Serializable {
         return anInetAddress;
     }
 
-    // BEGIN android-changed
+    // BEGIN android-added
     /**
      * Multiplies value by 1 billion.
      */
     private static long secondsToNanos(int ttl) {
         return (long) ttl * 1000000000;
     }
-    // END android-changed
+    // END android-added
 
     // BEGIN android-deleted
     // static native InetAddress[] getAliasesByNameImpl(String name)
     //     throws UnknownHostException;
     // END android-deleted
 
+    // BEGIN android-changed
     /**
      * Resolves a host name to its IP addresses. Thread safe.
      */
@@ -579,7 +581,8 @@ public class InetAddress extends Object implements Serializable {
      * exception, so this value should not be used as an argument. See also
      * inetAddr(String).
      */
-//    static native int inetAddrImpl(String host) throws UnknownHostException;
+    // BEGIN android-changed
+    // static native int inetAddrImpl(String host) throws UnknownHostException;
     static int inetAddrImpl(String host) throws UnknownHostException {
         // TODO Probably not exactly what we want, and also inefficient. Provide native later.
         try {
@@ -595,12 +598,14 @@ public class InetAddress extends Object implements Serializable {
             throw new UnknownHostException(host);
         }
     }
+    // END android-changed
 
     /**
      * Convert a binary address into a string containing an Ipv4 Internet
      * Protocol dotted address.
      */
-//    static native String inetNtoaImpl(int hipAddr);
+    // BEGIN android-changed
+    // static native String inetNtoaImpl(int hipAddr);
     static String inetNtoaImpl(int hipAddr) {
         // TODO Inefficient and probably wrong. Provide proper (native?) implementation later.
         int a = (hipAddr >> 24) & 0xFF;
@@ -610,6 +615,7 @@ public class InetAddress extends Object implements Serializable {
         
         return "" + a + "." + b + "." + c + "." + d;
     }
+    // END android-changed
 
     /**
      * Query the IP stack for the host address. The host is in string name form.
