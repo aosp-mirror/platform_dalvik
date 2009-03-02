@@ -465,10 +465,6 @@ const char* getClassDescriptor(DexFile* pDexFile, u4 classIdx)
 void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
     int insnWidth, const DecodedInstruction* pDecInsn)
 {
-    static const float gSpecialTab[16] = {
-        -2.0f, -1.0f, -0.5f, -0.25f, -0.1f, 0.1f, 0.25f, 0.5f,
-        1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 10.0f, 100.0f, 1000.0f
-    };
     const u2* insns = pCode->insns;
     int i;
 
