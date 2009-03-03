@@ -56,10 +56,10 @@ public final class DebugInfoEncoder {
     private static final boolean DEBUG = false;
 
     /** null-ok; positions (line numbers) to encode */
-    private final PositionList positions;
+    private final PositionList positionlist;
 
     /** null-ok; local variables to encode */
-    private final LocalList locals;
+    private final LocalList locallist;
 
     private final ByteArrayAnnotatedOutput output;
     private final DexFile file;
@@ -108,8 +108,8 @@ public final class DebugInfoEncoder {
     public DebugInfoEncoder(PositionList pl, LocalList ll,
             DexFile file, int codeSize, int regSize,
             boolean isStatic, CstMethodRef ref) {
-        this.positions = pl;
-        this.locals = ll;
+        this.positionlist = pl;
+        this.locallist = ll;
         this.file = file;
         output = new ByteArrayAnnotatedOutput();
         this.desc = ref.getPrototype();
@@ -193,11 +193,18 @@ public final class DebugInfoEncoder {
     
     private byte[] convert0() throws IOException {
         ArrayList<PositionList.Entry> sortedPositions = buildSortedPositions();
-        ArrayList<LocalList.Entry> methodArgs = extractMethodArguments();
+        ArrayList<LocalList.Entry> sortedLocalsStart = buildLocalsStart();
+
+        // Parameter locals are removed from sortedLocalsStart here.
+        ArrayList<LocalList.Entry> methodArgs
+                = extractMethodArguments(sortedLocalsStart);
+
+        ArrayList<LocalList.Entry> sortedLocalsEnd
+                = buildLocalsEnd(sortedLocalsStart);
 
         emitHeader(sortedPositions, methodArgs);
 
-        // TODO: Make this mark be the actual prologue end.
+        // TODO: Make this mark the actual prologue end.
         output.writeByte(DBG_SET_PROLOGUE_END);
 
         if (annotateTo != null || debugPrint != null) {
@@ -205,37 +212,56 @@ public final class DebugInfoEncoder {
         }
 
         int szp = sortedPositions.size();
-        int szl = locals.size();
+        int szl = sortedLocalsStart.size();
 
         // Current index in sortedPositions
         int curp = 0;
-        // Current index in locals
-        int curl = 0;
+        // Current index in sortedLocalsStart
+        int curls = 0;
+        // Current index in sortedLocalsEnd
+        int curle = 0;
 
         for (;;) {
             /*
              * Emit any information for the current address.
              */
 
-            curl = emitLocalsAtAddress(curl);
+            curle = emitLocalEndsAtAddress(curle, sortedLocalsEnd, curls,
+                    sortedLocalsStart);
+
+            /*
+             * Our locals-sorted-by-range-end has reached the end
+             * of the code block. Ignore everything else.
+             */
+            if (address == codeSize) {
+                curle = szl;
+            }
+
+            curls = emitLocalStartsAtAddress(curls, sortedLocalsStart);
+
             curp = emitPositionsAtAddress(curp, sortedPositions);
 
             /*
              * Figure out what the next important address is.
              */
 
-            int nextAddrL = Integer.MAX_VALUE; // local variable
-            int nextAddrP = Integer.MAX_VALUE; // position (line number)
+            int nextAddrLS = Integer.MAX_VALUE; // local start
+            int nextAddrLE = Integer.MAX_VALUE; // local end
+            int nextAddrP = Integer.MAX_VALUE;  // position (line number)
 
-            if (curl < szl) {
-                nextAddrL = locals.get(curl).getAddress();
+            if (curls < szl) {
+                nextAddrLS = sortedLocalsStart.get(curls).getStart();
+            }
+
+            if (curle < szl) {
+                nextAddrLE = sortedLocalsEnd.get(curle).getEnd();
             }
 
             if (curp < szp) {
                 nextAddrP = sortedPositions.get(curp).getAddress();
             }
 
-            int next = Math.min(nextAddrP, nextAddrL);
+            int next = Math.min(nextAddrP, Math.min(nextAddrLS, nextAddrLE));
 
             // No next important address == done.
             if (next == Integer.MAX_VALUE) {
@@ -247,7 +273,7 @@ public final class DebugInfoEncoder {
              * block, stop here. Those are implied anyway.
              */
             if (next == codeSize
-                    && nextAddrL == Integer.MAX_VALUE
+                    && nextAddrLS == Integer.MAX_VALUE
                     && nextAddrP == Integer.MAX_VALUE) {
                 break;                
             }
@@ -266,24 +292,76 @@ public final class DebugInfoEncoder {
     }
 
     /**
-     * Emits all local variable activity that occurs at the current
-     * {@link #address} starting at the given index into {@code
-     * locals} and including all subsequent activity at the same
-     * address.
+     * Emits all local ends that occur at the current <code>address</code>
      *
-     * @param curl Current index in locals
-     * @return new value for <code>curl</code>
+     * @param curle Current index in sortedLocalsEnd
+     * @param sortedLocalsEnd Locals, sorted by ascending end address
+     * @param curls Current index in sortedLocalsStart
+     * @param sortedLocalsStart Locals, sorted by ascending start address
+     * @return new value for <code>curle</code>
      * @throws IOException
      */
-    private int emitLocalsAtAddress(int curl)
+    private int emitLocalEndsAtAddress(int curle,
+            ArrayList<LocalList.Entry> sortedLocalsEnd, int curls,
+            ArrayList<LocalList.Entry> sortedLocalsStart)
             throws IOException {
-        int sz = locals.size();
 
-        // TODO: Don't emit ends implied by starts.
+        int szl = sortedLocalsEnd.size();
 
-        while ((curl < sz)
-                && (locals.get(curl).getAddress() == address)) {
-            LocalList.Entry lle = locals.get(curl++);
+        // Ignore "local ends" at end of code.
+        while (curle < szl
+                && sortedLocalsEnd.get(curle).getEnd() == address
+                && address != codeSize) {
+
+            boolean skipLocalEnd = false;
+
+            /*
+             * Check to see if there's a range-start that appears at
+             * the same address for the same register. If so, the
+             * end-range is implicit so skip it.
+             */
+            for (int j = curls; j < szl
+                    && sortedLocalsStart.get(j).getStart() == address
+                    ; j++) {
+
+                if (sortedLocalsStart.get(j).getRegister()
+                        == sortedLocalsEnd.get(curle).getRegister()) {
+                    skipLocalEnd = true;
+
+                    if (DEBUG) {
+                        System.err.printf("skip local end v%d\n",
+                                sortedLocalsEnd.get(curle).getRegister());
+                    }
+                    break;
+                }
+            }
+
+            if (!skipLocalEnd) {
+                emitLocalEnd(sortedLocalsEnd.get(curle));
+            }
+
+            curle++;
+        }
+        return curle;
+    }
+
+    /**
+     * Emits all local starts that occur at the current <code>address</code>
+     *
+     * @param curls Current index in sortedLocalsStart
+     * @param sortedLocalsStart Locals, sorted by ascending start address
+     * @return new value for <code>curls</code>
+     * @throws IOException
+     */
+    private int emitLocalStartsAtAddress(int curls,
+            ArrayList<LocalList.Entry> sortedLocalsStart)
+            throws IOException {
+
+        int szl = sortedLocalsStart.size();
+
+        while (curls < szl
+                && sortedLocalsStart.get(curls).getStart() == address) {
+            LocalList.Entry lle = sortedLocalsStart.get(curls++);
             int reg = lle.getRegister();
             LocalList.Entry prevlle = lastEntryForReg[reg];
 
@@ -296,45 +374,26 @@ public final class DebugInfoEncoder {
                 continue;
             } 
 
-            // At this point we have a new entry one way or another.
+            // At this point we have a new live entry one way or another.
             lastEntryForReg[reg] = lle;
 
-            if (lle.isStart()) {
-                if ((prevlle != null) && lle.matches(prevlle)) {
+            if ((prevlle != null) && lle.matches(prevlle)) {
+                if (prevlle.getEnd() == lle.getStart()) {
                     /*
-                     * The previous local in this register has the same
-                     * name and type as the one being introduced now, so
-                     * use the more efficient "restart" form.
+                     * There is nothing more to do in this case: It's
+                     * an adjacent range with the same register. The
+                     * previous emitLocalEndsAtAddress() call skipped
+                     * this local end, so we'll skip this local start
+                     * as well.
                      */
-                    if (prevlle.isStart()) {
-                        /*
-                         * We should never be handed a start when a
-                         * a matching local is already active.
-                         */
-                        throw new RuntimeException("shouldn't happen");
-                    }
-                    emitLocalRestart(lle);
                 } else {
-                    emitLocalStart(lle);
+                    emitLocalRestart(lle);
                 }
             } else {
-                /*
-                 * Only emit a local end if it is *not* due to a direct
-                 * replacement. Direct replacements imply an end of the
-                 * previous local in the same register.
-                 * 
-                 * TODO: Make sure the runtime can deal with implied
-                 * local ends from category-2 interactions, and when so,
-                 * also stop emitting local ends for those cases.
-                 */
-                if (lle.getDisposition()
-                        != LocalList.Disposition.END_REPLACED) {
-                    emitLocalEnd(lle);
-                }
+                emitLocalStart(lle);
             }
         }
-
-        return curl;
+        return curls;
     }
 
     /**
@@ -465,7 +524,7 @@ public final class DebugInfoEncoder {
          * a LOCAL_RESTART_EXTENDED
          */
 
-        for (LocalList.Entry arg : lastEntryForReg) {
+        for (LocalList.Entry arg: lastEntryForReg) {
             if (arg == null) {
                 continue;
             }
@@ -484,11 +543,11 @@ public final class DebugInfoEncoder {
      * @return A sorted positions list
      */
     private ArrayList<PositionList.Entry> buildSortedPositions() {
-        int sz = (positions == null) ? 0 : positions.size();
+        int sz = (positionlist == null) ? 0 : positionlist.size();
         ArrayList<PositionList.Entry> result = new ArrayList(sz);
 
         for (int i = 0; i < sz; i++) {
-            result.add(positions.get(i));
+            result.add(positionlist.get(i));
         }
 
         // Sort ascending by address.
@@ -502,6 +561,58 @@ public final class DebugInfoEncoder {
             }
         });
         return result;
+    }
+
+    /**
+     * Builds a list of locals entries sorted by ascending start address.
+     *
+     * @return A sorted locals list list
+     */
+    private ArrayList<LocalList.Entry> buildLocalsStart() {
+        int sz = (locallist == null) ? 0 : locallist.size();
+        ArrayList<LocalList.Entry> result = new ArrayList(sz);
+
+        // Add all the entries
+        for (int i = 0; i < sz; i++) {
+            LocalList.Entry e = locallist.get(i);
+            result.add(locallist.get(i));
+        }
+
+        // Sort ascending by start address.
+        Collections.sort (result, new Comparator<LocalList.Entry>() {
+            public int compare (LocalList.Entry a, LocalList.Entry b) {
+                return a.getStart() - b.getStart();
+            }
+
+            public boolean equals (Object obj) {
+               return obj == this;
+            }
+        });
+        return result;
+    }
+
+    /**
+     * Builds a list of locals entries sorted by ascending end address.
+     * 
+     * @param list locals list in any order
+     * @return a sorted locals list
+     */
+    private ArrayList<LocalList.Entry> buildLocalsEnd(
+            ArrayList<LocalList.Entry> list) {
+
+        ArrayList<LocalList.Entry> sortedLocalsEnd  = new ArrayList(list);
+
+        // Sort ascending by end address.
+        Collections.sort (sortedLocalsEnd, new Comparator<LocalList.Entry>() {
+            public int compare (LocalList.Entry a, LocalList.Entry b) {
+                return a.getEnd() - b.getEnd();
+            }
+
+            public boolean equals (Object obj) {
+               return obj == this;
+            }
+        });
+        return sortedLocalsEnd;
     }
 
     /**
@@ -521,18 +632,24 @@ public final class DebugInfoEncoder {
      * from the input list and sorted by ascending register in the
      * returned list.
      *
+     * @param sortedLocals locals list, sorted by ascending start address,
+     * to process; left unmodified
      * @return list of non-<code>this</code> method argument locals,
      * sorted by ascending register
      */
-    private ArrayList<LocalList.Entry> extractMethodArguments() {
+    private ArrayList<LocalList.Entry> extractMethodArguments (
+            ArrayList<LocalList.Entry> sortedLocals) {
+
         ArrayList<LocalList.Entry> result
                 = new ArrayList(desc.getParameterTypes().size());
-        int argBase = getParamBase();
-        BitSet seen = new BitSet(regSize - argBase);
-        int sz = locals.size();
 
+        int argBase = getParamBase();
+
+        BitSet seen = new BitSet(regSize - argBase);
+
+        int sz = sortedLocals.size();
         for (int i = 0; i < sz; i++) {
-            LocalList.Entry e = locals.get(i);
+            LocalList.Entry e = sortedLocals.get(i);
             int reg = e.getRegister();
 
             if (reg < argBase) {
@@ -549,12 +666,12 @@ public final class DebugInfoEncoder {
         }
 
         // Sort by ascending register.
-        Collections.sort(result, new Comparator<LocalList.Entry>() {
-            public int compare(LocalList.Entry a, LocalList.Entry b) {
+        Collections.sort (result, new Comparator<LocalList.Entry>() {
+            public int compare (LocalList.Entry a, LocalList.Entry b) {
                 return a.getRegister() - b.getRegister();
             }
 
-            public boolean equals(Object obj) {
+            public boolean equals (Object obj) {
                return obj == this;
             }
         });

@@ -1,3 +1,4 @@
+
 /*
  * This file was generated automatically by gen-mterp.py for 'x86'.
  *
@@ -6556,7 +6557,7 @@ dvmAsmSisterStart:
     sarl    $4,rINST_FULL
     .endif
     movl    rINST_FULL,OUT_ARG1(%esp)             # arg1<- A or AA (length)
-    call    dvmAllocArrayByClass                  # eax<- call(arrayClass, length, flags)
+    call    dvmAllocArrayByClass                  # eax<- call(typeCh, length, flags)
     UNSPILL(rPC)
     GET_GLUE(%ecx)
     testl   %eax,%eax                             # alloc successful?
@@ -6661,7 +6662,7 @@ dvmAsmSisterStart:
     sarl    $4,rINST_FULL
     .endif
     movl    rINST_FULL,OUT_ARG1(%esp)             # arg1<- A or AA (length)
-    call    dvmAllocArrayByClass                  # eax<- call(arrayClass, length, flags)
+    call    dvmAllocArrayByClass                  # eax<- call(typeCh, length, flags)
     UNSPILL(rPC)
     GET_GLUE(%ecx)
     testl   %eax,%eax                             # alloc successful?

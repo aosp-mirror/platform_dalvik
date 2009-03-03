@@ -17,14 +17,15 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
+import java.lang.reflect.Constructor;
 
 @TestTargetClass(String.class) 
 public class StringTest extends TestCase {
@@ -700,40 +701,4 @@ public class StringTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Regression test for some existing bugs and crashes",
-        method = "format",
-        args = { String.class, Object.class }
-    )
-    public void testProblemCases() {
-        BigDecimal[] input = new BigDecimal[] {
-            new BigDecimal("20.00000"),
-            new BigDecimal("20.000000"),
-            new BigDecimal(".2"),
-            new BigDecimal("2"),
-            new BigDecimal("-2"),
-            new BigDecimal("200000000000000000000000"),
-            new BigDecimal("20000000000000000000000000000000000000000000000000")
-        };
-
-        String[] output = new String[] {
-                "20.00",
-                "20.00",
-                "0.20",
-                "2.00",
-                "-2.00",
-                "200000000000000000000000.00",
-                "20000000000000000000000000000000000000000000000000.00"
-        };
-        
-        for (int i = 0; i < input.length; i++) {
-            String result = String.format("%.2f", input[i]);
-            assertEquals("Format test for \"" + input[i] + "\" failed, " +
-                    "expected=" + output[i] + ", " +
-                    "actual=" + result, output[i], result);
-        }
-    }
-    
 }
