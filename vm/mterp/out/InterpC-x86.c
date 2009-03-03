@@ -1811,6 +1811,10 @@ GOTO_TARGET(exceptionThrown)
          * exception this won't happen until some other exception gets
          * thrown.  If the code keeps pushing the stack bounds we'll end
          * up aborting the VM.
+         *
+         * Note we want to do this *after* the call to dvmFindCatchBlock,
+         * because that may need extra stack space to resolve exception
+         * classes (e.g. through a class loader).
          */
         if (self->stackOverflowed)
             dvmCleanupStackOverflow(self);

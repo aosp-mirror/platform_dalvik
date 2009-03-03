@@ -50,13 +50,13 @@ static UBool icuError(JNIEnv *env, UErrorCode errorcode)
             default :
                 exception = env->FindClass("java/lang/RuntimeException");
         }
-        
+
         return (env->ThrowNew(exception, emsg) != 0);
     }
     return 0;
 }
 
-static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale, 
+static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale,
         jstring pattern) {
 
     // the errorcode returned by unum_open
@@ -70,9 +70,9 @@ static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale,
     const char *localeChars = env->GetStringUTFChars(locale, NULL);
 
     // open a default type number format
-    UNumberFormat *fmt = unum_open(UNUM_PATTERN_DECIMAL, pattChars, pattLen, 
+    UNumberFormat *fmt = unum_open(UNUM_PATTERN_DECIMAL, pattChars, pattLen,
             localeChars, NULL, &status);
-    
+
     // release the allocated strings
     env->ReleaseStringChars(pattern, pattChars);
     env->ReleaseStringUTFChars(locale, localeChars);
@@ -88,20 +88,20 @@ static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale,
 
 static void closeDecimalFormatImpl(JNIEnv *env, jclass clazz, jint addr) {
 
-    // get the pointer to the number format    
+    // get the pointer to the number format
     UNumberFormat *fmt = (UNumberFormat *)(int)addr;
 
     // close this number format
     unum_close(fmt);
 }
 
-static void setSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol, 
+static void setSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol,
         jstring text) {
-    
+
     // the errorcode returned by unum_setSymbol
     UErrorCode status = U_ZERO_ERROR;
 
-    // get the pointer to the number format    
+    // get the pointer to the number format
     UNumberFormat *fmt = (UNumberFormat *)(int)addr;
 
     // prepare the symbol string for the call to unum_setSymbol
@@ -109,9 +109,9 @@ static void setSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol,
     int textLen = env->GetStringLength(text);
 
     // set the symbol
-    unum_setSymbol(fmt, (UNumberFormatSymbol) symbol, textChars, textLen, 
+    unum_setSymbol(fmt, (UNumberFormatSymbol) symbol, textChars, textLen,
             &status);
-    
+
     // release previously allocated space
     env->ReleaseStringChars(text, textChars);
 
@@ -126,14 +126,14 @@ static jstring getSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
     // the errorcode returned by unum_getSymbol
     UErrorCode status = U_ZERO_ERROR;
 
-    // get the pointer to the number format    
+    // get the pointer to the number format
     UNumberFormat *fmt = (UNumberFormat *)(int)addr;
 
     UChar* result = NULL;
     resultlength=0;
 
     // find out how long the result will be
-    reslenneeded=unum_getSymbol(fmt, (UNumberFormatSymbol) symbol, result, 
+    reslenneeded=unum_getSymbol(fmt, (UNumberFormatSymbol) symbol, result,
             resultlength, &status);
 
     result = NULL;
@@ -141,7 +141,7 @@ static jstring getSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
         status=U_ZERO_ERROR;
         resultlength=reslenneeded+1;
         result=(UChar*)malloc(sizeof(UChar) * resultlength);
-        reslenneeded=unum_getSymbol(fmt, (UNumberFormatSymbol) symbol, result, 
+        reslenneeded=unum_getSymbol(fmt, (UNumberFormatSymbol) symbol, result,
                 resultlength, &status);
     }
     if (icuError(env, status) != FALSE) {
@@ -154,17 +154,17 @@ static jstring getSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
 
     return res;
 }
-    
-static void setAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol, 
+
+static void setAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol,
         jint value) {
-    
+
     UNumberFormat *fmt = (UNumberFormat *)(int)addr;
 
     unum_setAttribute(fmt, (UNumberFormatAttribute) symbol, value);
 }
-    
+
 static jint getAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
-    
+
     UNumberFormat *fmt = (UNumberFormat *)(int)addr;
 
     int res = unum_getAttribute(fmt, (UNumberFormatAttribute) symbol);
@@ -172,27 +172,27 @@ static jint getAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
     return res;
 }
 
-static void setTextAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol, 
+static void setTextAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol,
         jstring text) {
 
     // the errorcode returned by unum_setTextAttribute
     UErrorCode status = U_ZERO_ERROR;
 
-    // get the pointer to the number format    
+    // get the pointer to the number format
     UNumberFormat *fmt = (UNumberFormat *)(int)addr;
 
     const UChar *textChars = env->GetStringChars(text, NULL);
     int textLen = env->GetStringLength(text);
 
-    unum_setTextAttribute(fmt, (UNumberFormatTextAttribute) symbol, textChars, 
+    unum_setTextAttribute(fmt, (UNumberFormatTextAttribute) symbol, textChars,
             textLen, &status);
-    
+
     env->ReleaseStringChars(text, textChars);
 
     icuError(env, status);
 }
 
-static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr, 
+static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
         jint symbol) {
 
     uint32_t resultlength, reslenneeded;
@@ -200,14 +200,14 @@ static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
     // the errorcode returned by unum_getTextAttribute
     UErrorCode status = U_ZERO_ERROR;
 
-    // get the pointer to the number format    
+    // get the pointer to the number format
     UNumberFormat *fmt = (UNumberFormat *)(int)addr;
 
     UChar* result = NULL;
     resultlength=0;
 
     // find out how long the result will be
-    reslenneeded=unum_getTextAttribute(fmt, (UNumberFormatTextAttribute) symbol, 
+    reslenneeded=unum_getTextAttribute(fmt, (UNumberFormatTextAttribute) symbol,
             result, resultlength, &status);
 
     result = NULL;
@@ -215,8 +215,8 @@ static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
         status=U_ZERO_ERROR;
         resultlength=reslenneeded+1;
         result=(UChar*)malloc(sizeof(UChar) * resultlength);
-        reslenneeded=unum_getTextAttribute(fmt, 
-                (UNumberFormatTextAttribute) symbol, result, resultlength, 
+        reslenneeded=unum_getTextAttribute(fmt,
+                (UNumberFormatTextAttribute) symbol, result, resultlength,
                 &status);
     }
     if (icuError(env, status) != FALSE) {
@@ -230,13 +230,13 @@ static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
     return res;
 }
 
-static void applyPatternImpl(JNIEnv *env, jclass clazz, jint addr, 
+static void applyPatternImpl(JNIEnv *env, jclass clazz, jint addr,
         jboolean localized, jstring pattern) {
 
     // the errorcode returned by unum_applyPattern
     UErrorCode status = U_ZERO_ERROR;
 
-    // get the pointer to the number format    
+    // get the pointer to the number format
     UNumberFormat *fmt = (UNumberFormat *)(int)addr;
 
     const UChar *pattChars = env->GetStringChars(pattern, NULL);
@@ -249,7 +249,7 @@ static void applyPatternImpl(JNIEnv *env, jclass clazz, jint addr,
     icuError(env, status);
 }
 
-static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr, 
+static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr,
         jboolean localized) {
 
     uint32_t resultlength, reslenneeded;
@@ -257,7 +257,7 @@ static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr,
     // the errorcode returned by unum_toPattern
     UErrorCode status = U_ZERO_ERROR;
 
-    // get the pointer to the number format    
+    // get the pointer to the number format
     UNumberFormat *fmt = (UNumberFormat *)(int)addr;
 
     UChar* result = NULL;
@@ -271,7 +271,7 @@ static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr,
         status=U_ZERO_ERROR;
         resultlength=reslenneeded+1;
         result=(UChar*)malloc(sizeof(UChar) * resultlength);
-        reslenneeded=unum_toPattern(fmt, localized, result, resultlength, 
+        reslenneeded=unum_toPattern(fmt, localized, result, resultlength,
                 &status);
     }
     if (icuError(env, status) != FALSE) {
@@ -284,19 +284,19 @@ static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr,
 
     return res;
 }
-    
-static jstring formatLong(JNIEnv *env, jclass clazz, jint addr, jlong value, 
+
+static jstring formatLong(JNIEnv *env, jclass clazz, jint addr, jlong value,
         jobject field, jstring fieldType, jobject attributes) {
 
     const char * fieldPositionClassName = "java/text/FieldPosition";
     const char * stringBufferClassName = "java/lang/StringBuffer";
     jclass fieldPositionClass = env->FindClass(fieldPositionClassName);
     jclass stringBufferClass = env->FindClass(stringBufferClassName);
-    jmethodID setBeginIndexMethodID = env->GetMethodID(fieldPositionClass, 
+    jmethodID setBeginIndexMethodID = env->GetMethodID(fieldPositionClass,
             "setBeginIndex", "(I)V");
-    jmethodID setEndIndexMethodID = env->GetMethodID(fieldPositionClass, 
+    jmethodID setEndIndexMethodID = env->GetMethodID(fieldPositionClass,
             "setEndIndex", "(I)V");
-    jmethodID appendMethodID = env->GetMethodID(stringBufferClass, 
+    jmethodID appendMethodID = env->GetMethodID(stringBufferClass,
             "append", "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
 
     const char * fieldName = NULL;
@@ -331,7 +331,7 @@ static jstring formatLong(JNIEnv *env, jclass clazz, jint addr, jlong value,
     if(status==U_BUFFER_OVERFLOW_ERROR) {
         status=U_ZERO_ERROR;
 
-        result = (UChar*)malloc(sizeof(UChar) * (reslenneeded + 1));    
+        result = (UChar*)malloc(sizeof(UChar) * (reslenneeded + 1));
 
         res->extract(result, reslenneeded + 1, status);
     }
@@ -393,18 +393,18 @@ static jstring formatLong(JNIEnv *env, jclass clazz, jint addr, jlong value,
     return resulting;
 }
 
-static jstring formatDouble(JNIEnv *env, jclass clazz, jint addr, jdouble value, 
+static jstring formatDouble(JNIEnv *env, jclass clazz, jint addr, jdouble value,
         jobject field, jstring fieldType, jobject attributes) {
 
     const char * fieldPositionClassName = "java/text/FieldPosition";
     const char * stringBufferClassName = "java/lang/StringBuffer";
     jclass fieldPositionClass = env->FindClass(fieldPositionClassName);
     jclass stringBufferClass = env->FindClass(stringBufferClassName);
-    jmethodID setBeginIndexMethodID = env->GetMethodID(fieldPositionClass, 
+    jmethodID setBeginIndexMethodID = env->GetMethodID(fieldPositionClass,
             "setBeginIndex", "(I)V");
-    jmethodID setEndIndexMethodID = env->GetMethodID(fieldPositionClass, 
+    jmethodID setEndIndexMethodID = env->GetMethodID(fieldPositionClass,
             "setEndIndex", "(I)V");
-    jmethodID appendMethodID = env->GetMethodID(stringBufferClass, 
+    jmethodID appendMethodID = env->GetMethodID(stringBufferClass,
             "append", "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
 
     const char * fieldName = NULL;
@@ -439,7 +439,7 @@ static jstring formatDouble(JNIEnv *env, jclass clazz, jint addr, jdouble value,
     if(status==U_BUFFER_OVERFLOW_ERROR) {
         status=U_ZERO_ERROR;
 
-        result = (UChar*)malloc(sizeof(UChar) * (reslenneeded + 1));    
+        result = (UChar*)malloc(sizeof(UChar) * (reslenneeded + 1));
 
         res->extract(result, reslenneeded + 1, status);
 
@@ -502,7 +502,7 @@ static jstring formatDouble(JNIEnv *env, jclass clazz, jint addr, jdouble value,
     return resulting;
 }
 
-static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring value, 
+static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring value,
         jobject field, jstring fieldType, jobject attributes, jint scale) {
 
     // const char * valueUTF = env->GetStringUTFChars(value, NULL);
@@ -521,21 +521,36 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
 
     uint32_t reslenneeded;
 
-    bool isInteger = (scale == 0);
-
     // prepare digit list
 
-    const char *digits = env->GetStringUTFChars(value, NULL);
+    const char *valueChars = env->GetStringUTFChars(value, NULL);
 
-    // length must be string lengt + 2 because there's an additional
-    // character in front of the string ("+" or "-") and a \0 at the end
-    DigitList digitList(strlen(digits) + 2);
-    digitList.fCount = strlen(digits);
+    bool isInteger = (scale == 0);
+    bool isPositive = (*valueChars != '-');
+
+    // skip the '-' if the number is negative
+    const char *digits = (isPositive ? valueChars : valueChars + 1);
+    int length = strlen(digits);
+
+    // The length of our digit list buffer must be the actual string length + 3,
+    // because ICU will append some additional characters at the head and at the
+    // tail of the string, in order to keep strtod() happy:
+    //
+    // - The sign "+" or "-" is appended at the head
+    // - The exponent "e" and the "\0" terminator is appended at the tail
+    //
+    // In retrospect, the changes to ICU's DigitList that were necessary for
+    // big numbers look a bit hacky. It would make sense to rework all this
+    // once ICU 4.x has been integrated into Android. Ideally, big number
+    // support would make it into ICU itself, so we don't need our private
+    // fix anymore.
+    DigitList digitList(length + 3);
+    digitList.fCount = length;
     strcpy(digitList.fDigits, digits);
-    env->ReleaseStringUTFChars(value, digits);
+    env->ReleaseStringUTFChars(value, valueChars);
 
     digitList.fDecimalAt = digitList.fCount - scale;
-    digitList.fIsPositive = (*digits != '-');
+    digitList.fIsPositive = isPositive;
     digitList.fRoundingMode = DecimalFormat::kRoundHalfUp;
 
     UChar *result = NULL;
@@ -548,10 +563,9 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
     UErrorCode status = U_ZERO_ERROR;
 
     DecimalFormat::AttributeBuffer *attrBuffer = NULL;
-    attrBuffer = (DecimalFormat::AttributeBuffer *) malloc(sizeof(DecimalFormat::AttributeBuffer));
+    attrBuffer = (DecimalFormat::AttributeBuffer *) calloc(sizeof(DecimalFormat::AttributeBuffer), 1);
     attrBuffer->bufferSize = 128;
-    attrBuffer->buffer = (char *) malloc(129 * sizeof(char));
-    attrBuffer->buffer[0] = '\0';
+    attrBuffer->buffer = (char *) calloc(129 * sizeof(char), 1);
 
     DecimalFormat *fmt = (DecimalFormat *)(int)addr;
 
@@ -564,7 +578,7 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
     if(status==U_BUFFER_OVERFLOW_ERROR) {
         status=U_ZERO_ERROR;
 
-        result = (UChar*)malloc(sizeof(UChar) * (reslenneeded + 1));    
+        result = (UChar*)malloc(sizeof(UChar) * (reslenneeded + 1));
 
         res.extract(result, reslenneeded + 1, status);
 
@@ -584,7 +598,7 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
         }
         free(attrBuffer->buffer);
         free(attrBuffer);
-        return NULL;        
+        return NULL;
     }
 
     int attrLength = (strlen(attrBuffer->buffer) + 1 );
@@ -596,7 +610,7 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
             // prepare the classes and method ids
             const char * stringBufferClassName = "java/lang/StringBuffer";
             jclass stringBufferClass = env->FindClass(stringBufferClassName);
-            jmethodID appendMethodID = env->GetMethodID(stringBufferClass, 
+            jmethodID appendMethodID = env->GetMethodID(stringBufferClass,
                     "append", "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
 
             jstring attrString = env->NewStringUTF(attrBuffer->buffer + 1);  // cut off the leading ';'
@@ -655,7 +669,7 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
     return resulting;
 }
 
-static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text, 
+static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
         jobject position) {
 
     const char * textUTF = env->GetStringUTFChars(text, NULL);
@@ -680,11 +694,11 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
     jclass bigDecimalClass = env->FindClass(bigDecimalClassName);
     jclass bigIntegerClass = env->FindClass(bigIntegerClassName);
 
-    jmethodID getIndexMethodID = env->GetMethodID(parsePositionClass, 
+    jmethodID getIndexMethodID = env->GetMethodID(parsePositionClass,
             "getIndex", "()I");
-    jmethodID setIndexMethodID = env->GetMethodID(parsePositionClass, 
+    jmethodID setIndexMethodID = env->GetMethodID(parsePositionClass,
             "setIndex", "(I)V");
-    jmethodID setErrorIndexMethodID = env->GetMethodID(parsePositionClass, 
+    jmethodID setErrorIndexMethodID = env->GetMethodID(parsePositionClass,
             "setErrorIndex", "(I)V");
 
     jmethodID longInitMethodID = env->GetMethodID(longClass, "<init>", "(J)V");
@@ -696,8 +710,8 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
     bool resultAssigned;
     int parsePos = env->CallIntMethod(position, getIndexMethodID, NULL);
 
-    // make sure the ParsePosition is valid. Actually icu4c would parse a number 
-    // correctly even if the parsePosition is set to -1, but since the RI fails 
+    // make sure the ParsePosition is valid. Actually icu4c would parse a number
+    // correctly even if the parsePosition is set to -1, but since the RI fails
     // for that case we have to fail too
     if(parsePos < 0 || parsePos > strlength) {
         return NULL;
@@ -707,9 +721,9 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
 
     const UnicodeString src((UChar*)str, strlength, strlength);
     ParsePosition pp;
-    
+
     pp.setIndex(parsePos);
-    
+
     DigitList digits;
 
     ((const DecimalFormat*)fmt)->parse(src, resultAssigned, res, pp, FALSE, digits);
@@ -719,8 +733,8 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
     if(pp.getErrorIndex() == -1) {
         parsePos = pp.getIndex();
     } else {
-        env->CallVoidMethod(position, setErrorIndexMethodID, 
-                (jint) pp.getErrorIndex());        
+        env->CallVoidMethod(position, setErrorIndexMethodID,
+                (jint) pp.getErrorIndex());
         return NULL;
     }
 
@@ -745,17 +759,17 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
         case Formattable::kDouble:
             resultDouble = res.getDouble();
             env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
-            return env->NewObject(doubleClass, dblInitMethodID, 
+            return env->NewObject(doubleClass, dblInitMethodID,
                     (jdouble) resultDouble);
         case Formattable::kLong:
             resultLong = res.getLong();
             env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
-            return env->NewObject(longClass, longInitMethodID, 
+            return env->NewObject(longClass, longInitMethodID,
                     (jlong) resultLong);
         case Formattable::kInt64:
             resultInt64 = res.getInt64();
             env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
-            return env->NewObject(longClass, longInitMethodID, 
+            return env->NewObject(longClass, longInitMethodID,
                     (jlong) resultInt64);
         default:
             return NULL;
@@ -805,7 +819,7 @@ static jint cloneImpl(JNIEnv *env, jclass clazz, jint addr) {
 
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    {"openDecimalFormatImpl", "(Ljava/lang/String;Ljava/lang/String;)I", 
+    {"openDecimalFormatImpl", "(Ljava/lang/String;Ljava/lang/String;)I",
             (void*) openDecimalFormatImpl},
     {"closeDecimalFormatImpl", "(I)V", (void*) closeDecimalFormatImpl},
     {"setSymbol", "(IILjava/lang/String;)V", (void*) setSymbol},
@@ -816,22 +830,22 @@ static JNINativeMethod gMethods[] = {
     {"getTextAttribute", "(II)Ljava/lang/String;", (void*) getTextAttribute},
     {"applyPatternImpl", "(IZLjava/lang/String;)V", (void*) applyPatternImpl},
     {"toPatternImpl", "(IZ)Ljava/lang/String;", (void*) toPatternImpl},
-    {"format", 
-            "(IJLjava/text/FieldPosition;Ljava/lang/String;Ljava/lang/StringBuffer;)Ljava/lang/String;", 
+    {"format",
+            "(IJLjava/text/FieldPosition;Ljava/lang/String;Ljava/lang/StringBuffer;)Ljava/lang/String;",
             (void*) formatLong},
-    {"format", 
-            "(IDLjava/text/FieldPosition;Ljava/lang/String;Ljava/lang/StringBuffer;)Ljava/lang/String;", 
+    {"format",
+            "(IDLjava/text/FieldPosition;Ljava/lang/String;Ljava/lang/StringBuffer;)Ljava/lang/String;",
             (void*) formatDouble},
-    {"format", 
-            "(ILjava/lang/String;Ljava/text/FieldPosition;Ljava/lang/String;Ljava/lang/StringBuffer;I)Ljava/lang/String;", 
+    {"format",
+            "(ILjava/lang/String;Ljava/text/FieldPosition;Ljava/lang/String;Ljava/lang/StringBuffer;I)Ljava/lang/String;",
             (void*) formatDigitList},
-    {"parse", 
-            "(ILjava/lang/String;Ljava/text/ParsePosition;)Ljava/lang/Number;", 
+    {"parse",
+            "(ILjava/lang/String;Ljava/text/ParsePosition;)Ljava/lang/Number;",
             (void*) parse},
     {"cloneImpl", "(I)I", (void*) cloneImpl}
 };
 int register_com_ibm_icu4jni_text_NativeDecimalFormat(JNIEnv* env) {
-    return jniRegisterNativeMethods(env, 
-            "com/ibm/icu4jni/text/NativeDecimalFormat", gMethods, 
+    return jniRegisterNativeMethods(env,
+            "com/ibm/icu4jni/text/NativeDecimalFormat", gMethods,
             NELEM(gMethods));
 }

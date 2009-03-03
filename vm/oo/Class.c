@@ -177,6 +177,10 @@ static void throwEarlierClassFailure(ClassObject* clazz);
 #if LOG_CLASS_LOADING
 /*
  * Logs information about a class loading with given timestamp.
+ *
+ * TODO: In the case where we fail in dvmLinkClass() and log the class as closing (type='<'),
+ * it would probably be better to use a new type code to indicate the failure.  This change would
+ * require a matching change in the parser and analysis code in frameworks/base/tools/preload.
  */
 static void logClassLoadWithTime(char type, ClassObject* clazz, u8 time) {
     pid_t ppid = getppid();
@@ -196,7 +200,7 @@ static void logClassLoad(char type, ClassObject* clazz) {
 }
 #endif
 
-/* 
+/*
  * Some LinearAlloc unit tests.
  */
 static void linearAllocTests()
@@ -1095,7 +1099,7 @@ void dvmSetClassSerialNumber(ClassObject* clazz)
  *
  * The class will be loaded and initialized if it has not already been.
  * If necessary, the superclass will be loaded.
- * 
+ *
  * If the class can't be found, returns NULL with an appropriate exception
  * raised.
  */
@@ -1391,7 +1395,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
             goto bail;
         }
 
-        /* 
+        /*
          * Lock the class while we link it so other threads must wait for us
          * to finish.  Set the "initThreadId" so we can identify recursive
          * invocation.
@@ -1451,6 +1455,17 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
             dvmObjectNotifyAll(self, (Object*) clazz);
             dvmUnlockObject(self, (Object*) clazz);
 
+#if LOG_CLASS_LOADING
+            LOG(LOG_INFO, "DVMLINK FAILED FOR CLASS ", "%s in %s\n",
+                clazz->descriptor, get_process_name());
+
+            /*
+             * TODO: It would probably be better to use a new type code here (instead of '<') to
+             * indicate the failure.  This change would require a matching change in the parser
+             * and analysis code in frameworks/base/tools/preload.
+             */
+            logClassLoad('<', clazz);
+#endif
             clazz = NULL;
             if (gDvm.optimizing) {
                 /* happens with "external" libs */
@@ -1458,9 +1473,6 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
             } else {
                 LOGW("Link of class '%s' failed\n", descriptor);
             }
-#if LOG_CLASS_LOADING
-            logClassLoad('<', clazz);
-#endif
             goto bail;
         }
         dvmObjectNotifyAll(self, (Object*) clazz);
@@ -1992,11 +2004,11 @@ static void loadMethodFromDex(ClassObject* clazz, const DexMethod* pDexMethod,
 /*
  * jniArgInfo (32-bit int) layout:
  *   SRRRHHHH HHHHHHHH HHHHHHHH HHHHHHHH
- *   
+ *
  *   S - if set, do things the hard way (scan the signature)
  *   R - return-type enumeration
  *   H - target-specific hints
- *   
+ *
  * This info is used at invocation time by dvmPlatformInvoke.  In most
  * cases, the target-specific hints allow dvmPlatformInvoke to avoid
  * having to fully parse the signature.
@@ -3622,7 +3634,7 @@ static void initSFields(ClassObject* clazz)
         bool needRelease = false;
 
         if (! parsed) {
-            /* 
+            /*
              * TODO: Eventually verification should attempt to ensure
              * that this can't happen at least due to a data integrity
              * problem.
@@ -4489,7 +4501,7 @@ void dvmDumpAllClasses(int flags)
  */
 int dvmGetNumLoadedClasses()
 {
-    int count; 
+    int count;
     dvmHashTableLock(gDvm.loadedClasses);
     count = dvmHashTableNumEntries(gDvm.loadedClasses);
     dvmHashTableUnlock(gDvm.loadedClasses);

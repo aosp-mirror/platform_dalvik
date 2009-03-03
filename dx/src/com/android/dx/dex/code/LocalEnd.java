@@ -29,9 +29,10 @@ import com.android.dx.rop.code.SourcePosition;
 public final class LocalEnd extends ZeroSizeInsn {
     /**
      * non-null; register spec representing the local variable ended
-     * by this instance. <b>Note:</b> The only salient part of the spec
-     * is the register number; the rest of the info may be useful for
-     * debugging but shouldn't affect any actual processing
+     * by this instance. <b>Note:</b> Technically, only the register
+     * number needs to be recorded here as the rest of the information
+     * is implicit in the ambient local variable state, but other code
+     * will check the other info for consistency.
      */
     private final RegisterSpec local;
 
