@@ -331,7 +331,7 @@ static bool isTypeWidthEqual1nr(RegType type1, RegType type2)
  */
 static RegType primitiveTypeToRegType(PrimitiveType primType)
 {
-    struct {
+    static const struct {
         RegType         regType;        /* type equivalent */
         PrimitiveType   primType;       /* verification */
     } convTab[] = {
