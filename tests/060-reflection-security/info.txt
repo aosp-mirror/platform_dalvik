@@ -1,0 +1,1 @@
+This is a basic test of how a SecurityManager can impact reflection calls.

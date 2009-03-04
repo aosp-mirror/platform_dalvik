@@ -1,0 +1,87 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 1 (0x1)
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=ES, L=C/ Muntaner 244 Barcelona, CN=Autoridad de Certificacion Firmaprofesional CIF A62634068/emailAddress=ca@firmaprofesional.com
+        Validity
+            Not Before: Oct 24 22:00:00 2001 GMT
+            Not After : Oct 24 22:00:00 2013 GMT
+        Subject: C=ES, L=C/ Muntaner 244 Barcelona, CN=Autoridad de Certificacion Firmaprofesional CIF A62634068/emailAddress=ca@firmaprofesional.com
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (2048 bit)
+                Modulus (2048 bit):
+                    00:e7:23:03:6f:6f:23:a5:5e:78:ce:95:2c:ed:94:
+                    1e:6e:0a:9e:01:c7:ea:30:d1:2c:9d:dd:37:e8:9b:
+                    98:79:56:d3:fc:73:df:d0:8a:de:55:8f:51:f9:5a:
+                    ea:de:b5:70:c4:ed:a4:ed:ff:a3:0d:6e:0f:64:50:
+                    31:af:01:27:58:ae:fe:6c:a7:4a:2f:17:2d:d3:73:
+                    d5:13:1c:8f:59:a5:34:2c:1d:54:04:45:cd:68:b8:
+                    a0:c0:03:a5:cf:85:42:47:95:28:5b:cf:ef:80:6c:
+                    e0:90:97:8a:01:3c:1d:f3:87:10:30:26:48:7d:d7:
+                    fc:e9:9d:91:71:ff:41:9a:a9:40:b5:37:9c:29:20:
+                    4f:1f:52:e3:a0:7d:13:6d:54:b7:0a:de:e9:6a:4e:
+                    07:ac:ac:19:5f:dc:7e:62:74:f6:b2:05:00:ba:85:
+                    a0:fd:1d:38:6e:cb:5a:bb:86:bc:94:67:33:35:83:
+                    2c:1f:23:cd:f8:c8:91:71:cc:97:8b:ef:ae:0f:dc:
+                    29:03:1b:c0:39:eb:70:ed:c1:6e:0e:d8:67:0b:89:
+                    a9:bc:35:e4:ef:b6:34:b4:a5:b6:c4:2d:a5:be:d0:
+                    c3:94:24:48:db:df:96:d3:00:b5:66:1a:8b:66:05:
+                    0f:dd:3f:3f:cb:3f:aa:5e:9a:4a:f8:b4:4a:ef:95:
+                    37:1b
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Subject Alternative Name: 
+                URI:http://www.firmaprofesional.com
+            X509v3 Basic Constraints: critical
+                CA:TRUE, pathlen:1
+            X509v3 Private Key Usage Period: 
+                Not Before: Oct 24 22:00:00 2001 GMT, Not After: Oct 24 22:00:00 2013 GMT
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                33:0B:A0:66:D1:EA:DA:CE:DE:62:93:04:28:52:B5:14:7F:38:68:B7
+    Signature Algorithm: sha1WithRSAEncryption
+        47:73:fe:8d:27:54:f0:f5:d4:77:9c:27:79:57:57:b7:15:56:
+        ec:c7:d8:58:b7:01:02:f4:33:ed:93:50:88:9e:7c:46:b1:bd:
+        3f:14:6f:f1:b3:47:48:8b:8c:97:06:d7:ea:7e:a3:5c:2a:bb:
+        4d:2f:47:e2:f8:39:06:c9:9c:2e:31:1a:03:78:f4:bc:38:c6:
+        22:8b:33:31:f0:16:04:04:7d:f9:76:e4:4b:d7:c0:e6:83:ec:
+        59:cc:3f:de:ff:4f:6b:b7:67:7e:a6:86:81:32:23:03:9d:c8:
+        f7:5f:c1:4a:60:a5:92:a9:b1:a4:a0:60:c3:78:87:b3:22:f3:
+        2a:eb:5b:a9:ed:05:ab:37:0f:b1:e2:d3:95:76:63:56:74:8c:
+        58:72:1b:37:e5:64:a1:be:4d:0c:93:98:0c:97:f6:87:6d:b3:
+        3f:e7:cb:80:a6:ed:88:c7:5f:50:62:02:e8:99:74:16:d0:e6:
+        b4:39:f1:27:cb:c8:40:d6:e3:86:10:a9:23:12:92:e0:69:41:
+        63:a7:af:25:0b:c0:c5:92:cb:1e:98:a3:5a:ba:c5:33:0f:a0:
+        97:01:dd:7f:e0:7b:d6:06:54:cf:a1:e2:4d:38:eb:4b:50:b5:
+        cb:26:f4:ca:da:70:4a:6a:a1:e2:79:aa:e1:a7:33:f6:fd:4a:
+        1f:f6:d9:60
+SHA1 Fingerprint=A9:62:8F:4B:98:A9:1B:48:35:BA:D2:C1:46:32:86:BB:66:64:6A:8C
+-----BEGIN CERTIFICATE-----
+MIIEVzCCAz+gAwIBAgIBATANBgkqhkiG9w0BAQUFADCBnTELMAkGA1UEBhMCRVMx
+IjAgBgNVBAcTGUMvIE11bnRhbmVyIDI0NCBCYXJjZWxvbmExQjBABgNVBAMTOUF1
+dG9yaWRhZCBkZSBDZXJ0aWZpY2FjaW9uIEZpcm1hcHJvZmVzaW9uYWwgQ0lGIEE2
+MjYzNDA2ODEmMCQGCSqGSIb3DQEJARYXY2FAZmlybWFwcm9mZXNpb25hbC5jb20w
+HhcNMDExMDI0MjIwMDAwWhcNMTMxMDI0MjIwMDAwWjCBnTELMAkGA1UEBhMCRVMx
+IjAgBgNVBAcTGUMvIE11bnRhbmVyIDI0NCBCYXJjZWxvbmExQjBABgNVBAMTOUF1
+dG9yaWRhZCBkZSBDZXJ0aWZpY2FjaW9uIEZpcm1hcHJvZmVzaW9uYWwgQ0lGIEE2
+MjYzNDA2ODEmMCQGCSqGSIb3DQEJARYXY2FAZmlybWFwcm9mZXNpb25hbC5jb20w
+ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDnIwNvbyOlXnjOlSztlB5u
+Cp4Bx+ow0Syd3Tfom5h5VtP8c9/Qit5Vj1H5WuretXDE7aTt/6MNbg9kUDGvASdY
+rv5sp0ovFy3Tc9UTHI9ZpTQsHVQERc1ouKDAA6XPhUJHlShbz++AbOCQl4oBPB3z
+hxAwJkh91/zpnZFx/0GaqUC1N5wpIE8fUuOgfRNtVLcK3ulqTgesrBlf3H5idPay
+BQC6haD9HThuy1q7hryUZzM1gywfI834yJFxzJeL764P3CkDG8A563DtwW4O2GcL
+iam8NeTvtjS0pbbELaW+0MOUJEjb35bTALVmGotmBQ/dPz/LP6pemkr4tErvlTcb
+AgMBAAGjgZ8wgZwwKgYDVR0RBCMwIYYfaHR0cDovL3d3dy5maXJtYXByb2Zlc2lv
+bmFsLmNvbTASBgNVHRMBAf8ECDAGAQH/AgEBMCsGA1UdEAQkMCKADzIwMDExMDI0
+MjIwMDAwWoEPMjAxMzEwMjQyMjAwMDBaMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4E
+FgQUMwugZtHq2s7eYpMEKFK1FH84aLcwDQYJKoZIhvcNAQEFBQADggEBAEdz/o0n
+VPD11HecJ3lXV7cVVuzH2Fi3AQL0M+2TUIiefEaxvT8Ub/GzR0iLjJcG1+p+o1wq
+u00vR+L4OQbJnC4xGgN49Lw4xiKLMzHwFgQEffl25EvXwOaD7FnMP97/T2u3Z36m
+hoEyIwOdyPdfwUpgpZKpsaSgYMN4h7Mi8yrrW6ntBas3D7Hi05V2Y1Z0jFhyGzfl
+ZKG+TQyTmAyX9odtsz/ny4Cm7YjHX1BiAuiZdBbQ5rQ58SfLyEDW44YQqSMSkuBp
+QWOnryULwMWSyx6Yo1q6xTMPoJcB3X/ge9YGVM+h4k0460tQtcsm9MracEpqoeJ5
+quGnM/b9Sh/22WA=
+-----END CERTIFICATE-----

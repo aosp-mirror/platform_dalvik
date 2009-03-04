@@ -1,0 +1,3 @@
+LocalClass succeeded
+Got expected PackageAccess complaint
+LocalClass2 succeeded

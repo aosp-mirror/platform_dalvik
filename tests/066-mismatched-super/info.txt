@@ -1,0 +1,19 @@
+This tests what happens when class A extends abstract class B, but somebody
+turns B into an interface without rebuilding A.
+
+If you run this with --no-verify you get reasonable results:
+
+java.lang.NoClassDefFoundError: Base
+	at Main.main(Main.java:8)
+	at dalvik.system.NativeStart.main(Native Method)
+Caused by: java.lang.IncompatibleClassChangeError: superclass is an interface
+	at dalvik.system.DexFile.defineClass(Native Method)
+	at dalvik.system.DexFile.loadClass(DexFile.java:91)
+	at dalvik.system.PathClassLoader.findClass(PathClassLoader.java:175)
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:453)
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:421)
+	... 2 more
+
+With the verifier enabled, you get a relatively content-free VerifyError
+with the detail only appearing in the log file.
+

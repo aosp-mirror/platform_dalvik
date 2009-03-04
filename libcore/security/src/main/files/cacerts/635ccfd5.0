@@ -1,0 +1,74 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 104 (0x68)
+        Signature Algorithm: md5WithRSAEncryption
+        Issuer: C=HU, L=Budapest, O=NetLock Halozatbiztonsagi Kft., OU=Tanusitvanykiadok, CN=NetLock Expressz (Class C) Tanusitvanykiado
+        Validity
+            Not Before: Feb 25 14:08:11 1999 GMT
+            Not After : Feb 20 14:08:11 2019 GMT
+        Subject: C=HU, L=Budapest, O=NetLock Halozatbiztonsagi Kft., OU=Tanusitvanykiadok, CN=NetLock Expressz (Class C) Tanusitvanykiado
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (1024 bit)
+                Modulus (1024 bit):
+                    00:eb:ec:b0:6c:61:8a:23:25:af:60:20:e3:d9:9f:
+                    fc:93:0b:db:5d:8d:b0:a1:b3:40:3a:82:ce:fd:75:
+                    e0:78:32:03:86:5a:86:95:91:ed:53:fa:9d:40:fc:
+                    e6:e8:dd:d9:5b:7a:03:bd:5d:f3:3b:0c:c3:51:79:
+                    9b:ad:55:a0:e9:d0:03:10:af:0a:ba:14:42:d9:52:
+                    26:11:22:c7:d2:20:cc:82:a4:9a:a9:fe:b8:81:76:
+                    9d:6a:b7:d2:36:75:3e:b1:86:09:f6:6e:6d:7e:4e:
+                    b7:7a:ec:ae:71:84:f6:04:33:08:25:32:eb:74:ac:
+                    16:44:c6:e4:40:93:1d:7f:ad
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE, pathlen:4
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            Netscape Cert Type: 
+                SSL CA, S/MIME CA, Object Signing CA
+            Netscape Comment: 
+                FIGYELEM! Ezen tanusitvany a NetLock Kft. Altalanos Szolgaltatasi Felteteleiben leirt eljarasok alapjan keszult. A hitelesites folyamatat a NetLock Kft. termekfelelosseg-biztositasa vedi. A digitalis alairas elfogadasanak feltetele az eloirt ellenorzesi eljaras megtetele. Az eljaras leirasa megtalalhato a NetLock Kft. Internet honlapjan a https://www.netlock.net/docs cimen vagy kerheto az ellenorzes@netlock.net e-mail cimen. IMPORTANT! The issuance and the use of this certificate is subject to the NetLock CPS available at https://www.netlock.net/docs or by e-mail at cps@netlock.net.
+    Signature Algorithm: md5WithRSAEncryption
+        10:ad:7f:d7:0c:32:80:0a:d8:86:f1:79:98:b5:ad:d4:cd:b3:
+        36:c4:96:48:c1:5c:cd:9a:d9:05:2e:9f:be:50:eb:f4:26:14:
+        10:2d:d4:66:17:f8:9e:c1:27:fd:f1:ed:e4:7b:4b:a0:6c:b5:
+        ab:9a:57:70:a6:ed:a0:a4:ed:2e:f5:fd:fc:bd:fe:4d:37:08:
+        0c:bc:e3:96:83:22:f5:49:1b:7f:4b:2b:b4:54:c1:80:7c:99:
+        4e:1d:d0:8c:ee:d0:ac:e5:92:fa:75:56:fe:64:a0:13:8f:b8:
+        b8:16:9d:61:05:67:80:c8:d0:d8:a5:07:02:34:98:04:8d:33:
+        04:d4
+SHA1 Fingerprint=E3:92:51:2F:0A:CF:F5:05:DF:F6:DE:06:7F:75:37:E1:65:EA:57:4B
+-----BEGIN CERTIFICATE-----
+MIIFTzCCBLigAwIBAgIBaDANBgkqhkiG9w0BAQQFADCBmzELMAkGA1UEBhMCSFUx
+ETAPBgNVBAcTCEJ1ZGFwZXN0MScwJQYDVQQKEx5OZXRMb2NrIEhhbG96YXRiaXp0
+b25zYWdpIEtmdC4xGjAYBgNVBAsTEVRhbnVzaXR2YW55a2lhZG9rMTQwMgYDVQQD
+EytOZXRMb2NrIEV4cHJlc3N6IChDbGFzcyBDKSBUYW51c2l0dmFueWtpYWRvMB4X
+DTk5MDIyNTE0MDgxMVoXDTE5MDIyMDE0MDgxMVowgZsxCzAJBgNVBAYTAkhVMREw
+DwYDVQQHEwhCdWRhcGVzdDEnMCUGA1UEChMeTmV0TG9jayBIYWxvemF0Yml6dG9u
+c2FnaSBLZnQuMRowGAYDVQQLExFUYW51c2l0dmFueWtpYWRvazE0MDIGA1UEAxMr
+TmV0TG9jayBFeHByZXNzeiAoQ2xhc3MgQykgVGFudXNpdHZhbnlraWFkbzCBnzAN
+BgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA6+ywbGGKIyWvYCDj2Z/8kwvbXY2wobNA
+OoLO/XXgeDIDhlqGlZHtU/qdQPzm6N3ZW3oDvV3zOwzDUXmbrVWg6dADEK8KuhRC
+2VImESLH0iDMgqSaqf64gXadarfSNnU+sYYJ9m5tfk63euyucYT2BDMIJTLrdKwW
+RMbkQJMdf60CAwEAAaOCAp8wggKbMBIGA1UdEwEB/wQIMAYBAf8CAQQwDgYDVR0P
+AQH/BAQDAgAGMBEGCWCGSAGG+EIBAQQEAwIABzCCAmAGCWCGSAGG+EIBDQSCAlEW
+ggJNRklHWUVMRU0hIEV6ZW4gdGFudXNpdHZhbnkgYSBOZXRMb2NrIEtmdC4gQWx0
+YWxhbm9zIFN6b2xnYWx0YXRhc2kgRmVsdGV0ZWxlaWJlbiBsZWlydCBlbGphcmFz
+b2sgYWxhcGphbiBrZXN6dWx0LiBBIGhpdGVsZXNpdGVzIGZvbHlhbWF0YXQgYSBO
+ZXRMb2NrIEtmdC4gdGVybWVrZmVsZWxvc3NlZy1iaXp0b3NpdGFzYSB2ZWRpLiBB
+IGRpZ2l0YWxpcyBhbGFpcmFzIGVsZm9nYWRhc2FuYWsgZmVsdGV0ZWxlIGF6IGVs
+b2lydCBlbGxlbm9yemVzaSBlbGphcmFzIG1lZ3RldGVsZS4gQXogZWxqYXJhcyBs
+ZWlyYXNhIG1lZ3RhbGFsaGF0byBhIE5ldExvY2sgS2Z0LiBJbnRlcm5ldCBob25s
+YXBqYW4gYSBodHRwczovL3d3dy5uZXRsb2NrLm5ldC9kb2NzIGNpbWVuIHZhZ3kg
+a2VyaGV0byBheiBlbGxlbm9yemVzQG5ldGxvY2submV0IGUtbWFpbCBjaW1lbi4g
+SU1QT1JUQU5UISBUaGUgaXNzdWFuY2UgYW5kIHRoZSB1c2Ugb2YgdGhpcyBjZXJ0
+aWZpY2F0ZSBpcyBzdWJqZWN0IHRvIHRoZSBOZXRMb2NrIENQUyBhdmFpbGFibGUg
+YXQgaHR0cHM6Ly93d3cubmV0bG9jay5uZXQvZG9jcyBvciBieSBlLW1haWwgYXQg
+Y3BzQG5ldGxvY2submV0LjANBgkqhkiG9w0BAQQFAAOBgQAQrX/XDDKACtiG8XmY
+ta3UzbM2xJZIwVzNmtkFLp++UOv0JhQQLdRmF/iewSf98e3ke0ugbLWrmldwpu2g
+pO0u9f38vf5NNwgMvOOWgyL1SRt/Syu0VMGAfJlOHdCM7tCs5ZL6dVb+ZKATj7i4
+Fp1hBWeAyNDYpQcCNJgEjTME1A==
+-----END CERTIFICATE-----

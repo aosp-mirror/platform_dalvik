@@ -1,0 +1,83 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 10000010 (0x98968a)
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=NL, O=Staat der Nederlanden, CN=Staat der Nederlanden Root CA
+        Validity
+            Not Before: Dec 17 09:23:49 2002 GMT
+            Not After : Dec 16 09:15:38 2015 GMT
+        Subject: C=NL, O=Staat der Nederlanden, CN=Staat der Nederlanden Root CA
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (2048 bit)
+                Modulus (2048 bit):
+                    00:98:d2:b5:51:11:7a:81:a6:14:98:71:6d:be:cc:
+                    e7:13:1b:d6:27:0e:7a:b3:6a:18:1c:b6:61:5a:d5:
+                    61:09:bf:de:90:13:c7:67:ee:dd:f3:da:c5:0c:12:
+                    9e:35:55:3e:2c:27:88:40:6b:f7:dc:dd:22:61:f5:
+                    c2:c7:0e:f5:f6:d5:76:53:4d:8f:8c:bc:18:76:37:
+                    85:9d:e8:ca:49:c7:d2:4f:98:13:09:a2:3e:22:88:
+                    9c:7f:d6:f2:10:65:b4:ee:5f:18:d5:17:e3:f8:c5:
+                    fd:e2:9d:a2:ef:53:0e:85:77:a2:0f:e1:30:47:ee:
+                    00:e7:33:7d:44:67:1a:0b:51:e8:8b:a0:9e:50:98:
+                    68:34:52:1f:2e:6d:01:f2:60:45:f2:31:eb:a9:31:
+                    68:29:bb:7a:41:9e:c6:19:7f:94:b4:51:39:03:7f:
+                    b2:de:a7:32:9b:b4:47:8e:6f:b4:4a:ae:e5:af:b1:
+                    dc:b0:1b:61:bc:99:72:de:e4:89:b7:7a:26:5d:da:
+                    33:49:5b:52:9c:0e:f5:8a:ad:c3:b8:3d:e8:06:6a:
+                    c2:d5:2a:0b:6c:7b:84:bd:56:05:cb:86:65:92:ec:
+                    44:2b:b0:8e:b9:dc:70:0b:46:da:ad:bc:63:88:39:
+                    fa:db:6a:fe:23:fa:bc:e4:48:f4:67:2b:6a:11:10:
+                    21:49
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:TRUE
+            X509v3 Certificate Policies: 
+                Policy: X509v3 Any Policy
+                  CPS: http://www.pkioverheid.nl/policies/root-policy
+
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                A8:7D:EB:BC:63:A4:74:13:74:00:EC:96:E0:D3:34:C1:2C:BF:6C:F8
+    Signature Algorithm: sha1WithRSAEncryption
+        05:84:87:55:74:36:61:c1:bb:d1:d4:c6:15:a8:13:b4:9f:a4:
+        fe:bb:ee:15:b4:2f:06:0c:29:f2:a8:92:a4:61:0d:fc:ab:5c:
+        08:5b:51:13:2b:4d:c2:2a:61:c8:f8:09:58:fc:2d:02:b2:39:
+        7d:99:66:81:bf:6e:5c:95:45:20:6c:e6:79:a7:d1:d8:1c:29:
+        fc:c2:20:27:51:c8:f1:7c:5d:34:67:69:85:11:30:c6:00:d2:
+        d7:f3:d3:7c:b6:f0:31:57:28:12:82:73:e9:33:2f:a6:55:b4:
+        0b:91:94:47:9c:fa:bb:7a:42:32:e8:ae:7e:2d:c8:bc:ac:14:
+        bf:d9:0f:d9:5b:fc:c1:f9:7a:95:e1:7d:7e:96:fc:71:b0:c2:
+        4c:c8:df:45:34:c9:ce:0d:f2:9c:64:08:d0:3b:c3:29:c5:b2:
+        ed:90:04:c1:b1:29:91:c5:30:6f:c1:a9:72:33:cc:fe:5d:16:
+        17:2c:11:69:e7:7e:fe:c5:83:08:df:bc:dc:22:3a:2e:20:69:
+        23:39:56:60:67:90:8b:2e:76:39:fb:11:88:97:f6:7c:bd:4b:
+        b8:20:16:67:05:8d:e2:3b:c1:72:3f:94:95:37:c7:5d:b9:9e:
+        d8:93:a1:17:8f:ff:0c:66:15:c1:24:7c:32:7c:03:1d:3b:a1:
+        58:45:32:93
+SHA1 Fingerprint=10:1D:FA:3F:D5:0B:CB:BB:9B:B5:60:0C:19:55:A4:1A:F4:73:3A:04
+-----BEGIN CERTIFICATE-----
+MIIDujCCAqKgAwIBAgIEAJiWijANBgkqhkiG9w0BAQUFADBVMQswCQYDVQQGEwJO
+TDEeMBwGA1UEChMVU3RhYXQgZGVyIE5lZGVybGFuZGVuMSYwJAYDVQQDEx1TdGFh
+dCBkZXIgTmVkZXJsYW5kZW4gUm9vdCBDQTAeFw0wMjEyMTcwOTIzNDlaFw0xNTEy
+MTYwOTE1MzhaMFUxCzAJBgNVBAYTAk5MMR4wHAYDVQQKExVTdGFhdCBkZXIgTmVk
+ZXJsYW5kZW4xJjAkBgNVBAMTHVN0YWF0IGRlciBOZWRlcmxhbmRlbiBSb290IENB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmNK1URF6gaYUmHFtvszn
+ExvWJw56s2oYHLZhWtVhCb/ekBPHZ+7d89rFDBKeNVU+LCeIQGv33N0iYfXCxw71
+9tV2U02PjLwYdjeFnejKScfST5gTCaI+Ioicf9byEGW07l8Y1Rfj+MX94p2i71MO
+hXeiD+EwR+4A5zN9RGcaC1Hoi6CeUJhoNFIfLm0B8mBF8jHrqTFoKbt6QZ7GGX+U
+tFE5A3+y3qcym7RHjm+0Sq7lr7HcsBthvJly3uSJt3omXdozSVtSnA71iq3DuD3o
+BmrC1SoLbHuEvVYFy4ZlkuxEK7COudxwC0barbxjiDn622r+I/q85Ej0ZytqERAh
+SQIDAQABo4GRMIGOMAwGA1UdEwQFMAMBAf8wTwYDVR0gBEgwRjBEBgRVHSAAMDww
+OgYIKwYBBQUHAgEWLmh0dHA6Ly93d3cucGtpb3ZlcmhlaWQubmwvcG9saWNpZXMv
+cm9vdC1wb2xpY3kwDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSofeu8Y6R0E3QA
+7Jbg0zTBLL9s+DANBgkqhkiG9w0BAQUFAAOCAQEABYSHVXQ2YcG70dTGFagTtJ+k
+/rvuFbQvBgwp8qiSpGEN/KtcCFtREytNwiphyPgJWPwtArI5fZlmgb9uXJVFIGzm
+eafR2Bwp/MIgJ1HI8XxdNGdphREwxgDS1/PTfLbwMVcoEoJz6TMvplW0C5GUR5z6
+u3pCMuiufi3IvKwUv9kP2Vv8wfl6leF9fpb8cbDCTMjfRTTJzg3ynGQI0DvDKcWy
+7ZAEwbEpkcUwb8GpcjPM/l0WFywRaed+/sWDCN+83CI6LiBpIzlWYGeQiy52OfsR
+iJf2fL1LuCAWZwWN4jvBcj+UlTfHXbme2JOhF4//DGYVwSR8MnwDHTuhWEUykw==
+-----END CERTIFICATE-----

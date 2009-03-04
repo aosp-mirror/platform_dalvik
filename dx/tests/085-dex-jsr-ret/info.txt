@@ -1,0 +1,2 @@
+Tests handling of the Java jsr/jsr_w/ret bytecodes.
+

@@ -1,0 +1,6 @@
+ReflectArrayTest.testSingleInt passed
+ReflectArrayTest.testSingle passed
+ReflectArrayTest.testMultiInt passed
+zero one two ++
+ReflectArrayTest.testMulti passed
+ReflectArrayTest passed

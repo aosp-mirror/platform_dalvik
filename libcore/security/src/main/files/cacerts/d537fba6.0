@@ -1,0 +1,94 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 986490188 (0x3acca54c)
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=DK, O=TDC Internet, OU=TDC Internet Root CA
+        Validity
+            Not Before: Apr  5 16:33:17 2001 GMT
+            Not After : Apr  5 17:03:17 2021 GMT
+        Subject: C=DK, O=TDC Internet, OU=TDC Internet Root CA
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (2048 bit)
+                Modulus (2048 bit):
+                    00:c4:b8:40:bc:91:d5:63:1f:d7:99:a0:8b:0c:40:
+                    1e:74:b7:48:9d:46:8c:02:b2:e0:24:5f:f0:19:13:
+                    a7:37:83:6b:5d:c7:8e:f9:84:30:ce:1a:3b:fa:fb:
+                    ce:8b:6d:23:c6:c3:6e:66:9f:89:a5:df:e0:42:50:
+                    67:fa:1f:6c:1e:f4:d0:05:d6:bf:ca:d6:4e:e4:68:
+                    60:6c:46:aa:1c:5d:63:e1:07:86:0e:65:00:a7:2e:
+                    a6:71:c6:bc:b9:81:a8:3a:7d:1a:d2:f9:d1:ac:4b:
+                    cb:ce:75:af:dc:7b:fa:81:73:d4:fc:ba:bd:41:88:
+                    d4:74:b3:f9:5e:38:3a:3c:43:a8:d2:95:4e:77:6d:
+                    13:0c:9d:8f:78:01:b7:5a:20:1f:03:37:35:e2:2c:
+                    db:4b:2b:2c:78:b9:49:db:c4:d0:c7:9c:9c:e4:8a:
+                    20:09:21:16:56:66:ff:05:ec:5b:e3:f0:cf:ab:24:
+                    24:5e:c3:7f:70:7a:12:c4:d2:b5:10:a0:b6:21:e1:
+                    8d:78:69:55:44:69:f5:ca:96:1c:34:85:17:25:77:
+                    e2:f6:2f:27:98:78:fd:79:06:3a:a2:d6:5a:43:c1:
+                    ff:ec:04:3b:ee:13:ef:d3:58:5a:ff:92:eb:ec:ae:
+                    da:f2:37:03:47:41:b6:97:c9:2d:0a:41:22:bb:bb:
+                    e6:a7
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            Netscape Cert Type: 
+                SSL CA, S/MIME CA, Object Signing CA
+            X509v3 CRL Distribution Points: 
+                DirName:/C=DK/O=TDC Internet/OU=TDC Internet Root CA/CN=CRL1
+
+            X509v3 Private Key Usage Period: 
+                Not Before: Apr  5 16:33:17 2001 GMT, Not After: Apr  5 17:03:17 2021 GMT
+            X509v3 Key Usage: 
+                Certificate Sign, CRL Sign
+            X509v3 Authority Key Identifier: 
+                keyid:6C:64:01:C7:FD:85:6D:AC:C8:DA:9E:50:08:85:08:B5:3C:56:A8:50
+
+            X509v3 Subject Key Identifier: 
+                6C:64:01:C7:FD:85:6D:AC:C8:DA:9E:50:08:85:08:B5:3C:56:A8:50
+            X509v3 Basic Constraints: 
+                CA:TRUE
+            1.2.840.113533.7.65.0: 
+                0...V5.0:4.0....
+    Signature Algorithm: sha1WithRSAEncryption
+        4e:43:cc:d1:dd:1d:10:1b:06:7f:b7:a4:fa:d3:d9:4d:fb:23:
+        9f:23:54:5b:e6:8b:2f:04:28:8b:b5:27:6d:89:a1:ec:98:69:
+        dc:e7:8d:26:83:05:79:74:ec:b4:b9:a3:97:c1:35:00:fd:15:
+        da:39:81:3a:95:31:90:de:97:e9:86:a8:99:77:0c:e5:5a:a0:
+        84:ff:12:16:ac:6e:b8:8d:c3:7b:92:c2:ac:2e:d0:7d:28:ec:
+        b6:f3:60:38:69:6f:3e:d8:04:55:3e:9e:cc:55:d2:ba:fe:bb:
+        47:04:d7:0a:d9:16:0a:34:29:f5:58:13:d5:4f:cf:8f:56:4b:
+        b3:1e:ee:d3:98:79:da:08:1e:0c:6f:b8:f8:16:27:ef:c2:6f:
+        3d:f6:a3:4b:3e:0e:e4:6d:6c:db:3b:41:12:9b:bd:0d:47:23:
+        7f:3c:4a:d0:af:c0:af:f6:ef:1b:b5:15:c4:eb:83:c4:09:5f:
+        74:8b:d9:11:fb:c2:56:b1:3c:f8:70:ca:34:8d:43:40:13:8c:
+        fd:99:03:54:79:c6:2e:ea:86:a1:f6:3a:d4:09:bc:f4:bc:66:
+        cc:3d:58:d0:57:49:0a:ee:25:e2:41:ee:13:f9:9b:38:34:d1:
+        00:f5:7e:e7:94:1d:fc:69:03:62:b8:99:05:05:3d:6b:78:12:
+        bd:b0:6f:65
+SHA1 Fingerprint=21:FC:BD:8E:7F:6C:AF:05:1B:D1:B3:43:EC:A8:E7:61:47:F2:0F:8A
+-----BEGIN CERTIFICATE-----
+MIIEKzCCAxOgAwIBAgIEOsylTDANBgkqhkiG9w0BAQUFADBDMQswCQYDVQQGEwJE
+SzEVMBMGA1UEChMMVERDIEludGVybmV0MR0wGwYDVQQLExRUREMgSW50ZXJuZXQg
+Um9vdCBDQTAeFw0wMTA0MDUxNjMzMTdaFw0yMTA0MDUxNzAzMTdaMEMxCzAJBgNV
+BAYTAkRLMRUwEwYDVQQKEwxUREMgSW50ZXJuZXQxHTAbBgNVBAsTFFREQyBJbnRl
+cm5ldCBSb290IENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxLhA
+vJHVYx/XmaCLDEAedLdInUaMArLgJF/wGROnN4NrXceO+YQwzho7+vvOi20jxsNu
+Zp+Jpd/gQlBn+h9sHvTQBda/ytZO5GhgbEaqHF1j4QeGDmUApy6mcca8uYGoOn0a
+0vnRrEvLznWv3Hv6gXPU/Lq9QYjUdLP5Xjg6PEOo0pVOd20TDJ2PeAG3WiAfAzc1
+4izbSysseLlJ28TQx5yc5IogCSEWVmb/Bexb4/DPqyQkXsN/cHoSxNK1EKC2IeGN
+eGlVRGn1ypYcNIUXJXfi9i8nmHj9eQY6otZaQ8H/7AQ77hPv01ha/5Lr7K7a8jcD
+R0G2l8ktCkEiu7vmpwIDAQABo4IBJTCCASEwEQYJYIZIAYb4QgEBBAQDAgAHMGUG
+A1UdHwReMFwwWqBYoFakVDBSMQswCQYDVQQGEwJESzEVMBMGA1UEChMMVERDIElu
+dGVybmV0MR0wGwYDVQQLExRUREMgSW50ZXJuZXQgUm9vdCBDQTENMAsGA1UEAxME
+Q1JMMTArBgNVHRAEJDAigA8yMDAxMDQwNTE2MzMxN1qBDzIwMjEwNDA1MTcwMzE3
+WjALBgNVHQ8EBAMCAQYwHwYDVR0jBBgwFoAUbGQBx/2FbazI2p5QCIUItTxWqFAw
+HQYDVR0OBBYEFGxkAcf9hW2syNqeUAiFCLU8VqhQMAwGA1UdEwQFMAMBAf8wHQYJ
+KoZIhvZ9B0EABBAwDhsIVjUuMDo0LjADAgSQMA0GCSqGSIb3DQEBBQUAA4IBAQBO
+Q8zR3R0QGwZ/t6T609lN+yOfI1Rb5osvBCiLtSdtiaHsmGnc540mgwV5dOy0uaOX
+wTUA/RXaOYE6lTGQ3pfphqiZdwzlWqCE/xIWrG64jcN7ksKsLtB9KOy282A4aW8+
+2ARVPp7MVdK6/rtHBNcK2RYKNCn1WBPVT8+PVkuzHu7TmHnaCB4Mb7j4Fifvwm89
+9qNLPg7kbWzbO0ESm70NRyN/PErQr8Cv9u8btRXE64PECV90i9kR+8JWsTz4cMo0
+jUNAE4z9mQNUecYu6oah9jrUCbz0vGbMPVjQV0kK7iXiQe4T+Zs4NNEA9X7nlB38
+aQNiuJkFBT1reBK9sG9l
+-----END CERTIFICATE-----

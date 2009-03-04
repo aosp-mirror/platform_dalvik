@@ -1,0 +1,950 @@
+/*
+ * Copyright (C) 2007 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.dx.ssa.back;
+
+import com.android.dx.rop.code.*;
+import com.android.dx.rop.cst.CstInteger;
+import com.android.dx.ssa.InterferenceRegisterMapper;
+import com.android.dx.ssa.RegisterMapper;
+import com.android.dx.ssa.SsaInsn;
+import com.android.dx.ssa.SsaMethod;
+import com.android.dx.ssa.NormalSsaInsn;
+import com.android.dx.ssa.PhiInsn;
+import com.android.dx.ssa.Optimizer;
+import com.android.dx.ssa.SsaBasicBlock;
+import com.android.dx.util.IntSet;
+import com.android.dx.util.IntIterator;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Map;
+import java.util.TreeMap;
+
+/**
+ * Allocates registers in a first-fit fashion, with the bottom reserved for
+ * method parameters and all SSAregisters representing the same local variable
+ * kept together if possible.
+ */
+public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
+    private static final boolean DEBUG = false;
+
+    /** maps local variable to a list of associated SSA registers*/
+    private final Map<LocalItem, ArrayList<RegisterSpec>> localVariables;
+
+    /** list of move-result-pesudo instructions seen in this method */
+    private final ArrayList<NormalSsaInsn> moveResultPseudoInsns;
+
+    /** list of invoke-range instructions seen in this method */
+    private final ArrayList<NormalSsaInsn> invokeRangeInsns;
+
+    /** indexed by SSA reg; the set of SSA regs we've mapped */
+    private final BitSet ssaRegsMapped;
+
+    /** Register mapper which will be our result */
+    private final InterferenceRegisterMapper mapper;
+
+    /** end of rop registers range (starting at 0) reserved for parameters. */
+    private final int paramRangeEnd;
+
+    /** set of Rop registers reserved for parameters or local variables. */
+    private final BitSet reservedRopRegs;
+
+    /** set of Rop registers that have been used by anything.*/
+    private final BitSet usedRopRegs;
+
+    /** true if converter should take steps to minimize rop-form registers*/
+    private final boolean minimizeRegisters;
+
+
+    /**
+     * Constructs instance.
+     *
+     * @param ssaMeth non-null; method to process
+     * @param interference non-null interference graph for SSA registers
+     * @param minimizeRegisters true if converter should take steps to
+     * minimize rop-form registers
+     */
+    public FirstFitLocalCombiningAllocator(
+            final SsaMethod ssaMeth, InterferenceGraph interference,
+            boolean minimizeRegisters) {
+        super(ssaMeth, interference);
+
+        ssaRegsMapped = new BitSet(ssaMeth.getRegCount());
+
+        mapper = new InterferenceRegisterMapper(
+                interference, ssaMeth.getRegCount());
+
+        this.minimizeRegisters = minimizeRegisters;
+
+        /*
+         * Reserve space for the params at the bottom of the register
+         * space. Later, we'll flip the params to the end of the register
+         * space.
+         */
+
+        paramRangeEnd = ssaMeth.getParamWidth();
+
+        reservedRopRegs = new BitSet(paramRangeEnd * 2);
+        reservedRopRegs.set(0, paramRangeEnd);
+        usedRopRegs = new BitSet(paramRangeEnd * 2);
+        localVariables = new TreeMap<LocalItem, ArrayList<RegisterSpec>>();
+        moveResultPseudoInsns = new ArrayList<NormalSsaInsn>();
+        invokeRangeInsns = new ArrayList<NormalSsaInsn>();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean wantsParamsMovedHigh() {
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public RegisterMapper allocateRegisters() {
+
+        analyzeInstructions();
+
+        if (DEBUG) {
+            printLocalVars();
+        }
+
+        if(DEBUG) System.out.println("--->Mapping local-associated params");
+        handleLocalAssociatedParams();
+
+        if(DEBUG) System.out.println("--->Mapping other params");
+        handleUnassociatedParameters();
+
+        if(DEBUG) System.out.println("--->Mapping invoke-range");
+        handleInvokeRangeInsns();
+        
+        if(DEBUG) System.out.println("--->Mapping local-associated non-params");
+        handleLocalAssociatedOther();
+
+        if(DEBUG) System.out.println("--->Mapping check-cast results");
+        handleCheckCastResults();
+
+        if(DEBUG) System.out.println("--->Mapping others");
+        handleNormalUnassociated();
+
+        return mapper;
+    }
+
+    /**
+     * Dumps local variable table to stdout for debugging.
+     */
+    private void printLocalVars() {
+        System.out.println("Printing local vars");
+        for (Map.Entry<LocalItem, ArrayList<RegisterSpec>> e:
+                localVariables.entrySet()) {
+            StringBuilder regs = new StringBuilder();
+
+            regs.append('{');
+            regs.append(' ');
+            for(RegisterSpec reg: e.getValue()) {
+                regs.append('v');
+                regs.append(reg.getReg());
+                regs.append(' ');
+            }
+            regs.append('}');
+            System.out.printf("Local: %s Registers: %s\n", e.getKey(), regs);
+        }
+    }
+
+    /**
+     * Maps all local-associated parameters to Rop registers.
+     */
+    private void handleLocalAssociatedParams() {
+        for (ArrayList<RegisterSpec> ssaRegs: localVariables.values()) {
+            int sz = ssaRegs.size();
+            int paramIndex = -1;
+            int paramCategory = 0;
+
+            // First, find out if this local variable is a parameter
+            for (int i = 0 ; i < sz ; i++) {
+                RegisterSpec ssaSpec = ssaRegs.get(i);
+                int ssaReg = ssaSpec.getReg();
+
+                paramIndex = getParameterIndexForReg(ssaReg);
+
+                if (paramIndex >= 0) {
+                    paramCategory = ssaSpec.getCategory();
+                    addMapping(ssaSpec, paramIndex);
+                    break;
+                }
+            }
+
+            if (paramIndex < 0) {
+                // this local wasn't a parameter
+                continue;
+            }
+
+            // Any remaining local-associated registers will be mapped later
+            tryMapRegs(ssaRegs, paramIndex, paramCategory, true);
+        }
+    }
+
+    /**
+     * Gets the parameter index for SSA registers that are method parameters.
+     * -1 is returned for non-parameter registers.
+     *
+     * @param ssaReg &gt;=0 SSA register to look up
+     * @return parameter index or -1 if not a parameter
+     */
+    private int getParameterIndexForReg(int ssaReg) {
+        SsaInsn defInsn = ssaMeth.getDefinitionForRegister(ssaReg);
+        if (defInsn == null) {
+            return -1;
+        }
+        
+        Rop opcode = defInsn.getOpcode();
+
+        // opcode == null for phi insns
+        if (opcode != null && opcode.getOpcode() == RegOps.MOVE_PARAM) {
+            CstInsn origInsn = (CstInsn) defInsn.getOriginalRopInsn();
+            return  ((CstInteger) origInsn.getConstant()).getValue();
+        }
+
+        return -1;
+    }
+
+    /**
+     * Maps all local-associated registers that are not parameters. Tries to
+     * find an unreserved range that's wide enough for all of the SSA registers,
+     * and then tries to map them all to that range. If not all fit,
+     * a new range is tried until all registers have been fit.
+     */
+    private void handleLocalAssociatedOther() {
+        for (ArrayList<RegisterSpec> specs: localVariables.values()) {
+            int ropReg = 0;
+
+            boolean done;
+            do {
+                int maxCategory = 1;
+
+                // compute max category for remaining unmapped registers
+                int sz = specs.size();
+                for (int i = 0; i < sz; i++) {
+                    RegisterSpec ssaSpec = specs.get(i);
+                    int category = ssaSpec.getCategory();
+                    if (!ssaRegsMapped.get(ssaSpec.getReg())
+                            && category > maxCategory) {
+                        maxCategory = category;
+                    }
+                }
+
+                ropReg = findRopRegForLocal(ropReg, maxCategory);
+
+                done = tryMapRegs(specs, ropReg, maxCategory, true);
+
+                // Increment for next call to findNext
+                ropReg++;
+            } while (!done);
+        }
+    }
+
+    /**
+     * Tries to map a list of SSA registers into the a rop reg, marking
+     * used rop space as reserved. SSA registers that don't fit are left
+     * unmapped.
+     *
+     * @param specs non-null; SSA registers to attempt to map
+     * @param ropReg &gt;=0 rop register to map to
+     * @param maxAllowedCategory 1 or 2, maximum category allowed in mapping.
+     * @param markReserved do so if true
+     * @return true if all registers wew mapped, false if some remain unmapped.
+     */
+    private boolean tryMapRegs(
+            ArrayList<RegisterSpec> specs, int ropReg,
+            int maxAllowedCategory, boolean markReserved) {
+        boolean remaining = false;
+        for(RegisterSpec spec: specs) {
+            if (ssaRegsMapped.get(spec.getReg())) {
+                continue;
+            }
+
+            boolean succeeded;
+            succeeded = tryMapReg(spec, ropReg, maxAllowedCategory);
+            remaining = !succeeded || remaining;
+            if (succeeded && markReserved) {
+                // This only needs to be called once really with
+                // the widest category used, but <shrug>
+                markReserved(ropReg, spec.getCategory());
+            }
+        }
+        return !remaining;
+    }
+
+    /**
+     * Tries to map an SSA register to a rop register.
+     *
+     * @param ssaSpec non-null; SSA register
+     * @param ropReg &gt;=0 rop register
+     * @param maxAllowedCategory 1 or 2, the maximum category that the SSA
+     * register is allowed to be.
+     * @return true if map succeeded, false if not.
+     */
+    private boolean tryMapReg(RegisterSpec ssaSpec, int ropReg,
+            int maxAllowedCategory) {
+        if (ssaSpec.getCategory() <= maxAllowedCategory
+                && !ssaRegsMapped.get(ssaSpec.getReg())
+                && canMapReg(ssaSpec, ropReg)) {
+            addMapping(ssaSpec, ropReg);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Marks a range of Rop registers as "reserved for a local variable"
+     *
+     * @param ropReg &gt;= 0 rop register to reserve
+     * @param category &gt; 0 width to reserve
+     */
+    private void markReserved(int ropReg, int category) {
+        reservedRopRegs.set(ropReg, ropReg + category, true);
+    }
+
+    /**
+     * Checks to see if any Rop registers in the specified range are reserved
+     * for local variables or parameters
+     *
+     * @param ropRangeStart &gt;= 0 lowest Rop register
+     * @param width &gt; 0 number of Rop registers in range.
+     * @return true if any register in range is marked reserved
+     */
+    private boolean rangeContainsReserved(int ropRangeStart, int width) {
+        for (int i = ropRangeStart; i < (ropRangeStart + width); i++) {
+            if (reservedRopRegs.get(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if given rop register represents the "this" pointer
+     * for a non-static method
+     *
+     * @param startReg rop register
+     * @return true if the "this" pointer is located here.
+     */
+    private boolean isThisPointerReg(int startReg) {
+        // "this" is always the first parameter
+        return startReg == 0 && !ssaMeth.isStatic();
+    }
+
+    /**
+     * Finds a range of unreserved Rop registers.
+     *
+     * @param startReg &gt;= 0; a Rop register to start the search at
+     * @param width &gt; 0; the width, in registers, required.
+     * @return &gt;= 0; start of available register range.
+     */
+    private int findNextUnreservedRopReg(int startReg, int width) {
+        if (minimizeRegisters && !isThisPointerReg(startReg)) {
+            return startReg;
+        }
+
+        int reg;
+
+        reg = reservedRopRegs.nextClearBit(startReg);
+
+        while (true) {
+            int i = 1;
+
+            while (i < width && !reservedRopRegs.get(reg + i)) {
+                i++;
+            }
+
+            if (i == width) {
+                return reg;
+            }
+
+            reg = reservedRopRegs.nextClearBit(reg + i);
+        }
+    }
+
+    /**
+     * Finds a range of rop regs that can be used for local variables.
+     * If <code>MIX_LOCALS_AND_OTHER</code> is false, this means any
+     * rop register that has not yet been used.
+     *
+     * @param startReg &gt;= 0; a Rop register to start the search at
+     * @param width &gt; 0; the width, in registers, required.
+     * @return &gt;= 0; start of available register range.
+     */
+    private int findRopRegForLocal(int startReg, int width) {
+        if (minimizeRegisters && !isThisPointerReg(startReg)) {
+            return startReg;
+        }
+
+        int reg;
+
+        reg = usedRopRegs.nextClearBit(startReg);
+
+        while (true) {
+            int i = 1;
+
+            while (i < width && !usedRopRegs.get(reg + i)) {
+                i++;
+            }
+
+            if (i == width) {
+                return reg;
+            }
+
+            reg = usedRopRegs.nextClearBit(reg + i);
+        }
+    }
+
+    /**
+     * Maps any parameter that isn't local-associated, which can happen
+     * in the case where there is no java debug info.
+     */
+    private void handleUnassociatedParameters() {
+        int szSsaRegs = ssaMeth.getRegCount();
+        for (int ssaReg = 0; ssaReg < szSsaRegs; ssaReg++) {
+            if (ssaRegsMapped.get(ssaReg)) {
+                // We already did this one above
+                continue;
+            }
+
+            int paramIndex = getParameterIndexForReg(ssaReg);
+
+            RegisterSpec ssaSpec = getDefinitionSpecForSsaReg(ssaReg);
+            if (paramIndex >= 0) {
+                addMapping(ssaSpec, paramIndex);
+            }            
+        }
+    }
+
+    /**
+     * Handles all insns that want a register range for their sources.
+     */
+    private void handleInvokeRangeInsns() {
+        for(NormalSsaInsn insn: invokeRangeInsns) {
+            adjustAndMapSourceRangeRange(insn);
+        }
+    }
+
+    /**
+     * Handles check cast results to reuse the same source register if possible
+     */
+    private void handleCheckCastResults() {
+        for (NormalSsaInsn insn : moveResultPseudoInsns) {
+            RegisterSpec moveRegSpec = insn.getResult();
+            int moveReg = moveRegSpec.getReg();
+            BitSet predBlocks = insn.getBlock().getPredecessors();
+
+            // Expect one predecessor block only
+            if (predBlocks.cardinality() != 1) {
+                continue;
+            }
+
+            SsaBasicBlock predBlock =
+                    ssaMeth.getBlocks().get(predBlocks.nextSetBit(0));
+            ArrayList<SsaInsn> insnList = predBlock.getInsns();
+
+            /**
+             * If the predecessor block has a check-cast, it will be the last
+             * instruction
+             */
+            SsaInsn checkCastInsn = insnList.get(insnList.size() - 1);
+            if (checkCastInsn.getOpcode().getOpcode() != RegOps.CHECK_CAST) {
+                continue;
+            }
+
+            RegisterSpec checkRegSpec = checkCastInsn.getSources().get(0);
+            int checkReg = checkRegSpec.getReg();
+
+            // Assume none of the register is mapped yet
+            int ropReg = 0;
+
+            /**
+             * See if either register is already mapped. Most likely the move
+             * result will be mapped already since the cast result is stored
+             * in a local variable.
+             */
+            if (ssaRegsMapped.get(moveReg)) {
+                ropReg = mapper.oldToNew(moveReg);
+            } else if (ssaRegsMapped.get(checkReg)) {
+                ropReg = mapper.oldToNew(checkReg);
+            }
+
+            ArrayList<RegisterSpec> ssaRegs = new ArrayList<RegisterSpec>(2);
+            ssaRegs.add(moveRegSpec);
+            ssaRegs.add(checkRegSpec);
+            int category = checkRegSpec.getCategory();
+
+            while (!tryMapRegs(ssaRegs, ropReg, category, false)) {
+                ropReg = findNextUnreservedRopReg(ropReg + 1, category);
+            }
+        }
+    }
+
+    /**
+     * Maps all non-parameter, non-local variable
+     * registers.
+     */
+    private void handleNormalUnassociated() {
+        int szSsaRegs = ssaMeth.getRegCount();
+        for (int ssaReg = 0; ssaReg < szSsaRegs; ssaReg++) {
+            if (ssaRegsMapped.get(ssaReg)) {
+                // We already did this one
+                continue;
+            }
+
+            RegisterSpec ssaSpec = getDefinitionSpecForSsaReg(ssaReg);
+
+            if (ssaSpec == null) continue;
+
+            int category = ssaSpec.getCategory();
+            // Find a rop reg that does not interfere
+            int ropReg = findNextUnreservedRopReg(0, category);
+            while (!canMapReg(ssaSpec, ropReg)) {
+                ropReg = findNextUnreservedRopReg(ropReg + 1, category);
+            }
+
+            addMapping(ssaSpec, ropReg);
+        }
+    }
+
+    /**
+     * Checks to see if <code>ssaSpec</code> can be mapped to
+     * <code>ropReg</code>. Checks interference graph and ensures
+     * the range does not cross the parameter range.
+     *
+     * @param ssaSpec non-null; SSA spec
+     * @param ropReg prosepctive new-namespace reg
+     * @return true if mapping is possible
+     */
+    private boolean canMapReg(RegisterSpec ssaSpec, int ropReg) {
+        int category = ssaSpec.getCategory();
+        return !(spansParamRange(ropReg, category)
+                || mapper.interferes(ssaSpec, ropReg));
+    }
+ 
+    /**
+     * Returns true if the specified Rop register + category
+     * will cross the boundry between the lower <code>paramWidth</code>
+     * registers reserved for method params and the upper registers. We cannot
+     * allocate a register that spans the param block and the normal block,
+     * because we will be moving the param block to high registers later.
+     * 
+     * @param ssaReg register in new namespace
+     * @param category width that the register will have
+     * @return true in the case noted above.
+     */
+    private boolean spansParamRange(int ssaReg, int category) {
+        return ((ssaReg < paramRangeEnd)
+                && ((ssaReg + category) > paramRangeEnd));
+    }
+
+    /**
+     * Analyze each instruction and find out all the local variable assignments
+     * and move-result-pseudo/invoke-range instrucitons.
+     */
+    private void analyzeInstructions() {
+        ssaMeth.forEachInsn(new SsaInsn.Visitor() {
+
+            /** {@inheritDoc} */
+            public void visitMoveInsn(NormalSsaInsn insn) {
+                processInsn(insn);
+            }
+
+            /** {@inheritDoc} */
+            public void visitPhiInsn(PhiInsn insn) {
+                processInsn(insn);
+            }
+
+            /** {@inheritDoc} */
+            public void visitNonMoveInsn(NormalSsaInsn insn) {
+                processInsn(insn);
+            }
+
+            /**
+             * This method collects three types of instructions:
+             * 1) Adds a local variable assignment to the
+             *    <code>localVariables</code> map.
+             * 2) Add move-result-pseudo to the
+             *    <code>moveResultPseudoInsns</code> list.
+             * 3) Add invoke-range to the
+             *    <code>invokeRangeInsns</code> list.
+             *
+             * @param insn non-null; insn that may represent a local variable
+             * assignment.
+             */
+            private void processInsn(SsaInsn insn) {
+                RegisterSpec assignment;
+                assignment = insn.getLocalAssignment();
+
+                if (assignment != null) {
+                    LocalItem local = assignment.getLocalItem();
+
+                    ArrayList<RegisterSpec> regList = localVariables.get(local);
+
+                    if (regList == null) {
+                        regList = new ArrayList<RegisterSpec>();
+                        localVariables.put(local, regList);
+                    }
+
+                    regList.add(assignment);
+                }
+
+                if (insn instanceof NormalSsaInsn) {
+                    if (insn.getOpcode().getOpcode() ==
+                            RegOps.MOVE_RESULT_PSEUDO) {
+                        moveResultPseudoInsns.add((NormalSsaInsn) insn);
+                    } else if (Optimizer.getAdvice().requiresSourcesInOrder(
+                            insn.getOriginalRopInsn().getOpcode(),
+                            insn.getSources())) {
+                        invokeRangeInsns.add((NormalSsaInsn) insn);
+                    }
+                }
+
+            }
+        });
+    }
+
+    /**
+     * Adds a mapping from an SSA register to a Rop register. <code>
+     * canMapReg</code> should have already been called.
+     *
+     * @param ssaSpec non-null; SSA register to map from
+     * @param ropReg &gt;=0; Rop register to map to
+     */
+    private void addMapping(RegisterSpec ssaSpec, int ropReg) {
+        int ssaReg = ssaSpec.getReg();
+
+        // An assertion
+        if (ssaRegsMapped.get(ssaReg) || !canMapReg(ssaSpec, ropReg)) {
+            throw new RuntimeException(
+                    "attempt to add invalid register mapping");
+        }
+
+        if (DEBUG) {
+            System.out.printf("Add mapping s%d -> v%d c:%d\n",
+                    ssaSpec.getReg(), ropReg, ssaSpec.getCategory());               
+
+        }
+
+        int category = ssaSpec.getCategory();
+        mapper.addMapping(ssaSpec.getReg(), ropReg, category);
+        ssaRegsMapped.set(ssaReg);
+        usedRopRegs.set(ropReg, ropReg + category);
+    }
+
+
+    /**
+     * Maps the source registers of the specified instruction such that they
+     * will fall in a contiguous range in Rop form. Moves are inserted as
+     * necessary to allow the range to be allocated.
+     *
+     * @param insn non-null; insn whos sources to process
+     */
+    private void adjustAndMapSourceRangeRange(NormalSsaInsn insn) {
+        int newRegStart;
+
+        newRegStart = findRangeAndAdjust(insn);
+
+        RegisterSpecList sources = insn.getSources();
+        int szSources = sources.size();
+        int nextRopReg = newRegStart;
+        for (int i = 0; i < szSources; i++) {
+            RegisterSpec source = sources.get(i);
+            int sourceReg = source.getReg();
+            int category = source.getCategory();
+            int curRopReg = nextRopReg;
+            nextRopReg += category;
+
+            if (ssaRegsMapped.get(sourceReg)) {
+                continue;
+            }
+
+            LocalItem localItem = getLocalItemForReg(sourceReg);
+            addMapping(source, curRopReg);
+
+            if (localItem != null) {
+                markReserved(curRopReg, category);
+                ArrayList<RegisterSpec> similarRegisters
+                        = localVariables.get(localItem);
+
+                int szSimilar = similarRegisters.size();
+
+                // Try to map all SSA registers also associated with this local
+                for (int j = 0; j < szSimilar; j++) {
+                    RegisterSpec similarSpec = similarRegisters.get(j);
+                    int similarReg = similarSpec.getReg();
+
+                    // ...and don't map anything that's also a source...
+                    if (-1 != sources.indexOfRegister(similarReg)) {
+                        continue;
+                    }
+
+                    // Registers left unmapped will get handled later
+                    tryMapReg(similarSpec, curRopReg, category);
+                }
+            }
+        }
+    }
+
+    /**
+     * Find a contiguous rop register range that fits the specified
+     * instruction's sources. First, try to center the range around
+     * sources that have already been mapped to Rop registers. If that fails,
+     * just find a new contiguous range that doesn't interfere.
+
+     * @param insn non-null; the insn whose sources need to fit. Must be
+     * last insn in basic block.
+     * @return &gt;= 0 rop register of start of range
+     */
+    private int findRangeAndAdjust(NormalSsaInsn insn) {
+        RegisterSpecList sources = insn.getSources();
+        int szSources = sources.size();
+        // the category for each source index
+        int categoriesForIndex[] = new int[szSources];
+        int rangeLength = 0;
+
+        // Compute rangeLength and categoriesForIndex
+        for (int i = 0; i < szSources; i++) {
+            int category = sources.get(i).getCategory();
+            categoriesForIndex[i] = category;
+            rangeLength += categoriesForIndex[i];
+        }
+
+        // The highest score of fits tried so far
+        int maxScore = Integer.MIN_VALUE;
+        // the high scoring range's start
+        int resultRangeStart = -1;
+        // by source index: set of sources needing moves in high scoring plan
+        BitSet resultMovesRequired = null;
+
+        /*
+         * First, go through each source that's already been mapped. Try
+         * to center the range around the Rop register this source is mapped
+         * to.
+         */
+        int rangeStartOffset = 0;
+        for (int i = 0; i < szSources; i++) {
+            int ssaCenterReg = sources.get(i).getReg();
+
+            if (i != 0) {
+                rangeStartOffset -= categoriesForIndex[i - 1];
+            }
+            if (!ssaRegsMapped.get(ssaCenterReg)) {
+                continue;
+            }
+
+            int rangeStart = mapper.oldToNew(ssaCenterReg) + rangeStartOffset;
+
+            if (rangeStart < 0 || spansParamRange(rangeStart, rangeLength)) {
+                continue;
+            }
+
+            BitSet curMovesRequired = new BitSet(szSources);
+
+            int fitWidth
+                    = fitPlanForRange(rangeStart, insn, categoriesForIndex,
+                    curMovesRequired);
+
+            if (fitWidth < 0) {
+                continue;
+            }
+
+            int score = fitWidth - curMovesRequired.cardinality();
+
+            if (score > maxScore) {
+                maxScore = score;
+                resultRangeStart = rangeStart;
+                resultMovesRequired = curMovesRequired;
+            }
+
+            if (fitWidth == rangeLength) {
+                // We can't do any better than this, so stop here
+                break;
+            }
+        }
+
+        /*
+         * If we were unable to find a plan for a fit centered around
+         * an already-mapped source, just try to find a range of
+         * registers we can move the range into.
+         */
+
+        if (resultRangeStart == -1) {
+            resultMovesRequired = new BitSet(szSources);
+
+            resultRangeStart = findAnyFittingRange(insn, rangeLength,
+                    categoriesForIndex, resultMovesRequired);
+        }
+
+        /*
+         * Now, insert any moves required
+         */
+
+        for (int i = resultMovesRequired.nextSetBit(0); i >= 0
+                ; i = resultMovesRequired.nextSetBit(i+1)) {
+            insn.changeOneSource(i,
+                    insertMoveBefore(insn, sources.get(i)));
+        }
+
+        return resultRangeStart;
+    }
+
+    /**
+     * Finds an unreserved range that will fit the sources of the
+     * specified instruction. Does not bother trying to center the range
+     * around an already-mapped source register;
+     *
+     * @param insn non-null; insn to build range for
+     * @param rangeLength &gt;=0 length required in register units.
+     * @param categoriesForIndex non-null; indexed by source index;
+     * the category for each source.
+     * @param outMovesRequired non-null; an output parameter indexed by
+     * source index that will contain the set of sources which need
+     * moves inserted.
+     * @return the rop register that starts the fitting range.
+     */
+    private int findAnyFittingRange(NormalSsaInsn insn, int rangeLength,
+            int[] categoriesForIndex, BitSet outMovesRequired) {
+        int rangeStart = 0;
+        while (true) {
+            rangeStart = findNextUnreservedRopReg(rangeStart, rangeLength);
+            int fitWidth
+                    = fitPlanForRange(rangeStart, insn,
+                    categoriesForIndex, outMovesRequired);
+
+            if (fitWidth >= 0) {
+                break;
+            }
+            rangeStart++;
+            outMovesRequired.clear();
+        }
+        return rangeStart;
+    }
+
+    /**
+     * Attempts to build a plan for fitting a range of sources into rop
+     * registers.
+     *
+     * @param ropReg &gt;=0 rop reg that begins range
+     * @param insn non-null; insn to plan range for
+     * @param categoriesForIndex non-null; indexed by source index;
+     * the category for each source.
+     * @param outMovesRequired non-null; an output parameter indexed by
+     * source index that will contain the set of sources which need
+     * moves inserted.
+     * @return the width of the fit that that does not involve added moves or
+     * -1 if "no fit possible"
+     */
+    private int fitPlanForRange(int ropReg, NormalSsaInsn insn,
+            int[] categoriesForIndex, BitSet outMovesRequired) {
+        RegisterSpecList sources = insn.getSources();
+        int szSources = sources.size();
+        int fitWidth = 0;
+        IntSet liveOut = insn.getBlock().getLiveOutRegs();
+        RegisterSpecList liveOutSpecs = ssaSetToSpecs(liveOut);
+
+        // An SSA reg may only be mapped into a range once
+        BitSet seen = new BitSet(ssaMeth.getRegCount());
+
+        for (int i = 0; i < szSources ; i++) {
+            RegisterSpec ssaSpec = sources.get(i);
+            int ssaReg = ssaSpec.getReg();
+            int category = categoriesForIndex[i];
+
+            if (i != 0) {
+                ropReg += categoriesForIndex[i-1];
+            }
+
+            if (ssaRegsMapped.get(ssaReg)
+                    && mapper.oldToNew(ssaReg) == ropReg) {
+                // A register already mapped appropriately
+                fitWidth += category;
+            } else if (rangeContainsReserved(ropReg, category)) {
+                fitWidth = -1;
+                break;
+            } else if (!ssaRegsMapped.get(ssaReg)
+                    && canMapReg(ssaSpec, ropReg)
+                    && !seen.get(ssaReg)) {
+                // A register that can be mapped appropriately
+                fitWidth += category;
+            } else if (!mapper.areAnyPinned(liveOutSpecs, ropReg, category)
+                    && !mapper.areAnyPinned(sources, ropReg, category)) {
+                /*
+                 * A source that can be moved
+                 * We can insert a move as long as:
+                 *
+                 *  - no SSA register pinned to the desired rop reg
+                 * is live out on the block
+                 *  - no SSA register pinned to desired rop reg is
+                 *  a source of this insn (since this may require
+                 * overlapping moves, which we can't presently handle)
+                 */
+
+                outMovesRequired.set(i);
+            } else {
+                fitWidth = -1;
+                break;
+            }
+
+            seen.set(ssaReg);
+        }
+        return fitWidth;
+    }
+
+    /**
+     * Converts a bit set of SSA registers into a RegisterSpecList containing
+     * the definition specs of all the registers.
+     *
+     * @param ssaSet non-null; set of SSA registers
+     * @return list of RegisterSpecs as noted above
+     */
+    RegisterSpecList ssaSetToSpecs(IntSet ssaSet) {
+        RegisterSpecList result = new RegisterSpecList(ssaSet.elements());
+
+        IntIterator iter = ssaSet.iterator();
+
+        int i = 0;
+        while (iter.hasNext()) {
+            result.set(i++, getDefinitionSpecForSsaReg(iter.next()));
+        }
+        
+        return result;
+    }
+
+    /**
+     * Gets a local item associated with an ssa register, if one exists
+     *
+     * @param ssaReg &gt;= 0 SSA register
+     * @return null-ok; associated local item or null
+     */
+    private LocalItem getLocalItemForReg(int ssaReg) {
+        for(Map.Entry<LocalItem, ArrayList<RegisterSpec>> entry:
+                localVariables.entrySet()) {
+
+            for (RegisterSpec spec: entry.getValue()) {
+                if (spec.getReg() == ssaReg) {
+                    return entry.getKey();
+                }
+            }
+        }
+
+        return null;
+    }
+}
