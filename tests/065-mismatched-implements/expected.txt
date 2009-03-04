@@ -1,3 +1,0 @@
-Dalvik VM unable to find static main(String[]) in 'Main'
-java.lang.VerifyError: Main
-	at dalvik.system.NativeStart.main(Native Method)

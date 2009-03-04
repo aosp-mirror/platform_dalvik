@@ -1,3 +1,0 @@
-Test that an attempt to access a private field results in a verification
-error.  Also try to access a non-public class in a different package with
-"instanceof".

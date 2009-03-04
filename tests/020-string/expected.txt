@@ -1,5 +1,0 @@
-testStr is 'This is a very nice string'
-This is a very nice string
-Compare result is 32
-Compare unicode: -65302
-Got expected exception

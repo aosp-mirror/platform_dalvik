@@ -1,2 +1,0 @@
-Got expected failure 1
-Got expected failure 2

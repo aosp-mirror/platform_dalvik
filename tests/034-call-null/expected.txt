@@ -1,3 +1,0 @@
-java.lang.NullPointerException
-	at Main.main(Main.java:12)
-	at dalvik.system.NativeStart.main(Native Method)

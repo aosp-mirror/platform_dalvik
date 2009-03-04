@@ -1,5 +1,0 @@
-Starting thread 'Joiner'
-@ JoinMainSub running
-JoinMain starter returning
-@ JoinMainSub successfully joined main
-@ JoinMainSub bailing

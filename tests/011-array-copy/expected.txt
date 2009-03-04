@@ -1,4 +1,0 @@
-string -> object
-object -> string
-object -> string (modified)
-caught ArrayStoreException (expected)

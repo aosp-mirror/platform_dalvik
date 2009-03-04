@@ -1,7 +1,0 @@
-CORRECT (one)
-CORRECT (not found)
-CORRECT (large)
-CORRECT (large)
-CORRECT (not found)
-CORRECT (not found)
-CORRECT (default only)

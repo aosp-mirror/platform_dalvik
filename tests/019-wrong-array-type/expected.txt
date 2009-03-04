@@ -1,1 +1,0 @@
-Got correct array store exception

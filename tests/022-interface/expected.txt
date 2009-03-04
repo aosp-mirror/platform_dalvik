@@ -1,2 +1,0 @@
-ImplBSub intf: 205
-ImplA: 7
