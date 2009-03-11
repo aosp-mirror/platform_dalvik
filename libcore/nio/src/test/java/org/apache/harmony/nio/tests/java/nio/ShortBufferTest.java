@@ -17,7 +17,6 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
@@ -27,7 +26,6 @@ import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.nio.InvalidMarkException;
 import java.nio.ShortBuffer;
 
@@ -689,7 +687,6 @@ public abstract class ShortBufferTest extends AbstractBufferTest {
         method = "put",
         args = {short[].class, int.class, int.class}
     )
-    @KnownFailure("ToT fixed")
     public  void testPutshortArrayintint2() {
         // Regression test
         ByteBuffer buf = ByteBuffer.allocateDirect(10);

@@ -124,9 +124,8 @@ public class ClassLoaderTest extends TestCase {
         method = "clearAssertionStatus",
         args = {}
     )
-    @AndroidOnly("clearAssertionStatus method is not supported.")
-    @BrokenTest("Android doesn't support assertions to be activated through " +
-            "the api")
+    @KnownFailure("Android doesn't support assertions to be activated " +
+            "through the api")
     public void test_clearAssertionStatus() {
         String className = getClass().getPackage().getName() + ".TestAssertions";
         String className1 = getClass().getPackage().getName() + ".TestAssertions1";
@@ -805,9 +804,9 @@ public class ClassLoaderTest extends TestCase {
         method = "getPackages",
         args = {}
     )
-    @KnownFailure("The package canot be found. Seems like the cache is not"
-            + "shared between the class loaders. But this test seems to"
-            + "expect exactly that. this tests works on the RI.")
+    @KnownFailure("The package canot be found. Seems like the cache is not " +
+            "shared between the class loaders. But this test seems to " +
+            "expect exactly that. this tests works on the RI.")
     public void test_getPackages() {
         
         PackageClassLoader pcl = new PackageClassLoader();

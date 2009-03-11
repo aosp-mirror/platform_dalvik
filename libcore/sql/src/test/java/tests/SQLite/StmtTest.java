@@ -22,6 +22,7 @@ import SQLite.Exception;
 import SQLite.Stmt;
 import SQLite.TableResult;
 import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
@@ -268,12 +269,12 @@ public class StmtTest extends SQLiteTest {
      * @tests {@link Stmt#reset()}
      */
     @TestTargetNew(
-        level = TestLevel.TODO,
+        level = TestLevel.COMPLETE,
         notes = "method test",
         method = "reset",
         args = {}
     )
-    @AndroidOnly("Tableresult is not cleared when resetting statement: "+
+    @BrokenTest("Tableresult is not cleared when resetting statement: "+
             "Either complete spec or change implementation accordingly.")
     public void testReset() throws Exception {
         db.exec("create table TEST (res integer not null)", null);

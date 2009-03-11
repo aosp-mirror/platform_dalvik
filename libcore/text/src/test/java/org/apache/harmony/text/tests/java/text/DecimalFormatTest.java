@@ -662,10 +662,11 @@ public class DecimalFormatTest extends TestCase {
         method = "getMinimumIntegerDigits",
         args = {}
     )
-    @KnownFailure("Something seems wrong with Android implementation, here!")
-    public void test_getMaximumIntegerDigits_AndroidFailure() {
+    @AndroidOnly("second 0 needs to be quoted in icu." +
+            "(quoting special characters in prefix and suffix necessary)")
+    public void test_getMaximumIntegerDigits2() {
         // regression test for HARMONY-878
-        assertTrue(new DecimalFormat("0\t0").getMaximumIntegerDigits() > 0);
+        assertTrue(new DecimalFormat("0\t'0'").getMaximumIntegerDigits() > 0);
     }
 
     @TestTargetNew(
@@ -1412,23 +1413,28 @@ public class DecimalFormatTest extends TestCase {
         method = "applyPattern",
         args = {java.lang.String.class}
     )
-    @KnownFailure("Something seems wrong with Android implementation, here!")
-    public void test_applyPatternLjava_lang_String_AndroidFailure() {
+    @AndroidOnly("icu supports 2 grouping sizes.")
+    public void test_applyPatternLjava_lang_String2() {
         DecimalFormat decFormat = new DecimalFormat("#.#");
         String [] patterns = {"####.##", "######.######", "000000.000000", 
                 "######.000000", "000000.######", " ###.###", "$#####.######",
                 "$$####.######", "%#,##,###,####", "#,##0.00;(#,##0.00)", 
                  "##.##-E"};
         
-        String [] expResult = {"#0.##", "#0.######", "#000000.000000", 
+        String [] expResult = {"#0.##", "#0.######", "#000000.000000",
                 "#.000000", "#000000.######", " #0.###", "$#0.######",
-                "$$#0.######", "%#,####", "#,##0.00;(#,##0.00)", 
-                 "#0.##-E"};
+                "$$#0.######",
+                "%#,###,####", // icu only. icu supports two grouping sizes 
+                "#,##0.00;(#,##0.00)",
+                "#0.##-'E'"}; // icu only. E in the suffix does not need to be
+                              // quoted. This is done automatically.
                 
         for (int i = 0; i < patterns.length; i++) {
             decFormat.applyPattern(patterns[i]);
-            assertEquals("Failed to apply following pattern: " + patterns[i],
-                    expResult[i], decFormat.toPattern());
+            String result = decFormat.toPattern();
+            assertEquals("Failed to apply following pattern: " + patterns[i] +
+                    " expected: " + expResult[i] + " returned: " + result,
+                    expResult[i], result);
         }
     }
 
@@ -2428,6 +2434,7 @@ public class DecimalFormatTest extends TestCase {
         method = "!SerializationGolden",
         args = {}
     )
+    @KnownFailure("a regression. This didn't fail before")
     public void test_serializationHarmonyRICompatible() {
         NumberFormat nf = NumberFormat.getInstance(Locale.FRANCE);
 

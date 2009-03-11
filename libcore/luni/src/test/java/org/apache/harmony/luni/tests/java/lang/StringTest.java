@@ -705,7 +705,7 @@ public class StringTest extends TestCase {
         level = TestLevel.ADDITIONAL,
         notes = "Regression test for some existing bugs and crashes",
         method = "format",
-        args = { String.class, Object.class }
+        args = { String.class, Object[].class }
     )
     public void testProblemCases() {
         BigDecimal[] input = new BigDecimal[] {

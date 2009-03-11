@@ -387,14 +387,14 @@ public class PropertiesTest extends junit.framework.TestCase {
         method = "loadFromXML",
         args = {java.io.InputStream.class}
     )
-    @KnownFailure("ToT fixed?")
+    @KnownFailure("Expected Exception is not thrown.")
     public void test_loadFromXMLLjava_io_InputStream() throws IOException {
         Properties myProps = new Properties();
         myProps.put("Property A", " aye\\\f\t\n\r\b");
         myProps.put("Property B", "b ee#!=:");
         myProps.put("Property C", "see");
-        
         Properties myProps2 = new Properties();
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         myProps.storeToXML(out, "A Header");
         out.close();

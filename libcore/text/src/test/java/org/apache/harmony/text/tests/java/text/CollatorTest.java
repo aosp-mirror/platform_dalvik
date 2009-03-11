@@ -353,14 +353,14 @@ public class CollatorTest extends junit.framework.TestCase {
         method = "setDecomposition",
         args = {int.class}
     )
-    @KnownFailure("Already fixed?")
+    @KnownFailure("uses decomposition even if set to NO_DECOMPOSITION")
     public void test_setDecompositionI() {
         Collator c = Collator.getInstance(Locale.FRENCH);
         c.setStrength(Collator.IDENTICAL);
         c.setDecomposition(Collator.NO_DECOMPOSITION);
-        assertTrue("Collator should not be using decomposition", !c.equals(
+        assertFalse("Collator should not be using decomposition", c.equals(
                 "\u212B", "\u00C5")); // "ANGSTROM SIGN" and "LATIN CAPITAL
-        // LETTER A WITH RING ABOVE"
+                                      // LETTER A WITH RING ABOVE"
         c.setDecomposition(Collator.CANONICAL_DECOMPOSITION);
         assertTrue("Collator should be using decomposition", c.equals("\u212B",
                 "\u00C5")); // "ANGSTROM SIGN" and "LATIN CAPITAL LETTER A WITH

@@ -259,7 +259,7 @@ public class PackageTest extends junit.framework.TestCase {
         method = "getPackage",
         args = {java.lang.String.class}
     )
-    @KnownFailure("Package information missing on android")
+    @KnownFailure("Real package information missing on android.")
     public void test_getPackageLjava_lang_String() throws Exception {
         assertSame("Package getPackage failed for java.lang", Package
                 .getPackage("java.lang"), Package.getPackage("java.lang"));
@@ -302,7 +302,6 @@ public class PackageTest extends junit.framework.TestCase {
         method = "hashCode",
         args = {}
     )
-    @KnownFailure("Package information missing on android")
     public void test_hashCode() {
         Package p1 = Package.getPackage("java.lang");
         if (p1 != null) {

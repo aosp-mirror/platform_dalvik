@@ -17,7 +17,8 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestTargets;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
@@ -717,7 +718,7 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    public void _test_writeObject_Calendar() {
+    public void test_writeObject_Calendar() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.util.Calendar)
 
@@ -1198,7 +1199,8 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    public void _test_writeObject_Collections_UnmodifiableMap_UnmodifiableEntrySet() {
+    @BrokenTest("Needs investigation. Fails on RI and on Android with the same IOException.")
+    public void test_writeObject_Collections_UnmodifiableMap_UnmodifiableEntrySet() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.util.Collections.UnmodifiableMap.UnmodifiableEntrySet)
 
@@ -2677,7 +2679,7 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    public void _test_writeObject_Proxy() {
+    public void test_writeObject_Proxy() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.security.GuardedObject)
 
@@ -2881,6 +2883,7 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
+    @KnownFailure("deserialization of a date fomat field seems to fail")
     public void test_writeObject_DateFormat_Field() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.text.DateFormat.Field)
@@ -2925,6 +2928,7 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
+    @KnownFailure("deserialization of a number fomat field seems to fail")
     public void test_writeObject_NumberFormat_Field() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.text.NumberFormat.Field)

@@ -105,7 +105,7 @@ class ComparableTimSort {
      *
      * @param a the array to be sorted
      */
-  private ComparableTimSort(Object[] a) {
+    private ComparableTimSort(Object[] a) {
         this.a = a;
 
         // Allocate temp storage (which may be increased later if necessary)
@@ -675,7 +675,7 @@ class ComparableTimSort {
                     dest += count1;
                     cursor1 += count1;
                     len1 -= count1;
-                    if (len1 == 1)
+                    if (len1 <= 1)  // len1 == 1 || len1 == 0
                         break outer;
                 }
                 a[dest++] = a[cursor2++];
@@ -706,6 +706,9 @@ class ComparableTimSort {
             if (DEBUG) assert len2 > 0;
             System.arraycopy(a, cursor2, a, dest, len2);
             a[dest + len2] = tmp[cursor1]; //  Last elt of run 1 to end of merge
+        } else if (len1 == 0) {
+            throw new IllegalArgumentException(
+                "Comparison method violates its general contract!");
         } else {
             if (DEBUG) assert len2 == 0;
             if (DEBUG) assert len1 > 1;
@@ -804,8 +807,8 @@ class ComparableTimSort {
                     cursor2 -= count2;
                     len2 -= count2;
                     System.arraycopy(tmp, cursor2 + 1, a, dest + 1, count2);
-                    if (len2 == 1)
-                        break outer;
+                    if (len2 <= 1)
+                        break outer; // len2 == 1 || len2 == 0
                 }
                 a[dest--] = a[cursor1--];
                 if (--len1 == 0)
@@ -824,6 +827,9 @@ class ComparableTimSort {
             cursor1 -= len1;
             System.arraycopy(a, cursor1 + 1, a, dest + 1, len1);
             a[dest] = tmp[cursor2];  // Move first elt of run2 to front of merge
+        } else if (len2 == 0) {
+            throw new IllegalArgumentException(
+                "Comparison method violates its general contract!");
         } else {
             if (DEBUG) assert len1 == 0;
             if (DEBUG) assert len2 > 0;

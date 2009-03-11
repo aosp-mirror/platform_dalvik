@@ -17,8 +17,7 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestTargets;
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
@@ -999,7 +998,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         args = {}
     )
    @SuppressWarnings("deprecation")
-   @AndroidOnly("Thread.resume is implemented on some RI")
+   @BrokenTest("Thread.resume is implemented on some RI")
     public void test_resume() throws OutOfMemoryError {
         // Test for method void java.lang.ThreadGroup.resume()
         final ThreadGroup originalCurrent = getInitialThreadGroup();
@@ -1236,7 +1235,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "stop",
         args = {}
     )
-    @AndroidOnly("stop() method not implemented. throws UnsupportedOperationException.")
+    @BrokenTest("stop() method not implemented.")
     @SuppressWarnings("deprecation")
     public void test_stop() throws OutOfMemoryError {
         // Test for method void java.lang.ThreadGroup.stop()
@@ -1305,7 +1304,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "suspend",
         args = {}
     )
-    @AndroidOnly("suspend() method not implemented. throws UnsupportedOperationException.")
+    @BrokenTest("suspend() method not implemented.")
     @SuppressWarnings("deprecation")
     public void test_suspend() throws OutOfMemoryError {
         // Test for method void java.lang.ThreadGroup.suspend()

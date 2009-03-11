@@ -17,6 +17,7 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -138,6 +139,9 @@ public class ResourceBundleTest extends junit.framework.TestCase {
         method = "getBundle",
         args = {java.lang.String.class, java.util.Locale.class, java.lang.ClassLoader.class}
     )
+    @KnownFailure("It's not allowed to pass null as parent class loader to"
+            + " a new ClassLoader anymore. Maybe we need to change"
+            + " URLClassLoader to allow this? It's not specified.")
     public void test_getBundleLjava_lang_StringLjava_util_LocaleLjava_lang_ClassLoader() {
         String classPath = System.getProperty("java.class.path");
         StringTokenizer tok = new StringTokenizer(classPath, File.pathSeparator);

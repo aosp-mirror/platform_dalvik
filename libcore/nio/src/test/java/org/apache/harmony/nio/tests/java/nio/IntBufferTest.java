@@ -17,7 +17,6 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
@@ -695,7 +694,6 @@ public abstract class IntBufferTest extends AbstractBufferTest {
         method = "put",
         args = {int[].class, int.class, int.class}
     )
-    @KnownFailure("ToT fixed")
     public  void testPutintArrayintint2() {
         // Regression test
         ByteBuffer buf = ByteBuffer.allocateDirect(20);

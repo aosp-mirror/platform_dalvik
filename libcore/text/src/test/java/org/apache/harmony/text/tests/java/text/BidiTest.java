@@ -1728,7 +1728,7 @@ public class BidiTest extends TestCase {
     )
     public void testCreateLineBidiInvalid() {
         // regression for HARMONY-1050
-        Bidi bidi = new Bidi("str", 1);
+        Bidi bidi = new Bidi("str", Bidi.DIRECTION_RIGHT_TO_LEFT);
         try {
             bidi.createLineBidi(-1, 1);
             fail("Expected IAE");
@@ -1775,7 +1775,7 @@ public class BidiTest extends TestCase {
     )
     @KnownFailure("Is this a failure or just a different behaviour of ICU?")
     public void testCreateLineBidi_AndroidFailure() {
-        Bidi bidi = new Bidi("str", 1);
+        Bidi bidi = new Bidi("str", Bidi.DIRECTION_RIGHT_TO_LEFT);
         bidi.createLineBidi(2, 2);
     }
 
