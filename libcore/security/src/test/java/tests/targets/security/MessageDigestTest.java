@@ -1,7 +1,6 @@
 package tests.targets.security;
 
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 
@@ -11,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-@TestTargetClass(targets.MessageDigests.Internal.class)
 public abstract class MessageDigestTest extends TestCase {
 
     private String digestAlgorithmName;
@@ -78,6 +76,11 @@ public abstract class MessageDigestTest extends TestCase {
                 level = TestLevel.ADDITIONAL,
                 method = "digest",
                 args = {}
+            ),
+            @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                method = "method",
+                args = {}
             )
     })
     public void testMessageDigest1()
@@ -114,6 +117,11 @@ public abstract class MessageDigestTest extends TestCase {
             @TestTargetNew(
                 level = TestLevel.ADDITIONAL,
                 method = "digest",
+                args = {}
+            ),
+            @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                method = "method",
                 args = {}
             )
     })
@@ -158,6 +166,24 @@ public abstract class MessageDigestTest extends TestCase {
         }
         return sourceBuilder.toString();
     }
+
+    @TestTargets({
+        @TestTargetNew(
+                level = TestLevel.ADDITIONAL,
+                method = "update",
+                args = {byte.class}
+            ),
+            @TestTargetNew(
+                level = TestLevel.ADDITIONAL,
+                method = "digest",
+                args = {}
+            ),
+            @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                method = "method",
+                args = {}
+            )
+    })
     public void testfips180_2_singleblock() {
 
         digest.update(source1.getBytes(), 0, source1.length());
@@ -176,6 +202,23 @@ public abstract class MessageDigestTest extends TestCase {
         assertEquals("computed and check digest differ", expected1, sb.toString());
     }
 
+    @TestTargets({
+        @TestTargetNew(
+                level = TestLevel.ADDITIONAL,
+                method = "update",
+                args = {byte.class}
+            ),
+            @TestTargetNew(
+                level = TestLevel.ADDITIONAL,
+                method = "digest",
+                args = {}
+            ),
+            @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                method = "method",
+                args = {}
+            )
+    })
     public void testfips180_2_multiblock() {
 
         digest.update(source2.getBytes(), 0, source2.length());
@@ -194,6 +237,23 @@ public abstract class MessageDigestTest extends TestCase {
         assertEquals("computed and check digest differ", expected2, sb.toString());
     }
 
+    @TestTargets({
+        @TestTargetNew(
+                level = TestLevel.ADDITIONAL,
+                method = "update",
+                args = {byte.class}
+            ),
+            @TestTargetNew(
+                level = TestLevel.ADDITIONAL,
+                method = "digest",
+                args = {}
+            ),
+            @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                method = "method",
+                args = {}
+            )
+    })
     public void testfips180_2_longMessage() {
 
         digest.update(source3.getBytes(), 0, source3.length());

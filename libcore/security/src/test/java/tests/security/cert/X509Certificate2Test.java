@@ -17,8 +17,6 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -55,8 +53,6 @@ public class X509Certificate2Test extends junit.framework.TestCase {
         method = "toString",
         args = {}
     )
-    @KnownFailure("java.lang.RuntimeException is thrown during " +
-            "X509Certificate.toString() method.")    
     public void test_toString() throws Exception {
 
         // Regression for HARMONY-3384
@@ -502,8 +498,6 @@ public class X509Certificate2Test extends junit.framework.TestCase {
         method = "getSubjectAlternativeNames",
         args = {}
     )
-    @AndroidOnly("getSubjectAlternativeNames method is not supported, " +
-            "it returns null for X509Certificate.")    
     public void testGetSubjectAlternativeNames()
             throws CertificateParsingException {
 
@@ -511,7 +505,7 @@ public class X509Certificate2Test extends junit.framework.TestCase {
 
         Collection<List<?>> coll = cert.getSubjectAlternativeNames();
         //getSubjectAlternativeNames method is not supported
-        assertNull(coll);
+        assertNotNull(coll);
 
         try {
             coll.clear();
@@ -540,8 +534,6 @@ public class X509Certificate2Test extends junit.framework.TestCase {
         method = "getIssuerAlternativeNames",
         args = {}
     )
-    @AndroidOnly("getIssuerAlternativeNames method is not supported, " +
-            "it returns null for X509Certificate.")
     public void testGetIssuerAlternativeNames()
             throws CertificateParsingException {
 
@@ -549,7 +541,7 @@ public class X509Certificate2Test extends junit.framework.TestCase {
 
         Collection<List<?>> coll = cert.getIssuerAlternativeNames();
         // getIssuerAlternativeNames returns null.
-        assertNull(coll);
+        assertNotNull(coll);
 
         try {
             coll.clear();

@@ -530,7 +530,6 @@ public class CertificateFactory1Test extends TestCase {
             args = {java.io.InputStream.class}
         )
     })
-    // Test passed on RI
     public void testCertificateFactory11() throws IOException {
         if (!X509Support) {
             fail(NotSupportMsg);

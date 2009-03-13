@@ -1,32 +1,12 @@
 package tests.targets.security;
 
-import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(targets.KeyStores.PKCS12.class)
 public class KeyStoreTestPKCS12 extends KeyStoreTest {
 
     public KeyStoreTestPKCS12() {
         super("PKCS12", keyStoreData, keyStorePassword);
-    }
-    
-    @Override
-    @TestTargetNew(
-            level = TestLevel.ADDITIONAL,
-            method = "!"
-    )
-    public void testKeyStoreCreate() {
-        super.testKeyStoreCreate();
-    }
-    
-    @Override
-    @TestTargetNew(
-            level = TestLevel.ADDITIONAL,
-            method = "!"
-    )    
-    public void testKeyStoreLoad() {
-        super.testKeyStoreLoad();
     }
     
     public static final String keyStorePassword = "the keystore password";

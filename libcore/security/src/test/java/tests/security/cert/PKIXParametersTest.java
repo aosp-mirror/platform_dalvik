@@ -22,7 +22,7 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.KnownFailure;
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -1413,9 +1413,8 @@ public class PKIXParametersTest extends TestCase {
         method = "setDate",
         args = {java.util.Date.class}
     )
-    @KnownFailure("p.setDate(null) does not reset to current"+
-            " time. RI fails at last assertion (time reset to 2007). Our" +
-            " fails at assertNotNull(p.getDate)")
+    @AndroidOnly("On the RI p.setDate(null) does not reset the date to null "
+            + "as specified.")
     public final void test_setDateLjava_util_Date() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         assertNotNull("could not create test TrustAnchor set", taSet);
@@ -1443,8 +1442,7 @@ public class PKIXParametersTest extends TestCase {
         p = new PKIXParameters(taSet);
         p.setDate(new Date(555L));
         p.setDate(null); // reset 'date' back to current time
-        assertNotNull(p.getDate());
-        //assertEquals(Calendar.getInstance().getTime(), p.getDate());
+        assertNull(p.getDate());
     }
 
     /**
