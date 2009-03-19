@@ -40,18 +40,25 @@ public class AbstractPreferencesTest extends TestCase {
 
     AbstractPreferences pref;
 
-    static AbstractPreferences root = (AbstractPreferences) Preferences.userRoot();
+    static AbstractPreferences root;
     
     static final String nodeName = "mock";
 
     static AbstractPreferences parent = null;
 
+    String oldUserHome = System.getProperty("user.home");
+    String oldJavaHome = System.getProperty("java.home");
+    
     protected void setUp() throws Exception {
         super.setUp();
 
+        System.setProperty("user.home", System.getProperty("java.io.tmpdir"));
+        System.setProperty("java.home", System.getProperty("java.io.tmpdir"));
+        
         Preferences.systemRoot().clear();
         Preferences.userRoot().clear();
-
+        
+        root = (AbstractPreferences) Preferences.userRoot();
         parent = (AbstractPreferences) Preferences.userNodeForPackage(this.getClass());
 
         pref = (AbstractPreferences) parent.node(nodeName);
@@ -61,6 +68,8 @@ public class AbstractPreferencesTest extends TestCase {
         parent.removeNode();
         Preferences.systemRoot().clear();
         Preferences.userRoot().clear();
+        System.setProperty("user.home", oldUserHome);
+        System.setProperty("java.home", oldJavaHome);
         super.tearDown();
     }
 

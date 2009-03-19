@@ -17,6 +17,7 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -226,6 +227,7 @@ public class DatagramSocketImplTest extends junit.framework.TestCase {
         method = "getLocalPort",
         args = {}
     )
+    @AndroidOnly("Bug in RI")
     public void test_getLocalPort() {
         // RI fails here. RI returns 0. the spec doesn't say what the value for
         // an unbound DatagramSocket should be. The same difference can be seen

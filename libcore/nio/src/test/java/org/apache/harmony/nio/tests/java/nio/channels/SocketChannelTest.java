@@ -17,7 +17,6 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
@@ -27,10 +26,8 @@ import dalvik.annotation.AndroidOnly;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.annotation.Target;
 import java.net.BindException;
 import java.net.ConnectException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -45,7 +42,6 @@ import java.nio.channels.NoConnectionPendingException;
 import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
@@ -2673,7 +2669,6 @@ public class SocketChannelTest extends TestCase {
         method = "write",
         args = {java.nio.ByteBuffer.class}
     )
-    @KnownFailure("Fixed on ToT")
     public void test_writeLjava_nio_ByteBuffer_Nonblocking_HugeData() throws IOException {
         // initialize write content
         ByteBuffer writeContent = ByteBuffer.allocate(CAPACITY_HUGE);

@@ -2,7 +2,6 @@ package tests.targets.security;
 
 import junit.framework.Assert;
 
-import java.io.PrintStream;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -15,7 +14,6 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.DSAParameterSpec;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 
@@ -26,9 +24,6 @@ import javax.crypto.KeyAgreement;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.interfaces.DHPrivateKey;
-import javax.crypto.interfaces.DHPublicKey;
-import javax.crypto.spec.DHParameterSpec;
 
 abstract class TestHelper<T/*, U*/> {
     void test(T testObject) {

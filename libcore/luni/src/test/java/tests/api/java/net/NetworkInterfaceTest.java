@@ -25,6 +25,7 @@ import dalvik.annotation.TestTargetNew;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
@@ -106,6 +107,9 @@ public class NetworkInterfaceTest extends junit.framework.TestCase {
                 }
             }
 
+            public void checkPermission(Permission perm) {
+                // allow everything
+            }
         }
 
         if (atLeastOneInterface) {
