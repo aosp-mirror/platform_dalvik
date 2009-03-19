@@ -198,10 +198,10 @@ INLINE bool dvmInsnIsGcPoint(const InsnFlags* insnFlags, int addr) {
     return (insnFlags[addr] & kInsnFlagGcPoint) != 0;
 }
 INLINE void dvmInsnSetGcPoint(InsnFlags* insnFlags, int addr,
-    bool isBranch)
+    bool isGcPoint)
 {
-    assert(isBranch);
-    //if (isBranch)
+    assert(isGcPoint);
+    //if (isGcPoint)
         insnFlags[addr] |= kInsnFlagGcPoint;
     //else
     //    insnFlags[addr] &= ~kInsnFlagGcPoint;

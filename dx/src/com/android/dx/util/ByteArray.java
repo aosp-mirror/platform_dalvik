@@ -21,28 +21,28 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Wrapper for a <code>byte[]</code>, which provides read-only access and
+ * Wrapper for a {@code byte[]}, which provides read-only access and
  * can "reveal" a partial slice of the underlying array.
  *
  * <b>Note:</b> Multibyte accessors all use big-endian order.
  */
 public final class ByteArray {
-    /** non-null; underlying array */
+    /** {@code non-null;} underlying array */
     private final byte[] bytes;
 
-    /** <code>&gt;= 0</code>; start index of the slice (inclusive) */
+    /** {@code >= 0}; start index of the slice (inclusive) */
     private final int start;
 
-    /** <code>&gt;= 0, &lt;= bytes.length</code>; size computed as
-     * <code>end - start</code> (in the constructor) */
+    /** {@code >= 0, <= bytes.length}; size computed as
+     * {@code end - start} (in the constructor) */
     private final int size;
 
     /**
      * Constructs an instance.
      *
-     * @param bytes non-null; the underlying array
-     * @param start <code>&gt;= 0</code>; start index of the slice (inclusive)
-     * @param end <code>&gt;= start, &lt;= bytes.length</code>; end index of
+     * @param bytes {@code non-null;} the underlying array
+     * @param start {@code >= 0;} start index of the slice (inclusive)
+     * @param end {@code >= start, <= bytes.length;} end index of
      * the slice (exclusive)
      */
     public ByteArray(byte[] bytes, int start, int end) {
@@ -68,9 +68,9 @@ public final class ByteArray {
     }
 
     /**
-     * Constructs an instance from an entire <code>byte[]</code>.
+     * Constructs an instance from an entire {@code byte[]}.
      *
-     * @param bytes non-null; the underlying array
+     * @param bytes {@code non-null;} the underlying array
      */
     public ByteArray(byte[] bytes) {
         this(bytes, 0, bytes.length);
@@ -79,7 +79,7 @@ public final class ByteArray {
     /**
      * Gets the size of the array, in bytes.
      *
-     * @return &gt;= 0; the size
+     * @return {@code >= 0;} the size
      */
     public int size() {
         return size;
@@ -88,10 +88,10 @@ public final class ByteArray {
     /**
      * Returns a slice (that is, a sub-array) of this instance.
      *
-     * @param start <code>&gt;= 0</code>; start index of the slice (inclusive)
-     * @param end <code>&gt;= start, &lt;= size()</code>; end index of
+     * @param start {@code >= 0;} start index of the slice (inclusive)
+     * @param end {@code >= start, <= size();} end index of
      * the slice (exclusive)
-     * @return non-null; the slice
+     * @return {@code non-null;} the slice
      */
     public ByteArray slice(int start, int end) {
         checkOffsets(start, end);
@@ -103,9 +103,9 @@ public final class ByteArray {
      * offset into this instance.
      *
      * @param offset offset into this instance
-     * @param bytes non-null; (alleged) underlying array
-     * @return corresponding offset into <code>bytes</code>
-     * @throws IllegalArgumentException thrown if <code>bytes</code> is
+     * @param bytes {@code non-null;} (alleged) underlying array
+     * @return corresponding offset into {@code bytes}
+     * @throws IllegalArgumentException thrown if {@code bytes} is
      * not the underlying array of this instance
      */
     public int underlyingOffset(int offset, byte[] bytes) {
@@ -117,10 +117,10 @@ public final class ByteArray {
     }
 
     /**
-     * Gets the <code>signed byte</code> value at a particular offset.
+     * Gets the {@code signed byte} value at a particular offset.
      *
-     * @param off <code>&gt;= 0, &lt; size(); offset to fetch
-     * @return <code>signed byte</code> at that offset
+     * @param off {@code >= 0, < size();} offset to fetch
+     * @return {@code signed byte} at that offset
      */
     public int getByte(int off) {
         checkOffsets(off, off + 1);
@@ -128,10 +128,10 @@ public final class ByteArray {
     }
 
     /**
-     * Gets the <code>signed short</code> value at a particular offset.
+     * Gets the {@code signed short} value at a particular offset.
      *
-     * @param off <code>&gt;= 0, &lt; (size() - 1); offset to fetch
-     * @return <code>signed short</code> at that offset
+     * @param off {@code >= 0, < (size() - 1);} offset to fetch
+     * @return {@code signed short} at that offset
      */
     public int getShort(int off) {
         checkOffsets(off, off + 2);
@@ -139,10 +139,10 @@ public final class ByteArray {
     }
 
     /**
-     * Gets the <code>signed int</code> value at a particular offset.
+     * Gets the {@code signed int} value at a particular offset.
      *
-     * @param off <code>&gt;= 0, &lt; (size() - 3); offset to fetch
-     * @return <code>signed int</code> at that offset
+     * @param off {@code >= 0, < (size() - 3);} offset to fetch
+     * @return {@code signed int} at that offset
      */
     public int getInt(int off) {
         checkOffsets(off, off + 4);
@@ -153,10 +153,10 @@ public final class ByteArray {
     }
 
     /**
-     * Gets the <code>signed long</code> value at a particular offset.
+     * Gets the {@code signed long} value at a particular offset.
      *
-     * @param off <code>&gt;= 0, &lt; (size() - 7); offset to fetch
-     * @return <code>signed int</code> at that offset
+     * @param off {@code >= 0, < (size() - 7);} offset to fetch
+     * @return {@code signed int} at that offset
      */
     public long getLong(int off) {
         checkOffsets(off, off + 8);
@@ -173,10 +173,10 @@ public final class ByteArray {
     }
 
     /**
-     * Gets the <code>unsigned byte</code> value at a particular offset.
+     * Gets the {@code unsigned byte} value at a particular offset.
      *
-     * @param off <code>&gt;= 0, &lt; size(); offset to fetch
-     * @return <code>unsigned byte</code> at that offset
+     * @param off {@code >= 0, < size();} offset to fetch
+     * @return {@code unsigned byte} at that offset
      */
     public int getUnsignedByte(int off) {
         checkOffsets(off, off + 1);
@@ -184,10 +184,10 @@ public final class ByteArray {
     }
 
     /**
-     * Gets the <code>unsigned short</code> value at a particular offset.
+     * Gets the {@code unsigned short} value at a particular offset.
      *
-     * @param off <code>&gt;= 0, &lt; (size() - 1); offset to fetch
-     * @return <code>unsigned short</code> at that offset
+     * @param off {@code >= 0, < (size() - 1);} offset to fetch
+     * @return {@code unsigned short} at that offset
      */
     public int getUnsignedShort(int off) {
         checkOffsets(off, off + 2);
@@ -196,11 +196,11 @@ public final class ByteArray {
 
     /**
      * Copies the contents of this instance into the given raw
-     * <code>byte[]</code> at the given offset. The given array must be
+     * {@code byte[]} at the given offset. The given array must be
      * large enough.
      * 
-     * @param out non-null; array to hold the output
-     * @param offset non-null; index into <code>out</code> for the first
+     * @param out {@code non-null;} array to hold the output
+     * @param offset {@code non-null;} index into {@code out} for the first
      * byte of output
      */
     public void getBytes(byte[] out, int offset) {
@@ -226,7 +226,7 @@ public final class ByteArray {
     }
 
     /**
-     * Gets the <code>signed byte</code> value at the given offset,
+     * Gets the {@code signed byte} value at the given offset,
      * without doing any argument checking.
      *
      * @param off offset to fetch
@@ -237,7 +237,7 @@ public final class ByteArray {
     }
 
     /**
-     * Gets the <code>unsigned byte</code> value at the given offset,
+     * Gets the {@code unsigned byte} value at the given offset,
      * without doing any argument checking.
      *
      * @param off offset to fetch
@@ -248,26 +248,26 @@ public final class ByteArray {
     }
 
     /**
-     * Gets a <code>DataInputStream</code> that reads from this instance,
+     * Gets a {@code DataInputStream} that reads from this instance,
      * with the cursor starting at the beginning of this instance's data.
      * <b>Note:</b> The returned instance may be cast to {@link #GetCursor}
      * if needed.
      * 
-     * @return non-null; an appropriately-constructed
-     * <code>DataInputStream</code> instance
+     * @return {@code non-null;} an appropriately-constructed
+     * {@code DataInputStream} instance
      */
     public MyDataInputStream makeDataInputStream() {
         return new MyDataInputStream(makeInputStream());
     }
 
     /**
-     * Gets a <code>InputStream</code> that reads from this instance,
+     * Gets a {@code InputStream} that reads from this instance,
      * with the cursor starting at the beginning of this instance's data.
      * <b>Note:</b> The returned instance may be cast to {@link #GetCursor}
      * if needed.
      * 
-     * @return non-null; an appropriately-constructed
-     * <code>InputStream</code> instancex
+     * @return {@code non-null;} an appropriately-constructed
+     * {@code InputStream} instancex
      */
     public MyInputStream makeInputStream() {
         return new MyInputStream();
@@ -280,7 +280,7 @@ public final class ByteArray {
         /**
          * Gets the current cursor.
          * 
-         * @return 0..size(); the cursor
+         * @return {@code 0..size();} the cursor
          */
         public int getCursor();
     }
@@ -345,7 +345,7 @@ public final class ByteArray {
         /**
          * Gets the current cursor.
          * 
-         * @return 0..size(); the cursor
+         * @return {@code 0..size();} the cursor
          */
         public int getCursor() {
             return cursor;
@@ -358,7 +358,7 @@ public final class ByteArray {
      * instance may be easily determined.
      */
     public class MyDataInputStream extends DataInputStream {
-        /** non-null; the underlying {@link #MyInputStream} */
+        /** {@code non-null;} the underlying {@link #MyInputStream} */
         private final MyInputStream wrapped;
         
         public MyDataInputStream(MyInputStream wrapped) {
@@ -370,7 +370,7 @@ public final class ByteArray {
         /**
          * Gets the current cursor.
          * 
-         * @return 0..size(); the cursor
+         * @return {@code 0..size();} the cursor
          */
         public int getCursor() {
             return wrapped.getCursor();

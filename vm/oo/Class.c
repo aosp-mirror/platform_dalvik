@@ -1721,7 +1721,39 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         dvmLinearReadOnly(classLoader, newClass->ifields);
     }
 
-    /* load method definitions */
+    /*
+     * Load method definitions.  We do this in two batches, direct then
+     * virtual.
+     *
+     * If register maps have already been generated for this class, and
+     * precise GC is enabled, we pull out pointers to them.  We know that
+     * they were streamed to the DEX file in the same order in which the
+     * methods appear.
+     *
+     * If the class wasn't pre-verified, the maps will be generated when
+     * the class is verified during class initialization.
+     */
+    u4 classDefIdx = dexGetIndexForClassDef(pDexFile, pClassDef);
+    const void* classMapData;
+    u4 numMethods;
+
+    if (gDvm.preciseGc) {
+        classMapData =
+            dvmGetRegisterMapClassData(pDexFile, classDefIdx, &numMethods);
+
+        /* sanity check */
+        if (classMapData != NULL &&
+            pHeader->directMethodsSize + pHeader->virtualMethodsSize != numMethods)
+        {
+            LOGE("ERROR: in %s, direct=%d virtual=%d, maps have %d\n",
+                newClass->descriptor, pHeader->directMethodsSize,
+                pHeader->virtualMethodsSize, numMethods);
+            assert(false);
+            classMapData = NULL;        /* abandon */
+        }
+    } else {
+        classMapData = NULL;
+    }
 
     if (pHeader->directMethodsSize != 0) {
         int count = (int) pHeader->directMethodsSize;
@@ -1734,6 +1766,15 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         for (i = 0; i < count; i++) {
             dexReadClassDataMethod(&pEncodedData, &method, &lastIndex);
             loadMethodFromDex(newClass, &method, &newClass->directMethods[i]);
+            if (classMapData != NULL) {
+                const RegisterMap* pMap = dvmGetNextRegisterMap(&classMapData);
+                if (dvmGetRegisterMapFormat(pMap) != kRegMapFormatNone) {
+                    newClass->directMethods[i].registerMap = pMap;
+                    /* TODO: add rigorous checks */
+                    assert((newClass->directMethods[i].registersSize+7) / 8 ==
+                        newClass->directMethods[i].registerMap->regWidth);
+                }
+            }
         }
         dvmLinearReadOnly(classLoader, newClass->directMethods);
     }
@@ -1749,6 +1790,15 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         for (i = 0; i < count; i++) {
             dexReadClassDataMethod(&pEncodedData, &method, &lastIndex);
             loadMethodFromDex(newClass, &method, &newClass->virtualMethods[i]);
+            if (classMapData != NULL) {
+                const RegisterMap* pMap = dvmGetNextRegisterMap(&classMapData);
+                if (dvmGetRegisterMapFormat(pMap) != kRegMapFormatNone) {
+                    newClass->virtualMethods[i].registerMap = pMap;
+                    /* TODO: add rigorous checks */
+                    assert((newClass->virtualMethods[i].registersSize+7) / 8 ==
+                        newClass->virtualMethods[i].registerMap->regWidth);
+                }
+            }
         }
         dvmLinearReadOnly(classLoader, newClass->virtualMethods);
     }
@@ -1913,6 +1963,8 @@ void dvmFreeClassInnards(ClassObject* clazz)
 
 /*
  * Free anything in a Method that was allocated on the system heap.
+ *
+ * The containing class is largely torn down by this point.
  */
 static void freeMethodInnards(Method* meth)
 {
@@ -1920,26 +1972,31 @@ static void freeMethodInnards(Method* meth)
     free(meth->exceptions);
     free(meth->lines);
     free(meth->locals);
-#else
-    // TODO: call dvmFreeRegisterMap() if meth->registerMap was allocated
-    //       on the system heap
-    UNUSED_PARAMETER(meth);
 #endif
+
+    /*
+     * Some register maps are allocated on the heap, either because of late
+     * verification or because we're caching an uncompressed form.
+     */
+    const RegisterMap* pMap = meth->registerMap;
+    if (pMap != NULL && dvmGetRegisterMapOnHeap(pMap)) {
+        dvmFreeRegisterMap((RegisterMap*) pMap);
+        meth->registerMap = NULL;
+    }
 }
 
 /*
  * Clone a Method, making new copies of anything that will be freed up
- * by freeMethodInnards().
+ * by freeMethodInnards().  This is used for "miranda" methods.
  */
 static void cloneMethod(Method* dst, const Method* src)
 {
+    if (src->registerMap != NULL) {
+        LOGE("GLITCH: only expected abstract methods here\n");
+        LOGE("        cloning %s.%s\n", src->clazz->descriptor, src->name);
+        dvmAbort();
+    }
     memcpy(dst, src, sizeof(Method));
-#if 0
-    /* for current usage, these are never set, so no need to implement copy */
-    assert(dst->exceptions == NULL);
-    assert(dst->lines == NULL);
-    assert(dst->locals == NULL);
-#endif
 }
 
 /*
@@ -4270,9 +4327,9 @@ void dvmSetNativeFunc(const Method* method, DalvikBridgeFunc func,
 
 /*
  * Add a RegisterMap to a Method.  This is done when we verify the class
- * and compute the register maps at class initialization time, which means
- * that "pMap" is on the heap and should be freed when the Method is
- * discarded.
+ * and compute the register maps at class initialization time (i.e. when
+ * we don't have a pre-generated map).  This means "pMap" is on the heap
+ * and should be freed when the Method is discarded.
  */
 void dvmSetRegisterMap(Method* method, const RegisterMap* pMap)
 {
@@ -4283,6 +4340,7 @@ void dvmSetRegisterMap(Method* method, const RegisterMap* pMap)
             method->clazz->descriptor, method->name);
         /* keep going */
     }
+    assert(!dvmIsNativeMethod(method) && !dvmIsAbstractMethod(method));
 
     /* might be virtual or direct */
     dvmLinearReadWrite(clazz->classLoader, clazz->virtualMethods);

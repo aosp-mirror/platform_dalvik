@@ -44,7 +44,7 @@ public class BitIntSet implements IntSet {
     /**
      * Ensures that the bit set has the capacity to represent the given value.
      *
-     * @param value &gt;= 0 value to represent
+     * @param value {@code >= 0;} value to represent
      */
     private void ensureCapacity(int value) {
         if (value >= Bits.getMax(bits)) {

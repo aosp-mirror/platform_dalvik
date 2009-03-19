@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Internal unit tests.
  */
@@ -20,5 +21,6 @@
 #define _DALVIK_TEST_TEST
 
 bool dvmTestHash(void);
+bool dvmTestAtomicSpeed(void);
 
 #endif /*_DALVIK_TEST_TEST*/

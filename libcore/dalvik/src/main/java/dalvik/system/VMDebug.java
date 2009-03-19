@@ -153,6 +153,12 @@ public final class VMDebug {
         int bufferSize, int flags);
 
     /**
+     * Determine whether method tracing is currently active.
+     * @hide
+     */
+    public static native boolean isMethodTracingActive();
+
+    /**
      * Stops method tracing.
      */
     public static native void stopMethodTracing();

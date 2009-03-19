@@ -24,21 +24,21 @@ import com.android.dx.util.AnnotatedOutput;
 
 /**
  * Combination instruction which turns into a variable number of
- * <code>move*</code> instructions to move a set of registers into
- * registers starting at <code>0</code> sequentially. This is used
+ * {@code move*} instructions to move a set of registers into
+ * registers starting at {@code 0} sequentially. This is used
  * in translating an instruction whose register requirements cannot
  * be met using a straightforward choice of a single opcode.
  */
 public final class HighRegisterPrefix extends VariableSizeInsn {
-    /** null-ok; cached instructions, if constructed */
+    /** {@code null-ok;} cached instructions, if constructed */
     private SimpleInsn[] insns;
     
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
-     * @param position non-null; source position
-     * @param registers non-null; source registers
+     * @param position {@code non-null;} source position
+     * @param registers {@code non-null;} source registers
      */
     public HighRegisterPrefix(SourcePosition position,
                               RegisterSpecList registers) {
@@ -135,9 +135,9 @@ public final class HighRegisterPrefix extends VariableSizeInsn {
      * Returns the proper move instruction for the given source spec
      * and destination index.
      *
-     * @param src non-null; the source register spec
-     * @param destIndex &gt;= 0; the destination register index
-     * @return non-null; the appropriate move instruction
+     * @param src {@code non-null;} the source register spec
+     * @param destIndex {@code >= 0;} the destination register index
+     * @return {@code non-null;} the appropriate move instruction
      */
     private static SimpleInsn moveInsnFor(RegisterSpec src, int destIndex) {
         return DalvInsn.makeMove(SourcePosition.NO_INFO,

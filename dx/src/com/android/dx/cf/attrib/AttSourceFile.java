@@ -19,19 +19,19 @@ package com.android.dx.cf.attrib;
 import com.android.dx.rop.cst.CstUtf8;
 
 /**
- * Attribute class for standard <code>SourceFile</code> attributes.
+ * Attribute class for standard {@code SourceFile} attributes.
  */
 public final class AttSourceFile extends BaseAttribute {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "SourceFile";
 
-    /** non-null; name of the source file */
+    /** {@code non-null;} name of the source file */
     private final CstUtf8 sourceFile;
 
     /**
      * Constructs an instance.
      * 
-     * @param sourceFile non-null; the name of the source file
+     * @param sourceFile {@code non-null;} the name of the source file
      */
     public AttSourceFile(CstUtf8 sourceFile) {
         super(ATTRIBUTE_NAME);
@@ -51,7 +51,7 @@ public final class AttSourceFile extends BaseAttribute {
     /**
      * Gets the source file name of this instance.
      * 
-     * @return non-null; the source file
+     * @return {@code non-null;} the source file
      */
     public CstUtf8 getSourceFile() {
         return sourceFile;

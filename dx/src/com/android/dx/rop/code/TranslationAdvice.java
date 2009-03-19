@@ -30,10 +30,10 @@ public interface TranslationAdvice {
      * last argument must have a type which indicates it is a known constant.)
      * The instruction associated must have exactly two sources.
      *
-     * @param opcode non-null; the opcode
-     * @param sourceA non-null; the first source
-     * @param sourceB non-null; the second source
-     * @return <code>true</code> iff the target can represent the operation
+     * @param opcode {@code non-null;} the opcode
+     * @param sourceA {@code non-null;} the first source
+     * @param sourceB {@code non-null;} the second source
+     * @return {@code true} iff the target can represent the operation
      * using a constant for the last argument
      */
     public boolean hasConstantOperation(Rop opcode,
@@ -43,9 +43,9 @@ public interface TranslationAdvice {
      * Returns true if the translation target requires the sources of the
      * specified opcode to be in order and contiguous (eg, for an invoke-range)
      *
-     * @param opcode non-null; opcode
-     * @param sources non-null; source list
-     * @return <code>true</code> iff the target requires the sources to be
+     * @param opcode {@code non-null;} opcode
+     * @param sources {@code non-null;} source list
+     * @return {@code true} iff the target requires the sources to be
      * in order and contiguous.
      */
     public boolean requiresSourcesInOrder(Rop opcode, RegisterSpecList sources);

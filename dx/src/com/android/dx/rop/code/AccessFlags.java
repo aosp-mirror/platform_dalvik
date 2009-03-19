@@ -23,8 +23,8 @@ import com.android.dx.util.Hex;
  * related utilities. Although, at the rop layer, flags are generally
  * ignored, this is the layer of communication, and as such, this
  * package is where these definitions belong. The flag definitions are
- * identical to Java access flags, but <code>ACC_SUPER</code> isn't
- * used at all in translated code, and <code>ACC_SYNCHRONIZED</code>
+ * identical to Java access flags, but {@code ACC_SUPER} isn't
+ * used at all in translated code, and {@code ACC_SYNCHRONIZED}
  * is only used in a very limited way.
  */
 public final class AccessFlags {
@@ -44,13 +44,13 @@ public final class AccessFlags {
     public static final int ACC_FINAL = 0x0010;
 
     /**
-     * synchronized method; only valid in dex files for <code>native</code>
+     * synchronized method; only valid in dex files for {@code native}
      * methods
      */
     public static final int ACC_SYNCHRONIZED = 0x0020;
 
     /**
-     * class with new-style <code>invokespecial</code> for superclass
+     * class with new-style {@code invokespecial} for superclass
      * method access 
      */
     public static final int ACC_SUPER = 0x0020;
@@ -77,7 +77,7 @@ public final class AccessFlags {
     public static final int ACC_ABSTRACT = 0x0400;
 
     /**
-     * method with strict floating point (<code>strictfp</code>)
+     * method with strict floating point ({@code strictfp})
      * behavior 
      */
     public static final int ACC_STRICT = 0x0800;
@@ -98,7 +98,7 @@ public final class AccessFlags {
     public static final int ACC_CONSTRUCTOR = 0x10000;
 
     /**
-     * method was declared <code>synchronized</code>; has no effect on
+     * method was declared {@code synchronized}; has no effect on
      * execution (other than inspecting this flag, per se)
      */
     public static final int ACC_DECLARED_SYNCHRONIZED = 0x20000;
@@ -147,7 +147,7 @@ public final class AccessFlags {
      * as defined on classes (not fields or methods).
      * 
      * @param flags the flags
-     * @return non-null; human-oriented string
+     * @return {@code non-null;} human-oriented string
      */
     public static String classString(int flags) {
         return humanHelper(flags, CLASS_FLAGS, CONV_CLASS);
@@ -158,7 +158,7 @@ public final class AccessFlags {
      * as defined on inner classes.
      * 
      * @param flags the flags
-     * @return non-null; human-oriented string
+     * @return {@code non-null;} human-oriented string
      */
     public static String innerClassString(int flags) {
         return humanHelper(flags, INNER_CLASS_FLAGS, CONV_CLASS);
@@ -169,7 +169,7 @@ public final class AccessFlags {
      * as defined on fields (not classes or methods).
      * 
      * @param flags the flags
-     * @return non-null; human-oriented string
+     * @return {@code non-null;} human-oriented string
      */
     public static String fieldString(int flags) {
         return humanHelper(flags, FIELD_FLAGS, CONV_FIELD);
@@ -180,106 +180,106 @@ public final class AccessFlags {
      * as defined on methods (not classes or fields).
      * 
      * @param flags the flags
-     * @return non-null; human-oriented string
+     * @return {@code non-null;} human-oriented string
      */
     public static String methodString(int flags) {
         return humanHelper(flags, METHOD_FLAGS, CONV_METHOD);
     }
 
     /**
-     * Returns whether the flag <code>ACC_PUBLIC</code> is on in the given
+     * Returns whether the flag {@code ACC_PUBLIC} is on in the given
      * flags.
      * 
      * @param flags the flags to check
-     * @return the value of the <code>ACC_PUBLIC</code> flag
+     * @return the value of the {@code ACC_PUBLIC} flag
      */
     public static boolean isPublic(int flags) {
         return (flags & ACC_PUBLIC) != 0;
     }
 
     /**
-     * Returns whether the flag <code>ACC_PROTECTED</code> is on in the given
+     * Returns whether the flag {@code ACC_PROTECTED} is on in the given
      * flags.
      * 
      * @param flags the flags to check
-     * @return the value of the <code>ACC_PROTECTED</code> flag
+     * @return the value of the {@code ACC_PROTECTED} flag
      */
     public static boolean isProtected(int flags) {
         return (flags & ACC_PROTECTED) != 0;
     }
 
     /**
-     * Returns whether the flag <code>ACC_PRIVATE</code> is on in the given
+     * Returns whether the flag {@code ACC_PRIVATE} is on in the given
      * flags.
      * 
      * @param flags the flags to check
-     * @return the value of the <code>ACC_PRIVATE</code> flag
+     * @return the value of the {@code ACC_PRIVATE} flag
      */
     public static boolean isPrivate(int flags) {
         return (flags & ACC_PRIVATE) != 0;
     }
 
     /**
-     * Returns whether the flag <code>ACC_STATIC</code> is on in the given
+     * Returns whether the flag {@code ACC_STATIC} is on in the given
      * flags.
      * 
      * @param flags the flags to check
-     * @return the value of the <code>ACC_STATIC</code> flag
+     * @return the value of the {@code ACC_STATIC} flag
      */
     public static boolean isStatic(int flags) {
         return (flags & ACC_STATIC) != 0;
     }
     
     /**
-     * Returns whether the flag <code>ACC_SYNCHRONIZED</code> is on in
+     * Returns whether the flag {@code ACC_SYNCHRONIZED} is on in
      * the given flags.
      * 
      * @param flags the flags to check
-     * @return the value of the <code>ACC_SYNCHRONIZED</code> flag
+     * @return the value of the {@code ACC_SYNCHRONIZED} flag
      */
     public static boolean isSynchronized(int flags) {
         return (flags & ACC_SYNCHRONIZED) != 0;
     }
 
     /**
-     * Returns whether the flag <code>ACC_ABSTRACT</code> is on in the given
+     * Returns whether the flag {@code ACC_ABSTRACT} is on in the given
      * flags.
      * 
      * @param flags the flags to check
-     * @return the value of the <code>ACC_ABSTRACT</code> flag
+     * @return the value of the {@code ACC_ABSTRACT} flag
      */
     public static boolean isAbstract(int flags) {
         return (flags & ACC_ABSTRACT) != 0;
     }
 
     /**
-     * Returns whether the flag <code>ACC_NATIVE</code> is on in the given
+     * Returns whether the flag {@code ACC_NATIVE} is on in the given
      * flags.
      * 
      * @param flags the flags to check
-     * @return the value of the <code>ACC_NATIVE</code> flag
+     * @return the value of the {@code ACC_NATIVE} flag
      */
     public static boolean isNative(int flags) {
         return (flags & ACC_NATIVE) != 0;
     }
 
     /**
-     * Returns whether the flag <code>ACC_ANNOTATION</code> is on in the given
+     * Returns whether the flag {@code ACC_ANNOTATION} is on in the given
      * flags.
      * 
      * @param flags the flags to check
-     * @return the value of the <code>ACC_ANNOTATION</code> flag
+     * @return the value of the {@code ACC_ANNOTATION} flag
      */
     public static boolean isAnnotation(int flags) {
         return (flags & ACC_ANNOTATION) != 0;
     }
 
     /**
-     * Returns whether the flag <code>ACC_DECLARED_SYNCHRONIZED</code> is
+     * Returns whether the flag {@code ACC_DECLARED_SYNCHRONIZED} is
      * on in the given flags.
      * 
      * @param flags the flags to check
-     * @return the value of the <code>ACC_DECLARED_SYNCHRONIZED</code> flag
+     * @return the value of the {@code ACC_DECLARED_SYNCHRONIZED} flag
      */
     public static boolean isDeclaredSynchronized(int flags) {
         return (flags & ACC_DECLARED_SYNCHRONIZED) != 0;
@@ -291,8 +291,8 @@ public final class AccessFlags {
      * 
      * @param flags the defined flags
      * @param mask mask for the "defined" bits
-     * @param what what the flags represent (one of <code>CONV_*</code>)
-     * @return non-null; human-oriented string
+     * @param what what the flags represent (one of {@code CONV_*})
+     * @return {@code non-null;} human-oriented string
      */
     private static String humanHelper(int flags, int mask, int what) {
         StringBuffer sb = new StringBuffer(80);

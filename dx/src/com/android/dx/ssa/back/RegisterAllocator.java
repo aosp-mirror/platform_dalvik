@@ -37,7 +37,6 @@ import java.util.ArrayList;
  * Base class of all register allocators
  */
 public abstract class RegisterAllocator {
-
     /** method being processed */
     protected final SsaMethod ssaMeth;
 
@@ -45,13 +44,13 @@ public abstract class RegisterAllocator {
     protected final InterferenceGraph interference;
 
     /**
-     * Creates an instance. Call <code>allocateRegisters</code> to run.
+     * Creates an instance. Call {@code allocateRegisters} to run.
      * @param ssaMeth method to process.
      * @param interference Interference graph, indexed by register in both
      * dimensions.
      */
-    public RegisterAllocator(
-            final SsaMethod ssaMeth, final InterferenceGraph interference) {
+    public RegisterAllocator(SsaMethod ssaMeth,
+            InterferenceGraph interference) {
         this.ssaMeth = ssaMeth;
         this.interference = interference;
     }
@@ -61,24 +60,25 @@ public abstract class RegisterAllocator {
      * of the namespace, and thus should be moved up to the top of the
      * namespace after phi removal.
      *
-     * @return true if params should be moved from low to high.
+     * @return {@code true} if params should be moved from low to high
      */
     public abstract boolean wantsParamsMovedHigh();
 
     /**
      * Runs the algorithm.
-     * @return a register mapper to apply to the <code>SsaMethod</code>
+     * 
+     * @return a register mapper to apply to the {@code SsaMethod}
      */
     public abstract RegisterMapper allocateRegisters();
 
     /**
      * Returns the category (width) of the definition site of the register.
-     * Returns 1 for undefined registers.
+     * Returns {@code 1} for undefined registers.
      *
      * @param reg register
-     * @return 1 or 2
+     * @return {@code 1..2}
      */
-    protected int getCategoryForSsaReg(int reg) {
+    protected final int getCategoryForSsaReg(int reg) {
         SsaInsn definition;
         definition = ssaMeth.getDefinitionForRegister(reg);
 
@@ -93,25 +93,26 @@ public abstract class RegisterAllocator {
     /**
      * Returns the RegisterSpec of the definition of the register.
      *
-     * @param reg &gt;= 0 SSA register
+     * @param reg {@code >= 0;} SSA register
      * @return definition spec of the register or null if it is never defined
-     * (for the case of "version 0" SSA registers).
+     * (for the case of "version 0" SSA registers)
      */
-    protected RegisterSpec getDefinitionSpecForSsaReg(int reg) {
-        SsaInsn definition;
-        definition = ssaMeth.getDefinitionForRegister(reg);
+    protected final RegisterSpec getDefinitionSpecForSsaReg(int reg) {
+        SsaInsn definition = ssaMeth.getDefinitionForRegister(reg);
 
         return definition == null ? null : definition.getResult();
     }
 
     /**
      * Returns true if the definition site of this register is a
-     * move-param (ie, this is a method parameter)
+     * move-param (ie, this is a method parameter).
+     * 
      * @param reg register in question
      * @return true if this is a method parameter
      */
     protected boolean isDefinitionMoveParam(int reg) {
         SsaInsn defInsn = ssaMeth.getDefinitionForRegister(reg);
+
         if (defInsn instanceof NormalSsaInsn) {
             NormalSsaInsn ndefInsn = (NormalSsaInsn) defInsn;
 
@@ -127,10 +128,10 @@ public abstract class RegisterAllocator {
      * interference graph in the process. The insn currently must be the
      * last insn in a block.
      *
-     * @param insn non-null; insn to insert move before, must be last insn
-     * in block.
-     * @param reg non-null; SSA register to duplicate
-     * @return non-null; spec of new SSA register created by move
+     * @param insn {@code non-null;} insn to insert move before, must
+     * be last insn in block
+     * @param reg {@code non-null;} SSA register to duplicate
+     * @return {@code non-null;} spec of new SSA register created by move
      */
     protected final RegisterSpec insertMoveBefore(SsaInsn insn,
             RegisterSpec reg) {
@@ -155,19 +156,17 @@ public abstract class RegisterAllocator {
         }
 
         /*
-         * Get new register and make new move instruction
+         * Get new register and make new move instruction.
          */
 
-        // new result must not have associated local variable
+        // The new result must not have an associated local variable.
         RegisterSpec newRegSpec = RegisterSpec.make(ssaMeth.makeNewSsaReg(),
                 reg.getTypeBearer());
 
-        SsaInsn toAdd;
-
-        toAdd = SsaInsn.makeFromRop(
-                    new PlainInsn(Rops.opMove(newRegSpec.getType()),
-                            SourcePosition.NO_INFO, newRegSpec,
-                            RegisterSpecList.make(reg)), block);
+        SsaInsn toAdd = SsaInsn.makeFromRop(
+                new PlainInsn(Rops.opMove(newRegSpec.getType()),
+                        SourcePosition.NO_INFO, newRegSpec,
+                        RegisterSpecList.make(reg)), block);
 
         insns.add(insnIndex, toAdd);
 

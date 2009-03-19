@@ -26,9 +26,9 @@ public interface Method
 {
     /**
      * Get the <i>effective</i> method descriptor, which includes, if
-     * necessary, a first <code>this</code> parameter.
+     * necessary, a first {@code this} parameter.
      *
-     * @return non-null; the effective method descriptor
+     * @return {@code non-null;} the effective method descriptor
      */
     public Prototype getEffectiveDescriptor();
 }

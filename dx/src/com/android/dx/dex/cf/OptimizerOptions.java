@@ -31,13 +31,13 @@ import java.util.HashSet;
  */
 public class OptimizerOptions {
     /**
-     * null-ok; hash set of class name + method names that should be optimized.
+     * {@code null-ok;} hash set of class name + method names that should be optimized.
      * null if this constraint was not specified on the command line
      */
     private static HashSet<String> optimizeList;
 
     /**
-     * null-ok; hash set of class name + method names that should NOT
+     * {@code null-ok;} hash set of class name + method names that should NOT
      * be optimized.  null if this constraint was not specified on the
      * command line
      */
@@ -118,12 +118,12 @@ public class OptimizerOptions {
      * Compares the output of the optimizer run normally with a run skipping
      * some optional steps. Results are printed to stderr.
      *
-     * @param nonOptRmeth non-null; origional rop method
-     * @param paramSize &gt;= 0 parameter size of method
+     * @param nonOptRmeth {@code non-null;} origional rop method
+     * @param paramSize {@code >= 0;} parameter size of method
      * @param isStatic true if this method has no 'this' pointer argument.
-     * @param args non-null; translator arguments
-     * @param advice non-null; translation advice
-     * @param rmeth non-null; method with all optimization steps run.
+     * @param args {@code non-null;} translator arguments
+     * @param advice {@code non-null;} translation advice
+     * @param rmeth {@code non-null;} method with all optimization steps run.
      */
     public static void compareOptimizerStep(RopMethod nonOptRmeth,
             int paramSize, boolean isStatic, CfOptions args,

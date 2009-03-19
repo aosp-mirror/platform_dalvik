@@ -95,6 +95,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
+    dvmFprintf(stderr, "  -Xgc:[no]precise\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
     dvmFprintf(stderr, "\n");
@@ -131,6 +132,9 @@ static void dvmUsage(const char* progName)
 #endif
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
         " extra_object_validation"
+#endif
+#ifdef WITH_EXTRA_GC_CHECKS
+        " extra_gc_checks"
 #endif
 #ifdef WITH_DALVIK_ASSERT
         " dalvik_assert"
@@ -788,6 +792,18 @@ static int dvmProcessOptions(int argc, const char* const argv[],
 
         } else if (strcmp(argv[i], "-Xgenregmap") == 0) {
             gDvm.generateRegisterMaps = true;
+            LOGD("Register maps will be generated during verification\n");
+
+        } else if (strncmp(argv[i], "-Xgc:", 5) == 0) {
+            if (strcmp(argv[i] + 5, "precise") == 0)
+                gDvm.preciseGc = true;
+            else if (strcmp(argv[i] + 5, "noprecise") == 0)
+                gDvm.preciseGc = false;
+            else {
+                dvmFprintf(stderr, "Bad value for -Xgc");
+                return -1;
+            }
+            LOGD("Precise GC configured %s\n", gDvm.preciseGc ? "ON" : "OFF");
 
         } else if (strcmp(argv[i], "-Xcheckdexsum") == 0) {
             gDvm.verifyDexChecksum = true;
@@ -810,6 +826,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
 
 /*
  * Set defaults for fields altered or modified by arguments.
+ *
+ * Globals are initialized to 0 (a/k/a NULL or false).
  */
 static void setCommandLineDefaults()
 {
@@ -936,6 +954,14 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
     }
 
+#if WITH_EXTRA_GC_CHECKS > 1
+    /* only "portable" interp has the extra goodies */
+    if (gDvm.executionMode != kExecutionModeInterpPortable) {
+        LOGI("Switching to 'portable' interpreter for GC checks\n");
+        gDvm.executionMode = kExecutionModeInterpPortable;
+    }
+#endif
+
     /* configure signal handling */
     if (!gDvm.reduceSignals)
         blockSignals();
@@ -956,6 +982,8 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     if (!dvmInlineNativeStartup())
         goto fail;
     if (!dvmVerificationStartup())
+        goto fail;
+    if (!dvmRegisterMapStartup())
         goto fail;
     if (!dvmInstanceofStartup())
         goto fail;
@@ -1290,6 +1318,8 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
         goto fail;
     if (!dvmVerificationStartup())
         goto fail;
+    if (!dvmRegisterMapStartup())
+        goto fail;
     if (!dvmInstanceofStartup())
         goto fail;
     if (!dvmClassStartup())
@@ -1370,6 +1400,7 @@ void dvmShutdown(void)
     dvmThreadShutdown();
     dvmClassShutdown();
     dvmVerificationShutdown();
+    dvmRegisterMapShutdown();
     dvmInstanceofShutdown();
     dvmInlineNativeShutdown();
     dvmGcShutdown();

@@ -41,31 +41,55 @@ import java.util.HashSet;
  * rank to keep the union-find tree balanced.
  */
 public final class Dominators {
-    /* postdom is true if we want post dominators. */
-    private boolean postdom;
+    /* postdom is true if we want post dominators */
+    private final boolean postdom;
+
+    /* {@code non-null;} method being processed */
+    private final SsaMethod meth;
+
     /* Method's basic blocks. */
-    private ArrayList<SsaBasicBlock> blocks;
+    private final ArrayList<SsaBasicBlock> blocks;
 
-    private static final class DFSInfo {
-        int semidom;
-        SsaBasicBlock parent;
-        // rep(resentative) is known as "label" in the paper. It is the node
-        // that our block's DFS info has been unioned to.
-        SsaBasicBlock rep;
-        SsaBasicBlock ancestor;
-        ArrayList<SsaBasicBlock> bucket;
+    /** indexed by basic block index */
+    private final DFSInfo[] info;
 
-        public DFSInfo() {
-            bucket = new ArrayList<SsaBasicBlock>();
-        }
+    private final ArrayList<SsaBasicBlock> vertex;
 
+    /** {@code non-null;} the raw dominator info */
+    private final DomFront.DomInfo domInfos[];
+
+    /**
+     * Constructs an instance.
+     * 
+     * @param meth {@code non-null;} method to process
+     * @param domInfos {@code non-null;} the raw dominator info
+     * @param postdom true for postdom information, false for normal dom info
+     */
+    private Dominators(SsaMethod meth, DomFront.DomInfo[] domInfos,
+            boolean postdom) {
+        this.meth = meth;
+        this.domInfos = domInfos;
+        this.postdom = postdom;
+        this.blocks = meth.getBlocks();
+        this.info = new DFSInfo[blocks.size() + 2];
+        this.vertex = new ArrayList<SsaBasicBlock>();
     }
 
-    /** Indexed by basic block index */
-    private DFSInfo[] info;
-    private ArrayList<SsaBasicBlock> vertex;
+    /**
+     * Constructs a fully-initialized instance. (This method exists so as
+     * to avoid calling a large amount of code in the constructor.)
+     * 
+     * @param meth {@code non-null;} method to process
+     * @param domInfos {@code non-null;} the raw dominator info
+     * @param postdom true for postdom information, false for normal dom info
+     */
+    public static Dominators make(SsaMethod meth, DomFront.DomInfo[] domInfos,
+            boolean postdom) {
+        Dominators result = new Dominators(meth, domInfos, postdom);
 
-    private DomFront.DomInfo domInfos[];
+        result.run();
+        return result;
+    }
 
     private BitSet getSuccs(SsaBasicBlock block) {
         if (postdom) {
@@ -85,6 +109,7 @@ public final class Dominators {
 
     /**
      * Performs path compress on the DFS info.
+     * 
      * @param in Basic block whose DFS info we are path compressing.
      */
     private void compress(SsaBasicBlock in) {
@@ -110,7 +135,7 @@ public final class Dominators {
                 }
                 worklist.remove(wsize - 1);
 
-                // Update based on ancestor info
+                // Update based on ancestor info.
                 if (vabbInfo.ancestor == null) {
                     continue;
                 }
@@ -124,42 +149,25 @@ public final class Dominators {
             }
         }
     }
+
     private SsaBasicBlock eval(SsaBasicBlock v) {
         DFSInfo bbInfo = info[v.getIndex()];
+
         if (bbInfo.ancestor == null) {
             return v;
         }
+
         compress(v);
         return bbInfo.rep;
     }
 
     /**
-     * Callback for depth-first walk through control flow graph (either
-     * from the entry block or the exit block). Records the traversal order
-     * in the <code>info</code>list.
+     * Performs dominator/post-dominator calculation for the control
+     * flow graph.
+     * 
+     * @param meth {@code non-null;} method to analyze
      */
-    private class DfsWalker implements SsaBasicBlock.Visitor {
-        int dfsNum = 0;
-
-        public void visitBlock (SsaBasicBlock v, SsaBasicBlock parent) {
-            DFSInfo bbInfo = new DFSInfo();
-            bbInfo.semidom = ++dfsNum;
-            bbInfo.rep = v;
-            bbInfo.parent = parent;
-            vertex.add(v);
-            info[v.getIndex()] = bbInfo;
-        }
-    }
-
-    /**
-     * Performs dominator/post-dominator calculation for the control flow graph.
-     * @param meth Method to analyze
-     */
-    public void run(SsaMethod meth) {
-
-        this.blocks = meth.getBlocks();
-        this.info = new DFSInfo[blocks.size() + 2];
-        this.vertex = new ArrayList<SsaBasicBlock>();
+    private void run() {
         SsaBasicBlock root = postdom
                 ? meth.getExitBlock() : meth.getEntryBlock();
 
@@ -168,8 +176,10 @@ public final class Dominators {
             domInfos[root.getIndex()].idom = root.getIndex();
         }
         
-        // First we perform a DFS numbering of the blocks, by numbering the dfs
-        // tree roots
+        /*
+         * First we perform a DFS numbering of the blocks, by
+         * numbering the dfs tree roots.
+         */
 
         DfsWalker walker = new DfsWalker();
         meth.forEachBlockDepthFirst(postdom, walker);
@@ -184,12 +194,15 @@ public final class Dominators {
 
             BitSet preds = getPreds(w);
             for (int j = preds.nextSetBit(0);
-                    j >= 0;
-                    j = preds.nextSetBit(j + 1)) {
+                 j >= 0;
+                 j = preds.nextSetBit(j + 1)) {
                 SsaBasicBlock predBlock = blocks.get(j);
                 DFSInfo predInfo = info[predBlock.getIndex()];
-                // PredInfo may not exist in case the predecessor is not
-                // reachable
+
+                /*
+                 * PredInfo may not exist in case the predecessor is
+                 * not reachable.
+                 */
                 if (predInfo != null) {
                     int predSemidom = info[eval(predBlock).getIndex()].semidom;
                     if (predSemidom < wInfo.semidom) {
@@ -199,11 +212,14 @@ public final class Dominators {
             }
             info[vertex.get(wInfo.semidom).getIndex()].bucket.add(w);
 
-            // Normally we would call link here, but in our  m log n
-            // implementation this is equivalent to the following single line
+            /*
+             * Normally we would call link here, but in our O(m log n)
+             * implementation this is equivalent to the following
+             * single line.
+             */
             wInfo.ancestor = wInfo.parent;
 
-            // Implicity define idom for each vertex
+            // Implicity define idom for each vertex.
             ArrayList<SsaBasicBlock> wParentBucket;
             wParentBucket = info[wInfo.parent.getIndex()].bucket;
 
@@ -219,6 +235,7 @@ public final class Dominators {
                 }
             }
         }
+
         // Now explicitly define the immediate dominator of each vertex
         for (int i =  2; i <= dfsMax; ++i) {
             SsaBasicBlock w = vertex.get(i);
@@ -231,10 +248,38 @@ public final class Dominators {
     }
 
     /**
-     * @param postdom true for postdom information, false for normal dom info
+     * Callback for depth-first walk through control flow graph (either
+     * from the entry block or the exit block). Records the traversal order
+     * in the {@code info}list.
      */
-    public Dominators(DomFront.DomInfo[] domInfos, boolean postdom) {
-        this.domInfos = domInfos;
-        this.postdom = postdom;
+    private class DfsWalker implements SsaBasicBlock.Visitor {
+        private int dfsNum = 0;
+
+        public void visitBlock(SsaBasicBlock v, SsaBasicBlock parent) {
+            DFSInfo bbInfo = new DFSInfo();
+            bbInfo.semidom = ++dfsNum;
+            bbInfo.rep = v;
+            bbInfo.parent = parent;
+            vertex.add(v);
+            info[v.getIndex()] = bbInfo;
+        }
+    }
+
+    private static final class DFSInfo {
+        public int semidom;
+        public SsaBasicBlock parent;
+
+        /**
+         * rep(resentative) is known as "label" in the paper. It is the node
+         * that our block's DFS info has been unioned to.
+         */
+        public SsaBasicBlock rep;
+
+        public SsaBasicBlock ancestor;
+        public ArrayList<SsaBasicBlock> bucket;
+
+        public DFSInfo() {
+            bucket = new ArrayList<SsaBasicBlock>();
+        }
     }
 }

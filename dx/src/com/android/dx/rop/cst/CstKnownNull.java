@@ -19,10 +19,10 @@ package com.android.dx.rop.cst;
 import com.android.dx.rop.type.Type;
 
 /**
- * Constant type to represent a known-<code>null</code> value.
+ * Constant type to represent a known-{@code null} value.
  */
 public final class CstKnownNull extends CstLiteralBits {
-    /** non-null; unique instance of this class */
+    /** {@code non-null;} unique instance of this class */
     public static final CstKnownNull THE_ONE = new CstKnownNull();
 
     /**

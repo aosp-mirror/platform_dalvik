@@ -27,10 +27,10 @@ import com.android.dx.util.AnnotatedOutput;
  * lists. Most of the overridden methods on this class end up throwing
  * exceptions, as code should know (implicitly or explicitly) to avoid
  * using this class. The one exception is {@link #isCompatible}, which
- * always returns <code>true</code>.
+ * always returns {@code true}.
  */
 public final class SpecialFormat extends InsnFormat {
-    /** non-null; unique instance of this class */
+    /** {@code non-null;} unique instance of this class */
     public static final InsnFormat THE_ONE = new SpecialFormat();
 
     /**

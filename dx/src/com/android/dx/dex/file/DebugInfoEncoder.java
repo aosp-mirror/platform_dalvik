@@ -46,19 +46,19 @@ import static com.android.dx.dex.file.DebugInfoConstants.*;
  * <li> signed LEB128: initial value for line register.
  * <li> n instances of signed LEB128: string indicies (offset by 1)
  * for each method argument in left-to-right order
- * with <code>this</code> excluded. A value of '0' indicates "no name"
+ * with {@code this} excluded. A value of '0' indicates "no name"
  * <li> A sequence of special or normal opcodes as defined in
- * <code>DebugInfoConstants</code>.
- * <li> A single terminating <code>OP_END_SEQUENCE</code>
+ * {@code DebugInfoConstants}.
+ * <li> A single terminating {@code OP_END_SEQUENCE}
  * </ol>
  */
 public final class DebugInfoEncoder {
     private static final boolean DEBUG = false;
 
-    /** null-ok; positions (line numbers) to encode */
+    /** {@code null-ok;} positions (line numbers) to encode */
     private final PositionList positions;
 
-    /** null-ok; local variables to encode */
+    /** {@code null-ok;} local variables to encode */
     private final LocalList locals;
 
     private final ByteArrayAnnotatedOutput output;
@@ -96,9 +96,9 @@ public final class DebugInfoEncoder {
     /**
      * Creates an instance.
      *
-     * @param pl null-ok; positions (line numbers) to encode
-     * @param ll null-ok; local variables to encode
-     * @param file null-ok; may only be <code>null</code> if simply using
+     * @param pl {@code null-ok;} positions (line numbers) to encode
+     * @param ll {@code null-ok;} local variables to encode
+     * @param file {@code null-ok;} may only be {@code null} if simply using
      * this class to do a debug print
      * @param codeSize
      * @param regSize
@@ -122,7 +122,7 @@ public final class DebugInfoEncoder {
     }
 
     /**
-     * Annotates or writes a message to the <code>debugPrint</code> writer
+     * Annotates or writes a message to the {@code debugPrint} writer
      * if applicable.
      *
      * @param length the number of bytes associated with this message
@@ -146,8 +146,8 @@ public final class DebugInfoEncoder {
      * Converts this (PositionList, LocalList) pair into a state machine
      * sequence.
      *
-     * @return encoded byte sequence without padding and
-     * terminated with a <code>'\00'</code>
+     * @return {@code non-null;} encoded byte sequence without padding and
+     * terminated with a {@code 0x00} byte
      */
     public byte[] convert() {
         try {
@@ -169,15 +169,15 @@ public final class DebugInfoEncoder {
 
     /**
      * Converts and produces annotations on a stream. Does not write
-     * actual bits to the <code>AnnotatedOutput</code>.
+     * actual bits to the {@code AnnotatedOutput}.
      *
-     * @param prefix null-ok; prefix to attach to each line of output
-     * @param debugPrint null-ok; if specified, an alternate output for
+     * @param prefix {@code null-ok;} prefix to attach to each line of output
+     * @param debugPrint {@code null-ok;} if specified, an alternate output for
      * annotations
-     * @param out null-ok; if specified, where annotations should go
+     * @param out {@code null-ok;} if specified, where annotations should go
      * @param consume whether to claim to have consumed output for
-     * <code>out</code>
-     * @return output sequence
+     * {@code out}
+     * @return {@code non-null;} encoded output
      */
     public byte[] convertAndAnnotate(String prefix, PrintWriter debugPrint,
             AnnotatedOutput out, boolean consume) {
@@ -272,7 +272,7 @@ public final class DebugInfoEncoder {
      * address.
      *
      * @param curl Current index in locals
-     * @return new value for <code>curl</code>
+     * @return new value for {@code curl}
      * @throws IOException
      */
     private int emitLocalsAtAddress(int curl)
@@ -338,11 +338,11 @@ public final class DebugInfoEncoder {
     }
 
     /**
-     * Emits all positions that occur at the current <code>address</code>
+     * Emits all positions that occur at the current {@code address}
      *
      * @param curp Current index in sortedPositions
      * @param sortedPositions positions, sorted by ascending address
-     * @return new value for <code>curp</code>
+     * @return new value for {@code curp}
      * @throws IOException
      */
     private int emitPositionsAtAddress(int curp,
@@ -507,7 +507,7 @@ public final class DebugInfoEncoder {
     /**
      * Gets the register that begins the method's parameter range (including
      * the 'this' parameter for non-static methods). The range continues until
-     * <code>regSize</code>
+     * {@code regSize}
      *
      * @return register as noted above
      */
@@ -521,7 +521,7 @@ public final class DebugInfoEncoder {
      * from the input list and sorted by ascending register in the
      * returned list.
      *
-     * @return list of non-<code>this</code> method argument locals,
+     * @return list of non-{@code this} method argument locals,
      * sorted by ascending register
      */
     private ArrayList<LocalList.Entry> extractMethodArguments() {
@@ -566,8 +566,8 @@ public final class DebugInfoEncoder {
      * Returns a string representation of this LocalList entry that is
      * appropriate for emitting as an annotation.
      *
-     * @param e non-null; entry
-     * @return non-null; annotation string
+     * @param e {@code non-null;} entry
+     * @return {@code non-null;} annotation string
      */
     private String entryAnnotationString(LocalList.Entry e) {
         StringBuilder sb = new StringBuilder();
@@ -633,7 +633,7 @@ public final class DebugInfoEncoder {
      * null symbol is used in some cases by the parameter name list
      * at the beginning of the sequence.
      *
-     * @param string null-ok; string to emit
+     * @param string {@code null-ok;} string to emit
      * @throws IOException
      */
     private void emitStringIndex(CstUtf8 string) throws IOException {
@@ -654,7 +654,7 @@ public final class DebugInfoEncoder {
      * Emits a type index as an unsigned LEB128. The actual value written
      * is shifted by 1, so that the '0' value is reserved for "null".
      *
-     * @param type null-ok; type to emit
+     * @param type {@code null-ok;} type to emit
      * @throws IOException
      */
     private void emitTypeIndex(CstType type) throws IOException {
@@ -739,7 +739,7 @@ public final class DebugInfoEncoder {
     /**
      * Emits a {@link DebugInfoConstants#DBG_END_LOCAL DBG_END_LOCAL} sequence.
      *
-     * @param entry entry non-null; entry associated with end.
+     * @param entry {@code entry non-null;} entry associated with end.
      * @throws IOException
      */
     private void emitLocalEnd(LocalList.Entry entry)
@@ -823,10 +823,11 @@ public final class DebugInfoEncoder {
      * Essentially the same as described in "DWARF Debugging Format Version 3"
      * section 6.2.5.1.
      *
-     * @param deltaLines &gt;= DBG_LINE_BASE and &lt;= DBG_LINE_BASE +
-     * DBG_LINE_RANGE, the line change to encode
-     * @param deltaAddress &gt;= 0; the address change to encode
-     * @return &lt;= 0xff if in range, otherwise parameters are out of range
+     * @param deltaLines {@code >= DBG_LINE_BASE, <= DBG_LINE_BASE +
+     * DBG_LINE_RANGE;} the line change to encode
+     * @param deltaAddress {@code >= 0;} the address change to encode
+     * @return {@code <= 0xff} if in range, otherwise parameters are out
+     * of range
      */
     private static int computeOpcode(int deltaLines, int deltaAddress) {
         if (deltaLines < DBG_LINE_BASE
@@ -867,7 +868,7 @@ public final class DebugInfoEncoder {
      * Emits an  {@link DebugInfoConstants#DBG_ADVANCE_PC DBG_ADVANCE_PC} 
      * sequence.
      *
-     * @param deltaAddress &gt;= 0 amount to change program counter by
+     * @param deltaAddress {@code >= 0;} amount to change program counter by
      * @throws IOException
      */
     private void emitAdvancePc(int deltaAddress) throws IOException {
@@ -890,8 +891,9 @@ public final class DebugInfoEncoder {
     /**
      * Emits an unsigned LEB128 value.
      *
-     * @param n &gt= 0 vallue to emit. Note that, although this can represent
-     * integers larger than Integer.MAX_VALUE, we currently don't allow that.
+     * @param n {@code >= 0;} value to emit. Note that, although this can
+     * represent integers larger than Integer.MAX_VALUE, we currently don't
+     * allow that.
      * @throws IOException
      */
     private void emitUnsignedLeb128(int n) throws IOException {

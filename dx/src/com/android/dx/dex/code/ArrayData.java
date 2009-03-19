@@ -29,12 +29,12 @@ import java.util.ArrayList;
  */
 public final class ArrayData extends VariableSizeInsn {
     /**
-     * non-null; address representing the instruction that uses this
+     * {@code non-null;} address representing the instruction that uses this
      * instance 
      */
     private final CodeAddress user;
 
-    /** non-null; initial values to be filled into an array */
+    /** {@code non-null;} initial values to be filled into an array */
     private final ArrayList<Constant> values;
 
     /** non-null: type of constant that initializes the array */
@@ -48,12 +48,12 @@ public final class ArrayData extends VariableSizeInsn {
 
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
-     * @param position non-null; source position
-     * @param user non-null; address representing the instruction that
+     * @param position {@code non-null;} source position
+     * @param user {@code non-null;} address representing the instruction that
      * uses this instance
-     * @param values non-null; initial values to be filled into an array
+     * @param values {@code non-null;} initial values to be filled into an array
      */
     public ArrayData(SourcePosition position, CodeAddress user,
                      ArrayList<Constant> values,

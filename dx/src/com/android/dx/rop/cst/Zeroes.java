@@ -30,10 +30,10 @@ public final class Zeroes {
     }
      
     /**
-     * Gets the "zero" (or <code>null</code>) value for the given type.
+     * Gets the "zero" (or {@code null}) value for the given type.
      * 
-     * @param type non-null; the type in question
-     * @return non-null; its "zero" value
+     * @param type {@code non-null;} the type in question
+     * @return {@code non-null;} its "zero" value
      */
     public static Constant zeroFor(Type type) {
         switch (type.getBasicType()) {

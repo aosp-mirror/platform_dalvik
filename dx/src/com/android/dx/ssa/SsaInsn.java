@@ -23,24 +23,34 @@ import com.android.dx.util.ToHuman;
  * An instruction in SSA form
  */
 public abstract class SsaInsn implements ToHuman, Cloneable {
+    /** {@code non-null;} the block that contains this instance */
+    private final SsaBasicBlock block;
 
-    protected RegisterSpec result;
-    protected final SsaBasicBlock block;
+    /** {@code null-ok;} result register */
+    private RegisterSpec result;
 
     /**
-     * Constructs an instance
-     * @param block block containing this insn. Can never change.
+     * Constructs an instance.
+     * 
+     * @param result {@code null-ok;} initial result register. May be changed.
+     * @param block {@code non-null;} block containing this insn. Can
+     * never change.
      */
-    protected SsaInsn(final SsaBasicBlock block) {
+    protected SsaInsn(RegisterSpec result, SsaBasicBlock block) {
+        if (block == null) {
+            throw new NullPointerException("block == null");
+        }
+
         this.block = block;
+        this.result = result;
     }
 
     /**
-     * Makes a new SSA insn form a ROP insn
+     * Makes a new SSA insn form a rop insn.
      *
-     * @param insn non-null; rop insn
-     * @param block non-null; owning block
-     * @return non-null; an appropriately constructed instance
+     * @param insn {@code non-null;} rop insn
+     * @param block {@code non-null;} owning block
+     * @return {@code non-null;} an appropriately constructed instance
      */
     public static SsaInsn makeFromRop(Insn insn, SsaBasicBlock block) {
         return new NormalSsaInsn(insn, block);
@@ -58,6 +68,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
 
     /**
      * Like {@link com.android.dx.rop.code.Insn getResult()}.
+     * 
      * @return result register
      */
     public RegisterSpec getResult() {
@@ -65,8 +76,22 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     }
 
     /**
+     * Set the result register.
+     * 
+     * @param result {@code non-null;} the new result register
+     */
+    protected void setResult(RegisterSpec result) {
+        if (result == null) {
+            throw new NullPointerException("result == null");
+        }
+
+        this.result = result;
+    }
+
+    /**
      * Like {@link com.android.dx.rop.code.Insn getSources()}.
-     * @return non-null; sources list
+     * 
+     * @return {@code non-null;} sources list
      */
     abstract public RegisterSpecList getSources();
 
@@ -80,7 +105,8 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     }
 
     /**
-     * is the specified reg the result reg?
+     * Returns whether or not the specified reg is the result reg.
+     * 
      * @param reg register to test
      * @return true if there is a result and it is stored in the specified
      * register
@@ -91,9 +117,10 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
 
 
     /**
-     * Changes the result register if this insn has a result.
-     * Used during renaming.
-     * @param reg new result register.
+     * Changes the result register if this insn has a result. This is used
+     * during renaming.
+     * 
+     * @param reg new result register
      */
     public void changeResultReg(int reg) {
         if (result != null) {
@@ -102,10 +129,10 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     }
 
     /**
-     * Sets the local association for the result of this insn.
-     * This is sometimes updated during the SsaRenamer process.
+     * Sets the local association for the result of this insn. This is
+     * sometimes updated during the SsaRenamer process.
      *
-     * @param local null-ok; New debug/local variable info.
+     * @param local {@code null-ok;} new debug/local variable info
      */
     public final void setResultLocal(LocalItem local) {
         LocalItem oldItem = result.getLocalItem();
@@ -120,10 +147,11 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     /**
      * Map registers after register allocation.
      *
-     * @param mapper
+     * @param mapper {@code non-null;} mapping from old to new registers
      */
     public final void mapRegisters(RegisterMapper mapper) {
         RegisterSpec oldResult = result;
+
         result = mapper.map(result);
         block.getParent().updateOneDefinition(this, oldResult);
         mapSourceRegisters(mapper);        
@@ -136,13 +164,12 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
      */
     abstract public void mapSourceRegisters(RegisterMapper mapper);
 
-
     /**
-     * Returns the Rop opcode for this insn, or null if this is a phi insn
+     * Returns the Rop opcode for this insn, or null if this is a phi insn.
      *
-     * TODO move this up into NormalSsaInsn
+     * TODO: Move this up into NormalSsaInsn.
      *
-     * @return null-ok; Rop opcode if there is one.
+     * @return {@code null-ok;} Rop opcode if there is one.
      */
     abstract public Rop getOpcode();
 
@@ -150,20 +177,21 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
      * Returns the original Rop insn for this insn, or null if this is
      * a phi insn.
      * 
-     * TODO move this up into NormalSsaInsn
+     * TODO: Move this up into NormalSsaInsn.
      *
-     * @return null-ok; Rop insn if there is one.
+     * @return {@code null-ok;} Rop insn if there is one.
      */
     abstract public Insn getOriginalRopInsn();
 
     /**
      * Gets the spec of a local variable assignment that occurs at this
      * instruction, or null if no local variable assignment occurs. This
-     * may be the result register, or for <code>mark-local</code> insns
+     * may be the result register, or for {@code mark-local} insns
      * it may be the source.
      *
-     * @return null-ok; a local-associated register spec or null
      * @see com.android.dx.rop.code.Insn#getLocalAssignment() 
+     * 
+     * @return {@code null-ok;} a local-associated register spec or null
      */
     public RegisterSpec getLocalAssignment() {
         if (result != null && result.getLocalItem() != null) {
@@ -176,7 +204,8 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     /**
      * Indicates whether the specified register is amongst the registers
      * used as sources for this instruction.
-     * @param reg The register in question
+     * 
+     * @param reg the register in question
      * @return true if the reg is a source
      */
     public boolean isRegASource(int reg) {
@@ -186,9 +215,9 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     /**
      * Transform back to ROP form.
      *
-     * TODO move this up into NormalSsaInsn
+     * TODO: Move this up into NormalSsaInsn.
      *
-     * @return non-null; a ROP representation of this instruction, with
+     * @return {@code non-null;} a ROP representation of this instruction, with
      * updated registers.
      */
     public abstract Insn toRopInsn();
@@ -208,8 +237,8 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     public abstract boolean hasSideEffect();
 
     /**
-     * @return true if this is a move (but not a move-operand or move-exception)
-     * instruction
+     * @return true if this is a move (but not a move-operand or
+     * move-exception) instruction
      */
     public boolean isNormalMoveInsn() {
         return false;
@@ -229,8 +258,9 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     abstract public boolean canThrow();
 
     /**
-     * accepts a visitor
-     * @param v visitor
+     * Accepts a visitor.
+     * 
+     * @param v {@code non-null} the visitor
      */
     public abstract void accept(Visitor v);
 
@@ -238,22 +268,21 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
      * Visitor interface for this class.
      */
     public static interface Visitor {
-
         /**
          * Any non-phi move instruction
-         * @param insn non-null; the instruction to visit
+         * @param insn {@code non-null;} the instruction to visit
          */
         public void visitMoveInsn(NormalSsaInsn insn);
 
         /**
          * Any phi insn
-         * @param insn non-null; the instruction to visit
+         * @param insn {@code non-null;} the instruction to visit
          */
         public void visitPhiInsn(PhiInsn insn);
 
         /**
          * Any insn that isn't a move or a phi (which is also a move).
-         * @param insn non-null; the instruction to visit
+         * @param insn {@code non-null;} the instruction to visit
          */
         public void visitNonMoveInsn(NormalSsaInsn insn);
     }

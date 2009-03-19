@@ -35,8 +35,8 @@ public final class FileUtils {
      * Reads the named file, translating {@link IOException} to a
      * {@link RuntimeException} of some sort.
      * 
-     * @param fileName non-null; name of the file to read
-     * @return non-null; contents of the file
+     * @param fileName {@code non-null;} name of the file to read
+     * @return {@code non-null;} contents of the file
      */
     public static byte[] readFile(String fileName) {
         File file = new File(fileName);
@@ -47,8 +47,8 @@ public final class FileUtils {
      * Reads the given file, translating {@link IOException} to a
      * {@link RuntimeException} of some sort.
      * 
-     * @param file non-null; the file to read
-     * @return non-null; contents of the file
+     * @param file {@code non-null;} the file to read
+     * @return {@code non-null;} contents of the file
      */
     public static byte[] readFile(File file) {
         if (!file.exists()) {

@@ -46,10 +46,10 @@ public final class DalvInsnList extends FixedSizeList {
      * Constructs and returns an immutable instance whose elements are
      * identical to the ones in the given list, in the same order.
      * 
-     * @param list non-null; the list to use for elements
+     * @param list {@code non-null;} the list to use for elements
      * @param regCount count, in register-units, of the number of registers
      * this code block requires.
-     * @return non-null; an appropriately-constructed instance of this
+     * @return {@code non-null;} an appropriately-constructed instance of this
      * class
      */
     public static DalvInsnList makeImmutable(ArrayList<DalvInsn> list,
@@ -66,7 +66,7 @@ public final class DalvInsnList extends FixedSizeList {
     }
     
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      * 
      * @param size the size of the list
      */
@@ -78,10 +78,10 @@ public final class DalvInsnList extends FixedSizeList {
     /**
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
-     * do that, this will throw <code>NullPointerException</code>.
+     * do that, this will throw {@code NullPointerException}.
      * 
-     * @param n &gt;= 0, &lt; size(); which index
-     * @return non-null; element at that index
+     * @param n {@code >= 0, < size();} which index
+     * @return {@code non-null;} element at that index
      */
     public DalvInsn get(int n) {
         return (DalvInsn) get0(n);
@@ -90,8 +90,8 @@ public final class DalvInsnList extends FixedSizeList {
     /**
      * Sets the instruction at the given index.
      * 
-     * @param n &gt;= 0, &lt; size(); which index
-     * @param insn non-null; the instruction to set at <code>n</code>
+     * @param n {@code >= 0, < size();} which index
+     * @param insn {@code non-null;} the instruction to set at {@code n}
      */
     public void set(int n, DalvInsn insn) {
         set0(n, insn);
@@ -102,7 +102,7 @@ public final class DalvInsnList extends FixedSizeList {
      * return a meaningful result if the instructions in this instance all
      * have valid addresses.
      * 
-     * @return &gt;= 0; the size
+     * @return {@code >= 0;} the size
      */
     public int codeSize() {
         int sz = size();
@@ -119,7 +119,7 @@ public final class DalvInsnList extends FixedSizeList {
      * Writes all the instructions in this instance to the given output
      * destination.
      * 
-     * @param out non-null; where to write to
+     * @param out {@code non-null;} where to write to
      */
     public void writeTo(AnnotatedOutput out) {
         int startCursor = out.getCursor();
@@ -170,7 +170,7 @@ public final class DalvInsnList extends FixedSizeList {
      * Gets the minimum required register count implied by this
      * instance.  This includes any unused parameters that could
      * potentially be at the top of the register space.
-     * @return &gt;= 0; the required registers size
+     * @return {@code >= 0;} the required registers size
      */
     public int getRegistersSize() {
         return regCount;
@@ -181,7 +181,7 @@ public final class DalvInsnList extends FixedSizeList {
      * method. This is equal to the largest argument word count of any
      * method referred to by this instance.
      * 
-     * @return &gt;= 0; the required outgoing arguments size
+     * @return {@code >= 0;} the required outgoing arguments size
      */
     public int getOutsSize() {
         int sz = size();
@@ -216,8 +216,8 @@ public final class DalvInsnList extends FixedSizeList {
     /**
      * Does a human-friendly dump of this instance.
      * 
-     * @param out non-null; where to dump
-     * @param prefix non-null; prefix to attach to each line of output
+     * @param out {@code non-null;} where to dump
+     * @param prefix {@code non-null;} prefix to attach to each line of output
      * @param verbose whether to be verbose; verbose output includes
      * lines for zero-size instructions and explicit constant pool indices
      */
@@ -250,8 +250,8 @@ public final class DalvInsnList extends FixedSizeList {
     /**
      * Does a human-friendly dump of this instance.
      * 
-     * @param out non-null; where to dump
-     * @param prefix non-null; prefix to attach to each line of output
+     * @param out {@code non-null;} where to dump
+     * @param prefix {@code non-null;} prefix to attach to each line of output
      * @param verbose whether to be verbose; verbose output includes
      * lines for zero-size instructions
      */

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * System utilities.
  */
@@ -61,6 +62,13 @@ int sysMapFileInShmem(int fd, MemMapping* pMap);
  */
 int sysMapFileSegmentInShmem(int fd, off_t start, long length,
     MemMapping* pMap);
+
+/*
+ * Create a private anonymous mapping, useful for large allocations.
+ *
+ * On success, "pMap" is filled in, and zero is returned.
+ */
+int sysCreatePrivateMap(size_t length, MemMapping* pMap);
 
 /*
  * Release the pages associated with a shared memory segment.

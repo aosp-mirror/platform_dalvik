@@ -30,8 +30,8 @@ public final class ClassDumper
     /**
      * Dumps the given array, interpreting it as a class file.
      *
-     * @param bytes non-null; bytes of the (alleged) class file
-     * @param out non-null; where to dump to
+     * @param bytes {@code non-null;} bytes of the (alleged) class file
+     * @param out {@code non-null;} where to dump to
      * passed in as &lt;= 0
      * @param filePath the file path for the class, excluding any base
      * directory specification

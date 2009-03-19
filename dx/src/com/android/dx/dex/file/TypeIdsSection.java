@@ -26,18 +26,18 @@ import java.util.Collection;
 import java.util.TreeMap;
 
 /**
- * Type identifiers list section of a <code>.dex</code> file.
+ * Type identifiers list section of a {@code .dex} file.
  */
 public final class TypeIdsSection extends UniformItemSection {
     /**
-     * non-null; map from types to {@link TypeIdItem} instances
+     * {@code non-null;} map from types to {@link TypeIdItem} instances
      */
     private final TreeMap<Type, TypeIdItem> typeIds;
 
     /**
      * Constructs an instance. The file offset is initially unknown.
      * 
-     * @param file non-null; file that this instance is part of
+     * @param file {@code non-null;} file that this instance is part of
      */
     public TypeIdsSection(DexFile file) {
         super("type_ids", file, 4);
@@ -73,7 +73,7 @@ public final class TypeIdsSection extends UniformItemSection {
     /**
      * Writes the portion of the file header that refers to this instance.
      * 
-     * @param out non-null; where to write
+     * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
         throwIfNotPrepared();
@@ -97,8 +97,8 @@ public final class TypeIdsSection extends UniformItemSection {
     /**
      * Interns an element into this instance.
      * 
-     * @param type non-null; the type to intern
-     * @return non-null; the interned reference
+     * @param type {@code non-null;} the type to intern
+     * @return {@code non-null;} the interned reference
      */
     public TypeIdItem intern(Type type) {
         if (type == null) {
@@ -120,8 +120,8 @@ public final class TypeIdsSection extends UniformItemSection {
     /**
      * Interns an element into this instance.
      * 
-     * @param type non-null; the type to intern
-     * @return non-null; the interned reference
+     * @param type {@code non-null;} the type to intern
+     * @return {@code non-null;} the interned reference
      */
     public TypeIdItem intern(CstType type) {
         if (type == null) {
@@ -145,8 +145,8 @@ public final class TypeIdsSection extends UniformItemSection {
      * Gets the index of the given type, which must have
      * been added to this instance.
      * 
-     * @param type non-null; the type to look up
-     * @return &gt;= 0; the reference's index
+     * @param type {@code non-null;} the type to look up
+     * @return {@code >= 0;} the reference's index
      */
     public int indexOf(Type type) {
         if (type == null) {
@@ -168,8 +168,8 @@ public final class TypeIdsSection extends UniformItemSection {
      * Gets the index of the given type, which must have
      * been added to this instance.
      * 
-     * @param type non-null; the type to look up
-     * @return &gt;= 0; the reference's index
+     * @param type {@code non-null;} the type to look up
+     * @return {@code >= 0;} the reference's index
      */
     public int indexOf(CstType type) {
         if (type == null) {

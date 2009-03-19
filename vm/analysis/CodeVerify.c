@@ -72,9 +72,9 @@ int gDvm__gcSimpleData = 0;
 static inline bool doVerboseLogging(const Method* meth) {
     return false;       /* COMMENT OUT to enable verbose debugging */
 
-    const char* cd = "Lop_lshr;";
-    const char* mn = "test";
-    const char* sg = "(II)J";
+    const char* cd = "Landroid/net/http/Request;";
+    const char* mn = "readResponse";
+    const char* sg = "(Landroid/net/http/AndroidHttpClientConnection;)V";
     return (strcmp(meth->clazz->descriptor, cd) == 0 &&
             dvmCompareNameDescriptorAndMethod(mn, sg, meth) == 0);
 }
@@ -327,7 +327,7 @@ static bool checkFieldArrayStore1nr(RegType instrType, RegType targetType)
  */
 static RegType primitiveTypeToRegType(PrimitiveType primType)
 {
-    struct {
+    static const struct {
         RegType         regType;        /* type equivalent */
         PrimitiveType   primType;       /* verification */
     } convTab[] = {
@@ -5173,13 +5173,11 @@ sput_1nr_common:
             updateRegisters(meth, insnFlags, regTable, insnIdx+insnWidth,
                 workRegs);
         } else {
-            /* if not yet visited, or regs were updated, set "changed" */
-            if (!dvmInsnIsVisited(insnFlags, insnIdx+insnWidth) ||
-                compareRegisters(workRegs, entryRegs,
-                    insnRegCount + kExtraRegs) != 0)
-            {
-                dvmInsnSetChanged(insnFlags, insnIdx+insnWidth, true);
-            }
+            /*
+             * We didn't record register data for the next entry, so we have
+             * to assume that something has changed and re-evaluate it.
+             */
+            dvmInsnSetChanged(insnFlags, insnIdx+insnWidth, true);
         }
     }
 
@@ -5209,6 +5207,7 @@ sput_1nr_common:
         if (!checkMoveException(meth, insnIdx+branchTarget, "branch"))
             goto bail;
 
+        /* update branch target, set "changed" if appropriate */
         updateRegisters(meth, insnFlags, regTable, insnIdx+branchTarget,
             workRegs);
     }

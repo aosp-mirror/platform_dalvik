@@ -39,16 +39,15 @@ import com.android.dx.util.IntList;
  * with the popular graph utility "dot".
  */
 public class DotDumper implements ParseObserver {
+    private DirectClassFile classFile;
 
-    DirectClassFile classFile;
+    private final byte[] bytes;
+    private final String filePath;
+    private final boolean strictParse;
+    private final boolean optimize;
+    private final Args args;
 
-    byte[] bytes;
-    String filePath;
-    boolean strictParse;
-    boolean optimize;
-    Args args;
-
-    static void dump (byte[] bytes, String filePath, Args args) {
+    static void dump(byte[] bytes, String filePath, Args args) {
         new DotDumper(bytes, filePath, args).run();
     }
 
@@ -59,7 +58,6 @@ public class DotDumper implements ParseObserver {
         this.optimize = args.optimize;
         this.args = args;
     }
-
 
     private void run() {
         ByteArray ba = new ByteArray(bytes);
@@ -89,17 +87,17 @@ public class DotDumper implements ParseObserver {
     }
 
     public void changeIndent(int indentDelta) {
-
+        // This space intentionally left blank.
     }
 
     public void parsed(ByteArray bytes, int offset, int len, String human) {
-        
+        // This space intentionally left blank.
     }
 
     /** {@inheritDoc} */
     public void startParsingMember(ByteArray bytes, int offset, String name,
                                    String descriptor) {
-
+        // This space intentionally left blank.
     }
 
     public void endParsingMember(ByteArray bytes, int offset, String name,
@@ -165,6 +163,5 @@ public class DotDumper implements ParseObserver {
         }
 
         System.out.println("}");
-
     }
 }

@@ -46,7 +46,7 @@
  */
 #define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
-#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia */
+#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
 # define CHECK_BRANCH_OFFSETS
 # define CHECK_REGISTER_INDICES
 #endif
@@ -86,6 +86,18 @@
 #endif
 
 /*
+ * Export another copy of the PC on every instruction; this is largely
+ * redundant with EXPORT_PC and the debugger code.  This value can be
+ * compared against what we have stored on the stack with EXPORT_PC to
+ * help ensure that we aren't missing any export calls.
+ */
+#if WITH_EXTRA_GC_CHECKS > 1
+# define EXPORT_EXTRA_PC() (self->currentPc2 = pc)
+#else
+# define EXPORT_EXTRA_PC()
+#endif
+
+/*
  * Adjust the program counter.  "_offset" is a signed int, in 16-bit units.
  *
  * Assumes the existence of "const u2* pc" and "const u2* curMethod->insns".
@@ -109,9 +121,13 @@
             dvmAbort();                                                     \
         }                                                                   \
         pc += myoff;                                                        \
+        EXPORT_EXTRA_PC();                                                  \
     } while (false)
 #else
-# define ADJUST_PC(_offset) (pc += _offset)
+# define ADJUST_PC(_offset) do {                                            \
+        pc += _offset;                                                      \
+        EXPORT_EXTRA_PC();                                                  \
+    } while (false)
 #endif
 
 /*
@@ -295,6 +311,8 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * trace can be generated correctly.  If we don't do this, the offset
  * within the current method won't be shown correctly.  See the notes
  * in Exception.c.
+ *
+ * This is also used to determine the address for precise GC.
  *
  * Assumes existence of "u4* fp" and "const u2* pc".
  */

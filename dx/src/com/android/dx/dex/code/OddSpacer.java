@@ -21,7 +21,7 @@ import com.android.dx.rop.code.SourcePosition;
 import com.android.dx.util.AnnotatedOutput;
 
 /**
- * Pseudo-instruction which either turns into a <code>nop</code> or
+ * Pseudo-instruction which either turns into a {@code nop} or
  * nothingness, in order to make the subsequent instruction have an
  * even address. This is used to align (subsequent) instructions that
  * require it.
@@ -29,9 +29,9 @@ import com.android.dx.util.AnnotatedOutput;
 public final class OddSpacer extends VariableSizeInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
-     * @param position non-null; source position
+     * @param position {@code non-null;} source position
      */
     public OddSpacer(SourcePosition position) {
         super(position, RegisterSpecList.EMPTY);

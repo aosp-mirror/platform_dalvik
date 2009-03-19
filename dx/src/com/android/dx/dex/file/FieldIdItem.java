@@ -25,7 +25,7 @@ public final class FieldIdItem extends MemberIdItem {
     /**
      * Constructs an instance.
      * 
-     * @param field non-null; the constant for the field
+     * @param field {@code non-null;} the constant for the field
      */
     public FieldIdItem(CstFieldRef field) {
         super(field);
@@ -49,7 +49,7 @@ public final class FieldIdItem extends MemberIdItem {
     /**
      * Gets the field constant.
      * 
-     * @return non-null; the constant
+     * @return {@code non-null;} the constant
      */
     public CstFieldRef getFieldRef() {
         return (CstFieldRef) getRef();

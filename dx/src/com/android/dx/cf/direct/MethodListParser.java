@@ -28,16 +28,16 @@ import com.android.dx.rop.cst.CstType;
  * Parser for lists of methods in a class file.
  */
 final /*package*/ class MethodListParser extends MemberListParser {
-    /** non-null; list in progress */
+    /** {@code non-null;} list in progress */
     final private StdMethodList methods;
 
     /**
      * Constructs an instance.
      * 
-     * @param cf non-null; the class file to parse from
-     * @param definer non-null; class being defined
-     * @param offset offset in <code>bytes</code> to the start of the list
-     * @param attributeFactory non-null; attribute factory to use
+     * @param cf {@code non-null;} the class file to parse from
+     * @param definer {@code non-null;} class being defined
+     * @param offset offset in {@code bytes} to the start of the list
+     * @param attributeFactory {@code non-null;} attribute factory to use
      */
     public MethodListParser(DirectClassFile cf, CstType definer,
             int offset, AttributeFactory attributeFactory) {
@@ -48,7 +48,7 @@ final /*package*/ class MethodListParser extends MemberListParser {
     /**
      * Gets the parsed list.
      * 
-     * @return non-null; the parsed list
+     * @return {@code non-null;} the parsed list
      */
     public StdMethodList getList() {
         parseIfNecessary();

@@ -20,7 +20,7 @@ package com.android.dx.dex.file;
  * An item in a Dalvik file which is referenced by index.
  */
 public abstract class IndexedItem extends Item {
-    /** &gt;= -1; assigned index of the item, or <code>-1</code> if not
+    /** {@code >= -1;} assigned index of the item, or {@code -1} if not
      * yet assigned */
     private int index;
 
@@ -34,7 +34,7 @@ public abstract class IndexedItem extends Item {
     /**
      * Gets whether or not this instance has been assigned an index.
      * 
-     * @return <code>true</code> iff this instance has been assigned an index
+     * @return {@code true} iff this instance has been assigned an index
      */
     public final boolean hasIndex() {
         return (index >= 0);
@@ -43,7 +43,7 @@ public abstract class IndexedItem extends Item {
     /**
      * Gets the item index.
      *
-     * @return &gt;= 0; the index
+     * @return {@code >= 0;} the index
      * @throws RuntimeException thrown if the item index is not yet assigned
      */
     public final int getIndex() {
@@ -56,10 +56,10 @@ public abstract class IndexedItem extends Item {
 
     /**
      * Sets the item index. This method may only ever be called once
-     * per instance, and this will throw a <code>RuntimeException</code> if
+     * per instance, and this will throw a {@code RuntimeException} if
      * called a second (or subsequent) time.
      *
-     * @param index &gt;= 0; the item index
+     * @param index {@code >= 0;} the item index
      */
     public final void setIndex(int index) {
         if (this.index != -1) {
@@ -73,7 +73,7 @@ public abstract class IndexedItem extends Item {
      * Gets the index of this item as a string, suitable for including in
      * annotations.
      * 
-     * @return non-null; the index string
+     * @return {@code non-null;} the index string
      */
     public final String indexString() {
         return '[' + Integer.toHexString(index) + ']';

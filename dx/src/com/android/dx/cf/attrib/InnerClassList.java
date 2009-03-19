@@ -22,7 +22,7 @@ import com.android.dx.util.FixedSizeList;
 
 /**
  * List of "inner class" entries, which are the contents of
- * <code>InnerClasses</code> attributes.
+ * {@code InnerClasses} attributes.
  */
 public final class InnerClassList extends FixedSizeList {
     /**
@@ -37,8 +37,8 @@ public final class InnerClassList extends FixedSizeList {
     /**
      * Gets the indicated item.
      *
-     * @param n &gt;= 0; which item
-     * @return null-ok; the indicated item
+     * @param n {@code >= 0;} which item
+     * @return {@code null-ok;} the indicated item
      */
     public Item get(int n) {
         return (Item) get0(n);
@@ -47,11 +47,11 @@ public final class InnerClassList extends FixedSizeList {
     /**
      * Sets the item at the given index.
      *
-     * @param n &gt;= 0, &lt; size(); which class
-     * @param innerClass non-null; class this item refers to
-     * @param outerClass null-ok; outer class that this class is a
+     * @param n {@code >= 0, < size();} which class
+     * @param innerClass {@code non-null;} class this item refers to
+     * @param outerClass {@code null-ok;} outer class that this class is a
      * member of, if any
-     * @param innerName null-ok; original simple name of this class,
+     * @param innerName {@code null-ok;} original simple name of this class,
      * if not anonymous
      * @param accessFlags original declared access flags
      */
@@ -64,13 +64,13 @@ public final class InnerClassList extends FixedSizeList {
      * Item in an inner classes list.
      */
     public static class Item {
-        /** non-null; class this item refers to */
+        /** {@code non-null;} class this item refers to */
         private final CstType innerClass;
 
-        /** null-ok; outer class that this class is a member of, if any */
+        /** {@code null-ok;} outer class that this class is a member of, if any */
         private final CstType outerClass;
 
-        /** null-ok; original simple name of this class, if not anonymous */
+        /** {@code null-ok;} original simple name of this class, if not anonymous */
         private final CstUtf8 innerName;
 
         /** original declared access flags */
@@ -79,10 +79,10 @@ public final class InnerClassList extends FixedSizeList {
         /**
          * Constructs an instance.
          *
-         * @param innerClass non-null; class this item refers to
-         * @param outerClass null-ok; outer class that this class is a
+         * @param innerClass {@code non-null;} class this item refers to
+         * @param outerClass {@code null-ok;} outer class that this class is a
          * member of, if any
-         * @param innerName null-ok; original simple name of this
+         * @param innerName {@code null-ok;} original simple name of this
          * class, if not anonymous
          * @param accessFlags original declared access flags
          */
@@ -101,7 +101,7 @@ public final class InnerClassList extends FixedSizeList {
         /**
          * Gets the class this item refers to.
          *
-         * @return non-null; the class
+         * @return {@code non-null;} the class
          */
         public CstType getInnerClass() {
             return innerClass;
@@ -110,7 +110,7 @@ public final class InnerClassList extends FixedSizeList {
         /**
          * Gets the outer class that this item's class is a member of, if any.
          *
-         * @return null-ok; the class
+         * @return {@code null-ok;} the class
          */
         public CstType getOuterClass() {
             return outerClass;
@@ -119,7 +119,7 @@ public final class InnerClassList extends FixedSizeList {
         /**
          * Gets the original name of this item's class, if not anonymous.
          *
-         * @return null-ok; the name
+         * @return {@code null-ok;} the name
          */
         public CstUtf8 getInnerName() {
             return innerName;

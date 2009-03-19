@@ -27,12 +27,12 @@ import java.util.Collection;
 import java.util.TreeMap;
 
 /**
- * Strings list section of a <code>.dex</code> file.
+ * Strings list section of a {@code .dex} file.
  */
 public final class StringIdsSection
         extends UniformItemSection {
     /**
-     * non-null; map from string constants to {@link
+     * {@code non-null;} map from string constants to {@link
      * StringIdItem} instances 
      */
     private final TreeMap<CstUtf8, StringIdItem> strings;
@@ -40,7 +40,7 @@ public final class StringIdsSection
     /**
      * Constructs an instance. The file offset is initially unknown.
      * 
-     * @param file non-null; file that this instance is part of
+     * @param file {@code non-null;} file that this instance is part of
      */
     public StringIdsSection(DexFile file) {
         super("string_ids", file, 4);
@@ -79,7 +79,7 @@ public final class StringIdsSection
     /**
      * Writes the portion of the file header that refers to this instance.
      * 
-     * @param out non-null; where to write
+     * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
         throwIfNotPrepared();
@@ -99,9 +99,9 @@ public final class StringIdsSection
     /**
      * Interns an element into this instance.
      * 
-     * @param string non-null; the string to intern, as a regular Java
-     * <code>String</code>
-     * @return non-null; the interned string
+     * @param string {@code non-null;} the string to intern, as a regular Java
+     * {@code String}
+     * @return {@code non-null;} the interned string
      */
     public StringIdItem intern(String string) {
         CstUtf8 utf8 = new CstUtf8(string);
@@ -111,8 +111,8 @@ public final class StringIdsSection
     /**
      * Interns an element into this instance.
      * 
-     * @param string non-null; the string to intern, as a {@link CstString}
-     * @return non-null; the interned string
+     * @param string {@code non-null;} the string to intern, as a {@link CstString}
+     * @return {@code non-null;} the interned string
      */
     public StringIdItem intern(CstString string) {
         CstUtf8 utf8 = string.getString();
@@ -122,8 +122,8 @@ public final class StringIdsSection
     /**
      * Interns an element into this instance.
      * 
-     * @param string non-null; the string to intern, as a constant
-     * @return non-null; the interned string
+     * @param string {@code non-null;} the string to intern, as a constant
+     * @return {@code non-null;} the interned string
      */
     public StringIdItem intern(CstUtf8 string) {
         return intern(new StringIdItem(string));
@@ -132,8 +132,8 @@ public final class StringIdsSection
     /**
      * Interns an element into this instance.
      * 
-     * @param string non-null; the string to intern
-     * @return non-null; the interned string
+     * @param string {@code non-null;} the string to intern
+     * @return {@code non-null;} the interned string
      */
     public StringIdItem intern(StringIdItem string) {
         if (string == null) {
@@ -156,7 +156,7 @@ public final class StringIdsSection
     /**
      * Interns the components of a name-and-type into this instance.
      * 
-     * @param nat non-null; the name-and-type
+     * @param nat {@code non-null;} the name-and-type
      */
     public void intern(CstNat nat) {
         intern(nat.getName());
@@ -167,8 +167,8 @@ public final class StringIdsSection
      * Gets the index of the given string, which must have been added
      * to this instance.
      * 
-     * @param string non-null; the string to look up
-     * @return &gt;= 0; the string's index
+     * @param string {@code non-null;} the string to look up
+     * @return {@code >= 0;} the string's index
      */
     public int indexOf(CstUtf8 string) {
         if (string == null) {
@@ -190,8 +190,8 @@ public final class StringIdsSection
      * Gets the index of the given string, which must have been added
      * to this instance.
      * 
-     * @param string non-null; the string to look up
-     * @return &gt;= 0; the string's index
+     * @param string {@code non-null;} the string to look up
+     * @return {@code >= 0;} the string's index
      */
     public int indexOf(CstString string) {
         return indexOf(string.getString());

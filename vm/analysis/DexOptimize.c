@@ -25,6 +25,7 @@
 #include "Dalvik.h"
 #include "libdex/InstrUtils.h"
 #include "libdex/OptInvocation.h"
+#include "analysis/RegisterMap.h"
 
 #include <zlib.h>
 
@@ -50,7 +51,7 @@ typedef struct InlineSub {
 /* fwd */
 static int writeDependencies(int fd, u4 modWhen, u4 crc);
 static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,\
-    const IndexMapSet* pIndexMapSet);
+    const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder);
 static void logFailedWrite(size_t expected, ssize_t actual, const char* msg,
     int err);
 
@@ -506,6 +507,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 {
     DexClassLookup* pClassLookup = NULL;
     IndexMapSet* pIndexMapSet = NULL;
+    RegisterMapBuilder* pRegMapBuilder = NULL;
     bool doVerify, doOpt;
     u4 headerFlags = 0;
 
@@ -566,6 +568,13 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
          * Rewrite the file.  Byte reordering, structure realigning,
          * class verification, and bytecode optimization are all performed
          * here.
+         *
+         * In theory the file could change size and bits could shift around.
+         * In practice this would be annoying to deal with, so the file
+         * layout is designed so that it can always be rewritten in place.
+         *
+         * This sets "headerFlags" and creates the class lookup table as
+         * part of doing the processing.
          */
         success = rewriteDex(((u1*) mapAddr) + dexOffset, dexLength,
                     doVerify, doOpt, &headerFlags, &pClassLookup);
@@ -576,6 +585,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 
             if (dvmDexFileOpenPartial(dexAddr, dexLength, &pDvmDex) != 0) {
                 LOGE("Unable to create DexFile\n");
+                success = false;
             } else {
                 /*
                  * If configured to do so, scan the instructions, looking
@@ -585,6 +595,18 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
                  * to load).
                  */
                 pIndexMapSet = dvmRewriteConstants(pDvmDex);
+
+                /*
+                 * If configured to do so, generate a full set of register
+                 * maps for all verified classes.
+                 */
+                if (gDvm.generateRegisterMaps) {
+                    pRegMapBuilder = dvmGenerateRegisterMaps(pDvmDex);
+                    if (pRegMapBuilder == NULL) {
+                        LOGE("Failed generating register maps\n");
+                        success = false;
+                    }
+                }
 
                 updateChecksum(dexAddr, dexLength,
                     (DexHeader*) pDvmDex->pHeader);
@@ -640,8 +662,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
         goto bail;
     }
 
-
-    /* compute deps length, and adjust aux start for 64-bit alignment */
+    /* compute deps length, then adjust aux start for 64-bit alignment */
     auxOffset = lseek(fd, 0, SEEK_END);
     depsLength = auxOffset - depsOffset;
 
@@ -656,7 +677,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     /*
      * Append any auxillary pre-computed data structures.
      */
-    if (!writeAuxData(fd, pClassLookup, pIndexMapSet)) {
+    if (!writeAuxData(fd, pClassLookup, pIndexMapSet, pRegMapBuilder)) {
         LOGW("Failed writing aux data\n");
         goto bail;
     }
@@ -692,8 +713,11 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     LOGV("Successfully wrote DEX header\n");
     result = true;
 
+    //dvmRegisterMapDumpStats();
+
 bail:
     dvmFreeIndexMapSet(pIndexMapSet);
+    dvmFreeRegisterMapBuilder(pRegMapBuilder);
     free(pClassLookup);
     return result;
 }
@@ -1085,19 +1109,28 @@ static bool writeChunk(int fd, u4 type, const void* data, size_t size)
  * so it can be used directly when the file is mapped for reading.
  */
 static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,
-    const IndexMapSet* pIndexMapSet)
+    const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder)
 {
     /* pre-computed class lookup hash table */
-    if (!writeChunk(fd, (u4) kDexChunkClassLookup, pClassLookup,
-            pClassLookup->size))
+    if (!writeChunk(fd, (u4) kDexChunkClassLookup,
+            pClassLookup, pClassLookup->size))
     {
         return false;
     }
 
     /* remapped constants (optional) */
     if (pIndexMapSet != NULL) {
-        if (!writeChunk(fd, pIndexMapSet->chunkType, pIndexMapSet->chunkData,
-                pIndexMapSet->chunkDataLen))
+        if (!writeChunk(fd, pIndexMapSet->chunkType,
+                pIndexMapSet->chunkData, pIndexMapSet->chunkDataLen))
+        {
+            return false;
+        }
+    }
+
+    /* register maps (optional) */
+    if (pRegMapBuilder != NULL) {
+        if (!writeChunk(fd, (u4) kDexChunkRegisterMaps,
+                pRegMapBuilder->data, pRegMapBuilder->size))
         {
             return false;
         }

@@ -26,7 +26,7 @@ import java.util.TreeMap;
  * Statistics about the contents of a file.
  */
 public final class Statistics {
-    /** non-null; data about each type of item */
+    /** {@code non-null;} data about each type of item */
     private final HashMap<String, Data> dataMap;
 
     /**
@@ -39,7 +39,7 @@ public final class Statistics {
     /**
      * Adds the given item to the statistics.
      * 
-     * @param item non-null; the item to add
+     * @param item {@code non-null;} the item to add
      */
     public void add(Item item) {
         String typeName = item.typeName();
@@ -55,7 +55,7 @@ public final class Statistics {
     /**
      * Adds the given list of items to the statistics.
      * 
-     * @param list non-null; the list of items to add
+     * @param list {@code non-null;} the list of items to add
      */
     public void addAll(Section list) {
         Collection<? extends Item> items = list.items();
@@ -67,7 +67,7 @@ public final class Statistics {
     /**
      * Writes the statistics as an annotation.
      * 
-     * @param out non-null; where to write to
+     * @param out {@code non-null;} where to write to
      */
     public final void writeAnnotation(AnnotatedOutput out) {
         if (dataMap.size() == 0) {
@@ -109,26 +109,26 @@ public final class Statistics {
      * Statistical data about a particular class.
      */
     private static class Data {
-        /** non-null; name to use as a label */
+        /** {@code non-null;} name to use as a label */
         private final String name;
 
-        /** &gt;= 0; number of instances */
+        /** {@code >= 0;} number of instances */
         private int count;
 
-        /** &gt;= 0; total size of instances in bytes */
+        /** {@code >= 0;} total size of instances in bytes */
         private int totalSize;
 
-        /** &gt;= 0; largest size of any individual item */
+        /** {@code >= 0;} largest size of any individual item */
         private int largestSize;
 
-        /** &gt;= 0; smallest size of any individual item */
+        /** {@code >= 0;} smallest size of any individual item */
         private int smallestSize;
 
         /**
          * Constructs an instance for the given item.
          * 
-         * @param item non-null; item in question
-         * @param name non-null; type name to use
+         * @param item {@code non-null;} item in question
+         * @param name {@code non-null;} type name to use
          */
         public Data(Item item, String name) {
             int size = item.writeSize();
@@ -143,7 +143,7 @@ public final class Statistics {
         /**
          * Incorporates a new item. This assumes the type name matches.
          * 
-         * @param item non-null; item to incorporate
+         * @param item {@code non-null;} item to incorporate
          */
         public void add(Item item) {
             int size = item.writeSize();
@@ -163,7 +163,7 @@ public final class Statistics {
         /**
          * Writes this instance as an annotation.
          * 
-         * @param out non-null; where to write to
+         * @param out {@code non-null;} where to write to
          */
         public void writeAnnotation(AnnotatedOutput out) {
             out.annotate(toHuman());

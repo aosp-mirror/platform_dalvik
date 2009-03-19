@@ -54,7 +54,7 @@ common_periodicChecks:
 #endif
 
     cmp     r3, #0                      @ suspend pending?
-    bne     2f                          @ yes, check suspend
+    bne     2f                          @ yes, do full suspension check
 
 #if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
 # if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
@@ -72,6 +72,7 @@ common_periodicChecks:
 
 2:  @ check suspend
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
+    EXPORT_PC()                         @ need for precise GC
     b       dvmCheckSuspendPending      @ suspend if necessary, then return
 
 3:  @ debugger/profiler enabled, bail out

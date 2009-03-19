@@ -390,7 +390,7 @@ public class RuleBasedCollator extends Collator {
 
     /**
      * Returns the collation rules of this collator. These {@code rules} can be
-     * fed into the {@link #RuleBasedCollator(String)} constructor.
+     * fed into the {@code RuleBasedCollator(String)} constructor.
      * <p>
      * Note that the {@code rules} are actually interpreted as a delta to the
      * standard Unicode Collation Algorithm (UCA). Hence, an empty {@code rules}

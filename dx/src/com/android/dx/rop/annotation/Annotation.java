@@ -41,20 +41,20 @@ import java.util.TreeMap;
  */
 public final class Annotation extends MutabilityControl 
         implements Comparable<Annotation>, ToHuman {
-    /** non-null; type of the annotation */
+    /** {@code non-null;} type of the annotation */
     private final CstType type;
 
-    /** non-null; the visibility of the annotation */
+    /** {@code non-null;} the visibility of the annotation */
     private final AnnotationVisibility visibility;
 
-    /** non-null; map from names to {@link NameValuePair} instances */
+    /** {@code non-null;} map from names to {@link NameValuePair} instances */
     private final TreeMap<CstUtf8, NameValuePair> elements;
     
     /**
      * Construct an instance. It initially contains no elements.
      * 
-     * @param type non-null; type of the annotation
-     * @param visibility non-null; the visibility of the annotation
+     * @param type {@code non-null;} type of the annotation
+     * @param visibility {@code non-null;} the visibility of the annotation
      */
     public Annotation(CstType type, AnnotationVisibility visibility) {
         if (type == null) {
@@ -165,7 +165,7 @@ public final class Annotation extends MutabilityControl
     /**
      * Gets the type of this instance.
      * 
-     * @return non-null; the type
+     * @return {@code non-null;} the type
      */
     public CstType getType() {
         return type;
@@ -174,7 +174,7 @@ public final class Annotation extends MutabilityControl
     /**
      * Gets the visibility of this instance.
      * 
-     * @return non-null; the visibility
+     * @return {@code non-null;} the visibility
      */
     public AnnotationVisibility getVisibility() {
         return visibility;
@@ -185,7 +185,7 @@ public final class Annotation extends MutabilityControl
      * If there is a preexisting element with the same name, it will be
      * replaced by this method.
      * 
-     * @param pair non-null; the (name, value) pair to place into this instance
+     * @param pair {@code non-null;} the (name, value) pair to place into this instance
      */
     public void put(NameValuePair pair) {
         throwIfImmutable();
@@ -202,7 +202,7 @@ public final class Annotation extends MutabilityControl
      * It is an error to call this method if there is a preexisting element
      * with the same name.
      * 
-     * @param pair non-null; the (name, value) pair to add to this instance
+     * @param pair {@code non-null;} the (name, value) pair to add to this instance
      */
     public void add(NameValuePair pair) {
         throwIfImmutable();
@@ -224,7 +224,7 @@ public final class Annotation extends MutabilityControl
      * Gets the set of name-value pairs contained in this instance. The
      * result is always unmodifiable.
      * 
-     * @return non-null; the set of name-value pairs
+     * @return {@code non-null;} the set of name-value pairs
      */
     public Collection<NameValuePair> getNameValuePairs() {
         return Collections.unmodifiableCollection(elements.values());

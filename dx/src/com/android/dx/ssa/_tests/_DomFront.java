@@ -19,7 +19,7 @@ package com.android.dx.ssa._tests;
 import junit.framework.TestCase;
 
 /**
- * Test the class <code>com.android.dx.ssa.DomFront</code>.
+ * Test the class {@code com.android.dx.ssa.DomFront}.
  */
 public class _DomFront
         extends TestCase {

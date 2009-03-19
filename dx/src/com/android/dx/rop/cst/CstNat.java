@@ -19,29 +19,29 @@ package com.android.dx.rop.cst;
 import com.android.dx.rop.type.Type;
 
 /**
- * Constants of type <code>CONSTANT_NameAndType_info</code>.
+ * Constants of type {@code CONSTANT_NameAndType_info}.
  */
 public final class CstNat extends Constant {
     /**
-     * non-null; the instance for name <code>TYPE</code> and descriptor
-     * <code>java.lang.Class</code>, which is useful when dealing with
+     * {@code non-null;} the instance for name {@code TYPE} and descriptor
+     * {@code java.lang.Class}, which is useful when dealing with
      * wrapped primitives 
      */
     public static final CstNat PRIMITIVE_TYPE_NAT =
         new CstNat(new CstUtf8("TYPE"),
                    new CstUtf8("Ljava/lang/Class;"));
 
-    /** non-null; the name */
+    /** {@code non-null;} the name */
     private final CstUtf8 name;
 
-    /** non-null; the descriptor (type) */
+    /** {@code non-null;} the descriptor (type) */
     private final CstUtf8 descriptor;
 
     /**
      * Constructs an instance.
      * 
-     * @param name non-null; the name
-     * @param descriptor non-null; the descriptor
+     * @param name {@code non-null;} the name
+     * @param descriptor {@code non-null;} the descriptor
      */
     public CstNat(CstUtf8 name, CstUtf8 descriptor) {
         if (name == null) {
@@ -108,7 +108,7 @@ public final class CstNat extends Constant {
     /**
      * Gets the name.
      * 
-     * @return non-null; the name
+     * @return {@code non-null;} the name
      */
     public CstUtf8 getName() {
         return name;
@@ -117,7 +117,7 @@ public final class CstNat extends Constant {
     /**
      * Gets the descriptor.
      * 
-     * @return non-null; the descriptor
+     * @return {@code non-null;} the descriptor
      */
     public CstUtf8 getDescriptor() {
         return descriptor;
@@ -127,7 +127,7 @@ public final class CstNat extends Constant {
      * Returns an unadorned but human-readable version of the name-and-type
      * value.
      * 
-     * @return non-null; the human form
+     * @return {@code non-null;} the human form
      */
     public String toHuman() {
         return name.toHuman() + ':' + descriptor.toHuman();
@@ -138,7 +138,7 @@ public final class CstNat extends Constant {
      * This method is only valid to call if the descriptor in fact describes
      * a field (and not a method).
      * 
-     * @return non-null; the field type
+     * @return {@code non-null;} the field type
      */
     public Type getFieldType() {
         return Type.intern(descriptor.getString());
@@ -147,9 +147,9 @@ public final class CstNat extends Constant {
     /**
      * Gets whether this instance has the name of a standard instance
      * initialization method. This is just a convenient shorthand for
-     * <code>getName().getString().equals("&lt;init&gt;")</code>.
+     * {@code getName().getString().equals("<init>")}.
      * 
-     * @return <code>true</code> iff this is a reference to an
+     * @return {@code true} iff this is a reference to an
      * instance initialization method
      */
     public final boolean isInstanceInit() {
@@ -159,9 +159,9 @@ public final class CstNat extends Constant {
     /**
      * Gets whether this instance has the name of a standard class
      * initialization method. This is just a convenient shorthand for
-     * <code>getName().getString().equals("&lt;clinit&gt;")</code>.
+     * {@code getName().getString().equals("<clinit>")}.
      * 
-     * @return <code>true</code> iff this is a reference to an
+     * @return {@code true} iff this is a reference to an
      * instance initialization method
      */
     public final boolean isClassInit() {

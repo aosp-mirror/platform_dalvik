@@ -66,10 +66,10 @@ public final class Ropper {
     /** number of special label offsets */
     private static final int SPECIAL_LABEL_COUNT = 7;
 
-    /** non-null; method being converted */
+    /** {@code non-null;} method being converted */
     private final ConcreteMethod method;
 
-    /** non-null; original block list */
+    /** {@code non-null;} original block list */
     private final ByteBlockList blocks;
 
     /** max locals of the method */
@@ -78,30 +78,30 @@ public final class Ropper {
     /** max label (exclusive) of any original bytecode block */
     private final int maxLabel;
 
-    /** non-null; simulation machine to use */
+    /** {@code non-null;} simulation machine to use */
     private final RopperMachine machine;
 
-    /** non-null; simulator to use */
+    /** {@code non-null;} simulator to use */
     private final Simulator sim;
 
     /**
-     * non-null; sparse array mapping block labels to initial frame contents,
+     * {@code non-null;} sparse array mapping block labels to initial frame contents,
      * if known 
      */
     private final Frame[] startFrames;
 
-    /** non-null; output block list in-progress */
+    /** {@code non-null;} output block list in-progress */
     private final ArrayList<BasicBlock> result;
 
     /**
-     * non-null; list of subroutine-nest labels
+     * {@code non-null;} list of subroutine-nest labels
      * (See {@link Frame#getSubroutines} associated with each result block.
      * Parallel to {@link Ropper#result}. 
      */
     private final ArrayList<IntList> resultSubroutines;
 
     /**
-     * non-null; for each block (by label) that is used as an exception
+     * {@code non-null;} for each block (by label) that is used as an exception
      * handler, the type of exception it catches 
      */
     private final Type[] catchTypes;
@@ -112,10 +112,10 @@ public final class Ropper {
      */
     private boolean synchNeedsExceptionHandler;
 
-    /** non-null; list of subroutines indexed by label of start address */
+    /** {@code non-null;} list of subroutines indexed by label of start address */
     private final Subroutine subroutines[];
 
-    /** true if <code>subroutines</code> is non-empty */
+    /** true if {@code subroutines} is non-empty */
     private boolean hasSubroutines;
 
     /**
@@ -155,7 +155,7 @@ public final class Ropper {
         }
 
         /**
-         * @return &gt;= 0; the label of the subroutine's start block.
+         * @return {@code >= 0;} the label of the subroutine's start block.
          */
         int getStartBlock() {
             return startBlock;
@@ -212,11 +212,11 @@ public final class Ropper {
 
         /**
          * Merges the specified frame into this subroutine's successors,
-         * setting <code>workSet</code> as appropriate. To be called with
+         * setting {@code workSet} as appropriate. To be called with
          * the frame of a subroutine ret block.
          *
-         * @param frame non-null; frame from ret block to merge
-         * @param workSet non-null; workset to update
+         * @param frame {@code non-null;} frame from ret block to merge
+         * @param workSet {@code non-null;} workset to update
          */
         void mergeToSuccessors(Frame frame, int[] workSet) {
             int sz = callerBlocks.size();
@@ -242,9 +242,9 @@ public final class Ropper {
     /**
      * Converts a {@link ConcreteMethod} to a {@link RopMethod}.
      * 
-     * @param method non-null; method to convert
-     * @param advice non-null; translation advice to use
-     * @return non-null; the converted instance
+     * @param method {@code non-null;} method to convert
+     * @param advice {@code non-null;} translation advice to use
+     * @return {@code non-null;} the converted instance
      */
     public static RopMethod convert(ConcreteMethod method,
             TranslationAdvice advice) {
@@ -263,8 +263,8 @@ public final class Ropper {
      * Constructs an instance. This class is not publicly instantiable; use
      * {@link #convert}.
      * 
-     * @param method non-null; method to convert
-     * @param advice non-null; translation advice to use
+     * @param method {@code non-null;} method to convert
+     * @param advice {@code non-null;} translation advice to use
      */
     private Ropper(ConcreteMethod method, TranslationAdvice advice) {
         if (method == null) {
@@ -307,7 +307,7 @@ public final class Ropper {
      * Gets the first (lowest) register number to use as the temporary
      * area when unwinding stack manipulation ops.
      * 
-     * @return &gt;= 0; the first register to use
+     * @return {@code >= 0;} the first register to use
      */
     /*package*/ int getFirstTempStackReg() {
         /*
@@ -326,8 +326,8 @@ public final class Ropper {
      * Gets the label for the exception handler setup block corresponding
      * to the given label.
      * 
-     * @param label &gt;= 0; the original label
-     * @return &gt;= 0; the corresponding exception handler setup label
+     * @param label {@code >= 0;} the original label
+     * @return {@code >= 0;} the corresponding exception handler setup label
      */
     private int getExceptionSetupLabel(int label) {
         return maxLabel + label;
@@ -337,8 +337,8 @@ public final class Ropper {
      * Gets the label for the given special-purpose block. The given label
      * should be one of the static constants defined by this class.
      * 
-     * @param label &lt; 0; the special label constant
-     * @return &gt;= 0; the actual label value to use
+     * @param label {@code < 0;} the special label constant
+     * @return {@code >= 0;} the actual label value to use
      */
     private int getSpecialLabel(int label) {
         /*
@@ -356,7 +356,7 @@ public final class Ropper {
     /**
      * Gets the minimum label for unreserved use.
      * 
-     * @return &gt;= 0; the minimum label
+     * @return {@code >= 0;} the minimum label
      */
     private int getMinimumUnreservedLabel() {
         /*
@@ -370,7 +370,7 @@ public final class Ropper {
     /**
      * Gets an arbitrary unreserved and available label.
      * 
-     * @return &gt;= 0; the label
+     * @return {@code >= 0;} the label
      */
     private int getAvailableLabel() {
         int candidate = getMinimumUnreservedLabel();
@@ -409,7 +409,7 @@ public final class Ropper {
      * Gets the total number of registers used for "normal" purposes (i.e.,
      * for the straightforward translation from the original Java).
      * 
-     * @return &gt;= 0; the total number of registers used
+     * @return {@code >= 0;} the total number of registers used
      */
     private int getNormalRegCount() {
         return maxLocals + method.getMaxStack();
@@ -419,7 +419,7 @@ public final class Ropper {
      * Gets the register spec to use to hold the object to synchronize on,
      * for a synchronized method.
      * 
-     * @return non-null; the register spec
+     * @return {@code non-null;} the register spec
      */
     private RegisterSpec getSynchReg() {
         /*
@@ -433,11 +433,11 @@ public final class Ropper {
 
     /**
      * Searches {@link #result} for a block with the given label. Return its
-     * index if found, or return <code>-1</code> if there is no such block.
+     * index if found, or return {@code -1} if there is no such block.
      * 
      * @param label the label to look for
-     * @return &gt;= -1; the index for the block with the given label or
-     * <code>-1</code> if there is no such block
+     * @return {@code >= -1;} the index for the block with the given label or
+     * {@code -1} if there is no such block
      */
     private int labelToResultIndex(int label) {
         int sz = result.size();
@@ -456,7 +456,7 @@ public final class Ropper {
      * found, or throw an exception if there is no such block.
      * 
      * @param label the label to look for
-     * @return non-null; the block with the given label
+     * @return {@code non-null;} the block with the given label
      */
     private BasicBlock labelToBlock(int label) {
         int idx = labelToResultIndex(label);
@@ -472,8 +472,8 @@ public final class Ropper {
     /**
      * Adds a block to the output result.
      * 
-     * @param block non-null; the block to add
-     * @param subroutines non-null; subroutine label list as described in
+     * @param block {@code non-null;} the block to add
+     * @param subroutines {@code non-null;} subroutine label list as described in
      * {@link Frame#getSubroutines}
      */
     private void addBlock(BasicBlock block, IntList subroutines) {
@@ -491,11 +491,11 @@ public final class Ropper {
      * replacement, then any extra blocks that got added with the
      * original get removed as a result of calling this method.
      * 
-     * @param block non-null; the block to add or replace
-     * @param subroutines non-null; subroutine label list as described in
+     * @param block {@code non-null;} the block to add or replace
+     * @param subroutines {@code non-null;} subroutine label list as described in
      * {@link Frame#getSubroutines}
-     * @return <code>true</code> if the block was replaced or
-     * <code>false</code> if it was added for the first time
+     * @return {@code true} if the block was replaced or
+     * {@code false} if it was added for the first time
      */
     private boolean addOrReplaceBlock(BasicBlock block, IntList subroutines) {
         if (block == null) {
@@ -529,11 +529,11 @@ public final class Ropper {
      * Adds or replaces a block in the output result. Do not delete
      * any successors.
      *
-     * @param block non-null; the block to add or replace
-     * @param subroutines non-null; subroutine label list as described in
+     * @param block {@code non-null;} the block to add or replace
+     * @param subroutines {@code non-null;} subroutine label list as described in
      * {@link Frame#getSubroutines}
-     * @return <code>true</code> if the block was replaced or
-     * <code>false</code> if it was added for the first time
+     * @return {@code true} if the block was replaced or
+     * {@code false} if it was added for the first time
      */
     private boolean addOrReplaceBlockNoDelete(BasicBlock block,
             IntList subroutines) {
@@ -564,7 +564,7 @@ public final class Ropper {
      * successors of it whose labels indicate that they are not in the
      * normally-translated range.
      * 
-     * @param idx non-null; block to remove (etc.)
+     * @param idx {@code non-null;} block to remove (etc.)
      */
     private void removeBlockAndSpecialSuccessors(int idx) {
         int minLabel = getMinimumUnreservedLabel();
@@ -591,7 +591,7 @@ public final class Ropper {
     /**
      * Extracts the resulting {@link RopMethod} from the instance.
      * 
-     * @return non-null; the method object
+     * @return {@code non-null;} the method object
      */
     private RopMethod getRopMethod() {
 
@@ -663,9 +663,9 @@ public final class Ropper {
     /**
      * Processes the given block.
      * 
-     * @param block non-null; block to process
-     * @param frame non-null; start frame for the block
-     * @param workSet non-null; bits representing work to do, which this
+     * @param block {@code non-null;} block to process
+     * @param frame {@code non-null;} start frame for the block
+     * @param workSet {@code non-null;} bits representing work to do, which this
      * method may add to
      */
     private void processBlock(ByteBlock block, Frame frame, int[] workSet) {
@@ -950,14 +950,14 @@ public final class Ropper {
      * Helper for {@link #processBlock}, which merges frames and
      * adds to the work set, as necessary.
      * 
-     * @param label &gt;= 0; label to work on
-     * @param pred  predecessor label. Must be &gt;= 0 when
-     * <code>label</code> is a subroutine start block and calledSubroutine
+     * @param label {@code >= 0;} label to work on
+     * @param pred  predecessor label; must be {@code >= 0} when
+     * {@code label} is a subroutine start block and calledSubroutine
      * is non-null. Otherwise, may be -1.
-     * @param calledSubroutine null-ok; a Subroutine instance if
-     * <code>label</code> is the first block in a subroutine.
-     * @param frame non-null; new frame for the labelled block
-     * @param workSet non-null; bits representing work to do, which this
+     * @param calledSubroutine {@code null-ok;} a Subroutine instance if
+     * {@code label} is the first block in a subroutine.
+     * @param frame {@code non-null;} new frame for the labelled block
+     * @param workSet {@code non-null;} bits representing work to do, which this
      * method may add to
      */
     private void mergeAndWorkAsNecessary(int label, int pred,
@@ -1078,7 +1078,7 @@ public final class Ropper {
 
     /**
      * Constructs and adds the return block, if necessary. The return
-     * block merely contains an appropriate <code>return</code>
+     * block merely contains an appropriate {@code return}
      * instruction.
      */
     private void addReturnBlock() {
@@ -1217,7 +1217,7 @@ public final class Ropper {
     /**
      * Checks to see if the basic block is a subroutine caller block.
      *
-     * @param bb non-null; the basic block in question
+     * @param bb {@code non-null;} the basic block in question
      * @return true if this block calls a subroutine
      */
     private boolean isSubroutineCaller(BasicBlock bb) {
@@ -1340,7 +1340,7 @@ public final class Ropper {
 
     /**
      * Inlines a subroutine. Start by calling
-     * <code>inlineSubroutineCalledFrom</code>.
+     * {@code inlineSubroutineCalledFrom}.
      */
     private class SubroutineInliner {
         /**
@@ -1502,8 +1502,8 @@ public final class Ropper {
          * Checks to see if a specified label is involved in a specified
          * subroutine.
          *
-         * @param label &gt;=0 a basic block label
-         * @param subroutineStart &gt;=0 a subroutine as identified by the
+         * @param label {@code >= 0;} a basic block label
+         * @param subroutineStart {@code >= 0;} a subroutine as identified by the
          * label of its start block.
          * @return true if the block is dominated by the subroutine call.
          */
@@ -1554,10 +1554,10 @@ public final class Ropper {
     }
 
     /**
-     * Finds a <code>Subroutine<code> that is returned from by a ret in
+     * Finds a {@code Subroutine} that is returned from by a ret in
      * a given block.
      * @param label A block that originally contained a ret instruction
-     * @return null-ok; Subroutine or null if none was found.
+     * @return {@code null-ok;} Subroutine or null if none was found.
      */
     private Subroutine subroutineFromRetBlock(int label) {
         for (int i = subroutines.length - 1 ; i >= 0 ; i--) {

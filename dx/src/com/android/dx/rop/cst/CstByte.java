@@ -20,30 +20,30 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.util.Hex;
 
 /**
- * Constants of type <code>byte</code>.
+ * Constants of type {@code byte}.
  */
 public final class CstByte
         extends CstLiteral32 {
-    /** non-null; the value <code>0</code> as an instance of this class */
+    /** {@code non-null;} the value {@code 0} as an instance of this class */
     public static final CstByte VALUE_0 = make((byte) 0);
     
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
      * 
-     * @param value the <code>byte</code> value
+     * @param value the {@code byte} value
      */
     public static CstByte make(byte value) {
         return new CstByte(value);
     }
 
     /**
-     * Makes an instance for the given <code>int</code> value. This
+     * Makes an instance for the given {@code int} value. This
      * may (but does not necessarily) return an already-allocated
      * instance.
      * 
-     * @param value the value, which must be in range for a <code>byte</code>
-     * @return non-null; the appropriate instance
+     * @param value the value, which must be in range for a {@code byte}
+     * @return {@code non-null;} the appropriate instance
      */
     public static CstByte make(int value) {
         byte cast = (byte) value;
@@ -59,7 +59,7 @@ public final class CstByte
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
      * 
-     * @param value the <code>byte</code> value
+     * @param value the {@code byte} value
      */
     private CstByte(byte value) {
         super(value);
@@ -89,7 +89,7 @@ public final class CstByte
     }
 
     /**
-     * Gets the <code>byte</code> value.
+     * Gets the {@code byte} value.
      * 
      * @return the value
      */

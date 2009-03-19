@@ -22,10 +22,10 @@ import com.android.dx.rop.cst.CstUtf8;
  * A local variable item: either a name or a signature or both.
  */
 public class LocalItem implements Comparable<LocalItem> {
-    /** null-ok; local variable name */
+    /** {@code null-ok;} local variable name */
     private final CstUtf8 name;
 
-    /** null-ok; local variable signature */
+    /** {@code null-ok;} local variable signature */
     private final CstUtf8 signature;
 
     /**
@@ -33,9 +33,9 @@ public class LocalItem implements Comparable<LocalItem> {
      *
      * TODO: intern these
      *
-     * @param name null-ok; local variable name
-     * @param signature null-ok; local variable signature
-     * @return non-null; appropriate instance.
+     * @param name {@code null-ok;} local variable name
+     * @param signature {@code null-ok;} local variable signature
+     * @return {@code non-null;} appropriate instance.
      */
     public static LocalItem make(CstUtf8 name, CstUtf8 signature) {
         if (name == null && signature == null) {
@@ -48,8 +48,8 @@ public class LocalItem implements Comparable<LocalItem> {
     /**
      * Constructs instance.
      *
-     * @param name null-ok; local variable name
-     * @param signature null-ok; local variable signature
+     * @param name {@code null-ok;} local variable name
+     * @param signature {@code null-ok;} local variable signature
      */
     private LocalItem(CstUtf8 name, CstUtf8 signature) {
         this.name = name;
@@ -126,7 +126,7 @@ public class LocalItem implements Comparable<LocalItem> {
     /**
      * Gets name.
      *
-     * @return null-ok; name
+     * @return {@code null-ok;} name
      */
     public CstUtf8 getName() {
         return name;
@@ -135,7 +135,7 @@ public class LocalItem implements Comparable<LocalItem> {
     /**
      * Gets signature.
      *
-     * @return null-ok; signature
+     * @return {@code null-ok;} signature
      */
     public CstUtf8 getSignature() {
         return signature;

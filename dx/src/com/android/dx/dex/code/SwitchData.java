@@ -29,16 +29,16 @@ import com.android.dx.util.IntList;
  */
 public final class SwitchData extends VariableSizeInsn {
     /**
-     * non-null; address representing the instruction that uses this
+     * {@code non-null;} address representing the instruction that uses this
      * instance 
      */
     private final CodeAddress user;
 
-    /** non-null; sorted list of switch cases (keys) */
+    /** {@code non-null;} sorted list of switch cases (keys) */
     private final IntList cases;
 
     /**
-     * non-null; corresponding list of code addresses; the branch
+     * {@code non-null;} corresponding list of code addresses; the branch
      * target for each case 
      */
     private final CodeAddress[] targets;
@@ -48,13 +48,13 @@ public final class SwitchData extends VariableSizeInsn {
 
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
-     * @param position non-null; source position
-     * @param user non-null; address representing the instruction that
+     * @param position {@code non-null;} source position
+     * @param user {@code non-null;} address representing the instruction that
      * uses this instance
-     * @param cases non-null; sorted list of switch cases (keys)
-     * @param targets non-null; corresponding list of code addresses; the
+     * @param cases {@code non-null;} sorted list of switch cases (keys)
+     * @param targets {@code non-null;} corresponding list of code addresses; the
      * branch target for each case
      */
     public SwitchData(SourcePosition position, CodeAddress user,
@@ -151,7 +151,7 @@ public final class SwitchData extends VariableSizeInsn {
     /**
      * Returns whether or not this instance's data will be output as packed.
      * 
-     * @return <code>true</code> iff the data is to be packed
+     * @return {@code true} iff the data is to be packed
      */
     public boolean isPacked() {
         return packed;
@@ -202,8 +202,8 @@ public final class SwitchData extends VariableSizeInsn {
      * Gets the size of a packed table for the given cases, in 16-bit code
      * units.
      * 
-     * @param cases non-null; sorted list of cases
-     * @return &gt;= -1; the packed table size or <code>-1</code> if the
+     * @param cases {@code non-null;} sorted list of cases
+     * @return {@code >= -1;} the packed table size or {@code -1} if the
      * cases couldn't possibly be represented as a packed table
      */
     private static long packedCodeSize(IntList cases) {
@@ -219,8 +219,8 @@ public final class SwitchData extends VariableSizeInsn {
      * Gets the size of a sparse table for the given cases, in 16-bit code
      * units.
      * 
-     * @param cases non-null; sorted list of cases
-     * @return &gt; 0; the sparse table size
+     * @param cases {@code non-null;} sorted list of cases
+     * @return {@code > 0;} the sparse table size
      */
     private static long sparseCodeSize(IntList cases) {
         int sz = cases.size();
@@ -231,8 +231,8 @@ public final class SwitchData extends VariableSizeInsn {
     /**
      * Determines whether the given list of cases warrant being packed.
      * 
-     * @param cases non-null; sorted list of cases
-     * @return <code>true</code> iff the table encoding the cases
+     * @param cases {@code non-null;} sorted list of cases
+     * @return {@code true} iff the table encoding the cases
      * should be packed
      */
     private static boolean shouldPack(IntList cases) {

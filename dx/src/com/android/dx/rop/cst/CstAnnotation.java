@@ -22,13 +22,13 @@ import com.android.dx.rop.annotation.Annotation;
  * Constant type that represents an annotation.
  */
 public final class CstAnnotation extends Constant {
-    /** non-null; the actual annotation */
+    /** {@code non-null;} the actual annotation */
     private final Annotation annotation;
     
     /**
      * Constructs an instance.
      *
-     * @param annotation non-null; the annotation to hold
+     * @param annotation {@code non-null;} the annotation to hold
      */
     public CstAnnotation(Annotation annotation) {
         if (annotation == null) {
@@ -88,7 +88,7 @@ public final class CstAnnotation extends Constant {
     /**
      * Get the underlying annotation.
      * 
-     * @return non-null; the annotation
+     * @return {@code non-null;} the annotation
      */
     public Annotation getAnnotation() {
         return annotation;

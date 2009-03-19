@@ -30,65 +30,51 @@ import java.util.List;
  * conversion back to ROP form.
  */
 public final class PhiInsn extends SsaInsn {
+    /**
+     * result register. The original result register of the phi insn
+     * is needed during the renaming process after the new result
+     * register has already been chosen.
+     */
+    private final int ropResultReg;
 
     /**
-     * the original result register of the phi insn is needed during the
-     * renaming process after the new result register has already been chosen.
+     * {@code non-null;} operands of the instruction; built up by
+     * {@link #addPhiOperand}
      */
-    private int ropResultReg;
-    private ArrayList<Operand> operands = new ArrayList<Operand>();
+    private final ArrayList<Operand> operands = new ArrayList<Operand>();
+
+    /** {@code null-ok;} source registers; constructed lazily */
     private RegisterSpecList sources;
 
     /**
-     * A single phi operand, consiting of source register and block index
-     * for move.
-     */
-    class Operand {
-        RegisterSpec regSpec;
-        int blockIndex;
-        int ropLabel;       //mostly for debugging
-
-        Operand (final RegisterSpec regSpec, final int blockIndex,
-                final int ropLabel){
-            this.regSpec = regSpec;
-            this.blockIndex = blockIndex;
-            this.ropLabel = ropLabel;
-        }
-    }
-
-    public static interface Visitor {
-        public void visitPhiInsn(PhiInsn insn);
-    }
-
-    public PhiInsn clone() {
-        throw new UnsupportedOperationException("can't clone phi");
-    }
-
-    /**
      * Constructs a new phi insn with no operands.
+     * 
      * @param resultReg the result reg for this phi insn
      * @param block block containing this insn.
      */
-    PhiInsn(final RegisterSpec resultReg, final SsaBasicBlock block) {
-        super(block);
-        this.result = resultReg;
+    public PhiInsn(RegisterSpec resultReg, SsaBasicBlock block) {
+        super(resultReg, block);
         ropResultReg = resultReg.getReg();
     }
 
     /**
      * Makes a phi insn with a void result type.
+     * 
      * @param resultReg the result register for this phi insn.
      * @param block block containing this insn.
      */
-    PhiInsn(final int resultReg, final SsaBasicBlock block) {
-        super(block);
-
+    public PhiInsn(final int resultReg, final SsaBasicBlock block) {
         /*
-         * The type here is bogus: the type depends on the operand and
-         * will be derived later.
+         * The result type here is bogus: The type depends on the
+         * operand and will be derived later.
          */
-        this.result = RegisterSpec.make(resultReg, Type.VOID);
+        super(RegisterSpec.make(resultReg, Type.VOID), block);
         ropResultReg = resultReg;
+    }
+
+    /** {@inheritDoc} */
+    public PhiInsn clone() {
+        throw new UnsupportedOperationException("can't clone phi");
     }
 
     /**
@@ -100,9 +86,8 @@ public final class PhiInsn extends SsaInsn {
      *
      * @param ssaMeth method that contains this insn
      */
-    void updateSourcesToDefinitions(SsaMethod ssaMeth) {
-
-        for (Operand o: operands) {
+    public void updateSourcesToDefinitions(SsaMethod ssaMeth) {
+        for (Operand o : operands) {
             RegisterSpec def 
                 = ssaMeth.getDefinitionForRegister(
                     o.regSpec.getReg()).getResult();
@@ -116,37 +101,42 @@ public final class PhiInsn extends SsaInsn {
     /**
      * Changes the result type. Used during phi type resolution
      *
-     * @param type non-null; new TypeBearer
-     * @param local null-ok; new local info, if available
+     * @param type {@code non-null;} new TypeBearer
+     * @param local {@code null-ok;} new local info, if available
      */
-    void changeResultType(TypeBearer type, LocalItem local) {
-        result = RegisterSpec.makeLocalOptional(result.getReg(), type, local);
+    public void changeResultType(TypeBearer type, LocalItem local) {
+        setResult(RegisterSpec.makeLocalOptional(
+                          getResult().getReg(), type, local));
     }
 
     /**
-     * @return the original rop-form result reg. Useful during renaming.
+     * Gets the original rop-form result reg. This is useful during renaming.
+     * 
+     * @return the original rop-form result reg
      */
-    int getRopResultReg() {
+    public int getRopResultReg() {
         return ropResultReg;
     }
 
     /**
-     * Add an operand to this phi instruction
+     * Adds an operand to this phi instruction.
+     * 
      * @param registerSpec register spec, including type and reg of operand
-     * @param predBlock Predecessor block to be associated with this operand
+     * @param predBlock predecessor block to be associated with this operand
      */
     public void addPhiOperand(RegisterSpec registerSpec,
             SsaBasicBlock predBlock) {
         operands.add(new Operand(registerSpec, predBlock.getIndex(),
                 predBlock.getRopLabel()));
         
-        // in case someone has already called getSources()
+        // Un-cache sources, in case someone has already called getSources().
         sources = null;
     }
 
     /**
      * Gets the index of the pred block associated with the RegisterSpec
      * at the particular getSources() index.
+     * 
      * @param sourcesIndex index of source in getSources()
      * @return block index
      */
@@ -157,7 +147,7 @@ public final class PhiInsn extends SsaInsn {
     /**
      * {@inheritDoc}
      *
-     * Always returns null for <code>PhiInsn</code>s
+     * Always returns null for {@code PhiInsn}s.
      */
     @Override
     public Rop getOpcode() {
@@ -167,18 +157,17 @@ public final class PhiInsn extends SsaInsn {
     /**
      * {@inheritDoc}
      *
-     * Always returns null for <code>PhiInsn</code>s
+     * Always returns null for {@code PhiInsn}s.
      */
     @Override
     public Insn getOriginalRopInsn() {
         return null;
     }
 
-
     /**
      * {@inheritDoc}
      *
-     * Always returns false for <code>PhiInsn</code>s
+     * Always returns false for {@code PhiInsn}s.
      */
     @Override
     public boolean canThrow() {
@@ -188,10 +177,10 @@ public final class PhiInsn extends SsaInsn {
     /**
      * Gets sources. Constructed lazily from phi operand data structures and
      * then cached.
-     * @return sources list
+     * 
+     * @return {@code non-null;} sources list
      */
     public RegisterSpecList getSources() {
-
         if (sources != null) {
             return sources;
         }
@@ -219,10 +208,10 @@ public final class PhiInsn extends SsaInsn {
     public boolean isRegASource(int reg) {
         /*
          * Avoid creating a sources list in case it has not already been
-         * created
+         * created.
          */
 
-        for (Operand o: operands) {
+        for (Operand o : operands) {
             if (o.regSpec.getReg() == reg) {
                 return true;
             }
@@ -236,12 +225,12 @@ public final class PhiInsn extends SsaInsn {
      */
     public boolean areAllOperandsEqual() {
         if (operands.size() == 0 ) {
-            // this should never happen
+            // This should never happen.
             return true;
         }
 
         int firstReg = operands.get(0).regSpec.getReg();
-        for (Operand o: operands) {
+        for (Operand o : operands) {
             if (firstReg != o.regSpec.getReg()) {
                 return false;
             }
@@ -253,19 +242,20 @@ public final class PhiInsn extends SsaInsn {
     /** {@inheritDoc} */
     @Override
     public final void mapSourceRegisters(RegisterMapper mapper) {
-        for (Operand o: operands) {
+        for (Operand o : operands) {
             RegisterSpec old = o.regSpec;
             o.regSpec = mapper.map(old);
             if (old != o.regSpec) {
-                block.getParent().onSourceChanged(this, old, o.regSpec);
+                getBlock().getParent().onSourceChanged(this, old, o.regSpec);
             }
         }
         sources = null;
     }
 
     /**
-     * Always throws an exeption, since
-     * a phi insn may not be converted back to rop form
+     * Always throws an exeption, since a phi insn may not be
+     * converted back to rop form.
+     * 
      * @return always throws exception
      */
     @Override
@@ -276,17 +266,16 @@ public final class PhiInsn extends SsaInsn {
 
     /**
      * Returns the list of predecessor blocks associated with all operands
-     * that have <code>reg</code> as an operand register.
+     * that have {@code reg} as an operand register.
      *
      * @param reg register to look up
      * @param ssaMeth method we're operating on
-     * @return List of predecessor blocks, empty if none
+     * @return list of predecessor blocks, empty if none
      */
-    public List<SsaBasicBlock> predBlocksForReg (int reg, SsaMethod ssaMeth) {
-        ArrayList<SsaBasicBlock> ret 
-            = (ArrayList<SsaBasicBlock>)new ArrayList();
+    public List<SsaBasicBlock> predBlocksForReg(int reg, SsaMethod ssaMeth) {
+        ArrayList<SsaBasicBlock> ret = new ArrayList<SsaBasicBlock>();
 
-        for (Operand o: operands) {
+        for (Operand o : operands) {
             if (o.regSpec.getReg() == reg) {
                 ret.add(ssaMeth.getBlocks().get(o.blockIndex));
             }
@@ -297,12 +286,13 @@ public final class PhiInsn extends SsaInsn {
 
     /** {@inheritDoc} */
     @Override
-    public  boolean isPhiOrMove() {
+    public boolean isPhiOrMove() {
         return true;    
     }
 
     /** {@inheritDoc} */
-    @Override public boolean hasSideEffect() {
+    @Override
+    public boolean hasSideEffect() {
         return Optimizer.getPreserveLocals() && getLocalAssignment() != null;
     }
 
@@ -312,25 +302,23 @@ public final class PhiInsn extends SsaInsn {
         v.visitPhiInsn(this);
     }
 
-    /**
-     * @return human-readable string for listing dumps
-     */
+    /** {@inheritDoc} */
     public String toHuman() {
         return toHumanWithInline(null);
     }
 
     /**
-     * Returns human-readable string for listing dumps.
-     * Allows sub-classes to specify extra text
-     * @param extra null-ok; the argument to print after the opcode
+     * Returns human-readable string for listing dumps. This method
+     * allows sub-classes to specify extra text.
+     * 
+     * @param extra {@code null-ok;} the argument to print after the opcode
      * @return human-readable string for listing dumps
      */
     protected final String toHumanWithInline(String extra) {
         StringBuffer sb = new StringBuffer(80);
 
         sb.append(SourcePosition.NO_INFO);
-        sb.append(": ");
-        sb.append("phi");       
+        sb.append(": phi");       
 
         if (extra != null) {
             sb.append("(");
@@ -338,6 +326,8 @@ public final class PhiInsn extends SsaInsn {
             sb.append(")");
         }
 
+        RegisterSpec result = getResult();
+        
         if (result == null) {
             sb.append(" .");
         } else {
@@ -360,5 +350,29 @@ public final class PhiInsn extends SsaInsn {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * A single phi operand, consiting of source register and block index
+     * for move.
+     */
+    private static class Operand {
+        public RegisterSpec regSpec;
+        public final int blockIndex;
+        public final int ropLabel;       // only used for debugging
+
+        public Operand(final RegisterSpec regSpec, final int blockIndex,
+                final int ropLabel) {
+            this.regSpec = regSpec;
+            this.blockIndex = blockIndex;
+            this.ropLabel = ropLabel;
+        }
+    }
+
+    /**
+     * Visitor interface for instances of this (outer) class.
+     */
+    public static interface Visitor {
+        public void visitPhiInsn(PhiInsn insn);
     }
 }

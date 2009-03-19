@@ -20,15 +20,15 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.util.Hex;
 
 /**
- * Constants of type <code>CONSTANT_Double_info</code>.
+ * Constants of type {@code CONSTANT_Double_info}.
  */
 public final class CstDouble
         extends CstLiteral64 {
-    /** non-null; instance representing <code>0</code> */
+    /** {@code non-null;} instance representing {@code 0} */
     public static final CstDouble VALUE_0 =
         new CstDouble(Double.doubleToLongBits(0.0));
 
-    /** non-null; instance representing <code>1</code> */
+    /** {@code non-null;} instance representing {@code 1} */
     public static final CstDouble VALUE_1 =
         new CstDouble(Double.doubleToLongBits(1.0));
 
@@ -36,7 +36,7 @@ public final class CstDouble
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
      * 
-     * @param bits the <code>double</code> value as <code>long</code> bits
+     * @param bits the {@code double} value as {@code long} bits
      */
     public static CstDouble make(long bits) {
         /*
@@ -49,7 +49,7 @@ public final class CstDouble
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
      * 
-     * @param bits the <code>double</code> value as <code>long</code> bits
+     * @param bits the {@code double} value as {@code long} bits
      */
     private CstDouble(long bits) {
         super(bits);
@@ -80,7 +80,7 @@ public final class CstDouble
     }
 
     /**
-     * Gets the <code>double</code> value.
+     * Gets the {@code double} value.
      * 
      * @return the value
      */

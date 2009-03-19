@@ -107,7 +107,10 @@
  * started.  If so, switch to a different "goto" table.
  */
 #define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
-        dvmCheckSuspendQuick(self);                                         \
+        if (dvmCheckSuspendQuick(self)) {                                   \
+            EXPORT_PC();  /* need for precise GC */                         \
+            dvmCheckSuspendPending(self);                                   \
+        }                                                                   \
         if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
             ADJUST_PC(_pcadj);                                              \
             glue->entryPoint = _entryPoint;                                 \

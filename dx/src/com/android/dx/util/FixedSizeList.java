@@ -23,11 +23,11 @@ import java.util.Arrays;
  */
 public class FixedSizeList
         extends MutabilityControl implements ToHuman {
-    /** non-null; array of elements */
+    /** {@code non-null;} array of elements */
     private Object[] arr;
 
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      * 
      * @param size the size of the list
      */
@@ -94,10 +94,10 @@ public class FixedSizeList
     /**
      * Gets a customized string form for this instance.
      * 
-     * @param prefix null-ok; prefix for the start of the result
-     * @param separator null-ok; separator to insert between each item
-     * @param suffix null-ok; suffix for the end of the result
-     * @return non-null; the custom string
+     * @param prefix {@code null-ok;} prefix for the start of the result
+     * @param separator {@code null-ok;} separator to insert between each item
+     * @param suffix {@code null-ok;} suffix for the end of the result
+     * @return {@code non-null;} the custom string
      */
     public String toString(String prefix, String separator, String suffix) {
         return toString0(prefix, separator, suffix, false);
@@ -108,10 +108,10 @@ public class FixedSizeList
      * only work if every element of the list implements {@link
      * ToHuman}.
      * 
-     * @param prefix null-ok; prefix for the start of the result
-     * @param separator null-ok; separator to insert between each item
-     * @param suffix null-ok; suffix for the end of the result
-     * @return non-null; the custom string
+     * @param prefix {@code null-ok;} prefix for the start of the result
+     * @param separator {@code null-ok;} separator to insert between each item
+     * @param suffix {@code null-ok;} suffix for the end of the result
+     * @return {@code non-null;} the custom string
      */
     public String toHuman(String prefix, String separator, String suffix) {
         return toString0(prefix, separator, suffix, true);
@@ -126,7 +126,7 @@ public class FixedSizeList
 
     /**
      * Shrinks this instance to fit, by removing any unset
-     * (<code>null</code>) elements, leaving the remaining elements in
+     * ({@code null}) elements, leaving the remaining elements in
      * their original order.
      */
     public void shrinkToFit() {
@@ -165,12 +165,12 @@ public class FixedSizeList
     /**
      * Gets the indicated element. It is an error to call this with the
      * index for an element which was never set; if you do that, this
-     * will throw <code>NullPointerException</code>. This method is
+     * will throw {@code NullPointerException}. This method is
      * protected so that subclasses may offer a safe type-checked
      * public interface to their clients.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
-     * @return non-null; the indicated element
+     * @param n {@code >= 0, < size();} which element
+     * @return {@code non-null;} the indicated element
      */
     protected final Object get0(int n) {
         try {
@@ -188,13 +188,13 @@ public class FixedSizeList
     }
 
     /**
-     * Gets the indicated element, allowing <code>null</code>s to be
+     * Gets the indicated element, allowing {@code null}s to be
      * returned. This method is protected so that subclasses may
      * (optionally) offer a safe type-checked public interface to
      * their clients.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
-     * @return null-ok; the indicated element
+     * @param n {@code >= 0, < size();} which element
+     * @return {@code null-ok;} the indicated element
      */
     protected final Object getOrNull0(int n) {
         return arr[n];
@@ -206,8 +206,8 @@ public class FixedSizeList
      * subclasses may offer a safe type-checked public interface to
      * their clients.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
-     * @param obj null-ok; the value to store
+     * @param n {@code >= 0, < size();} which element
+     * @param obj {@code null-ok;} the value to store
      */
     protected final void set0(int n, Object obj) {
         throwIfImmutable();
@@ -239,11 +239,11 @@ public class FixedSizeList
      * Helper for {@link #toString} and {@link #toHuman}, which both of
      * those call to pretty much do everything.
      * 
-     * @param prefix null-ok; prefix for the start of the result
-     * @param separator null-ok; separator to insert between each item
-     * @param suffix null-ok; suffix for the end of the result
+     * @param prefix {@code null-ok;} prefix for the start of the result
+     * @param separator {@code null-ok;} separator to insert between each item
+     * @param suffix {@code null-ok;} suffix for the end of the result
      * @param human whether the output is to be human 
-     * @return non-null; the custom string
+     * @return {@code non-null;} the custom string
      */
     private String toString0(String prefix, String separator, String suffix,
                              boolean human) {

@@ -30,13 +30,13 @@ import java.io.PrintWriter;
  */
 public final class EncodedField extends EncodedMember
         implements Comparable<EncodedField> {
-    /** non-null; constant for the field */
+    /** {@code non-null;} constant for the field */
     private final CstFieldRef field;
 
     /**
      * Constructs an instance.
      * 
-     * @param field non-null; constant for the field
+     * @param field {@code non-null;} constant for the field
      * @param accessFlags access flags
      */
     public EncodedField(CstFieldRef field, int accessFlags) {
@@ -122,7 +122,7 @@ public final class EncodedField extends EncodedMember
     /**
      * Gets the constant for the field.
      * 
-     * @return non-null; the constant
+     * @return {@code non-null;} the constant
      */
     public CstFieldRef getRef() {
         return field;

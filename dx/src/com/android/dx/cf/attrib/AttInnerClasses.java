@@ -19,19 +19,19 @@ package com.android.dx.cf.attrib;
 import com.android.dx.util.MutabilityException;
 
 /**
- * Attribute class for standard <code>InnerClasses</code> attributes.
+ * Attribute class for standard {@code InnerClasses} attributes.
  */
 public final class AttInnerClasses extends BaseAttribute {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "InnerClasses";
 
-    /** non-null; list of inner class entries */
+    /** {@code non-null;} list of inner class entries */
     private final InnerClassList innerClasses;
 
     /**
      * Constructs an instance.
      * 
-     * @param innerClasses non-null; list of inner class entries
+     * @param innerClasses {@code non-null;} list of inner class entries
      */
     public AttInnerClasses(InnerClassList innerClasses) {
         super(ATTRIBUTE_NAME);
@@ -56,7 +56,7 @@ public final class AttInnerClasses extends BaseAttribute {
     /**
      * Gets the list of "inner class" entries associated with this instance.
      * 
-     * @return non-null; the list
+     * @return {@code non-null;} the list
      */
     public InnerClassList getInnerClasses() {
         return innerClasses;

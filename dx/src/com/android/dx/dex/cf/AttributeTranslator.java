@@ -51,7 +51,7 @@ import java.util.ArrayList;
 
 /**
  * Utility methods that translate various classfile attributes
- * into forms suitable for use in creating <code>dex</code> files.
+ * into forms suitable for use in creating {@code dex} files.
  */
 /*package*/ class AttributeTranslator {
     /**
@@ -64,8 +64,8 @@ import java.util.ArrayList;
     /**
      * Gets the list of thrown exceptions for a given method.
      *
-     * @param method non-null; the method in question
-     * @return non-null; the list of thrown exceptions
+     * @param method {@code non-null;} the method in question
+     * @return {@code non-null;} the list of thrown exceptions
      */
     public static TypeList getExceptions(Method method) {
         AttributeList attribs = method.getAttributes();
@@ -83,10 +83,10 @@ import java.util.ArrayList;
      * Gets the annotations out of a given {@link AttributeList}. This
      * combines both visible and invisible annotations into a single
      * result set and also adds in a system annotation for the
-     * <code>Signature</code> attribute if present.
+     * {@code Signature} attribute if present.
      * 
-     * @param attribs non-null; the attributes list to search in
-     * @return non-null; the set of annotations, which may be empty
+     * @param attribs {@code non-null;} the attributes list to search in
+     * @return {@code non-null;} the set of annotations, which may be empty
      */
     public static Annotations getAnnotations(AttributeList attribs) {
         Annotations result = getAnnotations0(attribs);
@@ -102,15 +102,15 @@ import java.util.ArrayList;
     /**
      * Gets the annotations out of a given class, similar to {@link
      * #getAnnotations}, also including annotations for translations
-     * of class-level attributes <code>EnclosingMethod</code> and
-     * <code>InnerClasses</code>, if present. Additionally, if the
+     * of class-level attributes {@code EnclosingMethod} and
+     * {@code InnerClasses}, if present. Additionally, if the
      * class is an annotation class, then this also includes a
-     * representation of all the <code>AnnotationDefault</code>
+     * representation of all the {@code AnnotationDefault}
      * values.
      * 
-     * @param cf non-null; the class in question
-     * @param args non-null; the high-level options
-     * @return non-null; the set of annotations, which may be empty
+     * @param cf {@code non-null;} the class in question
+     * @param args {@code non-null;} the high-level options
+     * @return {@code non-null;} the set of annotations, which may be empty
      */
     public static Annotations getClassAnnotations(DirectClassFile cf,
             CfOptions args) {
@@ -148,10 +148,10 @@ import java.util.ArrayList;
     /**
      * Gets the annotations out of a given method, similar to {@link
      * #getAnnotations}, also including an annotation for the translation
-     * of the method-specific attribute <code>Exceptions</code>.
+     * of the method-specific attribute {@code Exceptions}.
      * 
-     * @param method non-null; the method in question
-     * @return non-null; the set of annotations, which may be empty
+     * @param method {@code non-null;} the method in question
+     * @return {@code non-null;} the set of annotations, which may be empty
      */
     public static Annotations getMethodAnnotations(Method method) {
         Annotations result = getAnnotations(method.getAttributes());
@@ -170,8 +170,8 @@ import java.util.ArrayList;
      * Helper method for {@link #getAnnotations} which just gets the
      * existing annotations, per se.
      * 
-     * @param attribs non-null; the attributes list to search in
-     * @return non-null; the set of annotations, which may be empty
+     * @param attribs {@code non-null;} the attributes list to search in
+     * @return {@code non-null;} the set of annotations, which may be empty
      */
     private static Annotations getAnnotations0(AttributeList attribs) {
         AttRuntimeVisibleAnnotations visible =
@@ -199,11 +199,11 @@ import java.util.ArrayList;
     }
 
     /**
-     * Gets the <code>Signature</code> attribute out of a given
+     * Gets the {@code Signature} attribute out of a given
      * {@link AttributeList}, if any, translating it to an annotation.
      * 
-     * @param attribs non-null; the attributes list to search in
-     * @return null-ok; the converted <code>Signature</code> annotation,
+     * @param attribs {@code non-null;} the attributes list to search in
+     * @return {@code null-ok;} the converted {@code Signature} annotation,
      * if there was an attribute to translate
      */
     private static Annotation getSignature(AttributeList attribs) {
@@ -218,15 +218,15 @@ import java.util.ArrayList;
     }
 
     /**
-     * Gets the <code>EnclosingMethod</code> attribute out of a given
+     * Gets the {@code EnclosingMethod} attribute out of a given
      * {@link AttributeList}, if any, translating it to an annotation.
      * If the class really has an enclosing method, this returns an
-     * <code>EnclosingMethod</code> annotation; if not, this returns
-     * an <code>EnclosingClass</code> annotation.
+     * {@code EnclosingMethod} annotation; if not, this returns
+     * an {@code EnclosingClass} annotation.
      * 
-     * @param attribs non-null; the attributes list to search in
-     * @return null-ok; the converted <code>EnclosingMethod</code> or
-     * <code>EnclosingClass</code> annotation, if there was an
+     * @param attribs {@code non-null;} the attributes list to search in
+     * @return {@code null-ok;} the converted {@code EnclosingMethod} or
+     * {@code EnclosingClass} annotation, if there was an
      * attribute to translate
      */
     private static Annotation translateEnclosingMethod(AttributeList attribs) {
@@ -256,16 +256,16 @@ import java.util.ArrayList;
     }
 
     /**
-     * Gets the <code>InnerClasses</code> attribute out of a given
+     * Gets the {@code InnerClasses} attribute out of a given
      * {@link AttributeList}, if any, translating it to one or more of an
-     * <code>InnerClass</code>, <code>EnclosingClass</code>, or
-     * <code>MemberClasses</code> annotation.
+     * {@code InnerClass}, {@code EnclosingClass}, or
+     * {@code MemberClasses} annotation.
      * 
-     * @param thisClass non-null; type representing the class being processed
-     * @param attribs non-null; the attributes list to search in
+     * @param thisClass {@code non-null;} type representing the class being processed
+     * @param attribs {@code non-null;} the attributes list to search in
      * @param needEnclosingClass whether to include an
-     * <code>EnclosingClass</code> annotation
-     * @return null-ok; the converted list of annotations, if there
+     * {@code EnclosingClass} annotation
+     * @return {@code null-ok;} the converted list of annotations, if there
      * was an attribute to translate
      */
     private static Annotations translateInnerClasses(CstType thisClass,
@@ -342,8 +342,8 @@ import java.util.ArrayList;
      * combines both visible and invisible annotations into a single
      * result set.
      * 
-     * @param method non-null; the method in question
-     * @return non-null; the list of annotation sets, which may be empty
+     * @param method {@code non-null;} the method in question
+     * @return {@code non-null;} the list of annotation sets, which may be empty
      */
     public static AnnotationsList getParameterAnnotations(Method method) {
         AttributeList attribs = method.getAttributes();
@@ -374,14 +374,14 @@ import java.util.ArrayList;
     }
 
     /**
-     * Gets the <code>AnnotationDefault</code> attributes out of a
+     * Gets the {@code AnnotationDefault} attributes out of a
      * given class, if any, reforming them as an
-     * <code>AnnotationDefault</code> annotation.
+     * {@code AnnotationDefault} annotation.
      * 
-     * @param cf non-null; the class in question
-     * @return null-ok; an appropriately-constructed
-     * <code>AnnotationDefault</code> annotation, if there were any
-     * annotation defaults in the class, or <code>null<code> if not
+     * @param cf {@code non-null;} the class in question
+     * @return {@code null-ok;} an appropriately-constructed
+     * {@code AnnotationDefault} annotation, if there were any
+     * annotation defaults in the class, or {@code null} if not
      */
     private static Annotation translateAnnotationDefaults(DirectClassFile cf) {
         CstType thisClass = cf.getThisClass();

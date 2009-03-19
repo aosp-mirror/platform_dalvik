@@ -26,17 +26,17 @@ import com.android.dx.util.IntList;
  */
 public final class SwitchInsn
         extends Insn {
-    /** non-null; list of switch cases */
+    /** {@code non-null;} list of switch cases */
     private final IntList cases;
 
     /**
      * Constructs an instance.
      * 
-     * @param opcode non-null; the opcode
-     * @param position non-null; source position
-     * @param result null-ok; spec for the result, if any
-     * @param sources non-null; specs for all the sources
-     * @param cases non-null; list of switch cases
+     * @param opcode {@code non-null;} the opcode
+     * @param position {@code non-null;} source position
+     * @param result {@code null-ok;} spec for the result, if any
+     * @param sources {@code non-null;} specs for all the sources
+     * @param cases {@code non-null;} list of switch cases
      */
     public SwitchInsn(Rop opcode, SourcePosition position, RegisterSpec result,
                       RegisterSpecList sources, IntList cases) {
@@ -90,7 +90,7 @@ public final class SwitchInsn
      * {@inheritDoc}
      *
      * <p> SwitchInsn always compares false. The current use for this method
-     * never encounters <code>SwitchInsn</code>s
+     * never encounters {@code SwitchInsn}s
      */
     @Override
     public boolean contentEquals(Insn b) {
@@ -111,7 +111,7 @@ public final class SwitchInsn
     /**
      * Gets the list of switch cases.
      * 
-     * @return non-null; the case list
+     * @return {@code non-null;} the case list
      */
     public IntList getCases() {
         return cases;

@@ -682,9 +682,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     FETCH_INST_WORD(1)
     testl   %eax,%eax                   # null object?
-#ifdef WITH_MONITOR_TRACKING
-    EXPORT_PC()
-#endif
+    EXPORT_PC()                         # need for precise GC, MONITOR_TRACKING
     jne     .LOP_MONITOR_ENTER_continue
     jmp     common_errNullObject
 
@@ -8618,6 +8616,7 @@ common_periodicChecks:
      *      bool dvmCheckSuspendPending(Thread* self)
      *  Because we reached here via a call, go ahead and build a new frame.
      */
+    EXPORT_PC()                         # need for precise GC
     movl    offGlue_self(%ecx),%eax      # eax<- glue->self
     SPILL(rPC)                      # save edx
     push    %ebp

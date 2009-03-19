@@ -24,23 +24,23 @@ import com.android.dx.util.IntList;
  * a method.
  */
 public final class LocalVariableExtractor {
-    /** non-null; method being extracted from */
+    /** {@code non-null;} method being extracted from */
     private final RopMethod method;
 
-    /** non-null; block list for the method */
+    /** {@code non-null;} block list for the method */
     private final BasicBlockList blocks;
 
-    /** non-null; result in-progress */
+    /** {@code non-null;} result in-progress */
     private final LocalVariableInfo resultInfo;
 
-    /** non-null; work set indicating blocks needing to be processed */
+    /** {@code non-null;} work set indicating blocks needing to be processed */
     private final int[] workSet;
 
     /**
      * Extracts out all the local variable information from the given method.
      * 
-     * @param method non-null; the method to extract from
-     * @return non-null; the extracted information
+     * @param method {@code non-null;} the method to extract from
+     * @return {@code non-null;} the extracted information
      */
     public static LocalVariableInfo extract(RopMethod method) {
         LocalVariableExtractor lve = new LocalVariableExtractor(method);
@@ -50,7 +50,7 @@ public final class LocalVariableExtractor {
     /**
      * Constructs an instance. This method is private. Use {@link #extract}.
      * 
-     * @param method non-null; the method to extract from
+     * @param method {@code non-null;} the method to extract from
      */
     private LocalVariableExtractor(RopMethod method) {
         if (method == null) {
@@ -69,7 +69,7 @@ public final class LocalVariableExtractor {
     /**
      * Does the extraction.
      * 
-     * @return non-null; the extracted information
+     * @return {@code non-null;} the extracted information
      */
     private LocalVariableInfo doit() {
         for (int label = method.getFirstLabel();
@@ -86,7 +86,7 @@ public final class LocalVariableExtractor {
     /**
      * Processes a single block.
      * 
-     * @param label &gt;= 0; label of the block to process
+     * @param label {@code >= 0;} label of the block to process
      */
     private void processBlock(int label) {
         RegisterSpecSet primaryState = resultInfo.mutableCopyOfStarts(label);

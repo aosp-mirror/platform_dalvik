@@ -43,10 +43,12 @@ public class Main {
         "    options: none, important, lines.\n" +
         "  dx --annotool --annotation=<class> [--element=<element types>]\n" +
         "  [--print=<print types>]\n" +
-        "  dx --dump [--debug] [--strict] [--bytes] [--basic-blocks | " +
-        "--rop-blocks]\n" +
+        "  dx --dump [--debug] [--strict] [--bytes] [--optimize]\n" +
+        "  [--basic-blocks | --rop-blocks | --ssa-blocks | --dot] " +
+        "[--ssa-step=<step>]\n" +
         "  [--width=<n>] [<file>.class | <file>.txt] ...\n" +
-        "    Dump classfiles in a human-oriented format.\n" +
+        "    Dump classfiles, or transformations thereof, in a " +
+        "human-oriented format.\n" +
         "  dx --junit [-wait] <TestClass>\n" +
         "    Run the indicated unit test.\n" + 
         "  dx -J<option> ... <arguments, in one of the above " +
@@ -156,9 +158,9 @@ public class Main {
      * Returns a copy of the given args array, but without the indicated
      * element.
      *
-     * @param orig non-null; original array
+     * @param orig {@code non-null;} original array
      * @param n which element to omit
-     * @return non-null; new array
+     * @return {@code non-null;} new array
      */
     private static String[] without(String[] orig, int n) {
         int len = orig.length - 1;

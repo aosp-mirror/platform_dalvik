@@ -30,11 +30,11 @@ import com.android.dx.util.MutabilityControl;
  * TypeBearer}.</p>
  */
 public final class ExecutionStack extends MutabilityControl {
-    /** non-null; array of stack contents */
+    /** {@code non-null;} array of stack contents */
     private final TypeBearer[] stack;
 
     /**
-     * &gt;= 0; stack pointer (points one past the end) / current stack
+     * {@code >= 0;} stack pointer (points one past the end) / current stack
      * size 
      */
     private int stackPtr;
@@ -42,7 +42,7 @@ public final class ExecutionStack extends MutabilityControl {
     /**
      * Constructs an instance. 
      * 
-     * @param maxStack &gt;= 0; the maximum size of the stack for this
+     * @param maxStack {@code >= 0;} the maximum size of the stack for this
      * instance
      */
     public ExecutionStack(int maxStack) {
@@ -54,7 +54,7 @@ public final class ExecutionStack extends MutabilityControl {
     /**
      * Makes and returns a mutable copy of this instance.
      * 
-     * @return non-null; the copy
+     * @return {@code non-null;} the copy
      */
     public ExecutionStack copy() {
         ExecutionStack result = new ExecutionStack(stack.length);
@@ -69,7 +69,7 @@ public final class ExecutionStack extends MutabilityControl {
      * Annotates (adds context to) the given exception with information
      * about this instance.
      * 
-     * @param ex non-null; the exception to annotate
+     * @param ex {@code non-null;} the exception to annotate
      */
     public void annotate(ExceptionWithContext ex) {
         int limit = stackPtr - 1;
@@ -86,7 +86,7 @@ public final class ExecutionStack extends MutabilityControl {
      * Replaces all the occurrences of the given uninitialized type in
      * this stack with its initialized equivalent.
      * 
-     * @param type non-null; type to replace
+     * @param type {@code non-null;} type to replace
      */
     public void makeInitialized(Type type) {
         if (stackPtr == 0) {
@@ -108,7 +108,7 @@ public final class ExecutionStack extends MutabilityControl {
     /**
      * Gets the maximum stack size for this instance.
      * 
-     * @return &gt;= 0; the max stack size
+     * @return {@code >= 0;} the max stack size
      */
     public int getMaxStack() {
         return stack.length;
@@ -117,7 +117,7 @@ public final class ExecutionStack extends MutabilityControl {
     /**
      * Gets the current stack size.
      * 
-     * @return &gt;= 0, &lt; getMaxStack(); the current stack size
+     * @return {@code >= 0, < getMaxStack();} the current stack size
      */
     public int size() {
         return stackPtr;
@@ -139,7 +139,7 @@ public final class ExecutionStack extends MutabilityControl {
     /**
      * Pushes a value of the given type onto the stack.
      * 
-     * @param type non-null; type of the value
+     * @param type {@code non-null;} type of the value
      * @throws SimException thrown if there is insufficient room on the
      * stack for the value
      */
@@ -171,14 +171,14 @@ public final class ExecutionStack extends MutabilityControl {
     }
 
     /**
-     * Peeks at the <code>n</code>th element down from the top of the stack.
-     * <code>n == 0</code> means to peek at the top of the stack. Note that
-     * this will return <code>null</code> if the indicated element is the
+     * Peeks at the {@code n}th element down from the top of the stack.
+     * {@code n == 0} means to peek at the top of the stack. Note that
+     * this will return {@code null} if the indicated element is the
      * deeper half of a category-2 value.
      * 
-     * @param n &gt;= 0; which element to peek at
-     * @return null-ok; the type of value stored at that element
-     * @throws SimException thrown if <code>n &gt;= size()</code> 
+     * @param n {@code >= 0;} which element to peek at
+     * @return {@code null-ok;} the type of value stored at that element
+     * @throws SimException thrown if {@code n >= size()} 
      */
     public TypeBearer peek(int n) {
         if (n < 0) {
@@ -193,10 +193,10 @@ public final class ExecutionStack extends MutabilityControl {
     }
 
     /**
-     * Peeks at the <code>n</code>th element down from the top of the
+     * Peeks at the {@code n}th element down from the top of the
      * stack, returning the type per se, as opposed to the
      * <i>type-bearer</i>.  This method is just a convenient shorthand
-     * for <code>peek(n).getType()</code>.
+     * for {@code peek(n).getType()}.
      * 
      * @see #peek
      */
@@ -207,7 +207,7 @@ public final class ExecutionStack extends MutabilityControl {
     /**
      * Pops the top element off of the stack.
      * 
-     * @return non-null; the type formerly on the top of the stack
+     * @return {@code non-null;} the type formerly on the top of the stack
      * @throws SimException thrown if the stack is empty
      */
     public TypeBearer pop() {
@@ -227,10 +227,10 @@ public final class ExecutionStack extends MutabilityControl {
      * the following restriction on its behavior: You may only replace
      * values with other values of the same category.
      * 
-     * @param n &gt;= 0; which element to change, where <code>0</code> is
+     * @param n {@code >= 0;} which element to change, where {@code 0} is
      * the top element of the stack
-     * @param type non-null; type of the new value
-     * @throws SimException thrown if <code>n &gt;= size()</code> or
+     * @param type {@code non-null;} type of the new value
+     * @throws SimException thrown if {@code n >= size()} or
      * the action is otherwise prohibited
      */
     public void change(int n, TypeBearer type) {
@@ -262,8 +262,8 @@ public final class ExecutionStack extends MutabilityControl {
      * returned.  See {@link Merger#mergeStack(ExecutionStack,ExecutionStack)
      * Merger.mergeStack()}
      *
-     * @param other non-null; a stack to merge with
-     * @return non-null; the result of the merge
+     * @param other {@code non-null;} a stack to merge with
+     * @return {@code non-null;} the result of the merge
      */
     public ExecutionStack merge(ExecutionStack other) {
         try {
@@ -279,11 +279,11 @@ public final class ExecutionStack extends MutabilityControl {
 
     /**
      * Gets the string form for a stack element. This is the same as
-     * <code>toString()</code> except that <code>null</code> is converted
-     * to <code>"&lt;invalid&gt;"</code>.
+     * {@code toString()} except that {@code null} is converted
+     * to {@code "<invalid>"}.
      * 
-     * @param type null-ok; the stack element
-     * @return non-null; the string form
+     * @param type {@code null-ok;} the stack element
+     * @return {@code non-null;} the string form
      */
     private static String stackElementString(TypeBearer type) {
         if (type == null) {
@@ -296,7 +296,7 @@ public final class ExecutionStack extends MutabilityControl {
     /**
      * Throws a properly-formatted exception.
      * 
-     * @param msg non-null; useful message
+     * @param msg {@code non-null;} useful message
      * @return never (keeps compiler happy)
      */
     private static TypeBearer throwSimException(String msg) {

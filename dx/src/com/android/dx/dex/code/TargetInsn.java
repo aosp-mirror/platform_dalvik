@@ -23,20 +23,20 @@ import com.android.dx.rop.code.SourcePosition;
  * Instruction which has a single branch target.
  */
 public final class TargetInsn extends FixedSizeInsn {
-    /** non-null; the branch target */
+    /** {@code non-null;} the branch target */
     private CodeAddress target;
 
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>), and the target is initially
-     * <code>null</code>.
+     * unknown ({@code -1}), and the target is initially
+     * {@code null}.
      * 
      * @param opcode the opcode; one of the constants from {@link Dops}
-     * @param position non-null; source position
-     * @param registers non-null; register list, including a
+     * @param position {@code non-null;} source position
+     * @param registers {@code non-null;} register list, including a
      * result register if appropriate (that is, registers may be either
      * ins or outs)
-     * @param target non-null; the branch target
+     * @param target {@code non-null;} the branch target
      */
     public TargetInsn(Dop opcode, SourcePosition position,
                       RegisterSpecList registers, CodeAddress target) {
@@ -64,12 +64,12 @@ public final class TargetInsn extends FixedSizeInsn {
     /**
      * Returns an instance that is just like this one, except that its
      * opcode has the opposite sense (as a test; e.g. a
-     * <code>lt</code> test becomes a <code>ge</code>), and its branch
+     * {@code lt} test becomes a {@code ge}), and its branch
      * target is replaced by the one given, and all set-once values
      * associated with the class (such as its address) are reset.
      * 
-     * @param target non-null; the new branch target
-     * @return non-null; an appropriately-constructed instance
+     * @param target {@code non-null;} the new branch target
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public TargetInsn withNewTargetAndReversed(CodeAddress target) {
         Dop opcode = getOpcode().getOppositeTest();
@@ -80,7 +80,7 @@ public final class TargetInsn extends FixedSizeInsn {
     /**
      * Gets the unique branch target of this instruction.
      * 
-     * @return non-null; the branch target
+     * @return {@code non-null;} the branch target
      */
     public CodeAddress getTarget() {
         return target;
@@ -90,9 +90,9 @@ public final class TargetInsn extends FixedSizeInsn {
      * Gets the target address of this instruction. This is only valid
      * to call if the target instruction has been assigned an address,
      * and it is merely a convenient shorthand for
-     * <code>getTarget().getAddress()</code>.
+     * {@code getTarget().getAddress()}.
      * 
-     * @return &gt;= 0; the target address
+     * @return {@code >= 0;} the target address
      */
     public int getTargetAddress() {
         return target.getAddress();
@@ -102,7 +102,7 @@ public final class TargetInsn extends FixedSizeInsn {
      * Gets the branch offset of this instruction. This is only valid to
      * call if both this and the target instruction each has been assigned
      * an address, and it is merely a convenient shorthand for
-     * <code>getTargetAddress() - getAddress()</code>.
+     * {@code getTargetAddress() - getAddress()}.
      * 
      * @return the branch offset
      */
@@ -113,8 +113,8 @@ public final class TargetInsn extends FixedSizeInsn {
     /**
      * Returns whether the target offset is known.
      * 
-     * @return <code>true</code> if the target offset is known or
-     * <code>false</code> if not
+     * @return {@code true} if the target offset is known or
+     * {@code false} if not
      */
     public boolean hasTargetOffset() {
         return hasAddress() && target.hasAddress();

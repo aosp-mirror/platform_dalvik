@@ -43,69 +43,69 @@ import com.android.dx.util.Hex;
 import java.util.Collection;
 
 /**
- * Handler for writing out <code>encoded_values</code> and parts
+ * Handler for writing out {@code encoded_values} and parts
  * thereof.
  */
 public final class ValueEncoder {
-    /** annotation value type constant: <code>byte</code> */
+    /** annotation value type constant: {@code byte} */
     private static final int VALUE_BYTE = 0x00;
 
-    /** annotation value type constant: <code>short</code> */
+    /** annotation value type constant: {@code short} */
     private static final int VALUE_SHORT = 0x02;
 
-    /** annotation value type constant: <code>char</code> */
+    /** annotation value type constant: {@code char} */
     private static final int VALUE_CHAR = 0x03;
 
-    /** annotation value type constant: <code>int</code> */
+    /** annotation value type constant: {@code int} */
     private static final int VALUE_INT = 0x04;
 
-    /** annotation value type constant: <code>long</code> */
+    /** annotation value type constant: {@code long} */
     private static final int VALUE_LONG = 0x06;
 
-    /** annotation value type constant: <code>float</code> */
+    /** annotation value type constant: {@code float} */
     private static final int VALUE_FLOAT = 0x10;
 
-    /** annotation value type constant: <code>double</code> */
+    /** annotation value type constant: {@code double} */
     private static final int VALUE_DOUBLE = 0x11;
 
-    /** annotation value type constant: <code>string</code> */
+    /** annotation value type constant: {@code string} */
     private static final int VALUE_STRING = 0x17;
 
-    /** annotation value type constant: <code>type</code> */
+    /** annotation value type constant: {@code type} */
     private static final int VALUE_TYPE = 0x18;
 
-    /** annotation value type constant: <code>field</code> */
+    /** annotation value type constant: {@code field} */
     private static final int VALUE_FIELD = 0x19;
 
-    /** annotation value type constant: <code>method</code> */
+    /** annotation value type constant: {@code method} */
     private static final int VALUE_METHOD = 0x1a;
 
-    /** annotation value type constant: <code>enum</code> */
+    /** annotation value type constant: {@code enum} */
     private static final int VALUE_ENUM = 0x1b;
 
-    /** annotation value type constant: <code>array</code> */
+    /** annotation value type constant: {@code array} */
     private static final int VALUE_ARRAY = 0x1c;
 
-    /** annotation value type constant: <code>annotation</code> */
+    /** annotation value type constant: {@code annotation} */
     private static final int VALUE_ANNOTATION = 0x1d;
 
-    /** annotation value type constant: <code>null</code> */
+    /** annotation value type constant: {@code null} */
     private static final int VALUE_NULL = 0x1e;
 
-    /** annotation value type constant: <code>boolean</code> */
+    /** annotation value type constant: {@code boolean} */
     private static final int VALUE_BOOLEAN = 0x1f;
 
-    /** non-null; file being written */
+    /** {@code non-null;} file being written */
     private final DexFile file;
 
-    /** non-null; output stream to write to */
+    /** {@code non-null;} output stream to write to */
     private final AnnotatedOutput out;
     
     /**
      * Construct an instance.
      * 
-     * @param file non-null; file being written
-     * @param out non-null; output stream to write to
+     * @param file {@code non-null;} file being written
+     * @param out {@code non-null;} output stream to write to
      */
     public ValueEncoder(DexFile file, AnnotatedOutput out) {
         if (file == null) {
@@ -123,7 +123,7 @@ public final class ValueEncoder {
     /**
      * Writes out the encoded form of the given constant.
      * 
-     * @param cst non-null; the constant to write
+     * @param cst {@code non-null;} the constant to write
      */
     public void writeConstant(Constant cst) {
         int type = constantToValueType(cst);
@@ -209,8 +209,8 @@ public final class ValueEncoder {
     /**
      * Gets the value type for the given constant.
      * 
-     * @param cst non-null; the constant
-     * @return the value type; one of the <code>VALUE_*</code> constants
+     * @param cst {@code non-null;} the constant
+     * @return the value type; one of the {@code VALUE_*} constants
      * defined by this class
      */
     private static int constantToValueType(Constant cst) {
@@ -257,15 +257,15 @@ public final class ValueEncoder {
 
     /**
      * Writes out the encoded form of the given array, that is, as
-     * an <code>encoded_array</code> and not including a
-     * <code>value_type</code> prefix. If the output stream keeps
-     * (debugging) annotations and <code>topLevel</code> is
-     * <code>true</code>, then this method will write (debugging)
+     * an {@code encoded_array} and not including a
+     * {@code value_type} prefix. If the output stream keeps
+     * (debugging) annotations and {@code topLevel} is
+     * {@code true}, then this method will write (debugging)
      * annotations.
      *
-     * @param array non-null; array instance to write
-     * @param topLevel <code>true</code> iff the given annotation is the
-     * top-level annotation or <code>false</code> if it is a sub-annotation
+     * @param array {@code non-null;} array instance to write
+     * @param topLevel {@code true} iff the given annotation is the
+     * top-level annotation or {@code false} if it is a sub-annotation
      * of some other annotation
      */
     public void writeArray(CstArray array, boolean topLevel) {
@@ -295,15 +295,15 @@ public final class ValueEncoder {
 
     /**
      * Writes out the encoded form of the given annotation, that is,
-     * as an <code>encoded_annotation</code> and not including a
-     * <code>value_type</code> prefix. If the output stream keeps
-     * (debugging) annotations and <code>topLevel</code> is
-     * <code>true</code>, then this method will write (debugging)
+     * as an {@code encoded_annotation} and not including a
+     * {@code value_type} prefix. If the output stream keeps
+     * (debugging) annotations and {@code topLevel} is
+     * {@code true}, then this method will write (debugging)
      * annotations.
      * 
-     * @param annotation non-null; annotation instance to write
-     * @param topLevel <code>true</code> iff the given annotation is the
-     * top-level annotation or <code>false</code> if it is a sub-annotation
+     * @param annotation {@code non-null;} annotation instance to write
+     * @param topLevel {@code true} iff the given annotation is the
+     * top-level annotation or {@code false} if it is a sub-annotation
      * of some other annotation
      */
     public void writeAnnotation(Annotation annotation, boolean topLevel) {
@@ -361,8 +361,8 @@ public final class ValueEncoder {
      * Gets the colloquial type name and human form of the type of the
      * given constant, when used as an encoded value.
      * 
-     * @param cst non-null; the constant
-     * @return non-null; its type name and human form
+     * @param cst {@code non-null;} the constant
+     * @return {@code non-null;} its type name and human form
      */
     public static String constantToHuman(Constant cst) {
         int type = constantToValueType(cst);
@@ -385,7 +385,7 @@ public final class ValueEncoder {
      * for any signed integral type.
      * 
      * @param type the type constant
-     * @param value <code>long</code> bits of the value
+     * @param value {@code long} bits of the value
      */
     private void writeSignedIntegralValue(int type, long value) {
         /*
@@ -422,7 +422,7 @@ public final class ValueEncoder {
      * for any unsigned integral type.
      * 
      * @param type the type constant
-     * @param value <code>long</code> bits of the value
+     * @param value {@code long} bits of the value
      */
     private void writeUnsignedIntegralValue(int type, long value) {
         // Figure out how many bits are needed to represent the value.
@@ -453,7 +453,7 @@ public final class ValueEncoder {
      * right-zero-extended value.
      * 
      * @param type the type constant
-     * @param value <code>long</code> bits of the value
+     * @param value {@code long} bits of the value
      */
     private void writeRightZeroExtendedValue(int type, long value) {
         // Figure out how many bits are needed to represent the value.
@@ -484,12 +484,12 @@ public final class ValueEncoder {
 
 
     /**
-     * Helper for <code>addContents()</code> methods, which adds
+     * Helper for {@code addContents()} methods, which adds
      * contents for a particular {@link Annotation}, calling itself
      * recursively should it encounter a nested annotation.
      *
-     * @param file non-null; the file to add to 
-     * @param annotation non-null; the annotation to add contents for
+     * @param file {@code non-null;} the file to add to 
+     * @param annotation {@code non-null;} the annotation to add contents for
      */
     public static void addContents(DexFile file, Annotation annotation) {
         TypeIdsSection typeIds = file.getTypeIds();
@@ -504,14 +504,14 @@ public final class ValueEncoder {
     }
 
     /**
-     * Helper for <code>addContents()</code> methods, which adds
+     * Helper for {@code addContents()} methods, which adds
      * contents for a particular constant, calling itself recursively
      * should it encounter a {@link CstArray} and calling {@link
      * #addContents(DexFile,Annotation)} recursively should it
      * encounter a {@link CstAnnotation}.
      * 
-     * @param file non-null; the file to add to 
-     * @param cst non-null; the constant to add contents for
+     * @param file {@code non-null;} the file to add to 
+     * @param cst {@code non-null;} the constant to add contents for
      */
     public static void addContents(DexFile file, Constant cst) {
         TypeIdsSection typeIds = file.getTypeIds();

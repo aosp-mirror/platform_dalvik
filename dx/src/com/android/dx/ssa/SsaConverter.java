@@ -122,7 +122,7 @@ public class SsaConverter {
     /**
      * Inserts Z nodes as new predecessors for every node that has multiple
      * successors and multiple predecessors.
-     * @param result non-null; method to process
+     * @param result {@code non-null;} method to process
      */
     private static void edgeSplitPredecessors(SsaMethod result) {
         ArrayList<SsaBasicBlock> blocks = result.getBlocks();
@@ -138,7 +138,7 @@ public class SsaConverter {
     }
 
     /**
-     * @param block non-null; block in question
+     * @param block {@code non-null;} block in question
      * @return true if this node needs to have a unique predecessor created for
      * it.
      */
@@ -200,7 +200,7 @@ public class SsaConverter {
     /**
      * Inserts Z nodes for every node that needs a new 
      * successor.
-     * @param result non-null; method to process
+     * @param result {@code non-null;} method to process
      */
     private static void edgeSplitSuccessors(SsaMethod result) {
         ArrayList<SsaBasicBlock> blocks = result.getBlocks();
@@ -248,8 +248,8 @@ public class SsaConverter {
      * See Appel algorithm 19.6
      * Place Phi functions in appropriate locations.
      *
-     * @param ssaMeth non-null; method to process. Modifications made in-place
-     * @param localInfo non-null; Local variable info, used when placing phis
+     * @param ssaMeth {@code non-null;} method to process. Modifications made in-place
+     * @param localInfo {@code non-null;} Local variable info, used when placing phis
      */
     private static void placePhiFunctions (SsaMethod ssaMeth,
             LocalVariableInfo localInfo) {

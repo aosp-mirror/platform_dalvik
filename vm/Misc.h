@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Miscellaneous utility functions.
  */
@@ -143,7 +144,11 @@ void dvmCreateFileOutputTarget(DebugOutputTarget* target, FILE* fp);
  * Print a debug message.
  */
 void dvmPrintDebugMessage(const DebugOutputTarget* target, const char* format,
-    ...);
+    ...)
+#if defined(__GNUC__)
+    __attribute__ ((format(printf, 2, 3)))
+#endif
+    ;
 
 
 /*
@@ -276,6 +281,15 @@ bool dvmIterativeSleep(int iteration, int maxTotalSleep, u8 relStartTime);
  * Set the "close on exec" flag on a file descriptor.
  */
 bool dvmSetCloseOnExec(int fd);
+
+/*
+ * Unconditionally abort the entire VM.  Try not to use this.
+ */
+void dvmAbort(void)
+#if defined(__GNUC__)
+    __attribute__ ((noreturn))
+#endif
+    ;
 
 #if (!HAVE_STRLCPY)
 /* Implementation of strlcpy() for platforms that don't already have it. */

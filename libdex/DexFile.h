@@ -163,6 +163,7 @@ enum {
 /* auxillary data section chunk codes */
 enum {
     kDexChunkClassLookup            = 0x434c4b50,   /* CLKP */
+    kDexChunkRegisterMaps           = 0x524d4150,   /* RMAP */
 
     kDexChunkReducingIndexMap       = 0x5249584d,   /* RIXM */
     kDexChunkExpandingIndexMap      = 0x4549584d,   /* EIXM */
@@ -514,11 +515,13 @@ typedef struct DexFile {
     const DexClassDef*  pClassDefs;
     const DexLink*      pLinkData;
 
-    /* mapped in "auxillary" section */
+    /*
+     * These are mapped out of the "auxillary" section, and may not be
+     * included in the file.
+     */
     const DexClassLookup* pClassLookup;
-
-    /* mapped in "auxillary" section */
     DexIndexMap         indexMap;
+    const void*         pRegisterMapPool;       // RegisterMapClassPool
 
     /* points to start of DEX file data */
     const u1*           baseAddr;
@@ -670,6 +673,15 @@ DEX_INLINE const DexTypeList* dexGetProtoParameters(
 DEX_INLINE const DexClassDef* dexGetClassDef(const DexFile* pDexFile, u4 idx) {
     assert(idx < pDexFile->pHeader->classDefsSize);
     return &pDexFile->pClassDefs[idx];
+}
+
+/* given a ClassDef pointer, recover its index */
+DEX_INLINE u4 dexGetIndexForClassDef(const DexFile* pDexFile,
+    const DexClassDef* pClassDef)
+{
+    assert(pClassDef >= pDexFile->pClassDefs &&
+           pClassDef < pDexFile->pClassDefs + pDexFile->pHeader->classDefsSize);
+    return pClassDef - pDexFile->pClassDefs;
 }
 
 /* get the interface list for a DexClass */

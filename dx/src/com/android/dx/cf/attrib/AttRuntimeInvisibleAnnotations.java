@@ -19,18 +19,18 @@ package com.android.dx.cf.attrib;
 import com.android.dx.rop.annotation.Annotations;
 
 /**
- * Attribute class for standard <code>RuntimeInvisibleAnnotations</code>
+ * Attribute class for standard {@code RuntimeInvisibleAnnotations}
  * attributes.
  */
 public final class AttRuntimeInvisibleAnnotations extends BaseAnnotations {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "RuntimeInvisibleAnnotations";
 
     /**
      * Constructs an instance.
      * 
-     * @param annotations non-null; the list of annotations
-     * @param byteLength &gt;= 0; attribute data length in the original
+     * @param annotations {@code non-null;} the list of annotations
+     * @param byteLength {@code >= 0;} attribute data length in the original
      * classfile (not including the attribute header)
      */
     public AttRuntimeInvisibleAnnotations(Annotations annotations,

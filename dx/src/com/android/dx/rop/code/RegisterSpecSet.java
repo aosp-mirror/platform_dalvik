@@ -25,23 +25,23 @@ import com.android.dx.rop.cst.CstUtf8;
  */
 public final class RegisterSpecSet
         extends MutabilityControl {
-    /** non-null; no-element instance */
+    /** {@code non-null;} no-element instance */
     public static final RegisterSpecSet EMPTY = new RegisterSpecSet(0);
 
     /**
-     * non-null; array of register specs, where each element is
-     * <code>null</code> or is an instance whose <code>reg</code>
+     * {@code non-null;} array of register specs, where each element is
+     * {@code null} or is an instance whose {@code reg}
      * matches the array index 
      */
     private final RegisterSpec[] specs;
 
-    /** &gt;= -1; size of the set or <code>-1</code> if not yet calculated */
+    /** {@code >= -1;} size of the set or {@code -1} if not yet calculated */
     private int size;
 
     /**
      * Constructs an instance. The instance is initially empty.
      * 
-     * @param maxSize &gt;= 0; the maximum register number (exclusive) that
+     * @param maxSize {@code >= 0;} the maximum register number (exclusive) that
      * may be represented in this instance
      */
     public RegisterSpecSet(int maxSize) {
@@ -127,7 +127,7 @@ public final class RegisterSpecSet
      * is also the maximum-plus-one of register numbers that may be
      * represented.
      * 
-     * @return &gt;= 0; the maximum size
+     * @return {@code >= 0;} the maximum size
      */
     public int getMaxSize() {
         return specs.length;
@@ -136,7 +136,7 @@ public final class RegisterSpecSet
     /**
      * Gets the current size of this instance.
      * 
-     * @return &gt;= 0; the size
+     * @return {@code >= 0;} the size
      */
     public int size() {
         int result = size;
@@ -160,9 +160,9 @@ public final class RegisterSpecSet
     /**
      * Gets the element with the given register number, if any.
      * 
-     * @param reg &gt;= 0; the desired register number
-     * @return null-ok; the element with the given register number or
-     * <code>null</code> if there is none
+     * @param reg {@code >= 0;} the desired register number
+     * @return {@code null-ok;} the element with the given register number or
+     * {@code null} if there is none
      */
     public RegisterSpec get(int reg) {
         try {
@@ -176,11 +176,11 @@ public final class RegisterSpecSet
     /**
      * Gets the element with the same register number as the given
      * spec, if any. This is just a convenient shorthand for
-     * <code>get(spec.getReg())</code>.
+     * {@code get(spec.getReg())}.
      * 
-     * @param spec non-null; spec with the desired register number
-     * @return null-ok; the element with the matching register number or
-     * <code>null</code> if there is none
+     * @param spec {@code non-null;} spec with the desired register number
+     * @return {@code null-ok;} the element with the matching register number or
+     * {@code null} if there is none
      */
     public RegisterSpec get(RegisterSpec spec) {
         return get(spec.getReg());
@@ -192,8 +192,8 @@ public final class RegisterSpecSet
      * none. This ignores the register number of the given spec but
      * matches on everything else.
      * 
-     * @param spec non-null; local to look for
-     * @return null-ok; first register found that matches, if any
+     * @param spec {@code non-null;} local to look for
+     * @return {@code null-ok;} first register found that matches, if any
      */
     public RegisterSpec findMatchingLocal(RegisterSpec spec) {
         int length = specs.length;
@@ -217,8 +217,8 @@ public final class RegisterSpecSet
      * Returns the spec in this set that's currently associated with a given
      * local (name and signature), or {@code null} if there is none.
      *
-     * @param local non-null; local item to search for
-     * @return null-ok; first register found with matching name and signature
+     * @param local {@code non-null;} local item to search for
+     * @return {@code null-ok;} first register found with matching name and signature
      */
     public RegisterSpec localItemToSpec(LocalItem local) {
         int length = specs.length;
@@ -238,7 +238,7 @@ public final class RegisterSpecSet
      * Removes a spec from the set. Only the register number
      * of the parameter is significant.
      *
-     * @param toRemove non-null; register to remove.
+     * @param toRemove {@code non-null;} register to remove.
      */
     public void remove(RegisterSpec toRemove) {
         try {
@@ -258,7 +258,7 @@ public final class RegisterSpecSet
      * a category-2 register, then the immediately subsequent element
      * is nullified.
      * 
-     * @param spec non-null; the register spec to put in the instance
+     * @param spec {@code non-null;} the register spec to put in the instance
      */
     public void put(RegisterSpec spec) {
         throwIfImmutable();
@@ -293,7 +293,7 @@ public final class RegisterSpecSet
     /**
      * Put the entire contents of the given set into this one.
      * 
-     * @param set non-null; the set to put into this instance
+     * @param set {@code non-null;} the set to put into this instance
      */
     public void putAll(RegisterSpecSet set) {
         int max = set.getMaxSize();
@@ -312,11 +312,11 @@ public final class RegisterSpecSet
      * {@link RegisterSpec#intersect} of corresponding elements from
      * this instance and the given one where both are non-null.
      * 
-     * @param other non-null; set to intersect with
+     * @param other {@code non-null;} set to intersect with
      * @param localPrimary whether local variables are primary to
-     * the intersection; if <code>true</code>, then the only non-null
+     * the intersection; if {@code true}, then the only non-null
      * result elements occur when registers being intersected have
-     * equal names (or both have <code>null</code> names)
+     * equal names (or both have {@code null} names)
      */
     public void intersect(RegisterSpecSet other, boolean localPrimary) {
         throwIfImmutable();
@@ -352,7 +352,7 @@ public final class RegisterSpecSet
      * of the result is inherited from the original.
      * 
      * @param delta the amount to offset the register numbers by
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpecSet withOffset(int delta) {
         int len = specs.length;
@@ -377,7 +377,7 @@ public final class RegisterSpecSet
     /**
      * Makes and return a mutable copy of this instance.
      * 
-     * @return non-null; the mutable copy
+     * @return {@code non-null;} the mutable copy
      */
     public RegisterSpecSet mutableCopy() {
         int len = specs.length;

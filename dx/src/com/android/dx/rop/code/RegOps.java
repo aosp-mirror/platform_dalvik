@@ -21,283 +21,279 @@ import com.android.dx.util.Hex;
 /**
  * All the register-based opcodes, and related utilities.
  * 
- * <p><b>Note:</b> Opcode descriptions use a rough pseudocode. <code>r</code>
- * is the result register, <code>x</code> is the first argument,
- * <code>y</code> is the second argument, and <code>z</code> is the
+ * <p><b>Note:</b> Opcode descriptions use a rough pseudocode. {@code r}
+ * is the result register, {@code x} is the first argument,
+ * {@code y} is the second argument, and {@code z} is the
  * third argument. The expression which describes
  * the operation uses Java-ish syntax but is preceded by type indicators for
  * each of the values.
  */
 public final class RegOps {
-    /** <code>nop()</code> */
+    /** {@code nop()} */
     public static final int NOP = 1;
 
-    /** <code>T: any type; r,x: T :: r = x;</code> */
+    /** {@code T: any type; r,x: T :: r = x;} */
     public static final int MOVE = 2;
 
-    /** <code>T: any type; r,param(x): T :: r = param(x)</code> */
+    /** {@code T: any type; r,param(x): T :: r = param(x)} */
     public static final int MOVE_PARAM = 3;
 
     /**
-     * <code>T: Throwable; r: T :: r = caught_exception</code>.
+     * {@code T: Throwable; r: T :: r = caught_exception}.
      * <b>Note:</b> This opcode should only ever be used in the
      * first instruction of a block, and such blocks must be
      * the start of an exception handler.
      */
     public static final int MOVE_EXCEPTION = 4;
 
-    /** <code>T: any type; r, literal: T :: r = literal;</code> */
+    /** {@code T: any type; r, literal: T :: r = literal;} */
     public static final int CONST = 5;
 
-    /** <code>goto <i>label</i></code> */
+    /** {@code goto label} */
     public static final int GOTO = 6;
 
     /**
-     * <code>T: int or Object; x,y: T :: if (x == y) goto
-     * <i>label</i></code> 
+     * {@code T: int or Object; x,y: T :: if (x == y) goto
+     * label}
      */
     public static final int IF_EQ = 7;
 
     /**
-     * <code>T: int or Object; x,y: T :: if (x != y) goto
-     * <i>label</i></code> 
+     * {@code T: int or Object; x,y: T :: if (x != y) goto
+     * label}
      */
     public static final int IF_NE = 8;
 
-    /** <code>x,y: int :: if (x &lt; y) goto <i>label</i></code> */
+    /** {@code x,y: int :: if (x < y) goto label} */
     public static final int IF_LT = 9;
 
-    /** <code>x,y: int :: if (x &gt;= y) goto <i>label</i></code> */
+    /** {@code x,y: int :: if (x >= y) goto label} */
     public static final int IF_GE = 10;
 
-    /** <code>x,y: int :: if (x &lt;= y) goto <i>label</i></code> */
+    /** {@code x,y: int :: if (x <= y) goto label} */
     public static final int IF_LE = 11;
 
-    /** <code>x,y: int :: if (x &gt; y) goto <i>label</i></code> */
+    /** {@code x,y: int :: if (x > y) goto label} */
     public static final int IF_GT = 12;
 
-    /** <code>x: int :: goto <i>table[x]</i></code> */
+    /** {@code x: int :: goto table[x]} */
     public static final int SWITCH = 13;
 
-    /** <code>T: any numeric type; r,x,y: T :: r = x + y</code> */
+    /** {@code T: any numeric type; r,x,y: T :: r = x + y} */
     public static final int ADD = 14;
 
-    /** <code>T: any numeric type; r,x,y: T :: r = x - y</code> */
+    /** {@code T: any numeric type; r,x,y: T :: r = x - y} */
     public static final int SUB = 15;
 
-    /** <code>T: any numeric type; r,x,y: T :: r = x * y</code> */
+    /** {@code T: any numeric type; r,x,y: T :: r = x * y} */
     public static final int MUL = 16;
 
-    /** <code>T: any numeric type; r,x,y: T :: r = x / y</code> */
+    /** {@code T: any numeric type; r,x,y: T :: r = x / y} */
     public static final int DIV = 17;
 
     /**
-     * <code>T: any numeric type; r,x,y: T :: r = x % y</code>
+     * {@code T: any numeric type; r,x,y: T :: r = x % y}
      * (Java-style remainder) 
      */
     public static final int REM = 18;
 
-    /** <code>T: any numeric type; r,x: T :: r = -x</code> */
+    /** {@code T: any numeric type; r,x: T :: r = -x} */
     public static final int NEG = 19;
 
-    /** <code>T: any integral type; r,x,y: T :: r = x &amp; y</code> */
+    /** {@code T: any integral type; r,x,y: T :: r = x & y} */
     public static final int AND = 20;
 
-    /** <code>T: any integral type; r,x,y: T :: r = x | y</code> */
+    /** {@code T: any integral type; r,x,y: T :: r = x | y} */
     public static final int OR = 21;
 
-    /** <code>T: any integral type; r,x,y: T :: r = x ^ y</code> */
+    /** {@code T: any integral type; r,x,y: T :: r = x ^ y} */
     public static final int XOR = 22;
 
     /**
-     * <code>T: any integral type; r,x: T; y: int :: r = x &lt;&lt;
-     * y</code> 
+     * {@code T: any integral type; r,x: T; y: int :: r = x << y}
      */
     public static final int SHL = 23;
 
     /**
-     * <code>T: any integral type; r,x: T; y: int :: r = x &gt;&gt;
-     * y</code> (signed right-shift) 
+     * {@code T: any integral type; r,x: T; y: int :: r = x >> y}
+     * (signed right-shift) 
      */
     public static final int SHR = 24;
 
     /**
-     * <code>T: any integral type; r,x: T; y: int :: r = x
-     * &gt;&gt;&gt; y</code> (unsigned right-shift) 
+     * {@code T: any integral type; r,x: T; y: int :: r = x >>> y}
+     * (unsigned right-shift) 
      */
     public static final int USHR = 25;
 
-    /** <code>T: any integral type; r,x: T :: r = ~x</code> */
+    /** {@code T: any integral type; r,x: T :: r = ~x} */
     public static final int NOT = 26;
 
     /**
-     * <code>T: any numeric type; r: int; x,y: T :: r = (x == y) ? 0
-     * : (x &gt; y) ? 1 : -1</code> (Java-style "cmpl" where a NaN is
+     * {@code T: any numeric type; r: int; x,y: T :: r = (x == y) ? 0
+     * : (x > y) ? 1 : -1} (Java-style "cmpl" where a NaN is
      * considered "less than" all other values; also used for integral
      * comparisons) 
      */
     public static final int CMPL = 27;
 
     /**
-     * <code>T: any floating point type; r: int; x,y: T :: r = (x == y) ? 0
-     * : (x &lt; y) ? -1 : 1</code> (Java-style "cmpg" where a NaN is
+     * {@code T: any floating point type; r: int; x,y: T :: r = (x == y) ? 0
+     * : (x < y) ? -1 : 1} (Java-style "cmpg" where a NaN is
      * considered "greater than" all other values) 
      */
     public static final int CMPG = 28;
 
     /**
-     * <code>T: any numeric type; U: any numeric type; r: T; x: U ::
-     * r = (T) x</code> (numeric type conversion between the four
+     * {@code T: any numeric type; U: any numeric type; r: T; x: U ::
+     * r = (T) x} (numeric type conversion between the four
      * "real" numeric types) 
      */
     public static final int CONV = 29;
 
     /**
-     * <code>r,x: int :: r = (x &lt;&lt; 24) &gt;&gt; 24</code> (Java-style
+     * {@code r,x: int :: r = (x << 24) >> 24} (Java-style
      * convert int to byte) 
      */
     public static final int TO_BYTE = 30;
 
     /**
-     * <code>r,x: int :: r = x &amp; 0xffff</code> (Java-style
-     * convert int to char) 
+     * {@code r,x: int :: r = x & 0xffff} (Java-style convert int to char) 
      */
     public static final int TO_CHAR = 31;
 
     /**
-     * <code>r,x: int :: r = (x &lt;&lt; 16) &gt;&gt; 16</code> (Java-style
+     * {@code r,x: int :: r = (x << 16) >> 16} (Java-style
      * convert int to short) 
      */
     public static final int TO_SHORT = 32;
 
-    /** <code>T: return type for the method; x: T; return x</code> */
+    /** {@code T: return type for the method; x: T; return x} */
     public static final int RETURN = 33;
 
-    /** <code>T: any type; r: int; x: T[]; :: r = x.length</code> */
+    /** {@code T: any type; r: int; x: T[]; :: r = x.length} */
     public static final int ARRAY_LENGTH = 34;
 
-    /** <code>x: Throwable :: throw(x)</code> */
+    /** {@code x: Throwable :: throw(x)} */
     public static final int THROW = 35;
 
-    /** <code>x: Object :: monitorenter(x)</code> */
+    /** {@code x: Object :: monitorenter(x)} */
     public static final int MONITOR_ENTER = 36;
 
-    /** <code>x: Object :: monitorexit(x)</code> */
+    /** {@code x: Object :: monitorexit(x)} */
     public static final int MONITOR_EXIT = 37;
 
-    /** <code>T: any type; r: T; x: T[]; y: int :: r = x[y]</code> */
+    /** {@code T: any type; r: T; x: T[]; y: int :: r = x[y]} */
     public static final int AGET = 38;
 
-    /** <code>T: any type; x: T; y: T[]; z: int :: x[y] = z</code> */
+    /** {@code T: any type; x: T; y: T[]; z: int :: x[y] = z} */
     public static final int APUT = 39;
 
     /**
-     * <code>T: any non-array object type :: r =
-     * alloc(T)</code> (allocate heap space for an object) 
+     * {@code T: any non-array object type :: r =
+     * alloc(T)} (allocate heap space for an object) 
      */
     public static final int NEW_INSTANCE = 40;
 
-    /** <code>T: any array type; r: T; x: int :: r = new T[x]</code> */
+    /** {@code T: any array type; r: T; x: int :: r = new T[x]} */
     public static final int NEW_ARRAY = 41;
 
     /**
-     * <code>T: any array type; r: T; x: int; v0..vx: T :: r = new T[x]
-     * {v0, ..., vx}</code> 
+     * {@code T: any array type; r: T; x: int; v0..vx: T :: r = new T[x]
+     * {v0, ..., vx}}
      */
     public static final int FILLED_NEW_ARRAY = 42;
 
     /**
-     * <code>T: any object type; x: Object :: (T) x</code> (can
-     * throw <code>ClassCastException</code>) 
+     * {@code T: any object type; x: Object :: (T) x} (can
+     * throw {@code ClassCastException}) 
      */
     public static final int CHECK_CAST = 43;
 
     /**
-     * <code>T: any object type; x: Object :: x instanceof
-     * T</code> 
+     * {@code T: any object type; x: Object :: x instanceof T}
      */
     public static final int INSTANCE_OF = 44;
 
     /**
-     * <code>T: any type; r: T; x: Object; f: instance field spec of
-     * type T :: r = x.f</code> 
+     * {@code T: any type; r: T; x: Object; f: instance field spec of
+     * type T :: r = x.f}
      */
     public static final int GET_FIELD = 45;
 
     /**
-     * <code>T: any type; r: T; f: static field spec of type T :: r =
-     * f</code> 
+     * {@code T: any type; r: T; f: static field spec of type T :: r =
+     * f} 
      */
     public static final int GET_STATIC = 46;
 
     /**
-     * <code>T: any type; x: T; y: Object; f: instance field spec of type
-     * T :: y.f = x</code> 
+     * {@code T: any type; x: T; y: Object; f: instance field spec of type
+     * T :: y.f = x} 
      */
     public static final int PUT_FIELD = 47;
 
     /**
-     * <code>T: any type; f: static field spec of type T; x: T :: f =
-     * x</code>
+     * {@code T: any type; f: static field spec of type T; x: T :: f = x}
      */
     public static final int PUT_STATIC = 48;
 
     /**
-     * <code>Tr, T0, T1...: any types; r: Tr; m: static method spec;
-     * y0: T0; y1: T1 ... :: r = m(y0, y1, ...)</code> (call static
+     * {@code Tr, T0, T1...: any types; r: Tr; m: static method spec;
+     * y0: T0; y1: T1 ... :: r = m(y0, y1, ...)} (call static
      * method) 
      */
     public static final int INVOKE_STATIC = 49;
 
     /**
-     * <code>Tr, T0, T1...: any types; r: Tr; x: Object; m: instance method
-     * spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1, ...)</code> (call normal
+     * {@code Tr, T0, T1...: any types; r: Tr; x: Object; m: instance method
+     * spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1, ...)} (call normal
      * virtual method) 
      */
     public static final int INVOKE_VIRTUAL = 50;
 
     /**
-     * <code>Tr, T0, T1...: any types; r: Tr; x: Object; m: instance method
-     * spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1, ...)</code> (call
+     * {@code Tr, T0, T1...: any types; r: Tr; x: Object; m: instance method
+     * spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1, ...)} (call
      * superclass virtual method) 
      */
     public static final int INVOKE_SUPER = 51;
 
     /**
-     * <code>Tr, T0, T1...: any types; r: Tr; x: Object; m: instance method
-     * spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1, ...)</code> (call
+     * {@code Tr, T0, T1...: any types; r: Tr; x: Object; m: instance method
+     * spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1, ...)} (call
      * direct/special method) 
      */
     public static final int INVOKE_DIRECT = 52;
 
     /**
-     * <code>Tr, T0, T1...: any types; r: Tr; x: Object; m: interface
+     * {@code Tr, T0, T1...: any types; r: Tr; x: Object; m: interface
      * (instance) method spec; y0: T0; y1: T1 ... :: r = x.m(y0, y1,
-     * ...)</code> (call interface method) 
+     * ...)} (call interface method) 
      */
     public static final int INVOKE_INTERFACE = 53;
 
     /**
-     * <code> T0: any type; </code> (mark beginning or end of local variable
-     * name
+     * {@code T0: any type; name: local variable name  :: mark(name,T0)}
+     * (mark beginning or end of local variable name)
      */
     public static final int MARK_LOCAL = 54;
 
     /**
-     * <code>T: Any type; r: T :: r = return_type</code>.
+     * {@code T: Any type; r: T :: r = return_type}.
      * <b>Note:</b> This opcode should only ever be used in the
      * first instruction of a block following an invoke-*.
      */
     public static final int MOVE_RESULT = 55;
 
     /**
-     * <code>T: Any type; r: T :: r = return_type</code>.
+     * {@code T: Any type; r: T :: r = return_type}.
      * <b>Note:</b> This opcode should only ever be used in the
      * first instruction of a block following a non-invoke throwing insn
      */
     public static final int MOVE_RESULT_PSEUDO = 56;
 
-    /** <code>T: Any primitive type; v0..vx: T :: {v0, ..., vx}</code> */
+    /** {@code T: Any primitive type; v0..vx: T :: {v0, ..., vx}} */
     public static final int FILL_ARRAY_DATA = 57;
 
     /**
@@ -310,8 +306,8 @@ public final class RegOps {
     /**
      * Gets the name of the given opcode.
      * 
-     * @param opcode &gt;= 0, &lt;= 255; the opcode
-     * @return non-null; its name
+     * @param opcode {@code >= 0, <= 255;} the opcode
+     * @return {@code non-null;} its name
      */
     public static String opName(int opcode) {
         switch (opcode) {

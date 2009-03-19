@@ -133,7 +133,7 @@ INLINE int dvmValidateObject(Object* obj)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsValidObject(obj)) {
-        //abort();
+        //dvmAbort();
         dvmThrowException("Ljava/lang/InternalError;",
             "VM detected invalid object ptr");
         return false;
@@ -142,7 +142,7 @@ INLINE int dvmValidateObject(Object* obj)
 #ifndef NDEBUG
     /* check for heap corruption */
     if (obj->clazz == NULL || ((u4) obj->clazz) <= 65536) {
-        abort();
+        dvmAbort();
         dvmThrowException("Ljava/lang/InternalError;",
             "VM detected invalid object class ptr");
         return false;

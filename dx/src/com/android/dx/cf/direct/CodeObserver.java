@@ -39,17 +39,17 @@ import java.util.ArrayList;
  * Bytecode visitor to use when "observing" bytecode getting parsed.
  */
 public class CodeObserver implements BytecodeArray.Visitor {
-    /** non-null; actual array of bytecode */
+    /** {@code non-null;} actual array of bytecode */
     private final ByteArray bytes;
 
-    /** non-null; observer to inform of parsing */
+    /** {@code non-null;} observer to inform of parsing */
     private final ParseObserver observer;
 
     /**
      * Constructs an instance.
      * 
-     * @param bytes non-null; actual array of bytecode
-     * @param observer non-null; observer to inform of parsing
+     * @param bytes {@code non-null;} actual array of bytecode
+     * @param observer {@code non-null;} observer to inform of parsing
      */
     public CodeObserver(ByteArray bytes, ParseObserver observer) {
         if (bytes == null) {
@@ -218,8 +218,8 @@ public class CodeObserver implements BytecodeArray.Visitor {
     }
 
     /**
-     * Helper for {code #visitConstant} where the constant is an
-     * <code>int</code>.
+     * Helper for {@link #visitConstant} where the constant is an
+     * {@code int}.
      * 
      * @param opcode the opcode
      * @param offset offset to the instruction
@@ -245,8 +245,8 @@ public class CodeObserver implements BytecodeArray.Visitor {
     }
 
     /**
-     * Helper for {code #visitConstant} where the constant is a
-     * <code>long</code>.
+     * Helper for {@link #visitConstant} where the constant is a
+     * {@code long}.
      * 
      * @param opcode the opcode
      * @param offset offset to the instruction
@@ -269,8 +269,8 @@ public class CodeObserver implements BytecodeArray.Visitor {
     }
 
     /**
-     * Helper for {code #visitConstant} where the constant is a
-     * <code>float</code>.
+     * Helper for {@link #visitConstant} where the constant is a
+     * {@code float}.
      * 
      * @param opcode the opcode
      * @param offset offset to the instruction
@@ -287,8 +287,8 @@ public class CodeObserver implements BytecodeArray.Visitor {
     }
 
     /**
-     * Helper for {code #visitConstant} where the constant is a
-     * <code>double</code>.
+     * Helper for {@link #visitConstant} where the constant is a
+     * {@code double}.
      * 
      * @param opcode the opcode
      * @param offset offset to the instruction

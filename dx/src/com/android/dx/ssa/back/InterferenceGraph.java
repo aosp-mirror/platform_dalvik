@@ -34,14 +34,17 @@ import java.util.ArrayList;
  * A register interference graph
  */
 public class InterferenceGraph {
-    /** interference graph, indexed by register in both dimensions  */
+    /**
+     * {@code non-null;} interference graph, indexed by register in
+     * both dimensions
+     */
     private final ArrayList<IntSet> interference;
 
     /**
      * Creates a new graph.
      *
-     * @param countRegs &gt;=0 the start count of registers in the namespace.
-     * New registers can be added subsequently.
+     * @param countRegs {@code >= 0;} the start count of registers in
+     * the namespace. New registers can be added subsequently.
      */
     public InterferenceGraph(int countRegs) {
         interference = new ArrayList<IntSet>(countRegs);
@@ -83,9 +86,9 @@ public class InterferenceGraph {
     /**
      * Merges the interference set for a register into a given bit set
      *
-     * @param reg &gt;=0 register
-     * @param set non-null; interference set; will be merged with set for
-     * given register
+     * @param reg {@code >= 0;} register
+     * @param set {@code non-null;} interference set; will be merged
+     * with set for given register
      */
     public void mergeInterferenceSet(int reg, IntSet set) {
         if (reg < interference.size()) {
@@ -100,8 +103,10 @@ public class InterferenceGraph {
      */
     private void ensureCapacity(int size) {
         int countRegs = interference.size();
+
         interference.ensureCapacity(size);
-        for (int i = countRegs ; i < size; i++) {
+
+        for (int i = countRegs; i < size; i++) {
             interference.add(SetFactory.makeInterferenceSet(size));
         }
     }

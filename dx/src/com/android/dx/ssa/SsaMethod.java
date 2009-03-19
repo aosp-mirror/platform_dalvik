@@ -235,7 +235,7 @@ public final class SsaMethod {
     
     /**
      * Makes a new basic block for this method,
-     * which is empty besides a single <code>GOTO</code>. Successors and
+     * which is empty besides a single {@code GOTO}. Successors and
      * predecessors are not yet set.
      *
      * @return new block
@@ -272,7 +272,7 @@ public final class SsaMethod {
     }
 
     /**
-     * @return null-ok; block of exit block or null if there is none
+     * @return {@code null-ok;} block of exit block or null if there is none
      */
     public SsaBasicBlock getExitBlock() {
         return exitBlockIndex < 0 ? null : blocks.get(exitBlockIndex);
@@ -339,7 +339,7 @@ public final class SsaMethod {
     }
 
     /**
-     * @return non-null; basic block list, do not modify.
+     * @return {@code non-null;} basic block list, do not modify.
      */
     public ArrayList<SsaBasicBlock> getBlocks() {
         return blocks;
@@ -349,7 +349,7 @@ public final class SsaMethod {
      * Returns the count of reachable blocks in this method: blocks that have
      * predecessors (or are the start block)
      *
-     * @return &gt;= 0; number of reachable basic blocks
+     * @return {@code >= 0;} number of reachable basic blocks
      */
     public int getCountReachableBlocks() {
         int ret = 0;
@@ -444,7 +444,7 @@ public final class SsaMethod {
             }
             /**
              * Adds specified insn to the uses list for all of its sources.
-             * @param insn non-null; insn to process
+             * @param insn {@code non-null;} insn to process
              */
             private void addToUses(SsaInsn insn) {
                 RegisterSpecList rl = insn.getSources();
@@ -466,9 +466,9 @@ public final class SsaMethod {
     /**
      * Updates the use list for a single change in source register.
      *
-     * @param insn non-null; insn being changed
-     * @param oldSource null-ok; The source that was used, if applicable
-     * @param newSource non-null; the new source being used
+     * @param insn {@code non-null;} insn being changed
+     * @param oldSource {@code null-ok;} The source that was used, if applicable
+     * @param newSource {@code non-null;} the new source being used
      */
     void onSourceChanged(SsaInsn insn,
             RegisterSpec oldSource, RegisterSpec newSource) {
@@ -491,9 +491,9 @@ public final class SsaMethod {
     /**
      * Updates the use list for a source list change.
      *
-     * @param insn insn non-null; insn being changed. insn.getSources()
+     * @param insn {@code insn non-null;} insn being changed. insn.getSources()
      * must return the new source list.
-     * @param oldSources null-ok; list of sources that were previously used.
+     * @param oldSources {@code null-ok;} list of sources that were previously used.
      */
     void onSourcesChanged(SsaInsn insn, RegisterSpecList oldSources) {
         if (useList == null) return;
@@ -512,12 +512,12 @@ public final class SsaMethod {
     }
 
     /**
-     * Removes a given <code>insn</code> from the use lists for the given
-     * <code>oldSources</code> (rather than the sources currently
+     * Removes a given {@code insn} from the use lists for the given
+     * {@code oldSources} (rather than the sources currently
      * returned by insn.getSources()).
      *
-     * @param insn non-null; insn in question
-     * @param oldSources null-ok; registers whose use lists <code>insn</code>
+     * @param insn {@code non-null;} insn in question
+     * @param oldSources {@code null-ok;} registers whose use lists {@code insn}
      * should be removed form.
      */
     private void removeFromUseList(SsaInsn insn, RegisterSpecList oldSources) {
@@ -536,7 +536,7 @@ public final class SsaMethod {
      * Adds an insn to both the use and def lists. For use when adding
      * a new insn to the method.
      *
-     * @param insn non-null; insn to add
+     * @param insn {@code non-null;} insn to add
      */
     void onInsnAdded(SsaInsn insn) {
         onSourcesChanged(insn, null);
@@ -547,7 +547,7 @@ public final class SsaMethod {
       * Removes an instruction from use and def lists. For use during
       * instruction removal.
       *
-      * @param insn non-null; insn to remove.
+      * @param insn {@code non-null;} insn to remove.
       */
      void onInsnRemoved(SsaInsn insn) {
          if (useList != null) {
@@ -579,9 +579,9 @@ public final class SsaMethod {
     /**
      * Updates a single definition.
      *
-     * @param insn non-null; insn who's result should be recorded as
+     * @param insn {@code non-null;} insn who's result should be recorded as
      * a definition
-     * @param oldResult null-ok; a previous result that should be no longer
+     * @param oldResult {@code null-ok;} a previous result that should be no longer
      * considered a definition by this insn
      */
     void updateOneDefinition(SsaInsn insn, RegisterSpec oldResult) {
@@ -641,7 +641,7 @@ public final class SsaMethod {
      * local variable. Each SSA reg may be associated with at most one
      * local var.
      *
-     * @param spec non-null; ssa reg
+     * @param spec {@code non-null;} ssa reg
      * @return true if reg is ever associated with a local
      */
     public boolean isRegALocal(RegisterSpec spec) {
@@ -681,7 +681,7 @@ public final class SsaMethod {
     /**
      * Makes a new SSA register. For use after renaming has completed.
      *
-     * @return &gt;=0 new SSA register.
+     * @return {@code >=0;} new SSA register.
      */
     public int makeNewSsaReg() {
         int reg = registerCount++;
@@ -692,7 +692,7 @@ public final class SsaMethod {
 
     /**
      * Visit all insns in this method
-     * @param visitor non-null; callback interface
+     * @param visitor {@code non-null;} callback interface
      */
     public void forEachInsn(SsaInsn.Visitor visitor) {
         for (SsaBasicBlock block: blocks) {
@@ -702,7 +702,7 @@ public final class SsaMethod {
 
     /**
      * Visits each phi insn in this method
-     * @param v non-null; callback
+     * @param v {@code non-null;} callback
      */
     public void forEachPhiInsn(PhiInsn.Visitor v) {
         for (SsaBasicBlock block: blocks) {
@@ -716,7 +716,7 @@ public final class SsaMethod {
      * method once for every block. This depth-first walk may be run forward
      * from the method entry point or backwards from the method exit points.
      * @param reverse true if this should walk backwards from the exit points
-     * @param v non-null; callback interface. <code>parent</code>is set
+     * @param v {@code non-null;} callback interface. {@code parent}is set
      * unless this is the root node
      */
     public void forEachBlockDepthFirst(boolean reverse,
@@ -755,10 +755,10 @@ public final class SsaMethod {
 
     /**
      * Visits blocks in dom-tree order, starting at the current node.
-     * The <code>parent</code> parameter of the Visitor.visitBlock callback
+     * The {@code parent} parameter of the Visitor.visitBlock callback
      * is currently always set to null.
      *
-     * @param v non-null; callback interface
+     * @param v {@code non-null;} callback interface
      */
     public void forEachBlockDepthFirstDom(SsaBasicBlock.Visitor v) {
         BitSet visited = new BitSet(getBlocks().size());
@@ -785,7 +785,7 @@ public final class SsaMethod {
     /**
      * Deletes all insns in the set from this method
      *
-     * @param deletedInsns non-null; insns to delete
+     * @param deletedInsns {@code non-null;} insns to delete
      */
     public void deleteInsns(Set<SsaInsn> deletedInsns) {
         for (SsaBasicBlock block: getBlocks()) {

@@ -54,12 +54,12 @@ public class BlockDumper
     private boolean rop;
 
     /**
-     * null-ok; the class file object being constructed; becomes non-null
-     * during {@link #dump} 
+     * {@code null-ok;} the class file object being constructed;
+     * becomes non-null during {@link #dump} 
      */
     protected DirectClassFile classFile;
 
-    /** null-ok; most recently parsed code attribute */
+    /** {@code null-ok;} most recently parsed code attribute */
     private AttCode codeAtt;
 
     /** whether or not to suppress dumping */
@@ -75,9 +75,8 @@ public class BlockDumper
      * Dumps the given array, interpreting it as a class file and dumping
      * methods with indications of block-level stuff.
      * 
-     * @param bytes non-null; bytes of the (alleged) class file
-     * @param out non-null; where to dump to
-     * passed in as &lt;= 0
+     * @param bytes {@code non-null;} bytes of the (alleged) class file
+     * @param out {@code non-null;} where to dump to
      * @param filePath the file path for the class, excluding any base
      * directory specification
      * @param rop whether or not to registerize (make rop blocks)
@@ -208,7 +207,7 @@ public class BlockDumper
     /**
      * Does a regular basic block dump.
      * 
-     * @param meth non-null; method data to dump
+     * @param meth {@code non-null;} method data to dump
      */
     private void regularDump(ConcreteMethod meth) {
         BytecodeArray code = meth.getCode();
@@ -283,7 +282,7 @@ public class BlockDumper
     /**
      * Does a registerizing dump.
      * 
-     * @param meth non-null; method data to dump
+     * @param meth {@code non-null;} method data to dump
      */
     private void ropDump(ConcreteMethod meth) {
         BytecodeArray code = meth.getCode();

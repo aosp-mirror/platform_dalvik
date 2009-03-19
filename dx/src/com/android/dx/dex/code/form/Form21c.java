@@ -28,11 +28,11 @@ import com.android.dx.rop.cst.CstType;
 import com.android.dx.util.AnnotatedOutput;
 
 /**
- * Instruction format <code>21c</code>. See the instruction format spec
+ * Instruction format {@code 21c}. See the instruction format spec
  * for details.
  */
 public final class Form21c extends InsnFormat {
-    /** non-null; unique instance of this class */
+    /** {@code non-null;} unique instance of this class */
     public static final InsnFormat THE_ONE = new Form21c();
 
     /**

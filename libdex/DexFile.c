@@ -643,6 +643,10 @@ static bool parseAuxData(const u1* data, DexFile* pDexFile)
             }
             indexMapType = *pAux;
             break;
+        case kDexChunkRegisterMaps:
+            LOGV("+++ found register maps, size=%u\n", size);
+            pDexFile->pRegisterMapPool = data;
+            break;
         default:
             LOGI("Unknown chunk 0x%08x (%c%c%c%c), size=%d in aux data area\n",
                 *pAux,

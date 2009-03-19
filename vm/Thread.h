@@ -203,6 +203,11 @@ typedef struct Thread {
 #ifdef WITH_JNI_STACK_CHECK
     u4          stackCrc;
 #endif
+
+#if WITH_EXTRA_GC_CHECKS > 1
+    /* PC, saved on every instruction; redundant with StackSaveArea */
+    const u2*   currentPc2;
+#endif
 } Thread;
 
 /* start point for an internal thread; mimics pthread args */
@@ -277,12 +282,11 @@ void dvmWaitForSuspend(Thread* thread);
 bool dvmCheckSuspendPending(Thread* self);
 
 /*
- * Fast test for use in the interpreter.  If our suspend count is nonzero,
- * do a more rigorous evaluation.
+ * Fast test for use in the interpreter.  Returns "true" if our suspend
+ * count is nonzero.
  */
-INLINE void dvmCheckSuspendQuick(Thread* self) {
-    if (self->suspendCount != 0)
-        dvmCheckSuspendPending(self);
+INLINE bool dvmCheckSuspendQuick(Thread* self) {
+    return (self->suspendCount != 0);
 }
 
 /*

@@ -41,28 +41,28 @@ import java.util.ArrayList;
  * between themselves.</p>
  */
 public class Simulator {
-    /** non-null; canned error message for local variable table mismatches */
+    /** {@code non-null;} canned error message for local variable table mismatches */
     private static final String LOCAL_MISMATCH_ERROR = 
         "This is symptomatic of .class transformation tools that ignore " +
         "local variable information.";
     
-    /** non-null; machine to use when simulating */
+    /** {@code non-null;} machine to use when simulating */
     private final Machine machine;
 
-    /** non-null; array of bytecode */
+    /** {@code non-null;} array of bytecode */
     private final BytecodeArray code;
 
-    /** non-null; local variable information */
+    /** {@code non-null;} local variable information */
     private final LocalVariableList localVariables;
 
-    /** non-null; visitor instance to use */
+    /** {@code non-null;} visitor instance to use */
     private final SimVisitor visitor;
 
     /**
      * Constructs an instance.
      * 
-     * @param machine non-null; machine to use when simulating
-     * @param method non-null; method data to use
+     * @param machine {@code non-null;} machine to use when simulating
+     * @param method {@code non-null;} method data to use
      */
     public Simulator(Machine machine, ConcreteMethod method) {
         if (machine == null) {
@@ -83,8 +83,8 @@ public class Simulator {
      * Simulates the effect of executing the given basic block. This modifies
      * the passed-in frame to represent the end result.
      * 
-     * @param bb non-null; the basic block
-     * @param frame non-null; frame to operate on
+     * @param bb {@code non-null;} the basic block
+     * @param frame {@code non-null;} frame to operate on
      */
     public void simulate(ByteBlock bb, Frame frame) {
         int end = bb.getEnd();
@@ -107,8 +107,8 @@ public class Simulator {
      * Simulates the effect of the instruction at the given offset, by
      * making appropriate calls on the given frame.
      * 
-     * @param offset &gt;= 0; offset of the instruction to simulate
-     * @param frame non-null; frame to operate on
+     * @param offset {@code >= 0;} offset of the instruction to simulate
+     * @param frame {@code non-null;} frame to operate on
      * @return the length of the instruction, in bytes
      */
     public int simulate(int offset, Frame frame) {
@@ -130,13 +130,13 @@ public class Simulator {
      */
     private class SimVisitor implements BytecodeArray.Visitor {
         /**
-         * non-null; machine instance to use (just to avoid excessive
+         * {@code non-null;} machine instance to use (just to avoid excessive
          * cross-object field access) 
          */
         private final Machine machine;
 
         /**
-         * null-ok; frame to use; set with each call to 
+         * {@code null-ok;} frame to use; set with each call to 
          * {@link Simulator#simulate}
          */
         private Frame frame;
@@ -155,7 +155,7 @@ public class Simulator {
         /**
          * Sets the frame to act on.
          * 
-         * @param frame non-null; the frame
+         * @param frame {@code non-null;} the frame
          */
         public void setFrame(Frame frame) {
             if (frame == null) {
@@ -456,7 +456,7 @@ public class Simulator {
          * Checks whether the prototype is compatible with returning the
          * given type, and throws if not.
          * 
-         * @param encountered non-null; the encountered return type
+         * @param encountered {@code non-null;} the encountered return type
          */
         private void checkReturnType(Type encountered) {
             Type returnType = machine.getPrototype().getReturnType();

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Thread support.
  */
@@ -478,6 +479,20 @@ void dvmUnlockThreadList(void)
     assert(cc == 0);
 }
 
+/*
+ * Convert SuspendCause to a string.
+ */
+static const char* getSuspendCauseStr(SuspendCause why)
+{
+    switch (why) {
+    case SUSPEND_NOT:               return "NOT?";
+    case SUSPEND_FOR_GC:            return "gc";
+    case SUSPEND_FOR_DEBUG:         return "debug";
+    case SUSPEND_FOR_DEBUG_EVENT:   return "debug-event";
+    case SUSPEND_FOR_STACK_DUMP:    return "stack-dump";
+    default:                        return "UNKNOWN";
+    }
+}
 
 /*
  * Grab the "thread suspend" lock.  This is required to prevent the
@@ -489,7 +504,6 @@ void dvmUnlockThreadList(void)
  */
 static void lockThreadSuspend(const char* who, SuspendCause why)
 {
-    const int kMaxRetries = 10;
     const int kSpinSleepTime = 3*1000*1000;        /* 3s */
     u8 startWhen = 0;       // init req'd to placate gcc
     int sleepIter = 0;
@@ -500,23 +514,30 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
         if (cc != 0) {
             if (!dvmCheckSuspendPending(NULL)) {
                 /*
-                 * Could be unusual JNI-attach thing, could be we hit
-                 * the window as the suspend or resume was started.  Could
-                 * also be the debugger telling us to resume at roughly
+                 * Could be we hit the window as the suspend or resume
+                 * was started (i.e. the lock has been grabbed but the
+                 * other thread hasn't yet set our "please suspend" flag).
+                 *
+                 * Could be an unusual JNI thread-attach thing.
+                 *
+                 * Could be the debugger telling us to resume at roughly
                  * the same time we're posting an event.
                  */
-                LOGI("threadid=%d ODD: thread-suspend lock held (%s:%d)"
-                     " but suspend not pending\n",
-                    dvmThreadSelf()->threadId, who, why);
+                LOGI("threadid=%d ODD: want thread-suspend lock (%s:%s),"
+                     " it's held, no suspend pending\n",
+                    dvmThreadSelf()->threadId, who, getSuspendCauseStr(why));
+            } else {
+                /* we suspended; reset timeout */
+                sleepIter = 0;
             }
 
             /* give the lock-holder a chance to do some work */
             if (sleepIter == 0)
                 startWhen = dvmGetRelativeTimeUsec();
             if (!dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
-                LOGE("threadid=%d: couldn't get thread-suspend lock (%s:%d),"
+                LOGE("threadid=%d: couldn't get thread-suspend lock (%s:%s),"
                      " bailing\n",
-                    dvmThreadSelf()->threadId, who, why);
+                    dvmThreadSelf()->threadId, who, getSuspendCauseStr(why));
                 dvmDumpAllThreads(false);
                 dvmAbort();
             }
@@ -2179,8 +2200,15 @@ void dvmSuspendSelf(bool jdwpActivity)
                 &gDvm.threadSuspendCountLock);
         assert(cc == 0);
         if (self->suspendCount != 0) {
-            LOGD("threadid=%d: still suspended after undo (s=%d d=%d)\n",
-                self->threadId, self->suspendCount, self->dbgSuspendCount);
+            /*
+             * The condition was signaled but we're still suspended.  This
+             * can happen if the debugger lets go while a SIGQUIT thread
+             * dump event is pending (assuming SignalCatcher was resumed for
+             * just long enough to try to grab the thread-suspend lock).
+             */
+            LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d s=%c)\n",
+                self->threadId, self->suspendCount, self->dbgSuspendCount,
+                self->isSuspended ? 'Y' : 'N');
         }
     }
     assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
@@ -2898,9 +2926,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         threadName, isDaemon ? " daemon" : "",
         priority, thread->threadId, kStatusNames[thread->status]);
     dvmPrintDebugMessage(target,
-        "  | group=\"%s\" sCount=%d dsCount=%d s=%d obj=%p\n",
+        "  | group=\"%s\" sCount=%d dsCount=%d s=%c obj=%p\n",
         groupName, thread->suspendCount, thread->dbgSuspendCount,
-        thread->isSuspended, thread->threadObj);
+        thread->isSuspended ? 'Y' : 'N', thread->threadObj);
     dvmPrintDebugMessage(target,
         "  | sysTid=%d nice=%d sched=%d/%d handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),
@@ -3127,9 +3155,15 @@ LockedObjectData* dvmFindInMonitorList(const Thread* self, const Object* obj)
  * GC helper functions
  */
 
+/*
+ * Add the contents of the registers from the interpreted call stack.
+ */
 static void gcScanInterpStackReferences(Thread *thread)
 {
     const u4 *framePtr;
+#if WITH_EXTRA_GC_CHECKS > 1
+    bool first = true;
+#endif
 
     framePtr = (const u4 *)thread->curFrame;
     while (framePtr != NULL) {
@@ -3138,26 +3172,183 @@ static void gcScanInterpStackReferences(Thread *thread)
 
         saveArea = SAVEAREA_FROM_FP(framePtr);
         method = saveArea->method;
-        if (method != NULL) {
+        if (method != NULL && !dvmIsNativeMethod(method)) {
 #ifdef COUNT_PRECISE_METHODS
             /* the GC is running, so no lock required */
-            if (!dvmIsNativeMethod(method)) {
-                if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
-                    LOGI("Added %s.%s %p\n",
-                        method->clazz->descriptor, method->name, method);
-            }
+            if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
+                LOGI("PGC: added %s.%s %p\n",
+                    method->clazz->descriptor, method->name, method);
 #endif
-            int i;
-            for (i = method->registersSize - 1; i >= 0; i--) {
-                u4 rval = *framePtr++;
-//TODO: wrap markifobject in a macro that does pointer checks
-                if (rval != 0 && (rval & 0x3) == 0) {
-                    dvmMarkIfObject((Object *)rval);
+#if WITH_EXTRA_GC_CHECKS > 1
+            /*
+             * May also want to enable the memset() in the "invokeMethod"
+             * goto target in the portable interpreter.  That sets the stack
+             * to a pattern that makes referring to uninitialized data
+             * very obvious.
+             */
+
+            if (first) {
+                /*
+                 * First frame, isn't native, check the "alternate" saved PC
+                 * as a sanity check.
+                 *
+                 * It seems like we could check the second frame if the first
+                 * is native, since the PCs should be the same.  It turns out
+                 * this doesn't always work.  The problem is that we could
+                 * have calls in the sequence:
+                 *   interp method #2
+                 *   native method
+                 *   interp method #1
+                 *
+                 * and then GC while in the native method after returning
+                 * from interp method #2.  The currentPc on the stack is
+                 * for interp method #1, but thread->currentPc2 is still
+                 * set for the last thing interp method #2 did.
+                 *
+                 * This can also happen in normal execution:
+                 * - sget-object on not-yet-loaded class
+                 * - class init updates currentPc2
+                 * - static field init is handled by parsing annotations;
+                 *   static String init requires creation of a String object,
+                 *   which can cause a GC
+                 *
+                 * Essentially, any pattern that involves executing
+                 * interpreted code and then causes an allocation without
+                 * executing instructions in the original method will hit
+                 * this.  These are rare enough that the test still has
+                 * some value.
+                 */
+                if (saveArea->xtra.currentPc != thread->currentPc2) {
+                    LOGW("PGC: savedPC(%p) != current PC(%p), %s.%s ins=%p\n",
+                        saveArea->xtra.currentPc, thread->currentPc2,
+                        method->clazz->descriptor, method->name, method->insns);
+                    if (saveArea->xtra.currentPc != NULL)
+                        LOGE("  pc inst = 0x%04x\n", *saveArea->xtra.currentPc);
+                    if (thread->currentPc2 != NULL)
+                        LOGE("  pc2 inst = 0x%04x\n", *thread->currentPc2);
+                    dvmDumpThread(thread, false);
                 }
+            } else {
+                /*
+                 * It's unusual, but not impossible, for a non-first frame
+                 * to be at something other than a method invocation.  For
+                 * example, if we do a new-instance on a nonexistent class,
+                 * we'll have a lot of class loader activity on the stack
+                 * above the frame with the "new" operation.  Could also
+                 * happen while we initialize a Throwable when an instruction
+                 * fails.
+                 *
+                 * So there's not much we can do here to verify the PC,
+                 * except to verify that it's a GC point.
+                 */
+            }
+            assert(saveArea->xtra.currentPc != NULL);
+#endif
+
+            const RegisterMap* pMap;
+            const u1* regVector;
+            int i;
+
+            pMap = method->registerMap;
+            if (pMap != NULL) {
+                /* found map, get registers for this address */
+                int addr = saveArea->xtra.currentPc - method->insns;
+                regVector = dvmGetRegisterMapLine(pMap, addr);
+                if (regVector == NULL) {
+                    LOGW("PGC: map but no entry for %s.%s addr=0x%04x\n",
+                        method->clazz->descriptor, method->name, addr);
+                } else {
+                    LOGV("PGC: found map for %s.%s 0x%04x (t=%d)\n",
+                        method->clazz->descriptor, method->name, addr,
+                        thread->threadId);
+                }
+            } else {
+                /*
+                 * No map found.  If precise GC is disabled this is
+                 * expected -- we don't create pointers to the map data even
+                 * if it's present -- but if it's enabled it means we're
+                 * unexpectedly falling back on a conservative scan, so it's
+                 * worth yelling a little.
+                 *
+                 * TODO: we should be able to remove this for production --
+                 * no need to keep banging on the global.
+                 */
+                if (gDvm.preciseGc) {
+                    LOGI("PGC: no map for %s.%s\n",
+                        method->clazz->descriptor, method->name);
+                }
+                regVector = NULL;
+            }
+
+            if (regVector == NULL) {
+                /* conservative scan */
+                for (i = method->registersSize - 1; i >= 0; i--) {
+                    u4 rval = *framePtr++;
+                    if (rval != 0 && (rval & 0x3) == 0) {
+                        dvmMarkIfObject((Object *)rval);
+                    }
+                }
+            } else {
+                /*
+                 * Precise scan.  v0 is at the lowest address on the
+                 * interpreted stack, and is the first bit in the register
+                 * vector, so we can walk through the register map and
+                 * memory in the same direction.
+                 *
+                 * A '1' bit indicates a live reference.
+                 */
+                u2 bits = 1 << 1;
+                for (i = method->registersSize - 1; i >= 0; i--) {
+                    u4 rval = *framePtr++;
+
+                    bits >>= 1;
+                    if (bits == 1) {
+                        /* set bit 9 so we can tell when we're empty */
+                        bits = *regVector++ | 0x0100;
+                        LOGVV("loaded bits: 0x%02x\n", bits & 0xff);
+                    }
+
+                    if (rval != 0 && (bits & 0x01) != 0) {
+                        /*
+                         * Non-null, register marked as live reference.  This
+                         * should always be a valid object.
+                         */
+#if WITH_EXTRA_GC_CHECKS > 0
+                        if ((rval & 0x3) != 0 ||
+                            !dvmIsValidObject((Object*) rval))
+                        {
+                            /* this is very bad */
+                            LOGE("PGC: invalid ref in reg %d: 0x%08x\n",
+                                method->registersSize-1 - i, rval);
+                        } else
+#endif
+                        {
+                            dvmMarkObjectNonNull((Object *)rval);
+                        }
+                    } else {
+                        /*
+                         * Null or non-reference, do nothing at all.
+                         */
+#if WITH_EXTRA_GC_CHECKS > 1
+                        if (dvmIsValidObject((Object*) rval)) {
+                            /* this is normal, but we feel chatty */
+                            LOGD("PGC: ignoring valid ref in reg %d: 0x%08x\n",
+                                method->registersSize-1 - i, rval);
+                        }
+#endif
+                    }
+                }
+                dvmReleaseRegisterMapLine(pMap, regVector);
             }
         }
-        /* else this is a break frame; nothing to mark.
+        /* else this is a break frame and there is nothing to mark, or
+         * this is a native method and the registers are just the "ins",
+         * copied from various registers in the caller's set.
          */
+
+#if WITH_EXTRA_GC_CHECKS > 1
+        first = false;
+#endif
 
         /* Don't fall into an infinite loop if things get corrupted.
          */

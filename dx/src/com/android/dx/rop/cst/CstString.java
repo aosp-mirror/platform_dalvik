@@ -19,17 +19,17 @@ package com.android.dx.rop.cst;
 import com.android.dx.rop.type.Type;
 
 /**
- * Constants of type <code>CONSTANT_String_info</code>.
+ * Constants of type {@code CONSTANT_String_info}.
  */
 public final class CstString
         extends TypedConstant {
-    /** non-null; the string value */
+    /** {@code non-null;} the string value */
     private final CstUtf8 string;
 
     /**
      * Constructs an instance.
      * 
-     * @param string non-null; the string value
+     * @param string {@code non-null;} the string value
      */
     public CstString(CstUtf8 string) {
         if (string == null) {
@@ -42,7 +42,7 @@ public final class CstString
     /**
      * Constructs an instance.
      * 
-     * @param string non-null; the string value
+     * @param string {@code non-null;} the string value
      */
     public CstString(String string) {
         this(new CstUtf8(string));
@@ -101,7 +101,7 @@ public final class CstString
     /**
      * Gets the string value.
      * 
-     * @return non-null; the string value
+     * @return {@code non-null;} the string value
      */
     public CstUtf8 getString() {
         return string;

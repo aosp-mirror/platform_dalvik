@@ -71,7 +71,7 @@ class SsaRenamer implements Runnable {
      * Indexed by block index; register version state for each block start.
      * This list is updated by each dom parent for its children. The only
      * sub-arrays that exist at any one time are the start states for blocks
-     * yet to be processed by a <code>BlockRenamer</code> instance.
+     * yet to be processed by a {@code BlockRenamer} instance.
      */
     private final RegisterSpec[][] startsForBlocks;
 
@@ -87,7 +87,7 @@ class SsaRenamer implements Runnable {
     /**
      * Constructs an instance of the renamer
      *
-     * @param ssaMeth non-null; un-renamed SSA method that will
+     * @param ssaMeth {@code non-null;} un-renamed SSA method that will
      * be renamed.
      */
     SsaRenamer (final SsaMethod ssaMeth) {
@@ -168,8 +168,8 @@ class SsaRenamer implements Runnable {
 
     /**
      * Duplicates a RegisterSpec array
-     * @param orig non-null; array to duplicate
-     * @return non-null; new instance
+     * @param orig {@code non-null;} array to duplicate
+     * @return {@code non-null;} new instance
      */
     private static  RegisterSpec[] dupArray(RegisterSpec[] orig) {
         RegisterSpec[] copy = new RegisterSpec[orig.length];
@@ -183,7 +183,7 @@ class SsaRenamer implements Runnable {
      * Gets a local variable item for a specified register.
      *
      * @param ssaReg register in SSA name space
-     * @return null-ok; Local variable name or null if none
+     * @return {@code null-ok;} Local variable name or null if none
      */
     private LocalItem getLocalForNewReg(int ssaReg) {
         if (ssaReg < ssaRegToLocalItems.size()) {
@@ -238,11 +238,11 @@ class SsaRenamer implements Runnable {
      * as appropriate.
      */
     private class BlockRenamer implements SsaInsn.Visitor{
-        /** non-null; block we're processing. */
+        /** {@code non-null;} block we're processing. */
         private final SsaBasicBlock block;
 
         /**
-         * non-null; indexed by old register name. The current top of the
+         * {@code non-null;} indexed by old register name. The current top of the
          * version stack as seen by this block. It's initialized from
          * the ending state of its dom parent, updated as the block's
          * instructions are processed, and then copied to each one of its
@@ -265,10 +265,10 @@ class SsaRenamer implements Runnable {
         private final RenamingMapper mapper;
 
         /**
-         * Constructs a block renamer instance. Call <code>process</code>
+         * Constructs a block renamer instance. Call {@code process}
          * to process.
          *
-         * @param block non-null; block to process
+         * @param block {@code non-null;} block to process
          */
         BlockRenamer(final SsaBasicBlock block) {
             this.block = block;
@@ -388,13 +388,13 @@ class SsaRenamer implements Runnable {
          * local.
          * <li> ensures that only one SSA register
          * at a time is considered to be associated with a local variable. When
-         * <code>currentMapping</code> is updated and the newly added element
+         * {@code currentMapping} is updated and the newly added element
          * is named, strip that name from any other SSA registers.
          * </ol>
          *
-         * @param ropReg &gt;= 0 Rop register number
-         * @param ssaReg non-null; An SSA register that has just
-         * been added to <code>currentMapping</code>
+         * @param ropReg {@code >= 0;} rop register number
+         * @param ssaReg {@code non-null;} an SSA register that has just
+         * been added to {@code currentMapping}
          */
         private void addMapping(int ropReg, RegisterSpec ssaReg) {
             int ssaRegNum = ssaReg.getReg();

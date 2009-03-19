@@ -26,17 +26,17 @@ import com.android.dx.rop.type.TypeList;
  */
 public final class ThrowingCstInsn
         extends CstInsn {
-    /** non-null; list of exceptions caught */
+    /** {@code non-null;} list of exceptions caught */
     private final TypeList catches;
 
     /**
      * Constructs an instance.
      * 
-     * @param opcode non-null; the opcode
-     * @param position non-null; source position
-     * @param sources non-null; specs for all the sources
-     * @param catches non-null; list of exceptions caught
-     * @param cst non-null; the constant
+     * @param opcode {@code non-null;} the opcode
+     * @param position {@code non-null;} source position
+     * @param sources {@code non-null;} specs for all the sources
+     * @param catches {@code non-null;} list of exceptions caught
+     * @param cst {@code non-null;} the constant
      */
     public ThrowingCstInsn(Rop opcode, SourcePosition position,
                            RegisterSpecList sources,

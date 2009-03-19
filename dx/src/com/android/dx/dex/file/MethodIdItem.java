@@ -25,7 +25,7 @@ public final class MethodIdItem extends MemberIdItem {
     /**
      * Constructs an instance.
      * 
-     * @param method non-null; the constant for the method
+     * @param method {@code non-null;} the constant for the method
      */
     public MethodIdItem(CstBaseMethodRef method) {
         super(method);
@@ -49,7 +49,7 @@ public final class MethodIdItem extends MemberIdItem {
     /**
      * Gets the method constant.
      * 
-     * @return non-null; the constant
+     * @return {@code non-null;} the constant
      */
     public CstBaseMethodRef getMethodRef() {
         return (CstBaseMethodRef) getRef();

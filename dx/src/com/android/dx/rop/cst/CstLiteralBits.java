@@ -23,18 +23,18 @@ public abstract class CstLiteralBits
         extends TypedConstant {
     /**
      * Returns whether or not this instance's value may be accurately
-     * represented as an <code>int</code>. The rule is that if there
-     * is an <code>int</code> which may be sign-extended to yield this
-     * instance's value, then this method returns <code>true</code>.
-     * Otherwise, it returns <code>false</code>.
+     * represented as an {@code int}. The rule is that if there
+     * is an {@code int} which may be sign-extended to yield this
+     * instance's value, then this method returns {@code true}.
+     * Otherwise, it returns {@code false}.
      *
-     * @return <code>true</code> iff this instance fits in an <code>int</code>
+     * @return {@code true} iff this instance fits in an {@code int}
      */
     public abstract boolean fitsInInt();
 
     /**
-     * Gets the value as <code>int</code> bits. If this instance contains
-     * more bits than fit in an <code>int</code>, then this returns only
+     * Gets the value as {@code int} bits. If this instance contains
+     * more bits than fit in an {@code int}, then this returns only
      * the low-order bits.
      *
      * @return the bits
@@ -42,8 +42,8 @@ public abstract class CstLiteralBits
     public abstract int getIntBits();
 
     /**
-     * Gets the value as <code>long</code> bits. If this instance contains
-     * fewer bits than fit in a <code>long</code>, then the result of this
+     * Gets the value as {@code long} bits. If this instance contains
+     * fewer bits than fit in a {@code long}, then the result of this
      * method is the sign extension of the value.
      * 
      * @return the bits

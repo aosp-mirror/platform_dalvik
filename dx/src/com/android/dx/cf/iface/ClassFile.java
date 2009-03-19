@@ -26,98 +26,98 @@ import com.android.dx.rop.type.TypeList;
  * facsimiles thereof.
  *
  * <p><b>Note:</b> The fields referred to in this documentation are of the
- * <code>ClassFile</code> structure defined in vmspec-2 sec4.1.
+ * {@code ClassFile} structure defined in vmspec-2 sec4.1.
  */
 public interface ClassFile {
     /**
-     * Gets the field <code>magic</code>.
+     * Gets the field {@code magic}.
      *
      * @return the value in question
      */
     public int getMagic();
 
     /**
-     * Gets the field <code>minor_version</code>.
+     * Gets the field {@code minor_version}.
      *
      * @return the value in question
      */
     public int getMinorVersion();
 
     /**
-     * Gets the field <code>major_version</code>.
+     * Gets the field {@code major_version}.
      *
      * @return the value in question
      */
     public int getMajorVersion();
 
     /**
-     * Gets the field <code>access_flags</code>.
+     * Gets the field {@code access_flags}.
      *
      * @return the value in question
      */
     public int getAccessFlags();
 
     /**
-     * Gets the field <code>this_class</code>, interpreted as a type constant.
+     * Gets the field {@code this_class}, interpreted as a type constant.
      *
-     * @return non-null; the value in question
+     * @return {@code non-null;} the value in question
      */
     public CstType getThisClass();
 
     /**
-     * Gets the field <code>super_class</code>, interpreted as a type constant
+     * Gets the field {@code super_class}, interpreted as a type constant
      * if non-zero.
      *
-     * @return null-ok; the value in question
+     * @return {@code null-ok;} the value in question
      */
     public CstType getSuperclass();
 
     /**
-     * Gets the field <code>constant_pool</code> (along with
-     * <code>constant_pool_count</code>).
+     * Gets the field {@code constant_pool} (along with
+     * {@code constant_pool_count}).
      *
-     * @return non-null; the constant pool
+     * @return {@code non-null;} the constant pool
      */
     public ConstantPool getConstantPool();
 
     /**
-     * Gets the field <code>interfaces<code> (along with 
-     * interfaces_count</code>).
+     * Gets the field {@code interfaces} (along with 
+     * {@code interfaces_count}).
      *
-     * @return non-null; the list of interfaces
+     * @return {@code non-null;} the list of interfaces
      */
     public TypeList getInterfaces();
 
     /**
-     * Gets the field <code>fields</code> (along with
-     * <code>fields_count</code>).
+     * Gets the field {@code fields} (along with
+     * {@code fields_count}).
      *
-     * @return non-null; the list of fields
+     * @return {@code non-null;} the list of fields
      */
     public FieldList getFields();
 
     /**
-     * Gets the field <code>methods</code> (along with
-     * <code>methods_count</code>).
+     * Gets the field {@code methods} (along with
+     * {@code methods_count}).
      *
-     * @return non-null; the list of fields
+     * @return {@code non-null;} the list of fields
      */
     public MethodList getMethods();
 
     /**
-     * Gets the field <code>attributes</code> (along with
-     * <code>attributes_count</code>).
+     * Gets the field {@code attributes} (along with
+     * {@code attributes_count}).
      *
-     * @return non-null; the list of attributes
+     * @return {@code non-null;} the list of attributes
      */
     public AttributeList getAttributes();
 
     /**
-     * Gets the name out of the <code>SourceFile</code> attribute of this
+     * Gets the name out of the {@code SourceFile} attribute of this
      * file, if any. This is a convenient shorthand for scrounging around
      * the class's attributes.
      *
-     * @return non-null; the constant pool
+     * @return {@code non-null;} the constant pool
      */
     public CstUtf8 getSourceFile();
 }

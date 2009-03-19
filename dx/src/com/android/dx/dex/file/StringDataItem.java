@@ -26,13 +26,13 @@ import com.android.dx.util.Leb128Utils;
  * Representation of string data for a particular string, in a Dalvik file.
  */
 public final class StringDataItem extends OffsettedItem {
-    /** non-null; the string value */
+    /** {@code non-null;} the string value */
     private final CstUtf8 value;
 
     /**
      * Constructs an instance.
      * 
-     * @param value non-null; the string value
+     * @param value {@code non-null;} the string value
      */
     public StringDataItem(CstUtf8 value) {
         super(1, writeSize(value));
@@ -43,8 +43,8 @@ public final class StringDataItem extends OffsettedItem {
     /**
      * Gets the write size for a given value.
      * 
-     * @param value non-null; the string value
-     * @return &gt;= 2 the write size, in bytes
+     * @param value {@code non-null;} the string value
+     * @return {@code >= 2}; the write size, in bytes
      */
     private static int writeSize(CstUtf8 value) {
         int utf16Size = value.getUtf16Size();

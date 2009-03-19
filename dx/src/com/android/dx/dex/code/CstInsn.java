@@ -25,31 +25,31 @@ import com.android.dx.rop.cst.Constant;
  * to all the normal instruction information.
  */
 public final class CstInsn extends FixedSizeInsn {
-    /** non-null; the constant argument for this instruction */
+    /** {@code non-null;} the constant argument for this instruction */
     private final Constant constant;
 
     /**
-     * &gt;= -1; the constant pool index for {@link #constant}, or
-     * <code>-1</code> if not yet set 
+     * {@code >= -1;} the constant pool index for {@link #constant}, or
+     * {@code -1} if not yet set 
      */
     private int index;
 
     /**
-     * &gt;= -1; the constant pool index for the class reference in
-     * {@link #constant} if any, or <code>-1</code> if not yet set 
+     * {@code >= -1;} the constant pool index for the class reference in
+     * {@link #constant} if any, or {@code -1} if not yet set 
      */
     private int classIndex;
 
     /**
      * Constructs an instance. The output address of this instance is
-     * initially unknown (<code>-1</code>) as is the constant pool index.
+     * initially unknown ({@code -1}) as is the constant pool index.
      * 
      * @param opcode the opcode; one of the constants from {@link Dops}
-     * @param position non-null; source position
-     * @param registers non-null; register list, including a
+     * @param position {@code non-null;} source position
+     * @param registers {@code non-null;} register list, including a
      * result register if appropriate (that is, registers may be either
      * ins or outs)
-     * @param constant non-null; constant argument
+     * @param constant {@code non-null;} constant argument
      */
     public CstInsn(Dop opcode, SourcePosition position,
                    RegisterSpecList registers, Constant constant) {
@@ -101,7 +101,7 @@ public final class CstInsn extends FixedSizeInsn {
     /**
      * Gets the constant argument.
      * 
-     * @return non-null; the constant argument
+     * @return {@code non-null;} the constant argument
      */
     public Constant getConstant() {
         return constant;
@@ -111,7 +111,7 @@ public final class CstInsn extends FixedSizeInsn {
      * Gets the constant's index. It is only valid to call this after
      * {@link #setIndex} has been called.
      * 
-     * @return &gt;= 0; the constant pool index
+     * @return {@code >= 0;} the constant pool index
      */
     public int getIndex() {
         if (index < 0) {
@@ -126,7 +126,7 @@ public final class CstInsn extends FixedSizeInsn {
      * 
      * @see #setIndex
      * 
-     * @return <code>true</code> iff the index has been set
+     * @return {@code true} iff the index has been set
      */
     public boolean hasIndex() {
         return (index >= 0);
@@ -136,7 +136,7 @@ public final class CstInsn extends FixedSizeInsn {
      * Sets the constant's index. It is only valid to call this method once
      * per instance.
      * 
-     * @param index &gt;= 0; the constant pool index
+     * @param index {@code >= 0;} the constant pool index
      */
     public void setIndex(int index) {
         if (index < 0) {
@@ -154,7 +154,7 @@ public final class CstInsn extends FixedSizeInsn {
      * Gets the constant's class index. It is only valid to call this after
      * {@link #setClassIndex} has been called.
      * 
-     * @return &gt;= 0; the constant's class's constant pool index
+     * @return {@code >= 0;} the constant's class's constant pool index
      */
     public int getClassIndex() {
         if (classIndex < 0) {
@@ -170,7 +170,7 @@ public final class CstInsn extends FixedSizeInsn {
      * 
      * @see #setClassIndex
      * 
-     * @return <code>true</code> iff the index has been set
+     * @return {@code true} iff the index has been set
      */
     public boolean hasClassIndex() {
         return (classIndex >= 0);
@@ -183,7 +183,7 @@ public final class CstInsn extends FixedSizeInsn {
      * with reference constants that this method should ever be
      * called. It is only valid to call this method once per instance.
      * 
-     * @param index &gt;= 0; the constant's class's constant pool index
+     * @param index {@code >= 0;} the constant's class's constant pool index
      */
     public void setClassIndex(int index) {
         if (index < 0) {

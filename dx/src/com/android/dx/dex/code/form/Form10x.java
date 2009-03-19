@@ -22,11 +22,11 @@ import com.android.dx.dex.code.SimpleInsn;
 import com.android.dx.util.AnnotatedOutput;
 
 /**
- * Instruction format <code>10x</code>. See the instruction format spec
+ * Instruction format {@code 10x}. See the instruction format spec
  * for details.
  */
 public final class Form10x extends InsnFormat {
-    /** non-null; unique instance of this class */
+    /** {@code non-null;} unique instance of this class */
     public static final InsnFormat THE_ONE = new Form10x();
 
     /**

@@ -35,22 +35,22 @@ public final class StdCatchBuilder implements CatchBuilder {
     /** the maximum range of a single catch handler, in code units */
     private static final int MAX_CATCH_RANGE = 65535;
     
-    /** non-null; method to build the list for */
+    /** {@code non-null;} method to build the list for */
     private final RopMethod method;
 
-    /** non-null; block output order */
+    /** {@code non-null;} block output order */
     private final int[] order;
 
-    /** non-null; address objects for each block */
+    /** {@code non-null;} address objects for each block */
     private final BlockAddresses addresses;
     
     /**
      * Constructs an instance. It merely holds onto its parameters for
      * a subsequent call to {@link #build}.
      * 
-     * @param method non-null; method to build the list for
-     * @param order non-null; block output order
-     * @param addresses non-null; address objects for each block
+     * @param method {@code non-null;} method to build the list for
+     * @param order {@code non-null;} block output order
+     * @param addresses {@code non-null;} address objects for each block
      */
     public StdCatchBuilder(RopMethod method, int[] order,
             BlockAddresses addresses) {
@@ -115,10 +115,10 @@ public final class StdCatchBuilder implements CatchBuilder {
     /**
      * Builds and returns the catch table for a given method.
      * 
-     * @param method non-null; method to build the list for
-     * @param order non-null; block output order
-     * @param addresses non-null; address objects for each block
-     * @return non-null; the constructed table
+     * @param method {@code non-null;} method to build the list for
+     * @param order {@code non-null;} block output order
+     * @param addresses {@code non-null;} address objects for each block
+     * @return {@code non-null;} the constructed table
      */
     public static CatchTable build(RopMethod method, int[] order,
             BlockAddresses addresses) {
@@ -210,9 +210,9 @@ public final class StdCatchBuilder implements CatchBuilder {
     /**
      * Makes the {@link CatchHandlerList} for the given basic block.
      * 
-     * @param block non-null; block to get entries for
-     * @param addresses non-null; address objects for each block
-     * @return non-null; array of entries
+     * @param block {@code non-null;} block to get entries for
+     * @param addresses {@code non-null;} address objects for each block
+     * @return {@code non-null;} array of entries
      */
     private static CatchHandlerList handlersFor(BasicBlock block,
             BlockAddresses addresses) {
@@ -267,10 +267,10 @@ public final class StdCatchBuilder implements CatchBuilder {
      * Makes a {@link CatchTable#Entry} for the given block range and
      * handlers.
      *
-     * @param start non-null; the start block for the range (inclusive)
-     * @param end non-null; the start block for the range (also inclusive)
-     * @param handlers non-null; the handlers for the range
-     * @param addresses non-null; address objects for each block
+     * @param start {@code non-null;} the start block for the range (inclusive)
+     * @param end {@code non-null;} the start block for the range (also inclusive)
+     * @param handlers {@code non-null;} the handlers for the range
+     * @param addresses {@code non-null;} address objects for each block
      */
     private static CatchTable.Entry makeEntry(BasicBlock start,
             BasicBlock end, CatchHandlerList handlers,
@@ -293,10 +293,10 @@ public final class StdCatchBuilder implements CatchBuilder {
      * for a catch handler. This is true as long as the covered range is
      * under 65536 code units.
      * 
-     * @param start non-null; the start block for the range (inclusive)
-     * @param end non-null; the start block for the range (also inclusive)
-     * @param addresses non-null; address objects for each block
-     * @return <code>true</code> if the range is valid as a catch range
+     * @param start {@code non-null;} the start block for the range (inclusive)
+     * @param end {@code non-null;} the start block for the range (also inclusive)
+     * @param addresses {@code non-null;} address objects for each block
+     * @return {@code true} if the range is valid as a catch range
      */
     private static boolean rangeIsValid(BasicBlock start, BasicBlock end,
             BlockAddresses addresses) {

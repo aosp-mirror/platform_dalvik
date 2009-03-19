@@ -27,7 +27,7 @@ public interface CatchBuilder {
     /**
      * Builds and returns the catch table for this instance.
      * 
-     * @return non-null; the constructed table
+     * @return {@code non-null;} the constructed table
      */
     public CatchTable build();
 
@@ -42,7 +42,7 @@ public interface CatchBuilder {
     /**
      * Gets the set of catch types associated with this instance.
      * 
-     * @return non-null; the set of catch types
+     * @return {@code non-null;} the set of catch types
      */
     public HashSet<Type> getCatchTypes();
 }

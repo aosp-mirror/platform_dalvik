@@ -22,29 +22,29 @@ package com.android.dx.rop.type;
 public interface TypeList {
     /**
      * Returns whether this instance is mutable. Note that the
-     * <code>TypeList</code> interface itself doesn't provide any
+     * {@code TypeList} interface itself doesn't provide any
      * means of mutation, but that doesn't mean that there isn't an
      * extra-interface way of mutating an instance.
      * 
-     * @return <code>true</code> if this instance is mutable or
-     * <code>false</code> if it is immutable
+     * @return {@code true} if this instance is mutable or
+     * {@code false} if it is immutable
      */
     public boolean isMutable();
     
     /**
      * Gets the size of this list.
      *
-     * @return &gt;= 0; the size
+     * @return {@code >= 0;} the size
      */
     public int size();
 
     /**
      * Gets the indicated element. It is an error to call this with the
      * index for an element which was never set; if you do that, this
-     * will throw <code>NullPointerException</code>.
+     * will throw {@code NullPointerException}.
      *
-     * @param n &gt;= 0, &lt; size(); which element
-     * @return non-null; the indicated element
+     * @param n {@code >= 0, < size();} which element
+     * @return {@code non-null;} the indicated element
      */
     public Type getType(int n);
 
@@ -53,7 +53,7 @@ public interface TypeList {
      * all the elements of this list. This is a sum of the widths (categories)
      * of all the elements.
      * 
-     * @return &gt;= 0; the required number of words
+     * @return {@code >= 0;} the required number of words
      */
     public int getWordCount();
 
@@ -62,8 +62,8 @@ public interface TypeList {
      * the given item is appended to the end and it is guaranteed to be
      * immutable.
      * 
-     * @param type non-null; item to append
-     * @return non-null; an appropriately-constructed instance
+     * @param type {@code non-null;} item to append
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public TypeList withAddedType(Type type);
 }

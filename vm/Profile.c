@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Android's method call profiling goodies.
  */
@@ -388,6 +389,7 @@ void dvmMethodTraceStart(const char* traceFileName, int bufferSize, int flags)
     return;
 
 fail:
+    updateActiveProfilers(-1);
     if (state->traceFile != NULL) {
         fclose(state->traceFile);
         state->traceFile = NULL;
@@ -448,6 +450,15 @@ static u4 getClockOverhead(void)
 }
 
 /*
+ * Returns "true" if method tracing is currently active.
+ */
+bool dvmIsMethodTraceActive(void)
+{
+    const MethodTraceState* state = &gDvm.methodTrace;
+    return state->traceEnabled;
+}
+
+/*
  * Stop method tracing.  We write the buffer to disk and generate a key
  * file so we can interpret it.
  */
@@ -464,6 +475,7 @@ void dvmMethodTraceStop(void)
 
     if (!state->traceEnabled) {
         /* somebody already stopped it, or it was never started */
+        LOGD("TRACE stop requested, but not running\n");
         dvmUnlockMutex(&state->startStopLock);
         return;
     } else {

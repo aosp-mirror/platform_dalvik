@@ -55,11 +55,11 @@ import com.android.dx.ssa.Optimizer;
 import com.android.dx.util.ExceptionWithContext;
 
 /**
- * Static method that turns <code>byte[]</code>s containing Java
+ * Static method that turns {@code byte[]}s containing Java
  * classfiles into {@link ClassDefItem} instances.
  */
 public class CfTranslator {
-    /** set to <code>true</code> to enable development-time debugging code */
+    /** set to {@code true} to enable development-time debugging code */
     private static final boolean DEBUG = false;
 
     /**
@@ -70,14 +70,14 @@ public class CfTranslator {
     }
 
     /**
-     * Takes a <code>byte[]</code>, interprets it as a Java classfile, and
+     * Takes a {@code byte[]}, interprets it as a Java classfile, and
      * translates it into a {@link ClassDefItem}.
      *
-     * @param filePath non-null; the file path for the class,
+     * @param filePath {@code non-null;} the file path for the class,
      * excluding any base directory specification
-     * @param bytes non-null; contents of the file
+     * @param bytes {@code non-null;} contents of the file
      * @param args command-line arguments
-     * @return non-null; the translated class
+     * @return {@code non-null;} the translated class
      */
     public static ClassDefItem translate(String filePath, byte[] bytes,
             CfOptions args) {
@@ -94,11 +94,11 @@ public class CfTranslator {
      * from {@link #translate} just to keep things a bit simpler in
      * terms of exception handling.
      *
-     * @param filePath non-null; the file path for the class,
+     * @param filePath {@code non-null;} the file path for the class,
      * excluding any base directory specification
-     * @param bytes non-null; contents of the file
+     * @param bytes {@code non-null;} contents of the file
      * @param args command-line arguments
-     * @return non-null; the translated class
+     * @return {@code non-null;} the translated class
      */
     private static ClassDefItem translate0(String filePath, byte[] bytes,
             CfOptions args) {
@@ -136,8 +136,8 @@ public class CfTranslator {
     /**
      * Processes the fields of the given class.
      *
-     * @param cf non-null; class being translated
-     * @param out non-null; output class
+     * @param cf {@code non-null;} class being translated
+     * @param out {@code non-null;} output class
      */
     private static void processFields(DirectClassFile cf, ClassDefItem out) {
         CstType thisClass = cf.getThisClass();
@@ -179,8 +179,8 @@ public class CfTranslator {
      * Helper for {@link #processFields}, which translates constants into
      * more specific types if necessary.
      * 
-     * @param constant non-null; the constant in question
-     * @param type non-null; the desired type
+     * @param constant {@code non-null;} the constant in question
+     * @param type {@code non-null;} the desired type
      */
     private static TypedConstant coerceConstant(TypedConstant constant,
             Type type) {
@@ -213,9 +213,9 @@ public class CfTranslator {
     /**
      * Processes the methods of the given class.
      *
-     * @param cf non-null; class being translated
-     * @param args non-null; command-line args
-     * @param out non-null; output class
+     * @param cf {@code non-null;} class being translated
+     * @param args {@code non-null;} command-line args
+     * @param out {@code non-null;} output class
      */
     private static void processMethods(DirectClassFile cf,
             CfOptions args, ClassDefItem out) {

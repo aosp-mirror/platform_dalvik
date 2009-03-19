@@ -26,11 +26,11 @@ import com.android.dx.rop.code.SourcePosition;
 public final class SimpleInsn extends FixedSizeInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
      * @param opcode the opcode; one of the constants from {@link Dops}
-     * @param position non-null; source position
-     * @param registers non-null; register list, including a
+     * @param position {@code non-null;} source position
+     * @param registers {@code non-null;} register list, including a
      * result register if appropriate (that is, registers may be either
      * ins or outs)
      */

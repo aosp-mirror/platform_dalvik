@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-// ** UNDER CONSTRUCTION **
-
 /*
  * This code generate "register maps" for Dalvik bytecode.  In a stack-based
  * VM we might call these "stack maps".  They are used to increase the
@@ -32,7 +30,7 @@
 
 
 /*
-Notes on just-in-time RegisterMap generation
+Notes on just-in-time RegisterMap generation [not supported]
 
 Generating RegisterMap tables as part of verification is convenient because
 we generate most of what we need to know as part of doing the verify.
@@ -85,6 +83,127 @@ an effort should be made to minimize memory use.
 // fwd
 static void outputTypeVector(const RegType* regs, int insnRegCount, u1* data);
 static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap);
+static void computeMapStats(RegisterMap* pMap, const Method* method);
+
+
+//#define REGISTER_MAP_STATS
+#ifdef REGISTER_MAP_STATS
+/*
+ * Generate some statistics on the register maps we generate.
+ */
+#define kMaxGcPointGap      50
+#define kUpdatePosnMinRegs  24
+#define kNumUpdatePosns     8
+#define kMaxDiffBits        20
+typedef struct MapStats {
+    /*
+     * Buckets measuring the distance between GC points.  This tells us how
+     * many bits we need to encode the advancing program counter.  We ignore
+     * some of the "long tail" entries.
+     */
+    int gcPointGap[kMaxGcPointGap];
+
+    /*
+     * Number of gaps.  Equal to (number of gcPoints - number of methods),
+     * since the computation isn't including the initial gap.
+     */
+    int gcGapCount;
+
+    /*
+     * Number of gaps.
+     */
+    int totalGcPointCount;
+
+    /*
+     * For larger methods (>= 24 registers), measure in which octant register
+     * updates occur.  This should help us understand whether register
+     * changes tend to cluster in the low regs even for large methods.
+     */
+    int updatePosn[kNumUpdatePosns];
+
+    /*
+     * For all methods, count up the number of changes to registers < 16
+     * and >= 16.
+     */
+    int updateLT16;
+    int updateGE16;
+
+    /*
+     * Histogram of the number of bits that differ between adjacent entries.
+     */
+    int numDiffBits[kMaxDiffBits];
+} MapStats;
+#endif
+
+/*
+ * Prepare some things.
+ */
+bool dvmRegisterMapStartup(void)
+{
+#ifdef REGISTER_MAP_STATS
+    MapStats* pStats = calloc(1, sizeof(MapStats));
+    gDvm.registerMapStats = pStats;
+#endif
+    return true;
+}
+
+/*
+ * Clean up.
+ */
+void dvmRegisterMapShutdown(void)
+{
+#ifdef REGISTER_MAP_STATS
+    free(gDvm.registerMapStats);
+#endif
+}
+
+/*
+ * Write stats to log file.
+ */
+void dvmRegisterMapDumpStats(void)
+{
+#ifdef REGISTER_MAP_STATS
+    MapStats* pStats = (MapStats*) gDvm.registerMapStats;
+    int i, end;
+
+    for (end = kMaxGcPointGap-1; end >= 0; end--) {
+        if (pStats->gcPointGap[end] != 0)
+            break;
+    }
+
+    LOGI("Register Map gcPointGap stats (diff count=%d, total=%d):\n",
+        pStats->gcGapCount, pStats->totalGcPointCount);
+    assert(pStats->gcPointGap[0] == 0);
+    for (i = 1; i <= end; i++) {
+        LOGI(" %2d %d\n", i, pStats->gcPointGap[i]);
+    }
+
+
+    for (end = kMaxDiffBits-1; end >= 0; end--) {
+        if (pStats->numDiffBits[end] != 0)
+            break;
+    }
+
+    LOGI("Register Map bit difference stats:\n");
+    for (i = 0; i <= end; i++) {
+        LOGI(" %2d %d\n", i, pStats->numDiffBits[i]);
+    }
+
+
+    LOGI("Register Map update position stats (lt16=%d ge16=%d):\n",
+        pStats->updateLT16, pStats->updateGE16);
+    for (i = 0; i < kNumUpdatePosns; i++) {
+        LOGI(" %2d %d\n", i, pStats->updatePosn[i]);
+    }
+#endif
+}
+
+
+/*
+ * ===========================================================================
+ *      Map generation
+ * ===========================================================================
+ */
 
 /*
  * Generate the register map for a method that has just been verified
@@ -105,12 +224,18 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
     int i, bytesForAddr, gcPointCount;
     int bufSize;
 
+    if (vdata->method->registersSize >= 2048) {
+        LOGE("ERROR: register map can't handle %d registers\n",
+            vdata->method->registersSize);
+        goto bail;
+    }
     regWidth = (vdata->method->registersSize + 7) / 8;
+
     if (vdata->insnsSize < 256) {
-        format = kFormatCompact8;
+        format = kRegMapFormatCompact8;
         bytesForAddr = 1;
     } else {
-        format = kFormatCompact16;
+        format = kRegMapFormatCompact16;
         bytesForAddr = 2;
     }
 
@@ -138,14 +263,14 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
     bufSize = offsetof(RegisterMap, data);
     bufSize += gcPointCount * (bytesForAddr + regWidth);
 
-    LOGD("+++ grm: %s.%s (adr=%d gpc=%d rwd=%d bsz=%d)\n",
+    LOGV("+++ grm: %s.%s (adr=%d gpc=%d rwd=%d bsz=%d)\n",
         vdata->method->clazz->descriptor, vdata->method->name,
         bytesForAddr, gcPointCount, regWidth, bufSize);
 
     pMap = (RegisterMap*) malloc(bufSize);
-    pMap->format = format;
+    pMap->format = format | kRegMapFormatOnHeap;
     pMap->regWidth = regWidth;
-    pMap->numEntries = gcPointCount;
+    dvmRegisterMapSetNumEntries(pMap, gcPointCount);
 
     /*
      * Populate it.
@@ -154,9 +279,9 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
     for (i = 0; i < vdata->insnsSize; i++) {
         if (dvmInsnIsGcPoint(vdata->insnFlags, i)) {
             assert(vdata->addrRegs[i] != NULL);
-            if (format == kFormatCompact8) {
+            if (format == kRegMapFormatCompact8) {
                 *mapData++ = i;
-            } else /*kFormatCompact16*/ {
+            } else /*kRegMapFormatCompact16*/ {
                 *mapData++ = i & 0xff;
                 *mapData++ = i >> 8;
             }
@@ -165,12 +290,15 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
         }
     }
 
-    LOGI("mapData=%p pMap=%p bufSize=%d\n", mapData, pMap, bufSize);
+    LOGV("mapData=%p pMap=%p bufSize=%d\n", mapData, pMap, bufSize);
     assert(mapData - (const u1*) pMap == bufSize);
 
 #if 1
     if (!verifyMap(vdata, pMap))
         goto bail;
+#endif
+#ifdef REGISTER_MAP_STATS
+    computeMapStats(pMap, vdata->method);
 #endif
 
     pResult = pMap;
@@ -187,6 +315,7 @@ void dvmFreeRegisterMap(RegisterMap* pMap)
     if (pMap == NULL)
         return;
 
+    assert(dvmGetRegisterMapOnHeap(pMap));
     free(pMap);
 }
 
@@ -235,36 +364,64 @@ static void outputTypeVector(const RegType* regs, int insnRegCount, u1* data)
  * Double-check the map.
  *
  * We run through all of the data in the map, and compare it to the original.
+ * Only works on uncompressed data.
  */
 static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
 {
-    const u1* data = pMap->data;
+    const u1* rawMap = pMap->data;
+    const u1 format = dvmGetRegisterMapFormat(pMap);
+    const u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
     int ent;
+    bool dumpMap = false;
 
-    for (ent = 0; ent < pMap->numEntries; ent++) {
+    if (false) {
+        const char* cd = "Landroid/net/http/Request;";
+        const char* mn = "readResponse";
+        const char* sg = "(Landroid/net/http/AndroidHttpClientConnection;)V";
+        if (strcmp(vdata->method->clazz->descriptor, cd) == 0 &&
+            strcmp(vdata->method->name, mn) == 0)
+        {
+            char* desc;
+            desc = dexProtoCopyMethodDescriptor(&vdata->method->prototype);
+            LOGI("Map for %s.%s %s\n", vdata->method->clazz->descriptor,
+                vdata->method->name, desc);
+            free(desc);
+
+            dumpMap = true;
+        }
+    }
+
+    if ((vdata->method->registersSize + 7) / 8 != pMap->regWidth) {
+        LOGE("GLITCH: registersSize=%d, regWidth=%d\n",
+            vdata->method->registersSize, pMap->regWidth);
+        return false;
+    }
+
+    for (ent = 0; ent < numEntries; ent++) {
         int addr;
 
-        switch (pMap->format) {
-        case kFormatCompact8:
-            addr = *data++;
+        switch (format) {
+        case kRegMapFormatCompact8:
+            addr = *rawMap++;
             break;
-        case kFormatCompact16:
-            addr = *data++;
-            addr |= (*data++) << 8;
+        case kRegMapFormatCompact16:
+            addr = *rawMap++;
+            addr |= (*rawMap++) << 8;
             break;
         default:
             /* shouldn't happen */
-            LOGE("GLITCH: bad format (%d)", pMap->format);
+            LOGE("GLITCH: bad format (%d)", format);
             dvmAbort();
         }
 
+        const u1* dataStart = rawMap;
         const RegType* regs = vdata->addrRegs[addr];
         if (regs == NULL) {
             LOGE("GLITCH: addr %d has no data\n", addr);
             return false;
         }
 
-        u1 val;
+        u1 val = 0;
         int i;
 
         for (i = 0; i < vdata->method->registersSize; i++) {
@@ -273,7 +430,7 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
             val >>= 1;
             if ((i & 0x07) == 0) {
                 /* load next byte of data */
-                val = *data++;
+                val = *rawMap++;
             }
 
             bitIsRef = val & 0x01;
@@ -288,9 +445,12 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
             }
         }
 
+        /* rawMap now points to the address field of the next entry */
+
         /* print the map as a binary string */
-        if (false) {
+        if (dumpMap) {
             char outBuf[vdata->method->registersSize +1];
+            char hexBuf[((vdata->method->registersSize + 7) / 8) * 3 +1];
             for (i = 0; i < vdata->method->registersSize; i++) {
                 if (isReferenceType(regs[i])) {
                     outBuf[i] = '1';
@@ -299,11 +459,668 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
                 }
             }
             outBuf[i] = '\0';
-            LOGD("  %04d %s\n", addr, outBuf);
+
+            char* cp = hexBuf;
+            const u1* altData = dataStart;
+            for (i = 0; i < (vdata->method->registersSize + 7) / 8; i++) {
+                sprintf(cp, " %02x", *altData++);
+                cp += 3;
+            }
+            hexBuf[i * 3] = '\0';
+            LOGD("  %04x %s %s\n", addr, outBuf, hexBuf);
         }
     }
 
     return true;
+}
+
+
+/*
+ * ===========================================================================
+ *      DEX generation & parsing
+ * ===========================================================================
+ */
+
+/*
+ * Advance "ptr" to ensure 32-bit alignment.
+ */
+static inline u1* align32(u1* ptr)
+{
+    return (u1*) (((int) ptr + 3) & ~0x03);
+}
+
+/*
+ * Compute the size, in bytes, of a register map.
+ */
+static size_t computeRegisterMapSize(const RegisterMap* pMap)
+{
+    static const int kHeaderSize = offsetof(RegisterMap, data);
+    u1 format = dvmGetRegisterMapFormat(pMap);
+    u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
+
+    assert(pMap != NULL);
+
+    switch (format) {
+    case kRegMapFormatNone:
+        return 1;
+    case kRegMapFormatCompact8:
+        return kHeaderSize + (1 + pMap->regWidth) * numEntries;
+    case kRegMapFormatCompact16:
+        return kHeaderSize + (2 + pMap->regWidth) * numEntries;
+    default:
+        LOGE("Bad register map format %d\n", format);
+        dvmAbort();
+        return 0;
+    }
+}
+
+/*
+ * Output the map for a single method, if it has one.
+ *
+ * Abstract and native methods have no map.  All others are expected to
+ * have one, since we know the class verified successfully.
+ *
+ * This strips the "allocated on heap" flag from the format byte, so that
+ * direct-mapped maps are correctly identified as such.
+ */
+static bool writeMapForMethod(const Method* meth, u1** pPtr)
+{
+    if (meth->registerMap == NULL) {
+        if (!dvmIsAbstractMethod(meth) && !dvmIsNativeMethod(meth)) {
+            LOGW("Warning: no map available for %s.%s\n",
+                meth->clazz->descriptor, meth->name);
+            /* weird, but keep going */
+        }
+        *(*pPtr)++ = kRegMapFormatNone;
+        return true;
+    }
+
+    /* serialize map into the buffer */
+    size_t mapSize = computeRegisterMapSize(meth->registerMap);
+    memcpy(*pPtr, meth->registerMap, mapSize);
+
+    /* strip the "on heap" flag out of the format byte, which is always first */
+    assert(**pPtr == meth->registerMap->format);
+    **pPtr &= ~(kRegMapFormatOnHeap);
+
+    *pPtr += mapSize;
+
+    return true;
+}
+
+/*
+ * Write maps for all methods in the specified class to the buffer, which
+ * can hold at most "length" bytes.  "*pPtr" will be advanced past the end
+ * of the data we write.
+ */
+static bool writeMapsAllMethods(DvmDex* pDvmDex, const ClassObject* clazz,
+    u1** pPtr, size_t length)
+{
+    RegisterMapMethodPool* pMethodPool;
+    u1* ptr = *pPtr;
+    int i, methodCount;
+
+    /* artificial limit */
+    if (clazz->virtualMethodCount + clazz->directMethodCount >= 65536) {
+        LOGE("Too many methods in %s\n", clazz->descriptor);
+        return false;
+    }
+
+    pMethodPool = (RegisterMapMethodPool*) ptr;
+    ptr += offsetof(RegisterMapMethodPool, methodData);
+    methodCount = 0;
+
+    /*
+     * Run through all methods, direct then virtual.  The class loader will
+     * traverse them in the same order.  (We could split them into two
+     * distinct pieces, but there doesn't appear to be any value in doing
+     * so other than that it makes class loading slightly less fragile.)
+     *
+     * The class loader won't know about miranda methods at the point
+     * where it parses this, so we omit those.
+     *
+     * TODO: consider omitting all native/abstract definitions.  Should be
+     * safe, though we lose the ability to sanity-check against the
+     * method counts in the DEX file.
+     */
+    for (i = 0; i < clazz->directMethodCount; i++) {
+        const Method* meth = &clazz->directMethods[i];
+        if (dvmIsMirandaMethod(meth))
+            continue;
+        if (!writeMapForMethod(&clazz->directMethods[i], &ptr)) {
+            return false;
+        }
+        methodCount++;
+        //ptr = align32(ptr);
+    }
+
+    for (i = 0; i < clazz->virtualMethodCount; i++) {
+        const Method* meth = &clazz->virtualMethods[i];
+        if (dvmIsMirandaMethod(meth))
+            continue;
+        if (!writeMapForMethod(&clazz->virtualMethods[i], &ptr)) {
+            return false;
+        }
+        methodCount++;
+        //ptr = align32(ptr);
+    }
+
+    pMethodPool->methodCount = methodCount;
+
+    *pPtr = ptr;
+    return true;
+}
+
+/*
+ * Write maps for all classes to the specified buffer, which can hold at
+ * most "length" bytes.
+ *
+ * Returns the actual length used, or 0 on failure.
+ */
+static size_t writeMapsAllClasses(DvmDex* pDvmDex, u1* basePtr, size_t length)
+{
+    DexFile* pDexFile = pDvmDex->pDexFile;
+    u4 count = pDexFile->pHeader->classDefsSize;
+    RegisterMapClassPool* pClassPool;
+    u4* offsetTable;
+    u1* ptr = basePtr;
+    u4 idx;
+
+    assert(gDvm.optimizing);
+
+    pClassPool = (RegisterMapClassPool*) ptr;
+    ptr += offsetof(RegisterMapClassPool, classDataOffset);
+    offsetTable = (u4*) ptr;
+    ptr += count * sizeof(u4);
+
+    pClassPool->numClasses = count;
+
+    /*
+     * We want an entry for every class, loaded or not.
+     */
+    for (idx = 0; idx < count; idx++) {
+        const DexClassDef* pClassDef;
+        const char* classDescriptor;
+        ClassObject* clazz;
+
+        pClassDef = dexGetClassDef(pDexFile, idx);
+        classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
+
+        /*
+         * All classes have been loaded into the bootstrap class loader.
+         * If we can find it, and it was successfully pre-verified, we
+         * run through its methods and add the register maps.
+         *
+         * If it wasn't pre-verified then we know it can't have any
+         * register maps.  Classes that can't be loaded or failed
+         * verification get an empty slot in the index.
+         */
+        clazz = NULL;
+        if ((pClassDef->accessFlags & CLASS_ISPREVERIFIED) != 0)
+            clazz = dvmLookupClass(classDescriptor, NULL, false);
+
+        if (clazz != NULL) {
+            offsetTable[idx] = ptr - basePtr;
+            LOGVV("%d -> offset %d (%p-%p)\n",
+                idx, offsetTable[idx], ptr, basePtr);
+
+            if (!writeMapsAllMethods(pDvmDex, clazz, &ptr,
+                    length - (ptr - basePtr)))
+            {
+                return 0;
+            }
+
+            ptr = align32(ptr);
+            LOGVV("Size %s (%d+%d methods): %d\n", clazz->descriptor,
+                clazz->directMethodCount, clazz->virtualMethodCount,
+                (ptr - basePtr) - offsetTable[idx]);
+        } else {
+            LOGV("%4d NOT mapadding '%s'\n", idx, classDescriptor);
+            assert(offsetTable[idx] == 0);
+        }
+    }
+
+    if (ptr - basePtr >= (int)length) {
+        /* a bit late */
+        LOGE("Buffer overrun\n");
+        dvmAbort();
+    }
+
+    return ptr - basePtr;
+}
+
+/*
+ * Generate a register map set for all verified classes in "pDvmDex".
+ */
+RegisterMapBuilder* dvmGenerateRegisterMaps(DvmDex* pDvmDex)
+{
+    RegisterMapBuilder* pBuilder;
+
+    pBuilder = (RegisterMapBuilder*) calloc(1, sizeof(RegisterMapBuilder));
+    if (pBuilder == NULL)
+        return NULL;
+
+    /*
+     * We have a couple of options here:
+     *  (1) Compute the size of the output, and malloc a buffer.
+     *  (2) Create a "large-enough" anonymous mmap region.
+     *
+     * The nice thing about option #2 is that we don't have to traverse
+     * all of the classes and methods twice.  The risk is that we might
+     * not make the region large enough.  Since the pages aren't mapped
+     * until used we can allocate a semi-absurd amount of memory without
+     * worrying about the effect on the rest of the system.
+     *
+     * The basic encoding on the largest jar file requires about 1MB of
+     * storage.  We map out 4MB here.  (TODO: guarantee that the last
+     * page of the mapping is marked invalid, so we reliably fail if
+     * we overrun.)
+     */
+    if (sysCreatePrivateMap(4 * 1024 * 1024, &pBuilder->memMap) != 0) {
+        free(pBuilder);
+        return NULL;
+    }
+
+    /*
+     * Create the maps.
+     */
+    size_t actual = writeMapsAllClasses(pDvmDex, (u1*)pBuilder->memMap.addr,
+                                        pBuilder->memMap.length);
+    if (actual == 0) {
+        dvmFreeRegisterMapBuilder(pBuilder);
+        return NULL;
+    }
+
+    LOGI("TOTAL size of register maps: %d\n", actual);
+
+    pBuilder->data = pBuilder->memMap.addr;
+    pBuilder->size = actual;
+    return pBuilder;
+}
+
+/*
+ * Free the builder.
+ */
+void dvmFreeRegisterMapBuilder(RegisterMapBuilder* pBuilder)
+{
+    if (pBuilder == NULL)
+        return;
+
+    sysReleaseShmem(&pBuilder->memMap);
+    free(pBuilder);
+}
+
+
+/*
+ * Find the data for the specified class.
+ *
+ * If there's no register map data, or none for this class, we return NULL.
+ */
+const void* dvmGetRegisterMapClassData(const DexFile* pDexFile, u4 classIdx,
+    u4* pNumMaps)
+{
+    const RegisterMapClassPool* pClassPool;
+    const RegisterMapMethodPool* pMethodPool;
+
+    pClassPool = (const RegisterMapClassPool*) pDexFile->pRegisterMapPool;
+    if (pClassPool == NULL)
+        return NULL;
+
+    if (classIdx >= pClassPool->numClasses) {
+        LOGE("bad class index (%d vs %d)\n", classIdx, pClassPool->numClasses);
+        dvmAbort();
+    }
+
+    u4 classOffset = pClassPool->classDataOffset[classIdx];
+    if (classOffset == 0) {
+        LOGV("+++ no map for classIdx=%d\n", classIdx);
+        return NULL;
+    }
+
+    pMethodPool =
+        (const RegisterMapMethodPool*) (((u1*) pClassPool) + classOffset);
+    if (pNumMaps != NULL)
+        *pNumMaps = pMethodPool->methodCount;
+    return pMethodPool->methodData;
+}
+
+/*
+ * This advances "*pPtr" and returns its original value.
+ */
+const RegisterMap* dvmGetNextRegisterMap(const void** pPtr)
+{
+    const RegisterMap* pMap = *pPtr;
+
+    *pPtr = /*align32*/(((u1*) pMap) + computeRegisterMapSize(pMap));
+    LOGVV("getNext: %p -> %p (f=0x%x w=%d e=%d)\n",
+        pMap, *pPtr, pMap->format, pMap->regWidth,
+        dvmRegisterMapGetNumEntries(pMap));
+    return pMap;
+}
+
+
+/*
+ * ===========================================================================
+ *      Utility functions
+ * ===========================================================================
+ */
+
+/*
+ * Return the data for the specified address, or NULL if not found.
+ *
+ * The result must be released with dvmReleaseRegisterMapLine().
+ */
+const u1* dvmGetRegisterMapLine(const RegisterMap* pMap, int addr)
+{
+    int addrWidth, lineWidth;
+    u1 format = dvmGetRegisterMapFormat(pMap);
+    u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
+
+    assert(numEntries > 0);
+
+    switch (format) {
+    case kRegMapFormatNone:
+        return NULL;
+    case kRegMapFormatCompact8:
+        addrWidth = 1;
+        break;
+    case kRegMapFormatCompact16:
+        addrWidth = 2;
+        break;
+    default:
+        LOGE("Unknown format %d\n", format);
+        dvmAbort();
+        return NULL;
+    }
+
+    lineWidth = addrWidth + pMap->regWidth;
+
+    /*
+     * Find the appropriate entry.  Many maps are very small, some are very
+     * large.
+     */
+    static const int kSearchThreshold = 8;
+    const u1* data;
+    int lineAddr;
+
+    if (numEntries < kSearchThreshold) {
+        int i;
+        data = pMap->data;
+        for (i = numEntries; i > 0; i--) {
+            lineAddr = data[0];
+            if (addrWidth > 1)
+                lineAddr |= data[1] << 8;
+            if (lineAddr == addr)
+                return data + addrWidth;
+
+            data += lineWidth;
+        }
+    } else {
+        int hi, lo, mid;
+
+        lo = 0;
+        hi = numEntries -1;
+
+        while (hi >= lo) {
+            mid = (hi + lo) / 2;
+            data = pMap->data + lineWidth * mid;
+
+            lineAddr = data[0];
+            if (addrWidth > 1)
+                lineAddr |= data[1] << 8;
+
+            if (addr > lineAddr) {
+                lo = mid + 1;
+            } else if (addr < lineAddr) {
+                hi = mid - 1;
+            } else {
+                return data + addrWidth;
+            }
+        }
+    }
+
+    assert(data == pMap->data + lineWidth * numEntries);
+    return NULL;
+}
+
+
+/*
+ * ===========================================================================
+ *      Map compression
+ * ===========================================================================
+ */
+
+/*
+Notes on map compression
+
+The idea is to create a compressed form that will be uncompressed before
+use, with the output possibly saved in a cache.  This means we can use an
+approach that is unsuited for random access if we choose.
+
+In the event that a map simply does not work with our compression scheme,
+it's reasonable to store the map without compression.  In the future we
+may want to have more than one compression scheme, and try each in turn,
+retaining the best.  (We certainly want to keep the uncompressed form if it
+turns out to be smaller or even slightly larger than the compressed form.)
+
+Each entry consists of an address and a bit vector.  Adjacent entries are
+strongly correlated, suggesting differential encoding.
+
+
+Ideally we would avoid outputting adjacent entries with identical
+bit vectors.  However, the register values at a given address do not
+imply anything about the set of valid registers at subsequent addresses.
+We therefore cannot omit an entry.
+
+  If the thread stack has a PC at an address without a corresponding
+  entry in the register map, we must conservatively scan the registers in
+  that thread.  This can happen when single-stepping in the debugger,
+  because the debugger is allowed to invoke arbitrary methods when
+  a thread is stopped at a breakpoint.  If we can guarantee that a GC
+  thread scan will never happen while the debugger has that thread stopped,
+  then we can lift this restriction and simply omit entries that don't
+  change the bit vector from its previous state.
+
+Each entry advances the address value by at least 1 (measured in 16-bit
+"code units").  Looking at the bootclasspath entries, advancing by 2 units
+is most common.  Advances by 1 unit are far less common than advances by
+2 units, but more common than 5, and things fall off rapidly.  Gaps of
+up to 220 code units appear in some computationally intensive bits of code,
+but are exceedingly rare.
+
+If we sum up the number of transitions in a couple of ranges in framework.jar:
+  [1,4]: 188998 of 218922 gaps (86.3%)
+  [1,7]: 211647 of 218922 gaps (96.7%)
+Using a 3-bit delta, with one value reserved as an escape code, should
+yield good results for the address.
+
+These results would change dramatically if we reduced the set of GC
+points by e.g. removing instructions like integer divide that are only
+present because they can throw and cause an allocation.
+
+We also need to include an "initial gap", because the first few instructions
+in a method may not be GC points.
+
+
+By observation, many entries simply repeat the previous bit vector, or
+change only one or two bits.  (This is with type-precise information;
+the rate of change of bits will be different if live-precise information
+is factored in).
+
+Looking again at adjacent entries in framework.jar:
+  0 bits changed: 63.0%
+  1 bit changed: 32.2%
+After that it falls off rapidly, e.g. the number of entries with 2 bits
+changed is usually less than 1/10th of the number of entries with 1 bit
+changed.  A solution that allows us to encode 0- or 1- bit changes
+efficiently will do well.
+
+We still need to handle cases where a large number of bits change.  We
+probably want a way to drop in a full copy of the bit vector when it's
+smaller than the representation of multiple bit changes.
+
+
+The bit-change information can be encoded as an index that tells the
+decoder to toggle the state.  We want to encode the index in as few bits
+as possible, but we need to allow for fairly wide vectors (e.g. we have a
+method with 175 registers).  We can deal with this in a couple of ways:
+(1) use an encoding that assumes few registers and has an escape code
+for larger numbers of registers; or (2) use different encodings based
+on how many total registers the method has.  The choice depends to some
+extent on whether methods with large numbers of registers tend to modify
+the first 16 regs more often than the others.
+
+The last N registers hold method arguments.  If the bytecode is expected
+to be examined in a debugger, "dx" ensures that the contents of these
+registers won't change.  Depending upon the encoding format, we may be
+able to take advantage of this.  We still have to encode the initial
+state, but we know we'll never have to output a bit change for the last
+N registers.
+
+Considering only methods with 16 or more registers, the "target octant"
+for register changes looks like this:
+  [ 43.1%, 16.4%, 6.5%, 6.2%, 7.4%, 8.8%, 9.7%, 1.8% ]
+As expected, there are fewer changes at the end of the list where the
+arguments are kept, and more changes at the start of the list because
+register values smaller than 16 can be used in compact Dalvik instructions
+and hence are favored for frequently-used values.  In general, the first
+octant is considerably more active than later entries, the last octant
+is much less active, and the rest are all about the same.
+
+Looking at all bit changes in all methods, 94% are to registers 0-15.  The
+encoding will benefit greatly by favoring the low-numbered registers.
+
+
+Some of the smaller methods have identical maps, and space could be
+saved by simply including a pointer to an earlier definition.  This would
+be best accomplished by specifying a "pointer" format value, followed by
+a 3-byte (or ULEB128) offset.  Implementing this would probably involve
+generating a hash value for each register map and maintaining a hash table.
+
+In some cases there are repeating patterns in the bit vector that aren't
+adjacent.  These could benefit from a dictionary encoding.  This doesn't
+really become useful until the methods reach a certain size though,
+and managing the dictionary may incur more overhead than we want.
+*/
+
+/*
+ * Compute some stats on the register map.
+ */
+static void computeMapStats(RegisterMap* pMap, const Method* method)
+{
+#ifdef REGISTER_MAP_STATS
+    MapStats* pStats = (MapStats*) gDvm.registerMapStats;
+    const u1 format = dvmGetRegisterMapFormat(pMap);
+    const u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
+    const u1* rawMap = pMap->data;
+    const u1* prevData = NULL;
+    int ent, addr, prevAddr = -1;
+
+    for (ent = 0; ent < numEntries; ent++) {
+        switch (format) {
+        case kRegMapFormatCompact8:
+            addr = *rawMap++;
+            break;
+        case kRegMapFormatCompact16:
+            addr = *rawMap++;
+            addr |= (*rawMap++) << 8;
+            break;
+        default:
+            /* shouldn't happen */
+            LOGE("GLITCH: bad format (%d)", format);
+            dvmAbort();
+        }
+
+        const u1* dataStart = rawMap;
+
+        pStats->totalGcPointCount++;
+
+        /*
+         * Gather "gap size" stats, i.e. the difference in addresses between
+         * successive GC points.
+         */
+        if (prevData != NULL) {
+            assert(prevAddr >= 0);
+            int addrDiff = addr - prevAddr;
+
+            if (addrDiff < 0) {
+                LOGE("GLITCH: address went backward (0x%04x->0x%04x, %s.%s)\n",
+                    prevAddr, addr, method->clazz->descriptor, method->name);
+            } else if (addrDiff > kMaxGcPointGap) {
+                LOGI("ARGH: addrDiff is %d, max %d (0x%04x->0x%04x, %s.%s)\n",
+                    addrDiff, kMaxGcPointGap, prevAddr, addr,
+                    method->clazz->descriptor, method->name);
+                /* skip this one */
+            } else {
+                pStats->gcPointGap[addrDiff]++;
+            }
+            pStats->gcGapCount++;
+
+
+            /*
+             * Compare bit vectors in adjacent entries.  We want to count
+             * up the number of bits that differ (to see if we frequently
+             * change 0 or 1 bits) and get a sense for which part of the
+             * vector changes the most often (near the start, middle, end).
+             *
+             * We only do the vector position quantization if we have at
+             * least 16 registers in the method.
+             */
+            int numDiff = 0;
+            float div = (float) kNumUpdatePosns / method->registersSize;
+            int regByte;
+            for (regByte = 0; regByte < pMap->regWidth; regByte++) {
+                int prev, cur, bit;
+
+                prev = prevData[regByte];
+                cur = dataStart[regByte];
+
+                for (bit = 0; bit < 8; bit++) {
+                    if (((prev >> bit) & 1) != ((cur >> bit) & 1)) {
+                        numDiff++;
+
+                        int bitNum = regByte * 8 + bit;
+
+                        if (bitNum < 16)
+                            pStats->updateLT16++;
+                        else
+                            pStats->updateGE16++;
+
+                        if (method->registersSize < 16)
+                            continue;
+
+                        if (bitNum >= method->registersSize) {
+                            /* stuff off the end should be zero in both */
+                            LOGE("WEIRD: bit=%d (%d/%d), prev=%02x cur=%02x\n",
+                                bit, regByte, method->registersSize,
+                                prev, cur);
+                            assert(false);
+                        }
+                        int idx = (int) (bitNum * div);
+                        if (!(idx >= 0 && idx < kNumUpdatePosns)) {
+                            LOGE("FAIL: bitNum=%d (of %d) div=%.3f idx=%d\n",
+                                bitNum, method->registersSize, div, idx);
+                            assert(false);
+                        }
+                        pStats->updatePosn[idx]++;
+                    }
+                }
+            }
+
+            if (numDiff > kMaxDiffBits) {
+                LOGW("ARGH: numDiff is %d, max %d\n", numDiff, kMaxDiffBits);
+            } else {
+                pStats->numDiffBits[numDiff]++;
+            }
+        }
+
+        /* advance to start of next line */
+        rawMap += pMap->regWidth;
+
+        prevAddr = addr;
+        prevData = dataStart;
+    }
+#endif
 }
 
 

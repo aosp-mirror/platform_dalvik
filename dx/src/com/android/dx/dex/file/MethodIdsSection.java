@@ -25,11 +25,11 @@ import java.util.Collection;
 import java.util.TreeMap;
 
 /**
- * Method refs list section of a <code>.dex</code> file.
+ * Method refs list section of a {@code .dex} file.
  */
 public final class MethodIdsSection extends MemberIdsSection {
     /**
-     * non-null; map from method constants to {@link
+     * {@code non-null;} map from method constants to {@link
      * MethodIdItem} instances 
      */
     private final TreeMap<CstBaseMethodRef, MethodIdItem> methodIds;
@@ -37,7 +37,7 @@ public final class MethodIdsSection extends MemberIdsSection {
     /**
      * Constructs an instance. The file offset is initially unknown.
      * 
-     * @param file non-null; file that this instance is part of
+     * @param file {@code non-null;} file that this instance is part of
      */
     public MethodIdsSection(DexFile file) {
         super("method_ids", file);
@@ -72,7 +72,7 @@ public final class MethodIdsSection extends MemberIdsSection {
     /**
      * Writes the portion of the file header that refers to this instance.
      * 
-     * @param out non-null; where to write
+     * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
         throwIfNotPrepared();
@@ -92,8 +92,8 @@ public final class MethodIdsSection extends MemberIdsSection {
     /**
      * Interns an element into this instance.
      * 
-     * @param method non-null; the reference to intern
-     * @return non-null; the interned reference
+     * @param method {@code non-null;} the reference to intern
+     * @return {@code non-null;} the interned reference
      */
     public MethodIdItem intern(CstBaseMethodRef method) {
         if (method == null) {
@@ -116,8 +116,8 @@ public final class MethodIdsSection extends MemberIdsSection {
      * Gets the index of the given reference, which must have been added
      * to this instance.
      * 
-     * @param ref non-null; the reference to look up
-     * @return &gt;= 0; the reference's index
+     * @param ref {@code non-null;} the reference to look up
+     * @return {@code >= 0;} the reference's index
      */
     public int indexOf(CstBaseMethodRef ref) {
         if (ref == null) {

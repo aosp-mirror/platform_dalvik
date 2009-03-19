@@ -19,20 +19,20 @@ package com.android.dx.cf.attrib;
 import com.android.dx.rop.annotation.AnnotationsList;
 
 /**
- * Attribute class for standard <code>RuntimeVisibleParameterAnnotations</code>
+ * Attribute class for standard {@code RuntimeVisibleParameterAnnotations}
  * attributes.
  */
 public final class AttRuntimeVisibleParameterAnnotations
         extends BaseParameterAnnotations {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME =
         "RuntimeVisibleParameterAnnotations";
 
     /**
      * Constructs an instance.
      * 
-     * @param annotations non-null; the parameter annotations
-     * @param byteLength &gt;= 0; attribute data length in the original
+     * @param annotations {@code non-null;} the parameter annotations
+     * @param byteLength {@code >= 0;} attribute data length in the original
      * classfile (not including the attribute header)
      */
     public AttRuntimeVisibleParameterAnnotations(

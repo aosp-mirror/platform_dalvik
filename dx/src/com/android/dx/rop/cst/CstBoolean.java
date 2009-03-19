@@ -19,33 +19,33 @@ package com.android.dx.rop.cst;
 import com.android.dx.rop.type.Type;
 
 /**
- * Constants of type <code>boolean</code>.
+ * Constants of type {@code boolean}.
  */
 public final class CstBoolean
         extends CstLiteral32 {
-    /** non-null; instance representing <code>false</code> */
+    /** {@code non-null;} instance representing {@code false} */
     public static final CstBoolean VALUE_FALSE = new CstBoolean(false);
 
-    /** non-null; instance representing <code>true</code> */
+    /** {@code non-null;} instance representing {@code true} */
     public static final CstBoolean VALUE_TRUE = new CstBoolean(true);
 
     /**
      * Makes an instance for the given value. This will return an
      * already-allocated instance.
      * 
-     * @param value the <code>boolean</code> value
-     * @return non-null; the appropriate instance
+     * @param value the {@code boolean} value
+     * @return {@code non-null;} the appropriate instance
      */
     public static CstBoolean make(boolean value) {
         return value ? VALUE_TRUE : VALUE_FALSE;
     }
 
     /**
-     * Makes an instance for the given <code>int</code> value. This
+     * Makes an instance for the given {@code int} value. This
      * will return an already-allocated instance.
      * 
-     * @param value must be either <code>0</code> or <code>1</code>
-     * @return non-null; the appropriate instance
+     * @param value must be either {@code 0} or {@code 1}
+     * @return {@code non-null;} the appropriate instance
      */
     public static CstBoolean make(int value) {
         if (value == 0) {
@@ -60,7 +60,7 @@ public final class CstBoolean
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
      * 
-     * @param value the <code>boolean</code> value
+     * @param value the {@code boolean} value
      */
     private CstBoolean(boolean value) {
         super(value ? 1 : 0);
@@ -89,7 +89,7 @@ public final class CstBoolean
     }
 
     /**
-     * Gets the <code>boolean</code> value.
+     * Gets the {@code boolean} value.
      * 
      * @return the value
      */

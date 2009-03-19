@@ -31,14 +31,14 @@ public final class ProtoIdItem extends IndexedItem {
     /** size of instances when written out to a file, in bytes */
     public static final int WRITE_SIZE = 12;
 
-    /** non-null; the wrapped prototype */
+    /** {@code non-null;} the wrapped prototype */
     private final Prototype prototype;
 
-    /** non-null; the short-form of the prototype */
+    /** {@code non-null;} the short-form of the prototype */
     private final CstUtf8 shortForm;
 
     /**
-     * null-ok; the list of parameter types or <code>null</code> if this
+     * {@code null-ok;} the list of parameter types or {@code null} if this
      * prototype has no parameters
      */
     private TypeListItem parameterTypes;
@@ -46,7 +46,7 @@ public final class ProtoIdItem extends IndexedItem {
     /**
      * Constructs an instance.
      * 
-     * @param prototype non-null; the constant for the prototype
+     * @param prototype {@code non-null;} the constant for the prototype
      */
     public ProtoIdItem(Prototype prototype) {
         if (prototype == null) {
@@ -64,8 +64,8 @@ public final class ProtoIdItem extends IndexedItem {
     /**
      * Creates the short-form of the given prototype.
      * 
-     * @param prototype non-null; the prototype
-     * @return non-null; the short form
+     * @param prototype {@code non-null;} the prototype
+     * @return {@code non-null;} the short form
      */
     private static CstUtf8 makeShortForm(Prototype prototype) {
         StdTypeList parameters = prototype.getParameterTypes();
@@ -84,7 +84,7 @@ public final class ProtoIdItem extends IndexedItem {
     /**
      * Gets the short-form character for the given type.
      * 
-     * @param type non-null; the type
+     * @param type {@code non-null;} the type
      * @return the corresponding short-form character
      */
     private static char shortFormCharFor(Type type) {

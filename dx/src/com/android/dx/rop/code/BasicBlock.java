@@ -25,34 +25,34 @@ import com.android.dx.util.LabeledItem;
  * Basic block of register-based instructions.
  */
 public final class BasicBlock implements LabeledItem {
-    /** &gt;= 0; target label for this block */
+    /** {@code >= 0;} target label for this block */
     private final int label;
 
-    /** non-null; list of instructions in this block */
+    /** {@code non-null;} list of instructions in this block */
     private final InsnList insns;
 
     /**
-     * non-null; full list of successors that this block may
+     * {@code non-null;} full list of successors that this block may
      * branch to 
      */
     private final IntList successors;
 
     /**
-     * &gt;= -1; the primary / standard-flow / "default" successor, or
-     * <code>-1</code> if this block has no successors (that is, it
+     * {@code >= -1;} the primary / standard-flow / "default" successor, or
+     * {@code -1} if this block has no successors (that is, it
      * exits the function/method) 
      */
     private final int primarySuccessor;
 
     /**
-     * Constructs an instance. The predecessor set is set to <code>null</code>.
+     * Constructs an instance. The predecessor set is set to {@code null}.
      * 
-     * @param label &gt;= 0; target label for this block
-     * @param insns non-null; list of instructions in this block
-     * @param successors non-null; full list of successors that this
+     * @param label {@code >= 0;} target label for this block
+     * @param insns {@code non-null;} list of instructions in this block
+     * @param successors {@code non-null;} full list of successors that this
      * block may branch to
-     * @param primarySuccessor &gt;= -1; the primary / standard-flow /
-     * "default" successor, or <code>-1</code> if this block has no
+     * @param primarySuccessor {@code >= -1;} the primary / standard-flow /
+     * "default" successor, or {@code -1} if this block has no
      * successors (that is, it exits the function/method or is an
      * unconditional throw)
      */
@@ -116,7 +116,7 @@ public final class BasicBlock implements LabeledItem {
      * {@inheritDoc}
      * 
      * Instances of this class compare by identity. That is,
-     * <code>x.equals(y)</code> is only true if <code>x == y</code>.
+     * {@code x.equals(y)} is only true if {@code x == y}.
      */
     @Override
     public boolean equals(Object other) {
@@ -137,7 +137,7 @@ public final class BasicBlock implements LabeledItem {
     /**
      * Gets the target label of this block.
      * 
-     * @return &gt;= 0; the label
+     * @return {@code >= 0;} the label
      */
     public int getLabel() {
         return label;
@@ -146,7 +146,7 @@ public final class BasicBlock implements LabeledItem {
     /**
      * Gets the list of instructions inside this block.
      * 
-     * @return non-null; the instruction list
+     * @return {@code non-null;} the instruction list
      */
     public InsnList getInsns() {
         return insns;
@@ -155,7 +155,7 @@ public final class BasicBlock implements LabeledItem {
     /**
      * Gets the list of successors that this block may branch to.
      * 
-     * @return non-null; the successors list
+     * @return {@code non-null;} the successors list
      */
     public IntList getSuccessors() {
         return successors;
@@ -164,7 +164,7 @@ public final class BasicBlock implements LabeledItem {
     /**
      * Gets the primary successor of this block.
      * 
-     * @return &gt;= -1; the primary successor, or <code>-1</code> if this
+     * @return {@code >= -1;} the primary successor, or {@code -1} if this
      * block has no successors at all
      */
     public int getPrimarySuccessor() {
@@ -175,7 +175,7 @@ public final class BasicBlock implements LabeledItem {
      * Gets the secondary successor of this block. It is only valid to call
      * this method on blocks that have exactly two successors.
      * 
-     * @return &gt;= 0; the secondary successor
+     * @return {@code >= 0;} the secondary successor
      */
     public int getSecondarySuccessor() {
         if (successors.size() != 2) {
@@ -193,9 +193,9 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * Gets the first instruction of this block. This is just a
-     * convenient shorthand for <code>getInsns().get(0)</code>.
+     * convenient shorthand for {@code getInsns().get(0)}.
      * 
-     * @return non-null; the first instruction
+     * @return {@code non-null;} the first instruction
      */
     public Insn getFirstInsn() {
         return insns.get(0);
@@ -203,9 +203,9 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * Gets the last instruction of this block. This is just a
-     * convenient shorthand for <code>getInsns().getLast()</code>.
+     * convenient shorthand for {@code getInsns().getLast()}.
      * 
-     * @return non-null; the last instruction
+     * @return {@code non-null;} the last instruction
      */
     public Insn getLastInsn() {
         return insns.getLast();
@@ -213,9 +213,9 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * Returns whether this block might throw an exception. This is
-     * just a convenient shorthand for <code>getLastInsn().canThrow()</code>.
+     * just a convenient shorthand for {@code getLastInsn().canThrow()}.
      * 
-     * @return <code>true</code> iff this block might throw an
+     * @return {@code true} iff this block might throw an
      * exception
      */
     public boolean canThrow() {
@@ -228,7 +228,7 @@ public final class BasicBlock implements LabeledItem {
      * the block to see if it could throw, and if so, whether it in fact
      * has any associated handlers.
      * 
-     * @return <code>true</code> iff this block has any associated
+     * @return {@code true} iff this block has any associated
      * exception handlers
      */
     public boolean hasExceptionHandlers() {
@@ -241,9 +241,9 @@ public final class BasicBlock implements LabeledItem {
      * if any. This is just a shorthand for inspecting the last
      * instruction in the block to see if it could throw, and if so,
      * grabbing the catch list out of it. If not, this returns an
-     * empty list (not <code>null</code>).
+     * empty list (not {@code null}).
      *
-     * @return non-null; the exception handler types associated with
+     * @return {@code non-null;} the exception handler types associated with
      * this block
      */
     public TypeList getExceptionHandlerTypes() {
@@ -257,7 +257,7 @@ public final class BasicBlock implements LabeledItem {
      * amount.
      * 
      * @param delta the amount to offset register numbers by
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public BasicBlock withRegisterOffset(int delta) {
         return new BasicBlock(label, insns.withRegisterOffset(delta),

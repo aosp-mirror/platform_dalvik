@@ -28,28 +28,27 @@ import java.util.ArrayList;
 
 /**
  * From Appel "Modern Compiler Implementation in Java" algorithm 19.17
- * Calculate the live ranges for register <code>reg</code>.<p>
+ * Calculate the live ranges for register {@code reg}.<p>
  *
  * v = regV <p>
  * s = insn <p>
  * M = visitedBlocks <p>
  */
 public class LivenessAnalyzer {
-
     /**
-     * non-null; index by basic block indexed set of basic blocks
+     * {@code non-null;} index by basic block indexed set of basic blocks
      * that have already been visited. "M" as written in the original Appel
      * algorithm.
      */
     private final BitSet visitedBlocks;
 
     /**
-     * non-null; set of blocks remaing to visit as "live out as block"
+     * {@code non-null;} set of blocks remaing to visit as "live out as block"
      */
     private final BitSet liveOutBlocks;
 
     /**
-     * &gt;=0; SSA register currently being analyzed.
+     * {@code >=0;} SSA register currently being analyzed.
      * "v" in the original Appel algorithm.
      */
     private final int regV;
@@ -63,7 +62,7 @@ public class LivenessAnalyzer {
     /** block "n" in Appel 19.17 */
     SsaBasicBlock blockN;
 
-    /** index of statement <code>s</code> in <code>blockN</code>*/
+    /** index of statement {@code s} in {@code blockN}*/
     private int statementIndex;
 
     /** the next function to call. one of the four constants below */
@@ -77,12 +76,12 @@ public class LivenessAnalyzer {
 
     /**
      * Runs register liveness algorithm for a method, updating the
-     * live in/out information in <code>SsaBasicBlock</code> instances and
+     * live in/out information in {@code SsaBasicBlock} instances and
      * returning an interference graph.
      *
-     * @param ssaMeth non-null; Method to process.
-     * @return non-null; interference graph indexed by SSA registers in both
-     * directions.
+     * @param ssaMeth {@code non-null;} Method to process.
+     * @return {@code non-null;} interference graph indexed by SSA
+     * registers in both directions.
      */
     public static InterferenceGraph constructInterferenceGraph(
             SsaMethod ssaMeth) {
@@ -102,13 +101,13 @@ public class LivenessAnalyzer {
     /**
      * Makes liveness analyzer instance for specific register.
      *
-     * @param ssaMeth non-null; method to process
+     * @param ssaMeth {@code non-null;} method to process
      * @param reg register whose liveness to analyze
-     * @param interference non-null; indexed by SSA reg in both dimensions;
-     * graph to update
+     * @param interference {@code non-null;} indexed by SSA reg in
+     * both dimensions; graph to update
      *
      */
-    private LivenessAnalyzer(final SsaMethod ssaMeth, final int reg,
+    private LivenessAnalyzer(SsaMethod ssaMeth, int reg,
             InterferenceGraph interference) {
         this.ssaMeth = ssaMeth;
         this.regV = reg;
@@ -118,10 +117,9 @@ public class LivenessAnalyzer {
     }
 
     /**
-     * The algorithm in Appel is presented in
-     * partial tail-recursion form. Obviously, that's not
-     * efficient in java, so this function serves
-     * as the dispatcher instead.
+     * The algorithm in Appel is presented in partial tail-recursion
+     * form. Obviously, that's not efficient in java, so this function
+     * serves as the dispatcher instead.
      */
     private void handleTailRecursion() {
         while (nextFunction != DONE) {
@@ -152,7 +150,7 @@ public class LivenessAnalyzer {
     public void run() {
         List<SsaInsn> useList = ssaMeth.getUseListForRegister(regV);
 
-        for (SsaInsn insn: useList) {
+        for (SsaInsn insn : useList) {
             nextFunction = DONE;
 
             if (insn instanceof PhiInsn) {
@@ -212,7 +210,6 @@ public class LivenessAnalyzer {
      * "v is live-in at s"
      */
     private void liveInAtStatement() {
-
         // if s is the first statement in block N
         if (statementIndex == 0) {
             // v is live-in at n
@@ -232,7 +229,6 @@ public class LivenessAnalyzer {
      * "v is live-out at s"
      */
     private void liveOutAtStatement() {
-
         SsaInsn statement = blockN.getInsns().get(statementIndex);
         RegisterSpec rs = statement.getResult();
 
@@ -253,12 +249,12 @@ public class LivenessAnalyzer {
      * as the result of another phi, and the phi removal move scheduler may
      * generate moves that over-write the live result.
      *
-     * @param ssaMeth non-null; method to pricess
-     * @param interference non-null; interference graph
+     * @param ssaMeth {@code non-null;} method to pricess
+     * @param interference {@code non-null;} interference graph
      */
     private static void coInterferePhis(SsaMethod ssaMeth,
             InterferenceGraph interference) {
-        for (SsaBasicBlock b: ssaMeth.getBlocks()) {
+        for (SsaBasicBlock b : ssaMeth.getBlocks()) {
             List<SsaInsn> phis = b.getPhiInsns();
 
             int szPhis = phis.size();

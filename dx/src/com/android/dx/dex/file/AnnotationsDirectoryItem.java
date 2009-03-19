@@ -40,16 +40,16 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     /** write size of a list element, in bytes */
     private static final int ELEMENT_SIZE = 8;
 
-    /** null-ok; the class-level annotations, if any */
+    /** {@code null-ok;} the class-level annotations, if any */
     private AnnotationSetItem classAnnotations;
     
-    /** null-ok; the annotated fields, if any */
+    /** {@code null-ok;} the annotated fields, if any */
     private ArrayList<FieldAnnotationStruct> fieldAnnotations;
 
-    /** null-ok; the annotated methods, if any */
+    /** {@code null-ok;} the annotated methods, if any */
     private ArrayList<MethodAnnotationStruct> methodAnnotations;
 
-    /** null-ok; the annotated parameters, if any */
+    /** {@code null-ok;} the annotated parameters, if any */
     private ArrayList<ParameterAnnotationStruct> parameterAnnotations;
 
     /**
@@ -73,7 +73,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     /**
      * Returns whether this item is empty (has no contents).
      * 
-     * @return <code>true</code> if this item is empty, or <code>false</code>
+     * @return {@code true} if this item is empty, or {@code false}
      * if not
      */
     public boolean isEmpty() {
@@ -88,8 +88,8 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
      * interning candidates are ones that <i>only</i> have a non-null
      * set of class annotations, with no other lists.
      *
-     * @return <code>true</code> if this is an interning candidate, or
-     * <code>false</code> if not
+     * @return {@code true} if this is an interning candidate, or
+     * {@code false} if not
      */
     public boolean isInternable() {
         return (classAnnotations != null) &&
@@ -132,7 +132,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
      * made on the class, per se, as opposed to on one of its members.
      * It is only valid to call this method at most once per instance.
      * 
-     * @param annotations non-null; annotations to set for this class
+     * @param annotations {@code non-null;} annotations to set for this class
      */
     public void setClassAnnotations(Annotations annotations) {
         if (annotations == null) {
@@ -150,8 +150,8 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     /**
      * Adds a field annotations item to this instance.
      * 
-     * @param field non-null; field in question
-     * @param annotations non-null; associated annotations to add
+     * @param field {@code non-null;} field in question
+     * @param annotations {@code non-null;} associated annotations to add
      */
     public void addFieldAnnotations(CstFieldRef field,
             Annotations annotations) {
@@ -166,8 +166,8 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     /**
      * Adds a method annotations item to this instance.
      * 
-     * @param method non-null; method in question
-     * @param annotations non-null; associated annotations to add
+     * @param method {@code non-null;} method in question
+     * @param annotations {@code non-null;} associated annotations to add
      */
     public void addMethodAnnotations(CstMethodRef method,
             Annotations annotations) {
@@ -182,8 +182,8 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     /**
      * Adds a parameter annotations item to this instance.
      * 
-     * @param method non-null; method in question
-     * @param list non-null; associated list of annotation sets to add
+     * @param method {@code non-null;} method in question
+     * @param list {@code non-null;} associated list of annotation sets to add
      */
     public void addParameterAnnotations(CstMethodRef method,
             AnnotationsList list) {
@@ -198,8 +198,8 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
      * Gets the method annotations for a given method, if any. This is
      * meant for use by debugging / dumping code.
      * 
-     * @param method non-null; the method
-     * @return null-ok; the method annotations, if any
+     * @param method {@code non-null;} the method
+     * @return {@code null-ok;} the method annotations, if any
      */
     public Annotations getMethodAnnotations(CstMethodRef method) {
         if (methodAnnotations == null) {
@@ -219,8 +219,8 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
      * Gets the parameter annotations for a given method, if any. This is
      * meant for use by debugging / dumping code.
      * 
-     * @param method non-null; the method
-     * @return null-ok; the parameter annotations, if any
+     * @param method {@code non-null;} the method
+     * @return {@code null-ok;} the parameter annotations, if any
      */
     public AnnotationsList getParameterAnnotations(CstMethodRef method) {
         if (parameterAnnotations == null) {
@@ -336,11 +336,11 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
     }
 
     /**
-     * Gets the list size of the given list, or <code>0</code> if given
-     * <code>null</code>.
+     * Gets the list size of the given list, or {@code 0} if given
+     * {@code null}.
      * 
-     * @param list null-ok; the list in question
-     * @return &gt;= 0; its size
+     * @param list {@code null-ok;} the list in question
+     * @return {@code >= 0;} its size
      */
     private static int listSize(ArrayList<?> list) {
         if (list == null) {
@@ -354,7 +354,7 @@ public final class AnnotationsDirectoryItem extends OffsettedItem {
      * Prints out the contents of this instance, in a debugging-friendly
      * way. This is meant to be called from {@link ClassDefItem#debugPrint}.
      * 
-     * @param out non-null; where to output to
+     * @param out {@code non-null;} where to output to
      */
     /*package*/ void debugPrint(PrintWriter out) {
         if (classAnnotations != null) {

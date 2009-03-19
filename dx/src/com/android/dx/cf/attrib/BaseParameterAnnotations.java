@@ -23,19 +23,19 @@ import com.android.dx.util.MutabilityException;
  * Base class for parameter annotation list attributes.
  */
 public abstract class BaseParameterAnnotations extends BaseAttribute {
-    /** non-null; list of annotations */
+    /** {@code non-null;} list of annotations */
     private final AnnotationsList parameterAnnotations;
 
-    /** &gt;= 0; attribute data length in the original classfile (not
+    /** {@code >= 0;} attribute data length in the original classfile (not
      * including the attribute header) */
     private final int byteLength;
 
     /**
      * Constructs an instance.
      * 
-     * @param attributeName non-null; the name of the attribute
-     * @param parameterAnnotations non-null; the annotations
-     * @param byteLength &gt;= 0; attribute data length in the original
+     * @param attributeName {@code non-null;} the name of the attribute
+     * @param parameterAnnotations {@code non-null;} the annotations
+     * @param byteLength {@code >= 0;} attribute data length in the original
      * classfile (not including the attribute header)
      */
     public BaseParameterAnnotations(String attributeName,
@@ -65,7 +65,7 @@ public abstract class BaseParameterAnnotations extends BaseAttribute {
     /**
      * Gets the list of annotation lists associated with this instance.
      * 
-     * @return non-null; the list
+     * @return {@code non-null;} the list
      */
     public final AnnotationsList getParameterAnnotations() {
         return parameterAnnotations;

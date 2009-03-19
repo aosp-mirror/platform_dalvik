@@ -19,7 +19,7 @@ package com.android.dx.rop;
 /**
  * <h1>An Introduction to Rop Form</h1>
  *
- * This package contains classes associated with dx's <code>Rop</code>
+ * This package contains classes associated with dx's {@code Rop}
  * intermediate form.<p>
  *
  * The Rop form is intended to represent the instructions and the control-flow
@@ -33,16 +33,16 @@ package com.android.dx.rop;
  * <li> {@link BasicBlock} and its per-method container, {@link BasicBlockList},
  * the representation of control flow elements.
  * <li> {@link Insn} and its subclasses along with its per-basic block
- * container {@link InsnList}. <code>Insn</code> instances represent
+ * container {@link InsnList}. {@code Insn} instances represent
  * individual instructions in the abstract register machine.
  * <li> {@link RegisterSpec} and its container {@link RegisterSpecList}. A
  * register spec encodes register number, register width, type information,
  * and potentially local variable information as well for instruction sources
  * and results.
  * <li> {@link Rop} instances represent opcodes in the abstract machine. Many
- * <code>Rop</code> instances are singletons defined in static fields in
+ * {@code Rop} instances are singletons defined in static fields in
  * {@link Rops}. The rest are constructed dynamically using static methods
- * in <code>Rops</code>
+ * in {@code Rops}
  * <li> {@link RegOps} lists numeric constants for the opcodes
  * <li> {@link Constant} and its subclasses represent constant data values
  * that opcodes may refer to.
@@ -62,8 +62,8 @@ package com.android.dx.rop;
  * bytecode. Blocks that don't originate directly from source bytecode have
  * labels generated for them in a mostly arbitrary order.<p>
  *
- * Blocks are referred to by their label, for the most part, because <code>
- * BasicBlock</code> instances are immutable and thus any modification to
+ * Blocks are referred to by their label, for the most part, because
+ * {@code BasicBlock} instances are immutable and thus any modification to
  * the control flow graph or the instruction list results in replacement
  * instances (with identical labels) being created.<p>
  *
@@ -105,7 +105,7 @@ package com.android.dx.rop;
  * instruction where a catch block exists inside the current method for that
  * exception class. Since the only possible path is the exception path, only
  * the exception path (which cannot be a primary successor) is a successor.
- * An example of this is shown in <code>dx/tests/092-ssa-cfg-edge-cases</code>.
+ * An example of this is shown in {@code dx/tests/092-ssa-cfg-edge-cases}.
  *
  * <h2>Rop Instructions</h2>
  *
@@ -123,18 +123,18 @@ package com.android.dx.rop;
  * Rops#MOVE_RESULT move-result} or {@link Rops#MOVE_RESULT_PSEUDO
  * move-result-pseudo} instructions at the top of the primary successor block.
  *
- * Only a single <code>move-result</code> or <code>move-result-pseudo</code>
+ * Only a single {@code move-result} or {@code move-result-pseudo}
  * may exist in any block and it must be exactly the first instruction in the
  * block.
  *
- * A <code>move-result</code> instruction is used for the results of call-like
- * instructions. If the value produced by a <code>move-result</code> is not
+ * A {@code move-result} instruction is used for the results of call-like
+ * instructions. If the value produced by a {@code move-result} is not
  * used by the method, it may be eliminated as dead code.
  *
- * A <code>move-result-pseudo</code> instruction is used for the results of
+ * A {@code move-result-pseudo} instruction is used for the results of
  * non-call-like throwing instructions. It may never be considered dead code
  * since the final dex instruction will always indicate a result register.
- * If a required <code>move-result-pseudo</code> instruction is not found
+ * If a required {@code move-result-pseudo} instruction is not found
  * during conversion to dex bytecode, an exception will be thrown.
  *
  * <h3>move-exception</h3>
@@ -148,25 +148,25 @@ package com.android.dx.rop;
  * <h3>move-param</h3>
  *
  * A {@link RegOps.MOVE_PARAM move-param} instruction represents a method
- * parameter. Every <code>move-param</code> instruction is a
+ * parameter. Every {@code move-param} instruction is a
  * {@link PlainCstInsn}. The index of the method parameter they refer to is
  * carried as the {@link CstInteger integer constant} associated with the
  * instruction.
  *
- * Any number of <code>move-param</code> instructions referring to the same
+ * Any number of {@code move-param} instructions referring to the same
  * parameter index may be included in a method's instruction lists. They
  * have no restrictions on placement beyond those of any other
  * {@link Rop.BRANCH_NONE} instruction. Note that the SSA optimizer arranges the
  * parameter assignments to align with the dex bytecode calling conventions.
  * With parameter assignments so arranged, the
- * {@link com.android.dx.dex.code.RopTranslator} sees Rop <code>move-param</code>
+ * {@link com.android.dx.dex.code.RopTranslator} sees Rop {@code move-param}
  * instructions as unnecessary in dex form and eliminates them.
  *
  * <h3>mark-local</h3>
  *
  * A {@link RegOps.MARK_LOCAL mark-local} instruction indicates that a local
  * variable becomes live in a specified register specified register for the
- * purposes of debug information. A <code>mark-local</code> instruction has
+ * purposes of debug information. A {@code mark-local} instruction has
  * a single source (the register which will now be considered a local variable)
  * and no results. The instruction has no side effect.<p>
  *
@@ -179,23 +179,22 @@ package com.android.dx.rop;
  * an assignment occurring. A common example of this is occurs in the Rop
  * representation of the following code:<p>
  *
- * <code>
+ * <pre>
  * try {
  *     Object foo = null;
  *     foo = new Object();
- * } catch (Throwable ex) {
- * }
- * </code>
+ * } catch (Throwable ex) { }
+ * </pre>
  *
- * An object's initialization occurs in two steps. First, a <code>new-instance
- * </code> instruction is executed, whose result is stored in a register.
- * However, that register can not yet be considered to contain "foo". That's
- * because the instance's constructor method must be called via an
- * <code>invoke</code> instruction. The constructor method, however, may
+ * An object's initialization occurs in two steps. First, a
+ * {@code new-instance} instruction is executed, whose result is stored in a
+ * register. However, that register can not yet be considered to contain
+ * "foo". That's because the instance's constructor method must be called
+ * via an {@code invoke} instruction. The constructor method, however, may
  * throw an exception. And if an exception occurs, then "foo" should remain
- * null. So "foo" becomes the value of the result of the <code>new-instance
- * </code> instruction after the (void) constructor method is invoked and
- * returns successfully. In such a case, a <code>mark-local</code> will
+ * null. So "foo" becomes the value of the result of the {@code new-instance}
+ * instruction after the (void) constructor method is invoked and
+ * returns successfully. In such a case, a {@code mark-local} will
  * typically occur at the beginning of the primary successor block following
  * the invocation to the constructor.
  */

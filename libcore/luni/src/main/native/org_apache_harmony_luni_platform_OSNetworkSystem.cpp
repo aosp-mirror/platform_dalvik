@@ -1379,7 +1379,7 @@ static jint osNetworkSystem_readSocketDirectImpl(JNIEnv* env, jclass clazz,
     // LOGD("ENTER readSocketDirectImpl");
 
     int handle;
-    jbyte *message = (jbyte *)address;
+    jbyte *message = (jbyte *)address + offset;
     int result, ret, localCount;
 
     handle = jniGetFDFromFileDescriptor(env, fileDescriptor);
@@ -1437,7 +1437,7 @@ static jint osNetworkSystem_readSocketImpl(JNIEnv* env, jclass clazz,
     }
 
     result = osNetworkSystem_readSocketDirectImpl(env, clazz, fileDescriptor,
-            (jint) message, offset, count, timeout);
+            (jint) message, 0, localCount, timeout);
 
     if (result > 0) {
         env->SetByteArrayRegion(data, offset, result, (jbyte *)message);
@@ -1455,7 +1455,7 @@ static jint osNetworkSystem_writeSocketDirectImpl(JNIEnv* env, jclass clazz,
     // LOGD("ENTER writeSocketDirectImpl");
 
     int handle;
-    jbyte *message = (jbyte *)address;
+    jbyte *message = (jbyte *)address + offset;
     int result = 0, sent = 0;
 
     if (count <= 0) {
@@ -1499,7 +1499,7 @@ static jint osNetworkSystem_writeSocketDirectImpl(JNIEnv* env, jclass clazz,
             if (!socketExConstructor) {
                 return 0;
             }
-            socketEx = env->NewObject(socketExClass, socketExConstructor, errorMessageString); 
+            socketEx = env->NewObject(socketExClass, socketExConstructor, errorMessageString);
             socketExCauseMethod = env->GetMethodID(socketExClass,"initCause","(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
             env->CallObjectMethod(socketEx,socketExCauseMethod,errorCodeEx);
             env->Throw((jthrowable)socketEx);
@@ -1539,13 +1539,13 @@ static jint osNetworkSystem_writeSocketImpl(JNIEnv* env, jclass clazz,
     env->GetByteArrayRegion(data, offset, count, message);
 
     result = osNetworkSystem_writeSocketDirectImpl(env, clazz, fileDescriptor,
-            (jint) message, offset, count);
+            (jint) message, 0, count);
 
     if (( jbyte *)message != internalBuffer) {
-      free(( jbyte *)message);
+        free(( jbyte *)message);
     }
 #undef INTERNAL_SEND_BUFFER_MAX
-   return result;
+    return result;
 }
 
 static void osNetworkSystem_setNonBlockingImpl(JNIEnv* env, jclass clazz,
@@ -2256,7 +2256,7 @@ static jint osNetworkSystem_receiveDatagramImpl(JNIEnv* env, jclass clazz,
     }
 
     int actualLength = osNetworkSystem_receiveDatagramDirectImpl(env, clazz, fd,
-            packet, (jint)bytes, offset, localLength, receiveTimeout, peek);
+            packet, (jint)bytes, 0, localLength, receiveTimeout, peek);
 
     if (actualLength > 0) {
         env->SetByteArrayRegion(data, offset, actualLength, bytes);
@@ -2315,7 +2315,7 @@ static jint osNetworkSystem_recvConnectedDatagramImpl(JNIEnv* env, jclass clazz,
     }
 
     int actualLength = osNetworkSystem_recvConnectedDatagramDirectImpl(env,
-            clazz, fd, packet, (jint)bytes, offset, localLength,
+            clazz, fd, packet, (jint)bytes, 0, localLength,
             receiveTimeout, peek);
 
     if (actualLength > 0) {
@@ -2757,10 +2757,10 @@ static jint osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
     }
 
     if (0 < result) {
-       /*output the result to a int array*/
-       flagArray = env->GetIntArrayElements(outFlags, &isCopy);
+        /*output the result to a int array*/
+        flagArray = env->GetIntArrayElements(outFlags, &isCopy);
 
-       for (val=0; val<countReadC; val++) {
+        for (val=0; val<countReadC; val++) {
             gotFD = env->GetObjectArrayElement(readFDArray,val);
 
             handle = jniGetFDFromFileDescriptor(env, gotFD);
@@ -3056,7 +3056,7 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
             break;
         }
 
-      case JAVASOCKOPT_MCAST_TTL: {
+        case JAVASOCKOPT_MCAST_TTL: {
             if ((anOption >> 16) & BROKEN_MULTICAST_TTL) {
                 return;
             }
@@ -3071,13 +3071,13 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
         case JAVASOCKOPT_MCAST_ADD_MEMBERSHIP: {
             mcastAddDropMembership(env, handle, optVal,
                     (anOption >> 16) & BROKEN_MULTICAST_IF, IP_ADD_MEMBERSHIP);
-            return;
+            break;
         }
 
         case JAVASOCKOPT_MCAST_DROP_MEMBERSHIP: {
             mcastAddDropMembership(env, handle, optVal,
                     (anOption >> 16) & BROKEN_MULTICAST_IF, IP_DROP_MEMBERSHIP);
-            return;
+            break;
         }
 
         case JAVASOCKOPT_MCAST_INTERFACE: {

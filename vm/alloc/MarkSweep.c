@@ -22,6 +22,7 @@
 #include <limits.h>     // for ULONG_MAX
 #include <sys/mman.h>   // for madvise(), mmap()
 #include <cutils/ashmem.h>
+#include <errno.h>
 
 #define GC_DEBUG_PARANOID   2
 #define GC_DEBUG_BASIC      1
@@ -92,7 +93,7 @@ createMarkStack(GcMarkStack *stack)
 {
     const Object **limit;
     size_t size;
-    int fd;
+    int fd, err;
 
     /* Create a stack big enough for the worst possible case,
      * where the heap is perfectly full of the smallest object.
@@ -104,14 +105,17 @@ createMarkStack(GcMarkStack *stack)
     size = ALIGN_UP_TO_PAGE_SIZE(size);
     fd = ashmem_create_region("dalvik-heap-markstack", size);
     if (fd < 0) {
-        LOGE_GC("Could not create %d-byte ashmem mark stack\n", size);
+        LOGE_GC("Could not create %d-byte ashmem mark stack: %s\n",
+            size, strerror(errno));
         return false;
     }
     limit = (const Object **)mmap(NULL, size, PROT_READ | PROT_WRITE,
             MAP_PRIVATE, fd, 0);
+    err = errno;
     close(fd);
     if (limit == MAP_FAILED) {
-        LOGE_GC("Could not mmap %d-byte ashmem mark stack\n", size);
+        LOGE_GC("Could not mmap %d-byte ashmem mark stack: %s\n",
+            size, strerror(err));
         return false;
     }
 

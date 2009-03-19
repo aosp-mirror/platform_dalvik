@@ -2653,7 +2653,7 @@ static jobjectRefType GetObjectRefType(JNIEnv* env, jobject obj)
 {
     JNI_ENTER();
     jobjectRefType type;
-    
+
     if (obj == NULL)
         type = JNIInvalidRefType;
     else
@@ -2677,45 +2677,55 @@ static jobjectRefType GetObjectRefType(JNIEnv* env, jobject obj)
 static jobject NewDirectByteBuffer(JNIEnv * env, void* address, jlong capacity)
 {
     jmethodID newBufferMethod;
-    jclass directBufferClass;
-    jclass platformaddressClass;
-    jobject platformaddress;
+    jclass directBufferClass = NULL;
+    jclass platformaddressClass = NULL;
+    jobject platformaddress = NULL;
     jmethodID onMethod;
+    jobject result = NULL;
 
     directBufferClass = (*env)->FindClass(env, 
             "java/nio/ReadWriteDirectByteBuffer");
 
     if(!directBufferClass)
     {
-        return NULL;
+        goto bail;
     }
 
     newBufferMethod = (*env)->GetMethodID(env, directBufferClass, "<init>",
             "(Lorg/apache/harmony/luni/platform/PlatformAddress;II)V");
     if(!newBufferMethod)
     {
-        return NULL;
+        goto bail;
     }
 
     platformaddressClass = (*env)->FindClass(env, 
             "org/apache/harmony/luni/platform/PlatformAddressFactory");
     if(!platformaddressClass)
     {
-        return NULL;
+        goto bail;
     }
 
     onMethod = (*env)->GetStaticMethodID(env, platformaddressClass, "on",
             "(I)Lorg/apache/harmony/luni/platform/PlatformAddress;");
     if(!onMethod)
     {
-        return NULL;
+        goto bail;
     }
 
-    platformaddress = (*env)->CallStaticObjectMethod(env, platformaddressClass, 
+    platformaddress = (*env)->CallStaticObjectMethod(env, platformaddressClass,
             onMethod, (jint)address);
 
-    return (*env)->NewObject(env, directBufferClass, newBufferMethod, 
+    result = (*env)->NewObject(env, directBufferClass, newBufferMethod, 
             platformaddress, (jint)capacity, (jint)0);
+
+bail:
+    if (directBufferClass != NULL)
+        (*env)->DeleteLocalRef(env, directBufferClass);
+    if (platformaddressClass != NULL)
+        (*env)->DeleteLocalRef(env, platformaddressClass);
+    if (platformaddress != NULL)
+        (*env)->DeleteLocalRef(env, platformaddress);
+    return result;
 }
 
 /*
@@ -2730,43 +2740,53 @@ static jobject NewDirectByteBuffer(JNIEnv * env, void* address, jlong capacity)
 static void* GetDirectBufferAddress(JNIEnv * env, jobject buf)
 {
     jmethodID tempMethod;
-    jclass tempClass;
-    jobject platformAddr;
-    jclass platformAddrClass;
+    jclass tempClass = NULL;
+    jobject platformAddr = NULL;
+    jclass platformAddrClass = NULL;
     jmethodID toLongMethod;
+    void* result = NULL;
 
     tempClass = (*env)->FindClass(env, 
             "org/apache/harmony/nio/internal/DirectBuffer");
     if(!tempClass)
     {
-        return 0;
+        goto bail;
     }
 
     if(JNI_FALSE == (*env)->IsInstanceOf(env, buf, tempClass))
     {
-        return 0;
+        goto bail;
     }
 
     tempMethod = (*env)->GetMethodID(env, tempClass, "getBaseAddress",
-             "()Lorg/apache/harmony/luni/platform/PlatformAddress;");        
+             "()Lorg/apache/harmony/luni/platform/PlatformAddress;");
     if(!tempMethod){
-        return 0;
-    }    
+        goto bail;
+    }
     platformAddr = (*env)->CallObjectMethod(env, buf, tempMethod);
     platformAddrClass = (*env)->FindClass (env, 
             "org/apache/harmony/luni/platform/PlatformAddress");
     if(!platformAddrClass)
     {
-        return 0;
+        goto bail;
 
     }
     toLongMethod = (*env)->GetMethodID(env, platformAddrClass, "toLong", "()J");
     if (!toLongMethod)
     {
-        return 0;
+        goto bail;
     }
 
-    return (void*)(u4)(*env)->CallLongMethod(env, platformAddr, toLongMethod);    
+    result = (void*)(u4)(*env)->CallLongMethod(env, platformAddr, toLongMethod);
+
+bail:
+    if (tempClass != NULL)
+        (*env)->DeleteLocalRef(env, tempClass);
+    if (platformAddr != NULL)
+        (*env)->DeleteLocalRef(env, platformAddr);
+    if (platformAddrClass != NULL)
+        (*env)->DeleteLocalRef(env, platformAddrClass);
+    return result;
 }
 
 /*
@@ -2781,34 +2801,42 @@ static void* GetDirectBufferAddress(JNIEnv * env, jobject buf)
 static jlong GetDirectBufferCapacity(JNIEnv * env, jobject buf)
 {
     jfieldID fieldCapacity;
-    jclass directBufferClass;
-    jclass bufferClass;
+    jclass directBufferClass = NULL;
+    jclass bufferClass = NULL;
+    jlong result = -1;
 
     directBufferClass = (*env)->FindClass(env,
             "org/apache/harmony/nio/internal/DirectBuffer");
     if (!directBufferClass)
     {
-        return -1;
+        goto bail;
     }
 
     if (JNI_FALSE == (*env)->IsInstanceOf(env, buf, directBufferClass))
     {
-        return -1;
+        goto bail;
     }
 
     bufferClass = (*env)->FindClass(env, "java/nio/Buffer");
     if (!bufferClass)
     {
-        return -1;
+        goto bail;
     }
 
     fieldCapacity = (*env)->GetFieldID(env, bufferClass, "capacity", "I");
     if (!fieldCapacity)
     {
-        return -1;
+        goto bail;
     }
 
-    return (*env)->GetIntField(env, buf, fieldCapacity);
+    result = (*env)->GetIntField(env, buf, fieldCapacity);
+
+bail:
+    if (directBufferClass != NULL)
+        (*env)->DeleteLocalRef(env, directBufferClass);
+    if (bufferClass != NULL)
+        (*env)->DeleteLocalRef(env, bufferClass);
+    return result;
 }
 
 

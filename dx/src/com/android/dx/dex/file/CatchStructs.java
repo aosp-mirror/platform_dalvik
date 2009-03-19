@@ -32,27 +32,27 @@ import java.util.TreeMap;
 /**
  * List of exception handlers (tuples of covered range, catch type,
  * handler address) for a particular piece of code. Instances of this
- * class correspond to a <code>try_item[]</code> and a
- * <code>catch_handler_item[]</code>.
+ * class correspond to a {@code try_item[]} and a
+ * {@code catch_handler_item[]}.
  */
 public final class CatchStructs {
     /**
-     * the size of a <code>try_item</code>: a <code>uint</code>
-     * and two <code>ushort</code>s 
+     * the size of a {@code try_item}: a {@code uint}
+     * and two {@code ushort}s 
      */
     private static final int TRY_ITEM_WRITE_SIZE = 4 + (2 * 2);
 
-    /** non-null; code that contains the catches */
+    /** {@code non-null;} code that contains the catches */
     private final DalvCode code;
     
     /**
-     * null-ok; the underlying table; set in
+     * {@code null-ok;} the underlying table; set in
      * {@link #finishProcessingIfNecessary}
      */
     private CatchTable table;
 
     /**
-     * null-ok; the encoded handler list, if calculated; set in
+     * {@code null-ok;} the encoded handler list, if calculated; set in
      * {@link #encode}
      */
     private byte[] encodedHandlers;
@@ -64,7 +64,7 @@ public final class CatchStructs {
     private int encodedHandlerHeaderSize;
 
     /**
-     * null-ok; map from handler lists to byte offsets, if calculated; set in
+     * {@code null-ok;} map from handler lists to byte offsets, if calculated; set in
      * {@link #encode}
      */
     private TreeMap<CatchHandlerList, Integer> handlerOffsets;
@@ -72,7 +72,7 @@ public final class CatchStructs {
     /**
      * Constructs an instance.
      * 
-     * @param code non-null; code that contains the catches
+     * @param code {@code non-null;} code that contains the catches
      */
     public CatchStructs(DalvCode code) {
         this.code = code;
@@ -94,7 +94,7 @@ public final class CatchStructs {
     /**
      * Gets the size of the tries list, in entries.
      * 
-     * @return &gt;= 0; the tries list size
+     * @return {@code >= 0;} the tries list size
      */
     public int triesSize() {
         finishProcessingIfNecessary();
@@ -104,8 +104,8 @@ public final class CatchStructs {
     /**
      * Does a human-friendly dump of this instance.
      * 
-     * @param out non-null; where to dump
-     * @param prefix non-null; prefix to attach to each line of output
+     * @param out {@code non-null;} where to dump
+     * @param prefix {@code non-null;} prefix to attach to each line of output
      */
     public void debugPrint(PrintWriter out, String prefix) {
         annotateEntries(prefix, out, null);
@@ -114,7 +114,7 @@ public final class CatchStructs {
     /**
      * Encodes the handler lists.
      * 
-     * @param file non-null; file this instance is part of
+     * @param file {@code non-null;} file this instance is part of
      */
     public void encode(DexFile file) {
         finishProcessingIfNecessary();
@@ -179,7 +179,7 @@ public final class CatchStructs {
     /**
      * Gets the write size of this instance, in bytes.
      * 
-     * @return &gt;= 0; the write size
+     * @return {@code >= 0;} the write size
      */
     public int writeSize() {
         return (triesSize() * TRY_ITEM_WRITE_SIZE) +
@@ -189,8 +189,8 @@ public final class CatchStructs {
     /**
      * Writes this instance to the given stream.
      * 
-     * @param file non-null; file this instance is part of
-     * @param out non-null; where to write to
+     * @param file {@code non-null;} file this instance is part of
+     * @param out {@code non-null;} where to write to
      */
     public void writeTo(DexFile file, AnnotatedOutput out) {
         finishProcessingIfNecessary();
@@ -225,12 +225,12 @@ public final class CatchStructs {
 
     /**
      * Helper method to annotate or simply print the exception handlers.
-     * Only one of <code>printTo</code> or <code>annotateTo</code> should
+     * Only one of {@code printTo} or {@code annotateTo} should
      * be non-null.
      * 
-     * @param prefix non-null; prefix for each line
-     * @param printTo null-ok; where to print to
-     * @param annotateTo null-ok; where to consume bytes and annotate to
+     * @param prefix {@code non-null;} prefix for each line
+     * @param printTo {@code null-ok;} where to print to
+     * @param annotateTo {@code null-ok;} where to consume bytes and annotate to
      */
     private void annotateEntries(String prefix, PrintWriter printTo,
             AnnotatedOutput annotateTo) {
@@ -299,12 +299,12 @@ public final class CatchStructs {
      * Helper for {@link #annotateEntries} to annotate a catch handler list
      * while consuming it.
      * 
-     * @param handlers non-null; handlers to annotate
-     * @param offset &gt;= 0; the offset of this handler
-     * @param size &gt;= 1; the number of bytes the handlers consume
-     * @param prefix non-null; prefix for each line
-     * @param printTo null-ok; where to print to
-     * @param annotateTo non-null; where to annotate to
+     * @param handlers {@code non-null;} handlers to annotate
+     * @param offset {@code >= 0;} the offset of this handler
+     * @param size {@code >= 1;} the number of bytes the handlers consume
+     * @param prefix {@code non-null;} prefix for each line
+     * @param printTo {@code null-ok;} where to print to
+     * @param annotateTo {@code non-null;} where to annotate to
      */
     private static void annotateAndConsumeHandlers(CatchHandlerList handlers,
             int offset, int size, String prefix, PrintWriter printTo,

@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 /**
  * Implementation of {@link AnnotatedOutput} which stores the written data
- * into a <code>byte[]</code>.
+ * into a {@code byte[]}.
  * 
  * <p><b>Note:</b> As per the {@link Output} interface, multi-byte
  * writes all use little-endian order.</p>
@@ -38,26 +38,26 @@ public final class ByteArrayAnnotatedOutput
      */
     private final boolean stretchy;
 
-    /** non-null; the data itself */
+    /** {@code non-null;} the data itself */
     private byte[] data;
 
-    /** &gt;= 0; current output cursor */
+    /** {@code >= 0;} current output cursor */
     private int cursor;
 
     /** whether annotations are to be verbose */
     private boolean verbose;
 
     /**
-     * null-ok; list of annotations, or <code>null</code> if this instance
+     * {@code null-ok;} list of annotations, or {@code null} if this instance
      * isn't keeping them 
      */
     private ArrayList<Annotation> annotations;
 
-    /** &gt;= 40 (if used); the desired maximum annotation width */
+    /** {@code >= 40 (if used);} the desired maximum annotation width */
     private int annotationWidth;
 
     /**
-     * &gt;= 8 (if used); the number of bytes of hex output to use
+     * {@code >= 8 (if used);} the number of bytes of hex output to use
      * in annotations 
      */
     private int hexCols;
@@ -69,7 +69,7 @@ public final class ByteArrayAnnotatedOutput
      * capacity of the resulting instance. Also, the constructed
      * instance does not keep annotations by default.
      * 
-     * @param data non-null; data array to use for output
+     * @param data {@code non-null;} data array to use for output
      */
     public ByteArrayAnnotatedOutput(byte[] data) {
         this(data, false);
@@ -87,7 +87,7 @@ public final class ByteArrayAnnotatedOutput
     /**
      * Internal constructor.
      * 
-     * @param data non-null; data array to use for output
+     * @param data {@code non-null;} data array to use for output
      * @param stretchy whether the instance is to be stretchy
      */
     private ByteArrayAnnotatedOutput(byte[] data, boolean stretchy) {
@@ -105,25 +105,25 @@ public final class ByteArrayAnnotatedOutput
     }
 
     /**
-     * Gets the underlying <code>byte[]</code> of this instance, which
+     * Gets the underlying {@code byte[]} of this instance, which
      * may be larger than the number of bytes written
      * 
      * @see #toByteArray
      * 
-     * @return non-null; the <code>byte[]</code>
+     * @return {@code non-null;} the {@code byte[]}
      */
     public byte[] getArray() {
         return data;
     }
 
     /**
-     * Constructs and returns a new <code>byte[]</code> that contains
+     * Constructs and returns a new {@code byte[]} that contains
      * the written contents exactly (that is, with no extra unwritten
      * bytes at the end).
      * 
      * @see #getArray
      * 
-     * @return non-null; an appropriately-constructed array
+     * @return {@code non-null;} an appropriately-constructed array
      */
     public byte[] toByteArray() {
         byte[] result = new byte[cursor];
@@ -419,7 +419,7 @@ public final class ByteArrayAnnotatedOutput
      * be called only once per instance, and only before any data has been
      * written to the it.
      * 
-     * @param annotationWidth &gt;= 40; the desired maximum annotation width
+     * @param annotationWidth {@code >= 40;} the desired maximum annotation width
      * @param verbose whether or not to indicate verbose annotations
      */
     public void enableAnnotations(int annotationWidth, boolean verbose) {
@@ -474,7 +474,7 @@ public final class ByteArrayAnnotatedOutput
     /**
      * Writes the annotated content of this instance to the given writer.
      * 
-     * @param out non-null; where to write to
+     * @param out {@code non-null;} where to write to
      */
     public void writeAnnotationsTo(Writer out) throws IOException {
         int width2 = getAnnotationWidth();
@@ -538,7 +538,7 @@ public final class ByteArrayAnnotatedOutput
      * Reallocates the underlying array if necessary. Calls to this method
      * should be guarded by a test of {@link #stretchy}.
      * 
-     * @param desiredSize &gt;= 0; the desired minimum total size of the array
+     * @param desiredSize {@code >= 0;} the desired minimum total size of the array
      */
     private void ensureCapacity(int desiredSize) {
         if (data.length < desiredSize) {
@@ -552,25 +552,25 @@ public final class ByteArrayAnnotatedOutput
      * Annotation on output.
      */
     private static class Annotation {
-        /** &gt;= 0; start of annotated range (inclusive) */
+        /** {@code >= 0;} start of annotated range (inclusive) */
         private final int start;
 
         /**
-         * &gt;= 0; end of annotated range (exclusive);
-         * <code>Integer.MAX_VALUE</code> if unclosed 
+         * {@code >= 0;} end of annotated range (exclusive);
+         * {@code Integer.MAX_VALUE} if unclosed 
          */
         private int end;
 
-        /** non-null; annotation text */
+        /** {@code non-null;} annotation text */
         private final String text;
 
         /**
          * Constructs an instance.
          * 
-         * @param start &gt;= 0; start of annotated range
-         * @param end &gt;= start; end of annotated range (exclusive) or
-         * <code>Integer.MAX_VALUE</code> if unclosed
-         * @param text non-null; annotation text
+         * @param start {@code >= 0;} start of annotated range
+         * @param end {@code >= start;} end of annotated range (exclusive) or
+         * {@code Integer.MAX_VALUE} if unclosed
+         * @param text {@code non-null;} annotation text
          */
         public Annotation(int start, int end, String text) {
             this.start = start;
@@ -581,8 +581,8 @@ public final class ByteArrayAnnotatedOutput
         /**
          * Constructs an instance. It is initally unclosed.
          * 
-         * @param start &gt;= 0; start of annotated range
-         * @param text non-null; annotation text
+         * @param start {@code >= 0;} start of annotated range
+         * @param text {@code non-null;} annotation text
          */
         public Annotation(int start, String text) {
             this(start, Integer.MAX_VALUE, text);
@@ -592,7 +592,7 @@ public final class ByteArrayAnnotatedOutput
          * Sets the end as given, but only if the instance is unclosed;
          * otherwise, do nothing.
          * 
-         * @param end &gt;= start; the end
+         * @param end {@code >= start;} the end
          */
         public void setEndIfUnset(int end) {
             if (this.end == Integer.MAX_VALUE) {
@@ -603,7 +603,7 @@ public final class ByteArrayAnnotatedOutput
         /**
          * Sets the end as given.
          * 
-         * @param end &gt;= start; the end
+         * @param end {@code >= start;} the end
          */
         public void setEnd(int end) {
             this.end = end;
@@ -630,7 +630,7 @@ public final class ByteArrayAnnotatedOutput
         /**
          * Gets the text.
          * 
-         * @return non-null; the text
+         * @return {@code non-null;} the text
          */
         public String getText() {
             return text;

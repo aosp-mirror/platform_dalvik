@@ -244,6 +244,23 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracing(const u4* args,
 }
 
 /*
+ * static boolean isMethodTracingActive()
+ *
+ * Determine whether method tracing is currently active.
+ */
+static void Dalvik_dalvik_system_VMDebug_isMethodTracingActive(const u4* args,
+    JValue* pResult)
+{
+    UNUSED_PARAMETER(args);
+
+#ifdef WITH_PROFILER
+    RETURN_BOOLEAN(dvmIsMethodTraceActive());
+#else
+    RETURN_BOOLEAN(false);
+#endif
+}
+
+/*
  * static void stopMethodTracing()
  *
  * Stop method tracing.
@@ -527,6 +544,7 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
 #ifdef WITH_HPROF
     StringObject* fileNameStr = (StringObject*) args[0];
     char* fileName;
+    int result;
 
     if (fileNameStr == NULL) {
         dvmThrowException("Ljava/lang/NullPointerException;", NULL);
@@ -540,8 +558,15 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
         RETURN_VOID();
     }
 
-    hprofDumpHeap(fileName);
+    result = hprofDumpHeap(fileName);
     free(fileName);
+
+    if (result != 0) {
+        /* ideally we'd throw something more specific based on actual failure */
+        dvmThrowException("Ljava/lang/RuntimeException;",
+            "Failure during heap dump -- check log output for details");
+        RETURN_VOID();
+    }
 #else
     dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
 #endif
@@ -562,6 +587,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_stopAllocCounting },
     { "startMethodTracing",         "(Ljava/lang/String;II)V",
         Dalvik_dalvik_system_VMDebug_startMethodTracing },
+    { "isMethodTracingActive",      "()Z",
+        Dalvik_dalvik_system_VMDebug_isMethodTracingActive },
     { "stopMethodTracing",          "()V",
         Dalvik_dalvik_system_VMDebug_stopMethodTracing },
     { "startEmulatorTracing",       "()V",

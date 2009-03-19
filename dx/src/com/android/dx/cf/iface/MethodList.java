@@ -22,11 +22,11 @@ package com.android.dx.cf.iface;
 public interface MethodList {
     /**
      * Get whether this instance is mutable. Note that the
-     * <code>MethodList</code> interface itself doesn't provide any means
+     * {@code MethodList} interface itself doesn't provide any means
      * of mutation, but that doesn't mean that there isn't a non-interface
      * way of mutating an instance.
      *
-     * @return <code>true</code> iff this instance is somehow mutable
+     * @return {@code true} iff this instance is somehow mutable
      */
     public boolean isMutable();
 
@@ -38,10 +38,10 @@ public interface MethodList {
     public int size();
 
     /**
-     * Get the <code>n</code>th method.
+     * Get the {@code n}th method.
      *
-     * @param n <code>n &gt;= 0, n &lt; size()</code>; which method
-     * @return non-null; the method in question
+     * @param n {@code n >= 0, n < size();} which method
+     * @return {@code non-null;} the method in question
      */
     public Method get(int n);
 }

@@ -32,9 +32,9 @@ public interface Machine {
     /**
      * Gets the effective prototype of the method that this instance is
      * being used for. The <i>effective</i> prototype includes an initial
-     * <code>this</code> argument for instance methods.
+     * {@code this} argument for instance methods.
      * 
-     * @return non-null; the method prototype
+     * @return {@code non-null;} the method prototype
      */
     public Prototype getPrototype();
     
@@ -48,21 +48,21 @@ public interface Machine {
      * and store them in the arguments area, indicating that there are now
      * that many arguments. Also, clear the auxiliary arguments.
      *
-     * @param frame non-null; frame to operate on
-     * @param count &gt;= 0; number of values to pop
+     * @param frame {@code non-null;} frame to operate on
+     * @param count {@code >= 0;} number of values to pop
      */
     public void popArgs(Frame frame, int count);
 
     /**
      * Pops values from the stack of the types indicated by the given
-     * <code>Prototype</code> (popped in reverse of the argument
+     * {@code Prototype} (popped in reverse of the argument
      * order, so the first prototype argument type is for the deepest
      * element of the stack), and store them in the arguments area,
      * indicating that there are now that many arguments. Also, clear
      * the auxiliary arguments.
      *
-     * @param frame non-null; frame to operate on
-     * @param prototype non-null; prototype indicating arguments to pop
+     * @param frame {@code non-null;} frame to operate on
+     * @param prototype {@code non-null;} prototype indicating arguments to pop
      */
     public void popArgs(Frame frame, Prototype prototype);
 
@@ -71,8 +71,8 @@ public interface Machine {
      * in the arguments area, indicating that there are now that many
      * arguments. Also, clear the auxiliary arguments.
      *
-     * @param frame non-null; frame to operate on
-     * @param type non-null; type of the argument
+     * @param frame {@code non-null;} frame to operate on
+     * @param type {@code non-null;} type of the argument
      */
     public void popArgs(Frame frame, Type type);
 
@@ -83,9 +83,9 @@ public interface Machine {
      * area, indicating that there are now that many arguments. Also,
      * clear the auxiliary arguments.
      *
-     * @param frame non-null; frame to operate on
-     * @param type1 non-null; type of the first argument
-     * @param type2 non-null; type of the second argument
+     * @param frame {@code non-null;} frame to operate on
+     * @param type1 {@code non-null;} type of the first argument
+     * @param type2 {@code non-null;} type of the second argument
      */
     public void popArgs(Frame frame, Type type1, Type type2);
 
@@ -96,10 +96,10 @@ public interface Machine {
      * area, indicating that there are now that many arguments. Also,
      * clear the auxiliary arguments.
      *
-     * @param frame non-null; frame to operate on
-     * @param type1 non-null; type of the first argument
-     * @param type2 non-null; type of the second argument
-     * @param type3 non-null; type of the third argument
+     * @param frame {@code non-null;} frame to operate on
+     * @param type1 {@code non-null;} type of the first argument
+     * @param type2 {@code non-null;} type of the second argument
+     * @param type3 {@code non-null;} type of the third argument
      */
     public void popArgs(Frame frame, Type type1, Type type2, Type type3);
 
@@ -107,8 +107,8 @@ public interface Machine {
      * Loads the local variable with the given index as the sole argument in
      * the arguments area. Also, clear the auxiliary arguments.
      *
-     * @param frame non-null; frame to operate on
-     * @param idx &gt;= 0; the local variable index
+     * @param frame {@code non-null;} frame to operate on
+     * @param idx {@code >= 0;} the local variable index
      */
     public void localArg(Frame frame, int idx);
 
@@ -116,28 +116,28 @@ public interface Machine {
      * Indicates that the salient type of this operation is as
      * given. This differentiates between, for example, the various
      * arithmetic opcodes, which, by the time they hit a
-     * <code>Machine</code> are collapsed to the <code>int</code>
+     * {@code Machine} are collapsed to the {@code int}
      * variant. (See {@link BytecodeArray#parseInstruction} for
      * details.)
      *
-     * @param type non-null; the salient type of the upcoming operation
+     * @param type {@code non-null;} the salient type of the upcoming operation
      */
     public void auxType(Type type);
 
     /**
      * Indicates that there is an auxiliary (inline, not stack)
-     * argument of type <code>int</code>, with the given value.
+     * argument of type {@code int}, with the given value.
      *
      * <p><b>Note:</b> Perhaps unintuitively, the stack manipulation
-     * ops (e.g., <code>dup</code> and <code>swap</code>) use this to
+     * ops (e.g., {@code dup} and {@code swap}) use this to
      * indicate the result stack pattern with a straightforward hex
      * encoding of the push order starting with least-significant
      * nibbles getting pushed first). For example, an all-category-1
-     * <code>dup2_x1</code> sets this to <code>0x12312</code>, and the
+     * {@code dup2_x1} sets this to {@code 0x12312}, and the
      * other form of that op sets this to
-     * <code>0x121</code>.</p>
+     * {@code 0x121}.</p>
      *
-     * <p><b>Also Note:</b> For <code>switch*</code> instructions, this is
+     * <p><b>Also Note:</b> For {@code switch*} instructions, this is
      * used to indicate the padding value (which is only useful for
      * verification).</p>
      *
@@ -149,10 +149,10 @@ public interface Machine {
      * Indicates that there is an auxiliary (inline, not stack) object
      * argument, with the value based on the given constant.
      *
-     * <p><b>Note:</b> Some opcodes use both <code>int</code> and
+     * <p><b>Note:</b> Some opcodes use both {@code int} and
      * constant auxiliary arguments.</p>
      *
-     * @param cst non-null; the constant containing / referencing
+     * @param cst {@code non-null;} the constant containing / referencing
      * the value
      */
     public void auxCstArg(Constant cst);
@@ -167,12 +167,12 @@ public interface Machine {
 
     /**
      * Indicates that there is an auxiliary (inline, not stack) argument
-     * consisting of a <code>switch*</code> table.
+     * consisting of a {@code switch*} table.
      *
      * <p><b>Note:</b> This is generally used in conjunction with
      * {@link #auxIntArg} (which holds the padding).</p>
      *
-     * @param cases non-null; the list of key-target pairs, plus the default
+     * @param cases {@code non-null;} the list of key-target pairs, plus the default
      * target
      */
     public void auxSwitchArg(SwitchList cases);
@@ -181,7 +181,7 @@ public interface Machine {
      * Indicates that there is an auxiliary (inline, not stack) argument
      * consisting of a list of initial values for a newly created array.
      *
-     * @param initValues non-null; the list of constant values to initialize
+     * @param initValues {@code non-null;} the list of constant values to initialize
      * the array
      */
     public void auxInitValues(ArrayList<Constant> initValues);
@@ -189,9 +189,9 @@ public interface Machine {
     /**
      * Indicates that the target of this operation is the given local.
      *
-     * @param idx &gt;= 0; the local variable index
-     * @param type non-null; the type of the local
-     * @param local null-ok; the name and signature of the local, if known
+     * @param idx {@code >= 0;} the local variable index
+     * @param type {@code non-null;} the type of the local
+     * @param local {@code null-ok;} the name and signature of the local, if known
      */
     public void localTarget(int idx, Type type, LocalItem local);
 
@@ -199,10 +199,10 @@ public interface Machine {
      * "Runs" the indicated opcode in an appropriate way, using the arguments
      * area as appropriate, and modifying the given frame in response.
      *
-     * @param frame non-null; frame to operate on
-     * @param offset &gt;= 0; byte offset in the method to the opcode being
+     * @param frame {@code non-null;} frame to operate on
+     * @param offset {@code >= 0;} byte offset in the method to the opcode being
      * run
-     * @param opcode &gt;= 0; the opcode to run
+     * @param opcode {@code >= 0;} the opcode to run
      */
     public void run(Frame frame, int offset, int opcode);
 }

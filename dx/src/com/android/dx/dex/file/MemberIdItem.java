@@ -29,13 +29,13 @@ public abstract class MemberIdItem extends IdItem {
     /** size of instances when written out to a file, in bytes */
     public static final int WRITE_SIZE = 8;
 
-    /** non-null; the constant for the member */
+    /** {@code non-null;} the constant for the member */
     private final CstMemberRef cst;
 
     /**
      * Constructs an instance.
      * 
-     * @param cst non-null; the constant for the member
+     * @param cst {@code non-null;} the constant for the member
      */
     public MemberIdItem(CstMemberRef cst) {
         super(cst.getDefiningClass());
@@ -86,7 +86,7 @@ public abstract class MemberIdItem extends IdItem {
      * this item, in order that it may be written out. Subclasses must
      * override this to get whatever it is they need to store.
      * 
-     * @param file non-null; the file being written
+     * @param file {@code non-null;} the file being written
      * @return the index in question
      */
     protected abstract int getTypoidIdx(DexFile file);
@@ -96,14 +96,14 @@ public abstract class MemberIdItem extends IdItem {
      * this item, for listing-generating purposes. Subclasses must override
      * this.
      * 
-     * @return non-null; the name in question
+     * @return {@code non-null;} the name in question
      */
     protected abstract String getTypoidName();
 
     /**
      * Gets the member constant.
      * 
-     * @return non-null; the constant
+     * @return {@code non-null;} the constant
      */
     public final CstMemberRef getRef() {
         return cst;

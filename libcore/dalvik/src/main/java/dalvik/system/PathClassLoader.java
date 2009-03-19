@@ -56,8 +56,8 @@ public class PathClassLoader extends ClassLoader {
     /**
      * Creates a {@code PathClassLoader} that operates on a given list of files
      * and directories. This method is equivalent to calling
-     * {@link #PathClassLoader(String, String, ClassLoader) with a {@code null}
-     * value for the second argument (see description there).
+     * {@link #PathClassLoader(String, String, ClassLoader)} with a
+     * {@code null} value for the second argument (see description there).
      * 
      * @param path
      *            the list of files and directories

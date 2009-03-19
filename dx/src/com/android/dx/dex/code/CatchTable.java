@@ -26,13 +26,13 @@ import com.android.dx.util.FixedSizeList;
  */
 public final class CatchTable extends FixedSizeList
         implements Comparable<CatchTable> {
-    /** non-null; empty instance */
+    /** {@code non-null;} empty instance */
     public static final CatchTable EMPTY = new CatchTable(0);
 
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      *
-     * @param size &gt;= 0; the size of the table
+     * @param size {@code >= 0;} the size of the table
      */
     public CatchTable(int size) {
         super(size);
@@ -41,10 +41,10 @@ public final class CatchTable extends FixedSizeList
     /**
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
-     * do that, this will throw <code>NullPointerException</code>.
+     * do that, this will throw {@code NullPointerException}.
      *
-     * @param n &gt;= 0, &lt; size(); which index
-     * @return non-null; element at that index
+     * @param n {@code >= 0, < size();} which index
+     * @return {@code non-null;} element at that index
      */
     public Entry get(int n) {
         return (Entry) get0(n);
@@ -53,8 +53,8 @@ public final class CatchTable extends FixedSizeList
     /**
      * Sets the entry at the given index.
      *
-     * @param n &gt;= 0, &lt; size(); which index
-     * @param entry non-null; the entry to set at <code>n</code>
+     * @param n {@code >= 0, < size();} which index
+     * @param entry {@code non-null;} the entry to set at {@code n}
      */
     public void set(int n, Entry entry) {
         set0(n, entry);
@@ -93,21 +93,21 @@ public final class CatchTable extends FixedSizeList
      * Entry in a catch list.
      */
     public static class Entry implements Comparable<Entry> {
-        /** &gt;= 0; start address */
+        /** {@code >= 0;} start address */
         private final int start;
 
-        /** &gt; start; end address (exclusive) */
+        /** {@code > start;} end address (exclusive) */
         private final int end;
 
-        /** non-null; list of catch handlers */
+        /** {@code non-null;} list of catch handlers */
         private final CatchHandlerList handlers;
 
         /**
          * Constructs an instance.
          *
-         * @param start &gt;= 0; start address 
-         * @param end &gt; start; end address (exclusive)
-         * @param handlers non-null; list of catch handlers
+         * @param start {@code >= 0;} start address 
+         * @param end {@code > start;} end address (exclusive)
+         * @param handlers {@code non-null;} list of catch handlers
          */
         public Entry(int start, int end, CatchHandlerList handlers) {
             if (start < 0) {
@@ -165,7 +165,7 @@ public final class CatchTable extends FixedSizeList
         /**
          * Gets the start address.
          * 
-         * @return &gt;= 0; the start address
+         * @return {@code >= 0;} the start address
          */
         public int getStart() {
             return start;
@@ -174,7 +174,7 @@ public final class CatchTable extends FixedSizeList
         /**
          * Gets the end address (exclusive).
          * 
-         * @return &gt; start; the end address (exclusive)
+         * @return {@code > start;} the end address (exclusive)
          */
         public int getEnd() {
             return end;
@@ -183,7 +183,7 @@ public final class CatchTable extends FixedSizeList
         /**
          * Gets the handlers.
          * 
-         * @return non-null; the handlers
+         * @return {@code non-null;} the handlers
          */
         public CatchHandlerList getHandlers() {
             return handlers;

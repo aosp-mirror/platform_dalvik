@@ -106,6 +106,7 @@ common_periodicChecks:
      *      bool dvmCheckSuspendPending(Thread* self)
      *  Because we reached here via a call, go ahead and build a new frame.
      */
+    EXPORT_PC()                         # need for precise GC
     movl    offGlue_self(%ecx),%eax      # eax<- glue->self
     SPILL(rPC)                      # save edx
     push    %ebp

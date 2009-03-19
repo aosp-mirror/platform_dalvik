@@ -28,7 +28,7 @@ public final class HexParser {
     }
 
     /**
-     * Parses the given text as hex, returning a <code>byte[]</code>
+     * Parses the given text as hex, returning a {@code byte[]}
      * corresponding to the text. The format is simple: Each line may
      * start with a hex offset followed by a colon (which is verified
      * and presumably used just as a comment), and then consists of
@@ -38,8 +38,8 @@ public final class HexParser {
      * of the subsequent characters is used, until the next double
      * quote. Quoted strings may not span multiple lines.
      * 
-     * @param src non-null; the source string
-     * @return non-null; the parsed form
+     * @param src {@code non-null;} the source string
+     * @return {@code non-null;} the parsed form
      */
     public static byte[] parse(String src) {
         int len = src.length();

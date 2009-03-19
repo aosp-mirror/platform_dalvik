@@ -19,24 +19,24 @@ package com.android.dx.cf.attrib;
 import com.android.dx.rop.cst.Constant;
 
 /**
- * Attribute class for <code>AnnotationDefault</code> attributes.
+ * Attribute class for {@code AnnotationDefault} attributes.
  */
 public final class AttAnnotationDefault extends BaseAttribute {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "AnnotationDefault";
 
-    /** non-null; the annotation default value */
+    /** {@code non-null;} the annotation default value */
     private final Constant value;
 
-    /** &gt;= 0; attribute data length in the original classfile (not
+    /** {@code >= 0;} attribute data length in the original classfile (not
      * including the attribute header) */
     private final int byteLength;
 
     /**
      * Constructs an instance.
      * 
-     * @param value non-null; the annotation default value
-     * @param byteLength &gt;= 0; attribute data length in the original
+     * @param value {@code non-null;} the annotation default value
+     * @param byteLength {@code >= 0;} attribute data length in the original
      * classfile (not including the attribute header)
      */
     public AttAnnotationDefault(Constant value, int byteLength) {
@@ -59,7 +59,7 @@ public final class AttAnnotationDefault extends BaseAttribute {
     /**
      * Gets the annotation default value.
      * 
-     * @return non-null; the value
+     * @return {@code non-null;} the value
      */
     public Constant getValue() {
         return value;

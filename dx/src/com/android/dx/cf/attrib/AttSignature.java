@@ -19,19 +19,19 @@ package com.android.dx.cf.attrib;
 import com.android.dx.rop.cst.CstUtf8;
 
 /**
- * Attribute class for standards-track <code>Signature</code> attributes.
+ * Attribute class for standards-track {@code Signature} attributes.
  */
 public final class AttSignature extends BaseAttribute {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "Signature";
 
-    /** non-null; the signature string */
+    /** {@code non-null;} the signature string */
     private final CstUtf8 signature;
 
     /**
      * Constructs an instance.
      * 
-     * @param signature non-null; the signature string
+     * @param signature {@code non-null;} the signature string
      */
     public AttSignature(CstUtf8 signature) {
         super(ATTRIBUTE_NAME);
@@ -51,7 +51,7 @@ public final class AttSignature extends BaseAttribute {
     /**
      * Gets the signature string.
      * 
-     * @return non-null; the signature string
+     * @return {@code non-null;} the signature string
      */
     public CstUtf8 getSignature() {
         return signature;

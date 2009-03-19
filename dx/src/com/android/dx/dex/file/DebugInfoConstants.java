@@ -110,8 +110,8 @@ public interface DebugInfoConstants {
      * next position entry that is added should be considered the end of
      * a method prologue (an appropriate place for a method breakpoint).<p>
      *
-     * The prologue_end register is cleared by any special (&gt= OPCODE_BASE)
-     * opcode.
+     * The prologue_end register is cleared by any special
+     * ({@code >= OPCODE_BASE}) opcode.
      */
     static final int DBG_SET_PROLOGUE_END = 0x07;
 
@@ -121,8 +121,8 @@ public interface DebugInfoConstants {
      * a method epilogue (an appropriate place to suspend execution before
      * method exit).<p>
      *
-     * The epilogue_begin register is cleared by any special (&gt= OPCODE_BASE)
-     * opcode.
+     * The epilogue_begin register is cleared by any special
+     * ({@code >= OPCODE_BASE}) opcode.
      */
     static final int DBG_SET_EPILOGUE_BEGIN = 0x08;
 

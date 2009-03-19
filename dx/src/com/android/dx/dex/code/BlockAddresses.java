@@ -28,15 +28,15 @@ import com.android.dx.rop.code.SourcePosition;
  * start address, end address, and last instruction address.
  */
 public final class BlockAddresses {
-    /** non-null; array containing addresses for the start of each basic
+    /** {@code non-null;} array containing addresses for the start of each basic
      * block (indexed by basic block label) */
     private final CodeAddress[] starts;
 
-    /** non-null; array containing addresses for the final instruction
+    /** {@code non-null;} array containing addresses for the final instruction
      * of each basic block (indexed by basic block label) */
     private final CodeAddress[] lasts;
 
-    /** non-null; array containing addresses for the end (just past the
+    /** {@code non-null;} array containing addresses for the end (just past the
      * final instruction) of each basic block (indexed by basic block
      * label) */
     private final CodeAddress[] ends;
@@ -44,7 +44,7 @@ public final class BlockAddresses {
     /**
      * Constructs an instance.
      *
-     * @param method non-null; the method to have block addresses for
+     * @param method {@code non-null;} the method to have block addresses for
      */
     public BlockAddresses(RopMethod method) {
         BasicBlockList blocks = method.getBlocks();
@@ -60,8 +60,8 @@ public final class BlockAddresses {
     /**
      * Gets the instance for the start of the given block.
      * 
-     * @param block non-null; the block in question
-     * @return non-null; the appropriate instance
+     * @param block {@code non-null;} the block in question
+     * @return {@code non-null;} the appropriate instance
      */
     public CodeAddress getStart(BasicBlock block) {
         return starts[block.getLabel()];
@@ -70,8 +70,8 @@ public final class BlockAddresses {
     /**
      * Gets the instance for the start of the block with the given label.
      * 
-     * @param label non-null; the label of the block in question
-     * @return non-null; the appropriate instance
+     * @param label {@code non-null;} the label of the block in question
+     * @return {@code non-null;} the appropriate instance
      */
     public CodeAddress getStart(int label) {
         return starts[label];
@@ -80,8 +80,8 @@ public final class BlockAddresses {
     /**
      * Gets the instance for the final instruction of the given block.
      * 
-     * @param block non-null; the block in question
-     * @return non-null; the appropriate instance
+     * @param block {@code non-null;} the block in question
+     * @return {@code non-null;} the appropriate instance
      */
     public CodeAddress getLast(BasicBlock block) {
         return lasts[block.getLabel()];
@@ -91,8 +91,8 @@ public final class BlockAddresses {
      * Gets the instance for the final instruction of the block with
      * the given label.
      * 
-     * @param label non-null; the label of the block in question
-     * @return non-null; the appropriate instance
+     * @param label {@code non-null;} the label of the block in question
+     * @return {@code non-null;} the appropriate instance
      */
     public CodeAddress getLast(int label) {
         return lasts[label];
@@ -102,8 +102,8 @@ public final class BlockAddresses {
      * Gets the instance for the end (address after the final instruction)
      * of the given block.
      * 
-     * @param block non-null; the block in question
-     * @return non-null; the appropriate instance
+     * @param block {@code non-null;} the block in question
+     * @return {@code non-null;} the appropriate instance
      */
     public CodeAddress getEnd(BasicBlock block) {
         return ends[block.getLabel()];
@@ -113,8 +113,8 @@ public final class BlockAddresses {
      * Gets the instance for the end (address after the final instruction)
      * of the block with the given label.
      * 
-     * @param label non-null; the label of the block in question
-     * @return non-null; the appropriate instance
+     * @param label {@code non-null;} the label of the block in question
+     * @return {@code non-null;} the appropriate instance
      */
     public CodeAddress getEnd(int label) {
         return ends[label];

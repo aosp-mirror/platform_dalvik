@@ -21,23 +21,23 @@ import java.util.HashMap;
 /**
  * Representation of a method decriptor. Instances of this class are
  * generally interned and may be usefully compared with each other
- * using <code>==</code>.
+ * using {@code ==}.
  */
 public final class Prototype implements Comparable<Prototype> {
-    /** non-null; intern table mapping string descriptors to instances */
+    /** {@code non-null;} intern table mapping string descriptors to instances */
     private static final HashMap<String, Prototype> internTable =
         new HashMap<String, Prototype>(500);
 
-    /** non-null; method descriptor */
+    /** {@code non-null;} method descriptor */
     private final String descriptor;
 
-    /** non-null; return type */
+    /** {@code non-null;} return type */
     private final Type returnType;
 
-    /** non-null; list of parameter types */
+    /** {@code non-null;} list of parameter types */
     private final StdTypeList parameterTypes;
 
-    /** null-ok; list of parameter frame types, if calculated */
+    /** {@code null-ok;} list of parameter frame types, if calculated */
     private StdTypeList parameterFrameTypes;
 
     /**
@@ -45,8 +45,8 @@ public final class Prototype implements Comparable<Prototype> {
      * given method descriptor. See vmspec-2 sec4.3.3 for details on the
      * field descriptor syntax.
      * 
-     * @param descriptor non-null; the descriptor
-     * @return non-null; the corresponding instance
+     * @param descriptor {@code non-null;} the descriptor
+     * @return {@code non-null;} the corresponding instance
      * @throws IllegalArgumentException thrown if the descriptor has
      * invalid syntax
      */
@@ -111,8 +111,8 @@ public final class Prototype implements Comparable<Prototype> {
      * that there is a '(' at the start of the descriptor and a
      * single ')' somewhere before the end.
      * 
-     * @param descriptor non-null; the descriptor string
-     * @return non-null; array large enough to hold all parsed parameter
+     * @param descriptor {@code non-null;} the descriptor string
+     * @return {@code non-null;} array large enough to hold all parsed parameter
      * types, but which is likely actually larger than needed
      */
     private static Type[] makeParameterArray(String descriptor) {
@@ -153,14 +153,14 @@ public final class Prototype implements Comparable<Prototype> {
     /**
      * Interns an instance, adding to the descriptor as necessary based
      * on the given definer, name, and flags. For example, an init
-     * method has an uninitialized object of type <code>definer</code>
+     * method has an uninitialized object of type {@code definer}
      * as its first argument.
      * 
-     * @param descriptor non-null; the descriptor string
-     * @param definer non-null; class the method is defined on
+     * @param descriptor {@code non-null;} the descriptor string
+     * @param definer {@code non-null;} class the method is defined on
      * @param isStatic whether this is a static method
      * @param isInit whether this is an init method
-     * @return non-null; the interned instance
+     * @return {@code non-null;} the interned instance
      */
     public static Prototype intern(String descriptor, Type definer,
             boolean isStatic, boolean isInit) {
@@ -179,11 +179,11 @@ public final class Prototype implements Comparable<Prototype> {
 
     /**
      * Interns an instance which consists of the given number of
-     * <code>int</code>s along with the given return type
+     * {@code int}s along with the given return type
      * 
-     * @param returnType non-null; the return type
-     * @param count &gt; 0; the number of elements in the prototype
-     * @return non-null; the interned instance
+     * @param returnType {@code non-null;} the return type
+     * @param count {@code > 0;} the number of elements in the prototype
+     * @return {@code non-null;} the interned instance
      */
     public static Prototype internInts(Type returnType, int count) {
         // Make the descriptor...
@@ -207,7 +207,7 @@ public final class Prototype implements Comparable<Prototype> {
      * Constructs an instance. This is a private constructor; use one
      * of the public static methods to get instances.
      * 
-     * @param descriptor non-null; the descriptor string
+     * @param descriptor {@code non-null;} the descriptor string
      */
     private Prototype(String descriptor, Type returnType,
             StdTypeList parameterTypes) {
@@ -304,7 +304,7 @@ public final class Prototype implements Comparable<Prototype> {
     /**
      * Gets the descriptor string.
      * 
-     * @return non-null; the descriptor
+     * @return {@code non-null;} the descriptor
      */
     public String getDescriptor() {
         return descriptor;
@@ -313,7 +313,7 @@ public final class Prototype implements Comparable<Prototype> {
     /**
      * Gets the return type.
      * 
-     * @return non-null; the return type
+     * @return {@code non-null;} the return type
      */
     public Type getReturnType() {
         return returnType;
@@ -322,7 +322,7 @@ public final class Prototype implements Comparable<Prototype> {
     /**
      * Gets the list of parameter types.
      * 
-     * @return non-null; the list of parameter types
+     * @return {@code non-null;} the list of parameter types
      */
     public StdTypeList getParameterTypes() {
         return parameterTypes;
@@ -334,7 +334,7 @@ public final class Prototype implements Comparable<Prototype> {
      * "intlike" types (see {@link Type#isIntlike}) are replaced by
      * {@link Type#INT}.
      * 
-     * @return non-null; the list of parameter frame types
+     * @return {@code non-null;} the list of parameter frame types
      */
     public StdTypeList getParameterFrameTypes() {
         if (parameterFrameTypes == null) {
@@ -360,8 +360,8 @@ public final class Prototype implements Comparable<Prototype> {
      * except that it has an additional parameter prepended to the original's
      * argument list.
      * 
-     * @param param non-null; the new first parameter
-     * @return non-null; an appropriately-constructed instance
+     * @param param {@code non-null;} the new first parameter
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public Prototype withFirstParameter(Type param) {
         String newDesc = "(" + param.getDescriptor() + descriptor.substring(1);
@@ -380,8 +380,8 @@ public final class Prototype implements Comparable<Prototype> {
      * there. If a conflicting value is already in the table, then leave it.
      * Return the interned value.
      * 
-     * @param desc non-null; instance to make interned
-     * @return non-null; the actual interned object
+     * @param desc {@code non-null;} instance to make interned
+     * @return {@code non-null;} the actual interned object
      */
     private static Prototype putIntern(Prototype desc) {
         synchronized (internTable) {

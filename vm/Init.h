@@ -41,9 +41,14 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
     DexClassVerifyMode verifyMode, int dexoptFlags);
 
 /*
- * Unconditionally abort the entire VM.  Try not to use this.
+ * Replacement for fprintf() when we want to send a message to the console.
+ * This defaults to fprintf(), but will use the JNI fprintf callback if
+ * one was provided.
  */
-int dvmFprintf(FILE* fp, const char* format, ...);
-void dvmAbort(void);
+int dvmFprintf(FILE* fp, const char* format, ...)
+#if defined(__GNUC__)
+    __attribute__ ((format(printf, 2, 3)))
+#endif
+    ;
 
 #endif /*_DALVIK_INIT*/

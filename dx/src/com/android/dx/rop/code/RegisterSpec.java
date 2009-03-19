@@ -30,33 +30,33 @@ import java.util.HashMap;
  */
 public final class RegisterSpec
         implements TypeBearer, ToHuman, Comparable<RegisterSpec> {
-    /** non-null; string to prefix register numbers with */
+    /** {@code non-null;} string to prefix register numbers with */
     public static final String PREFIX = "v";
 
-    /** non-null; intern table for instances */
+    /** {@code non-null;} intern table for instances */
     private static final HashMap<Object, RegisterSpec> theInterns =
         new HashMap<Object, RegisterSpec>(1000);
 
-    /** non-null; common comparison instance used while interning */
+    /** {@code non-null;} common comparison instance used while interning */
     private static final ForComparison theInterningItem = new ForComparison();
 
-    /** &gt;= 0; register number */
+    /** {@code >= 0;} register number */
     private final int reg;
 
-    /** non-null; type loaded or stored */
+    /** {@code non-null;} type loaded or stored */
     private final TypeBearer type;
 
-    /** null-ok; local variable info associated with this register, if any */
+    /** {@code null-ok;} local variable info associated with this register, if any */
     private final LocalItem local;
 
     /**
      * Intern the given triple as an instance of this class.
      *
-     * @param reg &gt;= 0; the register number
-     * @param type non-null; the type (or possibly actual value) which
+     * @param reg {@code >= 0;} the register number
+     * @param type {@code non-null;} the type (or possibly actual value) which
      * is loaded from or stored to the indicated register
-     * @param local null-ok; the associated local variable, if any
-     * @return non-null; an appropriately-constructed instance
+     * @param local {@code null-ok;} the associated local variable, if any
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     private static RegisterSpec intern(int reg, TypeBearer type,
             LocalItem local) {
@@ -77,10 +77,10 @@ public final class RegisterSpec
      * no variable info. This method is allowed to return shared
      * instances (but doesn't necessarily do so).
      * 
-     * @param reg &gt;= 0; the register number
-     * @param type non-null; the type (or possibly actual value) which
+     * @param reg {@code >= 0;} the register number
+     * @param type {@code non-null;} the type (or possibly actual value) which
      * is loaded from or stored to the indicated register
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public static RegisterSpec make(int reg, TypeBearer type) {
         return intern(reg, type, null);
@@ -91,11 +91,11 @@ public final class RegisterSpec
      * variable info. This method is allowed to return shared
      * instances (but doesn't necessarily do so).
      *
-     * @param reg &gt;= 0; the register number
-     * @param type non-null; the type (or possibly actual value) which
+     * @param reg {@code >= 0;} the register number
+     * @param type {@code non-null;} the type (or possibly actual value) which
      * is loaded from or stored to the indicated register
-     * @param local non-null; the associated local variable
-     * @return non-null; an appropriately-constructed instance
+     * @param local {@code non-null;} the associated local variable
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public static RegisterSpec make(int reg, TypeBearer type,
             LocalItem local) {
@@ -111,12 +111,12 @@ public final class RegisterSpec
      * variable info. This method is allowed to return shared
      * instances (but doesn't necessarily do so).
      *
-     * @param reg &gt;= 0; the register number
-     * @param type non-null; the type (or possibly actual value) which
+     * @param reg {@code >= 0;} the register number
+     * @param type {@code non-null;} the type (or possibly actual value) which
      * is loaded from or stored to the indicated register
-     * @param local null-ok; the associated variable info or null for
+     * @param local {@code null-ok;} the associated variable info or null for
      * none
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public static RegisterSpec makeLocalOptional(
             int reg, TypeBearer type, LocalItem local) {
@@ -127,8 +127,8 @@ public final class RegisterSpec
     /**
      * Gets the string form for the given register number.
      * 
-     * @param reg &gt= 0; the register number
-     * @return non-null; the string form
+     * @param reg {@code >= 0;} the register number
+     * @return {@code non-null;} the string form
      */
     public static String regString(int reg) {
         return PREFIX + reg;
@@ -138,10 +138,10 @@ public final class RegisterSpec
      * Constructs an instance. This constructor is private. Use
      * {@link #make}.
      * 
-     * @param reg &gt;= 0; the register number
-     * @param type non-null; the type (or possibly actual value) which
+     * @param reg {@code >= 0;} the register number
+     * @param type {@code non-null;} the type (or possibly actual value) which
      * is loaded from or stored to the indicated register
-     * @param local null-ok; the associated local variable, if any
+     * @param local {@code null-ok;} the associated local variable, if any
      */
     private RegisterSpec(int reg, TypeBearer type, LocalItem local) {
         if (reg < 0) {
@@ -178,7 +178,7 @@ public final class RegisterSpec
      * to ignore whatever arbitrary extra stuff might be carried around
      * by an outer {@link TypeBearer}.
      * 
-     * @param other null-ok; spec to compare to
+     * @param other {@code null-ok;} spec to compare to
      * @return {@code true} iff {@code this} and {@code other} are equal
      * in the stated way
      */
@@ -195,7 +195,7 @@ public final class RegisterSpec
      * This is useful to determine if two instances refer to the "same"
      * local variable.
      * 
-     * @param other null-ok; spec to compare to
+     * @param other {@code null-ok;} spec to compare to
      * @return {@code true} iff {@code this} and {@code other} are equal
      * in the stated way
      */
@@ -230,8 +230,8 @@ public final class RegisterSpec
      * Compares by (in priority order) register number, unwrapped type
      * (that is types not {@link TypeBearer}s, and local info.
      * 
-     * @param other non-null; spec to compare to
-     * @return {@code -1..1}; standard result of comparison
+     * @param other {@code non-null;} spec to compare to
+     * @return {@code -1..1;} standard result of comparison
      */
     public int compareTo(RegisterSpec other) {
         if (this.reg < other.reg) {
@@ -316,7 +316,7 @@ public final class RegisterSpec
     /**
      * Gets the register number.
      * 
-     * @return &gt;= 0; the register number
+     * @return {@code >= 0;} the register number
      */
     public int getReg() {
         return reg;
@@ -326,7 +326,7 @@ public final class RegisterSpec
      * Gets the type (or actual value) which is loaded from or stored
      * to the register associated with this instance.
      * 
-     * @return non-null; the type
+     * @return {@code non-null;} the type
      */
     public TypeBearer getTypeBearer() {
         return type;
@@ -335,7 +335,7 @@ public final class RegisterSpec
     /**
      * Gets the variable info associated with this instance, if any.
      *
-     * @return null-ok; the variable info, or <code>null</code> if this
+     * @return {@code null-ok;} the variable info, or {@code null} if this
      * instance has none
      */
     public LocalItem getLocalItem() {
@@ -349,7 +349,7 @@ public final class RegisterSpec
      * be used to determine the minimum required register count
      * implied by this instance.
      * 
-     * @return &gt;= 0; the required registers size
+     * @return {@code >= 0;} the required registers size
      */
     public int getNextReg() {
         return reg + getCategory();
@@ -357,11 +357,11 @@ public final class RegisterSpec
 
     /**
      * Gets the category of this instance's type. This is just a convenient
-     * shorthand for <code>getType().getCategory()</code>.
+     * shorthand for {@code getType().getCategory()}.
      * 
      * @see #isCategory1
      * @see #isCategory2
-     * @return 1..2; the category of this instance's type
+     * @return {@code 1..2;} the category of this instance's type
      */
     public int getCategory() {
         return type.getType().getCategory();
@@ -369,7 +369,7 @@ public final class RegisterSpec
 
     /**
      * Gets whether this instance's type is category 1. This is just a
-     * convenient shorthand for <code>getType().isCategory1()</code>.
+     * convenient shorthand for {@code getType().isCategory1()}.
      * 
      * @see #getCategory
      * @see #isCategory2
@@ -381,7 +381,7 @@ public final class RegisterSpec
 
     /**
      * Gets whether this instance's type is category 2. This is just a
-     * convenient shorthand for <code>getType().isCategory2()</code>.
+     * convenient shorthand for {@code getType().isCategory2()}.
      * 
      * @see #getCategory
      * @see #isCategory1
@@ -394,7 +394,7 @@ public final class RegisterSpec
     /**
      * Gets the string form for just the register number of this instance.
      * 
-     * @return non-null; the register string form
+     * @return {@code non-null;} the register string form
      */
     public String regString() {
         return regString(reg);
@@ -405,28 +405,28 @@ public final class RegisterSpec
      * and the given one, if any. The intersection is defined as follows:
      * 
      * <ul>
-     *   <li>If <code>other</code> is <code>null</code>, then the result
-     *     is <code>null</code>.
+     *   <li>If {@code other} is {@code null}, then the result
+     *     is {@code null}.
      *   <li>If the register numbers don't match, then the intersection
-     *     is <code>null</code>. Otherwise, the register number of the
+     *     is {@code null}. Otherwise, the register number of the
      *     intersection is the same as the one in the two instances.</li>
-     *   <li>If the types returned by <code>getType()</code> are not
-     *     <code>equals()</code>, then the intersection is null.</li>
-     *   <li>If the type bearers returned by <code>getTypeBearer()</code>
-     *     are <code>equals()</code>, then the intersection's type bearer
+     *   <li>If the types returned by {@code getType()} are not
+     *     {@code equals()}, then the intersection is null.</li>
+     *   <li>If the type bearers returned by {@code getTypeBearer()}
+     *     are {@code equals()}, then the intersection's type bearer
      *     is the one from this instance. Otherwise, the intersection's
-     *     type bearer is the <code>getType()</code> of this instance.</li>
-     *   <li>If the locals are <code>equals()</code>, then the local info
+     *     type bearer is the {@code getType()} of this instance.</li>
+     *   <li>If the locals are {@code equals()}, then the local info
      *     of the intersection is the local info of this instance. Otherwise,
-     *     the local info of the intersection is <code>null</code>.</li>
+     *     the local info of the intersection is {@code null}.</li>
      * </ul>
      * 
-     * @param other null-ok; instance to intersect with (or <code>null</code>)
+     * @param other {@code null-ok;} instance to intersect with (or {@code null})
      * @param localPrimary whether local variables are primary to the
-     * intersection; if <code>true</code>, then the only non-null
+     * intersection; if {@code true}, then the only non-null
      * results occur when registers being intersected have equal local
-     * infos (or both have <code>null</code> local infos)
-     * @return null-ok; the intersection
+     * infos (or both have {@code null} local infos)
+     * @return {@code null-ok;} the intersection
      */
     public RegisterSpec intersect(RegisterSpec other, boolean localPrimary) {
         if (this == other) {
@@ -471,8 +471,8 @@ public final class RegisterSpec
      * Returns an instance that is identical to this one, except that the
      * register number is replaced by the given one.
      * 
-     * @param newReg &gt;= 0; the new register number
-     * @return non-null; an appropriately-constructed instance
+     * @param newReg {@code >= 0;} the new register number
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpec withReg(int newReg) {
         if (reg == newReg) {
@@ -486,8 +486,8 @@ public final class RegisterSpec
      * Returns an instance that is identical to this one, except that
      * the type is replaced by the given one.
      *
-     * @param newType non-null; the new type
-     * @return non-null; an appropriately-constructed instance
+     * @param newType {@code non-null;} the new type
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpec withType(TypeBearer newType) {
         return makeLocalOptional(reg, newType, local);
@@ -498,7 +498,7 @@ public final class RegisterSpec
      * register number is offset by the given amount.
      * 
      * @param delta the amount to offset the register number by
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpec withOffset(int delta) {
         if (delta == 0) {
@@ -514,7 +514,7 @@ public final class RegisterSpec
      * (thereby stripping off non-type information) with any
      * initialization information stripped away as well.
      * 
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpec withSimpleType() {
         TypeBearer orig = type;
@@ -541,7 +541,7 @@ public final class RegisterSpec
      * Returns an instance that is identical to this one except that the
      * local variable is as specified in the parameter.
      *
-     * @param local null-ok; the local item or null for none
+     * @param local {@code null-ok;} the local item or null for none
      * @return an appropriate instance
      */
     public RegisterSpec withLocalItem(LocalItem local) {
@@ -559,7 +559,7 @@ public final class RegisterSpec
      * Helper for {@link #toString} and {@link #toHuman}.
      * 
      * @param human whether to be human-oriented
-     * @return non-null; the string form
+     * @return {@code non-null;} the string form
      */
     private String toString0(boolean human) {
         StringBuffer sb = new StringBuffer(40);
@@ -588,27 +588,27 @@ public final class RegisterSpec
 
     /**
      * Holder of register spec data for the purposes of comparison (so that
-     * <code>RegisterSpec</code> itself can still keep <code>final</code>
+     * {@code RegisterSpec} itself can still keep {@code final}
      * instance variables.
      */
     private static class ForComparison {
-        /** &gt;= 0; register number */
+        /** {@code >= 0;} register number */
         private int reg;
         
-        /** non-null; type loaded or stored */
+        /** {@code non-null;} type loaded or stored */
         private TypeBearer type;
 
-        /** null-ok; local variable associated with this register, if any */
+        /** {@code null-ok;} local variable associated with this register, if any */
         private LocalItem local;
 
         /**
          * Set all the instance variables.
          * 
-         * @param reg &gt;= 0; the register number
-         * @param type non-null; the type (or possibly actual value) which
+         * @param reg {@code >= 0;} the register number
+         * @param type {@code non-null;} the type (or possibly actual value) which
          * is loaded from or stored to the indicated register
-         * @param local null-ok; the associated local variable, if any
-         * @return non-null; an appropriately-constructed instance
+         * @param local {@code null-ok;} the associated local variable, if any
+         * @return {@code non-null;} an appropriately-constructed instance
          */
         public void set(int reg, TypeBearer type, LocalItem local) {
             this.reg = reg;
@@ -617,10 +617,10 @@ public final class RegisterSpec
         }
 
         /**
-         * Construct a <code>RegisterSpec</code> of this instance's
+         * Construct a {@code RegisterSpec} of this instance's
          * contents.
          * 
-         * @return non-null; an appropriately-constructed instance
+         * @return {@code non-null;} an appropriately-constructed instance
          */
         public RegisterSpec toRegisterSpec() {
             return new RegisterSpec(reg, type, local);

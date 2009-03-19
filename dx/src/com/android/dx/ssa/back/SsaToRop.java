@@ -38,7 +38,9 @@ import com.android.dx.util.IntList;
 import com.android.dx.util.Hex;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,55 +48,67 @@ import java.util.List;
  * Converts a method in SSA form to ROP form.
  */
 public class SsaToRop {
-
+    /** local debug flag */
     private static final boolean DEBUG = false;
 
-    /** non-null; method to process */
+    /** {@code non-null;} method to process */
     private final SsaMethod ssaMeth;
 
     /**
-     * true if the converter should attempt to minimize
+     * {@code true} if the converter should attempt to minimize
      * the rop-form register count
      */
     private final boolean minimizeRegisters;
 
-    /** interference graph */
-    private InterferenceGraph interference;
+    /** {@code non-null;} interference graph */
+    private final InterferenceGraph interference;
 
     /**
      * Converts a method in SSA form to ROP form.
-     * @param ssaMeth input
-     * @return non-null; rop-form output
+     * 
+     * @param ssaMeth {@code non-null;} method to process
+     * @param minimizeRegisters {@code true} if the converter should
+     * attempt to minimize the rop-form register count
+     * @return {@code non-null;} rop-form output
      */
     public static RopMethod convertToRopMethod(SsaMethod ssaMeth,
             boolean minimizeRegisters) {
         return new SsaToRop(ssaMeth, minimizeRegisters).convert();
     }
 
-    private SsaToRop(final SsaMethod ssaMethod, boolean minimizeRegisters) {
+    /**
+     * Constructs an instance.
+     * 
+     * @param ssaMeth {@code non-null;} method to process
+     * @param minimizeRegisters {@code true} if the converter should
+     * attempt to minimize the rop-form register count
+     */
+    private SsaToRop(SsaMethod ssaMethod, boolean minimizeRegisters) {
         this.minimizeRegisters = minimizeRegisters;
         this.ssaMeth = ssaMethod;
+        this.interference =
+            LivenessAnalyzer.constructInterferenceGraph(ssaMethod);
     }
 
+    /**
+     * Performs the conversion.
+     * 
+     * @return {@code non-null;} rop-form output
+     */
     private RopMethod convert() {
-        interference = LivenessAnalyzer.constructInterferenceGraph(ssaMeth);
-
         if (DEBUG) {
             interference.dumpToStdout();
         }
 
-        RegisterAllocator allocator;
-        RegisterMapper mapper;
+        // These are other allocators for debugging or historical comparison:
+        // allocator = new NullRegisterAllocator(ssaMeth, interference);
+        // allocator = new FirstFitAllocator(ssaMeth, interference);
 
-        // These are other allocators for debugging or historical comparison
+        RegisterAllocator allocator =
+            new FirstFitLocalCombiningAllocator(ssaMeth, interference,
+                    minimizeRegisters);
 
-        //allocator = new NullRegisterAllocator(ssaMeth, interference);
-        //allocator = new FirstFitAllocator(ssaMeth, interference);
-
-        allocator = new FirstFitLocalCombiningAllocator(ssaMeth, interference,
-                minimizeRegisters);
-
-        mapper = allocator.allocateRegisters();
+        RegisterMapper mapper = allocator.allocateRegisters();
 
         if (DEBUG) {
             System.out.println("Printing reg map");
@@ -113,22 +127,20 @@ public class SsaToRop {
 
         removeEmptyGotos();
 
-        RopMethod ropMethod;
-
-        ropMethod = convertToRop();
-
+        RopMethod ropMethod = new RopMethod(convertBasicBlocks(),
+                ssaMeth.blockIndexToRopLabel(ssaMeth.getEntryBlockIndex()));
         ropMethod = new IdenticalBlockCombiner(ropMethod).process();
 
         return ropMethod;
     }
 
-
     /**
-     * Removes all blocks containing only GOTOs from the control flow. Although
-     * much of this work will be done later when converting from rop to dex,
-     * not all simplification cases can be handled there. Furthermore, any no-op
-     * block between the exit block and blocks containing the real return or
-     * throw statements must be removed.
+     * Removes all blocks containing only GOTOs from the control flow. 
+     * Although much of this work will be done later when converting
+     * from rop to dex, not all simplification cases can be handled
+     * there. Furthermore, any no-op block between the exit block and
+     * blocks containing the real return or throw statements must be
+     * removed.
      */
     private void removeEmptyGotos() {
         final ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
@@ -139,8 +151,7 @@ public class SsaToRop {
 
                 if ((insns.size() == 1)
                         && (insns.get(0).getOpcode() == Rops.GOTO)) {
-
-                    BitSet preds = (BitSet)b.getPredecessors().clone();
+                    BitSet preds = (BitSet) b.getPredecessors().clone();
 
                     for (int i = preds.nextSetBit(0); i >= 0;
                             i = preds.nextSetBit(i + 1)) {
@@ -154,89 +165,47 @@ public class SsaToRop {
     }
 
     /**
-     * This method is not presently used.
-     * @return a list of registers ordered by most-frequently-used
-     * to least-frequently-used. Each register is listed once and only once.
-     */
-    public int[] getRegistersByFrequency() {
-        int regCount = ssaMeth.getRegCount();
-        Integer[] ret = new Integer[ssaMeth.getRegCount()];
-
-        for (int i = 0; i < regCount; i++) {
-            ret[i] = i;
-        }
-
-        java.util.Arrays.sort(ret, new java.util.Comparator<Integer>() {
-            public int compare (Integer o1, Integer o2) {
-                return ssaMeth.getUseListForRegister(o2).size()
-                        - ssaMeth.getUseListForRegister(o1).size();
-            }
-
-            public boolean equals(Object o) {
-                return o == this;
-            }
-        });
-
-        int result[] = new int[regCount];
-
-        for (int i = 0; i < regCount; i++) {
-            result[i] = ret[i];
-        }
-
-        return result;
-    }
-
-    /**
-     * See Appel 19.6
-     * To remove the phi instructions in an edge-split SSA representation
-     * we know we can always insert a move in a predecessor block
+     * See Appel 19.6. To remove the phi instructions in an edge-split
+     * SSA representation we know we can always insert a move in a
+     * predecessor block.
      */
     private void removePhiFunctions() {
-        for (SsaBasicBlock block: ssaMeth.getBlocks()) {
-            // Add moves in all the pred blocks for each phi insn`
+        for (SsaBasicBlock block : ssaMeth.getBlocks()) {
+            // Add moves in all the pred blocks for each phi insn.
             block.forEachPhiInsn(new PhiVisitor(block));
-            // Delete the phi insns
+            // Delete the phi insns.
             block.removeAllPhiInsns();
         }
 
         /*
          * After all move insns have been added: sort them so they don't
-         * destructively interfere
+         * destructively interfere.
          */
-        for (SsaBasicBlock block: ssaMeth.getBlocks()) {
+        for (SsaBasicBlock block : ssaMeth.getBlocks()) {
             block.scheduleMovesFromPhis();
         }
     }
 
     /**
-     * PhiSuccessorUpdater for adding move instructions to predecessors based
-     * on phi insns.
+     * Helper for {@link #removePhiFunctions}: PhiSuccessorUpdater for
+     * adding move instructions to predecessors based on phi insns.
      */
     private class PhiVisitor implements PhiInsn.Visitor {
-        SsaBasicBlock block;
+        private final SsaBasicBlock block;
 
-        PhiVisitor (final SsaBasicBlock block) {
+        PhiVisitor(SsaBasicBlock block) {
             this.block = block;
         }
 
-        public void visitPhiInsn (PhiInsn insn) {
-            RegisterSpecList sources;
-            RegisterSpec result;
+        public void visitPhiInsn(PhiInsn insn) {
             ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
-
-            sources = insn.getSources();
-            result = insn.getResult();
-
+            RegisterSpecList sources = insn.getSources();
+            RegisterSpec result = insn.getResult();
             int sz = sources.size();
 
-            for (int i = 0; i <sz; i++) {
-                RegisterSpec source;
-
-                source = sources.get(i);
-
-                SsaBasicBlock predBlock;
-
-                predBlock = blocks.get(
+            for (int i = 0; i < sz; i++) {
+                RegisterSpec source = sources.get(i);
+                SsaBasicBlock predBlock = blocks.get(
                         insn.predBlockIndexForSourcesIndex(i));
 
                 predBlock.addMoveToEnd(result, source);
@@ -250,9 +219,7 @@ public class SsaToRop {
      * Dalvik calling convention.
      */
     private void moveParametersToHighRegisters() {
-
         int paramWidth = ssaMeth.getParamWidth();
-
         BasicRegisterMapper mapper
                 = new BasicRegisterMapper(ssaMeth.getRegCount());
         int regCount = ssaMeth.getRegCount();
@@ -271,11 +238,6 @@ public class SsaToRop {
         }
 
         ssaMeth.mapRegisters(mapper);
-    }
-
-    private RopMethod convertToRop() {
-        return new RopMethod(convertBasicBlocks(),
-                ssaMeth.blockIndexToRopLabel(ssaMeth.getEntryBlockIndex()));
     }
 
     /**
@@ -314,7 +276,7 @@ public class SsaToRop {
      * Validates that a basic block is a valid end predecessor. It must
      * end in a RETURN or a THROW. Throws a runtime exception on error.
      *
-     * @param b non-null; block to validate
+     * @param b {@code non-null;} block to validate
      * @throws RuntimeException on error
      */
     private void verifyValidExitPredecessor(SsaBasicBlock b) {
@@ -337,14 +299,13 @@ public class SsaToRop {
      * @return ROP block
      */
     private BasicBlock convertBasicBlock(SsaBasicBlock block) {
-        BasicBlock result;
         IntList successorList = block.getRopLabelSuccessorList();
         int primarySuccessorLabel = block.getPrimarySuccessorRopLabel();
-        // Filter out any reference to the SSA form's exit block
 
-        // exit block may be null
+        // Filter out any reference to the SSA form's exit block.
+
+        // Exit block may be null.
         SsaBasicBlock exitBlock = ssaMeth.getExitBlock();
-
         int exitRopLabel = (exitBlock == null) ? -1 : exitBlock.getRopLabel();
 
         if (successorList.contains(exitRopLabel)) {
@@ -362,7 +323,7 @@ public class SsaToRop {
 
         successorList.setImmutable();
 
-        result = new BasicBlock(
+        BasicBlock result = new BasicBlock(
                 block.getRopLabel(), convertInsns(block.getInsns()),
                 successorList,
                 primarySuccessorLabel);
@@ -371,16 +332,14 @@ public class SsaToRop {
     }
 
     /**
-     * Converts an insn list to rop form
-     * @param ssaInsns non-null;old instructions
-     * @return non-null; immutable instruction list
+     * Converts an insn list to rop form.
+     * 
+     * @param ssaInsns {@code non-null;} old instructions
+     * @return {@code non-null;} immutable instruction list
      */
     private InsnList convertInsns(ArrayList<SsaInsn> ssaInsns) {
-        InsnList result;
-        int insnCount;
-
-        insnCount = ssaInsns.size();
-        result = new InsnList (insnCount);
+        int insnCount = ssaInsns.size();
+        InsnList result = new InsnList(insnCount);
 
         for (int i = 0; i < insnCount; i++) {
             result.set(i, ssaInsns.get(i).toRopInsn());
@@ -390,4 +349,35 @@ public class SsaToRop {
 
         return result;
     }
+
+    /**
+     * This method is not presently used.
+     * 
+     * @return a list of registers ordered by most-frequently-used to
+     * least-frequently-used. Each register is listed once and only
+     * once.
+     */
+    public int[] getRegistersByFrequency() {
+        int regCount = ssaMeth.getRegCount();
+        Integer[] ret = new Integer[regCount];
+
+        for (int i = 0; i < regCount; i++) {
+            ret[i] = i;
+        }
+
+        Arrays.sort(ret, new Comparator<Integer>() {
+            public int compare(Integer o1, Integer o2) {
+                return ssaMeth.getUseListForRegister(o2).size()
+                        - ssaMeth.getUseListForRegister(o1).size();
+            }
+        });
+
+        int result[] = new int[regCount];
+
+        for (int i = 0; i < regCount; i++) {
+            result[i] = ret[i];
+        }
+
+        return result;
+    }    
 }

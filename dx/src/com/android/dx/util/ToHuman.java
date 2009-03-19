@@ -23,9 +23,9 @@ package com.android.dx.util;
 public interface ToHuman {
     /**
      * Return the "human" string form of this instance.  This is
-     * generally less "debuggy" than <code>toString()</code>.
+     * generally less "debuggy" than {@code toString()}.
      *
-     * @return non-null; the human string form
+     * @return {@code non-null;} the human string form
      */
     public String toHuman();
 }

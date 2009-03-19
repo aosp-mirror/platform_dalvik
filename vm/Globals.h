@@ -99,6 +99,7 @@ struct DvmGlobals {
 
     DexOptimizerMode    dexOptMode;
     DexClassVerifyMode  classVerifyMode;
+    bool        preciseGc;
     bool        generateRegisterMaps;
 
     int         assertionCtrlCount;
@@ -462,10 +463,13 @@ struct DvmGlobals {
     /*
      * Compute some stats on loaded classes.
      */
-    int             numLoadedClasses;
-    int             numDeclaredMethods;
-    int             numDeclaredInstFields;
-    int             numDeclaredStaticFields;
+    int         numLoadedClasses;
+    int         numDeclaredMethods;
+    int         numDeclaredInstFields;
+    int         numDeclaredStaticFields;
+
+    /* when using a native debugger, set this to suppress watchdog timers */
+    bool        nativeDebuggerActive;
 
     /*
      * JDWP debugger support.
@@ -594,6 +598,9 @@ struct DvmGlobals {
 #ifdef COUNT_PRECISE_METHODS
     PointerSet* preciseMethods;
 #endif
+
+    /* some RegisterMap statistics, useful during development */
+    void*       registerMapStats;
 };
 
 extern struct DvmGlobals gDvm;

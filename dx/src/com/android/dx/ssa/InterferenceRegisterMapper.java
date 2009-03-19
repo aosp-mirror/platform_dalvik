@@ -33,7 +33,6 @@ import java.util.BitSet;
  * have variable register widths/categories, and the new namespace does.
  */
 public class InterferenceRegisterMapper extends BasicRegisterMapper {
-
     /**
      * Array of interference sets. ArrayList is indexed by new namespace
      * and BitIntSet's are indexed by old namespace.  The list expands
@@ -45,16 +44,15 @@ public class InterferenceRegisterMapper extends BasicRegisterMapper {
      */
     private final ArrayList<BitIntSet> newRegInterference;
 
-    /**
-     * The interference graph for the old namespace
-     */
+    /** the interference graph for the old namespace */
     private final InterferenceGraph oldRegInterference;
 
     /**
-     * @param countOldRegisters number of registers in old namespace.
+     * Constructs an instance
+     * 
+     * @param countOldRegisters number of registers in old namespace
      */
-    public InterferenceRegisterMapper(
-            InterferenceGraph oldRegInterference,
+    public InterferenceRegisterMapper(InterferenceGraph oldRegInterference,
             int countOldRegisters) {
         super(countOldRegisters);
 
@@ -75,8 +73,8 @@ public class InterferenceRegisterMapper extends BasicRegisterMapper {
     }
 
     /**
-     * Checks to see if old namespace reg <code>oldReg</code> interferes
-     * with what currently maps to <code>newReg</code>.
+     * Checks to see if old namespace reg {@code oldReg} interferes
+     * with what currently maps to {@code newReg}.
      *
      * @param oldReg old namespace register
      * @param newReg new namespace register
@@ -101,10 +99,10 @@ public class InterferenceRegisterMapper extends BasicRegisterMapper {
     }
 
     /**
-     * Checks to see if old namespace reg <code>oldReg</code> interferes
-     * with what currently maps to <code>newReg</code>.
+     * Checks to see if old namespace reg {@code oldReg} interferes
+     * with what currently maps to {@code newReg}.
      *
-     * @param oldSpec non-null; old namespace register
+     * @param oldSpec {@code non-null;} old namespace register
      * @param newReg new namespace register
      * @return true if oldReg will interfere with newReg
      */
@@ -115,6 +113,7 @@ public class InterferenceRegisterMapper extends BasicRegisterMapper {
     /**
      * Adds a register's interference set to the interference list,
      * growing it if necessary.
+     * 
      * @param newReg register in new namespace
      * @param oldReg register in old namespace
      */
@@ -134,17 +133,17 @@ public class InterferenceRegisterMapper extends BasicRegisterMapper {
      * pinned to the specified new-namespace reg + category. Takes into
      * account the category of the old-namespace registers.
      *
-     * @param oldSpecs non-null; set of old-namespace regs
-     * @param newReg &gt;= 0 new-namespace register
-     * @param targetCategory 1 or 2; the number of adjacent new-namespace
+     * @param oldSpecs {@code non-null;} set of old-namespace regs
+     * @param newReg {@code >= 0;} new-namespace register
+     * @param targetCategory {@code 1..2;} the number of adjacent new-namespace
      * registers (starting at ropReg) to consider
      * @return true if any of the old-namespace register have been mapped
      * to the new-namespace register + category
      */
     public boolean areAnyPinned(RegisterSpecList oldSpecs,
             int newReg, int targetCategory) {
-
         int sz = oldSpecs.size();
+
         for (int i = 0; i < sz; i++) {
             RegisterSpec oldSpec = oldSpecs.get(i);
             int r = oldToNew(oldSpec.getReg());
@@ -159,6 +158,7 @@ public class InterferenceRegisterMapper extends BasicRegisterMapper {
                 return true;
             }
         }
+        
         return false;
     }
 }

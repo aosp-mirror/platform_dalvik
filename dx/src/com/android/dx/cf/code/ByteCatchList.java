@@ -24,10 +24,10 @@ import com.android.dx.util.IntList;
 
 /**
  * List of catch entries, that is, the elements of an "exception table,"
- * which is part of a standard <code>Code</code> attribute.
+ * which is part of a standard {@code Code} attribute.
  */
 public final class ByteCatchList extends FixedSizeList {
-    /** non-null; convenient zero-entry instance */
+    /** {@code non-null;} convenient zero-entry instance */
     public static final ByteCatchList EMPTY = new ByteCatchList(0);
 
     /**
@@ -41,10 +41,10 @@ public final class ByteCatchList extends FixedSizeList {
 
     /**
      * Gets the total length of this structure in bytes, when included in
-     * a <code>Code</code> attribute. The returned value includes the
-     * two bytes for <code>exception_table_length</code>.
+     * a {@code Code} attribute. The returned value includes the
+     * two bytes for {@code exception_table_length}.
      *
-     * @return &gt;= 2; the total length, in bytes
+     * @return {@code >= 2;} the total length, in bytes
      */
     public int byteLength() {
         return 2 + size() * 8;
@@ -53,8 +53,8 @@ public final class ByteCatchList extends FixedSizeList {
     /**
      * Gets the indicated item.
      *
-     * @param n &gt;= 0; which item
-     * @return null-ok; the indicated item
+     * @param n {@code >= 0;} which item
+     * @return {@code null-ok;} the indicated item
      */
     public Item get(int n) {
         return (Item) get0(n);
@@ -63,8 +63,8 @@ public final class ByteCatchList extends FixedSizeList {
     /**
      * Sets the item at the given index.
      *
-     * @param n &gt;= 0, &lt; size(); which entry to set
-     * @param item non-null; the item
+     * @param n {@code >= 0, < size();} which entry to set
+     * @param item {@code non-null;} the item
      */
     public void set(int n, Item item) {
         if (item == null) {
@@ -77,13 +77,13 @@ public final class ByteCatchList extends FixedSizeList {
     /**
      * Sets the item at the given index.
      *
-     * @param n &gt;= 0, &lt; size(); which entry to set
-     * @param startPc &gt;= 0; the start pc (inclusive) of the handler's range
-     * @param endPc &gt;= startPc; the end pc (exclusive) of the
+     * @param n {@code >= 0, < size();} which entry to set
+     * @param startPc {@code >= 0;} the start pc (inclusive) of the handler's range
+     * @param endPc {@code >= startPc;} the end pc (exclusive) of the
      * handler's range
-     * @param handlerPc &gt;= 0; the pc of the exception handler
-     * @param exceptionClass null-ok; the exception class or
-     * <code>null</code> to catch all exceptions with this handler
+     * @param handlerPc {@code >= 0;} the pc of the exception handler
+     * @param exceptionClass {@code null-ok;} the exception class or
+     * {@code null} to catch all exceptions with this handler
      */
     public void set(int n, int startPc, int endPc, int handlerPc,
             CstType exceptionClass) {
@@ -95,8 +95,8 @@ public final class ByteCatchList extends FixedSizeList {
      * automatically made immutable.
      *
      * @param pc which address
-     * @return non-null; list of exception handlers active at
-     * <code>pc</code>
+     * @return {@code non-null;} list of exception handlers active at
+     * {@code pc}
      */
     public ByteCatchList listFor(int pc) {
         int sz = size();
@@ -128,12 +128,12 @@ public final class ByteCatchList extends FixedSizeList {
      * Helper method for {@link #listFor}, which tells whether a match
      * is <i>not</i> found for the exception type of the given item in
      * the given array. A match is considered to be either an exact type
-     * match or the class <code>Object</code> which represents a catch-all.
+     * match or the class {@code Object} which represents a catch-all.
      * 
-     * @param item non-null; item with the exception type to look for
-     * @param arr non-null; array to search in
-     * @param count non-null; maximum number of elements in the array to check
-     * @return <code>true</code> iff the exception type is <i>not</i> found
+     * @param item {@code non-null;} item with the exception type to look for
+     * @param arr {@code non-null;} array to search in
+     * @param count {@code non-null;} maximum number of elements in the array to check
+     * @return {@code true} iff the exception type is <i>not</i> found
      */
     private static boolean typeNotFound(Item item, Item[] arr, int count) {
         CstType type = item.getExceptionClass();
@@ -151,13 +151,13 @@ public final class ByteCatchList extends FixedSizeList {
     /**
      * Returns a target list corresponding to this instance. The result
      * is a list of all the exception handler addresses, with the given
-     * <code>noException</code> address appended if appropriate. The
+     * {@code noException} address appended if appropriate. The
      * result is automatically made immutable.
      * 
-     * @param noException &gt;= -1; the no-exception address to append, or
-     * <code>-1</code> not to append anything
-     * @return non-null; list of exception targets, with
-     * <code>noException</code> appended if necessary
+     * @param noException {@code >= -1;} the no-exception address to append, or
+     * {@code -1} not to append anything
+     * @return {@code non-null;} list of exception targets, with
+     * {@code noException} appended if necessary
      */
     public IntList toTargetList(int noException) {
         if (noException < -1) {
@@ -199,7 +199,7 @@ public final class ByteCatchList extends FixedSizeList {
     /**
      * Returns a rop-style catches list equivalent to this one.
      *
-     * @return non-null; the converted instance
+     * @return {@code non-null;} the converted instance
      */
     public TypeList toRopCatchList() {
         int sz = size();
@@ -221,29 +221,29 @@ public final class ByteCatchList extends FixedSizeList {
      * Item in an exception handler list.
      */
     public static class Item {
-        /** &gt;= 0; the start pc (inclusive) of the handler's range */
+        /** {@code >= 0;} the start pc (inclusive) of the handler's range */
         private final int startPc;
 
-        /** &gt;= startPc; the end pc (exclusive) of the handler's range */
+        /** {@code >= startPc;} the end pc (exclusive) of the handler's range */
         private final int endPc;
 
-        /** &gt;= 0; the pc of the exception handler */
+        /** {@code >= 0;} the pc of the exception handler */
         private final int handlerPc;
 
-        /** null-ok; the exception class or <code>null</code> to catch all
+        /** {@code null-ok;} the exception class or {@code null} to catch all
          * exceptions with this handler */
         private final CstType exceptionClass;
 
         /**
          * Constructs an instance.
          *
-         * @param startPc &gt;= 0; the start pc (inclusive) of the
+         * @param startPc {@code >= 0;} the start pc (inclusive) of the
          * handler's range
-         * @param endPc &gt;= startPc; the end pc (exclusive) of the
+         * @param endPc {@code >= startPc;} the end pc (exclusive) of the
          * handler's range
-         * @param handlerPc &gt;= 0; the pc of the exception handler
-         * @param exceptionClass null-ok; the exception class or
-         * <code>null</code> to catch all exceptions with this handler
+         * @param handlerPc {@code >= 0;} the pc of the exception handler
+         * @param exceptionClass {@code null-ok;} the exception class or
+         * {@code null} to catch all exceptions with this handler
          */
         public Item(int startPc, int endPc, int handlerPc,
                 CstType exceptionClass) {
@@ -268,7 +268,7 @@ public final class ByteCatchList extends FixedSizeList {
         /**
          * Gets the start pc (inclusive) of the handler's range.
          *
-         * @return &gt;= 0; the start pc (inclusive) of the handler's range.
+         * @return {@code >= 0;} the start pc (inclusive) of the handler's range.
          */
         public int getStartPc() {
             return startPc;
@@ -277,7 +277,7 @@ public final class ByteCatchList extends FixedSizeList {
         /**
          * Gets the end pc (exclusive) of the handler's range.
          *
-         * @return &gt;= startPc; the end pc (exclusive) of the
+         * @return {@code >= startPc;} the end pc (exclusive) of the
          * handler's range.
          */
         public int getEndPc() {
@@ -287,7 +287,7 @@ public final class ByteCatchList extends FixedSizeList {
         /**
          * Gets the pc of the exception handler.
          *
-         * @return &gt;= 0; the pc of the exception handler
+         * @return {@code >= 0;} the pc of the exception handler
          */
         public int getHandlerPc() {
             return handlerPc;
@@ -296,7 +296,7 @@ public final class ByteCatchList extends FixedSizeList {
         /**
          * Gets the class of exception handled.
          *
-         * @return non-null; the exception class; {@link CstType#OBJECT}
+         * @return {@code non-null;} the exception class; {@link CstType#OBJECT}
          * if this entry handles all possible exceptions
          */
         public CstType getExceptionClass() {
@@ -308,7 +308,7 @@ public final class ByteCatchList extends FixedSizeList {
          * Returns whether the given address is in the range of this item.
          *
          * @param pc the address
-         * @return <code>true</code> iff this item covers <code>pc</code>
+         * @return {@code true} iff this item covers {@code pc}
          */
         public boolean covers(int pc) {
             return (pc >= startPc) && (pc < endPc);

@@ -23,20 +23,20 @@ import com.android.dx.util.FixedSizeList;
 
 /**
  * List of "local variable" entries, which are the contents of
- * <code>LocalVariableTable</code> and <code>LocalVariableTypeTable</code>
+ * {@code LocalVariableTable} and {@code LocalVariableTypeTable}
  * attributes, as well as combinations of the two.
  */
 public final class LocalVariableList extends FixedSizeList {
-    /** non-null; zero-size instance */
+    /** {@code non-null;} zero-size instance */
     public static final LocalVariableList EMPTY = new LocalVariableList(0);
 
     /**
      * Returns an instance which is the concatenation of the two given
      * instances. The result is immutable.
      * 
-     * @param list1 non-null; first instance
-     * @param list2 non-null; second instance
-     * @return non-null; combined instance
+     * @param list1 {@code non-null;} first instance
+     * @param list2 {@code non-null;} second instance
+     * @return {@code non-null;} combined instance
      */
     public static LocalVariableList concat(LocalVariableList list1,
                                            LocalVariableList list2) {
@@ -70,9 +70,9 @@ public final class LocalVariableList extends FixedSizeList {
      * element in the signature list gets augmented with the
      * corresponding signature. The result is immutable.
      * 
-     * @param descriptorList non-null; list with descriptors
-     * @param signatureList non-null; list with signatures
-     * @return non-null; the merged result
+     * @param descriptorList {@code non-null;} list with descriptors
+     * @param signatureList {@code non-null;} list with signatures
+     * @return {@code non-null;} the merged result
      */
     public static LocalVariableList mergeDescriptorsAndSignatures(
             LocalVariableList descriptorList,
@@ -107,8 +107,8 @@ public final class LocalVariableList extends FixedSizeList {
     /**
      * Gets the indicated item.
      * 
-     * @param n &gt;= 0; which item
-     * @return null-ok; the indicated item
+     * @param n {@code >= 0;} which item
+     * @return {@code null-ok;} the indicated item
      */
     public Item get(int n) {
         return (Item) get0(n);
@@ -117,8 +117,8 @@ public final class LocalVariableList extends FixedSizeList {
     /**
      * Sets the item at the given index.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
-     * @param item non-null; the item
+     * @param n {@code >= 0, < size();} which element
+     * @param item {@code non-null;} the item
      */
     public void set(int n, Item item) {
         if (item == null) {
@@ -131,17 +131,17 @@ public final class LocalVariableList extends FixedSizeList {
     /**
      * Sets the item at the given index.
      * 
-     * <p><b>Note:</b> At least one of <code>descriptor</code> or
-     * <code>signature</code> must be passed as non-null.</p>
+     * <p><b>Note:</b> At least one of {@code descriptor} or
+     * {@code signature} must be passed as non-null.</p>
      * 
-     * @param n &gt;= 0, &lt; size(); which element
-     * @param startPc &gt;= 0; the start pc of this variable's scope
-     * @param length &gt;= 0; the length (in bytecodes) of this variable's
+     * @param n {@code >= 0, < size();} which element
+     * @param startPc {@code >= 0;} the start pc of this variable's scope
+     * @param length {@code >= 0;} the length (in bytecodes) of this variable's
      * scope
-     * @param name non-null; the variable's name
-     * @param descriptor null-ok; the variable's type descriptor
-     * @param signature null-ok; the variable's type signature
-     * @param index &gt;= 0; the variable's local index
+     * @param name {@code non-null;} the variable's name
+     * @param descriptor {@code null-ok;} the variable's type descriptor
+     * @param signature {@code null-ok;} the variable's type signature
+     * @param index {@code >= 0;} the variable's local index
      */
     public void set(int n, int startPc, int length, CstUtf8 name,
             CstUtf8 descriptor, CstUtf8 signature, int index) {
@@ -153,9 +153,9 @@ public final class LocalVariableList extends FixedSizeList {
      * the given {@link com.android.dx.cf.code.LocalVariableList.Item}
      * in all respects but the type descriptor and signature, if any.
      * 
-     * @param item non-null; local variable information to match
-     * @return null-ok; the corresponding local variable information stored
-     * in this instance, or <code>null</code> if there is no matching
+     * @param item {@code non-null;} local variable information to match
+     * @return {@code null-ok;} the corresponding local variable information stored
+     * in this instance, or {@code null} if there is no matching
      * information
      */
     public Item itemToLocal(Item item) {
@@ -178,10 +178,10 @@ public final class LocalVariableList extends FixedSizeList {
      * variable's start point is listed as the address of the instruction
      * <i>just past</i> the one that sets the variable.
      * 
-     * @param pc &gt;= 0; the address to look up
-     * @param index &gt;= 0; the local variable index
-     * @return null-ok; the associated local variable information, or
-     * <code>null</code> if none is known
+     * @param pc {@code >= 0;} the address to look up
+     * @param index {@code >= 0;} the local variable index
+     * @return {@code null-ok;} the associated local variable information, or
+     * {@code null} if none is known
      */
     public Item pcAndIndexToLocal(int pc, int index) {
         int sz = size();
@@ -201,37 +201,37 @@ public final class LocalVariableList extends FixedSizeList {
      * Item in a local variable table.
      */
     public static class Item {
-        /** &gt;= 0; the start pc of this variable's scope */
+        /** {@code >= 0;} the start pc of this variable's scope */
         private final int startPc;
 
-        /** &gt;= 0; the length (in bytecodes) of this variable's scope */
+        /** {@code >= 0;} the length (in bytecodes) of this variable's scope */
         private final int length;
 
-        /** non-null; the variable's name */
+        /** {@code non-null;} the variable's name */
         private final CstUtf8 name;
 
-        /** null-ok; the variable's type descriptor */
+        /** {@code null-ok;} the variable's type descriptor */
         private final CstUtf8 descriptor;
 
-        /** null-ok; the variable's type signature */
+        /** {@code null-ok;} the variable's type signature */
         private final CstUtf8 signature;
 
-        /** &gt;= 0; the variable's local index */
+        /** {@code >= 0;} the variable's local index */
         private final int index;
 
         /**
          * Constructs an instance.
          * 
-         * <p><b>Note:</b> At least one of <code>descriptor</code> or
-         * <code>signature</code> must be passed as non-null.</p>
+         * <p><b>Note:</b> At least one of {@code descriptor} or
+         * {@code signature} must be passed as non-null.</p>
          * 
-         * @param startPc &gt;= 0; the start pc of this variable's scope
-         * @param length &gt;= 0; the length (in bytecodes) of this variable's
+         * @param startPc {@code >= 0;} the start pc of this variable's scope
+         * @param length {@code >= 0;} the length (in bytecodes) of this variable's
          * scope
-         * @param name non-null; the variable's name
-         * @param descriptor null-ok; the variable's type descriptor
-         * @param signature null-ok; the variable's type signature
-         * @param index &gt;= 0; the variable's local index
+         * @param name {@code non-null;} the variable's name
+         * @param descriptor {@code null-ok;} the variable's type descriptor
+         * @param signature {@code null-ok;} the variable's type signature
+         * @param index {@code >= 0;} the variable's local index
          */
         public Item(int startPc, int length, CstUtf8 name,
                 CstUtf8 descriptor, CstUtf8 signature, int index) {
@@ -267,7 +267,7 @@ public final class LocalVariableList extends FixedSizeList {
         /**
          * Gets the start pc of this variable's scope.
          * 
-         * @return &gt;= 0; the start pc of this variable's scope
+         * @return {@code >= 0;} the start pc of this variable's scope
          */
         public int getStartPc() {
             return startPc;
@@ -276,7 +276,7 @@ public final class LocalVariableList extends FixedSizeList {
         /**
          * Gets the length (in bytecodes) of this variable's scope.
          * 
-         * @return &gt;= 0; the length (in bytecodes) of this variable's scope
+         * @return {@code >= 0;} the length (in bytecodes) of this variable's scope
          */
         public int getLength() {
             return length;
@@ -285,7 +285,7 @@ public final class LocalVariableList extends FixedSizeList {
         /**
          * Gets the variable's type descriptor.
          *
-         * @return null-ok; the variable's type descriptor
+         * @return {@code null-ok;} the variable's type descriptor
          */
         public CstUtf8 getDescriptor() {
             return descriptor;
@@ -294,7 +294,7 @@ public final class LocalVariableList extends FixedSizeList {
         /**
          * Gets the variable's LocalItem, a (name, signature) tuple
          *
-         * @return null-ok; the variable's type descriptor
+         * @return {@code null-ok;} the variable's type descriptor
          */
         public LocalItem getLocalItem() {
             return LocalItem.make(name, signature);
@@ -304,7 +304,7 @@ public final class LocalVariableList extends FixedSizeList {
          * Gets the variable's type signature. Private because if you need this,
          * you want getLocalItem() instead.
          *
-         * @return null-ok; the variable's type signature
+         * @return {@code null-ok;} the variable's type signature
          */
         private CstUtf8 getSignature() {
             return signature;
@@ -313,7 +313,7 @@ public final class LocalVariableList extends FixedSizeList {
         /**
          * Gets the variable's local index.
          * 
-         * @return &gt;= 0; the variable's local index
+         * @return {@code >= 0;} the variable's local index
          */
         public int getIndex() {
             return index;
@@ -321,9 +321,9 @@ public final class LocalVariableList extends FixedSizeList {
 
         /**
          * Gets the variable's type descriptor. This is a convenient shorthand
-         * for <code>Type.intern(getDescriptor().getString())</code>.
+         * for {@code Type.intern(getDescriptor().getString())}.
          * 
-         * @return non-null; the variable's type
+         * @return {@code non-null;} the variable's type
          */
         public Type getType() {
             return Type.intern(descriptor.getString());
@@ -333,8 +333,8 @@ public final class LocalVariableList extends FixedSizeList {
          * Constructs and returns an instance which is identical to this
          * one, except that the signature is changed to the given value.
          * 
-         * @param newSignature non-null; the new signature
-         * @return non-null; an appropriately-constructed instance
+         * @param newSignature {@code non-null;} the new signature
+         * @return {@code non-null;} an appropriately-constructed instance
          */
         public Item withSignature(CstUtf8 newSignature) {
             return new Item(startPc, length, name, descriptor, newSignature,
@@ -345,10 +345,10 @@ public final class LocalVariableList extends FixedSizeList {
          * Gets whether this instance matches (describes) the given
          * address and index.
          * 
-         * @param pc &gt;= 0; the address in question
-         * @param index &gt;= 0; the local variable index in question
-         * @return <code>true</code> iff this instance matches <code>pc</code>
-         * and <code>index</code>
+         * @param pc {@code >= 0;} the address in question
+         * @param index {@code >= 0;} the local variable index in question
+         * @return {@code true} iff this instance matches {@code pc}
+         * and {@code index}
          */
         public boolean matchesPcAndIndex(int pc, int index) {
             return (index == this.index) &&
@@ -361,8 +361,8 @@ public final class LocalVariableList extends FixedSizeList {
          * other instance exactly in all fields except type descriptor and
          * type signature.
          * 
-         * @param other non-null; the instance to compare to
-         * @return <code>true</code> iff this instance matches
+         * @param other {@code non-null;} the instance to compare to
+         * @return {@code true} iff this instance matches
          */
         public boolean matchesAllButType(Item other) {
             return (startPc == other.startPc)

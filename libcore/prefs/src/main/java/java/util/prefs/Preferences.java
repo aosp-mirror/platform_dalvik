@@ -1006,15 +1006,11 @@ public abstract class Preferences {
     
     //parse node's absolute path from class instance
     private static String getNodeName(Class<?> c){
-        // ??? PREFS TODO change back to harmony code once getPackage
-        // delivers the correct results
-        // Package p = c.getPackage();
-        // if(null == p){
-        //     return "/<unnamed>"; //$NON-NLS-1$
-        // }
-        // return "/"+p.getName().replace('.', '/'); //$NON-NLS-1$
-        int dotIndex = c.getName().lastIndexOf(".");
-        return "/" + c.getName().substring(0, dotIndex).replace(".", "/");
+        Package p = c.getPackage();
+        if(null == p){
+            return "/<unnamed>"; //$NON-NLS-1$
+        }
+        return "/"+p.getName().replace('.', '/'); //$NON-NLS-1$
     }
 
     /**

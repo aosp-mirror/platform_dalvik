@@ -47,7 +47,7 @@ import com.android.dx.dex.code.form.SpecialFormat;
  * them.
  */
 public final class Dops {
-    /** non-null; array containing all the standard instances */
+    /** {@code non-null;} array containing all the standard instances */
     private static final Dop[] DOPS;
 
     /**
@@ -1172,8 +1172,8 @@ public final class Dops {
     /**
      * Gets the {@link Dop} for the given opcode value.
      * 
-     * @param opcode DalvOps.MIN_VALUE..DalvOps.MAX_VALUE; the opcode value
-     * @return non-null; the associated opcode instance
+     * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode value
+     * @return {@code non-null;} the associated opcode instance
      */
     public static Dop get(int opcode) {
         int idx = opcode - DalvOps.MIN_VALUE;
@@ -1194,9 +1194,9 @@ public final class Dops {
      * Gets the {@link Dop} with the given family/format combination, if
      * any.
      * 
-     * @param family DalvOps.MIN_VALUE..DalvOps.MAX_VALUE; the opcode family
-     * @param format non-null; the opcode's instruction format
-     * @return null-ok; the corresponding opcode, or <code>null</code> if
+     * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
+     * @param format {@code non-null;} the opcode's instruction format
+     * @return {@code null-ok;} the corresponding opcode, or {@code null} if
      * there is none
      */
     public static Dop getOrNull(int family, InsnFormat format) {
@@ -1222,7 +1222,7 @@ public final class Dops {
     /**
      * Puts the given opcode into the table of all ops.
      * 
-     * @param opcode non-null; the opcode
+     * @param opcode {@code non-null;} the opcode
      */
     private static void set(Dop opcode) {
         int idx = opcode.getOpcode() - DalvOps.MIN_VALUE;

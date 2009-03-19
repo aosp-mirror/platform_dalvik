@@ -76,9 +76,10 @@ static bool dvmPushInterpFrame(Thread* self, const Method* method)
 
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space */
-        LOGW("Stack overflow on call to interp (top=%p cur=%p size=%d %s.%s)\n",
-            self->interpStackStart, self->curFrame, self->interpStackSize,
-            method->clazz->descriptor, method->name);
+        LOGW("Stack overflow on call to interp "
+             "(req=%d top=%p cur=%p size=%d %s.%s)\n",
+            stackReq, self->interpStackStart, self->curFrame,
+            self->interpStackSize, method->clazz->descriptor, method->name);
         dvmHandleStackOverflow(self);
         assert(dvmCheckException(self));
         return false;
@@ -148,9 +149,10 @@ bool dvmPushJNIFrame(Thread* self, const Method* method)
 
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space */
-        LOGW("Stack overflow on call to native (top=%p cur=%p size=%d '%s')\n",
-            self->interpStackStart, self->curFrame, self->interpStackSize,
-            method->name);
+        LOGW("Stack overflow on call to native "
+             "(req=%d top=%p cur=%p size=%d '%s')\n",
+            stackReq, self->interpStackStart, self->curFrame,
+            self->interpStackSize, method->name);
         dvmHandleStackOverflow(self);
         assert(dvmCheckException(self));
         return false;
@@ -217,9 +219,10 @@ bool dvmPushLocalFrame(Thread* self, const Method* method)
 
     if (stackPtr - stackReq < self->interpStackEnd) {
         /* not enough space; let JNI throw the exception */
-        LOGW("Stack overflow on PushLocal (top=%p cur=%p size=%d '%s')\n",
-            self->interpStackStart, self->curFrame, self->interpStackSize,
-            method->name);
+        LOGW("Stack overflow on PushLocal "
+             "(req=%d top=%p cur=%p size=%d '%s')\n",
+            stackReq, self->interpStackStart, self->curFrame,
+            self->interpStackSize, method->name);
         dvmHandleStackOverflow(self);
         assert(dvmCheckException(self));
         return false;
@@ -351,7 +354,8 @@ static ClassObject* callPrep(Thread* self, const Method* method, Object* obj,
 
 #ifndef NDEBUG
     if (self->status != THREAD_RUNNING) {
-        LOGW("Status=%d on call to %s.%s -\n", self->status,
+        LOGW("threadid=%d: status=%d on call to %s.%s -\n",
+            self->threadId, self->status,
             method->clazz->descriptor, method->name);
     }
 #endif
@@ -504,11 +508,17 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
     //dvmDumpThreadStack(dvmThreadSelf());
 
     if (dvmIsNativeMethod(method)) {
+#ifdef WITH_PROFILER
+        TRACE_METHOD_ENTER(self, method);
+#endif
         /*
          * Because we leave no space for local variables, "curFrame" points
          * directly at the method arguments.
          */
         (*method->nativeFunc)(self->curFrame, pResult, method, self);
+#ifdef WITH_PROFILER
+        TRACE_METHOD_EXIT(self, method);
+#endif
     } else {
         dvmInterpret(self, method, pResult);
     }
@@ -608,11 +618,17 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
 #endif
 
     if (dvmIsNativeMethod(method)) {
+#ifdef WITH_PROFILER
+        TRACE_METHOD_ENTER(self, method);
+#endif
         /*
          * Because we leave no space for local variables, "curFrame" points
          * directly at the method arguments.
          */
         (*method->nativeFunc)(self->curFrame, pResult, method, self);
+#ifdef WITH_PROFILER
+        TRACE_METHOD_EXIT(self, method);
+#endif
     } else {
         dvmInterpret(self, method, pResult);
     }
@@ -712,11 +728,17 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
     //dvmDumpThreadStack(dvmThreadSelf());
 
     if (dvmIsNativeMethod(method)) {
+#ifdef WITH_PROFILER
+        TRACE_METHOD_ENTER(self, method);
+#endif
         /*
          * Because we leave no space for local variables, "curFrame" points
          * directly at the method arguments.
          */
         (*method->nativeFunc)(self->curFrame, &retval, method, self);
+#ifdef WITH_PROFILER
+        TRACE_METHOD_EXIT(self, method);
+#endif
     } else {
         dvmInterpret(self, method, &retval);
     }

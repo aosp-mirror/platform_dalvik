@@ -20,24 +20,24 @@ import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstType;
 
 /**
- * Attribute class for standards-track <code>EnclosingMethod</code>
+ * Attribute class for standards-track {@code EnclosingMethod}
  * attributes.
  */
 public final class AttEnclosingMethod extends BaseAttribute {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "EnclosingMethod";
 
-    /** non-null; the innermost enclosing class */
+    /** {@code non-null;} the innermost enclosing class */
     private final CstType type;
 
-    /** null-ok; the name-and-type of the innermost enclosing method, if any */
+    /** {@code null-ok;} the name-and-type of the innermost enclosing method, if any */
     private final CstNat method;
 
     /**
      * Constructs an instance.
      * 
-     * @param type non-null; the innermost enclosing class
-     * @param method null-ok; the name-and-type of the innermost enclosing
+     * @param type {@code non-null;} the innermost enclosing class
+     * @param method {@code null-ok;} the name-and-type of the innermost enclosing
      * method, if any
      */
     public AttEnclosingMethod(CstType type, CstNat method) {
@@ -59,7 +59,7 @@ public final class AttEnclosingMethod extends BaseAttribute {
     /**
      * Gets the innermost enclosing class.
      * 
-     * @return non-null; the innermost enclosing class
+     * @return {@code non-null;} the innermost enclosing class
      */
     public CstType getEnclosingClass() {
         return type;
@@ -69,7 +69,7 @@ public final class AttEnclosingMethod extends BaseAttribute {
      * Gets the name-and-type of the innermost enclosing method, if
      * any.
      * 
-     * @return null-ok; the name-and-type of the innermost enclosing
+     * @return {@code null-ok;} the name-and-type of the innermost enclosing
      * method, if any
      */
     public CstNat getMethod() {
