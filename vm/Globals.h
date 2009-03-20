@@ -462,10 +462,13 @@ struct DvmGlobals {
     /*
      * Compute some stats on loaded classes.
      */
-    int             numLoadedClasses;
-    int             numDeclaredMethods;
-    int             numDeclaredInstFields;
-    int             numDeclaredStaticFields;
+    int         numLoadedClasses;
+    int         numDeclaredMethods;
+    int         numDeclaredInstFields;
+    int         numDeclaredStaticFields;
+
+    /* when using a native debugger, set this to suppress watchdog timers */
+    bool        nativeDebuggerActive;
 
     /*
      * JDWP debugger support.
