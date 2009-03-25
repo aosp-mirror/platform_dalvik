@@ -26,6 +26,7 @@ OPTIMIZE="y"
 VALGRIND="n"
 DEV_MODE="n"
 QUIET="n"
+PRECISE="y"
 
 while true; do
     if [ "x$1" = "x--quiet" ]; then
@@ -56,6 +57,9 @@ while true; do
         shift
     elif [ "x$1" = "x--no-optimize" ]; then
         OPTIMIZE="n"
+        shift
+    elif [ "x$1" = "x--no-precise" ]; then
+        PRECISE="n"
         shift
     elif [ "x$1" = "x--" ]; then
         shift
@@ -101,6 +105,12 @@ else
     valgrind_cmd=""
 fi
 
+if [ "$PRECISE" = "y" ]; then
+    GC_OPTS="-Xgc:precise -Xgenregmap"
+else
+    GC_OPTS="-Xgc:noprecise"
+fi
+
 msg "------------------------------"
 
 BASE="$OUT" # from build environment
@@ -109,9 +119,9 @@ DEBUG_OPTS="-Xcheck:jni -Xrunjdwp:transport=dt_socket,address=8000,server=y,susp
 
 export ANDROID_PRINTF_LOG=brief
 if [ "$DEV_MODE" = "y" ]; then
-	export ANDROID_LOG_TAGS='*:d'
+    export ANDROID_LOG_TAGS='*:d'
 else
-	export ANDROID_LOG_TAGS='*:s'
+    export ANDROID_LOG_TAGS='*:s'
 fi
 export ANDROID_DATA="$DATA_DIR"
 export ANDROID_ROOT="${BASE}/system"
@@ -134,5 +144,5 @@ if [ "$GDB" = "y" ]; then
 fi
 
 $valgrind_cmd $gdb $exe $gdbargs "-Xbootclasspath:${bpath}" \
-    $DEX_VERIFY $DEX_OPTIMIZE $DEX_DEBUG "-Xint:${INTERP}" -ea \
+    $DEX_VERIFY $DEX_OPTIMIZE $DEX_DEBUG $GC_OPTS "-Xint:${INTERP}" -ea \
     -cp test.jar Main "$@"

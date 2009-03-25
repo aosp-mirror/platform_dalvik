@@ -79,6 +79,9 @@ while true; do
     elif [ "x$1" = "x--no-optimize" ]; then
         run_args="${run_args} --no-optimize"
         shift
+    elif [ "x$1" = "x--no-precise" ]; then
+        run_args="${run_args} --no-precise"
+        shift
     elif [ "x$1" = "x--valgrind" ]; then
         run_args="${run_args} --valgrind"
         shift
@@ -146,6 +149,7 @@ if [ "$usage" = "yes" ]; then
         #echo "    --gdb          Run under gdb; incompatible with some tests."
         echo "    --no-verify    Turn off verification (on by default)."
         echo "    --no-optimize  Turn off optimization (on by default)."
+        echo "    --no-precise   Turn off precise GC (on by default)."
         echo "    --zygote       Spawn the process from the Zygote." \
 	    "If used, then the"
 	echo "                   other runtime options are ignored."
