@@ -54,9 +54,7 @@ public class ServerSocketFactoryTest extends TestCase {
     )
     public void test_Constructor() {
         try {
-            MyServerSocketFactory mssf = new MyServerSocketFactory();
-            assertNotNull(mssf);
-            assertTrue(mssf instanceof ServerSocketFactory);
+            ServerSocketFactory sf = new MyServerSocketFactory();
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
@@ -72,11 +70,10 @@ public class ServerSocketFactoryTest extends TestCase {
         args = {}
     )
     public final void test_createServerSocket_01() {
-        ServerSocketFactory sf = new MyServerSocketFactory();
+        ServerSocketFactory sf = ServerSocketFactory.getDefault();
         try {
             ServerSocket ss = sf.createServerSocket();
             assertNotNull(ss);
-            fail("No expected SocketException");
         } catch (SocketException e) {        
         } catch (Exception e) {
             fail(e.toString());
@@ -93,7 +90,7 @@ public class ServerSocketFactoryTest extends TestCase {
         args = {int.class}
     )
     public final void test_createServerSocket_02() {
-        MyServerSocketFactory sf = new MyServerSocketFactory();
+        ServerSocketFactory sf = ServerSocketFactory.getDefault();
         int portNumber = Support_PortManager.getNextPort();
         
         try {
@@ -132,7 +129,7 @@ public class ServerSocketFactoryTest extends TestCase {
         args = {int.class, int.class}
     )
     public final void test_createServerSocket_03() {
-        MyServerSocketFactory sf = new MyServerSocketFactory();
+        ServerSocketFactory sf = ServerSocketFactory.getDefault();
         int portNumber = Support_PortManager.getNextPort();
         
         try {
@@ -144,16 +141,6 @@ public class ServerSocketFactoryTest extends TestCase {
         
         try {
             sf.createServerSocket(portNumber, 0);
-            fail("IOException wasn't thrown");
-        } catch (IOException ioe) {
-            //expected
-        } catch (Exception ex) {
-            fail(ex + " was thrown instead of IOException");
-        }
-        
-        portNumber = Support_PortManager.getNextPort();
-        try {
-            sf.createServerSocket(portNumber, -1);
             fail("IOException wasn't thrown");
         } catch (IOException ioe) {
             //expected
@@ -181,7 +168,7 @@ public class ServerSocketFactoryTest extends TestCase {
         args = {int.class, int.class, InetAddress.class}
     )
     public final void test_createServerSocket_04() {
-        MyServerSocketFactory sf = new MyServerSocketFactory();
+        ServerSocketFactory sf = ServerSocketFactory.getDefault();
         int portNumber = Support_PortManager.getNextPort();
         
         try {
@@ -193,16 +180,6 @@ public class ServerSocketFactoryTest extends TestCase {
         
         try {
             sf.createServerSocket(portNumber, 0, InetAddress.getLocalHost());
-            fail("IOException wasn't thrown");
-        } catch (IOException ioe) {
-            //expected
-        } catch (Exception ex) {
-            fail(ex + " was thrown instead of IOException");
-        }
-        
-        portNumber = Support_PortManager.getNextPort();
-        try {
-            sf.createServerSocket(portNumber, -1, InetAddress.getLocalHost());
             fail("IOException wasn't thrown");
         } catch (IOException ioe) {
             //expected
@@ -249,53 +226,26 @@ public class ServerSocketFactoryTest extends TestCase {
         } 
     }
 }
-
 class MyServerSocketFactory extends ServerSocketFactory {
     
     public MyServerSocketFactory() {
         super();
     }
-    
+
+    @Override
     public ServerSocket createServerSocket(int port) throws IOException {
-        ServerSocket ss = null;
-        try {
-            ss = new ServerSocket(port);
-        } catch (java.net.BindException be) {
-            throw new IOException("error occurs");
-        } catch (IllegalArgumentException iae) {
-            throw iae;
-        }
-        return ss;
+        return null;
     }
-    
-    public ServerSocket createServerSocket(int port, int backlog) throws IOException {
-        ServerSocket ss = null;
-        if (backlog < 0) {
-            throw new IOException("negative backlog parameter");
-        }
-        try {
-            ss = new ServerSocket(port, backlog);
-        } catch (java.net.BindException be) {
-            throw new IOException("error occurs");
-        } catch (IllegalArgumentException iae) {
-            throw iae;
-        }
-        return ss;
+
+    @Override
+    public ServerSocket createServerSocket(int port, int backlog)
+            throws IOException {
+        return null;
     }
-    
-    public ServerSocket createServerSocket(int port, int backlog, InetAddress ifAddress) 
-                                           throws IOException {
-        ServerSocket ss = null;
-        if (backlog < 0) {
-            throw new IOException("negative backlog parameter");
-        }
-        try {
-            ss = new ServerSocket(port, backlog, ifAddress);
-        } catch (java.net.BindException be) {
-            throw new IOException("error occurs");
-        } catch (IllegalArgumentException iae) {
-            throw iae;
-        }
-        return ss;
-     }
+
+    @Override
+    public ServerSocket createServerSocket(int port, int backlog,
+            InetAddress address) throws IOException {
+        return null;
+    }
 }

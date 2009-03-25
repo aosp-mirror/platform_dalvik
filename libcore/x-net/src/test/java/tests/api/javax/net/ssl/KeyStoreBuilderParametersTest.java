@@ -75,7 +75,7 @@ public class KeyStoreBuilderParametersTest extends TestCase {
     public void test_Constructor02() {
                
         //Null parameter
-        List ls = null;
+        List<String> ls = null;
         try {
             KeyStoreBuilderParameters ksp = new KeyStoreBuilderParameters(ls);
             fail("NullPointerException should be thrown");
@@ -84,7 +84,7 @@ public class KeyStoreBuilderParametersTest extends TestCase {
         }
         
         //Empty parameter
-        List lsEmpty = new ArrayList();
+        List<String> lsEmpty = new ArrayList<String>();
         try {
             KeyStoreBuilderParameters ksp = new KeyStoreBuilderParameters(lsEmpty);
             fail("IllegalArgumentException should be thrown");
@@ -93,7 +93,7 @@ public class KeyStoreBuilderParametersTest extends TestCase {
         }
         
         //Not null parameter
-        List lsFiled = new ArrayList();;
+        List<String> lsFiled = new ArrayList<String>();;
         lsFiled.add("Parameter1");
         lsFiled.add("Parameter2");
         try {
@@ -116,13 +116,18 @@ public class KeyStoreBuilderParametersTest extends TestCase {
     )
     public void test_getParameters() {
         String[] param = {"Parameter1", "Parameter2", "Parameter3"};
-        List ls = new ArrayList();
+        List<String> ls = new ArrayList<String>();
         for (int i = 0; i < param.length; i++) {
             ls.add(param[i]);
         }
         KeyStoreBuilderParameters ksp = new KeyStoreBuilderParameters(ls);
         try {
-            List res_list = ksp.getParameters();
+            List<String> res_list = ksp.getParameters();
+            try {
+                res_list.add("test");
+            } catch (UnsupportedOperationException e) {
+                // expected
+            }
             Object[] res = res_list.toArray(); 
             if (res.length == param.length) {
                 for (int i = 0; i < res.length; i++) {

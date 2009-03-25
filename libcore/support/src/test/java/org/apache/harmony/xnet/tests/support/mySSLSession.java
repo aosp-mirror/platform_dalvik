@@ -2,6 +2,7 @@ package org.apache.harmony.xnet.tests.support;
 
 import java.security.Principal;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -10,6 +11,7 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSessionBindingEvent;
 import javax.net.ssl.SSLSessionBindingListener;
 import javax.net.ssl.SSLSessionContext;
+import javax.security.cert.CertificateException;
 import javax.security.cert.X509Certificate;
 
 import javax.net.ssl.SSLSession;
@@ -38,6 +40,18 @@ public class mySSLSession implements SSLSession {
     public mySSLSession(X509Certificate[] xc) {
         certs = TestCertUtils.getCertChain();
         xCerts = xc;
+    }
+    
+    public mySSLSession(Certificate[] xc) throws CertificateEncodingException, CertificateException {
+        certs = xc;
+        xCerts = new X509Certificate[xc.length];
+        int i = 0;
+        for (Certificate cert : xc) {
+            xCerts[i++] = X509Certificate.getInstance(cert.getEncoded());
+        }
+    }
+    
+    public mySSLSession() {
     }
     
     public int getApplicationBufferSize() {

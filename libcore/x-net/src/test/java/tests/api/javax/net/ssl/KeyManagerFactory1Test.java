@@ -20,7 +20,6 @@ package tests.api.javax.net.ssl;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.KnownFailure;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -180,8 +179,6 @@ public class KeyManagerFactory1Test extends TestCase {
         KeyManagerFactory keyMF;
         for (int i = 0; i < validValues.length; i++) {
             keyMF = KeyManagerFactory.getInstance(validValues[i]);
-            assertTrue("Not KeyManagerFactory object",
-                    keyMF instanceof KeyManagerFactory);
             assertEquals("Invalid algorithm", keyMF.getAlgorithm(),
                     validValues[i]);
         }
@@ -336,8 +333,6 @@ public class KeyManagerFactory1Test extends TestCase {
         for (int i = 0; i < validValues.length; i++) {
             kMF = KeyManagerFactory.getInstance(validValues[i],
                     defaultProviderName);
-            assertTrue("Not KeyManagerFactory object",
-                    kMF instanceof KeyManagerFactory);
             assertEquals("Incorrect algorithm", kMF.getAlgorithm(),
                     validValues[i]);
             assertEquals("Incorrect provider", kMF.getProvider().getName(),
@@ -428,7 +423,6 @@ public class KeyManagerFactory1Test extends TestCase {
         for (int i = 0; i < validValues.length; i++) {
             kMF = KeyManagerFactory
                     .getInstance(validValues[i], defaultProvider);
-            assertTrue(kMF instanceof KeyManagerFactory);
             assertEquals(kMF.getAlgorithm(), validValues[i]);
             assertEquals(kMF.getProvider(), defaultProvider);
         }
@@ -444,7 +438,7 @@ public class KeyManagerFactory1Test extends TestCase {
         method = "KeyManagerFactory",
         args = {javax.net.ssl.KeyManagerFactorySpi.class, java.security.Provider.class, java.lang.String.class}
     )
-    public void test_Constructor() throws NoSuchAlgorithmException {
+    public void test_Constructor() {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
             return;
@@ -452,7 +446,6 @@ public class KeyManagerFactory1Test extends TestCase {
         KeyManagerFactorySpi spi = new MyKeyManagerFactorySpi();
         KeyManagerFactory keyMF = new myKeyManagerFactory(spi, defaultProvider,
                 defaultAlgorithm);
-        assertTrue("Not CertStore object", keyMF instanceof KeyManagerFactory);
         assertEquals("Incorrect algorithm", keyMF.getAlgorithm(),
                 defaultAlgorithm);
         assertEquals("Incorrect provider", keyMF.getProvider(), defaultProvider);
@@ -464,12 +457,12 @@ public class KeyManagerFactory1Test extends TestCase {
             fail("Unexpected: "+e.toString()+" was thrown");
         }
         keyMF = new myKeyManagerFactory(null, null, null);
-        assertTrue("Not CertStore object", keyMF instanceof KeyManagerFactory);
         assertNull("Aalgorithm must be null", keyMF.getAlgorithm());
         assertNull("Provider must be null", keyMF.getProvider());
         try {
             keyMF.getKeyManagers();
         } catch (NullPointerException e) {
+            // expected
         }
     }
 
@@ -585,13 +578,10 @@ public class KeyManagerFactory1Test extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
-        notes = "functionality is not implemented in org.apache.harmony.xnet.provider.jsse.engineInit(ManagerFactoryParameters)",
+        notes = "",
         method = "init",
         args = {javax.net.ssl.ManagerFactoryParameters.class}
     )
-    @KnownFailure("ManagerFactoryParameters object is not supported " + 
-                  "and InvalidAlgorithmParameterException was thrown." +
-                  "RI: functionality is not implemented, just exception.")
     public void test_initLjavax_net_ssl_ManagerFactoryParameters()
         throws NoSuchAlgorithmException {
 
