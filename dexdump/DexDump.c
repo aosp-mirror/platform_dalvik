@@ -49,6 +49,7 @@ struct {
     bool disassemble;
     bool showFileHeaders;
     bool showSectionHeaders;
+    bool ignoreBadChecksum;
     bool dumpRegisterMaps;
     const char* tempFileName;
 } gOptions;
@@ -1296,8 +1297,11 @@ int process(const char* fileName)
         goto bail;
     mapped = true;
 
-    pDexFile = dexFileParse(map.addr, map.length,
-        kDexParseVerifyChecksum | kDexParseContinueOnError);
+    int flags = kDexParseVerifyChecksum;
+    if (gOptions.ignoreBadChecksum)
+        flags |= kDexParseContinueOnError;
+
+    pDexFile = dexFileParse(map.addr, map.length, flags);
     if (pDexFile == NULL) {
         fprintf(stderr, "ERROR: DEX parse failed\n");
         goto bail;
@@ -1322,12 +1326,13 @@ bail:
 void usage(void)
 {
     fprintf(stderr, "Copyright (C) 2007 The Android Open Source Project\n\n");
-    fprintf(stderr, "%s: [-d] [-f] [-h] [-m] [-t tempfile] dexfile...\n",
+    fprintf(stderr, "%s: [-d] [-f] [-h] [-m] [-i] [-t tempfile] dexfile...\n",
         gProgName);
     fprintf(stderr, "\n");
     fprintf(stderr, " -d : disassemble code sections\n");
     fprintf(stderr, " -f : display summary information from file header\n");
     fprintf(stderr, " -h : display file header details\n");
+    fprintf(stderr, " -i : ignore checksum failures\n");
     fprintf(stderr, " -m : dump register maps (and nothing else)\n");
     fprintf(stderr, " -t : temp file name (defaults to /sdcard/dex-temp-*)\n");
 }
@@ -1345,7 +1350,7 @@ int main(int argc, char* const argv[])
     memset(&gOptions, 0, sizeof(gOptions));
 
     while (1) {
-        ic = getopt(argc, argv, "dfhmt:");
+        ic = getopt(argc, argv, "dfhimt:");
         if (ic < 0)
             break;
 
@@ -1358,6 +1363,9 @@ int main(int argc, char* const argv[])
             break;
         case 'h':       // dump section headers, i.e. all meta-data
             gOptions.showSectionHeaders = true;
+            break;
+        case 'i':       // continue even if checksum is bad
+            gOptions.ignoreBadChecksum = true;
             break;
         case 'm':       // dump register maps only
             gOptions.dumpRegisterMaps = true;
