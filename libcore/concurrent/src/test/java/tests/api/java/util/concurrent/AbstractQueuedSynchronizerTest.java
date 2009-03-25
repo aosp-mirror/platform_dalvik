@@ -1044,9 +1044,11 @@ public class AbstractQueuedSynchronizerTest extends JSR166TestCase {
 
         try {
             t.start();
-            Thread.sleep(SHORT_DELAY_MS);
+            // BEGIN android-changed
+            Thread.sleep(SMALL_DELAY_MS); // SHORT_DELAY_MS was flaky on Android
             t.interrupt();
-            t.join(SHORT_DELAY_MS);
+            t.join(SMALL_DELAY_MS);       // SHORT_DELAY_MS was flaky on Android
+            // END android-changed
             assertFalse(t.isAlive());
         }
         catch (Exception ex) {
