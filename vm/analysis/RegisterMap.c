@@ -29,6 +29,12 @@
 
 #include <stddef.h>
 
+/* double-check the compression */
+#define REGISTER_MAP_VERIFY     true
+
+/* verbose logging */
+#define REGISTER_MAP_VERBOSE    false
+
 
 // fwd
 static void outputTypeVector(const RegType* regs, int insnRegCount, u1* data);
@@ -36,7 +42,7 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap);
 static int compareMaps(const RegisterMap* pMap1, const RegisterMap* pMap2);
 
 static void computeMapStats(RegisterMap* pMap, const Method* method);
-static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
+static RegisterMap* compressMapDifferential(const RegisterMap* pMap,\
     const Method* meth);
 static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap);
 
@@ -44,7 +50,7 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap);
 //#define REGISTER_MAP_STATS
 #ifdef REGISTER_MAP_STATS
 /*
- * Generate some statistics on the register maps we generate.
+ * Generate some statistics on the register maps we create and use.
  */
 #define kMaxGcPointGap      50
 #define kUpdatePosnMinRegs  24
@@ -87,6 +93,14 @@ typedef struct MapStats {
      * Histogram of the number of bits that differ between adjacent entries.
      */
     int numDiffBits[kMaxDiffBits];
+
+
+    /*
+     * Track the number of expanded maps, and the heap space required to
+     * hold them.
+     */
+    int numExpandedMaps;
+    int totalExpandedMapSize;
 } MapStats;
 #endif
 
@@ -264,32 +278,56 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
     computeMapStats(pMap, vdata->method);
 #endif
 
-    if (false) {
-        RegisterMap* pCompMap;
-        RegisterMap* pUncompMap;
+    /*
+     * Try to compress the map.
+     */
+    RegisterMap* pCompMap;
 
-        pCompMap = compressMapDifferential(pMap, vdata->method);
-        if (pCompMap != NULL) {
+    pCompMap = compressMapDifferential(pMap, vdata->method);
+    if (pCompMap != NULL) {
+        if (REGISTER_MAP_VERIFY) {
+            /*
+             * Expand the compressed map we just created, and compare it
+             * to the original.  Abort the VM if it doesn't match up.
+             */
+            RegisterMap* pUncompMap;
             pUncompMap = uncompressMapDifferential(pCompMap);
             if (pUncompMap == NULL) {
-                LOGE("Map failed to uncompress\n");
+                LOGE("Map failed to uncompress - %s.%s\n",
+                    vdata->method->clazz->descriptor,
+                    vdata->method->name);
                 free(pCompMap);
-                /* fail? just use original? */
+                /* bad - compression is broken or we're out of memory */
+                dvmAbort();
             } else {
                 if (compareMaps(pMap, pUncompMap) != 0) {
-                    LOGE("Map comparison failed\n");
-                    free(pCompMap);
-                    /* fail? just use original? */
-                } else {
-                    LOGD("Good compress on %s.%s\n",
+                    LOGE("Map comparison failed - %s.%s\n",
                         vdata->method->clazz->descriptor,
                         vdata->method->name);
-                    free(pMap);
-                    pMap = pCompMap;
+                    free(pCompMap);
+                    /* bad - compression is broken */
+                    dvmAbort();
                 }
 
+                /* verify succeeded */
                 free(pUncompMap);
             }
+        }
+
+        if (REGISTER_MAP_VERBOSE) {
+            LOGD("Good compress on %s.%s\n",
+                vdata->method->clazz->descriptor,
+                vdata->method->name);
+        }
+        free(pMap);
+        pMap = pCompMap;
+    } else {
+        if (REGISTER_MAP_VERBOSE) {
+            LOGD("Unable to compress %s.%s (ent=%d rw=%d)\n",
+                vdata->method->clazz->descriptor,
+                vdata->method->name,
+                dvmRegisterMapGetNumEntries(pMap),
+                dvmRegisterMapGetRegWidth(pMap));
         }
     }
 
@@ -353,6 +391,72 @@ static void outputTypeVector(const RegType* regs, int insnRegCount, u1* data)
 }
 
 /*
+ * Print the map as a series of binary strings.
+ *
+ * Pass in method->registersSize if known, or -1 if not.
+ */
+static void dumpRegisterMap(const RegisterMap* pMap, int registersSize)
+{
+    const u1* rawMap = pMap->data;
+    const RegisterMapFormat format = dvmRegisterMapGetFormat(pMap);
+    const int numEntries = dvmRegisterMapGetNumEntries(pMap);
+    const int regWidth = dvmRegisterMapGetRegWidth(pMap);
+    int addrWidth;
+
+    switch (format) {
+    case kRegMapFormatCompact8:
+        addrWidth = 1;
+        break;
+    case kRegMapFormatCompact16:
+        addrWidth = 2;
+        break;
+    default:
+        /* can't happen */
+        LOGE("Can only dump Compact8 / Compact16 maps (not %d)\n", format);
+        return;
+    }
+
+    if (registersSize < 0)
+        registersSize = 8 * regWidth;
+    assert(registersSize <= regWidth * 8);
+
+    int ent;
+    for (ent = 0; ent < numEntries; ent++) {
+        int i, addr;
+
+        addr = *rawMap++;
+        if (addrWidth > 1)
+            addr |= (*rawMap++) << 8;
+
+        const u1* dataStart = rawMap;
+        u1 val = 0;
+
+        /* create binary string */
+        char outBuf[registersSize +1];
+        for (i = 0; i < registersSize; i++) {
+            val >>= 1;
+            if ((i & 0x07) == 0)
+                val = *rawMap++;
+
+            outBuf[i] = '0' + (val & 0x01);
+        }
+        outBuf[i] = '\0';
+
+        /* back up and create hex dump */
+        char hexBuf[regWidth * 3 +1];
+        char* cp = hexBuf;
+        rawMap = dataStart;
+        for (i = 0; i < regWidth; i++) {
+            sprintf(cp, " %02x", *rawMap++);
+            cp += 3;
+        }
+        hexBuf[i * 3] = '\0';
+
+        LOGD("  %04x %s %s\n", addr, outBuf, hexBuf);
+    }
+}
+
+/*
  * Double-check the map.
  *
  * We run through all of the data in the map, and compare it to the original.
@@ -361,8 +465,8 @@ static void outputTypeVector(const RegType* regs, int insnRegCount, u1* data)
 static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
 {
     const u1* rawMap = pMap->data;
-    const u1 format = dvmRegisterMapGetFormat(pMap);
-    const u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
+    const RegisterMapFormat format = dvmRegisterMapGetFormat(pMap);
+    const int numEntries = dvmRegisterMapGetNumEntries(pMap);
     int ent;
     bool dumpMap = false;
 
@@ -438,30 +542,10 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
         }
 
         /* rawMap now points to the address field of the next entry */
-
-        /* print the map as a binary string */
-        if (dumpMap) {
-            char outBuf[vdata->method->registersSize +1];
-            char hexBuf[((vdata->method->registersSize + 7) / 8) * 3 +1];
-            for (i = 0; i < vdata->method->registersSize; i++) {
-                if (isReferenceType(regs[i])) {
-                    outBuf[i] = '1';
-                } else {
-                    outBuf[i] = '0';
-                }
-            }
-            outBuf[i] = '\0';
-
-            char* cp = hexBuf;
-            const u1* altData = dataStart;
-            for (i = 0; i < (vdata->method->registersSize + 7) / 8; i++) {
-                sprintf(cp, " %02x", *altData++);
-                cp += 3;
-            }
-            hexBuf[i * 3] = '\0';
-            LOGD("  %04x %s %s\n", addr, outBuf, hexBuf);
-        }
     }
+
+    if (dumpMap)
+        dumpRegisterMap(pMap, vdata->method->registersSize);
 
     return true;
 }
@@ -937,12 +1021,14 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
     switch (format) {
     case kRegMapFormatCompact8:
     case kRegMapFormatCompact16:
-        if (dvmRegisterMapGetOnHeap(curMap)) {
-            LOGD("RegMap: already expanded: %s.%s\n",
-                method->clazz->descriptor, method->name);
-        } else {
-            LOGD("RegMap: stored w/o compression: %s.%s\n",
-                method->clazz->descriptor, method->name);
+        if (REGISTER_MAP_VERBOSE) {
+            if (dvmRegisterMapGetOnHeap(curMap)) {
+                LOGD("RegMap: already expanded: %s.%s\n",
+                    method->clazz->descriptor, method->name);
+            } else {
+                LOGD("RegMap: stored w/o compression: %s.%s\n",
+                    method->clazz->descriptor, method->name);
+            }
         }
         return curMap;
     case kRegMapFormatDifferential:
@@ -958,6 +1044,19 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
             format, method->clazz->descriptor, method->name);
         return NULL;
     }
+
+#ifdef REGISTER_MAP_STATS
+    /*
+     * Gather and display some stats.
+     */
+    {
+        MapStats* pStats = (MapStats*) gDvm.registerMapStats;
+        pStats->numExpandedMaps++;
+        pStats->totalExpandedMapSize += computeRegisterMapSize(newMap);
+        LOGD("RMAP: count=%d size=%d\n",
+            pStats->numExpandedMaps, pStats->totalExpandedMapSize);
+    }
+#endif
 
     /*
      * Update method, and free compressed map if it was sitting on the heap.
@@ -1116,9 +1215,9 @@ compress large maps, so that they can be memory mapped and used directly.
 
   B: determines the meaning of CCCC.
 
-  CCCC: if B is 0, this is the number of the bit to toggle (0-14).  A
-  value of 15 indicates that no bits were changed.  If B is 1, this is
-  a count of the number of changed bits (0-14).  A value of 15 indicates
+  CCCC: if B is 0, this is the number of the bit to toggle (0-15).
+  If B is 1, this is a count of the number of changed bits (1-14).  A value
+  of 0 means that no bits were changed, and a value of 15 indicates
   that enough bits were changed that it required less space to output
   the entire bit vector.
 
@@ -1178,9 +1277,11 @@ static void computeMapStats(RegisterMap* pMap, const Method* method)
                 LOGE("GLITCH: address went backward (0x%04x->0x%04x, %s.%s)\n",
                     prevAddr, addr, method->clazz->descriptor, method->name);
             } else if (addrDiff > kMaxGcPointGap) {
-                LOGI("ARGH: addrDiff is %d, max %d (0x%04x->0x%04x, %s.%s)\n",
-                    addrDiff, kMaxGcPointGap, prevAddr, addr,
-                    method->clazz->descriptor, method->name);
+                if (REGISTER_MAP_VERBOSE) {
+                    LOGI("HEY: addrDiff is %d, max %d (0x%04x->0x%04x %s.%s)\n",
+                        addrDiff, kMaxGcPointGap, prevAddr, addr,
+                        method->clazz->descriptor, method->name);
+                }
                 /* skip this one */
             } else {
                 pStats->gcPointGap[addrDiff]++;
@@ -1239,7 +1340,9 @@ static void computeMapStats(RegisterMap* pMap, const Method* method)
             }
 
             if (numDiff > kMaxDiffBits) {
-                LOGW("ARGH: numDiff is %d, max %d\n", numDiff, kMaxDiffBits);
+                if (REGISTER_MAP_VERBOSE) {
+                    LOGI("WOW: numDiff is %d, max %d\n", numDiff, kMaxDiffBits);
+                }
             } else {
                 pStats->numDiffBits[numDiff]++;
             }
@@ -1254,6 +1357,72 @@ static void computeMapStats(RegisterMap* pMap, const Method* method)
 #endif
 }
 
+
+/*
+ * Compute the difference between two bit vectors.
+ *
+ * If "lebOutBuf" is non-NULL, we output the bit indices in ULEB128 format
+ * as we go.  Otherwise, we just generate the various counts.
+ *
+ * The bit vectors are compared byte-by-byte, so any unused bits at the
+ * end must be zero.
+ *
+ * Returns the number of bytes required to hold the ULEB128 output.
+ *
+ * If "pFirstBitChanged" or "pNumBitsChanged" are non-NULL, they will
+ * receive the index of the first changed bit and the number of changed
+ * bits, respectively.
+ */
+static int computeBitDiff(const u1* bits1, const u1* bits2, int byteWidth,
+    int* pFirstBitChanged, int* pNumBitsChanged, u1* lebOutBuf)
+{
+    int numBitsChanged = 0;
+    int firstBitChanged = -1;
+    int lebSize = 0;
+    int byteNum;
+
+    /*
+     * Run through the vectors, first comparing them at the byte level.  This
+     * will yield a fairly quick result if nothing has changed between them.
+     */
+    for (byteNum = 0; byteNum < byteWidth; byteNum++) {
+        u1 byte1 = *bits1++;
+        u1 byte2 = *bits2++;
+        if (byte1 != byte2) {
+            /*
+             * Walk through the byte, identifying the changed bits.
+             */
+            int bitNum;
+            for (bitNum = 0; bitNum < 8; bitNum++) {
+                if (((byte1 >> bitNum) & 0x01) != ((byte2 >> bitNum) & 0x01)) {
+                    int bitOffset = (byteNum << 3) + bitNum;
+
+                    if (firstBitChanged < 0)
+                        firstBitChanged = bitOffset;
+                    numBitsChanged++;
+
+                    if (lebOutBuf == NULL) {
+                        lebSize += unsignedLeb128Size(bitOffset);
+                    } else {
+                        u1* curBuf = lebOutBuf;
+                        lebOutBuf = writeUnsignedLeb128(lebOutBuf, bitOffset);
+                        lebSize += lebOutBuf - curBuf;
+                    }
+                }
+            }
+        }
+    }
+
+    if (numBitsChanged > 0)
+        assert(firstBitChanged >= 0);
+
+    if (pFirstBitChanged != NULL)
+        *pFirstBitChanged = firstBitChanged;
+    if (pNumBitsChanged != NULL)
+        *pNumBitsChanged = numBitsChanged;
+
+    return lebSize;
+}
 
 /*
  * Compress the register map with differential encoding.
@@ -1274,8 +1443,8 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
     bool debug = false;
 
     if (false &&
-        strcmp(meth->clazz->descriptor, "LSQLite/JDBC2y/JDBCDatabaseMetaData;") == 0 &&
-        strcmp(meth->name, "getTables") == 0)
+        strcmp(meth->clazz->descriptor, "Landroid/text/StaticLayout;") == 0 &&
+        strcmp(meth->name, "generate") == 0)
     {
         debug = true;
     }
@@ -1300,6 +1469,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
         LOGI("COMPRESS: %s.%s aw=%d rw=%d ne=%d\n",
             meth->clazz->descriptor, meth->name,
             addrWidth, regWidth, numEntries);
+        dumpRegisterMap(pMap, -1);
     }
 
     if (numEntries <= 1) {
@@ -1339,12 +1509,9 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
         addr |= (*mapData++) << 8;
 
     if (addr >= 128) {
-        LOGD("Can't compress map with starting address >= 128\n");
+        LOGV("Can't compress map with starting address >= 128\n");
         goto bail;
     }
-
-    if (debug)
-        LOGI("addrWidth=%d\n", addrWidth);
 
     /*
      * Start by writing the initial address and bit vector data.  The high
@@ -1376,6 +1543,9 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
         if (addrWidth > 1)
             addr |= (*mapData++) << 8;
 
+        if (debug)
+            LOGI(" addr=0x%04x ent=%d (aw=%d)\n", addr, entry, addrWidth);
+
         addrDiff = addr - prevAddr;
         assert(addrDiff > 0);
         if (addrDiff < 7) {
@@ -1385,31 +1555,64 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
                 LOGI(" : small %d, key=0x%02x\n", addrDiff, key);
         } else {
             /* large difference, output escape code */
-            key = 7;                    /* escape code for AAA */
+            key = 0x07;                 /* escape code for AAA */
             if (debug)
                 LOGI(" : large %d, key=0x%02x\n", addrDiff, key);
         }
 
-        /*
-         * TODO: stuff; for now just encode full bit vector
-         */
-        key |= 0xf8;
+        int numBitsChanged, firstBitChanged, lebSize;
+
+        lebSize = computeBitDiff(prevBits, mapData, regWidth,
+            &firstBitChanged, &numBitsChanged, NULL);
+
+        if (debug) {
+            LOGI(" : diff fbc=%d nbc=%d ls=%d (rw=%d)\n",
+                firstBitChanged, numBitsChanged, lebSize, regWidth);
+        }
+
+        if (numBitsChanged == 0) {
+            /* set B to 1 and CCCC to zero to indicate no bits were changed */
+            key |= 0x08;
+            if (debug) LOGI(" : no bits changed\n");
+        } else if (numBitsChanged == 1 && firstBitChanged < 16) {
+            /* set B to 0 and CCCC to the index of the changed bit */
+            key |= firstBitChanged << 4;
+            if (debug) LOGI(" : 1 low bit changed\n");
+        } else if (numBitsChanged < 15 && lebSize < regWidth) {
+            /* set B to 1 and CCCC to the number of bits */
+            key |= 0x08 | (numBitsChanged << 4);
+            if (debug) LOGI(" : some bits changed\n");
+        } else {
+            /* set B to 1 and CCCC to 0x0f so we store the entire vector */
+            key |= 0x08 | 0xf0;
+            if (debug) LOGI(" : encode original\n");
+        }
 
         /*
          * Encode output.  Start with the key, follow with the address
-         * diff (if needed), then the changed bit info.
+         * diff (if it didn't fit in 3 bits), then the changed bit info.
          */
         *tmpPtr++ = key;
         if (addrDiff >= 7)
             tmpPtr = writeUnsignedLeb128(tmpPtr, addrDiff);
 
-        memcpy(tmpPtr, mapData, regWidth);
-        tmpPtr += regWidth;
-
-        if (debug)
-            LOGI(" : copy regWidth=%d\n", regWidth);
-
-        //
+        if ((key & 0x08) != 0) {
+            int bitCount = key >> 4;
+            if (bitCount == 0) {
+                /* nothing changed, no additional output required */
+            } else if (bitCount == 15) {
+                /* full vector is most compact representation */
+                memcpy(tmpPtr, mapData, regWidth);
+                tmpPtr += regWidth;
+            } else {
+                /* write bit indices in LEB128 format */
+                (void) computeBitDiff(prevBits, mapData, regWidth,
+                    NULL, NULL, tmpPtr);
+                tmpPtr += lebSize;
+            }
+        } else {
+            /* single-bit changed, value encoded in key byte */
+        }
 
         prevBits = mapData;
         prevAddr = addr;
@@ -1418,15 +1621,21 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
         /*
          * See if we've run past the original size.
          */
-        if (tmpPtr - tmpBuf > origSize) {
-            LOGD("Compressed size exceeds original (%d vs %d): %s.%s\n",
-                tmpPtr - tmpBuf, origSize, meth->clazz->descriptor, meth->name);
+        if (tmpPtr - tmpBuf >= origSize) {
+            if (debug) {
+                LOGD("Compressed size >= original (%d vs %d): %s.%s\n",
+                    tmpPtr - tmpBuf, origSize,
+                    meth->clazz->descriptor, meth->name);
+            }
             goto bail;
         }
     }
 
     /*
      * Create a RegisterMap with the contents.
+     *
+     * TODO: consider using a threshold other than merely ">=".  We would
+     * get poorer compression but potentially use less native heap space.
      */
     static const int kHeaderSize = offsetof(RegisterMap, data);
     int newDataSize = tmpPtr - tmpBuf;
@@ -1434,8 +1643,10 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
 
     newMapSize = kHeaderSize + unsignedLeb128Size(newDataSize) + newDataSize;
     if (newMapSize >= origSize) {
-        LOGV("Final comp size exceeds original (%d vs %d): %s.%s\n",
-            newMapSize, origSize, meth->clazz->descriptor, meth->name);
+        if (debug) {
+            LOGD("Final comp size >= original (%d vs %d): %s.%s\n",
+                newMapSize, origSize, meth->clazz->descriptor, meth->name);
+        }
         goto bail;
     }
 
@@ -1451,9 +1662,11 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
     tmpPtr = writeUnsignedLeb128(tmpPtr, newDataSize);
     memcpy(tmpPtr, tmpBuf, newDataSize);
 
-    LOGD("Compression successful (%d -> %d) from aw=%d rw=%d ne=%d\n",
-        computeRegisterMapSize(pMap), computeRegisterMapSize(pNewMap),
-        addrWidth, regWidth, numEntries);
+    if (REGISTER_MAP_VERBOSE) {
+        LOGD("Compression successful (%d -> %d) from aw=%d rw=%d ne=%d\n",
+            computeRegisterMapSize(pMap), computeRegisterMapSize(pNewMap),
+            addrWidth, regWidth, numEntries);
+    }
 
 bail:
     free(tmpBuf);
@@ -1461,9 +1674,20 @@ bail:
 }
 
 /*
+ * Toggle the value of the "idx"th bit in "ptr".
+ */
+static inline void toggleBit(u1* ptr, int idx)
+{
+    ptr[idx >> 3] ^= 1 << (idx & 0x07);
+}
+
+/*
  * Expand a compressed map to an uncompressed form.
  *
  * Returns a newly-allocated RegisterMap on success, or NULL on failure.
+ *
+ * TODO: consider using the linear allocator or a custom allocator with
+ * LRU replacement for these instead of the native heap.
  */
 static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
 {
@@ -1498,8 +1722,10 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
     srcPtr++;
 
     /* now we know enough to allocate the new map */
-    LOGI("Expanding to map aw=%d rw=%d ne=%d\n",
-        newAddrWidth, regWidth, numEntries);
+    if (REGISTER_MAP_VERBOSE) {
+        LOGI("Expanding to map aw=%d rw=%d ne=%d\n",
+            newAddrWidth, regWidth, numEntries);
+    }
     newMapSize = kHeaderSize + (newAddrWidth + regWidth) * numEntries;
     pNewMap = (RegisterMap*) malloc(newMapSize);
     if (pNewMap == NULL)
@@ -1552,17 +1778,28 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
 
         /* unpack the bits */
         if ((key & 0x08) != 0) {
-            if ((key & 0xf0) == 0xf0) {
+            int bitCount = (key >> 4);
+            if (bitCount == 0) {
+                /* no bits changed, just copy previous */
+                memcpy(dstPtr, prevBits, regWidth);
+            } else if (bitCount == 15) {
                 /* full copy of bit vector is present; ignore prevBits */
                 memcpy(dstPtr, srcPtr, regWidth);
                 srcPtr += regWidth;
             } else {
-                // TODO - toggle a high-numbered bit, or multiple bits
-                assert(false);
+                /* copy previous bits and modify listed indices */
+                memcpy(dstPtr, prevBits, regWidth);
+                while (bitCount--) {
+                    int bitIndex = readUnsignedLeb128(&srcPtr);
+                    toggleBit(dstPtr, bitIndex);
+                }
             }
         } else {
-            // TODO - do nothing, or toggle a single low-numbered bit
-            assert(false);
+            /* copy previous bits and modify the specified one */
+            memcpy(dstPtr, prevBits, regWidth);
+
+            /* one bit, from 0-15 inclusive, was changed */
+            toggleBit(dstPtr, key >> 4);
         }
 
         prevAddr = addr;
@@ -1582,8 +1819,10 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
         goto bail;
     }
 
-    LOGD("Expansion successful (%d -> %d)\n",
-        computeRegisterMapSize(pMap), computeRegisterMapSize(pNewMap));
+    if (REGISTER_MAP_VERBOSE) {
+        LOGD("Expansion successful (%d -> %d)\n",
+            computeRegisterMapSize(pMap), computeRegisterMapSize(pNewMap));
+    }
 
     return pNewMap;
 

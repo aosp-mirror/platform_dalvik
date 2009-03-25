@@ -66,7 +66,7 @@ void dvmRegisterMapShutdown(void);
 /*
  * Get the format.
  */
-INLINE u1 dvmRegisterMapGetFormat(const RegisterMap* pMap) {
+INLINE RegisterMapFormat dvmRegisterMapGetFormat(const RegisterMap* pMap) {
     return pMap->format & ~(kRegMapFormatOnHeap);
 }
 
@@ -139,8 +139,11 @@ const u1* dvmRegisterMapGetLine(const RegisterMap* pMap, int addr);
 /*
  * Release "data".
  *
- * If "pMap" points to a compressed map, this will free "data"; otherwise,
- * it does nothing.
+ * If "pMap" points to a compressed map from which we have expanded a
+ * single line onto the heap, this will free "data"; otherwise, it does
+ * nothing.
+ *
+ * TODO: decide if this is still a useful concept.
  */
 INLINE void dvmReleaseRegisterMapLine(const RegisterMap* pMap, const u1* data)
 {}
