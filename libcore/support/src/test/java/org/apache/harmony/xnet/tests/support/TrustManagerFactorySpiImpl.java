@@ -9,36 +9,44 @@ import javax.net.ssl.TrustManager;
 
 public class TrustManagerFactorySpiImpl extends MyTrustManagerFactorySpi {
     
-    private boolean isInitialized = false;
+    private static boolean isengineInitCalled = false;
+    private static boolean isEngineGetTrustManagersCalled = false;
+    private static KeyStore ks = null;
+    private static ManagerFactoryParameters spec = null;
     
     public void engineInit(KeyStore ks) throws KeyStoreException {
-        if (ks == null) {
-            throw new KeyStoreException("Not supported operation for null KeyStore");
-        }
-        isInitialized = true;
+        isengineInitCalled = true;
+        this.ks = ks;
     }
 
     public void engineInit(ManagerFactoryParameters spec) throws InvalidAlgorithmParameterException {
-        if (spec == null) {
-            throw new InvalidAlgorithmParameterException("Null parameter");
-        }
-        if (spec instanceof Parameters) {
-            try {
-                engineInit(((Parameters)spec).getKeyStore());
-            } catch (KeyStoreException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            throw new InvalidAlgorithmParameterException("Invalid parameter");
-        }
-        isInitialized = true;
+        isengineInitCalled = true;
+        this.spec = spec;
     }
 
     public TrustManager[] engineGetTrustManagers() {
-        if(!isInitialized)
-            throw new IllegalStateException("TrustManagerFactorySpi is not initialized");
-        else
-            return null;
+        isEngineGetTrustManagersCalled = true;
+        return null;
     }
 
+    public void reset() {
+        isengineInitCalled = false;
+        isEngineGetTrustManagersCalled = false;
+    }
+
+    public boolean isEngineGetTrustManagersCalled() {
+        return isEngineGetTrustManagersCalled;
+    }
+
+    public boolean isEngineInitCalled() {
+        return isengineInitCalled;
+    }
+
+    public Object getKs() {
+        return ks;
+    }
+
+    public Object getSpec() {
+        return spec;
+    }
 }

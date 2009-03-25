@@ -15,6 +15,7 @@
  */
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -24,11 +25,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
 import junit.framework.TestCase;
-
-import org.apache.harmony.xnet.tests.support.SSLSocketFactoryImpl;
 
 import tests.support.Support_PortManager;
 
@@ -57,7 +57,7 @@ public class SSLSocketFactoryTest extends TestCase {
     )
     public void test_Constructor() {
         try {
-            SSLSocketFactoryImpl sf = new SSLSocketFactoryImpl();
+            SocketFactory sf = SSLSocketFactory.getDefault();
             assertTrue(sf instanceof SSLSocketFactory);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
@@ -87,8 +87,9 @@ public class SSLSocketFactoryTest extends TestCase {
         method = "createSocket",
         args = {java.net.Socket.class, java.lang.String.class, int.class, boolean.class}
     )
+    @BrokenTest("throws SocketException, socket not connected on both RI and Android")
     public void test_createSocket() {
-        SSLSocketFactoryImpl sf = new SSLSocketFactoryImpl();
+        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
         int sport = startServer("test_createSocket()");
         int[] invalid = {Integer.MIN_VALUE, -1, 65536, Integer.MAX_VALUE};
         String[] str = {null, ""};
@@ -141,8 +142,9 @@ public class SSLSocketFactoryTest extends TestCase {
     )
     public void test_getDefaultCipherSuites() {
         try {
-            SSLSocketFactoryImpl sf = new SSLSocketFactoryImpl();
-            assertNull(sf.getDefaultCipherSuites());
+            SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            assertTrue("no default cipher suites returned",
+                    sf.getDefaultCipherSuites().length > 0);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
@@ -159,8 +161,9 @@ public class SSLSocketFactoryTest extends TestCase {
     )
     public void test_getSupportedCipherSuites() {
         try {
-            SSLSocketFactoryImpl sf = new SSLSocketFactoryImpl();
-            assertNull(sf.getSupportedCipherSuites());
+            SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            assertTrue("no supported cipher suites returned",
+                    sf.getSupportedCipherSuites().length > 0);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
