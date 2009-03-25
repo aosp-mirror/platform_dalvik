@@ -111,7 +111,7 @@ void dvmHeapWorkerShutdown(void)
 }
 
 /* Make sure that the HeapWorker thread hasn't spent an inordinate
- * amount of time inside interpreted a finalizer.
+ * amount of time inside a finalizer.
  *
  * Aborts the VM if the thread appears to be wedged.
  *
@@ -132,12 +132,16 @@ void dvmAssertHeapWorkerThreadRunning()
         u8 nowCpu = dvmGetOtherThreadCpuTimeUsec(gDvm.heapWorkerHandle);
         u8 deltaCpu = nowCpu - heapWorkerInterpCpuStartTime;
 
-        if (delta > HEAP_WORKER_WATCHDOG_TIMEOUT && gDvm.debuggerActive) {
+        if (delta > HEAP_WORKER_WATCHDOG_TIMEOUT &&
+            (gDvm.debuggerActive || gDvm.nativeDebuggerActive))
+        {
             /*
              * Debugger suspension can block the thread indefinitely.  For
              * best results we should reset this explicitly whenever the
-             * HeapWorker thread is resumed.  Ignoring the yelp isn't
-             * quite right but will do for a quick fix.
+             * HeapWorker thread is resumed.  Unfortunately this is also
+             * affected by native debuggers, and we have no visibility
+             * into how they're manipulating us.  So, we ignore the
+             * watchdog and just reset the timer.
              */
             LOGI("Debugger is attached -- suppressing HeapWorker watchdog\n");
             heapWorkerInterpStartTime = now;        /* reset timer */
