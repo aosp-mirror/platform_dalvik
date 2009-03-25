@@ -1548,9 +1548,9 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
 
         addrDiff = addr - prevAddr;
         assert(addrDiff > 0);
-        if (addrDiff < 7) {
+        if (addrDiff < 8) {
             /* small difference, encode in 3 bits */
-            key = addr - prevAddr;      /* set 00000AAA */
+            key = addrDiff -1;          /* set 00000AAA */
             if (debug)
                 LOGI(" : small %d, key=0x%02x\n", addrDiff, key);
         } else {
@@ -1593,7 +1593,7 @@ static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
          * diff (if it didn't fit in 3 bits), then the changed bit info.
          */
         *tmpPtr++ = key;
-        if (addrDiff >= 7)
+        if ((key & 0x07) == 0x07)
             tmpPtr = writeUnsignedLeb128(tmpPtr, addrDiff);
 
         if ((key & 0x08) != 0) {
@@ -1768,7 +1768,7 @@ static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
             /* address diff follows in ULEB128 */
             addrDiff = readUnsignedLeb128(&srcPtr);
         } else {
-            addrDiff = key & 0x07;
+            addrDiff = (key & 0x07) +1;
         }
 
         addr = prevAddr + addrDiff;

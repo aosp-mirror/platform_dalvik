@@ -1060,6 +1060,45 @@ static inline const u1* align32(const u1* ptr)
     return (u1*) (((int) ptr + 3) & ~0x03);
 }
 
+
+/*
+ * Dump a map in the "differential" format.
+ *
+ * TODO: show a hex dump of the compressed data.  (We can show the
+ * uncompressed data if we move the compression code to libdex; otherwise
+ * it's too complex to merit a fast & fragile implementation here.)
+ */
+void dumpDifferentialCompressedMap(const u1** pData)
+{
+    const u1* data = *pData;
+    const u1* dataStart = data -1;      // format byte already removed
+    u1 regWidth;
+    u2 numEntries;
+
+    /* standard header */
+    regWidth = *data++;
+    numEntries = *data++;
+    numEntries |= (*data++) << 8;
+
+    /* compressed data begins with the compressed data length */
+    int compressedLen = readUnsignedLeb128(&data);
+    int addrWidth = 1;
+    if ((*data & 0x80) != 0)
+        addrWidth++;
+
+    int origLen = 4 + (addrWidth + regWidth) * numEntries;
+    int compLen = (data - dataStart) + compressedLen;
+
+    printf("        (differential compression %d -> %d [%d -> %d])\n",
+        origLen, compLen,
+        (addrWidth + regWidth) * numEntries, compressedLen);
+
+    /* skip past end of entry */
+    data += compressedLen;
+
+    *pData = data;
+}
+
 /*
  * Dump register map contents of the current method.
  *
@@ -1090,9 +1129,13 @@ void dumpMethodMap(DexFile* pDexFile, const DexMethod* pDexMethod, int idx,
         addrWidth = 1;
     } else if (format == 3) {       /* kRegMapFormatCompact16 */
         addrWidth = 2;
+    } else if (format == 4) {       /* kRegMapFormatDifferential */
+        dumpDifferentialCompressedMap(&data);
+        goto bail;
     } else {
         printf("        (unknown format %d!)\n", format);
-        addrWidth = -1;
+        /* don't know how to skip data; failure will cascade to end of class */
+        goto bail;
     }
 
     if (addrWidth > 0) {
@@ -1117,6 +1160,7 @@ void dumpMethodMap(DexFile* pDexFile, const DexMethod* pDexMethod, int idx,
         }
     }
 
+bail:
     //if (addrWidth >= 0)
     //    *pData = align32(data);
     *pData = data;
