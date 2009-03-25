@@ -1739,7 +1739,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
 
     if (gDvm.preciseGc) {
         classMapData =
-            dvmGetRegisterMapClassData(pDexFile, classDefIdx, &numMethods);
+            dvmRegisterMapGetClassData(pDexFile, classDefIdx, &numMethods);
 
         /* sanity check */
         if (classMapData != NULL &&
@@ -1767,8 +1767,8 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
             dexReadClassDataMethod(&pEncodedData, &method, &lastIndex);
             loadMethodFromDex(newClass, &method, &newClass->directMethods[i]);
             if (classMapData != NULL) {
-                const RegisterMap* pMap = dvmGetNextRegisterMap(&classMapData);
-                if (dvmGetRegisterMapFormat(pMap) != kRegMapFormatNone) {
+                const RegisterMap* pMap = dvmRegisterMapGetNext(&classMapData);
+                if (dvmRegisterMapGetFormat(pMap) != kRegMapFormatNone) {
                     newClass->directMethods[i].registerMap = pMap;
                     /* TODO: add rigorous checks */
                     assert((newClass->directMethods[i].registersSize+7) / 8 ==
@@ -1791,8 +1791,8 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
             dexReadClassDataMethod(&pEncodedData, &method, &lastIndex);
             loadMethodFromDex(newClass, &method, &newClass->virtualMethods[i]);
             if (classMapData != NULL) {
-                const RegisterMap* pMap = dvmGetNextRegisterMap(&classMapData);
-                if (dvmGetRegisterMapFormat(pMap) != kRegMapFormatNone) {
+                const RegisterMap* pMap = dvmRegisterMapGetNext(&classMapData);
+                if (dvmRegisterMapGetFormat(pMap) != kRegMapFormatNone) {
                     newClass->virtualMethods[i].registerMap = pMap;
                     /* TODO: add rigorous checks */
                     assert((newClass->virtualMethods[i].registersSize+7) / 8 ==
@@ -1979,7 +1979,7 @@ static void freeMethodInnards(Method* meth)
      * verification or because we're caching an uncompressed form.
      */
     const RegisterMap* pMap = meth->registerMap;
-    if (pMap != NULL && dvmGetRegisterMapOnHeap(pMap)) {
+    if (pMap != NULL && dvmRegisterMapGetOnHeap(pMap)) {
         dvmFreeRegisterMap((RegisterMap*) pMap);
         meth->registerMap = NULL;
     }
@@ -4336,7 +4336,8 @@ void dvmSetRegisterMap(Method* method, const RegisterMap* pMap)
     ClassObject* clazz = method->clazz;
 
     if (method->registerMap != NULL) {
-        LOGW("WARNING: registerMap already set for %s.%s\n",
+        /* unexpected during class loading, okay on first use (uncompress) */
+        LOGD("NOTE: registerMap already set for %s.%s\n",
             method->clazz->descriptor, method->name);
         /* keep going */
     }

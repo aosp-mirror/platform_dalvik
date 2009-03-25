@@ -33,7 +33,7 @@ typedef enum RegisterMapFormat {
     kRegMapFormatNone,          /* indicates no map data follows */
     kRegMapFormatCompact8,      /* compact layout, 8-bit addresses */
     kRegMapFormatCompact16,     /* compact layout, 16-bit addresses */
-    // TODO: compressed stream
+    kRegMapFormatDifferential,  /* compressed, differential encoding */
 
     kRegMapFormatOnHeap = 0x80, /* bit flag, indicates allocation on heap */
 } RegisterMapFormat;
@@ -66,21 +66,44 @@ void dvmRegisterMapShutdown(void);
 /*
  * Get the format.
  */
-INLINE u1 dvmGetRegisterMapFormat(const RegisterMap* pMap) {
+INLINE u1 dvmRegisterMapGetFormat(const RegisterMap* pMap) {
     return pMap->format & ~(kRegMapFormatOnHeap);
+}
+
+/*
+ * Set the format.
+ */
+INLINE void dvmRegisterMapSetFormat(RegisterMap* pMap, RegisterMapFormat format)
+{
+    pMap->format &= kRegMapFormatOnHeap;
+    pMap->format |= format;
 }
 
 /*
  * Get the "on heap" flag.
  */
-INLINE bool dvmGetRegisterMapOnHeap(const RegisterMap* pMap) {
+INLINE bool dvmRegisterMapGetOnHeap(const RegisterMap* pMap) {
     return (pMap->format & kRegMapFormatOnHeap) != 0;
+}
+
+/*
+ * Get the register bit vector width, in bytes.
+ */
+INLINE u1 dvmRegisterMapGetRegWidth(const RegisterMap* pMap) {
+    return pMap->regWidth;
+}
+
+/*
+ * Set the register bit vector width, in bytes.
+ */
+INLINE void dvmRegisterMapSetRegWidth(RegisterMap* pMap, int regWidth) {
+    pMap->regWidth = regWidth;
 }
 
 /*
  * Set the "on heap" flag.
  */
-INLINE void dvmSetRegisterMapOnHeap(RegisterMap* pMap, bool val) {
+INLINE void dvmRegisterMapSetOnHeap(RegisterMap* pMap, bool val) {
     if (val)
         pMap->format |= kRegMapFormatOnHeap;
     else
@@ -111,7 +134,7 @@ INLINE void dvmRegisterMapSetNumEntries(RegisterMap* pMap, u2 numEntries) {
  *
  * Returns NULL if not found.
  */
-const u1* dvmGetRegisterMapLine(const RegisterMap* pMap, int addr);
+const u1* dvmRegisterMapGetLine(const RegisterMap* pMap, int addr);
 
 /*
  * Release "data".
@@ -164,7 +187,7 @@ typedef struct RegisterMapClassPool {
  *
  * Returns NULL if none is available.
  */
-const void* dvmGetRegisterMapClassData(const DexFile* pDexFile, u4 classIdx,
+const void* dvmRegisterMapGetClassData(const DexFile* pDexFile, u4 classIdx,
     u4* pNumMaps);
 
 /*
@@ -172,9 +195,9 @@ const void* dvmGetRegisterMapClassData(const DexFile* pDexFile, u4 classIdx,
  * the end of the map.  (Used during class loading.)
  *
  * This should initially be called with the result from
- * dvmGetRegisterMapClassData().
+ * dvmRegisterMapGetClassData().
  */
-const RegisterMap* dvmGetNextRegisterMap(const void** pPtr);
+const RegisterMap* dvmRegisterMapGetNext(const void** pPtr);
 
 /*
  * This holds some meta-data while we construct the set of register maps
@@ -253,6 +276,30 @@ typedef struct VerifierData {
  * Returns a pointer to a newly-allocated RegisterMap, or NULL on failure.
  */
 RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata);
+
+/*
+ * Get the expanded form of the register map associated with the specified
+ * method.  May update method->registerMap, possibly freeing the previous
+ * map.
+ *
+ * Returns NULL on failure (e.g. unable to expand map).
+ *
+ * NOTE: this function is not synchronized; external locking is mandatory.
+ * (This is expected to be called at GC time.)
+ */
+const RegisterMap* dvmGetExpandedRegisterMap0(Method* method);
+INLINE const RegisterMap* dvmGetExpandedRegisterMap(Method* method)
+{
+    const RegisterMap* curMap = method->registerMap;
+    if (curMap == NULL)
+        return NULL;
+    RegisterMapFormat format = dvmRegisterMapGetFormat(curMap);
+    if (format == kRegMapFormatCompact8 || format == kRegMapFormatCompact16) {
+        return curMap;
+    } else {
+        return dvmGetExpandedRegisterMap0(method);
+    }
+}
 
 /* dump stats gathered during register map creation process */
 void dvmRegisterMapDumpStats(void);

@@ -124,4 +124,41 @@ int readAndVerifyUnsignedLeb128(const u1** pStream, const u1* limit,
  */
 int readAndVerifySignedLeb128(const u1** pStream, const u1* limit, bool* okay);
 
+
+/*
+ * Writes a 32-bit value in unsigned ULEB128 format.
+ *
+ * Returns the updated pointer.
+ */
+DEX_INLINE u1* writeUnsignedLeb128(u1* ptr, u4 data)
+{
+    while (true) {
+        u1 out = data & 0x7f;
+        if (out != data) {
+            *ptr++ = out | 0x80;
+            data >>= 7;
+        } else {
+            *ptr++ = out;
+            break;
+        }
+    }
+
+    return ptr;
+}
+
+/*
+ * Returns the number of bytes needed to encode "val" in ULEB128 form.
+ */
+DEX_INLINE int unsignedLeb128Size(u4 data)
+{
+    int count = 0;
+
+    do {
+        data >>= 7;
+        count++;
+    } while (data != 0);
+
+    return count;
+}
+
 #endif

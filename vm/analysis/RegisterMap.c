@@ -25,65 +25,20 @@
 #include "analysis/RegisterMap.h"
 #include "libdex/DexCatch.h"
 #include "libdex/InstrUtils.h"
+#include "libdex/Leb128.h"
 
 #include <stddef.h>
 
 
-/*
-Notes on just-in-time RegisterMap generation [not supported]
-
-Generating RegisterMap tables as part of verification is convenient because
-we generate most of what we need to know as part of doing the verify.
-The negative aspect of doing it this way is that we must store the
-result in the DEX file (if we're verifying ahead of time) or in memory
-(if verifying during class load) for every concrete non-native method,
-even if we never actually need the map during a GC.
-
-A simple but compact encoding of register map data increases the size of
-optimized DEX files by about 25%, so size considerations are important.
-
-We can instead generate the RegisterMap at the point where it is needed.
-In a typical application we only need to convert about 2% of the loaded
-methods, and we can generate type-precise roots reasonably quickly because
-(a) we know the method has already been verified and hence can make a
-lot of assumptions, and (b) we don't care what type of object a register
-holds, just whether or not it holds a reference, and hence can skip a
-lot of class resolution gymnastics.
-
-There are a couple of problems with this approach however.  First, to
-get good performance we really want an implementation that is largely
-independent from the verifier, which means some duplication of effort.
-Second, we're dealing with post-dexopt code, which contains "quickened"
-instructions.  We can't process those without either tracking type
-information (which slows us down) or storing additional data in the DEX
-file that allows us to reconstruct the original instructions (adds ~5%
-to the size of the ODEX).
-
-
-Implementation notes...
-
-Both type-precise and live-precise information can be generated knowing
-only whether or not a register holds a reference.  We don't need to
-know what kind of reference or whether the object has been initialized.
-Not only can we skip many of the fancy steps in the verifier, we can
-initialize from simpler sources, e.g. the initial registers and return
-type are set from the "shorty" signature rather than the full signature.
-
-The short-term storage needs for just-in-time register map generation can
-be much lower because we can use a 1-byte SRegType instead of a 4-byte
-RegType.  On the other hand, if we're not doing type-precise analysis
-in the verifier we only need to store register contents at every branch
-target, rather than every GC point (which are much more frequent).
-
-Whether it happens in the verifier or independently, because this is done
-with native heap allocations that may be difficult to return to the system,
-an effort should be made to minimize memory use.
-*/
-
 // fwd
 static void outputTypeVector(const RegType* regs, int insnRegCount, u1* data);
 static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap);
+static int compareMaps(const RegisterMap* pMap1, const RegisterMap* pMap2);
+
 static void computeMapStats(RegisterMap* pMap, const Method* method);
+static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
+    const Method* meth);
+static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap);
 
 
 //#define REGISTER_MAP_STATS
@@ -216,6 +171,7 @@ void dvmRegisterMapDumpStats(void)
  */
 RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
 {
+    static const int kHeaderSize = offsetof(RegisterMap, data);
     RegisterMap* pMap = NULL;
     RegisterMap* pResult = NULL;
     RegisterMapFormat format;
@@ -231,6 +187,13 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
     }
     regWidth = (vdata->method->registersSize + 7) / 8;
 
+    /*
+     * Decide if we need 8 or 16 bits to hold the address.  Strictly speaking
+     * we only need 16 bits if we actually encode an address >= 256 -- if
+     * the method has a section at the end without GC points (e.g. array
+     * data) we don't need to count it.  The situation is unusual, and
+     * detecting it requires scanning the entire method, so we don't bother.
+     */
     if (vdata->insnsSize < 256) {
         format = kRegMapFormatCompact8;
         bytesForAddr = 1;
@@ -260,16 +223,16 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
     /*
      * Allocate a buffer to hold the map data.
      */
-    bufSize = offsetof(RegisterMap, data);
-    bufSize += gcPointCount * (bytesForAddr + regWidth);
+    bufSize = kHeaderSize + gcPointCount * (bytesForAddr + regWidth);
 
     LOGV("+++ grm: %s.%s (adr=%d gpc=%d rwd=%d bsz=%d)\n",
         vdata->method->clazz->descriptor, vdata->method->name,
         bytesForAddr, gcPointCount, regWidth, bufSize);
 
     pMap = (RegisterMap*) malloc(bufSize);
-    pMap->format = format | kRegMapFormatOnHeap;
-    pMap->regWidth = regWidth;
+    dvmRegisterMapSetFormat(pMap, format);
+    dvmRegisterMapSetOnHeap(pMap, true);
+    dvmRegisterMapSetRegWidth(pMap, regWidth);
     dvmRegisterMapSetNumEntries(pMap, gcPointCount);
 
     /*
@@ -301,6 +264,35 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
     computeMapStats(pMap, vdata->method);
 #endif
 
+    if (false) {
+        RegisterMap* pCompMap;
+        RegisterMap* pUncompMap;
+
+        pCompMap = compressMapDifferential(pMap, vdata->method);
+        if (pCompMap != NULL) {
+            pUncompMap = uncompressMapDifferential(pCompMap);
+            if (pUncompMap == NULL) {
+                LOGE("Map failed to uncompress\n");
+                free(pCompMap);
+                /* fail? just use original? */
+            } else {
+                if (compareMaps(pMap, pUncompMap) != 0) {
+                    LOGE("Map comparison failed\n");
+                    free(pCompMap);
+                    /* fail? just use original? */
+                } else {
+                    LOGD("Good compress on %s.%s\n",
+                        vdata->method->clazz->descriptor,
+                        vdata->method->name);
+                    free(pMap);
+                    pMap = pCompMap;
+                }
+
+                free(pUncompMap);
+            }
+        }
+    }
+
     pResult = pMap;
 
 bail:
@@ -315,7 +307,7 @@ void dvmFreeRegisterMap(RegisterMap* pMap)
     if (pMap == NULL)
         return;
 
-    assert(dvmGetRegisterMapOnHeap(pMap));
+    assert(dvmRegisterMapGetOnHeap(pMap));
     free(pMap);
 }
 
@@ -369,7 +361,7 @@ static void outputTypeVector(const RegType* regs, int insnRegCount, u1* data)
 static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
 {
     const u1* rawMap = pMap->data;
-    const u1 format = dvmGetRegisterMapFormat(pMap);
+    const u1 format = dvmRegisterMapGetFormat(pMap);
     const u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
     int ent;
     bool dumpMap = false;
@@ -495,7 +487,7 @@ static inline u1* align32(u1* ptr)
 static size_t computeRegisterMapSize(const RegisterMap* pMap)
 {
     static const int kHeaderSize = offsetof(RegisterMap, data);
-    u1 format = dvmGetRegisterMapFormat(pMap);
+    u1 format = dvmRegisterMapGetFormat(pMap);
     u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
 
     assert(pMap != NULL);
@@ -507,6 +499,13 @@ static size_t computeRegisterMapSize(const RegisterMap* pMap)
         return kHeaderSize + (1 + pMap->regWidth) * numEntries;
     case kRegMapFormatCompact16:
         return kHeaderSize + (2 + pMap->regWidth) * numEntries;
+    case kRegMapFormatDifferential:
+        {
+            /* kHeaderSize + decoded ULEB128 length */
+            const u1* ptr = pMap->data;
+            int len = readUnsignedLeb128(&ptr);
+            return len + (ptr - (u1*) pMap);
+        }
     default:
         LOGE("Bad register map format %d\n", format);
         dvmAbort();
@@ -756,7 +755,7 @@ void dvmFreeRegisterMapBuilder(RegisterMapBuilder* pBuilder)
  *
  * If there's no register map data, or none for this class, we return NULL.
  */
-const void* dvmGetRegisterMapClassData(const DexFile* pDexFile, u4 classIdx,
+const void* dvmRegisterMapGetClassData(const DexFile* pDexFile, u4 classIdx,
     u4* pNumMaps)
 {
     const RegisterMapClassPool* pClassPool;
@@ -787,7 +786,7 @@ const void* dvmGetRegisterMapClassData(const DexFile* pDexFile, u4 classIdx,
 /*
  * This advances "*pPtr" and returns its original value.
  */
-const RegisterMap* dvmGetNextRegisterMap(const void** pPtr)
+const RegisterMap* dvmRegisterMapGetNext(const void** pPtr)
 {
     const RegisterMap* pMap = *pPtr;
 
@@ -810,10 +809,10 @@ const RegisterMap* dvmGetNextRegisterMap(const void** pPtr)
  *
  * The result must be released with dvmReleaseRegisterMapLine().
  */
-const u1* dvmGetRegisterMapLine(const RegisterMap* pMap, int addr)
+const u1* dvmRegisterMapGetLine(const RegisterMap* pMap, int addr)
 {
     int addrWidth, lineWidth;
-    u1 format = dvmGetRegisterMapFormat(pMap);
+    u1 format = dvmRegisterMapGetFormat(pMap);
     u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
 
     assert(numEntries > 0);
@@ -881,6 +880,94 @@ const u1* dvmGetRegisterMapLine(const RegisterMap* pMap, int addr)
 
     assert(data == pMap->data + lineWidth * numEntries);
     return NULL;
+}
+
+/*
+ * Compare two register maps.
+ *
+ * Returns 0 if they're equal, nonzero if not.
+ */
+static int compareMaps(const RegisterMap* pMap1, const RegisterMap* pMap2)
+{
+    size_t size1, size2;
+
+    size1 = computeRegisterMapSize(pMap1);
+    size2 = computeRegisterMapSize(pMap2);
+    if (size1 != size2) {
+        LOGI("compareMaps: size mismatch (%zd vs %zd)\n", size1, size2);
+        return -1;
+    }
+
+    if (memcmp(pMap1, pMap2, size1) != 0) {
+        LOGI("compareMaps: content mismatch\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/*
+ * Get the expanded form of the register map associated with the method.
+ *
+ * If the map is already in one of the uncompressed formats, we return
+ * immediately.  Otherwise, we expand the map and replace method's register
+ * map pointer, freeing it if it was allocated on the heap.
+ *
+ * NOTE: this function is not synchronized; external locking is mandatory.
+ */
+const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
+{
+    const RegisterMap* curMap = method->registerMap;
+    RegisterMap* newMap;
+
+    if (curMap == NULL)
+        return NULL;
+
+    /* sanity check to ensure this isn't called w/o external locking */
+    /* (if we use it somewhere other than the GC, fix it) */
+    if (true) {
+        if (pthread_mutex_trylock(&gDvm.gcHeapLock) == 0) {
+            LOGE("GLITCH: dvmGetExpandedRegisterMap not called at GC time\n");
+            dvmAbort();
+        }
+    }
+
+    RegisterMapFormat format = dvmRegisterMapGetFormat(curMap);
+    switch (format) {
+    case kRegMapFormatCompact8:
+    case kRegMapFormatCompact16:
+        if (dvmRegisterMapGetOnHeap(curMap)) {
+            LOGD("RegMap: already expanded: %s.%s\n",
+                method->clazz->descriptor, method->name);
+        } else {
+            LOGD("RegMap: stored w/o compression: %s.%s\n",
+                method->clazz->descriptor, method->name);
+        }
+        return curMap;
+    case kRegMapFormatDifferential:
+        newMap = uncompressMapDifferential(curMap);
+        break;
+    default:
+        LOGE("Unknown format %d in dvmGetExpandedRegisterMap\n", format);
+        dvmAbort();
+    }
+
+    if (newMap == NULL) {
+        LOGE("Map failed to uncompress (fmt=%d) %s.%s\n",
+            format, method->clazz->descriptor, method->name);
+        return NULL;
+    }
+
+    /*
+     * Update method, and free compressed map if it was sitting on the heap.
+     */
+    dvmSetRegisterMap(method, newMap);
+
+    if (dvmRegisterMapGetOnHeap(curMap))
+        dvmFreeRegisterMap((RegisterMap*) curMap);
+
+    return newMap;
 }
 
 
@@ -1001,16 +1088,60 @@ In some cases there are repeating patterns in the bit vector that aren't
 adjacent.  These could benefit from a dictionary encoding.  This doesn't
 really become useful until the methods reach a certain size though,
 and managing the dictionary may incur more overhead than we want.
+
+Large maps can be compressed significantly.  The trouble is that, when
+we need to use them, we have to uncompress them onto the heap.  We may
+get a better trade-off between storage size and heap usage by refusing to
+compress large maps, so that they can be memory mapped and used directly.
+(OTOH, only about 2% of the maps will ever actually be used.)
+
+
+----- differential format -----
+
+// common header
++00 1B format
++01 1B regWidth
++02 2B numEntries (little-endian)
++04 nB length in bytes of the data that follows, in ULEB128 format
+       (not strictly necessary; allows determination of size w/o full parse)
++05+ 1B initial address (0-127), high bit set if max addr >= 256
++06+ nB initial value for bit vector
+
+// for each entry
++00: CCCCBAAA
+
+  AAA: address difference.  Values from 0 to 6 indicate an increment of 1
+  to 7.  A value of 7 indicates that the address difference is large,
+  and the next byte is a ULEB128-encoded difference value.
+
+  B: determines the meaning of CCCC.
+
+  CCCC: if B is 0, this is the number of the bit to toggle (0-14).  A
+  value of 15 indicates that no bits were changed.  If B is 1, this is
+  a count of the number of changed bits (0-14).  A value of 15 indicates
+  that enough bits were changed that it required less space to output
+  the entire bit vector.
+
++01: (optional) ULEB128-encoded address difference
+
++01+: (optional) one or more ULEB128-encoded bit numbers, OR the entire
+  bit vector.
+
+The most common situation is an entry whose address has changed by 2-4
+code units, has no changes or just a single bit change, and the changed
+register is less than 16.  We should therefore be able to encode a large
+number of entries with a single byte, which is half the size of the
+Compact8 encoding method.
 */
 
 /*
- * Compute some stats on the register map.
+ * Compute some stats on an uncompressed register map.
  */
 static void computeMapStats(RegisterMap* pMap, const Method* method)
 {
 #ifdef REGISTER_MAP_STATS
     MapStats* pStats = (MapStats*) gDvm.registerMapStats;
-    const u1 format = dvmGetRegisterMapFormat(pMap);
+    const u1 format = dvmRegisterMapGetFormat(pMap);
     const u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
     const u1* rawMap = pMap->data;
     const u1* prevData = NULL;
@@ -1125,12 +1256,401 @@ static void computeMapStats(RegisterMap* pMap, const Method* method)
 
 
 /*
+ * Compress the register map with differential encoding.
+ *
+ * "meth" is only needed for debug output.
+ *
+ * On success, returns a newly-allocated RegisterMap.  If the map is not
+ * compatible for some reason, or fails to get smaller, this will return NULL.
+ */
+static RegisterMap* compressMapDifferential(const RegisterMap* pMap,
+    const Method* meth)
+{
+    RegisterMap* pNewMap = NULL;
+    int origSize = computeRegisterMapSize(pMap);
+    u1* tmpBuf = NULL;
+    u1* tmpPtr;
+    int addrWidth, regWidth, numEntries;
+    bool debug = false;
+
+    if (false &&
+        strcmp(meth->clazz->descriptor, "LSQLite/JDBC2y/JDBCDatabaseMetaData;") == 0 &&
+        strcmp(meth->name, "getTables") == 0)
+    {
+        debug = true;
+    }
+
+    u1 format = dvmRegisterMapGetFormat(pMap);
+    switch (format) {
+    case kRegMapFormatCompact8:
+        addrWidth = 1;
+        break;
+    case kRegMapFormatCompact16:
+        addrWidth = 2;
+        break;
+    default:
+        LOGE("ERROR: can't compress map with format=%d\n", format);
+        goto bail;
+    }
+
+    regWidth = dvmRegisterMapGetRegWidth(pMap);
+    numEntries = dvmRegisterMapGetNumEntries(pMap);
+
+    if (debug) {
+        LOGI("COMPRESS: %s.%s aw=%d rw=%d ne=%d\n",
+            meth->clazz->descriptor, meth->name,
+            addrWidth, regWidth, numEntries);
+    }
+
+    if (numEntries <= 1) {
+        LOGV("Can't compress map with 0 or 1 entries\n");
+        goto bail;
+    }
+
+    /*
+     * We don't know how large the compressed data will be.  It's possible
+     * for it to expand and become larger than the original.  The header
+     * itself is variable-sized, so we generate everything into a temporary
+     * buffer and then copy it to form-fitting storage once we know how big
+     * it will be (and that it's smaller than the original).
+     *
+     * If we use a size that is equal to the size of the input map plus
+     * a value longer than a single entry can possibly expand to, we need
+     * only check for overflow at the end of each entry.  The worst case
+     * for a single line is (1 + <ULEB8 address> + <full copy of vector>).
+     * Addresses are 16 bits, so that's (1 + 3 + regWidth).
+     *
+     * The initial address offset and bit vector will take up less than
+     * or equal to the amount of space required when uncompressed -- large
+     * initial offsets are rejected.
+     */
+    tmpBuf = (u1*) malloc(origSize + (1 + 3 + regWidth));
+    if (tmpBuf == NULL)
+        goto bail;
+
+    tmpPtr = tmpBuf;
+
+    const u1* mapData = pMap->data;
+    const u1* prevBits;
+    u2 addr, prevAddr;
+
+    addr = *mapData++;
+    if (addrWidth > 1)
+        addr |= (*mapData++) << 8;
+
+    if (addr >= 128) {
+        LOGD("Can't compress map with starting address >= 128\n");
+        goto bail;
+    }
+
+    if (debug)
+        LOGI("addrWidth=%d\n", addrWidth);
+
+    /*
+     * Start by writing the initial address and bit vector data.  The high
+     * bit of the initial address is used to indicate the required address
+     * width (which the decoder can't otherwise determine without parsing
+     * the compressed data).
+     */
+    *tmpPtr++ = addr | (addrWidth > 1 ? 0x80 : 0x00);
+    memcpy(tmpPtr, mapData, regWidth);
+
+    prevBits = mapData;
+    prevAddr = addr;
+
+    tmpPtr += regWidth;
+    mapData += regWidth;
+
+    /*
+     * Loop over all following entries.
+     */
+    int entry;
+    for (entry = 1; entry < numEntries; entry++) {
+        int addrDiff;
+        u1 key;
+
+        /*
+         * Pull out the address and figure out how to encode it.
+         */
+        addr = *mapData++;
+        if (addrWidth > 1)
+            addr |= (*mapData++) << 8;
+
+        addrDiff = addr - prevAddr;
+        assert(addrDiff > 0);
+        if (addrDiff < 7) {
+            /* small difference, encode in 3 bits */
+            key = addr - prevAddr;      /* set 00000AAA */
+            if (debug)
+                LOGI(" : small %d, key=0x%02x\n", addrDiff, key);
+        } else {
+            /* large difference, output escape code */
+            key = 7;                    /* escape code for AAA */
+            if (debug)
+                LOGI(" : large %d, key=0x%02x\n", addrDiff, key);
+        }
+
+        /*
+         * TODO: stuff; for now just encode full bit vector
+         */
+        key |= 0xf8;
+
+        /*
+         * Encode output.  Start with the key, follow with the address
+         * diff (if needed), then the changed bit info.
+         */
+        *tmpPtr++ = key;
+        if (addrDiff >= 7)
+            tmpPtr = writeUnsignedLeb128(tmpPtr, addrDiff);
+
+        memcpy(tmpPtr, mapData, regWidth);
+        tmpPtr += regWidth;
+
+        if (debug)
+            LOGI(" : copy regWidth=%d\n", regWidth);
+
+        //
+
+        prevBits = mapData;
+        prevAddr = addr;
+        mapData += regWidth;
+
+        /*
+         * See if we've run past the original size.
+         */
+        if (tmpPtr - tmpBuf > origSize) {
+            LOGD("Compressed size exceeds original (%d vs %d): %s.%s\n",
+                tmpPtr - tmpBuf, origSize, meth->clazz->descriptor, meth->name);
+            goto bail;
+        }
+    }
+
+    /*
+     * Create a RegisterMap with the contents.
+     */
+    static const int kHeaderSize = offsetof(RegisterMap, data);
+    int newDataSize = tmpPtr - tmpBuf;
+    int newMapSize;
+
+    newMapSize = kHeaderSize + unsignedLeb128Size(newDataSize) + newDataSize;
+    if (newMapSize >= origSize) {
+        LOGV("Final comp size exceeds original (%d vs %d): %s.%s\n",
+            newMapSize, origSize, meth->clazz->descriptor, meth->name);
+        goto bail;
+    }
+
+    pNewMap = (RegisterMap*) malloc(newMapSize);
+    if (pNewMap == NULL)
+        goto bail;
+    dvmRegisterMapSetFormat(pNewMap, kRegMapFormatDifferential);
+    dvmRegisterMapSetOnHeap(pNewMap, true);
+    dvmRegisterMapSetRegWidth(pNewMap, regWidth);
+    dvmRegisterMapSetNumEntries(pNewMap, numEntries);
+
+    tmpPtr = pNewMap->data;
+    tmpPtr = writeUnsignedLeb128(tmpPtr, newDataSize);
+    memcpy(tmpPtr, tmpBuf, newDataSize);
+
+    LOGD("Compression successful (%d -> %d) from aw=%d rw=%d ne=%d\n",
+        computeRegisterMapSize(pMap), computeRegisterMapSize(pNewMap),
+        addrWidth, regWidth, numEntries);
+
+bail:
+    free(tmpBuf);
+    return pNewMap;
+}
+
+/*
+ * Expand a compressed map to an uncompressed form.
+ *
+ * Returns a newly-allocated RegisterMap on success, or NULL on failure.
+ */
+static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap)
+{
+    RegisterMap* pNewMap = NULL;
+    static const int kHeaderSize = offsetof(RegisterMap, data);
+    u1 format = dvmRegisterMapGetFormat(pMap);
+    RegisterMapFormat newFormat;
+    int regWidth, numEntries, newAddrWidth, newMapSize;
+
+    if (format != kRegMapFormatDifferential) {
+        LOGE("Not differential (%d)\n", format);
+        goto bail;
+    }
+
+    regWidth = dvmRegisterMapGetRegWidth(pMap);
+    numEntries = dvmRegisterMapGetNumEntries(pMap);
+
+    /* get the data size; we can check this at the end */
+    const u1* srcPtr = pMap->data;
+    int expectedSrcLen = readUnsignedLeb128(&srcPtr);
+    const u1* srcStart = srcPtr;
+
+    /* get the initial address and the 16-bit address flag */
+    int addr = *srcPtr & 0x7f;
+    if ((*srcPtr & 0x80) == 0) {
+        newFormat = kRegMapFormatCompact8;
+        newAddrWidth = 1;
+    } else {
+        newFormat = kRegMapFormatCompact16;
+        newAddrWidth = 2;
+    }
+    srcPtr++;
+
+    /* now we know enough to allocate the new map */
+    LOGI("Expanding to map aw=%d rw=%d ne=%d\n",
+        newAddrWidth, regWidth, numEntries);
+    newMapSize = kHeaderSize + (newAddrWidth + regWidth) * numEntries;
+    pNewMap = (RegisterMap*) malloc(newMapSize);
+    if (pNewMap == NULL)
+        goto bail;
+
+    dvmRegisterMapSetFormat(pNewMap, newFormat);
+    dvmRegisterMapSetOnHeap(pNewMap, true);
+    dvmRegisterMapSetRegWidth(pNewMap, regWidth);
+    dvmRegisterMapSetNumEntries(pNewMap, numEntries);
+
+    /*
+     * Write the start address and initial bits to the new map.
+     */
+    u1* dstPtr = pNewMap->data;
+
+    *dstPtr++ = addr & 0xff;
+    if (newAddrWidth > 1)
+        *dstPtr++ = (u1) (addr >> 8);
+
+    memcpy(dstPtr, srcPtr, regWidth);
+
+    int prevAddr = addr;
+    const u1* prevBits = dstPtr;    /* point at uncompressed data */
+
+    dstPtr += regWidth;
+    srcPtr += regWidth;
+
+    /*
+     * Walk through, uncompressing one line at a time.
+     */
+    int entry;
+    for (entry = 1; entry < numEntries; entry++) {
+        int addrDiff;
+        u1 key;
+
+        key = *srcPtr++;
+
+        /* get the address */
+        if ((key & 0x07) == 7) {
+            /* address diff follows in ULEB128 */
+            addrDiff = readUnsignedLeb128(&srcPtr);
+        } else {
+            addrDiff = key & 0x07;
+        }
+
+        addr = prevAddr + addrDiff;
+        *dstPtr++ = addr & 0xff;
+        if (newAddrWidth > 1)
+            *dstPtr++ = (u1) (addr >> 8);
+
+        /* unpack the bits */
+        if ((key & 0x08) != 0) {
+            if ((key & 0xf0) == 0xf0) {
+                /* full copy of bit vector is present; ignore prevBits */
+                memcpy(dstPtr, srcPtr, regWidth);
+                srcPtr += regWidth;
+            } else {
+                // TODO - toggle a high-numbered bit, or multiple bits
+                assert(false);
+            }
+        } else {
+            // TODO - do nothing, or toggle a single low-numbered bit
+            assert(false);
+        }
+
+        prevAddr = addr;
+        prevBits = dstPtr;
+        dstPtr += regWidth;
+    }
+
+    if (dstPtr - (u1*) pNewMap != newMapSize) {
+        LOGE("ERROR: output %d bytes, expected %d\n",
+            dstPtr - (u1*) pNewMap, newMapSize);
+        goto bail;
+    }
+
+    if (srcPtr - srcStart != expectedSrcLen) {
+        LOGE("ERROR: consumed %d bytes, expected %d\n",
+            srcPtr - srcStart, expectedSrcLen);
+        goto bail;
+    }
+
+    LOGD("Expansion successful (%d -> %d)\n",
+        computeRegisterMapSize(pMap), computeRegisterMapSize(pNewMap));
+
+    return pNewMap;
+
+bail:
+    free(pNewMap);
+    return NULL;
+}
+
+
+/*
  * ===========================================================================
  *      Just-in-time generation
  * ===========================================================================
  */
 
 #if 0   /* incomplete implementation; may be removed entirely in the future */
+
+/*
+Notes on just-in-time RegisterMap generation
+
+Generating RegisterMap tables as part of verification is convenient because
+we generate most of what we need to know as part of doing the verify.
+The negative aspect of doing it this way is that we must store the
+result in the DEX file (if we're verifying ahead of time) or in memory
+(if verifying during class load) for every concrete non-native method,
+even if we never actually need the map during a GC.
+
+A simple but compact encoding of register map data increases the size of
+optimized DEX files by about 25%, so size considerations are important.
+
+We can instead generate the RegisterMap at the point where it is needed.
+In a typical application we only need to convert about 2% of the loaded
+methods, and we can generate type-precise roots reasonably quickly because
+(a) we know the method has already been verified and hence can make a
+lot of assumptions, and (b) we don't care what type of object a register
+holds, just whether or not it holds a reference, and hence can skip a
+lot of class resolution gymnastics.
+
+There are a couple of problems with this approach however.  First, to
+get good performance we really want an implementation that is largely
+independent from the verifier, which means some duplication of effort.
+Second, we're dealing with post-dexopt code, which contains "quickened"
+instructions.  We can't process those without either tracking type
+information (which slows us down) or storing additional data in the DEX
+file that allows us to reconstruct the original instructions (adds ~5%
+to the size of the ODEX).
+
+
+Implementation notes...
+
+Both type-precise and live-precise information can be generated knowing
+only whether or not a register holds a reference.  We don't need to
+know what kind of reference or whether the object has been initialized.
+Not only can we skip many of the fancy steps in the verifier, we can
+initialize from simpler sources, e.g. the initial registers and return
+type are set from the "shorty" signature rather than the full signature.
+
+The short-term storage needs for just-in-time register map generation can
+be much lower because we can use a 1-byte SRegType instead of a 4-byte
+RegType.  On the other hand, if we're not doing type-precise analysis
+in the verifier we only need to store register contents at every branch
+target, rather than every GC point (which are much more frequent).
+
+Whether it happens in the verifier or independently, because this is done
+with native heap allocations that may be difficult to return to the system,
+an effort should be made to minimize memory use.
+*/
 
 /*
  * This is like RegType in the verifier, but simplified.  It holds a value

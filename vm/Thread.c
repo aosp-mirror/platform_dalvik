@@ -3249,11 +3249,11 @@ static void gcScanInterpStackReferences(Thread *thread)
             const u1* regVector;
             int i;
 
-            pMap = method->registerMap;
+            pMap = dvmGetExpandedRegisterMap((Method*) method);
             if (pMap != NULL) {
                 /* found map, get registers for this address */
                 int addr = saveArea->xtra.currentPc - method->insns;
-                regVector = dvmGetRegisterMapLine(pMap, addr);
+                regVector = dvmRegisterMapGetLine(pMap, addr);
                 if (regVector == NULL) {
                     LOGW("PGC: map but no entry for %s.%s addr=0x%04x\n",
                         method->clazz->descriptor, method->name, addr);
