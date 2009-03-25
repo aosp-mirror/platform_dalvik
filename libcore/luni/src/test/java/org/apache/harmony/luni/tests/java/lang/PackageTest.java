@@ -29,6 +29,7 @@ import java.lang.annotation.Annotation;
 
 import java.lang.annotation.Annotation;
 
+import tests.support.Support_ClassLoader;
 import tests.support.resource.Support_Resources;
 
 @TestTargetClass(Package.class) 
@@ -40,14 +41,10 @@ public class PackageTest extends junit.framework.TestCase {
     
     Class clazz;
 
-    // URLClassLoader doesn't load classes from jar.
-    // use PathClassLoader
-    boolean USE_PATH_CLASS_LOADER = true;
-
     Package getTestPackage(String resourceJar, String className)
             throws Exception {
         
-        if (USE_PATH_CLASS_LOADER) {
+        if ("Dalvik".equals(System.getProperty("java.vm.name"))) {
             resourceJar = resourceJar.substring(0, resourceJar.indexOf(".")) + 
                                                                     "_dex.jar";
         }
@@ -55,14 +52,9 @@ public class PackageTest extends junit.framework.TestCase {
         URL resourceURL = new URL("file:/" + resPath + "/Package/"
                 + resourceJar);
 
-        ClassLoader cl = null;
-        if(USE_PATH_CLASS_LOADER) {
-            cl = new dalvik.system.PathClassLoader(
-                resourceURL.getPath(), getClass().getClassLoader());
-        } else {
-            cl = new URLClassLoader(new URL[] { resourceURL }, 
-                                                getClass().getClassLoader());
-        }
+        ClassLoader cl = Support_ClassLoader.getInstance(resourceURL,
+                getClass().getClassLoader());
+
        clazz = cl.loadClass(className);
        return clazz.getPackage();
     }
