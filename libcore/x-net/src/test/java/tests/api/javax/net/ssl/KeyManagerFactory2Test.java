@@ -114,13 +114,13 @@ public class KeyManagerFactory2Test extends TestCase {
         }
         keyMF.init(kStore, pass);
 
-        mfp = (ManagerFactoryParameters) new MyKeyManagerFactorySpi.Parameters(kStore, null);
+        mfp = new MyKeyManagerFactorySpi.Parameters(kStore, null);
         try {
             keyMF.init(mfp);
             fail("InvalidAlgorithmParameterException must be thrown");
         } catch (InvalidAlgorithmParameterException e) {
         }
-        mfp = (ManagerFactoryParameters) new MyKeyManagerFactorySpi.Parameters(kStore, pass);
+        mfp = new MyKeyManagerFactorySpi.Parameters(kStore, pass);
         keyMF.init(mfp);
     }
     /**
@@ -154,8 +154,6 @@ public class KeyManagerFactory2Test extends TestCase {
         KeyManagerFactory keyMF;
         for (int i = 0; i < validValues.length; i++) {
             keyMF = KeyManagerFactory.getInstance(validValues[i]);
-            assertTrue("Not instanceof KeyManagerFactory object",
-                    keyMF instanceof KeyManagerFactory);
             assertEquals("Incorrect algorithm", keyMF.getAlgorithm(),
                     validValues[i]);
             assertEquals("Incorrect provider", keyMF.getProvider(), mProv);
@@ -228,8 +226,6 @@ public class KeyManagerFactory2Test extends TestCase {
         for (int i = 0; i < validValues.length; i++) {
             keyMF = KeyManagerFactory.getInstance(validValues[i], mProv
                     .getName());
-            assertTrue("Not instanceof KeyManagerFactory object",
-                    keyMF instanceof KeyManagerFactory);
             assertEquals("Incorrect algorithm", keyMF.getAlgorithm(),
                     validValues[i]);
             assertEquals("Incorrect provider", keyMF.getProvider().getName(),
@@ -282,8 +278,6 @@ public class KeyManagerFactory2Test extends TestCase {
         KeyManagerFactory keyMF;
         for (int i = 0; i < validValues.length; i++) {
             keyMF = KeyManagerFactory.getInstance(validValues[i], mProv);
-            assertTrue("Not instanceof KeyManagerFactory object",
-                    keyMF instanceof KeyManagerFactory);
             assertEquals("Incorrect algorithm", keyMF.getAlgorithm(),
                     validValues[i]);
             assertEquals("Incorrect provider", keyMF.getProvider(), mProv);

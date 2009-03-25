@@ -36,7 +36,6 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.harmony.security.tests.support.cert.TestUtils;
-import org.apache.harmony.xnet.tests.support.SSLSocketFactoryImpl;
 
 import junit.framework.TestCase;
 
@@ -61,14 +60,11 @@ public class HttpsURLConnectionTest extends TestCase {
     public final void test_Constructor() {
         try {
             MyHttpsURLConnection huc = new MyHttpsURLConnection(new URL("https://www.fortify.net/"));
-            assertNotNull(huc);
-            assertTrue(huc instanceof HttpsURLConnection);
         } catch (Exception e) {
             fail("Unexpected exception: " + e.toString());
         }
         try {
             MyHttpsURLConnection huc = new MyHttpsURLConnection(null);
-            assertNotNull(huc);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
@@ -384,7 +380,8 @@ public class HttpsURLConnectionTest extends TestCase {
         } catch (IllegalArgumentException e) {
         }
         try {
-            SSLSocketFactoryImpl ssf = new SSLSocketFactoryImpl();
+            SSLSocketFactory ssf = (SSLSocketFactory) SSLSocketFactory
+                    .getDefault();
             HttpsURLConnection.setDefaultSSLSocketFactory(ssf);
         } catch (Exception e) {
             fail("Unexpected exception " + e);
@@ -408,7 +405,8 @@ public class HttpsURLConnectionTest extends TestCase {
         } catch (IllegalArgumentException e) {
         }
         try {
-            SSLSocketFactoryImpl ssf = new SSLSocketFactoryImpl();
+            SSLSocketFactory ssf = (SSLSocketFactory) SSLSocketFactory
+                    .getDefault();
             con.setSSLSocketFactory(ssf);
         } catch (Exception e) {
             fail("Unexpected exception " + e);

@@ -17,14 +17,21 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionBindingEvent;
 import javax.net.ssl.SSLSessionBindingListener;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.harmony.xnet.tests.support.mySSLSession;
+import java.io.IOException;
+import java.net.UnknownHostException;
 
 import junit.framework.TestCase;
 
@@ -37,8 +44,8 @@ public class SSLSessionBindingListenerTest extends TestCase {
     
     public class mySSLSessionBindingListener implements SSLSessionBindingListener {
         
-        private boolean boundDone = false;
-        private boolean unboundDone = false;
+        public boolean boundDone = false;
+        public boolean unboundDone = false;
         
         mySSLSessionBindingListener() {
         }
@@ -52,6 +59,9 @@ public class SSLSessionBindingListenerTest extends TestCase {
     }
     
     /**
+     * @throws IOException 
+     * @throws UnknownHostException 
+     * @throws InterruptedException 
      * @tests javax.net.ssl.SSLSessionBindingListener#valueBound(SSLSessionBindingEvent event)
      */
     @TestTargetNew(
@@ -60,18 +70,19 @@ public class SSLSessionBindingListenerTest extends TestCase {
         method = "valueBound",
         args = {SSLSessionBindingEvent.class}
     )
-    public void test_valueBound() {
-        mySSLSession ss = new mySSLSession("localhost", 1080, null);
+    public void test_valueBound() throws UnknownHostException, IOException,
+            InterruptedException {
+        SSLSocket sock = (SSLSocket) SSLSocketFactory.getDefault()
+                .createSocket();
+        SSLSession ss = sock.getSession();
         mySSLSessionBindingListener sbl = new mySSLSessionBindingListener();
-        SSLSessionBindingEvent event = new SSLSessionBindingEvent(ss, "Name_01");
-        try {
-            sbl.valueBound(event);
-        } catch (Exception e) {
-            fail("Unexpected exception: " + e);
-        }
+        ss.putValue("test", sbl);
+        assertTrue("valueBound was not called.", sbl.boundDone);
     }
     
     /**
+     * @throws IOException 
+     * @throws UnknownHostException 
      * @tests javax.net.ssl.SSLSessionBindingListener#valueUnbound(SSLSessionBindingEvent event)
      */
     @TestTargetNew(
@@ -80,15 +91,14 @@ public class SSLSessionBindingListenerTest extends TestCase {
         method = "valueUnbound",
         args = {SSLSessionBindingEvent.class}
     )
-    public void test_valueUnbound() {
-        mySSLSession ss = new mySSLSession("localhost", 1080, null);
+    @KnownFailure("this will be fixed in donutburger")
+    public void test_valueUnbound() throws UnknownHostException, IOException {
+        SSLSocket sock = (SSLSocket) SSLSocketFactory.getDefault()
+                .createSocket();
+        SSLSession ss = sock.getSession();
         mySSLSessionBindingListener sbl = new mySSLSessionBindingListener();
-        SSLSessionBindingEvent event = new SSLSessionBindingEvent(ss, "Name_01");
-        try {
-            sbl.valueUnbound(event);
-        } catch (Exception e) {
-            fail("Unexpected exception: " + e);
-        }
+        ss.putValue("test", sbl);
+        ss.removeValue("test");
+        assertTrue("valueUnbound was not called.", sbl.unboundDone);
     }
-
 }

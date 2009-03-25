@@ -550,7 +550,6 @@ public class TrustManagerFactory1Test extends TestCase {
         method = "init",
         args = {java.security.KeyStore.class}
     )
-    @KnownFailure("The RI doesn't throw any exception for null parameter.") 
     public void test_initLjava_security_KeyStore_01() {
         if (!DEFSupported) {
             fail(NotSupportedMsg);

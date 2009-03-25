@@ -16,16 +16,19 @@
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
+import java.security.AccessController;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
 
 import javax.net.ssl.ManagerFactoryParameters;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.TrustManagerFactorySpi;
 
 import junit.framework.TestCase;
@@ -35,6 +38,7 @@ import org.apache.harmony.xnet.tests.support.MyTrustManagerFactorySpi.Parameters
 @TestTargetClass(TrustManagerFactorySpi.class) 
 public class TrustManagerFactorySpiTest extends TestCase {
 
+    private TrustManagerFactorySpiImpl factory = new TrustManagerFactorySpiImpl();
     /**
      * @tests javax.net.ssl.TrustManagerFactorySpi#TrustManagerFactorySpi()
      */
@@ -47,13 +51,14 @@ public class TrustManagerFactorySpiTest extends TestCase {
     public void test_Constructor() {
         try {
             TrustManagerFactorySpiImpl tmf = new TrustManagerFactorySpiImpl();
-            assertTrue(tmf instanceof TrustManagerFactorySpi);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
+     * @throws KeyStoreException 
      * @tests javax.net.ssl.TrustManagerFactorySpi#engineInit(KeyStore ks)
      */
     @TestTargetNew(
@@ -62,25 +67,31 @@ public class TrustManagerFactorySpiTest extends TestCase {
         method = "engineInit",
         args = {java.security.KeyStore.class}
     )
-    public void test_engineInit_01() {
-        TrustManagerFactorySpiImpl tmf = new TrustManagerFactorySpiImpl();
+    public void test_engineInit_01() throws NoSuchAlgorithmException,
+            KeyStoreException {
+        factory.reset();
+        Provider provider = new MyProvider();
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("MyTMF",
+                provider);
+        KeyStore ks = null;
         try {
-            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+            ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
-            tmf.engineInit(ks);
+            tmf.init(ks);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
-        try {
-            KeyStore ks = null;
-            tmf.engineInit(ks);
-            fail("KeyStoreException wasn't thrown");
-        } catch (KeyStoreException kse) {
-            //expected
-        }
+        assertTrue(factory.isEngineInitCalled());
+        assertEquals(ks, factory.getKs());
+        factory.reset();
+        tmf.init((KeyStore) null);
+        assertTrue(factory.isEngineInitCalled());
+        assertNull(factory.getKs());
     }
     
     /**
+     * @throws InvalidAlgorithmParameterException 
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.TrustManagerFactorySpi#engineInit(ManagerFactoryParameters spec)
      */
     @TestTargetNew(
@@ -89,26 +100,31 @@ public class TrustManagerFactorySpiTest extends TestCase {
         method = "engineInit",
         args = {javax.net.ssl.ManagerFactoryParameters.class}
     )
-    public void test_engineInit_02() {
-        TrustManagerFactorySpiImpl tmf = new TrustManagerFactorySpiImpl();
+    public void test_engineInit_02() throws InvalidAlgorithmParameterException,
+            NoSuchAlgorithmException {
+        factory.reset();
+        Provider provider = new MyProvider();
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("MyTMF",
+                provider);
+        Parameters pr = null;
         try {
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
-            Parameters pr = new Parameters(ks);
-            tmf.engineInit(pr);
+            pr = new Parameters(ks);
+            tmf.init(pr);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
-        try {
-            ManagerFactoryParameters mfp = null;
-            tmf.engineInit(mfp);
-            fail("InvalidAlgorithmParameterException wasn't thrown");
-        } catch (InvalidAlgorithmParameterException kse) {
-            //expected
-        }
+        assertTrue(factory.isEngineInitCalled());
+        assertEquals(pr, factory.getSpec());
+        factory.reset();
+        tmf.init((ManagerFactoryParameters) null);
+        assertTrue(factory.isEngineInitCalled());
+        assertNull(factory.getSpec());
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.TrustManagerFactorySpi#engineGetTrustManagers()
      */
     @TestTargetNew(
@@ -117,24 +133,36 @@ public class TrustManagerFactorySpiTest extends TestCase {
         method = "engineGetTrustManagers",
         args = {}
     )
-    public void test_engineGetTrustManagers() {
-        TrustManagerFactorySpiImpl tmf = new TrustManagerFactorySpiImpl();
-        try {
-            TrustManager[] tm = tmf.engineGetTrustManagers();
-            fail("IllegalStateException wasn't thrown");
-        } catch (IllegalStateException ise) {
-            //expected
-        } catch (Exception e) {
-            fail(e + " was thrown instead of IllegalStateException");
-        }
+    public void test_engineGetTrustManagers() throws NoSuchAlgorithmException {
+        factory.reset();
+        Provider provider = new MyProvider();
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("MyTMF",
+                provider);
+        TrustManager[] tm = tmf.getTrustManagers();
+        assertTrue(factory.isEngineGetTrustManagersCalled());
+        factory.reset();
         try {
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
-            tmf.engineInit(ks);
-            TrustManager[] tm = tmf.engineGetTrustManagers();
-            assertNull("Object is not NULL", tm);
+            tmf.init(ks);
+            tm = tmf.getTrustManagers();
+            assertTrue(factory.isEngineGetTrustManagersCalled());
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
+    }
+}
+
+class MyProvider extends Provider {
+
+    public MyProvider() {
+        super("MyProvider", 1.0, "My Test Provider");
+        AccessController.doPrivileged(new java.security.PrivilegedAction<Void>() {
+            public Void run() {
+                put("TrustManagerFactory.MyTMF",
+                        "org.apache.harmony.xnet.tests.support.TrustManagerFactorySpiImpl");
+                return null;
+            }
+        });
     }
 }

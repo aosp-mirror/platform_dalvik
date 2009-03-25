@@ -68,7 +68,6 @@ public class AllTests {
         suite.addTestSuite(X509KeyManagerTest.class);
         suite.addTestSuite(SSLSessionTest.class);
         suite.addTestSuite(SSLSessionBindingListenerTest.class);
-        suite.addTestSuite(HandshakeCompletedListenerTest.class);
         suite.addTestSuite(HostnameVerifierTest.class);
 
         // $JUnit-END$

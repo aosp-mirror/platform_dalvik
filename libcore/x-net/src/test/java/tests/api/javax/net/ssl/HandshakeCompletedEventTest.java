@@ -17,11 +17,14 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -38,6 +41,7 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.security.cert.X509Certificate;
@@ -46,7 +50,8 @@ import junit.framework.TestCase;
 
 import org.apache.harmony.luni.util.Base64;
 import org.apache.harmony.xnet.tests.support.mySSLSession;
-import org.apache.harmony.xnet.tests.support.mySSLSocket;
+
+import tests.support.Support_PortManager;
 
 /**
  * Tests for <code>HandshakeCompletedEvent</code> class constructors and methods.
@@ -73,6 +78,7 @@ public class HandshakeCompletedEventTest extends TestCase {
 
 
     /**
+     * @throws IOException 
      * @tests javax.net.ssl.HandshakeCompletedEvent#HandshakeCompletedEvent(SSLSocket sock, SSLSession s) 
      */
     @TestTargetNew(
@@ -81,12 +87,11 @@ public class HandshakeCompletedEventTest extends TestCase {
         method = "HandshakeCompletedEvent",
         args = {javax.net.ssl.SSLSocket.class, javax.net.ssl.SSLSession.class}
     )
-    public final void test_Constructor() {
-        mySSLSession session = new mySSLSession("localhost", 1080, null);
-        mySSLSocket socket = new mySSLSocket();
+    public final void test_Constructor() throws IOException {
+        mySSLSession session = new mySSLSession();
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
         try {
             HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
-            assertNotNull(event);
         } catch (Exception e) {
             fail("Unexpected exception: " + e);
         }
@@ -99,6 +104,7 @@ public class HandshakeCompletedEventTest extends TestCase {
     }
     
     /**
+     * @throws IOException 
      * @tests javax.net.ssl.HandshakeCompletedEvent#getCipherSuite() 
      */
     @TestTargetNew(
@@ -107,18 +113,19 @@ public class HandshakeCompletedEventTest extends TestCase {
         method = "getCipherSuite",
         args = {}
     )
-    public final void test_getCipherSuite() {
+    public final void test_getCipherSuite() throws IOException {
         mySSLSession session = new mySSLSession("localhost", 1080, null);
-        mySSLSocket socket = new mySSLSocket();
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
         try {
-            String name = event.getCipherSuite();
+            assertEquals("SuiteName", event.getCipherSuite());
         } catch (Exception e) {
             fail("Unexpected exception: " + e);
         }
     }
     
     /**
+     * @throws IOException 
      * @tests javax.net.ssl.HandshakeCompletedEvent#getLocalCertificates() 
      */
     @TestTargetNew(
@@ -127,9 +134,9 @@ public class HandshakeCompletedEventTest extends TestCase {
         method = "getLocalCertificates",
         args = {}
     )
-    public final void test_getLocalCertificates() {
+    public final void test_getLocalCertificates() throws IOException {
         mySSLSession session = new mySSLSession("localhost", 1080, null);
-        mySSLSocket socket = new mySSLSocket();
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
         try {
             assertNull(event.getLocalCertificates());
@@ -139,6 +146,7 @@ public class HandshakeCompletedEventTest extends TestCase {
     }
     
     /**
+     * @throws IOException 
      * @tests javax.net.ssl.HandshakeCompletedEvent#getLocalPrincipal() 
      */
     @TestTargetNew(
@@ -147,9 +155,9 @@ public class HandshakeCompletedEventTest extends TestCase {
         method = "getLocalPrincipal",
         args = {}
     )
-    public final void test_getLocalPrincipal() {
+    public final void test_getLocalPrincipal() throws IOException {
         mySSLSession session = new mySSLSession("localhost", 1080, null);
-        mySSLSocket socket = new mySSLSocket();
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
         try {
             assertNull(event.getLocalPrincipal());
@@ -159,6 +167,7 @@ public class HandshakeCompletedEventTest extends TestCase {
     }
     
     /**
+     * @throws IOException 
      * @tests javax.net.ssl.HandshakeCompletedEvent#getPeerCertificateChain() 
      */
     @TestTargetNew(
@@ -167,10 +176,10 @@ public class HandshakeCompletedEventTest extends TestCase {
         method = "getPeerCertificateChain",
         args = {}
     )
-    public final void test_getPeerCertificateChain() {
+    public final void test_getPeerCertificateChain() throws IOException {
         ByteArrayInputStream bis = new ByteArrayInputStream(certificate.getBytes());
-        mySSLSession session = new mySSLSession(null);
-        mySSLSocket socket = new mySSLSocket();
+        mySSLSession session = new mySSLSession((X509Certificate[]) null);
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
         try {
             X509Certificate[] res = event.getPeerCertificateChain();
@@ -196,6 +205,7 @@ public class HandshakeCompletedEventTest extends TestCase {
     }
     
     /**
+     * @throws IOException 
      * @tests javax.net.ssl.HandshakeCompletedEvent#getPeerCertificates() 
      */
     @TestTargetNew(
@@ -204,9 +214,9 @@ public class HandshakeCompletedEventTest extends TestCase {
         method = "getPeerCertificates",
         args = {}
     )
-    public final void test_getPeerCertificates() {
+    public final void test_getPeerCertificates() throws IOException {
         mySSLSession session = new mySSLSession("localhost", 1080, null);
-        mySSLSocket socket = new mySSLSocket();
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
         try {
             Certificate[] res = event.getPeerCertificates();
@@ -215,7 +225,7 @@ public class HandshakeCompletedEventTest extends TestCase {
             //expected
         }
         
-        session = new mySSLSession(null);
+        session = new mySSLSession((X509Certificate[]) null);
         event = new HandshakeCompletedEvent(socket, session);
         try {
             Certificate[] res = event.getPeerCertificates();
@@ -226,6 +236,7 @@ public class HandshakeCompletedEventTest extends TestCase {
     }
     
     /**
+     * @throws IOException 
      * @tests javax.net.ssl.HandshakeCompletedEvent#getPeerPrincipal() 
      */
     @TestTargetNew(
@@ -234,9 +245,9 @@ public class HandshakeCompletedEventTest extends TestCase {
         method = "getPeerPrincipal",
         args = {}
     )
-    public final void test_getPeerPrincipal() {
+    public final void test_getPeerPrincipal() throws IOException {
         mySSLSession session = new mySSLSession("localhost", 1080, null);
-        mySSLSocket socket = new mySSLSocket();
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
         try {
             assertNull(event.getPeerPrincipal());
@@ -246,6 +257,7 @@ public class HandshakeCompletedEventTest extends TestCase {
     }
     
     /**
+     * @throws IOException 
      * @tests javax.net.ssl.HandshakeCompletedEvent#getSession() 
      */
     @TestTargetNew(
@@ -254,9 +266,9 @@ public class HandshakeCompletedEventTest extends TestCase {
         method = "getSession",
         args = {}
     )
-    public final void test_getSession() {
+    public final void test_getSession() throws IOException {
         mySSLSession session = new mySSLSession("localhost", 1080, null);
-        mySSLSocket socket = new mySSLSocket();
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
         try {
             SSLSession ss = event.getSession();
@@ -268,6 +280,7 @@ public class HandshakeCompletedEventTest extends TestCase {
     }
     
     /**
+     * @throws IOException 
      * @tests javax.net.ssl.HandshakeCompletedEvent#getSocket() 
      */
     @TestTargetNew(
@@ -276,10 +289,9 @@ public class HandshakeCompletedEventTest extends TestCase {
         method = "getSocket",
         args = {}
     )
-    public final void test_getSocket() {
-        mySSLSession session = new mySSLSession("localhost", 1080, null);
-        mySSLSocket socket = new mySSLSocket();
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
+    public final void test_getSocket() throws IOException {
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
+        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, null);
         try {
             SSLSocket ss = event.getSocket();
             assertNotNull(ss);
@@ -297,7 +309,7 @@ public class HandshakeCompletedEventTest extends TestCase {
     SSLSocket socket;
     SSLSocket serverSocket;
     MyHandshakeListener listener;
-    int port = 1081;
+    int port = Support_PortManager.getNextPort();
     String host = "localhost";
     
     private String PASSWORD = "android";
@@ -429,18 +441,35 @@ public class HandshakeCompletedEventTest extends TestCase {
      * usual sense, we just make sure that we got the expected certificates,
      * because our self-signed test certificates are not valid.)
      */
-    @TestTargetNew(
+    
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.COMPLETE,
             notes = "",
             clazz = SSLSocket.class,
             method = "addHandshakeCompletedListener",
             args = {HandshakeCompletedListener.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            clazz = HandshakeCompletedListener.class,
+            method = "handshakeCompleted",
+            args = {HandshakeCompletedEvent.class}
         )
+    })
+    @AndroidOnly("Uses bks key store. Change useBKS to false to run on the RI")
     public void testClientAuth() {
+
+        boolean useBKS = true;
+
         listener = new MyHandshakeListener();
         try {
-            TestServer server = new TestServer(8088, true, TestServer.CLIENT_AUTH_WANTED);
-            TestClient client = new TestClient(8088, true);
+            String serverKeys = (useBKS ? SERVER_KEYS_BKS : SERVER_KEYS_JKS);
+            String clientKeys = (useBKS ? CLIENT_KEYS_BKS : CLIENT_KEYS_JKS);
+            TestServer server = new TestServer(true,
+                    TestServer.CLIENT_AUTH_WANTED, serverKeys);
+            TestClient client = new TestClient(true, clientKeys);
             
             Thread serverThread = new Thread(server);
             Thread clientThread = new Thread(client);
@@ -486,14 +515,14 @@ public class HandshakeCompletedEventTest extends TestCase {
 
         private Exception exception;
 
-        private int port;
+        String keys;
         
         private int clientAuth;
         
         private boolean provideKeys;
 
-        public TestServer(int port, boolean provideKeys, int clientAuth) {
-            this.port = port;
+        public TestServer(boolean provideKeys, int clientAuth, String keys) {
+            this.keys = keys;
             this.clientAuth = clientAuth;
             this.provideKeys = provideKeys;
             
@@ -502,7 +531,7 @@ public class HandshakeCompletedEventTest extends TestCase {
         
         public void run() {
             try {
-                KeyManager[] keyManagers = provideKeys ? getKeyManagers(SERVER_KEYS_BKS) : null;
+                KeyManager[] keyManagers = provideKeys ? getKeyManagers(keys) : null;
                 TrustManager[] trustManagers = new TrustManager[] { trustManager };
 
                 SSLContext sslContext = SSLContext.getInstance("TLS");
@@ -560,12 +589,12 @@ public class HandshakeCompletedEventTest extends TestCase {
 
         private Exception exception;
         
-        private int port;
+        private String keys;
         
         private boolean provideKeys;
         
-        public TestClient(int port, boolean provideKeys) {
-            this.port = port;
+        public TestClient(boolean provideKeys, String keys) {
+            this.keys = keys;
             this.provideKeys = provideKeys;
             
             trustManager = new TestTrustManager(); 
@@ -573,7 +602,7 @@ public class HandshakeCompletedEventTest extends TestCase {
         
         public void run() {
             try {
-                KeyManager[] keyManagers = provideKeys ? getKeyManagers(CLIENT_KEYS_BKS) : null;
+                KeyManager[] keyManagers = provideKeys ? getKeyManagers(keys) : null;
                 TrustManager[] trustManagers = new TrustManager[] { trustManager };
 
                 SSLContext sslContext = SSLContext.getInstance("TLS");

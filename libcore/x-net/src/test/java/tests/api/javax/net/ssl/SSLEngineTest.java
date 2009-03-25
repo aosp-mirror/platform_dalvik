@@ -17,6 +17,8 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -25,11 +27,14 @@ import dalvik.annotation.AndroidOnly;
 
 import java.nio.ByteBuffer;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLEngineResult;
 import java.nio.ReadOnlyBufferException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 import junit.framework.TestCase;
 
@@ -48,6 +53,7 @@ public class SSLEngineTest extends TestCase {
     /**
      * Test for <code>SSLEngine()</code> constructor Assertion: creates
      * SSLEngine object with null host and -1 port
+     * @throws NoSuchAlgorithmException 
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
@@ -55,17 +61,18 @@ public class SSLEngineTest extends TestCase {
         method = "SSLEngine",
         args = {}
     )
-    public void test_Constructor() {
-        SSLEngine e = new mySSLEngine();
+    public void test_Constructor() throws NoSuchAlgorithmException {
+        SSLEngine e = getEngine();
         assertNull(e.getPeerHost());
         assertEquals(-1, e.getPeerPort());
-        String[] suites = { "a", "b", "c" };
+        String[] suites = e.getSupportedCipherSuites();
         e.setEnabledCipherSuites(suites);
         assertEquals(e.getEnabledCipherSuites().length, suites.length);
     }
 
     /**
      * Test for <code>SSLEngine(String host, int port)</code> constructor
+     * @throws NoSuchAlgorithmException 
      */
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
@@ -73,19 +80,37 @@ public class SSLEngineTest extends TestCase {
         method = "SSLEngine",
         args = {java.lang.String.class, int.class}
     )
-    public void test_ConstructorLjava_lang_StringI01() throws SSLException {
+    public void test_ConstructorLjava_lang_StringI01() throws NoSuchAlgorithmException {
         int port = 1010;
-        SSLEngine e = new mySSLEngine(null, port);
+        SSLEngine e = getEngine(null, port);
         assertNull(e.getPeerHost());
         assertEquals(e.getPeerPort(), port);
         try {
             e.beginHandshake();
+        } catch (IllegalStateException ex) {
+            // expected
         } catch (SSLException ex) {
+            fail("unexpected SSLException was thrown.");
+        }
+        e = getEngine(null, port);
+        e.setUseClientMode(true);
+        try {
+            e.beginHandshake();
+        } catch (SSLException ex) {
+            // expected
+        }
+        e = getEngine(null, port);
+        e.setUseClientMode(false);
+        try {
+            e.beginHandshake();
+        } catch (SSLException ex) {
+            // expected
         }
     }
 
     /**
      * Test for <code>SSLEngine(String host, int port)</code> constructor
+     * @throws NoSuchAlgorithmException 
      */
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
@@ -93,13 +118,13 @@ public class SSLEngineTest extends TestCase {
         method = "SSLEngine",
         args = {java.lang.String.class, int.class}
     )
-    public void test_ConstructorLjava_lang_StringI02() {
+    public void test_ConstructorLjava_lang_StringI02() throws NoSuchAlgorithmException {
         String host = "new host";
         int port = 8080;
-        SSLEngine e = new mySSLEngine(host, port);
+        SSLEngine e = getEngine(host, port);
         assertEquals(e.getPeerHost(), host);
         assertEquals(e.getPeerPort(), port);
-        String[] suites = { "a", "b", "c" };
+        String[] suites = e.getSupportedCipherSuites();
         e.setEnabledCipherSuites(suites);
         assertEquals(e.getEnabledCipherSuites().length, suites.length);
         e.setUseClientMode(true);
@@ -108,6 +133,7 @@ public class SSLEngineTest extends TestCase {
 
     /**
      * Test for <code>getPeerHost()</code> method
+     * @throws NoSuchAlgorithmException 
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
@@ -115,15 +141,16 @@ public class SSLEngineTest extends TestCase {
         method = "getPeerHost",
         args = {}
     )
-    public void test_getPeerHost() {
-        SSLEngine e = new mySSLEngine();
+    public void test_getPeerHost() throws NoSuchAlgorithmException {
+        SSLEngine e = getEngine();
         assertNull(e.getPeerHost());
-        e = new mySSLEngine("www.fortify.net", 80);
+        e = getEngine("www.fortify.net", 80);
         assertEquals("Incorrect host name", "www.fortify.net", e.getPeerHost());
     }
     
     /**
      * Test for <code>getPeerPort()</code> method
+     * @throws NoSuchAlgorithmException 
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
@@ -131,15 +158,16 @@ public class SSLEngineTest extends TestCase {
         method = "getPeerPort",
         args = {}
     )
-    public void test_getPeerPort() {
-        SSLEngine e = new mySSLEngine();
+    public void test_getPeerPort() throws NoSuchAlgorithmException {
+        SSLEngine e = getEngine();
         assertEquals("Incorrect default value of peer port",
                 -1 ,e.getPeerPort());
-        e = new mySSLEngine("www.fortify.net", 80);
+        e = getEngine("www.fortify.net", 80);
         assertEquals("Incorrect peer port", 80, e.getPeerPort());
     }
 
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#getSupportedProtocols()
      */
     @TestTargetNew(
@@ -148,18 +176,19 @@ public class SSLEngineTest extends TestCase {
         method = "getSupportedProtocols",
         args = {}
     )
-    public void test_getSupportedProtocols() {
-        mySSLEngine sse = new mySSLEngine();
+    public void test_getSupportedProtocols() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
             String[] res = sse.getSupportedProtocols();
             assertNotNull(res);
-            assertEquals(res.length, 0);
+            assertTrue(res.length > 0);
         } catch (Exception ex) {
             fail("Unexpected exception " + ex);
         }
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#setEnabledProtocols(String[] protocols)
      * @tests javax.net.ssl.SSLEngine#getEnabledProtocols()
      */
@@ -177,15 +206,15 @@ public class SSLEngineTest extends TestCase {
             args = {String[].class}
         )
     })
-    public void test_EnabledProtocols() {
-        mySSLEngine sse = new mySSLEngine();
-        String[] pr = {"Protocil_01", "Protocol_02"};
+    public void test_EnabledProtocols() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
+        String[] pr = sse.getSupportedProtocols();
         try {
             sse.setEnabledProtocols(pr);
             String[] res = sse.getEnabledProtocols();
             assertNotNull("Null array was returned", res);
             assertEquals("Incorrect array length", res.length, pr.length);
-            assertEquals("Incorrect array was returned", res, pr);
+            assertTrue("Incorrect array was returned", Arrays.equals(res, pr));
         } catch (Exception ex) {
             fail("Unexpected exception " + ex);
         }
@@ -198,6 +227,7 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#getSupportedCipherSuites()
      */
     @TestTargetNew(
@@ -206,18 +236,19 @@ public class SSLEngineTest extends TestCase {
         method = "getSupportedCipherSuites",
         args = {}
     )
-    public void test_getSupportedCipherSuites() {
-        mySSLEngine sse = new mySSLEngine();
+    public void test_getSupportedCipherSuites() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
             String[] res = sse.getSupportedCipherSuites();
             assertNotNull(res);
-            assertEquals(res.length, 0);
+            assertTrue(res.length > 0);
         } catch (Exception ex) {
             fail("Unexpected exception " + ex);
         }
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#setEnabledCipherSuites(String[] suites)
      * @tests javax.net.ssl.SSLEngine#getEnabledCipherSuites()
      */
@@ -235,15 +266,15 @@ public class SSLEngineTest extends TestCase {
             args = {}
         )
     })
-    public void test_EnabledCipherSuites() {
-        mySSLEngine sse = new mySSLEngine();
-        String[] st = {"Suite_01", "Suite_02"};
+    public void test_EnabledCipherSuites() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
+        String[] st = sse.getSupportedCipherSuites();
         try {
             sse.setEnabledCipherSuites(st);
             String[] res = sse.getEnabledCipherSuites();
             assertNotNull("Null array was returned", res);
             assertEquals("Incorrect array length", res.length, st.length);
-            assertEquals("Incorrect array was returned", res, st);
+            assertTrue("Incorrect array was returned", Arrays.equals(res, st));
         } catch (Exception ex) {
             fail("Unexpected exception " + ex);
         }
@@ -256,6 +287,7 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#setEnableSessionCreation(boolean flag)
      * @tests javax.net.ssl.SSLEngine#getEnableSessionCreation()
      */
@@ -273,8 +305,8 @@ public class SSLEngineTest extends TestCase {
             args = {}
         )
     })
-    public void test_EnableSessionCreation() {
-        mySSLEngine sse = new mySSLEngine();
+    public void test_EnableSessionCreation() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
             assertTrue(sse.getEnableSessionCreation());
             sse.setEnableSessionCreation(false);
@@ -287,6 +319,7 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#setNeedClientAuth(boolean need)
      * @tests javax.net.ssl.SSLEngine#getNeedClientAuth()
      */
@@ -304,8 +337,8 @@ public class SSLEngineTest extends TestCase {
             args = {}
         )
     })
-    public void test_NeedClientAuth() {
-        mySSLEngine sse = new mySSLEngine();
+    public void test_NeedClientAuth() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
             sse.setNeedClientAuth(false);
             assertFalse(sse.getNeedClientAuth());
@@ -317,6 +350,7 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#setWantClientAuth(boolean want)
      * @tests javax.net.ssl.SSLEngine#getWantClientAuth()
      */
@@ -334,8 +368,8 @@ public class SSLEngineTest extends TestCase {
             args = {}
         )
     })
-    public void test_WantClientAuth() {
-        mySSLEngine sse = new mySSLEngine();
+    public void test_WantClientAuth() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
             sse.setWantClientAuth(false);
             assertFalse(sse.getWantClientAuth());
@@ -347,6 +381,7 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#beginHandshake()
      */
     @TestTargetNew(
@@ -355,15 +390,17 @@ public class SSLEngineTest extends TestCase {
         method = "beginHandshake",
         args = {}
     )
-    public void test_beginHandshake() {
-        mySSLEngine sse = new mySSLEngine();
+    public void test_beginHandshake() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
             sse.beginHandshake();
-            fail("SSLException wasn't thrown");
-        } catch (SSLException se) {
+            fail("IllegalStateException wasn't thrown");
+        } catch (IllegalStateException se) {
             //expected
+        } catch (Exception e) {
+            fail(e + " was thrown instead of IllegalStateException");
         }
-        sse = new mySSLEngine("new host", 1080);
+        sse = getEngine("new host", 1080);
         try {
             sse.beginHandshake();
             fail("IllegalStateException wasn't thrown");
@@ -372,9 +409,9 @@ public class SSLEngineTest extends TestCase {
         } catch (Exception e) {
             fail(e + " was thrown instead of IllegalStateException");
         }
+        sse = getEngine();
         try {
             sse.setUseClientMode(true);
-            System.out.println("<--- Client mode was set");
             sse.beginHandshake();
         } catch (Exception ex) {
             fail("Unexpected exception " + ex);
@@ -382,6 +419,7 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#setUseClientMode(boolean mode)
      * @tests javax.net.ssl.SSLEngine#getUseClientMode()
      */
@@ -399,8 +437,9 @@ public class SSLEngineTest extends TestCase {
             args = {}
         )
     })
-    public void test_UseClientMode() {
-        mySSLEngine sse = new mySSLEngine();
+    @AndroidOnly("The RI doesn't throw the expected IllegalStateException.")
+    public void test_UseClientMode() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
             sse.setUseClientMode(false);
             assertFalse(sse.getUseClientMode());
@@ -411,7 +450,7 @@ public class SSLEngineTest extends TestCase {
         }
         
         try {
-            sse = new mySSLEngine("new host", 1080);
+            sse = getEngine(null, 1080);
             sse.setUseClientMode(true);
             sse.beginHandshake();
             try {
@@ -426,6 +465,7 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#getSession()
      */
     @TestTargetNew(
@@ -434,16 +474,17 @@ public class SSLEngineTest extends TestCase {
         method = "getSession",
         args = {}
     )
-    public void test_getSession() {
-        mySSLEngine sse = new mySSLEngine();
+    public void test_getSession() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
-            assertNull(sse.getSession());
+            assertNotNull(sse.getSession());
         } catch (Exception ex) {
             fail("Unexpected exception " + ex);
         }
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#getHandshakeStatus()
      */
     @TestTargetNew(
@@ -452,16 +493,20 @@ public class SSLEngineTest extends TestCase {
         method = "getHandshakeStatus",
         args = {}
     )
-    public void test_getHandshakeStatus() {
-        mySSLEngine sse = new mySSLEngine();
+    public void test_getHandshakeStatus() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
-            assertEquals(sse.getHandshakeStatus().toString(), "FINISHED");
+            assertEquals(sse.getHandshakeStatus().toString(), "NOT_HANDSHAKING");
+            sse.setUseClientMode(true);
+            sse.beginHandshake();
+            assertEquals(sse.getHandshakeStatus().toString(), "NEED_WRAP");
         } catch (Exception ex) {
             fail("Unexpected exception " + ex);
         }
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#getDelegatedTask()
      */
     @TestTargetNew(
@@ -470,8 +515,9 @@ public class SSLEngineTest extends TestCase {
         method = "getDelegatedTask",
         args = {}
     )
-    public void test_getDelegatedTask() {
-        mySSLEngine sse = new mySSLEngine();
+    @BrokenTest("Throws NPE because sse seems to be null")
+    public void test_getDelegatedTask() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         try {
             assertNull(sse.getDelegatedTask());
         } catch (Exception ex) {
@@ -490,14 +536,14 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class, int.class, int.class}
     )
+    @BrokenTest("SSLException is not thrown")
     public void test_unwrap_01() {
-        ByteBuffer bbs = ByteBuffer.allocate(100);
-        ByteBuffer bbd = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1();
+        ByteBuffer bbs = ByteBuffer.wrap(new byte[] {1,2,3,1,2,3,1,2,3,1,2,3});
+        ByteBuffer bbd = ByteBuffer.allocate(100);
+        SSLEngine sse = getEngine();
         sse.setUseClientMode(true);
-        
         try {
-            sse.unwrap(bbs, new ByteBuffer[] { bbd }, 0, 10);
+            sse.unwrap(bbs, new ByteBuffer[] { bbd }, 0, 1);
             fail("SSLException wasn't thrown");
         } catch (SSLException ex) {
             //expected
@@ -515,13 +561,14 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class, int.class, int.class}
     )
+    @KnownFailure("Fixed in DonutBurger, boundary checks missing")
     public void test_unwrap_02() throws SSLException {
         String host = "new host";
         int port = 8080;
         ByteBuffer[] bbA = { ByteBuffer.allocate(100), ByteBuffer.allocate(10), ByteBuffer.allocate(100) };
 
         ByteBuffer bb = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -561,6 +608,7 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class, int.class, int.class}
     )
+    @KnownFailure("Fixed on DonutBurger, Wrong Exception thrown")
     public void test_unwrap_03() {
         String host = "new host";
         int port = 8080;
@@ -568,7 +616,7 @@ public class SSLEngineTest extends TestCase {
         ByteBuffer[] bbA = { bbR, ByteBuffer.allocate(10), ByteBuffer.allocate(100) };
 
         ByteBuffer bb = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -592,7 +640,7 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class, int.class, int.class}
     )
-    @AndroidOnly("NullPointerException was thrown instead of IllegalArgumentException for null parameter.")
+    @KnownFailure("Fixed on DonutBurger, Wrong Exception thrown")
     public void test_unwrap_04() {
         String host = "new host";
         int port = 8080;
@@ -601,7 +649,7 @@ public class SSLEngineTest extends TestCase {
         ByteBuffer[] bbN = null;
         ByteBuffer bb = ByteBuffer.allocate(10);
         ByteBuffer bN = null;
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -654,13 +702,14 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class, int.class, int.class}
     )
+    @AndroidOnly("The RI doesn't throw the IllegalStateException.")
     public void test_unwrap_05() {
         String host = "new host";
         int port = 8080;
         ByteBuffer[] bbA = { ByteBuffer.allocate(100), ByteBuffer.allocate(10), ByteBuffer.allocate(100) };
 
         ByteBuffer bb = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         
         try {
             SSLEngineResult res = sse.unwrap(bb, bbA, 0, bbA.length);
@@ -688,13 +737,13 @@ public class SSLEngineTest extends TestCase {
         ByteBuffer[] bbA = { ByteBuffer.allocate(100), ByteBuffer.allocate(10), ByteBuffer.allocate(100) };
 
         ByteBuffer bb = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
             SSLEngineResult res = sse.unwrap(bb, bbA, 0, bbA.length);
-            assertEquals(1, res.bytesConsumed());
-            assertEquals(2, res.bytesProduced());
+            assertEquals(0, res.bytesConsumed());
+            assertEquals(0, res.bytesProduced());
         } catch (Exception ex) {
             fail("Unexpected exception: " + ex);
         }
@@ -711,14 +760,15 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer[].class, int.class, int.class, ByteBuffer.class}
     )
+    @BrokenTest("SSLException is not thrown")
     public void test_wrap_01() {
         ByteBuffer bbs = ByteBuffer.allocate(100);
         ByteBuffer bbd = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1();
+        SSLEngine sse = getEngine();
         sse.setUseClientMode(true);
         
         try {
-            sse.wrap(new ByteBuffer[] { bbs }, 0, 100, bbd);
+            sse.wrap(new ByteBuffer[] { bbs }, 0, 1, bbd);
             fail("SSLException wasn't thrown");
         } catch (SSLException ex) {
             //expected
@@ -736,12 +786,13 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer[].class, int.class, int.class, ByteBuffer.class}
     )
+    @KnownFailure("Fixed in DonutBurger, boundary checks missing")
     public void test_wrap_02() throws SSLException {
         String host = "new host";
         int port = 8080;
         ByteBuffer bb = ByteBuffer.allocate(10);
         ByteBuffer[] bbA = {ByteBuffer.allocate(5), ByteBuffer.allocate(10), ByteBuffer.allocate(5)};
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -786,7 +837,7 @@ public class SSLEngineTest extends TestCase {
         int port = 8080;
         ByteBuffer bb = ByteBuffer.allocate(10).asReadOnlyBuffer();
         ByteBuffer[] bbA = {ByteBuffer.allocate(5), ByteBuffer.allocate(10), ByteBuffer.allocate(5)};
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -808,7 +859,7 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer[].class, int.class, int.class, ByteBuffer.class}
     )
-    @AndroidOnly("NullPointerException was thrown instead of IllegalArgumentException for null parameter.")
+    @KnownFailure("Fixed on DonutBurger, Wrong Exception thrown")
     public void test_wrap_04() {
         String host = "new host";
         int port = 8080;
@@ -817,7 +868,7 @@ public class SSLEngineTest extends TestCase {
         ByteBuffer[] bbN = null;
         ByteBuffer bb = ByteBuffer.allocate(10);
         ByteBuffer bN = null;
-        SSLEngine e = new mySSLEngine1(host, port);
+        SSLEngine e = getEngine(host, port);
         e.setUseClientMode(true);
         
         try {
@@ -850,12 +901,13 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer[].class, int.class, int.class, ByteBuffer.class}
     )
+    @AndroidOnly("The RI doesn't throw the IllegalStateException.")
     public void test_wrap_05() throws SSLException {
         String host = "new host";
         int port = 8080;
         ByteBuffer bb = ByteBuffer.allocate(10);
         ByteBuffer[] bbA = {ByteBuffer.allocate(5), ByteBuffer.allocate(10), ByteBuffer.allocate(5)};
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         
         try {
             SSLEngineResult res = sse.wrap(bbA, 0, bbA.length, bb);
@@ -880,7 +932,7 @@ public class SSLEngineTest extends TestCase {
         int port = 8080;
         ByteBuffer bb = ByteBuffer.allocate(10);
         ByteBuffer[] bbA = {ByteBuffer.allocate(5), ByteBuffer.allocate(10), ByteBuffer.allocate(5)};
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);        
         
         try {
@@ -891,6 +943,7 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#closeOutbound()
      * @tests javax.net.ssl.SSLEngine#isOutboundDone()
      */
@@ -908,8 +961,8 @@ public class SSLEngineTest extends TestCase {
             args = {}
         )
     })
-    public void test_closeOutbound() {
-        SSLEngine sse = new mySSLEngine();
+    public void test_closeOutbound() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
         
         try {
             assertFalse(sse.isOutboundDone());
@@ -921,6 +974,7 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
+     * @throws NoSuchAlgorithmException 
      * @tests javax.net.ssl.SSLEngine#closeInbound()
      * @tests javax.net.ssl.SSLEngine#isInboundDone()
      */
@@ -938,8 +992,8 @@ public class SSLEngineTest extends TestCase {
             args = {}
         )
     })
-    public void test_closeInbound() {
-        SSLEngine sse = new mySSLEngine();
+    public void test_closeInbound() throws NoSuchAlgorithmException {
+        SSLEngine sse = getEngine();
  
         try {
             assertFalse(sse.isInboundDone());
@@ -960,10 +1014,11 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer.class}
     )
+    @BrokenTest("SSLException is not thrown")
     public void test_unwrap_ByteBuffer_ByteBuffer_01() {
         ByteBuffer bbs = ByteBuffer.allocate(100);
         ByteBuffer bbd = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1();
+        SSLEngine sse = getEngine();
         sse.setUseClientMode(true);
         
         try {
@@ -984,12 +1039,13 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer.class}
     )
+    @KnownFailure("Fixed on DonutBurger, Wrong Exception thrown")
     public void test_unwrap_ByteBuffer_ByteBuffer_02() {
         String host = "new host";
         int port = 8080;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer bbd = ByteBuffer.allocate(100).asReadOnlyBuffer();
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -1012,7 +1068,7 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer.class}
     )
-    @AndroidOnly("NullPointerException was thrown instead of IllegalArgumentException for null parameter.")
+    @KnownFailure("Fixed on DonutBurger, Wrong Exception thrown")
     public void test_unwrap_ByteBuffer_ByteBuffer_03() {
         String host = "new host";
         int port = 8080;
@@ -1020,7 +1076,7 @@ public class SSLEngineTest extends TestCase {
         ByteBuffer bbdN = null;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer bbd = ByteBuffer.allocate(100);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -1064,12 +1120,13 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer.class}
     )
+    @AndroidOnly("The RI doesn't throw the IllegalStateException.")
     public void test_unwrap_ByteBuffer_ByteBuffer_04() {
         String host = "new host";
         int port = 8080;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer bbd = ByteBuffer.allocate(100);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         
         try {
             SSLEngineResult res = sse.unwrap(bbs, bbd);
@@ -1095,13 +1152,13 @@ public class SSLEngineTest extends TestCase {
         int port = 8080;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer bbd = ByteBuffer.allocate(100);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
             SSLEngineResult res = sse.unwrap(bbs, bbd);
-            assertEquals(1, res.bytesConsumed());
-            assertEquals(2, res.bytesProduced());
+            assertEquals(0, res.bytesConsumed());
+            assertEquals(0, res.bytesProduced());
         } catch (Exception e) {
             fail("Unexpected exception: " + e);
         }
@@ -1117,10 +1174,11 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class}
     )
+    @BrokenTest("SSLException is not thrown")
     public void test_unwrap_ByteBuffer$ByteBuffer_01() {
         ByteBuffer bbs = ByteBuffer.allocate(100);
         ByteBuffer bbd = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1();
+        SSLEngine sse = getEngine();
         sse.setUseClientMode(true);
         
         try {
@@ -1141,13 +1199,14 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class}
     )
+    @KnownFailure("Fixed on DonutBurger, Wrong Exception thrown")
     public void test_unwrap_ByteBuffer$ByteBuffer_02() {
         String host = "new host";
         int port = 8080;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer bbR = ByteBuffer.allocate(100).asReadOnlyBuffer();
         ByteBuffer[] bbA = { bbR, ByteBuffer.allocate(10), ByteBuffer.allocate(100) };
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -1170,7 +1229,7 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class}
     )
-    @AndroidOnly("NullPointerException was thrown instead of IllegalArgumentException for null parameter.")
+    @KnownFailure("Fixed on DonutBurger, Wrong Exception thrown")
     public void test_unwrap_ByteBuffer$ByteBuffer_03() {
         String host = "new host";
         int port = 8080;
@@ -1179,7 +1238,7 @@ public class SSLEngineTest extends TestCase {
         ByteBuffer[] bbAN = null;
         ByteBuffer bb = ByteBuffer.allocate(10);
         ByteBuffer bN = null;
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -1233,12 +1292,13 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class}
     )
+    @AndroidOnly("The RI doesn't throw the IllegalStateException.")
     public void test_unwrap_ByteBuffer$ByteBuffer_04() {
         String host = "new host";
         int port = 8080;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer[] bbd = {ByteBuffer.allocate(100), ByteBuffer.allocate(10), ByteBuffer.allocate(100) };
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         
         try {
             SSLEngineResult res = sse.unwrap(bbs, bbd);
@@ -1264,13 +1324,13 @@ public class SSLEngineTest extends TestCase {
         int port = 8080;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer[] bbd = {ByteBuffer.allocate(100), ByteBuffer.allocate(10), ByteBuffer.allocate(100) };
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
             SSLEngineResult res = sse.unwrap(bbs, bbd);
-            assertEquals(1, res.bytesConsumed());
-            assertEquals(2, res.bytesProduced());
+            assertEquals(0, res.bytesConsumed());
+            assertEquals(0, res.bytesProduced());
         } catch (Exception ex) {
             fail("Unexpected exception: " + ex);
         }
@@ -1286,10 +1346,11 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer.class, ByteBuffer.class}
     )
+    @BrokenTest("SSLException is not thrown")
     public void test_wrap_ByteBuffer_ByteBuffer_01() {
         ByteBuffer bbs = ByteBuffer.allocate(100);
         ByteBuffer bbd = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1();
+        SSLEngine sse = getEngine();
         sse.setUseClientMode(true);
         
         try {
@@ -1315,7 +1376,7 @@ public class SSLEngineTest extends TestCase {
         int port = 8080;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer bbd = ByteBuffer.allocate(100).asReadOnlyBuffer();
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -1338,7 +1399,7 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer.class, ByteBuffer.class}
     )
-    @AndroidOnly("NullPointerException was thrown instead of IllegalArgumentException for null parameter.")
+    @KnownFailure("Fixed on DonutBurger, Wrong Exception thrown")
     public void test_wrap_ByteBuffer_ByteBuffer_03() {
         String host = "new host";
         int port = 8080;
@@ -1346,7 +1407,7 @@ public class SSLEngineTest extends TestCase {
         ByteBuffer bbdN = null;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer bbd = ByteBuffer.allocate(100);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -1390,12 +1451,13 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer.class, ByteBuffer.class}
     )
+    @AndroidOnly("The RI doesn't throw the IllegalStateException.")
     public void test_wrap_ByteBuffer_ByteBuffer_04() {
         String host = "new host";
         int port = 8080;
         ByteBuffer bbs = ByteBuffer.allocate(10);
         ByteBuffer bbd = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         
         try {
             SSLEngineResult res = sse.wrap(bbs, bbd);
@@ -1420,13 +1482,13 @@ public class SSLEngineTest extends TestCase {
         String host = "new host";
         int port = 8080;
         ByteBuffer bb = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
             SSLEngineResult res = sse.wrap(bb, ByteBuffer.allocate(10));
-            assertEquals(10, res.bytesConsumed());
-            assertEquals(20, res.bytesProduced());
+            assertEquals(0, res.bytesConsumed());
+            assertEquals(0, res.bytesProduced());
         } catch (Exception e) {
             fail("Unexpected exception: " + e);
         }
@@ -1442,10 +1504,11 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer[].class, ByteBuffer.class}
     )
+    @BrokenTest("SSLException is not thrown")
     public void test_wrap_ByteBuffer$ByteBuffer_01() {
         ByteBuffer bbs = ByteBuffer.allocate(100);
         ByteBuffer bbd = ByteBuffer.allocate(10);
-        SSLEngine sse = new mySSLEngine1();
+        SSLEngine sse = getEngine();
         sse.setUseClientMode(true);
         
         try {
@@ -1471,7 +1534,7 @@ public class SSLEngineTest extends TestCase {
         int port = 8080;
         ByteBuffer bb = ByteBuffer.allocate(10).asReadOnlyBuffer();
         ByteBuffer[] bbA = {ByteBuffer.allocate(5), ByteBuffer.allocate(10), ByteBuffer.allocate(5)};
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -1494,7 +1557,7 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer[].class, ByteBuffer.class}
     )
-    @AndroidOnly("NullPointerException was thrown instead of IllegalArgumentException for null parameter.")
+    @KnownFailure("Fixed on DonutBurger, Wrong Exception thrown")
     public void test_wrap_ByteBuffer$ByteBuffer_03() {
         String host = "new host";
         int port = 8080;
@@ -1503,7 +1566,7 @@ public class SSLEngineTest extends TestCase {
         ByteBuffer[] bbAN = null;
         ByteBuffer bb = ByteBuffer.allocate(10);
         ByteBuffer bN = null;
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
@@ -1547,12 +1610,13 @@ public class SSLEngineTest extends TestCase {
         method = "wrap",
         args = {ByteBuffer[].class, ByteBuffer.class}
     )
+    @AndroidOnly("The RI doesn't throw the IllegalStateException.")
     public void test_wrap_ByteBuffer$ByteBuffer_04() {
         String host = "new host";
         int port = 8080;
         ByteBuffer bb = ByteBuffer.allocate(10);
         ByteBuffer[] bbA = { ByteBuffer.allocate(5), ByteBuffer.allocate(10), ByteBuffer.allocate(5) };
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         
         try {
             SSLEngineResult res = sse.wrap(bbA, bb);
@@ -1578,265 +1642,43 @@ public class SSLEngineTest extends TestCase {
         int port = 8080;
         ByteBuffer bb = ByteBuffer.allocate(10);
         ByteBuffer[] bbA = { ByteBuffer.allocate(5), ByteBuffer.allocate(10), ByteBuffer.allocate(5) };
-        SSLEngine sse = new mySSLEngine1(host, port);
+        SSLEngine sse = getEngine(host, port);
         sse.setUseClientMode(true);
         
         try {
             SSLEngineResult res = sse.wrap(bbA, bb);
-            assertEquals(10, res.bytesConsumed());
-            assertEquals(20, res.bytesProduced());
+            assertEquals(0, res.bytesConsumed());
+            assertEquals(0, res.bytesProduced());
         } catch (Exception ex) {
             fail("Unexpected exception: " + ex);
         }
     }
-}
 
-/*
- * Additional class for verification SSLEngine constructors
- */
-
-class mySSLEngine extends SSLEngine {
-
-    private boolean useClientMode;
-
-    private boolean needClientAuth;
-
-    private boolean enableSessionCreation = true;
-
-    private boolean wantClientAuth;
-
-    private String[] enabledProtocols;
-
-    private String[] enabledCipherSuites;
-    
-    public int mode = -1;
-    private boolean init = false;
-    private boolean inboundDone = false;
-    private boolean outboundDone = false;
-
-    public mySSLEngine() {
-        super();
-    }
-
-    protected mySSLEngine(String host, int port) {
-        super(host, port);
-    }
-
-    public void beginHandshake() throws SSLException {
-        String host = super.getPeerHost();
-        if ((host == null) || (host.length() == 0)) {
-            throw new SSLException("");
+    private SSLEngine getEngine() {
+        SSLContext context = null;
+        try {
+            context = SSLContext.getInstance("TLS");
+            context.init(null, null, null);
+        } catch (KeyManagementException e) {
+            fail("Could not get SSLEngine: key management exception "
+                    + e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            fail("Could not get SSLEngine: no such algorithm " + e.getMessage());
         }
-        if (mode == -1) {
-            throw new IllegalStateException();
+        return context.createSSLEngine();
+    }
+
+    private SSLEngine getEngine(String host, int port) {
+        SSLContext context = null;
+        try {
+            context = SSLContext.getInstance("TLS");
+            context.init(null, null, null);
+        } catch (KeyManagementException e) {
+            fail("Could not get SSLEngine: key management exception "
+                    + e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            fail("Could not get SSLEngine: no such algorithm " + e.getMessage());
         }
-        init = true;
-    }
-
-    public void closeInbound() throws SSLException {
-        inboundDone = true;
-    }
-
-    public void closeOutbound() {
-        outboundDone = true;
-    }
-
-    public Runnable getDelegatedTask() {
-        return null;
-    }
-
-    public String[] getEnabledCipherSuites() {
-        return enabledCipherSuites;
-    }
-
-    public String[] getEnabledProtocols() {
-        return enabledProtocols;
-    }
-
-    public boolean getEnableSessionCreation() {
-        return enableSessionCreation;
-    }
-
-    public SSLEngineResult.HandshakeStatus getHandshakeStatus() {
-        return SSLEngineResult.HandshakeStatus.FINISHED;
-    }
-
-    public boolean getNeedClientAuth() {
-        return needClientAuth;
-    }
-
-    public SSLSession getSession() {
-        return null;
-    }
-
-    public String[] getSupportedCipherSuites() {
-        return new String[0];
-    }
-
-    public String[] getSupportedProtocols() {
-        return new String[0];
-    }
-
-    public boolean getUseClientMode() {
-        return useClientMode;
-    }
-
-    public boolean getWantClientAuth() {
-        return wantClientAuth;
-    }
-
-    public boolean isInboundDone() {
-        return inboundDone;
-    }
-
-    public boolean isOutboundDone() {
-        return outboundDone;
-    }
-
-    public void setEnabledCipherSuites(String[] suites) {
-        if (suites == null) {
-            throw new IllegalArgumentException();
-        }
-        enabledCipherSuites = suites;
-    }
-
-    public void setEnabledProtocols(String[] protocols) {
-        if (protocols == null) {
-            throw new IllegalArgumentException();
-        }
-        enabledProtocols = protocols;
-    }
-
-    public void setEnableSessionCreation(boolean flag) {
-        enableSessionCreation = flag;
-    }
-
-    public void setNeedClientAuth(boolean need) {
-        needClientAuth = need;
-    }
-
-    public void setUseClientMode(boolean mode) {
-        if (init) {
-            throw new IllegalArgumentException();
-        }
-        useClientMode = mode;
-        if (useClientMode) {
-            this.mode = 1;
-        } else {
-            this.mode = 0;
-        }
-    }
-
-    public void setWantClientAuth(boolean want) {
-        wantClientAuth = want;
-    }
-
-    public SSLEngineResult unwrap(ByteBuffer src, ByteBuffer[] dsts,
-            int offset, int length) throws SSLException {
-        return new SSLEngineResult(SSLEngineResult.Status.OK,
-                SSLEngineResult.HandshakeStatus.FINISHED, 1, 2);
-    }
-
-    public SSLEngineResult wrap(ByteBuffer[] srcs, int offset, int length,
-            ByteBuffer dst) throws SSLException {
-        return new SSLEngineResult(SSLEngineResult.Status.OK,
-                SSLEngineResult.HandshakeStatus.FINISHED, 10, 20);
-    }
-}
-
-class mySSLEngine1 extends mySSLEngine {
-    
-    public mySSLEngine1() {
-    }
-
-    public mySSLEngine1(String host, int port) {
-        super(host, port);
-    }
-    
-    public SSLEngineResult unwrap(ByteBuffer src, ByteBuffer dst)
-            throws SSLException {
-        if (src.limit() > dst.limit()) {
-            throw new SSLException("incorrect limits");
-        }
-        return super.unwrap(src, dst);
-    }
-
-    public SSLEngineResult unwrap(ByteBuffer src, ByteBuffer[] dsts)
-            throws SSLException {
-        if (src.limit() > dsts[0].limit()) {
-            throw new SSLException("incorrect limits");
-        }
-        return super.unwrap(src, dsts);
-    }
-
-    public SSLEngineResult wrap(ByteBuffer[] srcs, ByteBuffer dst)
-            throws SSLException {
-        if (srcs[0].limit() > dst.limit()) {
-            throw new SSLException("incorrect limits");
-        }
-        return super.wrap(srcs, dst);
-    }
-
-    public SSLEngineResult wrap(ByteBuffer src, ByteBuffer dst)
-            throws SSLException {
-        if (src.limit() > dst.limit()) {
-            throw new SSLException("incorrect limits");
-        }
-        return super.wrap(src, dst);
-    }
-    
-    public SSLEngineResult unwrap(ByteBuffer src, ByteBuffer[] dsts,
-            int offset, int length) throws SSLException {
-        if (super.mode == -1) {
-            throw new IllegalStateException("client/server mode has not yet been set");
-        }
-        if (src.limit() > dsts[0].limit()) {
-            throw new SSLException("incorrect limits");
-        }
-        if (offset < 0 || length < 0) {
-            throw new IndexOutOfBoundsException("negative parameter");
-        }
-        if (offset > length || length > dsts.length - offset) {
-            throw new IndexOutOfBoundsException("negative parameter");
-        }
-        if (src.equals(null) || dsts.equals(null)) {
-            throw new IllegalArgumentException("null parameter");
-        }
-        for (int i = 0; i < dsts.length; i++) {
-            if (dsts[i].isReadOnly()) {
-                throw new ReadOnlyBufferException();
-            } else if (dsts[i].equals(null)) {
-                throw new IllegalArgumentException("null parameter");
-            }
-        }
-        return super.unwrap(src, dsts, offset, length);
-    }
-    
-    public SSLEngineResult wrap(ByteBuffer[] srcs, int offset, int length, ByteBuffer dst)
-                                throws SSLException {
-        if (super.mode == -1) {
-            throw new IllegalStateException("client/server mode has not yet been set");
-        }
-        if (srcs[0].limit() > dst.limit()) {
-            throw new SSLException("incorrect limits");
-        }
-        if (offset < 0 || length < 0) {
-            throw new IndexOutOfBoundsException("negative parameter");
-        }
-        if (offset > length || length > srcs.length - offset) {
-            throw new IndexOutOfBoundsException("negative parameter");
-        }
-        if (srcs.equals(null) || dst.equals(null)) {
-            throw new IllegalArgumentException("null parameter");
-        }
-        for (int i = 0; i < srcs.length; i++) {
-            if (srcs[i].equals(null)) {
-                throw new IllegalArgumentException("null parameter");
-            }
-        }
-        if (dst.isReadOnly()) {
-            throw new ReadOnlyBufferException();
-        }
-        return super.wrap(srcs, offset, length, dst);
+        return context.createSSLEngine(host, port);
     }
 }
