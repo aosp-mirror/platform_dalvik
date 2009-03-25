@@ -3084,7 +3084,12 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
             if ((anOption >> 16) & BROKEN_MULTICAST_IF) {
                 return;
             }
-            result = setsockopt(handle, IPPROTO_IP, IP_MULTICAST_IF, &sockVal, sockSize);
+            struct ip_mreqn mcast_req;
+            memset(&mcast_req, 0, sizeof(mcast_req));
+            memcpy(&(mcast_req.imr_address), &(sockVal.sin_addr),
+                   sizeof(struct in_addr));
+            result = setsockopt(handle, IPPROTO_IP, IP_MULTICAST_IF,
+                                &mcast_req, sizeof(mcast_req));
             if (0 != result) {
                 throwSocketException(env, convertError(errno));
                 return;
