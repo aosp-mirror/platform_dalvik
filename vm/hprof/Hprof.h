@@ -235,7 +235,7 @@ int hprofShutdown_StackFrame(void);
  */
 
 hprof_context_t *hprofStartup(const char *outputFileName);
-void hprofShutdown(hprof_context_t *ctx);
+bool hprofShutdown(hprof_context_t *ctx);
 
 /*
  * Heap.c functions
@@ -244,7 +244,7 @@ void hprofShutdown(hprof_context_t *ctx);
  * the heap implementation; these functions require heap knowledge,
  * so they are implemented in Heap.c.
  */
-void hprofDumpHeap(const char* fileName);
+int hprofDumpHeap(const char* fileName);
 void dvmHeapSetHprofGcScanState(hprof_heap_tag_t state, u4 threadSerialNumber);
 
 #endif  // _DALVIK_HPROF_HPROF
