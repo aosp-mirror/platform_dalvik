@@ -17,6 +17,7 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -1079,6 +1080,7 @@ public class SystemTest extends junit.framework.TestCase {
         method = "load",
         args = {java.lang.String.class}
     )
+    @AndroidOnly("No x86 version of this library")
     public void test_load() {
         try {
             new TestLibrary().checkString();

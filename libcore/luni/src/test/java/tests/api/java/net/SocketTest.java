@@ -494,6 +494,8 @@ public class SocketTest extends SocketTestCase {
         args = {}
     )
     public void test_getInputStream() throws IOException {
+        System.setSecurityManager(null);
+        
         // Test for method java.io.InputStream java.net.Socket.getInputStream()
         int sport = startServer("SServer getInputStream");
         int portNumber = Support_PortManager.getNextPort();
