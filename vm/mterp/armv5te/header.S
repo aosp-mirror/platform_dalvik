@@ -117,6 +117,13 @@ unspecified registers or condition codes.
 #define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #(_count*2)]!
 
 /*
+ * The operation performed here is similar to FETCH_ADVANCE_INST, except the
+ * src and dest registers are parameterized (not hard-wired to rPC and rINST).
+ */
+#define PREFETCH_ADVANCE_INST(_dreg, _sreg, _count) \
+        ldrh    _dreg, [_sreg, #(_count*2)]!
+
+/*
  * Fetch the next instruction from an offset specified by _reg.  Updates
  * rPC to point to the next instruction.  "_reg" must specify the distance
  * in bytes, *not* 16-bit code units, and may be a signed value.
@@ -148,6 +155,11 @@ unspecified registers or condition codes.
  * Put the instruction's opcode field into the specified register.
  */
 #define GET_INST_OPCODE(_reg)   and     _reg, rINST, #255
+
+/*
+ * Put the prefetched instruction's opcode field into the specified register.
+ */
+#define GET_PREFETCHED_OPCODE(_oreg, _ireg)   and     _oreg, _ireg, #255
 
 /*
  * Begin executing the opcode in _reg.  Because this only jumps within the
