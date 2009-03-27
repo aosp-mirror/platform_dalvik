@@ -2077,6 +2077,7 @@ static const u1* verifyEncodedArray(const CheckState* state,
     while (size--) {
         data = verifyEncodedValue(state, data, crossVerify);
         if (data == NULL) {
+            LOGE("Bogus encoded_array value\n");
             return NULL;
         }
     }

@@ -130,8 +130,11 @@ ClassObject* dvmResolveClass(const ClassObject* referrer, u4 classIdx,
                     referrer->pDvmDex,
                     resClass->descriptor, resClassCheck->descriptor,
                     resClassCheck->classLoader, resClassCheck->pDvmDex);
+                LOGW("(%s had used a different %s during pre-verification)\n",
+                    referrer->descriptor, resClass->descriptor);
                 dvmThrowException("Ljava/lang/IllegalAccessError;",
-                    "cross-loader access from pre-verified class");
+                    "Class ref in pre-verified class resolved to unexpected "
+                    "implementation");
                 return NULL;
             }
         }
