@@ -110,15 +110,10 @@ public class Support_Exec extends TestCase {
         execArgs = new ArrayList<String>(3 + args.length);
 
         // construct the name of executable file
-        executable = System.getProperty("java.home");
-        if (!executable.endsWith(File.separator)) {
-            executable += File.separator;
-        }
-        executable += "bin" + File.separator;
         if (againstDalvik) {
-            execArgs.add(executable + "dalvikvm");
+            execArgs.add("dalvikvm");
         } else {
-            execArgs.add(executable + "java");
+            execArgs.add("java");
         }
 
         // add classpath string
@@ -161,8 +156,6 @@ public class Support_Exec extends TestCase {
                 command.append(" ");
                 command.append(execArgs.get(i));
             }
-            System.out.println();
-            System.out.println("Exec: " + command.toString());
         }
 
         // execute java process

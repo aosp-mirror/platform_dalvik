@@ -47,13 +47,13 @@ public abstract class Support_ClassLoader {
         }
     }
     
-    class Dalvik extends Support_ClassLoader {
+    static class Dalvik extends Support_ClassLoader {
         public ClassLoader getClassLoader(URL url, ClassLoader parent) {
             return new PathClassLoader(url.getPath(), parent);
         }
     }
     
-    class RefImpl extends Support_ClassLoader {
+    static class RefImpl extends Support_ClassLoader {
         public ClassLoader getClassLoader(URL url, ClassLoader parent) {
             return new URLClassLoader(new URL[] { url }, parent);
         }
