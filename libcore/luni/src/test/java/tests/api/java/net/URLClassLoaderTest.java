@@ -504,7 +504,8 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
         try {
             Class.forName("bpack.Bart", true, ucl);
             fail("InvalidJarIndexException should be thrown");
-        } catch (InvalidJarIndexException e) {
+        } catch (RuntimeException e) {
+            e.printStackTrace();
             // expected
         }
 

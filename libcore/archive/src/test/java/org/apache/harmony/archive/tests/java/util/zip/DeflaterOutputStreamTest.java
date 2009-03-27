@@ -102,7 +102,7 @@ public class DeflaterOutputStreamTest extends TestCase {
     public void test_ConstructorLjava_io_OutputStreamLjava_util_zip_Deflater()
             throws Exception {
         byte byteArray[] = {1, 3, 4, 7, 8};
-        File f1 = new File("hyts_Constru_OD.tst");
+        File f1 = File.createTempFile("hyts_Constru_OD", ".tst");
         FileOutputStream fos = new FileOutputStream(f1);
         Deflater defl = null;
         MyDeflaterOutputStream dos;
@@ -134,7 +134,7 @@ public class DeflaterOutputStreamTest extends TestCase {
         args = {java.io.OutputStream.class}
     )
     public void test_ConstructorLjava_io_OutputStream() throws Exception {
-        File f1 = new File("hyts_Constru_O.tst");
+        File f1 = File.createTempFile("hyts_Constru_O", ".tst");
         FileOutputStream fos = new FileOutputStream(f1);
         MyDeflaterOutputStream dos = new MyDeflaterOutputStream(fos);
 
@@ -163,7 +163,7 @@ public class DeflaterOutputStreamTest extends TestCase {
         int negBuf = -5;
         int zeroBuf = 0;
         byte byteArray[] = {1, 3, 4, 7, 8, 3, 6};
-        File f1 = new File("hyts_Constru_ODI.tst");
+        File f1 = File.createTempFile("hyts_Constru_ODI", ".tst");
         FileOutputStream fos = new FileOutputStream(f1);
         Deflater defl = null;
         MyDeflaterOutputStream dos;
@@ -210,7 +210,7 @@ public class DeflaterOutputStreamTest extends TestCase {
         args = {}
     )
     public void test_close() throws Exception {
-        File f1 = new File("close.tst");
+        File f1 = File.createTempFile("close", ".tst");
         FileOutputStream fos = new FileOutputStream(f1);
         DeflaterOutputStream dos = new DeflaterOutputStream(fos);
         byte byteArray[] = {1, 3, 4, 6};
@@ -277,7 +277,7 @@ public class DeflaterOutputStreamTest extends TestCase {
         // Need test to see if method finish() actually finishes
         // Only testing possible errors, not if it actually works
 
-        File f1 = new File("finish.tst");
+        File f1 = File.createTempFile("finish", ".tst");
         FileOutputStream fos1 = new FileOutputStream(f1);
         DeflaterOutputStream dos = new DeflaterOutputStream(fos1);
         byte byteArray[] = {1, 3, 4, 6};
@@ -331,7 +331,7 @@ public class DeflaterOutputStreamTest extends TestCase {
         args = {int.class}
     )
     public void test_writeI() throws Exception {
-        File f1 = new File("writeI1.tst");
+        File f1 = File.createTempFile("writeI1", ".tst");
         FileOutputStream fos = new FileOutputStream(f1);
         DeflaterOutputStream dos = new DeflaterOutputStream(fos);
         for (int i = 0; i < 3; i++) {
@@ -376,7 +376,7 @@ public class DeflaterOutputStreamTest extends TestCase {
         byte byteArray[] = {1, 3, 4, 7, 8, 3, 6};
 
         // Test to see if the correct bytes are saved.
-        File f1 = new File("writeBII.tst");
+        File f1 = File.createTempFile("writeBII", ".tst");
         FileOutputStream fos1 = new FileOutputStream(f1);
         DeflaterOutputStream dos1 = new DeflaterOutputStream(fos1);
         dos1.write(byteArray, 2, 3);
@@ -392,7 +392,7 @@ public class DeflaterOutputStreamTest extends TestCase {
         f1.delete();
 
         // Test for trying to write more bytes than available from the array
-        File f2 = new File("writeBII2.tst");
+        File f2 = File.createTempFile("writeBII", ".tst");
         FileOutputStream fos2 = new FileOutputStream(f2);
         DeflaterOutputStream dos2 = new DeflaterOutputStream(fos2);
         try {
@@ -448,7 +448,7 @@ public class DeflaterOutputStreamTest extends TestCase {
         args = {}
     )
     public void test_deflate() throws Exception {
-        File f1 = new File("writeI1.tst");
+        File f1 = File.createTempFile("writeI1", ".tst");
         FileOutputStream fos = new FileOutputStream(f1);
         MyDeflaterOutputStream dos = new MyDeflaterOutputStream(fos);
         assertFalse(dos.getDaflateFlag());

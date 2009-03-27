@@ -16,6 +16,8 @@ import java.io.OutputStream;
 import java.lang.reflect.GenericSignatureFormatError;
 import java.lang.reflect.TypeVariable;
 
+import tests.support.Support_ClassLoader;
+
 @TestTargetClass(GenericSignatureFormatError.class)
 public class GenericSignatureFormatErrorTest extends TestCase{
 
@@ -84,8 +86,14 @@ public class GenericSignatureFormatErrorTest extends TestCase{
         // class signature string "<U:" was changed to "<<:"
         //System.out.println("file length:"+tf.length());
         try {
-            DexFile df = new DexFile(tf);
-            Class clazz = df.loadClass("demo/HelloWorld", this.getClass().getClassLoader());
+            // Was:
+            // DexFile df = new DexFile(tf);
+            // Class clazz = df.loadClass("demo/HelloWorld", this.getClass().getClassLoader());
+
+            ClassLoader cl = Support_ClassLoader.getInstance(tf.toURL(),
+                    getClass().getClassLoader());
+            
+            Class clazz = cl.loadClass("demo/HelloWorld");
             TypeVariable[] tvs = clazz.getTypeParameters();
             fail("expecting a GenericSignatureFormatError");
             // for (TypeVariable tv : tvs) {

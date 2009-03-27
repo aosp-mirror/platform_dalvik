@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
@@ -28,60 +28,42 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 import junit.framework.TestCase;
 
-@TestTargetClass(SSLServerSocketFactory.class) 
+@TestTargetClass(SSLServerSocketFactory.class)
 public class SSLServerSocketFactoryTest extends TestCase {
-    
+
     private class MockSSLServerSocketFactory extends SSLServerSocketFactory {
         public MockSSLServerSocketFactory() {
             super();
         }
 
-        /**
-         * @see javax.net.ssl.SSLServerSocketFactory#getDefaultCipherSuites()
-         */
         @Override
         public String[] getDefaultCipherSuites() {
-            // it is a fake
             return null;
         }
 
-        /**
-         * @see javax.net.ssl.SSLServerSocketFactory#getSupportedCipherSuites()
-         */
         @Override
         public String[] getSupportedCipherSuites() {
-            // it is a fake
             return null;
         }
 
-        /**
-         * @see javax.net.ServerSocketFactory#createServerSocket(int)
-         */
         @Override
         public ServerSocket createServerSocket(int arg0) throws IOException {
-            // it is a fake
             return null;
         }
 
-        /**
-         * @see javax.net.ServerSocketFactory#createServerSocket(int, int)
-         */
         @Override
-        public ServerSocket createServerSocket(int arg0, int arg1) throws IOException {
-            // it is a fake
+        public ServerSocket createServerSocket(int arg0, int arg1)
+                throws IOException {
             return null;
         }
 
-        /**
-         * @see javax.net.ServerSocketFactory#createServerSocket(int, int, java.net.InetAddress)
-         */
         @Override
-        public ServerSocket createServerSocket(int arg0, int arg1, InetAddress arg2) throws IOException {
-            // it is a fake
+        public ServerSocket createServerSocket(int arg0, int arg1,
+                InetAddress arg2) throws IOException {
             return null;
         }
     }
-    
+
     /**
      * @tests javax.net.ssl.SSLServerSocketFactory#SSLServerSocketFactory()
      */
@@ -94,7 +76,6 @@ public class SSLServerSocketFactoryTest extends TestCase {
     public void test_Constructor() {
         try {
             MockSSLServerSocketFactory ssf = new MockSSLServerSocketFactory();
-            assertTrue(ssf instanceof SSLServerSocketFactory);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
@@ -113,7 +94,7 @@ public class SSLServerSocketFactoryTest extends TestCase {
         assertNotNull("Incorrect default socket factory",
                 SSLServerSocketFactory.getDefault());
     }
-    
+
     /**
      * @tests javax.net.ssl.SSLServerSocketFactory#getDefaultCipherSuites()
      */
@@ -124,14 +105,15 @@ public class SSLServerSocketFactoryTest extends TestCase {
         args = {}
     )
     public void test_getDefaultCipherSuites() {
-        MockSSLServerSocketFactory ssf = new MockSSLServerSocketFactory();
+        SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory
+                .getDefault();
         try {
-             assertNull(ssf.getDefaultCipherSuites());
+            assertTrue(ssf.getDefaultCipherSuites().length > 0);
         } catch (Exception e) {
             fail("Unexpected exception " + e);
         }
     }
-    
+
     /**
      * @tests javax.net.ssl.SSLServerSocketFactory#getSupportedCipherSuites()
      */
@@ -142,9 +124,10 @@ public class SSLServerSocketFactoryTest extends TestCase {
         args = {}
     )
     public void test_getSupportedCipherSuites() {
-        MockSSLServerSocketFactory ssf = new MockSSLServerSocketFactory();
+        SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory
+                .getDefault();
         try {
-             assertNull(ssf.getSupportedCipherSuites());
+            assertTrue(ssf.getSupportedCipherSuites().length > 0);
         } catch (Exception e) {
             fail("Unexpected exception " + e);
         }

@@ -80,6 +80,7 @@ public class FilePreferencesImplTest extends TestCase {
         uroot.clear();
         names = uroot.keys();
         assertEquals(0, names.length);
+        uroot.removeNode();
     }
 
     @TestTargets({
@@ -108,6 +109,7 @@ public class FilePreferencesImplTest extends TestCase {
         assertEquals("value1", sroot.get("skey1", null));
         sroot.put("\u4e2d key1", "\u4e2d value1");
         assertEquals("\u4e2d value1", sroot.get("\u4e2d key1", null));
+        sroot.removeNode();
     }
 
     @TestTargetNew(
@@ -146,6 +148,8 @@ public class FilePreferencesImplTest extends TestCase {
         assertNotContains(childNames, "child1");
         assertNotContains(childNames, "\u4e2d child2");
         assertNotContains(childNames, "grand");
+
+        uroot.removeNode();
     }
 
     @TestTargetNew(
@@ -184,6 +188,7 @@ public class FilePreferencesImplTest extends TestCase {
         assertNotContains(childNames, "child1");
         assertNotContains(childNames, "child2");
         assertNotContains(childNames, "grand");
+        sroot.removeNode();
     }
 
     @TestTargets({
@@ -260,6 +265,7 @@ public class FilePreferencesImplTest extends TestCase {
             }
         } finally {
             manager.restoreDefault();
+            uroot.removeNode();
         }
     }
 

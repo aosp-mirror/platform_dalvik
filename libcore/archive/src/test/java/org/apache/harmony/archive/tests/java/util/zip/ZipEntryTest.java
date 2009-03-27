@@ -25,6 +25,7 @@ import dalvik.annotation.TestTargetNew;
 import tests.support.resource.Support_Resources;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.TimeZone;
@@ -36,7 +37,7 @@ public class ZipEntryTest extends junit.framework.TestCase {
     // BEGIN android-added
     public byte[] getAllBytesFromStream(InputStream is) throws IOException {
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        byte[] buf = new byte[666];
+        byte[] buf = new byte[512];
         int iRead;
         int off;
         while (is.available() > 0) {
@@ -57,7 +58,7 @@ public class ZipEntryTest extends junit.framework.TestCase {
             "com.ibm.oti.configuration", "JDK")
             + System.getProperty("java.vm.version");
 
-    static final String tempFileName = platformId + "zfzezi.zip";
+    static final String tempFileName = platformId + "zipentrytest.zip";
 
     long orgSize;
 
@@ -598,7 +599,7 @@ public class ZipEntryTest extends junit.framework.TestCase {
             // BEGIN android-changed
             // Create a local copy of the file since some tests want to alter
             // information.
-            f = new java.io.File(tempFileName);
+            f = File.createTempFile(tempFileName, ".zip");
             // Create absolute filename as ZipFile does not resolve using
             // user.dir
             f = new java.io.File(f.getAbsolutePath());

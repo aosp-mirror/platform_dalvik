@@ -16,15 +16,16 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.Permission;
 
 import junit.framework.TestCase;
-
-import java.security.Permission;
+import tests.support.Support_ClassLoader;
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestLevel;
 
 /*
  * This class tests the security permissions which are documented in
@@ -167,13 +168,21 @@ public class JavaLangThreadTest extends TestCase {
         
         assertNotNull("test assumption: caller's class loader must not be null",
                 this.getClass().getClassLoader());
+
+        URL url;
+        
+        try {
+            url = new URL("file:");
+        } catch (MalformedURLException ex) {
+            throw new RuntimeException(ex);
+        }
         
         t1.setContextClassLoader(null);
         t2.setContextClassLoader(this.getClass().getClassLoader());
         t3.setContextClassLoader(this.getClass().getClassLoader().getParent());
         t4.setContextClassLoader(
-                new dalvik.system.PathClassLoader("",
-                        this.getClass().getClassLoader()));
+                Support_ClassLoader.getInstance(url,
+                        getClass().getClassLoader()));
         t5.setContextClassLoader(
                 new ClassLoader(this.getClass().getClassLoader()) {});
 

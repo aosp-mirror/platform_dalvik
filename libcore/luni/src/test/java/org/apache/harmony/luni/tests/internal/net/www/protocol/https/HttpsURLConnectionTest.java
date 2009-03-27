@@ -74,7 +74,6 @@ import junit.framework.TestCase;
  * The password to the certstore should be "password" (without quotes).
  */
 @TestTargetClass(HttpsURLConnection.class)
-@AndroidOnly("we only have a .bks key store in the test resources")
 public class HttpsURLConnectionTest extends TestCase {
 
     // the password to the store
@@ -127,6 +126,7 @@ public class HttpsURLConnectionTest extends TestCase {
         method = "getDefaultSSLSocketFactory",
         args = {}
     )
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testGetDefaultSSLSocketFactory() throws Exception {
         // set up the properties defining the default values needed by SSL stuff
         setUpStoreProperties();
@@ -160,6 +160,7 @@ public class HttpsURLConnectionTest extends TestCase {
         args = {javax.net.ssl.HostnameVerifier.class}
     )
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testHttpsConnection() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
         setUpStoreProperties();
@@ -218,6 +219,7 @@ public class HttpsURLConnectionTest extends TestCase {
         )
     })
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testHttpsConnection_Not_Found_Response() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
         setUpStoreProperties();
@@ -265,6 +267,7 @@ public class HttpsURLConnectionTest extends TestCase {
         method = "setDefaultSSLSocketFactory",
         args = {javax.net.ssl.SSLSocketFactory.class}
     )
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testSetDefaultSSLSocketFactory() throws Throwable {
         // create the SSLServerSocket which will be used by server side
         SSLContext ctx = getContext();
@@ -320,6 +323,7 @@ public class HttpsURLConnectionTest extends TestCase {
         method = "setSSLSocketFactory",
         args = {javax.net.ssl.SSLSocketFactory.class}
     )
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testSetSSLSocketFactory() throws Throwable {
         // create the SSLServerSocket which will be used by server side
         SSLContext ctx = getContext();
@@ -399,6 +403,7 @@ public class HttpsURLConnectionTest extends TestCase {
             args = {}
         )
     })
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testUnconnectedStateParameters() throws Throwable {
         // create HttpsURLConnection to be tested
         URL url = new URL("https://localhost:55555");
@@ -438,6 +443,7 @@ public class HttpsURLConnectionTest extends TestCase {
         args = {javax.net.ssl.HostnameVerifier.class}
     )
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testSetHostnameVerifier() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
@@ -487,6 +493,7 @@ public class HttpsURLConnectionTest extends TestCase {
         args = {boolean.class}
     )
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void test_doOutput() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
@@ -543,6 +550,7 @@ public class HttpsURLConnectionTest extends TestCase {
         )
     })
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyConnection() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
@@ -600,6 +608,7 @@ public class HttpsURLConnectionTest extends TestCase {
         )
     })
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyAuthConnection() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
@@ -667,6 +676,7 @@ public class HttpsURLConnectionTest extends TestCase {
         )
     })
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testConsequentProxyConnection() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
@@ -739,6 +749,7 @@ public class HttpsURLConnectionTest extends TestCase {
         )
     })
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyAuthConnection_doOutput() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
@@ -804,6 +815,7 @@ public class HttpsURLConnectionTest extends TestCase {
         )
     })
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyAuthConnectionFailed() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
@@ -866,6 +878,7 @@ public class HttpsURLConnectionTest extends TestCase {
         )
     })
     @KnownFailure("VM aborts after more than one test was run.")
+    @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyConnection_Not_Found_Response() throws Throwable {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();

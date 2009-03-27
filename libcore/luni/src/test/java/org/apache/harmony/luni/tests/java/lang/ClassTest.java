@@ -45,13 +45,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
 
+import tests.support.Support_ClassLoader;
 import tests.support.resource.Support_Resources;
 import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestLevel;
 
 @SuppressWarnings("deprecation")
 @TestTargetClass(Class.class)
@@ -578,9 +578,9 @@ public class ClassTest extends junit.framework.TestCase {
           URL resourceURL = new URL("file:/" + resPath + "/Package/"
                   + hyts_package_name);
 
-          ClassLoader cl =  new dalvik.system.PathClassLoader(
-                  resourceURL.getPath(), getClass().getClassLoader());
-
+          ClassLoader cl = Support_ClassLoader.getInstance(resourceURL, 
+                  getClass().getClassLoader());
+          
           Class clazz = cl.loadClass("C");
           assertNull("getPackage for C.class should return null",
                   clazz.getPackage());

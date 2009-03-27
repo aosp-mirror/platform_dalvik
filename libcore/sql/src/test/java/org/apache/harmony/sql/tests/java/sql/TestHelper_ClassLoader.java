@@ -27,7 +27,7 @@ import java.util.jar.JarFile;
 public class TestHelper_ClassLoader extends ClassLoader {
 
     public TestHelper_ClassLoader() {
-        super(null);
+        super();
     }
 
     /**

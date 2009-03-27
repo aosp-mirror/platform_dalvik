@@ -18,7 +18,6 @@
 package org.apache.harmony.archive.tests.java.util.zip;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
@@ -35,17 +34,6 @@ import tests.support.resource.Support_Resources;
 
 @TestTargetClass(CheckedInputStream.class)
 public class CheckedInputStreamTest extends TestCase {
-
-    @Override
-    protected void tearDown() {
-        try {
-            File deletedFile = new File("empty.txt");
-            deletedFile.delete();
-        } catch (SecurityException e) {
-            fail("Cannot delete file for security reasons");
-        }
-
-    }
 
     /**
      * @tests java.util.zip.CheckedInputStream#CheckedInputStream(java.io.InputStream,
@@ -80,9 +68,11 @@ public class CheckedInputStreamTest extends TestCase {
     public void test_getChecksum() throws Exception {
         byte outBuf[] = new byte[100];
         // testing getChecksum for an empty file
-        FileOutputStream outEmp = new FileOutputStream("empty.txt");
+        File empty = File.createTempFile("empty", ".txt");
+        empty.deleteOnExit();
+        FileOutputStream outEmp = new FileOutputStream(empty);
         outEmp.close();
-        InputStream inEmp = new FileInputStream("empty.txt");
+        InputStream inEmp = new FileInputStream(empty);
         CheckedInputStream checkEmpty = new CheckedInputStream(inEmp,
                 new CRC32());
         while (checkEmpty.read() >= 0) {
