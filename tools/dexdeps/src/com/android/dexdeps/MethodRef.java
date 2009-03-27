@@ -17,14 +17,17 @@
 package com.android.dexdeps;
 
 public class MethodRef {
-    private String mDeclClass, mDescriptor, mMethodName;
+    private String mDeclClass, mReturnType, mMethodName;
+    private String[] mArgTypes;
 
     /**
      * Initializes a new field reference.
      */
-    public MethodRef(String declClass, String descriptor, String methodName) {
+    public MethodRef(String declClass, String[] argTypes, String returnType,
+            String methodName) {
         mDeclClass = declClass;
-        mDescriptor = descriptor;
+        mArgTypes = argTypes;
+        mReturnType = returnType;
         mMethodName = methodName;
     }
 
@@ -39,7 +42,7 @@ public class MethodRef {
      * Gets the method's descriptor.
      */
     public String getDescriptor() {
-        return mDescriptor;
+        return descriptorFromProtoArray(mArgTypes, mReturnType);
     }
 
     /**
@@ -50,20 +53,36 @@ public class MethodRef {
     }
 
     /**
-     * Gets the method arguments as an array of type strings.
+     * Gets an array of method argument types.
      */
-    public String[] getArguments() {
-        // TODO
-        return null;
+    public String[] getArgumentTypeNames() {
+        return mArgTypes;
     }
 
     /**
-     * Gets the method's return type.
+     * Gets the method's return type.  Examples: "Ljava/lang/String;", "[I".
      */
-    public String getReturnType() {
-        // TODO
-        return null;
+    public String getReturnTypeName() {
+        return mReturnType;
+    }
+
+    /**
+     * Returns the method descriptor, given the argument and return type
+     * prototype strings.
+     */
+    private static String descriptorFromProtoArray(String[] protos,
+            String returnType) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("(");
+        for (int i = 0; i < protos.length; i++) {
+            builder.append(protos[i]);
+        }
+
+        builder.append(")");
+        builder.append(returnType);
+
+        return builder.toString();
     }
 }
-
 

@@ -28,14 +28,23 @@ public class FieldRef {
         mFieldName = fieldName;
     }
 
+    /**
+     * Gets the name of the field's declaring class.
+     */
     public String getDeclClassName() {
         return mDeclClass;
     }
 
+    /**
+     * Gets the type name.  Examples: "Ljava/lang/String;", "[I".
+     */
     public String getTypeName() {
         return mFieldType;
     }
 
+    /**
+     * Gets the field name.
+     */
     public String getName() {
         return mFieldName;
     }

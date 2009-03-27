@@ -55,7 +55,8 @@ public class Main {
             usage();
             System.exit(2);
         } catch (IOException ioe) {
-            /* a message was already reported, just bail quietly */
+            if (ioe.getMessage() != null)
+                System.err.println("Failed: " + ioe);
             System.exit(1);
         } catch (DexDataException dde) {
             /* a message was already reported, just bail quietly */
@@ -127,7 +128,7 @@ public class Main {
          * to ensure it doesn't hang around if we fail.
          */
         File tempFile = File.createTempFile("dexdeps", ".dex");
-        System.out.println("+++ using temp " + tempFile);
+        //System.out.println("+++ using temp " + tempFile);
         RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
         tempFile.delete();
 
@@ -173,7 +174,7 @@ public class Main {
                     System.err.println("Unknown format '" + mOutputFormat +"'");
                     throw new UsageException();
                 }
-                System.out.println("Using format " + mOutputFormat);
+                //System.out.println("+++ using format " + mOutputFormat);
             } else {
                 System.err.println("Unknown option '" + arg + "'");
                 throw new UsageException();
