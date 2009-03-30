@@ -644,7 +644,6 @@ public class ResultSetTest extends SQLTest {
     )
     @KnownFailure("not supported")
     public void testPrevious2() throws SQLException {
-        /*
         try {
             assertSame(ResultSet.TYPE_SCROLL_INSENSITIVE, scrollableTarget.getFetchDirection());
             
@@ -667,7 +666,6 @@ public class ResultSetTest extends SQLTest {
         } catch (SQLException e) {
             //ok
         }
-        */
     }
 
     /**
@@ -740,7 +738,6 @@ public class ResultSetTest extends SQLTest {
     @KnownFailure("Scrollable resultSet. Not supported")
     public void testRelativeScrollableResultSet() throws SQLException {
      // scrollable resultSet 
-        /*
         try {
             
             int initialRow = scrollableTarget.getRow();
@@ -783,7 +780,6 @@ public class ResultSetTest extends SQLTest {
         } catch (SQLException e) {
             //ok
         }
-        */
     }
     
 
@@ -799,7 +795,6 @@ public class ResultSetTest extends SQLTest {
     )
     @KnownFailure("not supported")
     public void testUpdateObjectStringObject() {
-        /*
         try {
            writableTarget.next();
            writableTarget.updateObject("family","bird");
@@ -814,7 +809,6 @@ public class ResultSetTest extends SQLTest {
         } catch (SQLException e) {
            fail("Unexpected exception: " + e.getMessage());
         }
-        */
     }
 
     
@@ -829,7 +823,6 @@ public class ResultSetTest extends SQLTest {
     )
     @KnownFailure("Feature not supported")
     public void testUpdateStringStringString() throws Exception {
-        /*
         try {
             writableTarget.next();
             writableTarget.updateString("family","bird");
@@ -863,7 +856,6 @@ public class ResultSetTest extends SQLTest {
          } catch (SQLException e) {
             //ok
          }
-         */
     }
 
     /**

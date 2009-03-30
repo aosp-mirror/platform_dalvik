@@ -34,7 +34,9 @@ public class AllTests {
         suite.addTest(org.apache.harmony.sql.tests.java.sql.AllTests.suite());
         suite.addTest(org.apache.harmony.sql.tests.javax.sql.AllTests.suite());
         suite.addTest(tests.java.sql.AllTests.suite());
-        suite.addTest(tests.SQLite.AllTests.suite());
+        
+        // These don't do blackbox testing *and* crash JUnit on the JDK
+        // suite.addTest(tests.SQLite.AllTests.suite());
         
         suite.addTestSuite(tests.sql.ConnectionTest.class);
         suite.addTestSuite(tests.sql.PreparedStatementTest.class);

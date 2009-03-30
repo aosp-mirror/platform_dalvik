@@ -362,12 +362,10 @@ public class StatementTest extends SQLTest {
             try {
                 st = conn.createStatement();
                 st.execute(queries[i], Statement.NO_GENERATED_KEYS);
-                fail("Exception expected: Not supported");
-                /*
+                
                 ResultSet rs = st.getGeneratedKeys();
-                fail("Revise test implemenation for feature impl. has changed");
                 assertFalse(rs.next());
-                */
+                
             } catch (SQLException e) {
                 // ok
             } finally {
