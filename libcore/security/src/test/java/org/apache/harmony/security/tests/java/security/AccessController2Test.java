@@ -198,7 +198,6 @@ public class AccessController2Test extends junit.framework.TestCase {
         method = "checkPermission",
         args = {java.security.Permission.class}
     )
-    @KnownFailure("")
     public void test_checkPermission_NullParameter() {
         //Null parameter
         try {
