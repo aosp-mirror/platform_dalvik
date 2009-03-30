@@ -36,6 +36,7 @@ public class AllTests
         suite.addTest(tests.archive.AllTests.suite());
         suite.addTest(tests.concurrent.AllTests.suite());
         suite.addTest(tests.crypto.AllTests.suite());
+        suite.addTest(tests.dom.AllTests.suite());
         suite.addTest(tests.logging.AllTests.suite());
         suite.addTest(tests.luni.AllTests.suite());
         suite.addTest(tests.luni.AllTestsIo.suite());
@@ -47,13 +48,11 @@ public class AllTests
         suite.addTest(tests.nio_char.AllTests.suite());
         suite.addTest(tests.prefs.AllTests.suite());
         suite.addTest(tests.regex.AllTests.suite());
+        suite.addTest(tests.security.AllTests.suite());
         suite.addTest(tests.sql.AllTests.suite());
         suite.addTest(tests.text.AllTests.suite());
         suite.addTest(tests.xml.AllTests.suite());
         suite.addTest(tests.xnet.AllTests.suite());
-        suite.addTest(tests.dom.AllTests.suite());
-
-        suite.addTest(tests.security.AllTests.suite());
 
         return suite;
     }

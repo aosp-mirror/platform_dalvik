@@ -17,6 +17,7 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure; 
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.TestLevel;
@@ -298,7 +299,8 @@ public class DatagramSocketTest extends SocketTestCase {
         method = "connect",
         args = {java.net.InetAddress.class, int.class}
     )
-    public void test_connectLjava_net_InetAddressI() {
+    public void test_connectLjava_net_InetAddressI() throws
+            UnknownHostException, SocketException {
         try {
             ds = new java.net.DatagramSocket();
             InetAddress inetAddress = InetAddress.getLocalHost();
@@ -689,43 +691,47 @@ public class DatagramSocketTest extends SocketTestCase {
                                 + e.toString());
             }
         }
-        
-        try {
-            byte[] addressBytes = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.InetAddress.class, int.class}
+    )
+    @BrokenTest("IllegalArgumentException is thrown from Permission object")
+    public void test_connectLjava_net_InetAddressI_SecurityManager() throws
+            SocketException, UnknownHostException {
+        byte[] addressBytes = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0 };
-            ds = new java.net.DatagramSocket();
-            int portNumber = Support_PortManager.getNextPortForUDP();
+        ds = new java.net.DatagramSocket();
+        int portNumber = Support_PortManager.getNextPortForUDP();
 
-            final InetAddress inetAddress = InetAddress   
-                .getByAddress(addressBytes);
-        
-            SecurityManager sm = new SecurityManager() {
+        final InetAddress inetAddress = InetAddress   
+            .getByAddress(addressBytes);
+    
+        SecurityManager sm = new SecurityManager() {
 
-                public void checkPermission(Permission perm) {
-                    if(perm.getActions().equals("connect,resolve") ) {
-                        throw new SecurityException();
-                    }
-                }
-          
-                public void checkListen(int port) {
+            public void checkPermission(Permission perm) {
+                if(perm.getActions().equals("connect,resolve") ) {
                     throw new SecurityException();
                 }
-            };
+            }
+      
+            public void checkListen(int port) {
+                throw new SecurityException();
+            }
+        };
 
-            SecurityManager oldSm = System.getSecurityManager();
-            System.setSecurityManager(sm);
-            try {
-                ds.connect(inetAddress, portNumber);
-                fail("SecurityException should be thrown.");
-            } catch (SecurityException e) {
-                // expected
-            } finally {
-                System.setSecurityManager(oldSm);
-            } 
-        
-        } catch(Exception e) {
-            fail("Unexpected exception was thrown:" + e.getClass() + ", " 
-                    + e.getMessage());
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            ds.connect(inetAddress, portNumber);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
         }
     }
 
