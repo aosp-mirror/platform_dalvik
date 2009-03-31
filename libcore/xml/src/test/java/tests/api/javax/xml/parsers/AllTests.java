@@ -40,7 +40,8 @@ public class AllTests {
         suite.addTestSuite(ParserConfigurationExceptionTest.class);
         suite.addTestSuite(SAXParserFactoryTest.class);       
         suite.addTestSuite(SAXParserTest.class);
-        suite.addTestSuite(ExpatParserTest.class);
+        // TODO Move ExpatParser to impl tests package
+        // suite.addTestSuite(ExpatParserTest.class);
 
         // $JUnit-END$
         return suite;
