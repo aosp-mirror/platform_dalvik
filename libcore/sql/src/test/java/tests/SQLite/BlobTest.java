@@ -208,28 +208,22 @@ public class BlobTest extends SQLiteTest {
      * @tests Blob#close()
      */
     @TestTargetNew(
-        level = TestLevel.SUFFICIENT,
+        level = TestLevel.NOT_FEASIBLE,
         notes = "not clear from spec what should happen when Blob is closed.",
         method = "close",
         args = {}
     )
-    @KnownFailure("Blob does not clean up inputStream.")
+//    @KnownFailure("Blob does not clean up inputStream.")
     public void testClose() {
     assertNotNull(testBlob);
        
     testBlob.close();
-    // inputStream eithter null or some error occurs
+    // inputStream either null or some error occurs
     try {
+        // TODO This does look a bit weird. Revisit later. 
         assertNull(testBlob.getInputStream());
     } catch (Throwable e) {
         //ok
     }
-    
-    try {
-        assertNull(testBlob.getOutputStream());
-    } catch (Throwable e) {
-        //ok
-    }
-      
     }
 }

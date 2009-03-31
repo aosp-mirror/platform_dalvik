@@ -24,10 +24,6 @@ import junit.framework.TestCase;
 
 import java.sql.SQLInput;
 
-/**
- * @author andrea@google.com (Your Name Here)
- *
- */
 @TestTargetClass(SQLInput.class)
 public class SQLInputTest extends TestCase {
 

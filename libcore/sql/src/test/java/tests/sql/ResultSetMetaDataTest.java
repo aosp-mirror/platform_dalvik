@@ -106,7 +106,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         }
 
         try {
-            String name  = rsmd.getColumnClassName(-1);
+            String name  = rsmd.getColumnClassName(0);
             assertNull(name);
         } catch (SQLException e) {
             fail("SQLException is thrown");
@@ -156,19 +156,20 @@ public class ResultSetMetaDataTest extends SQLTest {
         method = "getColumnLabel",
         args = {int.class}
     )
+    @KnownFailure("Column label has format TABLE.COLUMN expected: COLUMN")
     public void testGetColumnLabel() {
         String[] labels = { "id", "name", "family" };
         try {
             for (int i = 0; i < rsmd.getColumnCount(); i++) {
                 String label = rsmd.getColumnLabel(i + 1);
-                assertTrue(labels[i].contains(label));
+                assertTrue("expected "+labels[i] + "got "+label,labels[i].contains(label));
             }
         } catch (SQLException e) {
             fail("SQLException is thrown: " + e.getMessage());
         }
         
         try {
-            String label = rsmd.getColumnLabel(-1);
+            String label = rsmd.getColumnLabel(0);
             fail("SQLException expected");
         } catch (SQLException e) {
             //ok
@@ -191,6 +192,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         method = "getColumnName",
         args = {int.class}
     )
+    @KnownFailure("Column label has format TABLE.COLUMN expected: COLUMN")
     public void testGetColumnName() {
         String[] labels = { "id", "name", "family" };
         try {
@@ -203,7 +205,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         }
 
         try {
-            String label = rsmd.getColumnName(-1);
+            String label = rsmd.getColumnName(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             //ok
@@ -240,7 +242,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         }
 
         try {
-            rsmd.getColumnType(-1);
+            rsmd.getColumnType(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -274,7 +276,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         }
 
         try {
-            rsmd.getColumnTypeName(-1);
+            rsmd.getColumnTypeName(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -293,10 +295,11 @@ public class ResultSetMetaDataTest extends SQLTest {
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
-        notes = "MAX/MIN/zero parameters checking missed",
+        notes = "",
         method = "getTableName",
         args = {int.class}
     )
+    @KnownFailure("For int = 0, exception expected")
     public void testGetTableName() throws SQLException {
         try {
             assertEquals("zoo", rsmd.getTableName(1));
@@ -333,18 +336,12 @@ public class ResultSetMetaDataTest extends SQLTest {
             } catch (SQLException sqle) {
             }
         }
-
+        //Exception Text
         try {
-            String name = rsmd.getTableName(-1);
+            String name = rsmd.getTableName(0);
             fail("SQLException Expected");
         } catch (SQLException e) {
             // ok
-        }
-        try {
-            String name = rsmd.getTableName(5);
-            fail("SQLException Expected");
-        } catch (SQLException e) {
-            //ok
         }
     }
     
@@ -398,7 +395,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         
         
         try {
-            rsmd.getPrecision(-1);
+            rsmd.getPrecision(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -456,7 +453,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         assertTrue(rsmd2.getScale(2) > 0);
         
         try {
-            rsmd.getScale(-1);
+            rsmd.getScale(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -503,7 +500,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         
         
         try {
-            rsmd.getSchemaName(-1);
+            rsmd.getSchemaName(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -549,7 +546,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         // Exception testing
         
         try {
-            rsmd.isAutoIncrement(-1);
+            rsmd.isAutoIncrement(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -597,7 +594,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         // Exception testing
         
         try {
-            rsmd.isCaseSensitive(-1);
+            rsmd.isCaseSensitive(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -642,7 +639,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         // Exception testing
         
         try {
-            rsmd.isCurrency(-1);
+            rsmd.isCurrency(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -687,7 +684,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         // Exception testing
 
         try {
-            rsmd.isDefinitelyWritable(-1);
+            rsmd.isDefinitelyWritable(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -728,7 +725,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         // Exception testing
 
         try {
-            rsmd.isNullable(-1);
+            rsmd.isNullable(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -747,8 +744,8 @@ public class ResultSetMetaDataTest extends SQLTest {
      * @test {@link java.sql.ResultSetMetaData#isReadOnly(int column)}
      */
     @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Tests fail: always returns false. Exceptions fail, Feature only partially implemented.",
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "Cannot know from blackbox test if readonly or writable. Exceptions fail, Feature only partially implemented.",
         method = "isReadOnly",
         args = {int.class}
     )
@@ -765,13 +762,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         // Exception testing
 
         try {
-            rsmd.isReadOnly(-1);
-            fail("SQLException is not thrown");
-        } catch (SQLException e) {
-            // expected
-        }
-        try {
-            rsmd.isReadOnly(5);
+            rsmd.isReadOnly(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -802,13 +793,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         // Exception testing
 
         try {
-            rsmd.isSearchable(-1);
-            fail("SQLException is not thrown");
-        } catch (SQLException e) {
-            // expected
-        }
-        try {
-            rsmd.isSearchable(5);
+            rsmd.isSearchable(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -837,13 +822,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         // Exception testing
 
         try {
-            rsmd.isSigned(-1);
-            fail("SQLException is not thrown");
-        } catch (SQLException e) {
-            // expected
-        }
-        try {
-            rsmd.isSigned(5);
+            rsmd.isSigned(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
@@ -854,8 +833,8 @@ public class ResultSetMetaDataTest extends SQLTest {
      * @test {@link java.sql.ResultSetMetaData#isWritable(int column)}
      */
     @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Not supported. Tests fail: always returns false. Exceptions and tests on non numeric fields fail, failing statements commented out. Feature only partially implemented.",
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "Analaguous to is Readonly.  Exceptions and tests on non numeric fields fail, failing statements commented out. Feature only partially implemented.",
         method = "isWritable",
         args = {int.class}
     )
@@ -867,26 +846,18 @@ public class ResultSetMetaDataTest extends SQLTest {
             assertTrue(rsmd.isWritable(2));
             assertTrue(rsmd.isWritable(3));
         } catch (SQLException e1) {
-            fail("ResultSetMetaDataTest.isReadOnly" + e1.getMessage());
+            fail("ResultSetMetaDataTest.isWritable" + e1.getMessage());
             e1.printStackTrace();
         }
         
-        /*
         // Exception testing
 
         try {
-            rsmd.isWritable(-1);
+            rsmd.isWritable(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected
         }
-        try {
-            rsmd.isSigned(5);
-            fail("SQLException is not thrown");
-        } catch (SQLException e) {
-            // expected
-        }
-        */
     }
     
     
@@ -914,7 +885,7 @@ public class ResultSetMetaDataTest extends SQLTest {
         // Exception testing
 
         try {
-            rsmd.getColumnDisplaySize(-1);
+            rsmd.getColumnDisplaySize(0);
             fail("SQLException is not thrown");
         } catch (SQLException e) {
             // expected

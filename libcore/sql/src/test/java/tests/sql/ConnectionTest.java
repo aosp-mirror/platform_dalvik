@@ -287,7 +287,6 @@ public class ConnectionTest extends SQLTest {
         )
     @KnownFailure("not supported")
     public void testCreateStatementIntIntIntNotSupported() {
-        /*
         Statement st = null;
         try {
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
@@ -314,7 +313,6 @@ public class ConnectionTest extends SQLTest {
             }
             }
         }
-        */
     }
 
     /**
@@ -1604,7 +1602,6 @@ public class ConnectionTest extends SQLTest {
             st.execute("select * from zoo where family = 'dog'");
             rs1 = st.getResultSet();
             assertEquals(1, getCount(rs1));
-            /* 
 //          TODO getGeneratedKeys is not supported
             rs4 = prst.getGeneratedKeys();
             assertEquals(0, getCount(rs4));
@@ -1623,7 +1620,6 @@ public class ConnectionTest extends SQLTest {
             rs5 = prst1.getGeneratedKeys();
             assertEquals(0, getCount(rs5));
           
-            */
         } catch (SQLException e) {
             fail("SQLException is thrown: " + e.getMessage());
         } finally {
