@@ -72,7 +72,11 @@ public class XMLFormatterTest extends TestCase {
             args = {java.util.logging.Handler.class}
         )
     })
-    public void testXMLFormatter() {
+    public void testXMLFormatter() throws SecurityException,
+            UnsupportedEncodingException {
+
+        handler.setEncoding("UTF-8");
+
         String result = formatter.getHead(handler);
         int headPos = result
                 .indexOf("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
