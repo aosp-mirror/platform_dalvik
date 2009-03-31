@@ -2466,7 +2466,7 @@ public class FileTest extends junit.framework.TestCase {
         Support_Exec.execJava(new String[] {
                 "tests.support.Support_DeleteOnExitTest",
                 dir.getAbsolutePath(), subDir.getAbsolutePath() },
-                new String[] {}, false);
+                new String[] { System.getProperty("java.class.path") }, false);
         Thread.sleep(2000);
         assertFalse(dir.exists());
         assertFalse(subDir.exists());

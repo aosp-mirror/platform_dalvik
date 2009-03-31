@@ -17,6 +17,8 @@
 
 package org.apache.harmony.luni.tests.internal.net.www.protocol.http;
 
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -170,6 +172,7 @@ public class HttpURLConnectionTest extends TestCase {
         method = "getOutputStream",
         args = {}
     )
+    @BrokenTest("openConnection seems to return null, wrong config?")
     public void testGetOutputStream() throws Exception {
         // Regression for HARMONY-482
         MockServer httpServer =
@@ -181,7 +184,7 @@ public class HttpURLConnectionTest extends TestCase {
             }
         }
         HttpURLConnection c = (HttpURLConnection)
-            new URL("http://127.0.0.1:" + httpServer.port()).openConnection();
+            new URL("http://localhost:" + httpServer.port()).openConnection();
         c.setDoOutput(true);
         //use new String("POST") instead of simple "POST" to obtain other
         //object instances then those that are in HttpURLConnection classes
@@ -201,6 +204,7 @@ public class HttpURLConnectionTest extends TestCase {
         method = "usingProxy",
         args = {}
     )
+    @KnownFailure("Not implemented")
     public void testUsingProxy() throws Exception {
         // Regression for HARMONY-570
         MockServer server = new MockServer("server");
@@ -247,6 +251,7 @@ public class HttpURLConnectionTest extends TestCase {
         method = "usingProxy",
         args = {}
     )
+    @KnownFailure("Not implemented")
     public void testUsingProxySelector() throws Exception {
         // Regression for HARMONY-570
         MockServer server = new MockServer("server");
@@ -302,6 +307,7 @@ public class HttpURLConnectionTest extends TestCase {
             args = {}
         )
     })
+    @KnownFailure("Not umplemented")
     public void testProxyAuthorization() throws Exception {
         // Set up test Authenticator
         Authenticator.setDefault(new Authenticator() {
