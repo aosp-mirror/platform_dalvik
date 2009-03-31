@@ -17,19 +17,6 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.BrokenTest;
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
-import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
-
-import tests.util.CallVerificationStack;
-
 import java.security.Permission;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -42,6 +29,17 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.LoggingPermission;
+
+import junit.framework.TestCase;
+
+import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
+
+import tests.util.CallVerificationStack;
+import dalvik.annotation.SideEffect;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 /**
  * Test suite for the class java.util.logging.Logger.
@@ -75,6 +73,7 @@ public class LoggerTest extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
+        LogManager.getLogManager().reset();
         oldLocale = Locale.getDefault();
         Locale.setDefault(new Locale("zh", "CN"));
         sharedLogger = new MockLogger("SharedLogger", VALID_RESOURCE_BUNDLE);
@@ -433,10 +432,6 @@ public class LoggerTest extends TestCase {
         method = "getLogger",
         args = {java.lang.String.class}
     )
-    @BrokenTest("This fails on RI and Android." +
-            "getResourceBundle and getResourceBundleName methods return " +
-            "null on RI for Logger with empty string name. On the RI " + 
-            "getHandlers() returns a non empty array.")
     public void testGetLogger_Empty() {
         assertNotNull(LogManager.getLogManager().getLogger(""));
         Logger log = Logger.getLogger("");
@@ -611,9 +606,6 @@ public class LoggerTest extends TestCase {
         method = "getLogger",
         args = {java.lang.String.class, java.lang.String.class}
     )
-    @KnownFailure("IllegalArgumentException is thrown instead of " +
-            "MissingResourceException if resource bundle with specified " +
-            "name can't be found.")
     public void testGetLoggerWithRes_InvalidResourceBundle() {
 
         assertNull(LogManager.getLogManager().getLogger(
@@ -763,6 +755,7 @@ public class LoggerTest extends TestCase {
         method = "getLogger",
         args = {java.lang.String.class, java.lang.String.class}
     )
+    @SideEffect("Attaches ResourceBundle to anonymous logger; irreversible")
     public void testGetLoggerWithRes_Empty() {
         Logger log = Logger.getLogger("", VALID_RESOURCE_BUNDLE);
         assertSame(log, LogManager.getLogManager().getLogger(""));
