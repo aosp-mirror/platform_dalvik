@@ -99,26 +99,25 @@ public class RuntimeTest extends junit.framework.TestCase {
         args = {}
     )
     public void test_freeMemory() {
-        try {
-            long before = r.freeMemory();
-            Vector<StringBuffer> v = new Vector<StringBuffer>();
-            for (int i = 1; i < 10; i++)
-                v.addElement(new StringBuffer(10000));
-            long after =  r.freeMemory();
-            v = null;
-            r.gc();
-            assertTrue("freeMemory should return less value after " +
-                    "creating an object", after < before);            
-            long afterGC =  r.freeMemory();
-            assertTrue("freeMemory should not return less value after " +
-                    "creating an object", afterGC > after);
-        } catch (Exception e) {
-            System.out.println("Out of memory during freeMemory test: " 
-                    + e.getMessage());
-            r.gc();
-        } finally {
-            r.gc();
+        // Heap might grow or do GC at any time,
+        // so we can't really test a lot. Hence
+        // we are just doing some basic sanity
+        // checks here.
+        assertTrue("must have some free memory",
+                r.freeMemory() > 0); 
+
+        assertTrue("must not exceed total memory",
+                r.freeMemory() < r.totalMemory()); 
+        
+        long before = r.totalMemory() - r.freeMemory();
+        Vector<byte[]> v = new Vector<byte[]>();
+        for (int i = 1; i < 10; i++) {
+            v.addElement(new byte[10000]);
         }
+        long after =  r.totalMemory() - r.freeMemory();
+
+        assertTrue("free memory must change with allocations", 
+                after != before);            
     }
 
     /**
@@ -829,6 +828,7 @@ public class RuntimeTest extends junit.framework.TestCase {
     public void test_traceInstructions() {
         Runtime.getRuntime().traceInstructions(false);
         Runtime.getRuntime().traceInstructions(true);
+        Runtime.getRuntime().traceInstructions(false);
     }
     
     @TestTargetNew(
@@ -838,14 +838,18 @@ public class RuntimeTest extends junit.framework.TestCase {
         args = {boolean.class}
     )
     public void test_traceMethodCalls() {
-        Runtime.getRuntime().traceMethodCalls(false);
-        Runtime.getRuntime().traceMethodCalls(true);
-        Runtime.getRuntime().traceMethodCalls(false);
-        // try to clean up
-        //File tracefile = new File("/sdcard/dmtrace.trace");
-        //if(tracefile.exists()) {
-        //    tracefile.delete();
-        //}
+        try {
+            Runtime.getRuntime().traceMethodCalls(false);
+            Runtime.getRuntime().traceMethodCalls(true);
+            Runtime.getRuntime().traceMethodCalls(false);
+        } catch (RuntimeException ex) {
+            // Slightly ugly: we default to the SD card, which may or may not
+            // be there. So we also accept the error case as a success, since
+            // it means we actually did enable tracing (or tried to).
+            if (!"file open failed".equals(ex.getMessage())) {
+                throw ex;
+            }
+        }
     }
     
     @SuppressWarnings("deprecation")
@@ -1066,7 +1070,7 @@ public class RuntimeTest extends junit.framework.TestCase {
             public void checkPermission(Permission perm) {
                 
             }
-            
+
             public void checkExit(int status) {
                 statusCode = status;
                 throw new SecurityException();

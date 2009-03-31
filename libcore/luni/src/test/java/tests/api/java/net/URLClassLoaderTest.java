@@ -658,7 +658,7 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     public void test_getResourceLjava_lang_String()
             throws MalformedURLException {
         URL url1 = new URL("file:///");
-        URLClassLoader loader = new URLClassLoader(new URL[] { url1 }, null);
+        URLClassLoader loader = new URLClassLoader(new URL[] { url1 });
         long start = System.currentTimeMillis();
         // try without the leading /
         URL result = loader.getResource("dir1/file1");
@@ -713,7 +713,7 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
         for (int i = 0; i < urlVec.size(); i++) {
             urls[i] = urlVec.elementAt(i);
         }            
-        URLClassLoader loader = new URLClassLoader(urls, null);
+        URLClassLoader loader = new URLClassLoader(urls);
         return loader;
     }
 }

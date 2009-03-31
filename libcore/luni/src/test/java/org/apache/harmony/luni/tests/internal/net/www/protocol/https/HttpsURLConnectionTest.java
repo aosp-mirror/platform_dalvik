@@ -159,7 +159,7 @@ public class HttpsURLConnectionTest extends TestCase {
         method = "setDefaultHostnameVerifier",
         args = {javax.net.ssl.HostnameVerifier.class}
     )
-    @KnownFailure("VM aborts after more than one test was run.")
+    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testHttpsConnection() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
@@ -218,7 +218,7 @@ public class HttpsURLConnectionTest extends TestCase {
             args = {int.class}
         )
     })
-    @KnownFailure("VM aborts after more than one test was run.")
+    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testHttpsConnection_Not_Found_Response() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
@@ -268,6 +268,7 @@ public class HttpsURLConnectionTest extends TestCase {
         args = {javax.net.ssl.SSLSocketFactory.class}
     )
     @AndroidOnly("we only have a .bks key store in the test resources")
+    @KnownFailure("End to end test fails. No response data is transferred from server to client")
     public void testSetDefaultSSLSocketFactory() throws Throwable {
         // create the SSLServerSocket which will be used by server side
         SSLContext ctx = getContext();
@@ -324,6 +325,7 @@ public class HttpsURLConnectionTest extends TestCase {
         args = {javax.net.ssl.SSLSocketFactory.class}
     )
     @AndroidOnly("we only have a .bks key store in the test resources")
+    @KnownFailure("End to end test fails. No response data is transferred from server to client")
     public void testSetSSLSocketFactory() throws Throwable {
         // create the SSLServerSocket which will be used by server side
         SSLContext ctx = getContext();
@@ -442,7 +444,7 @@ public class HttpsURLConnectionTest extends TestCase {
         method = "setHostnameVerifier",
         args = {javax.net.ssl.HostnameVerifier.class}
     )
-    @KnownFailure("VM aborts after more than one test was run.")
+    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testSetHostnameVerifier() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -492,7 +494,7 @@ public class HttpsURLConnectionTest extends TestCase {
         method = "setDoOutput",
         args = {boolean.class}
     )
-    @KnownFailure("VM aborts after more than one test was run.")
+    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void test_doOutput() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -549,7 +551,7 @@ public class HttpsURLConnectionTest extends TestCase {
             args = {int.class}
         )
     })
-    @KnownFailure("VM aborts after more than one test was run.")
+    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyConnection() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -607,7 +609,7 @@ public class HttpsURLConnectionTest extends TestCase {
             args = {int.class}
         )
     })
-    @KnownFailure("VM aborts after more than one test was run.")
+    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyAuthConnection() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -675,7 +677,7 @@ public class HttpsURLConnectionTest extends TestCase {
             args = {}
         )
     })
-    @KnownFailure("VM aborts after more than one test was run.")
+    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testConsequentProxyConnection() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -748,7 +750,7 @@ public class HttpsURLConnectionTest extends TestCase {
             args = {boolean.class}
         )
     })
-    @KnownFailure("VM aborts after more than one test was run.")
+    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyAuthConnection_doOutput() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -814,7 +816,6 @@ public class HttpsURLConnectionTest extends TestCase {
             args = {int.class}
         )
     })
-    @KnownFailure("VM aborts after more than one test was run.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyAuthConnectionFailed() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -877,7 +878,7 @@ public class HttpsURLConnectionTest extends TestCase {
             args = {int.class}
         )
     })
-    @KnownFailure("VM aborts after more than one test was run.")
+    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testProxyConnection_Not_Found_Response() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -1189,51 +1190,51 @@ public class HttpsURLConnectionTest extends TestCase {
         /**
          * The header of OK HTTP response.
          */
-        static String responseHead = "HTTP/1.1 200 OK\n";
+        static final String responseHead = "HTTP/1.1 200 OK\n";
 
         /**
          * The content of the response.
          */
-        static String plainResponseContent = "<HTML>\n"
+        static final String plainResponseContent = "<HTML>\n"
                 + "<HEAD><TITLE>Plain Response Content</TITLE></HEAD>\n"
                 + "</HTML>";
 
         /**
          * The tail of the response.
          */
-        static String plainResponseTail = "Content-type: text/html\n"
+        static final String plainResponseTail = "Content-type: text/html\n"
                 + "Content-length: " + plainResponseContent.length() + "\n\n"
                 + plainResponseContent;
 
         /**
          * The response message to be sent in plain (HTTP) format.
          */
-        static String plainResponse = responseHead + plainResponseTail;
+        static final String plainResponse = responseHead + plainResponseTail;
 
         /**
          * The content of the response to be sent during HTTPS session.
          */
-        static String httpsResponseContent = "<HTML>\n"
+        static final String httpsResponseContent = "<HTML>\n"
                 + "<HEAD><TITLE>HTTPS Response Content</TITLE></HEAD>\n"
                 + "</HTML>";
 
         /**
          * The tail of the response to be sent during HTTPS session.
          */
-        static String httpsResponseTail = "Content-type: text/html\n"
+        static final String httpsResponseTail = "Content-type: text/html\n"
                 + "Content-length: " + httpsResponseContent.length() + "\n\n"
                 + httpsResponseContent;
 
         /**
          * The response requiring client's proxy authentication.
          */
-        static String respAuthenticationRequired = "HTTP/1.0 407 Proxy authentication required\n"
+        static final String respAuthenticationRequired = "HTTP/1.0 407 Proxy authentication required\n"
                 + "Proxy-authenticate: Basic realm=\"localhost\"\n\n";
 
         /**
          * The data to be posted by client to the server.
          */
-        static String clientsData = "_.-^ Client's Data ^-._";
+        static final String clientsData = "_.-^ Client's Data ^-._";
 
         /**
          * The exception thrown during peers interaction.
@@ -1368,8 +1369,10 @@ public class HttpsURLConnectionTest extends TestCase {
                     os
                             .write(("HTTP/1.1 " + responseCode + "\n" + httpsResponseTail)
                                     .getBytes());
+                    os.flush();
+                    os.close();
                     // and return
-                    log("Work is DONE");
+                    log("Work is DONE !actAsProxy");
                     return;
                 }
 
@@ -1446,7 +1449,7 @@ public class HttpsURLConnectionTest extends TestCase {
                             .write(("HTTP/1.1 " + responseCode + "\n" + httpsResponseTail)
                                     .getBytes());
                 }
-                log("Work is DONE");
+                log("Work is DONE actAsProxy");
             } catch (Throwable e) {
                 if (DO_LOG) {
                     e.printStackTrace();

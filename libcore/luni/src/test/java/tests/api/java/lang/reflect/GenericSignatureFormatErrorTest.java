@@ -80,6 +80,7 @@ public class GenericSignatureFormatErrorTest extends TestCase{
         assertNotNull(is);
         OutputStream fos = new FileOutputStream(tf);
         copy(is, fos);
+        fos.flush();
         fos.close();
         
         
