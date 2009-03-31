@@ -241,7 +241,6 @@ public class Charset_MultiByte_x_windows_950 extends Charset_AbstractTest {
         method = "functionalCoDec_REPR",
         args = {}
     )
-    @KnownFailure("This Characterset is not properly supported in Android!")
     @Override
     public void test_Decode() throws CharacterCodingException {
         super.test_Decode();

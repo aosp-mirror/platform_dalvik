@@ -262,10 +262,11 @@ public class Charset_AbstractTest extends TestCase {
             expected = expectedCB.get();
             actual = actualCB.get();
             if (actual != expected) {
-                System.out.format("Mismatch at index %d: %d instead of expected %d.\n",
+                String detail = String.format(
+                        "Mismatch at index %d: %d instead of expected %d.\n",
                         i, (int) actual, (int) expected);
                 match = false;
-                fail(msg);
+                fail(msg + ": " + detail);
             }
 //            else {
 //                System.out.format("Match index %d: %d = %d\n",
@@ -289,10 +290,11 @@ public class Charset_AbstractTest extends TestCase {
         for (int i = 0; i < len; i++) {
             actual = actualCB.get();
             if (actual != expected[i]) {
-                System.out.format("Mismatch at index %d: %d instead of expected %d.\n",
+                String detail = String.format(
+                        "Mismatch at index %d: %d instead of expected %d.\n",
                         i, (int) actual, (int) expected[i]);
                 match = false;
-                fail(msg);
+                fail(msg + ": " + detail);
             }
 //            else {
 //                System.out.format("Match index %d: %d = %d\n",
@@ -316,10 +318,11 @@ public class Charset_AbstractTest extends TestCase {
         for (int i = 0; i < len; i++) {
             actual = actualBB.get();
             if (actual != expected[i]) {
-                System.out.format("Mismatch at index %d: %d instead of expected %d.\n",
+                String detail = String.format(
+                        "Mismatch at index %d: %d instead of expected %d.\n",
                         i, actual & 0xff, expected[i] & 0xff);
                 match = false;
-                fail(msg);
+                fail(msg + ": " + detail);
             }
         }
         assertTrue(msg, match);
