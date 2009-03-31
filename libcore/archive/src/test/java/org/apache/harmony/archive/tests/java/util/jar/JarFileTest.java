@@ -491,8 +491,9 @@ public class JarFileTest extends TestCase {
             ByteArrayOutputStream manOut = new ByteArrayOutputStream();
             manifest.write(manOut);
             byte[] manBytes = manOut.toByteArray();
-            File file = new File(Support_PlatformFile.getNewPlatformFile(
-                    "hyts_manifest1", ".jar"));
+            File file = File.createTempFile(
+                    Support_PlatformFile.getNewPlatformFile("hyts_manifest1",
+                            ""), ".jar");
             JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(
                     file.getAbsolutePath()));
             ZipEntry entry = new ZipEntry("META-INF/");
