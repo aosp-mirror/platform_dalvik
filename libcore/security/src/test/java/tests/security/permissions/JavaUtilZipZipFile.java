@@ -16,16 +16,16 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
+import java.io.File;
+import java.io.IOException;
+import java.security.Permission;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 import junit.framework.TestCase;
-
-import java.io.IOException;
-import java.io.File;
-import java.util.zip.ZipFile;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 /*
  * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
@@ -69,6 +69,10 @@ public class JavaUtilZipZipFile extends TestCase {
                 this.name = name;
                 super.checkRead(name);
             }
+            
+            @Override
+            public void checkPermission(Permission permission) {
+            }
         }
         
         File file = File.createTempFile("foo", "zip");
@@ -78,7 +82,11 @@ public class JavaUtilZipZipFile extends TestCase {
         System.setSecurityManager(s);
         
         s.reset();
-        new ZipFile(filename);
+        try {
+            new ZipFile(filename);
+        } catch (ZipException ex) {
+            // Ignore.
+        }
         assertTrue("java.util.zip.ZipFile() construcor must call checkRead on security permissions", s.called);
         assertEquals("Argument of checkPermission is not correct", filename, s.getName());
     }
