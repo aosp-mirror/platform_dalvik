@@ -346,14 +346,14 @@ public class Main {
 
         DxConsole.err.println("\ntrouble processing \"" + name + "\":");
         DxConsole.err.println("\n" + 
-                "Attempt to include a core class in something other than a " +
-                "core\n" +
-                "library. It is likely that you have attempted to include " +
-                "in an\n" +
-                "application the core library (or a part thereof) from a " +
-                "desktop\n" +
-                "virtual machine. This will most assuredly not work. At a " +
-                "minimum, it\n" +
+                "Attempt to include a core class (java.* or javax.*) in " +
+                "something other\n" +
+                "than a core library. It is likely that you have " +
+                "attempted to include\n" +
+                "in an application the core library (or a part thereof) " +
+                "from a desktop\n" +
+                "virtual machine. This will most assuredly not work. " +
+                "At a minimum, it\n" +
                 "jeopardizes the compatibility of your app with future " +
                 "versions of the\n" +
                 "platform. It is also often of questionable legality.\n" +
@@ -379,17 +379,17 @@ public class Main {
                 "\n" +
                 "If you are legitimately using some code that happens to " +
                 "be in a core\n" +
-                "package, then the easiest alternative you have is to " +
-                "repackage that\n" +
-                "code. That is, move the classes in question into your " +
-                "own package\n" +
+                "package, then the easiest safe alternative you have is " +
+                "to repackage\n" +
+                "that code. That is, move the classes in question into " +
+                "your own package\n" +
                 "namespace. This means that they will never be in " +
                 "conflict with core\n" +
                 "system classes. If you find that you cannot do this, " +
                 "then that is an\n" +
-                "indication that the path you are on will ultimately " +
-                "lead to pain,\n" +
-                "suffering, grief, and lamentation.");
+                "indication that the path you are on will ultimately lead " +
+                "to pain,\n" +
+                "suffering, grief, and lamentation.\n");
         errors++;
         throw new StopProcessing();
     }
