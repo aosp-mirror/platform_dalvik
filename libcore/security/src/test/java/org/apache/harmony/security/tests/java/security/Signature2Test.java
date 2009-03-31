@@ -369,20 +369,24 @@ public class Signature2Test extends junit.framework.TestCase {
         Provider p = new MyProvider();
         p.put("DSA", "tests.java.security.support.cert.MyCertificate$1");
 
-        Security.addProvider(new MyProvider());
-
-        Provider[] pp = Security.getProviders();
-        if (pp == null) {
-            return;
-        }
+        Provider myProvider = new MyProvider();
+        Security.addProvider(myProvider);
 
         try {
-            Signature.getInstance("DSA").initVerify((Certificate) null);
-            fail("NullPointerException expected");
-        } catch (NullPointerException e) {
-            // fail
-        }
+            Provider[] pp = Security.getProviders();
+            if (pp == null) {
+                return;
+            }
 
+            try {
+                Signature.getInstance("DSA").initVerify((Certificate) null);
+                fail("NullPointerException expected");
+            } catch (NullPointerException e) {
+                // fail
+            }
+        } finally {
+            Security.removeProvider(myProvider.getName());
+        }
     }
 
     /**

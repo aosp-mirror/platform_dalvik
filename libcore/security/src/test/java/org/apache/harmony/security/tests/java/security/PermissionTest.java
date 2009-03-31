@@ -124,10 +124,7 @@ public class PermissionTest extends TestCase {
             System.setSecurityManager(sm);
             Permission p = new SecurityPermission("testGuardPermission");
             p.checkGuard(this);
-            fail("expected SecurityException");
-        } catch (SecurityException e) {
-            // ok
-            assertTrue("checkPermisson was not called", sm.called);
+            assertTrue("SecurityManager must be invoked", sm.called);
         } finally {
             System.setSecurityManager(null);
         }
