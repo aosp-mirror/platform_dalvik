@@ -25,10 +25,6 @@ import junit.framework.TestCase;
 import java.sql.Struct;
 import java.util.Map;
 
-/**
- * @author andrea@google.com (Your Name Here)
- *
- */
 @TestTargetClass(Struct.class)
 public class StructTest extends TestCase {
 

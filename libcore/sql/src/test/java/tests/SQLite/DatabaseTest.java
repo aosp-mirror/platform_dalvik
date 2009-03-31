@@ -16,6 +16,7 @@
 
 package tests.SQLite;
 
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
@@ -1053,6 +1054,7 @@ public class DatabaseTest extends SQLiteTest {
         args = {FunctionContext.class, String[].class}
                     )
     })
+    @AndroidOnly("Aggregation function not called")
     public void testCreate_aggregate() {
         TestTrace t = new TestTrace();
         
