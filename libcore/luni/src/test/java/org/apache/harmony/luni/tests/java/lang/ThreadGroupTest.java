@@ -318,6 +318,19 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         }            
     }
 
+    /*
+     * Checks whether the current Thread is in the given list.
+     */
+    private boolean inListOfThreads(Thread[] threads) {
+        for (int i = 0; i < threads.length; i++) {
+            if (Thread.currentThread() == threads[i]) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
@@ -330,8 +343,9 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
 
         int countThread = initialThreadGroup.enumerate(listOfThreads);
         assertEquals(numThreads, countThread);
-        assertEquals(Thread.currentThread(), listOfThreads[0]);
-
+        assertTrue("Current thread must be in enumeration of threads",
+                inListOfThreads(listOfThreads));
+        
         SecurityManager oldSm = System.getSecurityManager();
         System.setSecurityManager(sm);
         try {
@@ -356,11 +370,11 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
 
         int countThread = initialThreadGroup.enumerate(listOfThreads, false);
         assertEquals(numThreads, countThread);
-        assertEquals(Thread.currentThread(), listOfThreads[0]);    
 
         countThread = initialThreadGroup.enumerate(listOfThreads, true);
         assertEquals(numThreads, countThread);
-        assertEquals(Thread.currentThread(), listOfThreads[0]);         
+        assertTrue("Current thread must be in enumeration of threads",
+                inListOfThreads(listOfThreads));
 
         ThreadGroup subGroup = new ThreadGroup(initialThreadGroup, "Test Group 1");
         int subThreadsCount = 3;
@@ -369,7 +383,8 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         
         countThread = initialThreadGroup.enumerate(listOfThreads, true);
         assertEquals(numThreads, countThread);
-        assertEquals(Thread.currentThread(), listOfThreads[0]); 
+        assertTrue("Current thread must be in enumeration of threads",
+                inListOfThreads(listOfThreads));
         
         for(MyThread thr:subThreads) {
             thr.start();
@@ -388,7 +403,8 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         
         countThread = initialThreadGroup.enumerate(listOfThreads, true);
         assertEquals(numThreads2, countThread);
-        assertEquals(Thread.currentThread(), listOfThreads[0]); 
+        assertTrue("Current thread must be in enumeration of threads",
+                inListOfThreads(listOfThreads));
         
         for(MyThread thr:subThreads) {
             thr.interrupt();
@@ -407,7 +423,8 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         
         countThread = initialThreadGroup.enumerate(listOfThreads, false);
         assertEquals(numThreads3, countThread);
-        assertEquals(Thread.currentThread(), listOfThreads[0]); 
+        assertTrue("Current thread must be in enumeration of threads",
+                inListOfThreads(listOfThreads));
 
         SecurityManager oldSm = System.getSecurityManager();
         System.setSecurityManager(sm);

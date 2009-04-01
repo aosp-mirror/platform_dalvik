@@ -19,16 +19,6 @@ package org.apache.harmony.logging.tests.java.util.logging;
 
 
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargets;
-
-import junit.framework.TestCase;
-
-import org.apache.harmony.logging.tests.java.util.logging.HandlerTest.NullOutputStream;
-import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
-
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
@@ -44,6 +34,17 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.LoggingPermission;
+
+import junit.framework.TestCase;
+
+import org.apache.harmony.logging.tests.java.util.logging.HandlerTest.NullOutputStream;
+import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
+
+import dalvik.annotation.SideEffect;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 /**
  * 
@@ -464,18 +465,28 @@ public class LogManagerTest extends TestCase {
         assertSame(global, Logger.global);
         assertSame(root, global.getParent());
 
+        Logger oldGlobal = global;
+        Logger oldRoot = root;
+        
         // root properties
         manager.readConfiguration(EnvironmentHelper.PropertiesToInputStream(props));
+        
+        global = manager.getLogger("global");
+        root = manager.getLogger("");
+
+        assertSame(oldGlobal, global);
+        assertSame(oldRoot, root);
+        
         assertNull(root.getFilter());
         assertEquals(2, root.getHandlers().length);
         assertEquals(Level.FINE, root.getLevel());
         assertEquals("", root.getName());
         assertSame(root.getParent(), null);
-        // This test sometimes fails if other tests are run before this one.
+        assertTrue(root.getUseParentHandlers());
+        
+        // The following two fail if other tests are run before this one.
         assertNull(root.getResourceBundle());
         assertNull(root.getResourceBundleName());
-        assertTrue(root.getUseParentHandlers());
-
     }
 
     /*

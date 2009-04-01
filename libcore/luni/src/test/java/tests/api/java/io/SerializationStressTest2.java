@@ -1900,7 +1900,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @KnownFailure("Maybe the stack gets too deep for android. Change the test?")
     public void test_DeepNestingWithWriteObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)

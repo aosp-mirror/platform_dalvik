@@ -346,25 +346,50 @@ public class Main {
 
         DxConsole.err.println("\ntrouble processing \"" + name + "\":");
         DxConsole.err.println("\n" + 
-                "Attempt to include a core VM class in something other " +
-                "than a core library.\n" +
-                "It is likely that you have attempted to include the " +
-                "core library from a desktop\n" +
-                "virtual machine into an application, which will most " +
-                "assuredly not work. If\n" +
-                "you really intend to build a core library -- which is "+
-                "only appropriate as\n" +
-                "part of creating a full virtual machine binary, as " +
-                "opposed to compiling an\n" +
-                "application -- then use the \"--core-library\" option " +
-                "to suppress this error\n" +
-                "message. If you go ahead and use \"--core-library\" " +
-                "but are in fact building\n" +
-                "an application, then please be aware that your build " +
-                "will still fail at some\n" +
-                "point; you will simply be denied the pleasure of " +
-                "reading this helpful error\n" +
-                "message.");
+                "Attempt to include a core class (java.* or javax.*) in " +
+                "something other\n" +
+                "than a core library. It is likely that you have " +
+                "attempted to include\n" +
+                "in an application the core library (or a part thereof) " +
+                "from a desktop\n" +
+                "virtual machine. This will most assuredly not work. " +
+                "At a minimum, it\n" +
+                "jeopardizes the compatibility of your app with future " +
+                "versions of the\n" +
+                "platform. It is also often of questionable legality.\n" +
+                "\n" +
+                "If you really intend to build a core library -- which is " +
+                "only\n" +
+                "appropriate as part of creating a full virtual machine " +
+                "distribution,\n" +
+                "as opposed to compiling an application -- then use the\n" +
+                "\"--core-library\" option to suppress this error message.\n" +
+                "\n" +
+                "If you go ahead and use \"--core-library\" but are in " +
+                "fact building an\n" +
+                "application, then be forewarned that your application " +
+                "will still fail\n" +
+                "to build or run, at some point. Please be prepared for " +
+                "angry customers\n" +
+                "who find, for example, that your application ceases to " +
+                "function once\n" +
+                "they upgrade their operating system. You will be to " +
+                "blame for this\n" +
+                "problem.\n" +
+                "\n" +
+                "If you are legitimately using some code that happens to " +
+                "be in a core\n" +
+                "package, then the easiest safe alternative you have is " +
+                "to repackage\n" +
+                "that code. That is, move the classes in question into " +
+                "your own package\n" +
+                "namespace. This means that they will never be in " +
+                "conflict with core\n" +
+                "system classes. If you find that you cannot do this, " +
+                "then that is an\n" +
+                "indication that the path you are on will ultimately lead " +
+                "to pain,\n" +
+                "suffering, grief, and lamentation.\n");
         errors++;
         throw new StopProcessing();
     }

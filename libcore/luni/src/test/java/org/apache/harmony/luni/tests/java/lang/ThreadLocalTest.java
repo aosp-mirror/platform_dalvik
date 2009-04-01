@@ -214,5 +214,8 @@ public class ThreadLocalTest extends TestCase {
         thread.join();
         assertSame(value, threadLocal.get());
         assertSame(inheritedValue, holder[0]);
+
+        // Cleanup properly, so other tests are not affected.
+        threadLocal.remove();
     }
 }

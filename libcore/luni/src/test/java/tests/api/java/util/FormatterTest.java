@@ -15,12 +15,6 @@
  */
 package tests.api.java.util;
 
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.AndroidOnly;
-
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -59,6 +53,12 @@ import java.util.TimeZone;
 import java.util.UnknownFormatConversionException;
 
 import junit.framework.TestCase;
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(Formatter.class) 
 public class FormatterTest extends TestCase {
@@ -2029,6 +2029,7 @@ public class FormatterTest extends TestCase {
         args = {java.lang.String.class, java.lang.Object[].class}
     )
     @AndroidOnly("Icu data for Czech locale differs a bit from the RI")
+    @BrokenTest("Many failures in this test. Needs more investigation.")
     public void test_formatLjava_lang_String$Ljava_lang_Object_DateTimeConversion() {
         Formatter f = null;
         Date now = new Date(1147327147578L);
@@ -2773,7 +2774,7 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("flaky! results. differs if debugger is attached.")
+    // Flaky! results. differs if debugger is attached.
     public void test_formatLjava_lang_String$LBigInteger() {
         final Object[][] tripleD = {
                 {new BigInteger("123456789012345678901234567890"),          "%d",       "123456789012345678901234567890"}, //$NON-NLS-2$

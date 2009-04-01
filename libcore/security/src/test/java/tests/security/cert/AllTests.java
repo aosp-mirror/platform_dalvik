@@ -77,7 +77,8 @@ public class AllTests {
         suite.addTestSuite(X509CRLSelector2Test.class);
         suite.addTestSuite(X509CRLSelectorTest.class);
         suite.addTestSuite(X509CRLTest.class);
-        suite.addTestSuite(X509CertSelectorTest.class);
+        // Crashes on RI.
+        // suite.addTestSuite(X509CertSelectorTest.class);
         suite.addTestSuite(X509Certificate2Test.class);
         suite.addTestSuite(PolicyNodeTest.class);
 

@@ -155,16 +155,16 @@ public class Charset_SingleByteAbstractTest extends Charset_AbstractTest {
             else {
                 if (expected[i] == 65533) {
                     if (actual[i] == (bytes[i] & 0xff)) {
-                        System.out.format("REPLACE mismatch at index %d (byte %d): %d instead of expected %d.\n",
-                                i, bytes[i] & 0xff, (int) actual[i], (int) expected[i]);
+//                        System.out.format("REPLACE mismatch at index %d (byte %d): %d instead of expected %d.\n",
+//                                i, bytes[i] & 0xff, (int) actual[i], (int) expected[i]);
                     } else {
-                        System.out.format("REPLACE mismatch at index %d (byte %d): %d instead of expected %d.\n",
-                                i, bytes[i] & 0xff, (int) actual[i], (int) expected[i]);
+//                        System.out.format("REPLACE mismatch at index %d (byte %d): %d instead of expected %d.\n",
+//                                i, bytes[i] & 0xff, (int) actual[i], (int) expected[i]);
                     }
                     replaceMatch = false;
                 } else {
-                    System.out.format("MISMATCH at index %d (byte %d): %d instead of expected %d.\n",
-                            i, bytes[i] & 0xff, (int) actual[i], (int) expected[i]);
+//                    System.out.format("MISMATCH at index %d (byte %d): %d instead of expected %d.\n",
+//                            i, bytes[i] & 0xff, (int) actual[i], (int) expected[i]);
                     match = false;
                 }
             }
@@ -176,7 +176,7 @@ public class Charset_SingleByteAbstractTest extends Charset_AbstractTest {
         }
         assertTrue(msg, match);
         if (!replaceMatch) {
-            System.out.println("for charset " + charsetName);
+//            System.out.println("for charset " + charsetName);
         }
     }
 
@@ -199,8 +199,8 @@ public class Charset_SingleByteAbstractTest extends Charset_AbstractTest {
         for (int i = 0; i < len; i++) {
             if ((actual[i] != expected[i]) &&
                     !((chars[i] == 65533)) && (actual[i] == 63)) {
-                System.out.format("MISMATCH at index %d: %d instead of expected %d.\n",
-                        i, actual[i], expected[i]);
+//              System.out.format("MISMATCH at index %d: %d instead of expected %d.\n",
+//                      i, actual[i], expected[i]);
                 match = false;
             }
         }
