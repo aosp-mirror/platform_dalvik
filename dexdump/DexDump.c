@@ -46,6 +46,7 @@ static InstructionFormat* gInstrFormat;
 
 /* command-line options */
 struct {
+    bool checksumOnly;
     bool disassemble;
     bool showFileHeaders;
     bool showSectionHeaders;
@@ -1307,7 +1308,11 @@ int process(const char* fileName)
         goto bail;
     }
 
-    processDexFile(fileName, pDexFile);
+    if (gOptions.checksumOnly) {
+        printf("Checksum verified\n");
+    } else {
+        processDexFile(fileName, pDexFile);
+    }
 
     result = 0;
 
@@ -1326,9 +1331,11 @@ bail:
 void usage(void)
 {
     fprintf(stderr, "Copyright (C) 2007 The Android Open Source Project\n\n");
-    fprintf(stderr, "%s: [-d] [-f] [-h] [-m] [-i] [-t tempfile] dexfile...\n",
+    fprintf(stderr,
+        "%s: [-c] [-d] [-f] [-h] [-m] [-i] [-t tempfile] dexfile...\n",
         gProgName);
     fprintf(stderr, "\n");
+    fprintf(stderr, " -c : verify checksum and exit\n");
     fprintf(stderr, " -d : disassemble code sections\n");
     fprintf(stderr, " -f : display summary information from file header\n");
     fprintf(stderr, " -h : display file header details\n");
@@ -1350,11 +1357,14 @@ int main(int argc, char* const argv[])
     memset(&gOptions, 0, sizeof(gOptions));
 
     while (1) {
-        ic = getopt(argc, argv, "dfhimt:");
+        ic = getopt(argc, argv, "cdfhimt:");
         if (ic < 0)
             break;
 
         switch (ic) {
+        case 'c':       // verify the checksum then exit
+            gOptions.checksumOnly = true;
+            break;
         case 'd':       // disassemble Dalvik instructions
             gOptions.disassemble = true;
             break;
@@ -1384,6 +1394,11 @@ int main(int argc, char* const argv[])
         wantUsage = true;
     }
 
+    if (gOptions.checksumOnly && gOptions.ignoreBadChecksum) {
+        fprintf(stderr, "Can't specify both -c and -i\n");
+        wantUsage = true;
+    }
+
     /* initialize some VM tables */
     gInstrWidth = dexCreateInstrWidthTable();
     gInstrFormat = dexCreateInstrFormatTable();
@@ -1393,11 +1408,14 @@ int main(int argc, char* const argv[])
         return 2;
     }
 
-    while (optind < argc)
-        process(argv[optind++]);
+    int result = 0;
+    while (optind < argc) {
+        result |= process(argv[optind++]);
+    }
 
     free(gInstrWidth);
     free(gInstrFormat);
 
-    return 0;
+    return (result != 0);
 }
+

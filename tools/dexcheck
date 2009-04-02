@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# This requires read permission on /data/dalvik-cache.  On an eng build this
+# works, on userdebug you will need to "adb root", or "su" followed by
+# "chmod 777 /data/dalvik-cache".
+
+# Get the list of files.  Use "sed" to drop the trailing carriage return.
+files=`adb shell "cd /data/dalvik-cache; echo *" | sed -e s/.$//`
+
+# Check each file in turn.  This is much faster with "dexdump -c", but that
+# was added post-cupcake.
+for file in $files; do
+	echo $file
+	errout=`adb shell "dexdump /data/dalvik-cache/$file > dev/null"`
+	echo $errout | grep ERROR > /dev/null
+	if [ $? -eq 0 ]; then
+		echo "  Failure in $file: $errout"
+	fi
+done
+
+exit 0
+
