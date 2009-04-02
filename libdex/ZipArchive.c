@@ -285,6 +285,8 @@ int dexZipOpenArchive(const char* fileName, ZipArchive* pArchive)
 
     LOGV("Opening archive '%s' %p\n", fileName, pArchive);
 
+    memset(pArchive, 0, sizeof(ZipArchive));
+
     fd = open(fileName, O_RDONLY, 0);
     if (fd < 0) {
         err = errno ? errno : -1;
