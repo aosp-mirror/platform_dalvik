@@ -29,7 +29,7 @@ LOCAL_MODULE := core
 
 include $(BUILD_JAVA_LIBRARY)
 
-
+core-intermediates := ${intermediates}
 
 # Definitions to make the core-tests library.
 
@@ -47,9 +47,43 @@ LOCAL_MODULE := core-tests
 
 include $(BUILD_JAVA_LIBRARY)
 
+# This one's tricky. One of our tests needs to have a
+# resource with a "#" in its name, but Perforce doesn't
+# allow us to submit such a file. So we create it here
+# on-the-fly.
+TMP_RESOURCE_DIR := /tmp/
+TMP_RESOURCE_FILE := org/apache/harmony/luni/tests/java/lang/test\#.properties
+
+$(TMP_RESOURCE_DIR)$(TMP_RESOURCE_FILE):
+	@mkdir -p $(dir $@)
+	@echo "Hello, world!" > $@
+
+$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_EXTRA_JAR_ARGS := $(extra_jar_args) -C $(TMP_RESOURCE_DIR) $(TMP_RESOURCE_FILE)
+$(LOCAL_INTERMEDIATE_TARGETS): $(TMP_RESOURCE_DIR)$(TMP_RESOURCE_FILE)
+
+# Definitions for building a version of the core-tests.jar
+# that is suitable for execution on the RI. This JAR would
+# be better located in $HOST_OUT_JAVA_LIBRARIES, but it is
+# not possible to refer to that from a shell script (the
+# variable is not exported from envsetup.sh). There is also
+# some trickery involved: we need to include some classes
+# that reside in core.jar, but since we cannot incldue the
+# whole core.jar in the RI classpath, we copy those classses
+# over to our new file.
+HOST_CORE_JAR := $(HOST_COMMON_OUT_ROOT)/core-tests.jar
+
+$(HOST_CORE_JAR): PRIVATE_LOCAL_BUILT_MODULE := $(LOCAL_BUILT_MODULE)
+$(HOST_CORE_JAR): PRIVATE_CORE_INTERMEDIATES := $(core-intermediates)
+$(HOST_CORE_JAR): $(LOCAL_BUILT_MODULE)
+	@rm -rf $(dir $<)/hostctsclasses
+	$(call unzip-jar-files,$(dir $<)classes.jar,$(dir $<)hostctsclasses)
+	@unzip -qx -o $(PRIVATE_CORE_INTERMEDIATES)/classes.jar dalvik/annotation/* -d $(dir $<)hostctsclasses
+	@cp $< $@
+	@jar uf $@ -C $(dir $<)hostctsclasses .
+
+$(LOCAL_INSTALLED_MODULE): $(HOST_CORE_JAR)
+
 $(LOCAL_INSTALLED_MODULE): run-core-tests
-
-
 
 # Definitions to copy the core-tests runner script.
 
@@ -60,7 +94,13 @@ LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := run-core-tests
 include $(BUILD_PREBUILT)
 
-
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := run-core-tests-on-ri
+LOCAL_IS_HOST_MODULE := true
+LOCAL_MODULE_CLASS := EXECUTABLES
+LOCAL_MODULE_TAGS := tests
+LOCAL_MODULE := run-core-tests-on-ri
+include $(BUILD_PREBUILT)
 
 # Build all of the native code, if any is present.
 
