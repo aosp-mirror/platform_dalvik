@@ -9,11 +9,14 @@ files=`adb shell "cd /data/dalvik-cache; echo *" | sed -e s/.$//`
 
 # Check each file in turn.  This is much faster with "dexdump -c", but that
 # was added post-cupcake.
+#
+# The dexdump found in older builds does not stop on checksum failures and
+# will likely crash.
 for file in $files; do
 	echo $file
 	errout=`adb shell "dexdump /data/dalvik-cache/$file > dev/null"`
-	echo $errout | grep ERROR > /dev/null
-	if [ $? -eq 0 ]; then
+	errcount=`echo $errout | wc -w` > /dev/null
+	if [ $errcount != "0" ]; then
 		echo "  Failure in $file: $errout"
 	fi
 done
