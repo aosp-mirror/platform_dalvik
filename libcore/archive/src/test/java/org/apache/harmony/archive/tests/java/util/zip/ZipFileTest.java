@@ -324,11 +324,9 @@ public class ZipFileTest extends junit.framework.TestCase {
 
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Strange test that succeeds in Android but not against RI.",
         method = "getEntry",
         args = {java.lang.String.class}
     )
-    @BrokenTest("Needs investigation. AndroidOnly?")
     public void test_getEntryLjava_lang_String_AndroidOnly() throws IOException {
         java.util.zip.ZipEntry zentry = zfile.getEntry("File1.txt");
         assertNotNull("Could not obtain ZipEntry", zentry);
@@ -336,12 +334,18 @@ public class ZipFileTest extends junit.framework.TestCase {
         InputStream in;
 
         zentry = zfile.getEntry("testdir1");
-        assertNotNull("Could not obtain ZipEntry: testdir1", zentry);
+        assertNotNull("Must be able to obtain ZipEntry: testdir1", zentry);
         in = zfile.getInputStream(zentry);
-        assertNotNull("testdir1 should not have null input stream", in);
-        r = in.read();
-        in.close();
-        assertEquals("testdir1 should not contain data", -1, r);
+        /*
+         * Android delivers empty InputStream, RI no InputStream at all. The
+         * spec doesn't clarify this, so we need to deal with both situations.
+         */
+        int data = -1;
+        if (in != null) {
+            data = in.read();
+            in.close();
+        }
+        assertEquals("Must not be able to read directory data", -1, data);
     }
 
     @TestTargetNew(
