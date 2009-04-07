@@ -49,9 +49,10 @@ import tests.support.Support_ClassLoader;
 import tests.support.resource.Support_Resources;
 import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestLevel;
 
 @SuppressWarnings("deprecation")
 @TestTargetClass(Class.class)
@@ -300,14 +301,17 @@ public class ClassTest extends junit.framework.TestCase {
             assertEquals(classes[i], clazz);
         }
 
-        for(int i = 0; i < classes.length; i++) {
-            Class<?> clazz = Class.forName(classes[i].getName(), true,
-                                            ClassLoader.getSystemClassLoader());
-            assertEquals(classes[i], clazz);
+        Class<?> [] systemClasses = {String.class, Integer.class, Object.class,
+                Object[].class};
 
-            clazz = Class.forName(classes[i].getName(), false,
+        for(int i = 0; i < systemClasses.length; i++) {
+            Class<?> clazz = Class.forName(systemClasses[i].getName(), true,
                                             ClassLoader.getSystemClassLoader());
-            assertEquals(classes[i], clazz);
+            assertEquals(systemClasses[i], clazz);
+
+            clazz = Class.forName(systemClasses[i].getName(), false,
+                                            ClassLoader.getSystemClassLoader());
+            assertEquals(systemClasses[i], clazz);
         }
 
         try  {
@@ -616,7 +620,7 @@ public class ClassTest extends junit.framework.TestCase {
         method = "getProtectionDomain",
         args = {}
     )
-    @BrokenTest("There is no protection domain set in Android.")
+    @KnownFailure("There is no protection domain set in Android.")
     public void test_getProtectionDomain() {
         ProtectionDomain pd = PublicTestClass.class.getProtectionDomain();
         assertNotNull("Test 1: Protection domain expected to be set.", pd);
@@ -883,9 +887,7 @@ public class ClassTest extends junit.framework.TestCase {
         method = "getClasses",
         args = {}
     )
-    @BrokenTest("Class.forName does not work with an URLClassLoader; " +
-            "the VMClassLoader does not support loading classes from a " +
-            "(jar) byte array.")
+    @KnownFailure("Defining classes from byte[] not supported in Android")
     public void test_getClasses_subtest0() {
         final Permission privCheckPermission = new BasicPermission("Privilege check") {
             private static final long serialVersionUID = 1L;

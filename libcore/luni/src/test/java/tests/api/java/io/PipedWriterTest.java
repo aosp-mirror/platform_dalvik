@@ -17,17 +17,14 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.BrokenTest;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.IOException;
 import java.io.PipedReader;
 import java.io.PipedWriter;
-
 import java.util.Arrays;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(PipedWriter.class) 
 public class PipedWriterTest extends junit.framework.TestCase {
@@ -318,7 +315,6 @@ public class PipedWriterTest extends junit.framework.TestCase {
         method = "write",
         args = {char[].class, int.class, int.class}
     )
-    @BrokenTest("Hangs on RI")
     public void test_write$CII_MultiThread() throws Exception {
         final PipedReader pr = new PipedReader();
         final PipedWriter pw = new PipedWriter();
@@ -336,6 +332,7 @@ public class PipedWriterTest extends junit.framework.TestCase {
                     pw.write(1);
                     while (readerAlive) {
                     // wait the reader thread dead
+                        Thread.sleep(100);
                     }
                     try {
                         // should throw exception since reader thread
@@ -346,6 +343,8 @@ public class PipedWriterTest extends junit.framework.TestCase {
                         pass = true;
                     }
                 } catch (IOException e) {
+                  //ignore
+                } catch (InterruptedException e) {
                   //ignore
                 }
             }
@@ -422,7 +421,6 @@ public class PipedWriterTest extends junit.framework.TestCase {
         method = "write",
         args = {int.class}
     )
-    @BrokenTest("Hangs on RI")
     public void test_writeI_MultiThread() throws IOException {
         final PipedReader pr = new PipedReader();
         final PipedWriter pw = new PipedWriter();
@@ -437,6 +435,7 @@ public class PipedWriterTest extends junit.framework.TestCase {
                     pw.write(1);
                     while (readerAlive) {
                     // wait the reader thread dead
+                        Thread.sleep(100);
                     }
                     try {
                         // should throw exception since reader thread
@@ -447,6 +446,8 @@ public class PipedWriterTest extends junit.framework.TestCase {
                     }
                 } catch (IOException e) {
                   //ignore
+                } catch (InterruptedException e) {
+                    //ignore
                 }
             }
         }

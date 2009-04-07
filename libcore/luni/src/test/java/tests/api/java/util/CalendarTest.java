@@ -1270,6 +1270,25 @@ public class CalendarTest extends junit.framework.TestCase {
         cal1.setTimeZone(TimeZone.getTimeZone("GMT-8"));
         assertTrue(cal1.toString().equals(cal2.toString()));
     }
+    
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        method = "get",
+        args = {int.class}
+    )
+    public void test_EdgeCases() {
+        Calendar c = Calendar.getInstance();
+        
+        c.setTimeInMillis(Long.MAX_VALUE);
+        
+        assertEquals(292278994, c.get(Calendar.YEAR));
+        assertEquals(Calendar.AUGUST, c.get(Calendar.MONTH));
+        assertEquals(17, c.get(Calendar.DAY_OF_MONTH));
+        assertEquals(Calendar.SUNDAY, c.get(Calendar.DAY_OF_WEEK));
+        assertEquals(7, c.get(Calendar.HOUR_OF_DAY));
+        assertEquals(12, c.get(Calendar.MINUTE));
+        assertEquals(55, c.get(Calendar.SECOND));
+    }
 
     protected void setUp() {
         defaultLocale = Locale.getDefault();

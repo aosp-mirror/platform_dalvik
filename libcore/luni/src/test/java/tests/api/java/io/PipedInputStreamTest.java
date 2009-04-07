@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
-import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -415,7 +414,6 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
         method = "receive",
         args = {int.class}
     )
-    @BrokenTest("Test hangs indefinitely on the RI")
     public void test_receive() throws IOException {
         pis = new PipedInputStream();
         pos = new PipedOutputStream();
@@ -431,8 +429,9 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
             public void run() {
                 try {
                     pos.write(1);
-                    while (readerAlive)
-                        ;
+                    while (readerAlive) {
+                        Thread.sleep(100);
+                    }
                     try {
                         // should throw exception since reader thread
                         // is now dead
@@ -440,7 +439,11 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
                     } catch (IOException e) {
                         pass = true;
                     }
-                } catch (IOException e) {}
+                } catch (IOException e) {
+                    // ignore
+                } catch (InterruptedException e) {
+                    // ignore
+                }
             }
         }
         WriteRunnable writeRunnable = new WriteRunnable();

@@ -17,6 +17,7 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
@@ -914,15 +915,14 @@ public class SerializationStressTest0 extends SerializationStressTest {
                 fail("ClassNotFoundException serializing data : " + e.getMessage());
             }
         }
-
+        
         @TestTargetNew(
             level = TestLevel.COMPLETE,
             notes = "Verifies serialization.",
             method = "!Serialization",
             args = {}
         )
-        @BrokenTest("Needs investigation. succeeds on android, fails on RI")
-        public void test_2_writeReplace() {
+        public void test_2_writeReplace_01() {
             try {
                 boolean exception = false;
                 try {
@@ -931,20 +931,60 @@ public class SerializationStressTest0 extends SerializationStressTest {
                     exception = true;
                 }
                 assertTrue("Should throw ObjectStreamException", exception);
-                exception = false;
+            } catch (IOException e) {
+                fail("IOException serializing data : " + e.getMessage());
+            }
+        }
+        
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "Verifies serialization.",
+                method = "!Serialization",
+                args = {}
+            )
+        public void test_2_writeReplace_02() {
+            try {
+                boolean exception = false;
                 try {
                     oos.writeObject(new WriteReplaceTestF(1, -1));
                 } catch (RuntimeException e) {
                     exception = true;
                 }
                 assertTrue("Should throw RuntimeException", exception);
-                exception = false;
+            } catch (IOException e) {
+                fail("IOException serializing data : " + e.getMessage());
+            }
+        }
+        
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "Verifies serialization.",
+                method = "!Serialization",
+                args = {}
+            )
+        public void test_2_writeReplace_03() {
+            try {
+                boolean exception = false;
                 try {
                     oos.writeObject(new WriteReplaceTestF(2, -1));
                 } catch (Error e) {
                     exception = true;
                 }
                 assertTrue("Should throw Error", exception);
+            } catch (IOException e) {
+                fail("IOException serializing data : " + e.getMessage());
+            }
+        }
+        
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "Verifies serialization.",
+                method = "!Serialization",
+                args = {}
+            )
+        public void test_2_writeReplace_04() {
+            try {
+                boolean exception = false;
 
                 oos.writeObject(new WriteReplaceTestF(3, 0));
                 oos.writeObject(new WriteReplaceTestF(3, 1));
@@ -959,16 +999,11 @@ public class SerializationStressTest0 extends SerializationStressTest {
                 ois = new ObjectInputStream(loadStream());
                 try {
                     ois.readObject();
-                } catch (WriteAbortedException e) {
-                }
-
-                exception = false;
-                try {
-                    ois.readObject();
-                } catch (ObjectStreamException e) {
+                } catch (InvalidObjectException e) {
                     exception = true;
                 }
-                assertTrue("Expected ObjectStreamException", exception);
+                assertTrue("Expected InvalidObjectException", exception);
+
                 exception = false;
                 try {
                     ois.readObject();

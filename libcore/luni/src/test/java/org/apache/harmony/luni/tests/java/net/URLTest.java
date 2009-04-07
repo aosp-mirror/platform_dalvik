@@ -583,7 +583,7 @@ public class URLTest extends TestCase {
      * Test method for {@link java.net.URL#openConnection(java.net.Proxy)}.
      */
     @TestTargetNew(
-        level = TestLevel.NOT_FEASIBLE,
+        level = TestLevel.COMPLETE,
         notes = "See ExcludedProxyTest.",
         method = "openConnection",
         args = {java.net.Proxy.class}

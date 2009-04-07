@@ -20,6 +20,7 @@ import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.BrokenTest;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;

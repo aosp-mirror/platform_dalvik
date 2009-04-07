@@ -37,13 +37,8 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
 
     LinkedHashSet hs;
 
-    static Object[] objArray;
-    {
-        objArray = new Object[1000];
-        for (int i = 0; i < objArray.length; i++)
-            objArray[i] = new Integer(i);
-    }
-
+    Object[] objArray;
+    
     /**
      * @tests java.util.LinkedHashSet#LinkedHashSet()
      */
@@ -431,6 +426,10 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
      * is called before a test is executed.
      */
     protected void setUp() {
+        objArray = new Object[1000];
+        for (int i = 0; i < objArray.length; i++)
+            objArray[i] = new Integer(i);
+
         hs = new LinkedHashSet();
         for (int i = 0; i < objArray.length; i++)
             hs.add(objArray[i]);
@@ -442,5 +441,7 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
+        objArray = null;
+        hs = null;
     }
 }
