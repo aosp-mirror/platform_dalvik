@@ -45,18 +45,10 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
 
     final static int hmSize = 1000;
 
-    static Object[] objArray;
+    Object[] objArray;
 
-    static Object[] objArray2;
-    {
-        objArray = new Object[hmSize];
-        objArray2 = new Object[hmSize];
-        for (int i = 0; i < objArray.length; i++) {
-            objArray[i] = new Integer(i);
-            objArray2[i] = objArray[i].toString();
-        }
-    }
-
+    Object[] objArray2;
+    
     static final class CacheMap extends LinkedHashMap {
         protected boolean removeEldestEntry(Map.Entry e) {
             return size() > 5;
@@ -823,6 +815,13 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
      * is called before a test is executed.
      */
     protected void setUp() {
+        objArray = new Object[hmSize];
+        objArray2 = new Object[hmSize];
+        for (int i = 0; i < objArray.length; i++) {
+            objArray[i] = new Integer(i);
+            objArray2[i] = objArray[i].toString();
+        }
+
         hm = new LinkedHashMap();
         for (int i = 0; i < objArray.length; i++)
             hm.put(objArray2[i], objArray[i]);
@@ -835,5 +834,8 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
+        objArray = null;
+        objArray2 = null;
+        hm = null;
     }
 }

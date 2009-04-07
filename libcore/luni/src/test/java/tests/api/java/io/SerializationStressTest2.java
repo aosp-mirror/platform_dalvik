@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
+@SuppressWarnings("serial")
 @TestTargetClass(Serializable.class) 
 public class SerializationStressTest2 extends SerializationStressTest {
 
@@ -145,7 +146,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
 
         private void readObject(java.io.ObjectInputStream in)
                 throws java.io.IOException, ClassNotFoundException {
-            ObjectInputStream.GetField fields = in.readFields();
+            in.readFields();
         }
 
         private void writeObject(java.io.ObjectOutputStream out)
@@ -166,12 +167,12 @@ public class SerializationStressTest2 extends SerializationStressTest {
 
         private void readObject(java.io.ObjectInputStream in)
                 throws java.io.IOException, ClassNotFoundException {
-            ObjectInputStream.GetField fields = in.readFields();
+            in.readFields();
         }
 
         private void writeObject(java.io.ObjectOutputStream out)
                 throws java.io.IOException, ClassNotFoundException {
-            ObjectOutputStream.PutField fields = out.putFields();
+            out.putFields();
             out.writeFields();
         }
     }
@@ -182,6 +183,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
     // does not consume. Have to make sure we can load object properly AND
     // object after it (to show the extra byte[] is consumed)
     private static class OptionalDataNotRead implements java.io.Serializable {
+        @SuppressWarnings("unused")
         private int field1, field2;
 
         public OptionalDataNotRead() {
@@ -258,7 +260,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
         }
 
         protected Object replaceObject(Object obj) throws IOException {
-            Class objClass = obj.getClass();
+            Class<?> objClass = obj.getClass();
             if (objClass == String.class)
                 calledStringReplacement = true;
 
@@ -408,7 +410,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
 
             InitializerFieldsTest inst = (InitializerFieldsTest) obj;
             return inst.toBeSerialized.equals(this.toBeSerialized)
-                    && inst.toBeNotSerialized.equals(this.toBeNotSerialized2);
+                    && InitializerFieldsTest.toBeNotSerialized.equals(InitializerFieldsTest.toBeNotSerialized2);
         }
     }
 
@@ -450,7 +452,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
                     && inst.toBeSerialized3.equals(this.toBeSerialized3)
                     && inst.toBeSerialized4.equals(this.toBeSerialized4)
                     && inst.toBeSerialized5.equals(this.toBeSerialized5)
-                    && inst.toBeNotSerialized.equals(this.toBeNotSerialized2);
+                    && InitializerFieldsTest2.toBeNotSerialized.equals(InitializerFieldsTest2.toBeNotSerialized2);
         }
     }
 
@@ -496,8 +498,8 @@ public class SerializationStressTest2 extends SerializationStressTest {
                             .equals(this.sub_toBeSerialized4)
                     && inst.sub_toBeSerialized5
                             .equals(this.sub_toBeSerialized5)
-                    && inst.sub_toBeNotSerialized
-                            .equals(this.sub_toBeNotSerialized2);
+                    && InitializerFieldsTest3.sub_toBeNotSerialized
+                            .equals(InitializerFieldsTest3.sub_toBeNotSerialized2);
         }
     }
 
@@ -799,7 +801,8 @@ public class SerializationStressTest2 extends SerializationStressTest {
             // replace or supplement this.
             // NOTE: if two objects are equal (equals Object) returns true) they
             // must have the same hash code
-            Class[] c = { String.class }; // *** synthetic field
+            @SuppressWarnings("unused")
+            Class<?>[] c = { String.class }; // *** synthetic field
             return super.hashCode();
         }
     }
@@ -815,7 +818,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             java.io.IOException ex = new java.io.WriteAbortedException(FOO,
@@ -823,7 +825,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
             objToSave = ex;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Has to be able to save/load an exception
             assertTrue(MSG_TEST_FAILED + objToSave, true);
 
@@ -851,7 +853,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             WithUnmatchingSerialPersistentFields spf = new WithUnmatchingSerialPersistentFields();
@@ -860,7 +861,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
                 System.out.println("Obj = " + objToSave);
             boolean causedException = false;
             try {
-                objLoaded = dumpAndReload(objToSave);
+                dumpAndReload(objToSave);
             } catch (InvalidClassException ce) {
                 causedException = true;
             }
@@ -967,7 +968,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             WriteFieldsWithoutFetchingPutFields spf = new WriteFieldsWithoutFetchingPutFields();
@@ -976,7 +976,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
                 System.out.println("Obj = " + objToSave);
             boolean causedException = false;
             try {
-                objLoaded = dumpAndReload(objToSave);
+                dumpAndReload(objToSave);
             } catch (NotActiveException ce) {
                 causedException = true;
             }
@@ -1006,13 +1006,12 @@ public class SerializationStressTest2 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             objToSave = SerialPersistentFields.class; // Test for 1FA7TA6
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Has to be able to save/load an exception
             assertTrue(MSG_TEST_FAILED + objToSave, true);
 
@@ -1040,7 +1039,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             objToSave = ObjectStreamClass.lookup(SerialPersistentFields.class); // Test
@@ -1048,7 +1046,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
             // 1FA7TA6
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Has to be able to save/load an exception
             assertTrue(MSG_TEST_FAILED + objToSave, true);
 
@@ -1230,7 +1228,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
 
         try {
 
-            ArrayList list = new ArrayList(Arrays.asList(new String[] { "a",
+            ArrayList<String> list = new ArrayList<String>(Arrays.asList(new String[] { "a",
                     "list", "of", "strings" }));
             objToSave = list;
             if (DEBUG)
@@ -1238,6 +1236,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
             objLoaded = dumpAndReload(objToSave);
             // Has to have worked
             assertTrue(MSG_TEST_FAILED + objToSave, true);
+            assertNotNull(objLoaded);
 
         } catch (IOException e) {
             fail("IOException serializing " + objToSave + " : "
@@ -1273,6 +1272,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
             objLoaded = dumpAndReload(objToSave);
             // Has to have worked
             assertTrue(MSG_TEST_FAILED + objToSave, true);
+            assertNotNull(objLoaded);
 
         } catch (IOException e) {
             fail("IOException serializing " + objToSave + " : "
@@ -1425,7 +1425,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             ByteArrayOutputStream out;
@@ -1464,7 +1463,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             ByteArrayOutputStream out;
@@ -1503,7 +1501,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             ByteArrayOutputStream out;
@@ -1542,7 +1539,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             ByteArrayOutputStream out;
@@ -1591,6 +1587,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
             objLoaded = dumpAndReload(objToSave);
             // Has to have worked
             assertTrue(MSG_TEST_FAILED + objToSave, true);
+            assertNotNull(objLoaded);
 
         } catch (IOException e) {
             fail("IOException serializing " + objToSave + " : "
@@ -2396,7 +2393,7 @@ public class SerializationStressTest2 extends SerializationStressTest {
             try {
                 ObjectInputStream ois = new ObjectInputStream(
                         new ByteArrayInputStream(out.toByteArray()));
-                Object obj = ois.readObject();
+                ois.readObject();
             } catch (OptionalDataException e) {
                 lengthRead = e.length;
             }

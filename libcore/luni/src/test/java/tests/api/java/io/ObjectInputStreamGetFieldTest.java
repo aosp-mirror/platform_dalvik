@@ -64,9 +64,9 @@ public class ObjectInputStreamGetFieldTest extends junit.framework.TestCase {
     private ObjectInputStream ois = null;
     
     private final String FILENAME = 
-            "tests/api/java/io/testFields.ser";
+            "/tests/api/java/io/testFields.ser";
     private final String DEFAULTED_FILENAME = 
-            "tests/api/java/io/testFieldsDefaulted.ser";
+            "/tests/api/java/io/testFieldsDefaulted.ser";
 
     public boolean booleanValue;
     public byte byteValue;
@@ -386,7 +386,7 @@ public class ObjectInputStreamGetFieldTest extends junit.framework.TestCase {
             ois.close();
         }
         ois = new ObjectInputStream(
-                    ClassLoader.getSystemResourceAsStream(fileName));
+                    getClass().getResourceAsStream(fileName));
     }
     
     protected void tearDown() throws Exception {
