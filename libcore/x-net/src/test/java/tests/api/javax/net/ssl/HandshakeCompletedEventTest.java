@@ -662,7 +662,7 @@ public class HandshakeCompletedEventTest extends TestCase {
      * Implements basically a dummy TrustManager. It stores the certificate
      * chain it sees, so it can later be queried.
      */
-    static class TestTrustManager implements X509TrustManager {
+    public static class TestTrustManager implements X509TrustManager {
         
         private X509Certificate[] chain;
         
