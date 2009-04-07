@@ -42,84 +42,65 @@ public class DeleteFunctionalityTest extends TestCase {
 
     private static Statement statement = null;
 
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
         super.setUp();
+        Support_SQL.loadDriver();
+        conn = Support_SQL.getConnection();
+        statement = conn.createStatement();
+        createTestTables();
         DatabaseCreator.fillParentTable(conn);
     }
 
-    protected void tearDown() throws Exception {
-        statement.execute("DELETE FROM " + DatabaseCreator.FKSTRICT_TABLE);
-        statement.execute("DELETE FROM " + DatabaseCreator.FKCASCADE_TABLE);
-        statement.execute("DELETE FROM " + DatabaseCreator.PARENT_TABLE);
-        statement.execute("DELETE FROM " + DatabaseCreator.TEST_TABLE5);
+    public void tearDown() throws Exception {
+    	deleteTestTables();
+        statement.close();
+        conn.close();
         super.tearDown();
     }
 
-    public static Test suite() {
-        TestSetup setup = new TestSetup(new TestSuite(
-                DeleteFunctionalityTest.class)) {
-            protected void setUp() throws Exception {
-                Support_SQL.loadDriver();
-                try {
-                    conn = Support_SQL.getConnection();
-                    statement = conn.createStatement();
-                    createTestTables();
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
-                }
-            }
 
-            protected void tearDown() throws Exception {
-                deleteTestTables();
-                statement.close();
-                conn.close();
-            }
+    public void createTestTables() {
+        try {
+            DatabaseMetaData meta = conn.getMetaData();
+            ResultSet userTab = meta.getTables(null, null, null, null);
 
-            private void createTestTables() {
-                try {
-                    DatabaseMetaData meta = conn.getMetaData();
-                    ResultSet userTab = meta.getTables(null, null, null, null);
-
-                    while (userTab.next()) {
-                        String tableName = userTab.getString("TABLE_NAME");
-                        if (tableName.equals(DatabaseCreator.PARENT_TABLE)) {
-                            statement
-                                    .execute(DatabaseCreator.DROP_TABLE_PARENT);
-                        } else if (tableName
-                                .equals(DatabaseCreator.FKCASCADE_TABLE)) {
-                            statement
-                                    .execute(DatabaseCreator.DROP_TABLE_FKCASCADE);
-                        } else if (tableName
-                                .equals(DatabaseCreator.FKSTRICT_TABLE)) {
-                            statement
-                                    .execute(DatabaseCreator.DROP_TABLE_FKSTRICT);
-                        } else if (tableName
-                                .equals(DatabaseCreator.TEST_TABLE5)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE5);
-                        }
-                    }
-                    userTab.close();
-                    statement.execute(DatabaseCreator.CREATE_TABLE_PARENT);
-                    statement.execute(DatabaseCreator.CREATE_TABLE_FKSTRICT);
-                    statement.execute(DatabaseCreator.CREATE_TABLE_FKCASCADE);
-                    statement.execute(DatabaseCreator.CREATE_TABLE5);
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
-                }
-            }
-
-            private void deleteTestTables() {
-                try {
-                    statement.execute(DatabaseCreator.DROP_TABLE_FKCASCADE);
-                    statement.execute(DatabaseCreator.DROP_TABLE_FKSTRICT);
-                    statement.execute(DatabaseCreator.DROP_TABLE_PARENT);
+            while (userTab.next()) {
+                String tableName = userTab.getString("TABLE_NAME");
+                if (tableName.equals(DatabaseCreator.PARENT_TABLE)) {
+                    statement
+                            .execute(DatabaseCreator.DROP_TABLE_PARENT);
+                } else if (tableName
+                        .equals(DatabaseCreator.FKCASCADE_TABLE)) {
+                    statement
+                            .execute(DatabaseCreator.DROP_TABLE_FKCASCADE);
+                } else if (tableName
+                        .equals(DatabaseCreator.FKSTRICT_TABLE)) {
+                    statement
+                            .execute(DatabaseCreator.DROP_TABLE_FKSTRICT);
+                } else if (tableName
+                        .equals(DatabaseCreator.TEST_TABLE5)) {
                     statement.execute(DatabaseCreator.DROP_TABLE5);
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
                 }
             }
-        };
-        return setup;
+            userTab.close();
+            statement.execute(DatabaseCreator.CREATE_TABLE_PARENT);
+            statement.execute(DatabaseCreator.CREATE_TABLE_FKSTRICT);
+            statement.execute(DatabaseCreator.CREATE_TABLE_FKCASCADE);
+            statement.execute(DatabaseCreator.CREATE_TABLE5);
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
+    }
+
+    public void deleteTestTables() {
+        try {
+            statement.execute(DatabaseCreator.DROP_TABLE_FKCASCADE);
+            statement.execute(DatabaseCreator.DROP_TABLE_FKSTRICT);
+            statement.execute(DatabaseCreator.DROP_TABLE_PARENT);
+            statement.execute(DatabaseCreator.DROP_TABLE5);
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
     }
 
     /**
