@@ -17,15 +17,7 @@
 
 package tests.api.javax.net.ssl;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -40,15 +32,20 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLContextSpi;
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLSessionContext;
 import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSessionContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+import junit.framework.TestCase;
+
 import org.apache.harmony.security.tests.support.SpiEngUtils;
 import org.apache.harmony.xnet.tests.support.MySSLContextSpi;
-import junit.framework.TestCase;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 /**
  * Tests for <code>SSLContext</code> class constructors and methods.
@@ -108,7 +105,8 @@ public class SSLContext1Test extends TestCase {
         args = {javax.net.ssl.SSLContextSpi.class, java.security.Provider.class, java.lang.String.class}
     )
     public void test_ConstructorLjavax_net_ssl_SSLContextSpiLjava_security_ProviderLjava_lang_String()
-        throws KeyManagementException {
+        throws NoSuchAlgorithmException,
+            KeyManagementException {
         if (!DEFSupported) {
             fail(NotSupportMsg);
             return;
@@ -116,22 +114,24 @@ public class SSLContext1Test extends TestCase {
         SSLContextSpi spi = new MySSLContextSpi();
         SSLContext sslContext = new mySSLContext(spi, defaultProvider,
                 defaultProtocol);
-        assertNotNull("Not CertStore object", sslContext);
-        assertEquals("Incorrect protocol", defaultProtocol,
-                sslContext.getProtocol());
-        assertEquals("Incorrect provider", defaultProvider,
-                sslContext.getProvider());
+        assertTrue("Not CertStore object", sslContext instanceof SSLContext);
+        assertEquals("Incorrect protocol", sslContext.getProtocol(),
+                defaultProtocol);
+        assertEquals("Incorrect provider", sslContext.getProvider(),
+                defaultProvider);
         TrustManager[] tm = null;
         KeyManager[] km = null;
         sslContext.init(km, tm, new SecureRandom());
+        assertTrue(sslContext.createSSLEngine() instanceof SSLEngine);
+        assertTrue(sslContext.createSSLEngine("host host", 8888) instanceof SSLEngine);
         try {
             sslContext.init(km, tm, null);
             fail("KeyManagementException should be thrown for null SEcureRandom");
         } catch (KeyManagementException e) {
-            // expected
         }
 
         sslContext = new mySSLContext(null, null, null);
+        assertTrue("Not CertStore object", sslContext instanceof SSLContext);
         assertNull("Incorrect protocol", sslContext.getProtocol());
         assertNull("Incorrect provider", sslContext.getProvider());
         try {
@@ -191,6 +191,7 @@ public class SSLContext1Test extends TestCase {
      * Test for <code>getClientSessionContext()</code>
      * <code>getServiceSessionContext()</code>
      * methods Assertion: returns correspondent object
+     * @throws KeyManagementException 
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
@@ -198,8 +199,7 @@ public class SSLContext1Test extends TestCase {
         method = "getClientSessionContext",
         args = {}
     )
-    @KnownFailure("Works on RI but throws NPE on Android, maybe related to SSLSessionContextTest issues")
-    public void test_getClientSessionContext() {
+    public void test_getClientSessionContext() throws NoSuchAlgorithmException, KeyManagementException {
         if (!DEFSupported) {
             fail(NotSupportMsg);
             return;
@@ -207,10 +207,11 @@ public class SSLContext1Test extends TestCase {
         SSLContext[] sslC = createSSLCon();
         assertNotNull("SSLContext objects were not created", sslC);
         for (int i = 0; i < sslC.length; i++) {
-            assertNotNull("Client session is incorrectly instantiated", 
-                    sslC[i].getClientSessionContext());
-            assertNotNull("Server session is incorrectly instantiated", 
-                    sslC[i].getServerSessionContext());
+            sslC[i].init(null, null, null);
+            assertTrue("Client session is incorrectly instantiated: " + i + " ", 
+                    sslC[i].getClientSessionContext() instanceof SSLSessionContext);
+            assertTrue("Server session is incorrectly instantiated", 
+                    sslC[i].getServerSessionContext() instanceof SSLSessionContext);
         }
     }
 
@@ -220,7 +221,7 @@ public class SSLContext1Test extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
-        notes = "checks valid protocol values",
+        notes = "",
         method = "getInstance",
         args = {java.lang.String.class}
     )
@@ -232,9 +233,10 @@ public class SSLContext1Test extends TestCase {
         SSLContext sslContext;
         for (int i = 0; i < validValues.length; i++) {
             sslContext = SSLContext.getInstance(validValues[i]);
-            assertNotNull("Not SSLContext object", sslContext);
-            assertEquals("Invalid protocol", validValues[i],
-                    sslContext.getProtocol());
+            assertTrue("Not SSLContext object",
+                    sslContext instanceof SSLContext);
+            assertEquals("Invalid protocol", sslContext.getProtocol(),
+                    validValues[i]);
         }
     }
 
@@ -245,14 +247,14 @@ public class SSLContext1Test extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
-        notes = "checks invalid protocol values",
+        notes = "",
         method = "getInstance",
         args = {java.lang.String.class}
     )
     public void test_getInstanceLjava_lang_String02() {
         try {
             SSLContext.getInstance(null);
-            fail("NoSuchAlgorithmException or NullPointerException should be thrown (protocol is null)");
+            fail("NoSuchAlgorithmException or NullPointerException should be thrown (protocol is null");
         } catch (NoSuchAlgorithmException e) {
         } catch (NullPointerException e) {
         }
