@@ -904,12 +904,13 @@ public class Pattern2Test extends TestCase {
     }
     @TestTargetNew(
         level = TestLevel.ADDITIONAL,
-        notes = "TODO empty test",
+        notes = "",
         method = "!",
         args = {}
     )
-    @BrokenTest("empty test")
     public void testUnicodeCategories() throws PatternSyntaxException {
+        Pattern p;
+        Matcher m;
         // Test Unicode categories using \p and \P
         // One letter codes: L, M, N, P, S, Z, C
         // Two letter codes: Lu, Nd, Sc, Sm, ...
@@ -920,8 +921,6 @@ public class Pattern2Test extends TestCase {
 
         // Test \p{N}
         // TODO
-
-        // ... etc
 
         // Test two letter codes:
         // From unicode.org:
@@ -955,6 +954,67 @@ public class Pattern2Test extends TestCase {
         // Cs
         // Co
         // Cn
+        
+        
+        
+        // TODO add more tests per category
+        String[][] tests = new String[][] { 
+            //{"Cc", "\u0000", "-\u0041"}, 
+            {"Cf", "\u202B"},
+            {"Co", "\uE000"},
+            {"Cs", "\uD800"},
+            {"Ll","a", "b", "x", "y", "z", "-A", "-Z"},
+            {"Lm","\u02B9"},
+            {"Lu","B", "C", "-c"},
+            {"Lo","\u05E2"},
+            {"Lt","\u01C5"},
+            {"Mc","\u0903"},
+            {"Me","\u06DE"},
+            {"Mn","\u0300"},
+            {"Nd","\u0030"},
+            {"Nl","\u2164"},
+            {"No","\u0BF0"},
+           // {"Pc","\u30FB"},
+            {"Pd","\u2015"},
+            {"Pe","\u207E"},
+            {"Po","\u00B7"},
+            {"Ps","\u0F3C"},
+            {"Sc","\u20A0"},
+            {"Sk","\u00B8"},
+            {"Sm","\u002B"},
+            {"So","\u0B70"},
+            {"Zl","\u2028"},
+            // {"Pi","\u200C"},
+            {"Zp","\u2029"}
+           
+            };
+        
+        for (int i=0; i < tests.length; i++) {
+            String[] tc = tests[i];
+            String cat = tc[0];
+            String pa = "{"+cat+"}";
+            String pat = "\\p"+pa;
+            String npat = "\\P"+pa;
+            p = Pattern.compile(pat);
+            Pattern pn = Pattern.compile(npat);
+            for (int j = 1; j < tc.length; j++) {
+                String t = tc[j];
+                boolean invert = t.startsWith("-");
+                if (invert) { 
+                    // test negative case, expected to fail
+                    t = t.substring(1);
+                }
+                boolean suc = p.matcher(t).matches() ^ invert;
+                boolean fail = pn.matcher(t).matches() ^ invert ;
+                assertTrue("expected '"+t+"' to be matched " +
+                        "by pattern '"+pat, suc);
+                assertFalse("expected '"+t+"' to  " +
+                        "not be matched by pattern '"+npat, fail);
+                
+            }
+        }
+        
+       
     }
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
@@ -1033,18 +1093,37 @@ public class Pattern2Test extends TestCase {
     }
     @TestTargetNew(
         level = TestLevel.ADDITIONAL,
-        notes = "TODO empty test",
+        notes = "",
         method = "!",
         args = {}
     )
-    @BrokenTest("empty test")
     public void testCapturingGroups() throws PatternSyntaxException {
+        Pattern p;
+        Matcher m;
+        
         // Test simple capturing groups
-        // TODO
+        p = Pattern.compile("(a+)b");
+        m = p.matcher("aaaaaaaab");
+        assertTrue(m.matches());
+        assertEquals(1, m.groupCount());
+        assertEquals("aaaaaaaa", m.group(1));
+        
+        p = Pattern.compile("((an)+)((as)+)");
+        m = p.matcher("ananas");
+        assertTrue(m.matches());
+        assertEquals(4, m.groupCount());
+        assertEquals("anan",m.group(1));
+        assertEquals("an",m.group(2));
+        assertEquals("as",m.group(3));
+        assertEquals("as",m.group(4));
 
         // Test grouping without capture (?:...)
-        // TODO
-
+        p = Pattern.compile("(?:(?:an)+)(as)");
+        m = p.matcher("ananas");
+        assertTrue(m.matches());
+        assertEquals(1, m.groupCount());
+        assertEquals("as", m.group(1));
+        
         // Test combination of grouping and capture
         // TODO
 
@@ -1052,27 +1131,71 @@ public class Pattern2Test extends TestCase {
         // TODO
 
         // Test \<num> with <num> out of range
-        // TODO
+        p = Pattern.compile("((an)+)as\\1");
+        m = p.matcher("ananasanan");
+        assertTrue(m.matches());
+        
+        try {
+            p = Pattern.compile("((an)+)as\\4");
+            fail("expected PatternSyntaxException");
+        } catch (PatternSyntaxException pse) {
+            // expected
+        }
+        
     }
     @TestTargetNew(
         level = TestLevel.ADDITIONAL,
-        notes = "TODO empty test",
+        notes = "",
         method = "!",
         args = {}
     )
-    @BrokenTest("empty test")
     public void testRepeats() {
+        Pattern p;
+        Matcher m;
+        
         // Test ?
-        // TODO
-
+        p = Pattern.compile("(abc)?c");
+        m = p.matcher("abcc");
+        assertTrue(m.matches());
+        m = p.matcher("c");
+        assertTrue(m.matches());
+        m = p.matcher("cc");
+        assertFalse(m.matches());
+        m = p.matcher("abcabcc");
+        assertFalse(m.matches());
+        
         // Test *
-        // TODO
+        p = Pattern.compile("(abc)*c");
+        m = p.matcher("abcc");
+        assertTrue(m.matches());
+        m = p.matcher("c");
+        assertTrue(m.matches());
+        m = p.matcher("cc");
+        assertFalse(m.matches());
+        m = p.matcher("abcabcc");
+        assertTrue(m.matches());
 
         // Test +
-        // TODO
+        p = Pattern.compile("(abc)+c");
+        m = p.matcher("abcc");
+        assertTrue(m.matches());
+        m = p.matcher("c");
+        assertFalse(m.matches());
+        m = p.matcher("cc");
+        assertFalse(m.matches());
+        m = p.matcher("abcabcc");
+        assertTrue(m.matches());
 
         // Test {<num>}, including 0, 1 and more
-        // TODO
+        p = Pattern.compile("(abc){2}c");
+        m = p.matcher("abcc");
+        assertFalse(m.matches());
+        m = p.matcher("c");
+        assertFalse(m.matches());
+        m = p.matcher("cc");
+        assertFalse(m.matches());
+        m = p.matcher("abcabcc");
+        assertTrue(m.matches());
 
         // Test {<num>,}, including 0, 1 and more
         // TODO
@@ -1082,14 +1205,22 @@ public class Pattern2Test extends TestCase {
     }
     @TestTargetNew(
         level = TestLevel.ADDITIONAL,
-        notes = "TODO empty test",
+        notes = "",
         method = "!",
         args = {}
     )
-    @BrokenTest("empty test")
     public void testAnchors() throws PatternSyntaxException {
+        Pattern p;
+        Matcher m;
+        
         // Test ^, default and MULTILINE
-        // TODO
+        p = Pattern.compile("^abc\\n^abc", Pattern.MULTILINE);
+        m = p.matcher("abc\nabc");
+        assertTrue(m.matches());
+
+        p = Pattern.compile("^abc\\n^abc");
+        m = p.matcher("abc\nabc");
+        assertFalse(m.matches());
 
         // Test $, default and MULTILINE
         // TODO
