@@ -41,20 +41,6 @@ import junit.framework.TestCase;
 public class DriverPropertyInfoTest extends TestCase {
 
     /*
-     * Public statics test
-     */
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Empty test",
-        method = "!",
-        args = {}
-    )
-    @BrokenTest("empty")
-    public void testPublicStatics() {
-
-    } // end method testPublicStatics
-
-    /*
      * Constructor test
      */
     @TestTargetNew(
