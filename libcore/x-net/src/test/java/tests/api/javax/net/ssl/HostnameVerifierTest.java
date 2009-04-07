@@ -20,6 +20,7 @@ package tests.api.javax.net.ssl;
 import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
+import dalvik.annotation.SideEffect;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -56,7 +57,7 @@ public class HostnameVerifierTest extends TestCase implements
         method = "verify",
         args = {String.class, SSLSession.class}
     )
-    @BrokenTest("Some side effect from other tests seems to make this test fail.")
+    @SideEffect("the DefaultHostnameVerifier is set in some other tests, therefore we need isolation")
     public final void test_verify() {
         mySSLSession session = new mySSLSession("localhost", 1080, null);
         HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
@@ -75,7 +76,7 @@ public class HostnameVerifierTest extends TestCase implements
         args = {String.class, SSLSession.class}
     )
     @AndroidOnly("DefaultHostnameVerifier on RI is weird and cannot be tested this way.")
-    @KnownFailure("DefaultHostnameVerifier is broken on Android, fixed in donutburger")
+    @SideEffect("the DefaultHostnameVerifier is set in some other tests, therefore we need isolation")
     public void testVerify() throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         InputStream in;
@@ -185,6 +186,7 @@ public class HostnameVerifierTest extends TestCase implements
     )
     @AndroidOnly("DefaultHostnameVerifier on RI is weird and cannot be tested this way.")
     @KnownFailure("DefaultHostnameVerifier is broken on Android, fixed in donutburger")
+    @SideEffect("the DefaultHostnameVerifier is set in some other tests, therefore we need isolation")
     public void testSubjectAlt() throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         InputStream in = new ByteArrayInputStream(X509_MULTIPLE_SUBJECT_ALT);
