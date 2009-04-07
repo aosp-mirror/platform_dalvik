@@ -17,7 +17,6 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
-import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargets;

@@ -50,81 +50,71 @@ public class MultiThreadAccessTest extends TestCase {
 
     private ThreadPool threadPool;
 
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
+    	super.setUp();
+        Support_SQL.loadDriver();
+        try {
+            conn = Support_SQL.getConnection();
+            statement = conn.createStatement();
+            createTestTables();
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
         threadPool = new ThreadPool(numThreads);
     }
 
-    protected void tearDown() throws Exception {
-        threadPool.join();
+    public void tearDown() throws Exception {
+    	threadPool.join();
+        deleteTestTables();
+        conn.close();
+        statement.close();
+        super.tearDown();
     }
 
-    public static Test suite() {
-        TestSetup setup = new TestSetup(new TestSuite(
-                MultiThreadAccessTest.class)) {
-            protected void setUp() throws Exception {
-                Support_SQL.loadDriver();
-                try {
-                    conn = Support_SQL.getConnection();
-                    statement = conn.createStatement();
-                    createTestTables();
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
-                }
-            }
+    public void createTestTables() {
+        try {
+            ResultSet userTab = conn.getMetaData().getTables(null,
+                    null, null, null);
 
-            protected void tearDown() throws Exception {
-                deleteTestTables();
-                conn.close();
-                statement.close();
-            }
-
-            private void createTestTables() {
-                try {
-                    ResultSet userTab = conn.getMetaData().getTables(null,
-                            null, null, null);
-
-                    while (userTab.next()) {
-                        String tableName = userTab.getString("TABLE_NAME");
-                        if (tableName.equals(DatabaseCreator.TEST_TABLE1)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE1);
-                        } else if (tableName
-                                .equals(DatabaseCreator.TEST_TABLE2)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE2);
-                        } else if (tableName
-                                .equals(DatabaseCreator.TEST_TABLE4)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE4);
-                        } else if (tableName
-                                .equals(DatabaseCreator.TEST_TABLE3)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE3);
-                        }
-                    }
-
-                    userTab.close();
-                    statement.execute(DatabaseCreator.CREATE_TABLE3);
-                    statement.execute(DatabaseCreator.CREATE_TABLE4);
-                    statement.execute(DatabaseCreator.CREATE_TABLE1);
-                    statement.execute(DatabaseCreator.CREATE_TABLE2);
-
-                    DatabaseCreator.fillTestTable1(conn, numOfRecords);
-                    DatabaseCreator.fillTestTable2(conn, numOfRecords);
-                    DatabaseCreator.fillTestTable4(conn, numOfRecords);
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
-                }
-            }
-
-            private void deleteTestTables() {
-                try {
+            while (userTab.next()) {
+                String tableName = userTab.getString("TABLE_NAME");
+                if (tableName.equals(DatabaseCreator.TEST_TABLE1)) {
                     statement.execute(DatabaseCreator.DROP_TABLE1);
+                } else if (tableName
+                        .equals(DatabaseCreator.TEST_TABLE2)) {
                     statement.execute(DatabaseCreator.DROP_TABLE2);
-                    statement.execute(DatabaseCreator.DROP_TABLE3);
+                } else if (tableName
+                        .equals(DatabaseCreator.TEST_TABLE4)) {
                     statement.execute(DatabaseCreator.DROP_TABLE4);
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
+                } else if (tableName
+                        .equals(DatabaseCreator.TEST_TABLE3)) {
+                    statement.execute(DatabaseCreator.DROP_TABLE3);
                 }
             }
-        };
-        return setup;
+
+            userTab.close();
+            statement.execute(DatabaseCreator.CREATE_TABLE3);
+            statement.execute(DatabaseCreator.CREATE_TABLE4);
+            statement.execute(DatabaseCreator.CREATE_TABLE1);
+            statement.execute(DatabaseCreator.CREATE_TABLE2);
+
+            DatabaseCreator.fillTestTable1(conn, numOfRecords);
+            DatabaseCreator.fillTestTable2(conn, numOfRecords);
+            DatabaseCreator.fillTestTable4(conn, numOfRecords);
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
+    }
+
+    public void deleteTestTables() {
+        try {
+            statement.execute(DatabaseCreator.DROP_TABLE1);
+            statement.execute(DatabaseCreator.DROP_TABLE2);
+            statement.execute(DatabaseCreator.DROP_TABLE3);
+            statement.execute(DatabaseCreator.DROP_TABLE4);
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
     }
 
     /**

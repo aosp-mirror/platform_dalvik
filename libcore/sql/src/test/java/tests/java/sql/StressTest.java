@@ -16,7 +16,6 @@
 
 package tests.java.sql;
 
-import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -25,7 +24,6 @@ import dalvik.annotation.TestTargetNew;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,10 +36,7 @@ import java.util.logging.Logger;
 import tests.support.DatabaseCreator;
 import tests.support.Support_SQL;
 import tests.support.ThreadPool;
-import junit.extensions.TestSetup;
-import junit.framework.Test;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 @TestTargetClass(Statement.class)
 public class StressTest extends TestCase {
@@ -50,72 +45,69 @@ public class StressTest extends TestCase {
     private static Connection conn;
 
     private static Statement statement;
-
-    public static Test suite() {
-        TestSetup setup = new TestSetup(new TestSuite(StressTest.class)) {
-
-            protected void setUp() throws Exception {
-                Support_SQL.loadDriver();
-                conn = Support_SQL.getConnection();
-                statement = conn.createStatement();
-                createTestTables();
-            }
-
-            protected void tearDown() throws Exception {
-                dropTestTables();
-                statement.close();
-                conn.close();
-            }
-
-            private void createTestTables() {
-                try {
-                    DatabaseMetaData meta = conn.getMetaData();
-                    ResultSet userTab = meta.getTables(null, null, null, null);
-
-                    while (userTab.next()) {
-                        String tableName = userTab.getString("TABLE_NAME");
-                        if (tableName.equals(DatabaseCreator.TEST_TABLE2)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE2);
-                        }
-                    }
-                    statement.execute(DatabaseCreator.CREATE_TABLE2);
-                } catch (SQLException sql) {
-                    fail("Unexpected SQLException " + sql.toString());
-                }
-                return;
-            }
-
-            private void dropTestTables() {
-                try {
-                    statement.execute(DatabaseCreator.DROP_TABLE2);
-                } catch (SQLException sql) {
-                    fail("Unexpected SQLException " + sql.toString());
-                }
-                return;
-            }
-        };
-        return setup;
-    }
-
-    /**
-     * @see junit.framework.TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    
+    public void setUp() throws Exception {
+    	super.setUp();
+        Support_SQL.loadDriver();
+        conn = Support_SQL.getConnection();
+        statement = conn.createStatement();
+        createTestTables();
         vc.clear();
     }
 
-    /**
-     * @see junit.framework.TestCase#tearDown()
-     */
-    @Override
     protected void tearDown() throws Exception {
         closeConnections();
-        statement.execute("DELETE FROM " + DatabaseCreator.TEST_TABLE2);
+        statement.close();
+        conn.close();
         super.tearDown();
     }
 
+    private void createTestTables() {
+        try {
+            DatabaseMetaData meta = conn.getMetaData();
+            ResultSet userTab = meta.getTables(null, null, null, null);
+
+            while (userTab.next()) {
+                String tableName = userTab.getString("TABLE_NAME");
+                if (tableName.equals(DatabaseCreator.TEST_TABLE2)) {
+                    statement.execute(DatabaseCreator.DROP_TABLE2);
+                }
+            }
+            statement.execute(DatabaseCreator.CREATE_TABLE2);
+        } catch (SQLException sql) {
+            fail("Unexpected SQLException " + sql.toString());
+        }
+        return;
+    }
+
+    private void dropTestTables() {
+        try {
+            statement.execute(DatabaseCreator.DROP_TABLE2);
+        } catch (SQLException sql) {
+            fail("Unexpected SQLException " + sql.toString());
+        }
+        return;
+    }
+    
+//    /**
+//     * @see junit.framework.TestCase#setUp()
+//     */
+//    @Override
+//    protected void setUp() throws Exception {
+//        super.setUp();
+//        vc.clear();
+//    }
+//
+//    /**
+//     * @see junit.framework.TestCase#tearDown()
+//     */
+//    @Override
+//    protected void tearDown() throws Exception {
+//        closeConnections();
+//        statement.execute("DELETE FROM " + DatabaseCreator.TEST_TABLE2);
+//        super.tearDown();
+//    }
+    
     /**
      * @tests StressTest#testManyConnectionsUsingOneThread(). Create many
      *        connections to the DataBase using one thread.
@@ -227,9 +219,6 @@ public class StressTest extends TestCase {
             method = "connect",
             clazz = Driver.class,
             args = {String.class, Properties.class}
-    )
-    @BrokenTest("Error in ThreadPool implementation threads do not get"
-            +" more tasks (only one): there seems to be a deadlock or something."
     )
     public void testInsertOfManyRowsUsingManyThreads() {
         Logger.global.info("java.sql stress test: multiple threads and many operations.");
