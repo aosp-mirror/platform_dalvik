@@ -190,7 +190,7 @@ public class ProcessManagerTest extends TestCase {
     )
     public void testHeavyLoad() {
         int i;
-        for (i = 0; i < 2000; i++)
+        for (i = 0; i < 100; i++)
             stuff();
     }
 

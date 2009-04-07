@@ -699,11 +699,9 @@ public class DatagramSocketTest extends SocketTestCase {
         method = "connect",
         args = {java.net.InetAddress.class, int.class}
     )
-    @BrokenTest("IllegalArgumentException is thrown from Permission object")
     public void test_connectLjava_net_InetAddressI_SecurityManager() throws
             SocketException, UnknownHostException {
-        byte[] addressBytes = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0 };
+        byte[] addressBytes = { 0, 0, 0, 0 };
         ds = new java.net.DatagramSocket();
         int portNumber = Support_PortManager.getNextPortForUDP();
 

@@ -1,6 +1,6 @@
 package org.apache.harmony.luni.tests.java.net;
 
-import dalvik.annotation.BrokenTest;
+import dalvik.annotation.SideEffect;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -44,9 +44,9 @@ public class ContentHandlerFactoryTest extends TestCase {
             args = { ContentHandlerFactory.class }
         )
     })
-    @BrokenTest("This test affects tests that are run after this one." +
+    @SideEffect("This test affects tests that are run after this one." +
             " The reason are side effects due to caching in URLConnection." +
-            " Maybe this test has to be marked NOT_FEASIBLE.")
+            " Maybe this test needs to be run in isolation.")
     public void test_createContentHandler() throws IOException {
         
         TestContentHandlerFactory factory =  new TestContentHandlerFactory();
