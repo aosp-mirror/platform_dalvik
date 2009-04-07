@@ -34,14 +34,14 @@ public class ParserFactoryTest extends TestCase {
         args = { },
         notes = "Checks everything except META-INF case"
     )
-    public void testMakeParser() {
+    public void testMakeParser() throws NullPointerException,
+            ClassCastException, ClassNotFoundException, InstantiationException,
+            IllegalAccessException {
         // Property not set at all
         try {
             ParserFactory.makeParser();
         } catch (NullPointerException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
 
         // Unknown class
@@ -51,8 +51,6 @@ public class ParserFactoryTest extends TestCase {
             ParserFactory.makeParser();
         } catch (ClassNotFoundException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
         
         // Non-accessible class
@@ -63,8 +61,6 @@ public class ParserFactoryTest extends TestCase {
             ParserFactory.makeParser();
         } catch (IllegalAccessException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
         
         // Non-instantiable class
@@ -75,8 +71,6 @@ public class ParserFactoryTest extends TestCase {
             ParserFactory.makeParser();
         } catch (InstantiationException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
         
         // Non-Parser class
@@ -87,19 +81,13 @@ public class ParserFactoryTest extends TestCase {
             ParserFactory.makeParser();
         } catch (ClassCastException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
         
         // Good one, finally
         System.setProperty("org.xml.sax.parser",
                 "tests.api.org.xml.sax.support.DoNothingParser");
         
-        try {
-            ParserFactory.makeParser();
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
-        }
+        ParserFactory.makeParser();
         
     }
 
@@ -108,14 +96,14 @@ public class ParserFactoryTest extends TestCase {
         method = "makeParser",
         args = { String.class }
     )
-    public void testMakeParserString() {
+    public void testMakeParserString() throws ClassCastException,
+            ClassNotFoundException, IllegalAccessException,
+            InstantiationException {
         // No class
         try {
             ParserFactory.makeParser(null);
         } catch (NullPointerException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
 
         // Unknown class
@@ -123,8 +111,6 @@ public class ParserFactoryTest extends TestCase {
             ParserFactory.makeParser("foo.bar.SAXParser");
         } catch (ClassNotFoundException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
         
         // Non-accessible class
@@ -133,8 +119,6 @@ public class ParserFactoryTest extends TestCase {
                     "tests.api.org.xml.sax.support.NoAccessParser");
         } catch (IllegalAccessException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
         
         // Non-instantiable class
@@ -143,8 +127,6 @@ public class ParserFactoryTest extends TestCase {
                     "tests.api.org.xml.sax.support.NoInstanceParser");
         } catch (InstantiationException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
         
         // Non-Parser class
@@ -153,17 +135,11 @@ public class ParserFactoryTest extends TestCase {
                     "tests.api.org.xml.sax.support.NoSubclassParser");
         } catch (ClassCastException e) {
             // Expected
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
         }
         
         // Good one, finally
-        try {
-            ParserFactory.makeParser(
-                    "tests.api.org.xml.sax.support.DoNothingParser");
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception", e);
-        }
+        ParserFactory.makeParser(
+                "tests.api.org.xml.sax.support.DoNothingParser");
 
     }
 
