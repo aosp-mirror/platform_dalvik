@@ -54,90 +54,78 @@ public class SelectFunctionalityTest extends TestCase {
 
     private static Time time;
 
-    protected void setUp() throws Exception {
-        super.setUp();
+    public void setUp() throws Exception {
+    	super.setUp();
+        Support_SQL.loadDriver();
+        try {
+            conn = Support_SQL.getConnection();
+            statement = conn.createStatement();
+            createTestTables();
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
     }
 
-    protected void tearDown() throws Exception {
+    public void tearDown() throws Exception {
+        deleteTestTables();
+        conn.close();
+        statement.close();
         super.tearDown();
     }
 
-    public static Test suite() {
-        TestSetup setup = new TestSetup(new TestSuite(
-                SelectFunctionalityTest.class)) {
-            protected void setUp() throws Exception {
-                Support_SQL.loadDriver();
-                try {
-                    conn = Support_SQL.getConnection();
-                    statement = conn.createStatement();
-                    createTestTables();
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
-                }
-            }
+    private void createTestTables() {
+        try {
+            ResultSet userTab = conn.getMetaData().getTables(null,
+                    null, null, null);
 
-            protected void tearDown() throws Exception {
-                deleteTestTables();
-                conn.close();
-                statement.close();
-            }
-
-            private void createTestTables() {
-                try {
-                    ResultSet userTab = conn.getMetaData().getTables(null,
-                            null, null, null);
-
-                    while (userTab.next()) {
-                        String tableName = userTab.getString("TABLE_NAME");
-                        if (tableName.equals(DatabaseCreator.TEST_TABLE2)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE2);
-                        } else if (tableName
-                                .equals(DatabaseCreator.SALESPEOPLE_TABLE)) {
-                            statement
-                                    .execute(DatabaseCreator.DROP_TABLE_SALESPEOPLE);
-                        } else if (tableName
-                                .equals(DatabaseCreator.CUSTOMERS_TABLE)) {
-                            statement
-                                    .execute(DatabaseCreator.DROP_TABLE_CUSTOMERS);
-                        } else if (tableName
-                                .equals(DatabaseCreator.ORDERS_TABLE)) {
-                            statement
-                                    .execute(DatabaseCreator.DROP_TABLE_ORDERS);
-                        }
-                    }
-                    userTab.close();
-
-                    statement.execute(DatabaseCreator.CREATE_TABLE2);
-                    statement.execute(DatabaseCreator.CREATE_TABLE_SALESPEOPLE);
-                    statement.execute(DatabaseCreator.CREATE_TABLE_CUSTOMERS);
-                    statement.execute(DatabaseCreator.CREATE_TABLE_ORDERS);
-
-                    long currentTime = Calendar.getInstance().getTimeInMillis();
-                    date = new Date(currentTime);
-                    time = new Time(currentTime);
-
-                    DatabaseCreator.fillTestTable2(conn, 1, 5, currentTime);
-                    DatabaseCreator.fillCustomersTable(conn);
-                    DatabaseCreator.fillOrdersTable(conn);
-                    DatabaseCreator.fillSalesPeopleTable(conn);
-
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
-                }
-            }
-
-            private void deleteTestTables() {
-                try {
+            while (userTab.next()) {
+                String tableName = userTab.getString("TABLE_NAME");
+                if (tableName.equals(DatabaseCreator.TEST_TABLE2)) {
                     statement.execute(DatabaseCreator.DROP_TABLE2);
-                    statement.execute(DatabaseCreator.DROP_TABLE_SALESPEOPLE);
-                    statement.execute(DatabaseCreator.DROP_TABLE_CUSTOMERS);
-                    statement.execute(DatabaseCreator.DROP_TABLE_ORDERS);
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
+                } else if (tableName
+                        .equals(DatabaseCreator.SALESPEOPLE_TABLE)) {
+                    statement
+                            .execute(DatabaseCreator.DROP_TABLE_SALESPEOPLE);
+                } else if (tableName
+                        .equals(DatabaseCreator.CUSTOMERS_TABLE)) {
+                    statement
+                            .execute(DatabaseCreator.DROP_TABLE_CUSTOMERS);
+                } else if (tableName
+                        .equals(DatabaseCreator.ORDERS_TABLE)) {
+                    statement
+                            .execute(DatabaseCreator.DROP_TABLE_ORDERS);
                 }
             }
-        };
-        return setup;
+            userTab.close();
+
+            statement.execute(DatabaseCreator.CREATE_TABLE2);
+            statement.execute(DatabaseCreator.CREATE_TABLE_SALESPEOPLE);
+            statement.execute(DatabaseCreator.CREATE_TABLE_CUSTOMERS);
+            statement.execute(DatabaseCreator.CREATE_TABLE_ORDERS);
+
+            long currentTime = Calendar.getInstance().getTimeInMillis();
+            date = new Date(currentTime);
+            time = new Time(currentTime);
+
+            DatabaseCreator.fillTestTable2(conn, 1, 5, currentTime);
+            DatabaseCreator.fillCustomersTable(conn);
+            DatabaseCreator.fillOrdersTable(conn);
+            DatabaseCreator.fillSalesPeopleTable(conn);
+
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
+    }
+
+    private void deleteTestTables() {
+        try {
+            statement.execute(DatabaseCreator.DROP_TABLE2);
+            statement.execute(DatabaseCreator.DROP_TABLE_SALESPEOPLE);
+            statement.execute(DatabaseCreator.DROP_TABLE_CUSTOMERS);
+            statement.execute(DatabaseCreator.DROP_TABLE_ORDERS);
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
     }
 
     /**

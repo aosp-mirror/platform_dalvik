@@ -33,16 +33,15 @@ public class AllTests {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.java.sql;");
         // $JUnit-BEGIN$
 
-        suite.addTest(DatabaseMetaDataTest.suite());
-        suite.addTest(MultiThreadAccessTest.suite());
-        suite.addTest(StressTest.suite());
-        suite.addTest(UpdateFunctionalityTest.suite());
-        suite.addTest(SelectFunctionalityTest.suite());
-        suite.addTest(UpdateFunctionalityTest2.suite());
-        suite.addTest(DeleteFunctionalityTest.suite());
-        suite.addTest(DatabaseMetaDataTest.suite());
-        suite.addTest(DatabaseMetaDataNotSupportedTest.suite());
-        suite.addTest(InsertFunctionalityTest.suite());
+        suite.addTestSuite(MultiThreadAccessTest.class);
+        suite.addTestSuite(tests.java.sql.StressTest.class);
+        suite.addTestSuite(tests.java.sql.UpdateFunctionalityTest.class);
+        suite.addTestSuite(tests.java.sql.SelectFunctionalityTest.class);
+        suite.addTestSuite(tests.java.sql.UpdateFunctionalityTest2.class);
+        suite.addTestSuite(tests.java.sql.DeleteFunctionalityTest.class);
+        suite.addTestSuite(tests.java.sql.DatabaseMetaDataTest.class);
+        suite.addTestSuite(tests.java.sql.DatabaseMetaDataNotSupportedTest.class);
+        suite.addTestSuite(tests.java.sql.InsertFunctionalityTest.class);
 
         // $JUnit-END$
         return suite;

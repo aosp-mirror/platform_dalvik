@@ -63,36 +63,38 @@ public class DatabaseMetaDataTest extends TestCase {
 
     private static int id = 1;
 
-    public static Test suite() {
-        TestSetup setup = new TestSetup(new TestSuite(
-                DatabaseMetaDataTest.class)) {
-            protected void setUp() {
-                Support_SQL.loadDriver();
-                try {
-                    conn = Support_SQL.getConnection();
-                    meta = conn.getMetaData();
-                    statement = conn.createStatement();
-                    createTestTables();
-                } catch (SQLException e) {
-                    System.out.println("Error in test setup: "+e.getMessage());
-                }
-            }
+    public void setUp() throws Exception {
+    	super.setUp();
+        Support_SQL.loadDriver();
+        try {
+            conn = Support_SQL.getConnection();
+            meta = conn.getMetaData();
+            statement = conn.createStatement();
+            statementForward = conn.createStatement(
+                    ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY);
+            createTestTables();
+        } catch (SQLException e) {
+            System.out.println("Error in test setup: "+e.getMessage());
+        }
+    }
 
-            protected void tearDown() {
-                try {
-                    conn = Support_SQL.getConnection();
-                    meta = conn.getMetaData();
-                    statement = conn.createStatement();
-                    deleteTestTables();
-                } catch (SQLException e) {
-                    System.out.println("Error in teardown: "+e.getMessage());
-                } finally {
-                    try {
-                        conn.close();
-                    } catch (SQLException e) {
-                    }
-                }
+    protected void tearDown() throws Exception {
+        try {
+            conn = Support_SQL.getConnection();
+            meta = conn.getMetaData();
+            statement = conn.createStatement();
+            deleteTestTables();
+        } catch (SQLException e) {
+            System.out.println("Error in teardown: "+e.getMessage());
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e) {
             }
+        }
+        super.tearDown();
+    }
 
             private void createTestTables() {
                 try {
@@ -135,10 +137,7 @@ public class DatabaseMetaDataTest extends TestCase {
                     }
                 }
             }
-        };
-        return setup;
-    }
-    
+    /*
     public void setUp() {
         try {
             super.setUp();
@@ -147,7 +146,7 @@ public class DatabaseMetaDataTest extends TestCase {
                 statement = conn.createStatement();
                 statementForward = conn.createStatement(
                         ResultSet.TYPE_FORWARD_ONLY,
-                        ResultSet.CONCUR_UPDATABLE);
+                        ResultSet.CONCUR_READ_ONLY);
                 meta = conn.getMetaData();
                 
                 assertFalse(conn.isClosed());
@@ -161,6 +160,7 @@ public class DatabaseMetaDataTest extends TestCase {
         }
         
     }
+    */
     
     /**
      * @tests {@link java.sql.DatabaseMetaData #getBestRowIdentifier(java.lang.String,
@@ -168,7 +168,7 @@ public class DatabaseMetaDataTest extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.SUFFICIENT,
-        notes = "Not All variants of parameters can be tested: updates on resultSets are not supported.",
+        notes = "Not all variants of parameters can be tested: updates on resultSets are not supported.",
         method = "getBestRowIdentifier",
         args = {java.lang.String.class, java.lang.String.class, java.lang.String.class, int.class, boolean.class}
     )
@@ -177,15 +177,20 @@ public class DatabaseMetaDataTest extends TestCase {
         ResultSet result = statementForward.executeQuery("SELECT * FROM "
                 + DatabaseCreator.TEST_TABLE1);
 
-        // TODO not supported
-        // try {
-        // result.moveToInsertRow();
-        // result.updateInt("id", 1234567);
-        // result.updateString("field1", "test1");
-        // result.insertRow();
-        // } catch (SQLException e) {
-        // fail("Unexpected SQLException " + e.toString());
-        // }
+        //Updatable ResultSet not supported, converted to normal insert statement
+        statementForward.executeUpdate("INSERT INTO " + DatabaseCreator.TEST_TABLE1
+                + " (id, field1) VALUES( 1234567, 'test1');");
+        /* not supported
+        try {
+         result.moveToInsertRow();
+         result.updateInt("id", 1234567);
+         result.updateString("field1", "test1");
+         result.insertRow();
+         } catch (SQLException e) {
+         fail("Unexpected SQLException " + e.toString());
+         }
+         */
+        
 
         result.close();
 
