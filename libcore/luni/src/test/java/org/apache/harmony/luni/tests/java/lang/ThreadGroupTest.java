@@ -17,6 +17,7 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -1014,62 +1015,41 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "resume",
         args = {}
     )
-   @SuppressWarnings("deprecation")
-   @BrokenTest("Thread.resume is implemented on some RI")
-    public void test_resume() throws OutOfMemoryError {
-        // Test for method void java.lang.ThreadGroup.resume()
-        final ThreadGroup originalCurrent = getInitialThreadGroup();
-
-        final ThreadGroup testRoot = new ThreadGroup(originalCurrent,
-                "Test group");
-        final int DEPTH = 2;
-        buildRandomTreeUnder(testRoot, DEPTH);
-
-        final int THREADS_PER_GROUP = 2;
-        final Vector<MyThread> threads = populateGroupsWithThreads(testRoot,
-                THREADS_PER_GROUP);
-        try {
-            for (int i = 0; i < threads.size(); i++) {
-                Thread t = threads.elementAt(i);
-                t.start();
-            }
-        } catch (OutOfMemoryError e) {
-            for (int i = 0; i < threads.size(); i++) {
-                Thread t = threads.elementAt(i);
-                t.interrupt();
-            }
-            throw e;
-        }
-
-        try {
-            testRoot.resume();
-            fail("Thread.resume() is not supported and throws an UOE on Android.");
-        } catch (UnsupportedOperationException e) {
-            // expected
-        }
-
-
-        for (int i = 0; i < threads.size(); i++) {
-            MyThread t = threads.elementAt(i);
-            t.interrupt();
-        }
-
-        // Make sure we do cleanup before returning
-        testRoot.destroy();
-
-        assertEquals("Method destroy must have problems",
-                0, testRoot.activeCount());
+    @AndroidOnly("RI does implement this method, whereas Android does not")
+    @SuppressWarnings("deprecation")
+    public void test_resume() {
+        ThreadGroup group = new ThreadGroup("Foo");
         
-        SecurityManager oldSm = System.getSecurityManager();
-        System.setSecurityManager(sm);
+        Thread thread = launchFiveSecondDummyThread(group);
+
         try {
-            originalCurrent.resume();
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // Ignore
+        }
+
+        // No-op in Android. Must neither have an effect nor throw an exception.
+        Thread.State state = thread.getState();
+        group.resume();
+        assertEquals(state, thread.getState());
+
+        // Security checks are made even though method is not supported.
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(new ThreadSecurityManager());
+        try {
+            group.resume();
             fail("Should throw SecurityException");
         } catch (SecurityException e) {
             // expected
         } finally {
-           System.setSecurityManager(oldSm);
-        } 
+            System.setSecurityManager(oldSm);
+        }
+        
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            // Ignore
+        }
     }
 
     /**
@@ -1252,66 +1232,68 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "stop",
         args = {}
     )
-    @BrokenTest("stop() method not implemented.")
+    @AndroidOnly("RI does implement this method, whereas Android does not")
     @SuppressWarnings("deprecation")
-    public void test_stop() throws OutOfMemoryError {
-        // Test for method void java.lang.ThreadGroup.stop()
-        final ThreadGroup originalCurrent = getInitialThreadGroup();
-
-        final ThreadGroup testRoot = new ThreadGroup(originalCurrent,
-                "Test group");
-        final int DEPTH = 2;
-        buildRandomTreeUnder(testRoot, DEPTH);
-
-        final int THREADS_PER_GROUP = 2;
-        final Vector<MyThread> threads = populateGroupsWithThreads(testRoot,
-                THREADS_PER_GROUP);
-
-        try {
-            for (int i = 0; i < threads.size(); i++) {
-                Thread t = threads.elementAt(i);
-                t.start();
-            }
-        } catch (OutOfMemoryError e) {
-            for (int i = 0; i < threads.size(); i++) {
-                Thread t = threads.elementAt(i);
-                t.interrupt();
-            }
-            throw e;
-        }
-
-        // Now that they are all running, let's stop the ThreadGroup
-        try {
-            testRoot.stop();
-            fail("Thread.stop() is not supported and throws an UOE on Android.");
-        } catch (UnsupportedOperationException e) {
-            // expected
-        }
-
-        for (int i = 0; i < threads.size(); i++) {
-            Thread t = threads.elementAt(i);
-            t.interrupt();
-        }
-
-        // To make sure that even if we fail, we exit in a clean state
-        testRoot.destroy();
-
-        assertEquals("Method destroy (or wipeAllThreads) must have problems",
-                0, testRoot.activeCount());
-
-        SecurityManager oldSm = System.getSecurityManager();
-        System.setSecurityManager(sm);
+    public void test_stop() {
+        ThreadGroup group = new ThreadGroup("Foo");
         
+        Thread thread = launchFiveSecondDummyThread(group);
+
         try {
-            originalCurrent.stop();
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // Ignore
+        }
+
+        // No-op in Android. Must neither have an effect nor throw an exception.
+        Thread.State state = thread.getState();
+        group.stop();
+        assertEquals(state, thread.getState());
+
+        // Security checks are made even though method is not supported.
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(new ThreadSecurityManager());
+        try {
+            group.stop();
             fail("Should throw SecurityException");
         } catch (SecurityException e) {
             // expected
         } finally {
-           System.setSecurityManager(oldSm);
+            System.setSecurityManager(oldSm);
+        }
+        
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            // Ignore
         }
     }
 
+    private Thread launchFiveSecondDummyThread(ThreadGroup group) {
+        Thread thread = new Thread(group, "Bar") {
+            public void run() {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    // Ignore
+                }
+            }
+        };
+        
+        thread.start();
+        
+        return thread;
+    }
+
+    private class ThreadSecurityManager extends SecurityManager {
+        public void checkPermission(Permission perm) {
+        }
+        
+        public void checkAccess(Thread t) {
+            throw new SecurityException();
+        }
+    };
+    
     /**
      * @tests java.lang.ThreadGroup#suspend()
      */
@@ -1321,61 +1303,41 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         method = "suspend",
         args = {}
     )
-    @BrokenTest("suspend() method not implemented.")
+    @AndroidOnly("RI does implement this method, whereas Android does not")
     @SuppressWarnings("deprecation")
-    public void test_suspend() throws OutOfMemoryError {
-        // Test for method void java.lang.ThreadGroup.suspend()
-        final ThreadGroup originalCurrent = getInitialThreadGroup();
-
-        final ThreadGroup testRoot = new ThreadGroup(originalCurrent,
-                "Test group");
-        final int DEPTH = 2;
-        buildRandomTreeUnder(testRoot, DEPTH);
-
-        final int THREADS_PER_GROUP = 2;
-        final Vector<MyThread> threads = populateGroupsWithThreads(testRoot,
-                THREADS_PER_GROUP);
-
-        try {
-            for (int i = 0; i < threads.size(); i++) {
-                Thread t = threads.elementAt(i);
-                t.start();
-            }
-        } catch (OutOfMemoryError e) {
-            for (int i = 0; i < threads.size(); i++) {
-                Thread t = threads.elementAt(i);
-                t.interrupt();
-            }
-            throw e;
-        }
-
-        try {
-            testRoot.suspend();
-            fail("Thread.suspend() is not supported and throws an UOE on Android.");
-        } catch (UnsupportedOperationException e) {
-            // expected
-        }
-
-        for (int i = 0; i < threads.size(); i++) {
-            Thread t = threads.elementAt(i);
-            t.interrupt();
-         }
-        // Make sure we cleanup before returning from the method
-        testRoot.destroy();
-
-        assertEquals("Method destroy (or wipeAllThreads) must have problems",
-                0, testRoot.activeCount());
+    public void test_suspend() {
+        ThreadGroup group = new ThreadGroup("Foo");
         
-        SecurityManager oldSm = System.getSecurityManager();
-        System.setSecurityManager(sm);
+        Thread thread = launchFiveSecondDummyThread(group);
+
         try {
-            originalCurrent.suspend();
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // Ignore
+        }
+
+        // No-op in Android. Must neither have an effect nor throw an exception.
+        Thread.State state = thread.getState();
+        group.suspend();
+        assertEquals(state, thread.getState());
+
+        // Security checks are made even though method is not supported.
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(new ThreadSecurityManager());
+        try {
+            group.suspend();
             fail("Should throw SecurityException");
         } catch (SecurityException e) {
             // expected
         } finally {
-           System.setSecurityManager(oldSm);
-        }  
+            System.setSecurityManager(oldSm);
+        }
+        
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            // Ignore
+        }
     }
 
     /**

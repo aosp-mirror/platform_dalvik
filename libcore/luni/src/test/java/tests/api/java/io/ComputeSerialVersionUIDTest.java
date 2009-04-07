@@ -11,7 +11,7 @@ import dalvik.annotation.TestTargetClass;
 public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
 
 
-    private String path = "serialization/tests/api/java/io/";
+    private String path = "/serialization/tests/api/java/io/";
 
     @TestTargetNew(
         level = TestLevel.COMPLETE,
@@ -20,8 +20,8 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
         args = {}
     )
     public void testComputeSUIDClass() throws Exception {
-        ObjectInputStream ois = new ObjectInputStream(ClassLoader
-                .getSystemResourceAsStream(path + "testComputeSUIDClass.ser"));
+        ObjectInputStream ois = new ObjectInputStream(getClass()
+                .getResourceAsStream(path + "testComputeSUIDClass.ser"));
         SerializationTestClass.TestClassName1 o1 = (SerializationTestClass.TestClassName1) ois
                 .readObject();
         SerializationTestClass.TestClassName2T_T$T o2 = (SerializationTestClass.TestClassName2T_T$T) ois
@@ -44,9 +44,8 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
         args = {}
     )
     public void testComputeSUIDInterfaces() throws Exception {
-        ObjectInputStream ois = new ObjectInputStream(ClassLoader
-                .getSystemResourceAsStream(path
-                        + "testComputeSUIDInterfaces.ser"));
+        ObjectInputStream ois = new ObjectInputStream(getClass()
+                .getResourceAsStream(path + "testComputeSUIDInterfaces.ser"));
         SerializationTestClass.TestIntefaces o1 = (SerializationTestClass.TestIntefaces) ois
                 .readObject();
         SerializationTestClass.TestIntefacesA o2 = (SerializationTestClass.TestIntefacesA) ois
@@ -83,8 +82,8 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
         args = {}
     )
     public void testComputeSUIDFields() throws Exception {
-        ObjectInputStream ois = new ObjectInputStream(ClassLoader
-                .getSystemResourceAsStream(path + "testComputeSUIDFields.ser"));
+        ObjectInputStream ois = new ObjectInputStream(getClass()
+                .getResourceAsStream(path + "testComputeSUIDFields.ser"));
         SerializationTestClass.TestFieldsNone o1 = (SerializationTestClass.TestFieldsNone) ois
                 .readObject();
         SerializationTestClass.TestFieldsOneFinal o2 = (SerializationTestClass.TestFieldsOneFinal) ois
@@ -127,9 +126,8 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
         args = {}
     )
     public void testComputeSUIDConstructors() throws Exception {
-        ObjectInputStream ois = new ObjectInputStream(ClassLoader
-                .getSystemResourceAsStream(path
-                        + "testComputeSUIDConstructors.ser"));
+        ObjectInputStream ois = new ObjectInputStream(getClass()
+                .getResourceAsStream(path + "testComputeSUIDConstructors.ser"));
         SerializationTestClass.TestConstructorNone o1 = (SerializationTestClass.TestConstructorNone) ois
                 .readObject();
         SerializationTestClass.TestConstructorOne o2 = (SerializationTestClass.TestConstructorOne) ois
@@ -156,8 +154,8 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
         args = {}
     )
     public void testComputeSUIDMethods() throws Exception {
-        ObjectInputStream ois = new ObjectInputStream(ClassLoader
-                .getSystemResourceAsStream(path + "testComputeSUIDMethods.ser"));
+        ObjectInputStream ois = new ObjectInputStream(getClass()
+                .getResourceAsStream(path + "testComputeSUIDMethods.ser"));
         SerializationTestClass.TestMehodPrivate o1 = (SerializationTestClass.TestMehodPrivate) ois
                 .readObject();
         SerializationTestClass.TestMethodAbstract o2 = (SerializationTestClass.TestMethodAbstract) ois

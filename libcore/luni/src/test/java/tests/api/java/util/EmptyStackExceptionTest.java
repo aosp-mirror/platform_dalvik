@@ -28,14 +28,9 @@ import java.util.Stack;
 @TestTargetClass(EmptyStackException.class) 
 public class EmptyStackExceptionTest extends junit.framework.TestCase {
 
-    static Object[] objArray = new Object[10];
+    Object[] objArray = new Object[10];
     Stack s;
     
-    {
-        for (int counter = 0; counter < objArray.length; counter++)
-            objArray[counter] = new Integer(counter);
-    }
-
     /**
      * @tests java.util.EmptyStackException#EmptyStackException()
      */
@@ -61,9 +56,14 @@ public class EmptyStackExceptionTest extends junit.framework.TestCase {
      * is called before a test is executed.
      */
     protected void setUp() {
+        for (int counter = 0; counter < objArray.length; counter++) {
+            objArray[counter] = new Integer(counter);
+        }
+
         s = new Stack();
-        for (int counter = 0; counter < objArray.length; counter++)
+        for (int counter = 0; counter < objArray.length; counter++) {
             s.push(objArray[counter]);
+        }
     }
 
     /**
@@ -71,5 +71,7 @@ public class EmptyStackExceptionTest extends junit.framework.TestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
+        objArray = null;
+        s = null;
     }
 }

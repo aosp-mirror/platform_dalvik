@@ -17,27 +17,15 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.BrokenTest;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InvalidObjectException;
-import java.io.NotActiveException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.ObjectStreamClass;
-import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.io.StreamCorruptedException;
-import java.io.WriteAbortedException;
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.util.ArrayList;
@@ -61,12 +49,14 @@ import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.Vector;
+
+import dalvik.annotation.TestTargetClass;
 
 /**
  * Automated Test Suite for class java.io.ObjectOutputStream
  * 
  */
+@SuppressWarnings({"serial", "unchecked"})
 @TestTargetClass(Serializable.class) 
 public class SerializationStressTest extends junit.framework.TestCase implements
         Serializable {

@@ -44,31 +44,26 @@ public class ArraysTest extends junit.framework.TestCase {
 
     final static int arraySize = 100;
 
-    static Object[] objArray;
+    Object[] objArray;
 
-    static boolean[] booleanArray;
+    boolean[] booleanArray;
 
-    static byte[] byteArray;
+    byte[] byteArray;
 
-    static char[] charArray;
+    char[] charArray;
 
-    static double[] doubleArray;
+    double[] doubleArray;
 
-    static float[] floatArray;
+    float[] floatArray;
 
-    static int[] intArray;
+    int[] intArray;
 
-    static long[] longArray;
+    long[] longArray;
 
-    static Object[] objectArray;
+    Object[] objectArray;
 
-    static short[] shortArray;
-    {
-        objArray = new Object[arraySize];
-        for (int i = 0; i < objArray.length; i++)
-            objArray[i] = new Integer(i);
-    }
-
+    short[] shortArray;
+    
     /**
      * @tests java.util.Arrays#asList(java.lang.Object[])
      */
@@ -2427,6 +2422,10 @@ public class ArraysTest extends junit.framework.TestCase {
      * is called before a test is executed.
      */
     protected void setUp() {
+        objArray = new Object[arraySize];
+        for (int i = 0; i < objArray.length; i++)
+            objArray[i] = new Integer(i);
+
         booleanArray = new boolean[arraySize];
         byteArray = new byte[arraySize];
         charArray = new char[arraySize];
@@ -2458,5 +2457,15 @@ public class ArraysTest extends junit.framework.TestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
+        objArray = null;
+        booleanArray = null;
+        byteArray = null;
+        charArray = null;
+        doubleArray = null;
+        floatArray = null;
+        intArray = null;
+        longArray = null;
+        objectArray = null;
+        shortArray = null;
     }
 }

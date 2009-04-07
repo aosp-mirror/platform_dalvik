@@ -1,6 +1,7 @@
 package tests.api.java.lang.reflect;
 
 import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.SideEffect;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -55,6 +56,9 @@ public class GenericSignatureFormatErrorTest extends TestCase{
     )    
     @AndroidOnly("Uses Android specific class dalvik.system.DexFile " +
             "for loading classes.")
+    @SideEffect("strange issue (exception: 'could not open dex file', " +
+            "dalvikvm: 'waitpid failed' log msg  - only occurs when @SideEffect is removed " +
+            "and this test is run via running tests.luni.AllTestsLang TestSuite")
     public void test_signatureFormatError() throws Exception {
         /*
          * dex1.bytes is a jar file with a classes.dex in it.
