@@ -998,7 +998,8 @@ static int compareMaps(const RegisterMap* pMap1, const RegisterMap* pMap2)
  * immediately.  Otherwise, we expand the map and replace method's register
  * map pointer, freeing it if it was allocated on the heap.
  *
- * NOTE: this function is not synchronized; external locking is mandatory.
+ * NOTE: this function is not synchronized; external locking is mandatory
+ * (unless we're in the zygote, where single-threaded access is guaranteed).
  */
 const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
 {
@@ -1009,9 +1010,9 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
         return NULL;
 
     /* sanity check to ensure this isn't called w/o external locking */
-    /* (if we use it somewhere other than the GC, fix it) */
+    /* (if we use this at a time other than during GC, fix/remove this test) */
     if (true) {
-        if (pthread_mutex_trylock(&gDvm.gcHeapLock) == 0) {
+        if (!gDvm.zygote && pthread_mutex_trylock(&gDvm.gcHeapLock) == 0) {
             LOGE("GLITCH: dvmGetExpandedRegisterMap not called at GC time\n");
             dvmAbort();
         }
@@ -1057,6 +1058,13 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
             pStats->numExpandedMaps, pStats->totalExpandedMapSize);
     }
 #endif
+
+    IF_LOGV() {
+        char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
+        LOGV("Expanding map -> %s.%s:%s\n",
+            method->clazz->descriptor, method->name, desc);
+        free(desc);
+    }
 
     /*
      * Update method, and free compressed map if it was sitting on the heap.

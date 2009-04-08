@@ -260,6 +260,13 @@ public final class VMDebug {
      */
     public static native void dumpHprofData(String fileName) throws IOException;
 
+    /**
+     * Primes the register map cache.
+     *
+     * @hide
+     */
+    public static native boolean cacheRegisterMap(String classAndMethodDesc);
+
     /* don't ask */
     static native void printThis(Object thisThing, int count, int thing);
 

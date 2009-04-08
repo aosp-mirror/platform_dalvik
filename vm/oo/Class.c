@@ -4337,7 +4337,7 @@ void dvmSetRegisterMap(Method* method, const RegisterMap* pMap)
 
     if (method->registerMap != NULL) {
         /* unexpected during class loading, okay on first use (uncompress) */
-        LOGD("NOTE: registerMap already set for %s.%s\n",
+        LOGV("NOTE: registerMap already set for %s.%s\n",
             method->clazz->descriptor, method->name);
         /* keep going */
     }
