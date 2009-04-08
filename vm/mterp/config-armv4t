@@ -13,8 +13,8 @@
 # limitations under the License.
 
 #
-# Configuration for ARMv4 architecture targets.  This is largely pulled
-# from the ARMv5 sources, but we can't use certain instructions introduced
+# Configuration for ARMv4T architecture targets.  This is largely pulled
+# from the ARMv5TE sources, but we can't use certain instructions introduced
 # in ARMv5 (BLX, CLZ, LDC2, MCR2, MRC2, STC2) or ARMv5TE (PLD, LDRD, MCRR,
 # MRRC, QADD, QDADD, QDSUB, QSUB, SMLA, SMLAL, SMLAW, SMUL, SMULW, STRD).
 #
@@ -42,14 +42,14 @@ import armv5te/entry.S
 
 # opcode list; argument to op-start is default directory
 op-start armv5te
-    op OP_AGET_WIDE armv4
-    op OP_APUT_WIDE armv4
-    op OP_IGET_WIDE armv4
-    op OP_IGET_WIDE_QUICK armv4
-    op OP_IPUT_WIDE armv4
-    op OP_IPUT_WIDE_QUICK armv4
-    op OP_SGET_WIDE armv4
-    op OP_SPUT_WIDE armv4
+    op OP_AGET_WIDE armv4t
+    op OP_APUT_WIDE armv4t
+    op OP_IGET_WIDE armv4t
+    op OP_IGET_WIDE_QUICK armv4t
+    op OP_IPUT_WIDE armv4t
+    op OP_IPUT_WIDE_QUICK armv4t
+    op OP_SGET_WIDE armv4t
+    op OP_SPUT_WIDE armv4t
 op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates
