@@ -91,7 +91,8 @@ static void java_lang_ProcessManager_watchChildren(JNIEnv* env, jobject o) {
     while (1) {
         int status;
 
-        pid_t pid = wait(&status);
+        /* wait for children in our process group */
+        pid_t pid = waitpid(0, &status, 0);
 
         if (pid >= 0) {
             // Extract real status.
