@@ -97,12 +97,12 @@ bail:
  *
  * If "quiet" is set, don't report common errors.
  *
- * Returns 0 on success.
+ * Returns 0 (kUTFRSuccess) on success.
  */
 UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
     MemMapping* pMap, bool quiet)
 {
-    UnzipToFileResult result = kUTFRSuccess;
+    UnzipToFileResult result = kUTFRGenericFailure;
     int len = strlen(fileName);
     char tempName[32];
     bool removeTemp = false;
