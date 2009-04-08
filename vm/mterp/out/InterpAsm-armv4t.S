@@ -1,5 +1,5 @@
 /*
- * This file was generated automatically by gen-mterp.py for 'armv4'.
+ * This file was generated automatically by gen-mterp.py for 'armv4t'.
  *
  * --> DO NOT EDIT <--
  */
@@ -124,13 +124,6 @@ unspecified registers or condition codes.
 #define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #(_count*2)]!
 
 /*
- * The operation performed here is similar to FETCH_ADVANCE_INST, except the
- * src and dest registers are parameterized (not hard-wired to rPC and rINST).
- */
-#define PREFETCH_ADVANCE_INST(_dreg, _sreg, _count) \
-        ldrh    _dreg, [_sreg, #(_count*2)]!
-
-/*
  * Fetch the next instruction from an offset specified by _reg.  Updates
  * rPC to point to the next instruction.  "_reg" must specify the distance
  * in bytes, *not* 16-bit code units, and may be a signed value.
@@ -162,11 +155,6 @@ unspecified registers or condition codes.
  * Put the instruction's opcode field into the specified register.
  */
 #define GET_INST_OPCODE(_reg)   and     _reg, rINST, #255
-
-/*
- * Put the prefetched instruction's opcode field into the specified register.
- */
-#define GET_PREFETCHED_OPCODE(_oreg, _ireg)   and     _oreg, _ireg, #255
 
 /*
  * Begin executing the opcode in _reg.  Because this only jumps within the
@@ -830,7 +818,9 @@ dalvik_inst:
     GET_VREG(r1, r2)                    @ r1<- vAA (object)
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
     cmp     r1, #0                      @ null object?
-    EXPORT_PC()                         @ need for precise GC, MONITOR_TRACKING
+#ifdef WITH_MONITOR_TRACKING
+    EXPORT_PC()                         @ export PC so we can grab stack trace
+#endif
     beq     common_errNullObject        @ null object, throw an exception
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     bl      dvmLockObject               @ call(self, obj)
@@ -1865,7 +1855,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_WIDE: /* 0x45 */
-/* File: armv4/OP_AGET_WIDE.S */
+/* File: armv4t/OP_AGET_WIDE.S */
     /*
      * Array get, 64 bits.  vAA <- vBB[vCC].
      *
@@ -2088,7 +2078,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT_WIDE: /* 0x4c */
-/* File: armv4/OP_APUT_WIDE.S */
+/* File: armv4t/OP_APUT_WIDE.S */
     /*
      * Array put, 64 bits.  vBB[vCC] <- vAA.
      */
@@ -2299,7 +2289,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_WIDE: /* 0x53 */
-/* File: armv4/OP_IGET_WIDE.S */
+/* File: armv4t/OP_IGET_WIDE.S */
     /*
      * Wide 32-bit instance field get.
      */
@@ -2493,7 +2483,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_WIDE: /* 0x5a */
-/* File: armv4/OP_IPUT_WIDE.S */
+/* File: armv4t/OP_IPUT_WIDE.S */
     /* iput-wide vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
     ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
@@ -2682,7 +2672,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_SGET_WIDE: /* 0x61 */
-/* File: armv4/OP_SGET_WIDE.S */
+/* File: armv4t/OP_SGET_WIDE.S */
     /*
      * 64-bit SGET handler.
      */
@@ -2860,7 +2850,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_SPUT_WIDE: /* 0x68 */
-/* File: armv4/OP_SPUT_WIDE.S */
+/* File: armv4t/OP_SPUT_WIDE.S */
     /*
      * 64-bit SPUT handler.
      */
@@ -7532,7 +7522,7 @@ d2i_doconv:
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_WIDE_QUICK: /* 0xf3 */
-/* File: armv4/OP_IGET_WIDE_QUICK.S */
+/* File: armv4t/OP_IGET_WIDE_QUICK.S */
     /* iget-wide-quick vA, vB, offset@CCCC */
     mov     r2, rINST, lsr #12          @ r2<- B
     GET_VREG(r3, r2)                    @ r3<- object we're operating on
@@ -7595,7 +7585,7 @@ d2i_doconv:
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_WIDE_QUICK: /* 0xf6 */
-/* File: armv4/OP_IPUT_WIDE_QUICK.S */
+/* File: armv4t/OP_IPUT_WIDE_QUICK.S */
     /* iput-wide-quick vA, vB, offset@CCCC */
     mov     r0, rINST, lsr #8           @ r0<- A(+)
     mov     r1, rINST, lsr #12          @ r1<- B
@@ -9352,7 +9342,7 @@ common_periodicChecks:
 #endif
 
     cmp     r3, #0                      @ suspend pending?
-    bne     2f                          @ yes, do full suspension check
+    bne     2f                          @ yes, check suspend
 
 #if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
 # if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
@@ -9370,7 +9360,6 @@ common_periodicChecks:
 
 2:  @ check suspend
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
-    EXPORT_PC()                         @ need for precise GC
     b       dvmCheckSuspendPending      @ suspend if necessary, then return
 
 3:  @ debugger/profiler enabled, bail out
@@ -9418,12 +9407,10 @@ common_invokeMethodRange:
     @ (very few methods have > 10 args; could unroll for common cases)
     add     r3, rFP, r1, lsl #2         @ r3<- &fp[CCCC]
     sub     r10, r10, r2, lsl #2        @ r10<- "outs" area, for call args
-    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
 1:  ldr     r1, [r3], #4                @ val = *fp++
     subs    r2, r2, #1                  @ count--
     str     r1, [r10], #4               @ *outs++ = val
     bne     1b                          @ ...while count != 0
-    ldrh    r3, [r0, #offMethod_outsSize]   @ r3<- methodToCall->outsSize
     b       .LinvokeArgsDone
 
 /*
@@ -9437,50 +9424,47 @@ common_invokeMethodNoRange:
     @ prepare to copy args to "outs" area of current frame
     movs    r2, rINST, lsr #12          @ r2<- B (arg count) -- test for zero
     SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
-    FETCH(r1, 2)                        @ r1<- GFED (load here to hide latency)
-    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
-    ldrh    r3, [r0, #offMethod_outsSize]  @ r3<- methodToCall->outsSize
-    beq     .LinvokeArgsDone
+    beq     .LinvokeArgsDone            @ if no args, skip the rest
+    FETCH(r1, 2)                        @ r1<- GFED
 
-    @ r0=methodToCall, r1=GFED, r3=outSize, r2=count, r9=regSize, r10=outs
+    @ r0=methodToCall, r1=GFED, r2=count, r10=outs
 .LinvokeNonRange:
     rsb     r2, r2, #5                  @ r2<- 5-r2
     add     pc, pc, r2, lsl #4          @ computed goto, 4 instrs each
     bl      common_abort                @ (skipped due to ARM prefetch)
 5:  and     ip, rINST, #0x0f00          @ isolate A
-    ldr     r2, [rFP, ip, lsr #6]       @ r2<- vA (shift right 8, left 2)
+    ldr     r3, [rFP, ip, lsr #6]       @ r3<- vA (shift right 8, left 2)
     mov     r0, r0                      @ nop
-    str     r2, [r10, #-4]!             @ *--outs = vA
+    str     r3, [r10, #-4]!             @ *--outs = vA
 4:  and     ip, r1, #0xf000             @ isolate G
-    ldr     r2, [rFP, ip, lsr #10]      @ r2<- vG (shift right 12, left 2)
+    ldr     r3, [rFP, ip, lsr #10]      @ r3<- vG (shift right 12, left 2)
     mov     r0, r0                      @ nop
-    str     r2, [r10, #-4]!             @ *--outs = vG
+    str     r3, [r10, #-4]!             @ *--outs = vG
 3:  and     ip, r1, #0x0f00             @ isolate F
-    ldr     r2, [rFP, ip, lsr #6]       @ r2<- vF
+    ldr     r3, [rFP, ip, lsr #6]       @ r3<- vF
     mov     r0, r0                      @ nop
-    str     r2, [r10, #-4]!             @ *--outs = vF
+    str     r3, [r10, #-4]!             @ *--outs = vF
 2:  and     ip, r1, #0x00f0             @ isolate E
-    ldr     r2, [rFP, ip, lsr #2]       @ r2<- vE
+    ldr     r3, [rFP, ip, lsr #2]       @ r3<- vE
     mov     r0, r0                      @ nop
-    str     r2, [r10, #-4]!             @ *--outs = vE
+    str     r3, [r10, #-4]!             @ *--outs = vE
 1:  and     ip, r1, #0x000f             @ isolate D
-    ldr     r2, [rFP, ip, lsl #2]       @ r2<- vD
+    ldr     r3, [rFP, ip, lsl #2]       @ r3<- vD
     mov     r0, r0                      @ nop
-    str     r2, [r10, #-4]!             @ *--outs = vD
+    str     r3, [r10, #-4]!             @ *--outs = vD
 0:  @ fall through to .LinvokeArgsDone
 
-.LinvokeArgsDone: @ r0=methodToCall, r3=outSize, r9=regSize
-    ldr     r2, [r0, #offMethod_insns]  @ r2<- method->insns
-    ldr     rINST, [r0, #offMethod_clazz]  @ rINST<- method->clazz
+.LinvokeArgsDone: @ r0=methodToCall
     @ find space for the new stack frame, check for overflow
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
-    sub     r1, r1, r9, lsl #2          @ r1<- newFp (old savearea - regsSize)
+    ldrh    r2, [r0, #offMethod_registersSize]  @ r2<- methodToCall->regsSize
+    ldrh    r3, [r0, #offMethod_outsSize]   @ r3<- methodToCall->outsSize
+    sub     r1, r1, r2, lsl #2          @ r1<- newFp (old savearea - regsSize)
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- newSaveArea
 @    bl      common_dumpRegs
     ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
-    ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     blt     .LstackOverflow             @ yes, this frame will overflow stack
 
     @ set up newSaveArea
@@ -9491,6 +9475,8 @@ common_invokeMethodNoRange:
     str     rFP, [r10, #offStackSaveArea_prevFrame]
     str     rPC, [r10, #offStackSaveArea_savedPc]
     str     r0, [r10, #offStackSaveArea_method]
+
+    ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     tst     r3, #ACC_NATIVE
     bne     .LinvokeNative
 
@@ -9509,18 +9495,17 @@ common_invokeMethodNoRange:
     ldmfd   sp!, {r0-r3}
     */
 
-    ldrh    r9, [r2]                        @ r9 <- load INST from new PC
-    ldr     r3, [rINST, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
-    mov     rPC, r2                         @ publish new rPC
-    ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self
-
     @ Update "glue" values for the new method
-    @ r0=methodToCall, r1=newFp, r2=self, r3=newMethodClass, r9=newINST
+    @ r0=methodToCall, r1=newFp
+    ldr     r3, [r0, #offMethod_clazz]      @ r3<- method->clazz
     str     r0, [rGLUE, #offGlue_method]    @ glue->method = methodToCall
+    ldr     r3, [r3, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
+    ldr     rPC, [r0, #offMethod_insns]     @ rPC<- method->insns
     str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
+    ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self
+    FETCH_INST()                            @ load rINST from rPC
     mov     rFP, r1                         @ fp = newFp
-    GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
-    mov     rINST, r9                       @ publish new rINST
+    GET_INST_OPCODE(ip)                     @ extract opcode from rINST
     str     r1, [r2, #offThread_curFrame]   @ self->curFrame = newFp
     GOTO_OPCODE(ip)                         @ jump to next instruction
 
@@ -9615,21 +9600,20 @@ common_returnFromMethod:
 
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
     ldr     rFP, [r0, #offStackSaveArea_prevFrame] @ fp = saveArea->prevFrame
-    ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc
     ldr     r2, [rFP, #(offStackSaveArea_method - sizeofStackSaveArea)]
                                         @ r2<- method we're returning to
-    ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
     cmp     r2, #0                      @ is this a break frame?
-    ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
     mov     r1, #0                      @ "want switch" = false
     beq     common_gotoBail             @ break frame, bail out completely
 
-    PREFETCH_ADVANCE_INST(rINST, r9, 3) @ advance r9, update new rINST
-    str     r2, [rGLUE, #offGlue_method]@ glue->method = newSave->method
-    ldr     r1, [r10, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
+    ldr     rPC, [r0, #offStackSaveArea_savedPc] @ pc = saveArea->savedPc
+    ldr     r3, [rGLUE, #offGlue_self]      @ r3<- glue->self
+    str     r2, [rGLUE, #offGlue_method]    @ glue->method = newSave->method
     str     rFP, [r3, #offThread_curFrame]  @ self->curFrame = fp
+    ldr     r1, [r2, #offMethod_clazz]      @ r1<- method->clazz
+    FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
+    ldr     r1, [r1, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    mov     rPC, r9                     @ publish new rPC
     str     r1, [rGLUE, #offGlue_methodClassDex]
     GOTO_OPCODE(ip)                     @ jump to next instruction
 

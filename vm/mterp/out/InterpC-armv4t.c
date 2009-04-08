@@ -1,5 +1,5 @@
 /*
- * This file was generated automatically by gen-mterp.py for 'armv4'.
+ * This file was generated automatically by gen-mterp.py for 'armv4t'.
  *
  * --> DO NOT EDIT <--
  */
@@ -53,7 +53,7 @@
  */
 #define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
-#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
+#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia */
 # define CHECK_BRANCH_OFFSETS
 # define CHECK_REGISTER_INDICES
 #endif
@@ -93,18 +93,6 @@
 #endif
 
 /*
- * Export another copy of the PC on every instruction; this is largely
- * redundant with EXPORT_PC and the debugger code.  This value can be
- * compared against what we have stored on the stack with EXPORT_PC to
- * help ensure that we aren't missing any export calls.
- */
-#if WITH_EXTRA_GC_CHECKS > 1
-# define EXPORT_EXTRA_PC() (self->currentPc2 = pc)
-#else
-# define EXPORT_EXTRA_PC()
-#endif
-
-/*
  * Adjust the program counter.  "_offset" is a signed int, in 16-bit units.
  *
  * Assumes the existence of "const u2* pc" and "const u2* curMethod->insns".
@@ -128,13 +116,9 @@
             dvmAbort();                                                     \
         }                                                                   \
         pc += myoff;                                                        \
-        EXPORT_EXTRA_PC();                                                  \
     } while (false)
 #else
-# define ADJUST_PC(_offset) do {                                            \
-        pc += _offset;                                                      \
-        EXPORT_EXTRA_PC();                                                  \
-    } while (false)
+# define ADJUST_PC(_offset) (pc += _offset)
 #endif
 
 /*
@@ -318,8 +302,6 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * trace can be generated correctly.  If we don't do this, the offset
  * within the current method won't be shown correctly.  See the notes
  * in Exception.c.
- *
- * This is also used to determine the address for precise GC.
  *
  * Assumes existence of "u4* fp" and "const u2* pc".
  */
@@ -531,10 +513,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * started.  If so, switch to a different "goto" table.
  */
 #define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
-        if (dvmCheckSuspendQuick(self)) {                                   \
-            EXPORT_PC();  /* need for precise GC */                         \
-            dvmCheckSuspendPending(self);                                   \
-        }                                                                   \
+        dvmCheckSuspendQuick(self);                                         \
         if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
             ADJUST_PC(_pcadj);                                              \
             glue->entryPoint = _entryPoint;                                 \
