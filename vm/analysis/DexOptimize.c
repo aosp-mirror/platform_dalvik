@@ -366,6 +366,9 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         char* androidRoot;
         int flags;
 
+        /* change process groups, so we don't clash with ProcessManager */
+        setpgid(0, 0);
+
         /* full path to optimizer */
         androidRoot = getenv("ANDROID_ROOT");
         if (androidRoot == NULL) {
