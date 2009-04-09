@@ -42,7 +42,7 @@ public class SSLSessionContextTest extends TestCase {
     public final void test_sessionCacheSize() throws NoSuchAlgorithmException, KeyManagementException {
         SSLContext context = SSLContext.getInstance("TLS");
         context.init(null, null, null);
-		SSLSessionContext sc = context
+        SSLSessionContext sc = context
                 .getClientSessionContext();
         sc.setSessionCacheSize(10);
         assertEquals("10 wasn't returned", 10, sc.getSessionCacheSize());
@@ -80,7 +80,7 @@ public class SSLSessionContextTest extends TestCase {
     public final void test_sessionTimeout() throws NoSuchAlgorithmException, KeyManagementException {
         SSLContext context = SSLContext.getInstance("TLS");
         context.init(null, null, null);
-		SSLSessionContext sc = context
+        SSLSessionContext sc = context
                 .getClientSessionContext();
         sc.setSessionTimeout(100);
         assertEquals("100 wasn't returned", 100, sc.getSessionTimeout());
@@ -109,7 +109,7 @@ public class SSLSessionContextTest extends TestCase {
     public final void test_getSession() throws NoSuchAlgorithmException, KeyManagementException {
         SSLContext context = SSLContext.getInstance("TLS");
         context.init(null, null, null);
-		SSLSessionContext sc = context
+        SSLSessionContext sc = context
                 .getClientSessionContext();
         try {
             sc.getSession(null);
@@ -133,7 +133,7 @@ public class SSLSessionContextTest extends TestCase {
     public final void test_getIds() throws NoSuchAlgorithmException, KeyManagementException {
         SSLContext context = SSLContext.getInstance("TLS");
         context.init(null, null, null);
-		SSLSessionContext sc = context
+        SSLSessionContext sc = context
                 .getClientSessionContext();
         assertFalse(sc.getIds().hasMoreElements());
     }
