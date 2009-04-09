@@ -814,7 +814,7 @@ RegisterMapBuilder* dvmGenerateRegisterMaps(DvmDex* pDvmDex)
         return NULL;
     }
 
-    LOGI("TOTAL size of register maps: %d\n", actual);
+    LOGV("TOTAL size of register maps: %d\n", actual);
 
     pBuilder->data = pBuilder->memMap.addr;
     pBuilder->size = actual;
