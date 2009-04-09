@@ -49,7 +49,7 @@ public class ThreadsTest extends TestCase {
         } catch (NoSuchFieldException ex) {
             INITIALIZEFAILED = new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
-        	INITIALIZEFAILED = new RuntimeException(ex);
+            INITIALIZEFAILED = new RuntimeException(ex);
         }
     }
 
@@ -299,7 +299,8 @@ public class ThreadsTest extends TestCase {
     
     @Override
     protected void setUp() throws Exception {
-    	if (INITIALIZEFAILED != null)
-    		throw INITIALIZEFAILED;
+        if (INITIALIZEFAILED != null) {
+            throw INITIALIZEFAILED;
+        }
     }
 }

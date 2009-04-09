@@ -468,7 +468,7 @@ public class DriverManagerTest extends TestCase {
     public void testRegisterDriver() throws ClassNotFoundException,
             SQLException, IllegalAccessException, InstantiationException {
         // This is DRIVER3
-    	// String EXTRA_DRIVER_NAME = 
+        // String EXTRA_DRIVER_NAME = 
         // "org.apache.harmony.sql.tests.java.sql.TestHelper_Driver3";
 
         try {

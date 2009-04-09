@@ -60,7 +60,7 @@ public class UpdateFunctionalityTest extends TestCase {
     }
 
     public void tearDown() throws Exception {
-    	deleteTestTables();
+        deleteTestTables();
         statement.close();
         conn.close();
         

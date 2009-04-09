@@ -629,7 +629,7 @@ public class JarFileTest extends TestCase {
     )
     @AndroidOnly("This test doesn't pass on RI. If entry size is set up " +
             "incorrectly, SecurityException is thrown. " +
-	    "But SecurityException is thrown on RI only " +
+            "But SecurityException is thrown on RI only " +
             "if jar file is signed incorreclty.")
     public void test_getInputStreamLjava_util_jar_JarEntry_subtest0() {
         File signedFile = null;

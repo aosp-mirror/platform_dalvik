@@ -201,8 +201,8 @@ public abstract class ShortBufferTest extends AbstractBufferTest {
         assertEquals(buf.limit(), buf.capacity());
         assertContentLikeTestData1(buf, 0, (short) 0, buf.capacity());
         try {
-	    // Fails on RI. Spec doesn't specify the behavior if
-	    // actually nothing to be done by compact(). So RI doesn't reset
+            // Fails on RI. Spec doesn't specify the behavior if
+            // actually nothing to be done by compact(). So RI doesn't reset
             // mark position 
             buf.reset();
             fail("Should throw Exception"); //$NON-NLS-1$

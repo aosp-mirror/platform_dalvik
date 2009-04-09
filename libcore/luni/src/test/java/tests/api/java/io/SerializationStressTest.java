@@ -170,43 +170,43 @@ public class SerializationStressTest extends junit.framework.TestCase implements
     static Exception INITIALIZE_EXCEPTION = null;
 
     static {
-    	try {
-	        TABLE.put("one", "1");
-	        TABLE.put("two", "2");
-	        TABLE.put("three", "3");
-	        MAP.put("one", "1");
-	        MAP.put("two", "2");
-	        MAP.put("three", "3");
-	        LINKEDMAP.put("one", "1");
-	        LINKEDMAP.put("two", "2");
-	        LINKEDMAP.put("three", "3");
-	        IDENTITYMAP.put("one", "1");
-	        IDENTITYMAP.put("two", "2");
-	        IDENTITYMAP.put("three", "3");
-	        LINKEDSET.add("one");
-	        LINKEDSET.add("two");
-	        LINKEDSET.add("three");
-	        TREE.put("one", "1");
-	        TREE.put("two", "2");
-	        TREE.put("three", "3");
-	        PERMCOL.add(PERM);
-	        // To make sure they all use the same Calendar
-	        CALENDAR.setTimeZone(new SimpleTimeZone(0, "GMT"));
-	        CALENDAR.set(1999, Calendar.JUNE, 23, 15, 47, 13);
-	        CALENDAR.set(Calendar.MILLISECOND, 553);
-	        DATEFORM.setCalendar(CALENDAR);
-	        java.text.DateFormatSymbols symbols = new java.text.DateFormatSymbols();
-	        symbols.setZoneStrings(new String[][] { { "a", "b", "c", "d" },
-	                { "e", "f", "g", "h" } });
-	        ((java.text.SimpleDateFormat) DATEFORM).setDateFormatSymbols(symbols);
-	        DATEFORM.setNumberFormat(new java.text.DecimalFormat("#.#;'-'#.#"));
-	        DATEFORM.setTimeZone(TimeZone.getTimeZone("EST"));
-	        ((java.text.DecimalFormat) NUMBERFORM).applyPattern("#.#;'-'#.#");
-	        MESSAGE.setFormat(0, DATEFORM);
-	        MESSAGE.setFormat(1, DATEFORM);
-    	} catch (Exception e) {
-    		INITIALIZE_EXCEPTION = e;
-    	}
+        try {
+            TABLE.put("one", "1");
+            TABLE.put("two", "2");
+            TABLE.put("three", "3");
+            MAP.put("one", "1");
+            MAP.put("two", "2");
+            MAP.put("three", "3");
+            LINKEDMAP.put("one", "1");
+            LINKEDMAP.put("two", "2");
+            LINKEDMAP.put("three", "3");
+            IDENTITYMAP.put("one", "1");
+            IDENTITYMAP.put("two", "2");
+            IDENTITYMAP.put("three", "3");
+            LINKEDSET.add("one");
+            LINKEDSET.add("two");
+            LINKEDSET.add("three");
+            TREE.put("one", "1");
+            TREE.put("two", "2");
+            TREE.put("three", "3");
+            PERMCOL.add(PERM);
+            // To make sure they all use the same Calendar
+            CALENDAR.setTimeZone(new SimpleTimeZone(0, "GMT"));
+            CALENDAR.set(1999, Calendar.JUNE, 23, 15, 47, 13);
+            CALENDAR.set(Calendar.MILLISECOND, 553);
+            DATEFORM.setCalendar(CALENDAR);
+            java.text.DateFormatSymbols symbols = new java.text.DateFormatSymbols();
+            symbols.setZoneStrings(new String[][] { { "a", "b", "c", "d" },
+                    { "e", "f", "g", "h" } });
+            ((java.text.SimpleDateFormat) DATEFORM).setDateFormatSymbols(symbols);
+            DATEFORM.setNumberFormat(new java.text.DecimalFormat("#.#;'-'#.#"));
+            DATEFORM.setTimeZone(TimeZone.getTimeZone("EST"));
+            ((java.text.DecimalFormat) NUMBERFORM).applyPattern("#.#;'-'#.#");
+            MESSAGE.setFormat(0, DATEFORM);
+            MESSAGE.setFormat(1, DATEFORM);
+        } catch (Exception e) {
+            INITIALIZE_EXCEPTION = e;
+        }
     }
 
     public SerializationStressTest() {
@@ -263,9 +263,9 @@ public class SerializationStressTest extends junit.framework.TestCase implements
      * is called before a test is executed.
      */
     protected void setUp() {
-    	if (INITIALIZE_EXCEPTION != null) {
-    		throw new ExceptionInInitializerError(INITIALIZE_EXCEPTION);
-    	}
+        if (INITIALIZE_EXCEPTION != null) {
+            throw new ExceptionInInitializerError(INITIALIZE_EXCEPTION);
+        }
         try {
             if (xdump) {
                 oos = new ObjectOutputStream(new FileOutputStream(xFileName
