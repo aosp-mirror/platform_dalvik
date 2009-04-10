@@ -232,8 +232,8 @@ public abstract class CharBufferTest extends AbstractBufferTest {
         assertEquals(buf.limit(), buf.capacity());
         assertContentLikeTestData1(buf, 0, (char) 0, buf.capacity());
         try {
-	        // failed on RI. Spec doesn't specify the behavior if 
-	        // actually nothing to be done by compact()
+            // failed on RI. Spec doesn't specify the behavior if 
+            // actually nothing to be done by compact()
             buf.reset();
             fail("Should throw Exception"); //$NON-NLS-1$
         } catch (InvalidMarkException e) {

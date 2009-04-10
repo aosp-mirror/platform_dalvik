@@ -45,7 +45,7 @@ public class UpdateFunctionalityTest2 extends TestCase {
     private static Statement statement = null;
     
     public void setUp() throws Exception {
-    	super.setUp();
+        super.setUp();
         Support_SQL.loadDriver();
         try {
             conn = Support_SQL.getConnection();

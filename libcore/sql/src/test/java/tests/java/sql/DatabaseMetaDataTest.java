@@ -64,7 +64,7 @@ public class DatabaseMetaDataTest extends TestCase {
     private static int id = 1;
 
     public void setUp() throws Exception {
-    	super.setUp();
+        super.setUp();
         Support_SQL.loadDriver();
         try {
             conn = Support_SQL.getConnection();

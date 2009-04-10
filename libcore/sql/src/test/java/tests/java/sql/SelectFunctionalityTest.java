@@ -55,7 +55,7 @@ public class SelectFunctionalityTest extends TestCase {
     private static Time time;
 
     public void setUp() throws Exception {
-    	super.setUp();
+        super.setUp();
         Support_SQL.loadDriver();
         try {
             conn = Support_SQL.getConnection();
