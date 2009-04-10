@@ -47,7 +47,7 @@ public class StressTest extends TestCase {
     private static Statement statement;
     
     public void setUp() throws Exception {
-    	super.setUp();
+        super.setUp();
         Support_SQL.loadDriver();
         conn = Support_SQL.getConnection();
         statement = conn.createStatement();

@@ -246,7 +246,7 @@ public abstract class DoubleBufferTest extends AbstractBufferTest {
         assertContentLikeTestData1(buf, 0, 0.0, buf.capacity());
         try {
             // Fails on RI. Spec doesn't specify the behavior if
-	    // actually nothing to be done by compact(). So RI doesn't reset
+            // actually nothing to be done by compact(). So RI doesn't reset
             // mark position 
             buf.reset();
             fail("Should throw Exception"); //$NON-NLS-1$

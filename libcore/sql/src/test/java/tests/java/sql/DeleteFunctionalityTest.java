@@ -52,7 +52,7 @@ public class DeleteFunctionalityTest extends TestCase {
     }
 
     public void tearDown() throws Exception {
-    	deleteTestTables();
+        deleteTestTables();
         statement.close();
         conn.close();
         super.tearDown();
