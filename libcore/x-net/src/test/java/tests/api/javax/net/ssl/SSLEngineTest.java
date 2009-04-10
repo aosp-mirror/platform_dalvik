@@ -30,6 +30,8 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.net.ssl.KeyManager;
@@ -765,8 +767,6 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
-     * @throws IOException 
-     * @throws InterruptedException 
      * @tests javax.net.ssl.SSLEngine#wrap(ByteBuffer[] srcs, int offset,
      *                                     int length, ByteBuffer dst)
      * Exception case: SSLException should be thrown.
@@ -1021,8 +1021,6 @@ public class SSLEngineTest extends TestCase {
     }
     
     /**
-     * @throws InterruptedException 
-     * @throws IOException 
      * @tests javax.net.ssl.SSLEngine#unwrap(ByteBuffer src, ByteBuffer dst)
      * SSLException should be thrown.
      */
@@ -1191,31 +1189,15 @@ public class SSLEngineTest extends TestCase {
         method = "unwrap",
         args = {ByteBuffer.class, ByteBuffer[].class}
     )
-    public void test_unwrap_ByteBuffer$ByteBuffer_01() {
-        ByteBuffer bbs = ByteBuffer.allocate(20);
-        bbs.put("blablablabla".getBytes());
-        bbs.rewind();
-        ByteBuffer bbd = ByteBuffer.allocate(20000);
-        bbd.rewind();
-        SSLEngine sse = getEngine();
-        sse.setUseClientMode(true);
-        
-        try {
-			sse.beginHandshake();
+    public void test_unwrap_ByteBuffer$ByteBuffer_01() throws IOException, InterruptedException {
+        prepareEngines();
+        doHandshake();
 
-	    	SSLEngineResult.HandshakeStatus status = sse.getHandshakeStatus();
-	    	int i = 0;
-	    	while (status == SSLEngineResult.HandshakeStatus.NEED_WRAP && i++ < 10) {
-	        	SSLEngineResult result = sse.wrap(bbs, bbd);
-	        	status = result.getHandshakeStatus();
-	        	bbs.rewind();
-	    	}
-		} catch (SSLException e) {
-			fail("unexpected exception : " + e);
-		}
+        ByteBuffer bbs = ByteBuffer.allocate(100);  
+        ByteBuffer bbd = ByteBuffer.allocate(100);
         
         try {
-            sse.unwrap(bbs, new ByteBuffer[] { bbd });
+            clientEngine.engine.unwrap(bbs, new ByteBuffer[] { bbd });
             fail("SSLException wasn't thrown");
         } catch (SSLException ex) {
             //expected
@@ -1736,26 +1718,24 @@ public class SSLEngineTest extends TestCase {
 
         private ByteBuffer writeBuffer;
 
-        HandshakeHandler(boolean clientMode, SourceChannel in, SinkChannel out) {
+        HandshakeHandler(boolean clientMode, SourceChannel in, SinkChannel out)
+                throws SSLException {
             this.in = in;
             this.out = out;
             engine = getEngine();
             engine.setUseClientMode(clientMode);
             String[] cipherSuites = engine.getSupportedCipherSuites();
-            Vector<String> enabledSuites = new Vector<String>();
+            Set<String> enabledSuites = new HashSet<String>();
             for (String cipherSuite : cipherSuites) {
                 if (cipherSuite.contains("anon")) {
                     enabledSuites.add(cipherSuite);
                 }
             }
-            engine.setEnabledCipherSuites((String[])enabledSuites.toArray(new String[0]));
+            engine.setEnabledCipherSuites((String[]) enabledSuites.toArray(
+                    new String[enabledSuites.size()]));
 
-            try {
-                engine.beginHandshake();
-                status = engine.getHandshakeStatus();
-            } catch (SSLException e) {
-                throw new RuntimeException("failed to start handshake");
-            }
+            engine.beginHandshake();
+            status = engine.getHandshakeStatus();
 
             if (clientMode) {
                 LOGTAG = "CLIENT: ";
@@ -1779,14 +1759,9 @@ public class SSLEngineTest extends TestCase {
             //System.out.println(o);
         }
 
-        private void reset(ByteBuffer buffer) {
-            buffer.rewind();
-            buffer.limit(buffer.capacity());
-        }
-
         private ByteBuffer read() throws IOException {
             if (readBuffer == null || readBuffer.remaining() == 0 || readBuffer.position() == 0) {
-                reset(readBuffer);
+                readBuffer.clear();
                 int read = in.read(readBuffer);
                 log("read: " + read);
                 readBuffer.rewind();
@@ -1796,8 +1771,8 @@ public class SSLEngineTest extends TestCase {
         }
 
         public void run() {
-            while (true) {
-                try {
+            try {
+                while (true) {
                     switch (status) {
                         case FINISHED: {
                             log(status);
@@ -1805,7 +1780,7 @@ public class SSLEngineTest extends TestCase {
                         }
                         case NEED_TASK: {
                             log(status);
-                            Runnable task = null;
+                            Runnable task;
                             while ((task = engine.getDelegatedTask()) != null) {
                                 task.run();
                             }
@@ -1815,7 +1790,7 @@ public class SSLEngineTest extends TestCase {
                         case NEED_UNWRAP: {
                             log(status);
                             ByteBuffer source = read();
-                            reset(writeBuffer);
+                            writeBuffer.clear();
 
                             while (status == HandshakeStatus.NEED_UNWRAP) {
                                 SSLEngineResult result = engine.unwrap(source, writeBuffer);
@@ -1826,7 +1801,7 @@ public class SSLEngineTest extends TestCase {
                         }
                         case NEED_WRAP: {
                             log(status);
-                            reset(writeBuffer);
+                            writeBuffer.clear();
 
                             int produced = 0;
                             SSLEngineResult result = null;
@@ -1847,51 +1822,15 @@ public class SSLEngineTest extends TestCase {
                             return;
                         }
                     }
-                } catch (IOException e) {
-                    log(e);
-                    return;
-                } catch (RuntimeException e) {
-                    // ignore;
-                    return;
                 }
+            } catch (IOException e) {
+                log(e);
+            } catch (RuntimeException e) {
+                // ignore;
             }
         }
     }
     
-    /** 
-     * Implements basically a dummy TrustManager. It stores the certificate
-     * chain it sees, so it can later be queried.
-     */
-    class TestTrustManager implements X509TrustManager {
-        
-        private X509Certificate[] chain;
-        
-        private String authType;
-        
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-            this.chain = chain;
-            this.authType = authType;
-        }
-    
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-            this.chain = chain;
-            this.authType = authType;
-        }
-    
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
-    
-        public X509Certificate[] getChain() {
-            return chain;
-        }
-        
-        public String getAuthType() {
-            return authType;
-        }
-        
-    }
-
     @TestTargets({
         @TestTargetNew(
                 level = TestLevel.PARTIAL_COMPLETE,
@@ -1930,17 +1869,22 @@ public class SSLEngineTest extends TestCase {
                 args = {}
         )
     })
-    @KnownFailure("Handshake Status is never finished. NPE in ClientSessionContext$HostAndPort.hashCode() when host is null")
+    @KnownFailure("Handshake Status is never finished. NPE in "
+            + "ClientSessionContext$HostAndPort.hashCode() when host is null")
     public void testHandshake() throws IOException, InterruptedException {
-    	
+
         prepareEngines();
-    	
+
         assertTrue("handshake failed", doHandshake());
         
         System.out.println(clientEngine.engine.getSession().getCipherSuite());
-    	
-    	assertEquals("Handshake not finished", SSLEngineResult.HandshakeStatus.FINISHED, clientEngine.getStatus());
-        assertEquals("Handshake not finished", SSLEngineResult.HandshakeStatus.FINISHED, serverEngine.getStatus());
+
+        assertEquals("Handshake not finished",
+                SSLEngineResult.HandshakeStatus.FINISHED,
+                clientEngine.getStatus());
+        assertEquals("Handshake not finished",
+                SSLEngineResult.HandshakeStatus.FINISHED,
+                serverEngine.getStatus());
     }
     
     void prepareEngines() throws IOException {
@@ -1980,24 +1924,4 @@ public class SSLEngineTest extends TestCase {
         return clientEngine.getStatus() == HandshakeStatus.FINISHED && serverEngine.getStatus() == HandshakeStatus.FINISHED;
     }
     
-
-    /**
-     * Loads a keystore from a base64-encoded String. Returns the KeyManager[]
-     * for the result.
-     */
-    private KeyManager[] getKeyManagers(String keys) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException {
-//        byte[] bytes = Base64.decode(keys.getBytes());                    
-//        InputStream inputStream = new ByteArrayInputStream(bytes);
-//        
-//        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-//        keyStore.load(inputStream, PASSWORD.toCharArray());
-//        inputStream.close();
-//        
-//        String algorithm = KeyManagerFactory.getDefaultAlgorithm();
-//        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(algorithm);
-//        keyManagerFactory.init(keyStore, PASSWORD.toCharArray());
-//        
-//        return keyManagerFactory.getKeyManagers();
-        return null;
-    }    
 }

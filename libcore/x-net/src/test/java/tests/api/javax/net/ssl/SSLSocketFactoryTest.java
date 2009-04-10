@@ -35,8 +35,8 @@ import tests.support.Support_PortManager;
 @TestTargetClass(SSLSocketFactory.class) 
 public class SSLSocketFactoryTest extends TestCase {
     
-	private ServerSocket ss;
-	
+    private ServerSocket ss;
+
     protected int startServer(String name) {
         int portNumber = Support_PortManager.getNextPort();
         try {
@@ -89,19 +89,20 @@ public class SSLSocketFactoryTest extends TestCase {
         args = {java.net.Socket.class, java.lang.String.class, int.class, boolean.class}
     )
     public void test_createSocket() {
-        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        SSLSocketFactory sf = (SSLSocketFactory)SSLSocketFactory.getDefault();
         int sport = startServer("test_createSocket()");
-        int[] invalid = {Integer.MIN_VALUE, -1, 65536, Integer.MAX_VALUE};
-        String[] str = {"bla-bla"};
+        int[] invalid = {
+                Integer.MIN_VALUE, -1, 65536, Integer.MAX_VALUE
+        };
         try {
-        	Socket st = new Socket("localhost", sport);
-           Socket s = sf.createSocket(st, "localhost", sport, false);
-           assertFalse(s.isClosed());
+            Socket st = new Socket("localhost", sport);
+            Socket s = sf.createSocket(st, "localhost", sport, false);
+            assertFalse(s.isClosed());
         } catch (Exception ex) {
             fail("Unexpected exception " + ex);
         }
         try {
-        	Socket st = new Socket("localhost", sport);
+            Socket st = new Socket("localhost", sport);
             Socket s = sf.createSocket(st, "localhost", sport, true);
             s.close();
             assertTrue(st.isClosed());
@@ -112,28 +113,27 @@ public class SSLSocketFactoryTest extends TestCase {
             sf.createSocket(null, "localhost", sport, true);
             fail("IOException wasn't thrown");
         } catch (IOException ioe) {
-            //expected
+            // expected
         } catch (NullPointerException e) {
-        	// expected
+            // expected
         }
         for (int i = 0; i < invalid.length; i++) {
             try {
                 Socket s = sf.createSocket(new Socket(), "localhost", 1080, false);
                 fail("IOException wasn't thrown");
             } catch (IOException ioe) {
-                //expected
+                // expected
             }
         }
-        for (int i = 0; i < str.length; i++) {
-            try {
-            	Socket st = new Socket(str[i], sport);
-                Socket s = sf.createSocket(st, str[i], sport, false);
-                fail("UnknownHostException wasn't thrown: " + str[i]);
-            } catch (UnknownHostException uhe) {
-                //expected
-            } catch (Exception e) {
-                fail(e + " was thrown instead of UnknownHostException");
-            }
+
+        try {
+            Socket st = new Socket("bla-bla", sport);
+            Socket s = sf.createSocket(st, "bla-bla", sport, false);
+            fail("UnknownHostException wasn't thrown: " + "bla-bla");
+        } catch (UnknownHostException uhe) {
+            // expected
+        } catch (Exception e) {
+            fail(e + " was thrown instead of UnknownHostException");
         }
     }
     
