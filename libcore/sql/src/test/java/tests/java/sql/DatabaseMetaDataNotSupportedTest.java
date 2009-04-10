@@ -58,7 +58,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     private static int id = 1;
     
     public void setUp() throws Exception {
-    	super.setUp();
+        super.setUp();
         Support_SQL.loadDriver();
         try {
             conn = Support_SQL.getConnection();
@@ -140,7 +140,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_allProceduresAreCallable() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.allProceduresAreCallable());
+        assertFalse(meta.allProceduresAreCallable());
     }
     
     /**
@@ -220,7 +220,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_dataDefinitionIgnoredInTransactions() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.dataDefinitionIgnoredInTransactions());
+        assertFalse(meta.dataDefinitionIgnoredInTransactions());
     }
     
     /**
@@ -234,7 +234,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_deletesAreDetectedI() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.deletesAreDetected(0));
+        assertFalse(meta.deletesAreDetected(0));
     }
 
     /**
@@ -249,7 +249,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     @KnownFailure("not supported")
     public void test_doesMaxRowSizeIncludeBlobs() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.doesMaxRowSizeIncludeBlobs());
+        assertFalse(meta.doesMaxRowSizeIncludeBlobs());
     }
 
     /**
@@ -526,7 +526,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     public void test_getProcedureColumnsLjava_lang_StringLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	meta.getProcedureColumns("", "", "", "");
+        meta.getProcedureColumns("", "", "", "");
     }
     
     /**
@@ -821,7 +821,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     @KnownFailure("not supported")
     public void test_locatorsUpdateCopy() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.locatorsUpdateCopy());
+        assertFalse(meta.locatorsUpdateCopy());
     }
 
     /**
@@ -835,7 +835,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_nullPlusNonNullIsNull() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.nullPlusNonNullIsNull());
+        assertFalse(meta.nullPlusNonNullIsNull());
     }
 
     /**
@@ -849,7 +849,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_nullsAreSortedAtEnd() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.nullsAreSortedAtEnd());
+        assertFalse(meta.nullsAreSortedAtEnd());
     }
 
     /**
@@ -863,7 +863,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_nullsAreSortedAtStart() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.nullsAreSortedAtStart());
+        assertFalse(meta.nullsAreSortedAtStart());
     }
 
     /**
@@ -877,7 +877,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_nullsAreSortedHigh() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.nullsAreSortedHigh());
+        assertFalse(meta.nullsAreSortedHigh());
     }
 
     /**
@@ -891,7 +891,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_nullsAreSortedLow() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.nullsAreSortedLow());
+        assertFalse(meta.nullsAreSortedLow());
     }
     
     /**
@@ -987,7 +987,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
         args = {}
     )
     public void test_storesLowerCaseQuotedIdentifiers() throws SQLException {
-    	assertFalse(meta.storesLowerCaseQuotedIdentifiers());
+        assertFalse(meta.storesLowerCaseQuotedIdentifiers());
     }
     
     /**
@@ -1001,7 +1001,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_storesUpperCaseIdentifiers() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.storesUpperCaseIdentifiers());
+        assertFalse(meta.storesUpperCaseIdentifiers());
     }
 
     /**
@@ -1015,7 +1015,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_storesUpperCaseQuotedIdentifiers() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.storesUpperCaseQuotedIdentifiers());
+        assertFalse(meta.storesUpperCaseQuotedIdentifiers());
     }
 
     /**
@@ -1030,7 +1030,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     @KnownFailure("not supported")
     public void test_supportsANSI92EntryLevelSQL() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsANSI92EntryLevelSQL());
+        assertFalse(meta.supportsANSI92EntryLevelSQL());
     }
 
     /**
@@ -1044,7 +1044,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsANSI92FullSQL() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsANSI92FullSQL());
+        assertFalse(meta.supportsANSI92FullSQL());
     }
 
     /**
@@ -1058,7 +1058,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsANSI92IntermediateSQL() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsANSI92IntermediateSQL());
+        assertFalse(meta.supportsANSI92IntermediateSQL());
     }
 
     /**
@@ -1072,7 +1072,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsAlterTableWithAddColumn() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsAlterTableWithAddColumn());    	
+        assertFalse(meta.supportsAlterTableWithAddColumn());
     }
 
     /**
@@ -1086,7 +1086,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsAlterTableWithDropColumn() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsAlterTableWithDropColumn());    	
+        assertFalse(meta.supportsAlterTableWithDropColumn());
 
     }
 
@@ -1101,7 +1101,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsBatchUpdates() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsBatchUpdates());
+        assertFalse(meta.supportsBatchUpdates());
     }
 
     /**
@@ -1115,7 +1115,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsCatalogsInDataManipulation() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsCatalogsInDataManipulation());
+        assertFalse(meta.supportsCatalogsInDataManipulation());
     }
 
     /**
@@ -1129,7 +1129,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsCatalogsInIndexDefinitions() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsCatalogsInIndexDefinitions());
+        assertFalse(meta.supportsCatalogsInIndexDefinitions());
     }
 
     /**
@@ -1144,7 +1144,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     public void test_supportsCatalogsInPrivilegeDefinitions()
             throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsCatalogsInPrivilegeDefinitions());
+        assertFalse(meta.supportsCatalogsInPrivilegeDefinitions());
     }
 
     /**
@@ -1158,7 +1158,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsCatalogsInProcedureCalls() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsCatalogsInProcedureCalls());
+        assertFalse(meta.supportsCatalogsInProcedureCalls());
     }
 
     /**
@@ -1172,7 +1172,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsCatalogsInTableDefinitions() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsCatalogsInTableDefinitions());
+        assertFalse(meta.supportsCatalogsInTableDefinitions());
     }
 
     /**
@@ -1186,7 +1186,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsConvert() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsConvert());
+        assertFalse(meta.supportsConvert());
     }
 
     /**
@@ -1200,7 +1200,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsConvertII() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsConvert());
+        assertFalse(meta.supportsConvert());
     }
 
     /**
@@ -1214,7 +1214,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsCoreSQLGrammar() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsCoreSQLGrammar());
+        assertFalse(meta.supportsCoreSQLGrammar());
     }
 
     /**
@@ -1228,7 +1228,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsCorrelatedSubqueries() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsCorrelatedSubqueries());
+        assertFalse(meta.supportsCorrelatedSubqueries());
     }
 
     /**
@@ -1244,7 +1244,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     public void test_supportsDataDefinitionAndDataManipulationTransactions()
             throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsDataDefinitionAndDataManipulationTransactions());
+        assertFalse(meta.supportsDataDefinitionAndDataManipulationTransactions());
     }
 
     /**
@@ -1259,7 +1259,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     public void test_supportsDataManipulationTransactionsOnly()
             throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsDataManipulationTransactionsOnly());
+        assertFalse(meta.supportsDataManipulationTransactionsOnly());
     }
 
     /**
@@ -1274,7 +1274,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     public void test_supportsDifferentTableCorrelationNames()
             throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsDifferentTableCorrelationNames());
+        assertFalse(meta.supportsDifferentTableCorrelationNames());
     }
 
 
@@ -1289,7 +1289,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsExtendedSQLGrammar() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsExtendedSQLGrammar());
+        assertFalse(meta.supportsExtendedSQLGrammar());
     }
 
     /**
@@ -1303,7 +1303,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsFullOuterJoins() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsFullOuterJoins());
+        assertFalse(meta.supportsFullOuterJoins());
     }
 
     /**
@@ -1317,7 +1317,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsGetGeneratedKeys() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsGetGeneratedKeys());
+        assertFalse(meta.supportsGetGeneratedKeys());
     }
     
     /**
@@ -1331,7 +1331,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsGroupByBeyondSelect() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsGroupByBeyondSelect());
+        assertFalse(meta.supportsGroupByBeyondSelect());
     }
 
     /**
@@ -1345,7 +1345,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsIntegrityEnhancementFacility() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsIntegrityEnhancementFacility());
+        assertFalse(meta.supportsIntegrityEnhancementFacility());
     }
 
     /**
@@ -1359,7 +1359,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsLikeEscapeClause() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsLikeEscapeClause());
+        assertFalse(meta.supportsLikeEscapeClause());
     }
 
     /**
@@ -1373,7 +1373,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsLimitedOuterJoins() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsLimitedOuterJoins());
+        assertFalse(meta.supportsLimitedOuterJoins());
     }
 
     /**
@@ -1388,7 +1388,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     @KnownFailure("not supported")
     public void test_supportsMinimumSQLGrammar() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsMinimumSQLGrammar());
+        assertFalse(meta.supportsMinimumSQLGrammar());
     }
 
     /**
@@ -1402,7 +1402,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsMixedCaseIdentifiers() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsMixedCaseIdentifiers());
+        assertFalse(meta.supportsMixedCaseIdentifiers());
     }
 
     /**
@@ -1416,7 +1416,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsMixedCaseQuotedIdentifiers() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsMixedCaseQuotedIdentifiers());
+        assertFalse(meta.supportsMixedCaseQuotedIdentifiers());
     }
 
     /**
@@ -1430,7 +1430,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsMultipleOpenResults() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsMultipleOpenResults());
+        assertFalse(meta.supportsMultipleOpenResults());
     }
 
     /**
@@ -1444,7 +1444,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsMultipleResultSets() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsMultipleResultSets());
+        assertFalse(meta.supportsMultipleResultSets());
     }
 
     /**
@@ -1458,7 +1458,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsMultipleTransactions() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsMultipleTransactions());
+        assertFalse(meta.supportsMultipleTransactions());
     }
 
     /**
@@ -1472,7 +1472,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsNamedParameters() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsNamedParameters());
+        assertFalse(meta.supportsNamedParameters());
     }
     
     /**
@@ -1486,7 +1486,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsOpenCursorsAcrossCommit() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsOpenCursorsAcrossCommit());
+        assertFalse(meta.supportsOpenCursorsAcrossCommit());
     }
 
     /**
@@ -1500,7 +1500,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsOpenCursorsAcrossRollback() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsOpenCursorsAcrossRollback());
+        assertFalse(meta.supportsOpenCursorsAcrossRollback());
     }
 
     /**
@@ -1514,7 +1514,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsOpenStatementsAcrossCommit() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsOpenStatementsAcrossCommit());
+        assertFalse(meta.supportsOpenStatementsAcrossCommit());
     }
 
     /**
@@ -1528,7 +1528,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsOpenStatementsAcrossRollback() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsOpenStatementsAcrossRollback());
+        assertFalse(meta.supportsOpenStatementsAcrossRollback());
     }
     
     /**
@@ -1542,7 +1542,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsOuterJoins() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsOuterJoins());
+        assertFalse(meta.supportsOuterJoins());
     }
 
     /**
@@ -1556,7 +1556,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsPositionedDelete() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsPositionedDelete());
+        assertFalse(meta.supportsPositionedDelete());
     }
 
     /**
@@ -1570,7 +1570,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsPositionedUpdate() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsPositionedUpdate());
+        assertFalse(meta.supportsPositionedUpdate());
     }
 
     /**
@@ -1584,7 +1584,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsResultSetConcurrencyII() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsResultSetConcurrency(0,0));
+        assertFalse(meta.supportsResultSetConcurrency(0,0));
     }
 
     /**
@@ -1598,7 +1598,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsResultSetHoldabilityI() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsResultSetHoldability(0));
+        assertFalse(meta.supportsResultSetHoldability(0));
     }
     
     /**
@@ -1634,7 +1634,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsSavepoints() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsSavepoints());
+        assertFalse(meta.supportsSavepoints());
     }
 
     /**
@@ -1648,7 +1648,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsSchemasInDataManipulation() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsSchemasInDataManipulation());
+        assertFalse(meta.supportsSchemasInDataManipulation());
     }
 
     /**
@@ -1662,7 +1662,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsSchemasInIndexDefinitions() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsSchemasInIndexDefinitions());
+        assertFalse(meta.supportsSchemasInIndexDefinitions());
     }
 
     /**
@@ -1690,7 +1690,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsSchemasInProcedureCalls() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsSchemasInProcedureCalls());
+        assertFalse(meta.supportsSchemasInProcedureCalls());
     }
 
     /**
@@ -1704,7 +1704,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsSchemasInTableDefinitions() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsSchemasInTableDefinitions());
+        assertFalse(meta.supportsSchemasInTableDefinitions());
     }
     
     /**
@@ -1718,7 +1718,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsStatementPooling() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsStatementPooling());
+        assertFalse(meta.supportsStatementPooling());
     }
 
     /**
@@ -1732,7 +1732,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsStoredProcedures() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsStoredProcedures());
+        assertFalse(meta.supportsStoredProcedures());
     }
 
     /**
@@ -1747,7 +1747,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     @KnownFailure("not supported")
     public void test_supportsSubqueriesInComparisons() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsSubqueriesInComparisons());
+        assertFalse(meta.supportsSubqueriesInComparisons());
     }
     
     /**
@@ -1761,7 +1761,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     @KnownFailure("not supported")
     public void test_supportsSubqueriesInIns() throws SQLException {
-    	assertFalse(meta.supportsSubqueriesInIns());
+        assertFalse(meta.supportsSubqueriesInIns());
     }
 
     /**
@@ -1775,7 +1775,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsSubqueriesInQuantifieds() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsSubqueriesInQuantifieds());
+        assertFalse(meta.supportsSubqueriesInQuantifieds());
     }
     
     /**
@@ -1789,7 +1789,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     @KnownFailure("not supported")
     public void test_supportsTransactions() throws SQLException {
-    	assertFalse(meta.supportsTransactions());
+        assertFalse(meta.supportsTransactions());
     }
 
     /**
@@ -1803,7 +1803,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsUnion() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsUnion());
+        assertFalse(meta.supportsUnion());
     }
 
     /**
@@ -1817,7 +1817,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_supportsUnionAll() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.supportsUnionAll());
+        assertFalse(meta.supportsUnionAll());
     }
     
     /**
@@ -1831,7 +1831,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     )
     public void test_usesLocalFilePerTable() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.usesLocalFilePerTable());
+        assertFalse(meta.usesLocalFilePerTable());
     }
 
     /**
@@ -1846,7 +1846,7 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
     @KnownFailure("not supported")
     public void test_usesLocalFiles() throws SQLException {
         // NOT_FEASIBLE: SQLITE does not implement this functionality
-    	assertFalse(meta.usesLocalFiles());
+        assertFalse(meta.usesLocalFiles());
     }
     
     /**

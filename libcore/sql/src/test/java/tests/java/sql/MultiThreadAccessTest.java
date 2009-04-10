@@ -51,7 +51,7 @@ public class MultiThreadAccessTest extends TestCase {
     private ThreadPool threadPool;
 
     public void setUp() throws Exception {
-    	super.setUp();
+        super.setUp();
         Support_SQL.loadDriver();
         try {
             conn = Support_SQL.getConnection();
@@ -64,7 +64,7 @@ public class MultiThreadAccessTest extends TestCase {
     }
 
     public void tearDown() throws Exception {
-    	threadPool.join();
+        threadPool.join();
         deleteTestTables();
         conn.close();
         statement.close();

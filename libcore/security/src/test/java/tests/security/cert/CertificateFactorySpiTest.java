@@ -52,7 +52,7 @@ import java.util.List;
 @TestTargetClass(CertificateFactorySpi.class)
 public class CertificateFactorySpiTest extends TestCase {
 
-	/**
+    /**
      * Test for <code>CertificateFactorySpi</code> constructor 
      * Assertion: constructs CertificateFactorySpi
      */
