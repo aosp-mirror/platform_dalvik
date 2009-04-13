@@ -3249,7 +3249,8 @@ static void gcScanInterpStackReferences(Thread *thread)
             const u1* regVector;
             int i;
 
-            pMap = dvmGetExpandedRegisterMap((Method*) method);
+            Method* nonConstMethod = (Method*) method;  // quiet gcc
+            pMap = dvmGetExpandedRegisterMap(nonConstMethod);
             if (pMap != NULL) {
                 /* found map, get registers for this address */
                 int addr = saveArea->xtra.currentPc - method->insns;
@@ -3274,7 +3275,7 @@ static void gcScanInterpStackReferences(Thread *thread)
                  * no need to keep banging on the global.
                  */
                 if (gDvm.preciseGc) {
-                    LOGI("PGC: no map for %s.%s\n",
+                    LOGV("PGC: no map for %s.%s\n",
                         method->clazz->descriptor, method->name);
                 }
                 regVector = NULL;
