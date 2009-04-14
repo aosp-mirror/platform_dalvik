@@ -34,12 +34,12 @@ public class ParserFactoryTest extends TestCase {
         args = { },
         notes = "Checks everything except META-INF case"
     )
-    public void testMakeParser() throws NullPointerException,
-            ClassCastException, ClassNotFoundException, InstantiationException,
-            IllegalAccessException {
+    public void testMakeParser() throws ClassNotFoundException,
+            IllegalAccessException, InstantiationException {
         // Property not set at all
         try {
             ParserFactory.makeParser();
+            fail("expected NullPointerException was not thrown");
         } catch (NullPointerException e) {
             // Expected
         }
@@ -49,6 +49,7 @@ public class ParserFactoryTest extends TestCase {
         
         try {
             ParserFactory.makeParser();
+            fail("expected ClassNotFoundException was not thrown");
         } catch (ClassNotFoundException e) {
             // Expected
         }
@@ -59,6 +60,7 @@ public class ParserFactoryTest extends TestCase {
         
         try {
             ParserFactory.makeParser();
+            fail("expected IllegalAccessException was not thrown");
         } catch (IllegalAccessException e) {
             // Expected
         }
@@ -69,6 +71,7 @@ public class ParserFactoryTest extends TestCase {
         
         try {
             ParserFactory.makeParser();
+            fail("expected InstantiationException was not thrown");
         } catch (InstantiationException e) {
             // Expected
         }
@@ -79,6 +82,7 @@ public class ParserFactoryTest extends TestCase {
         
         try {
             ParserFactory.makeParser();
+            fail("expected ClassCastException was not thrown");
         } catch (ClassCastException e) {
             // Expected
         }
@@ -96,12 +100,12 @@ public class ParserFactoryTest extends TestCase {
         method = "makeParser",
         args = { String.class }
     )
-    public void testMakeParserString() throws ClassCastException,
-            ClassNotFoundException, IllegalAccessException,
-            InstantiationException {
+    public void testMakeParserString() throws ClassNotFoundException,
+            IllegalAccessException, InstantiationException {
         // No class
         try {
             ParserFactory.makeParser(null);
+            fail("expected NullPointerException was not thrown");
         } catch (NullPointerException e) {
             // Expected
         }
@@ -109,6 +113,7 @@ public class ParserFactoryTest extends TestCase {
         // Unknown class
         try {
             ParserFactory.makeParser("foo.bar.SAXParser");
+            fail("expected ClassNotFoundException was not thrown");
         } catch (ClassNotFoundException e) {
             // Expected
         }
@@ -117,6 +122,7 @@ public class ParserFactoryTest extends TestCase {
         try {
             ParserFactory.makeParser(
                     "tests.api.org.xml.sax.support.NoAccessParser");
+            fail("expected IllegalAccessException was not thrown");
         } catch (IllegalAccessException e) {
             // Expected
         }
@@ -125,6 +131,7 @@ public class ParserFactoryTest extends TestCase {
         try {
             ParserFactory.makeParser(
                     "tests.api.org.xml.sax.support.NoInstanceParser");
+            fail("expected InstantiationException was not thrown");
         } catch (InstantiationException e) {
             // Expected
         }
@@ -133,6 +140,7 @@ public class ParserFactoryTest extends TestCase {
         try {
             ParserFactory.makeParser(
                     "tests.api.org.xml.sax.support.NoSubclassParser");
+            fail("expected ClassCastException was not thrown");
         } catch (ClassCastException e) {
             // Expected
         }
