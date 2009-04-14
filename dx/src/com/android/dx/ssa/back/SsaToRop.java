@@ -170,18 +170,21 @@ public class SsaToRop {
      * predecessor block.
      */
     private void removePhiFunctions() {
-        for (SsaBasicBlock block : ssaMeth.getBlocks()) {
+        ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
+        
+        for (SsaBasicBlock block : blocks) {
             // Add moves in all the pred blocks for each phi insn.
-            block.forEachPhiInsn(new PhiVisitor(block));
+            block.forEachPhiInsn(new PhiVisitor(block, blocks));
+
             // Delete the phi insns.
             block.removeAllPhiInsns();
         }
 
         /*
-         * After all move insns have been added: sort them so they don't
+         * After all move insns have been added, sort them so they don't
          * destructively interfere.
          */
-        for (SsaBasicBlock block : ssaMeth.getBlocks()) {
+        for (SsaBasicBlock block : blocks) {
             block.scheduleMovesFromPhis();
         }
     }
@@ -190,15 +193,17 @@ public class SsaToRop {
      * Helper for {@link #removePhiFunctions}: PhiSuccessorUpdater for
      * adding move instructions to predecessors based on phi insns.
      */
-    private class PhiVisitor implements PhiInsn.Visitor {
+    private static class PhiVisitor implements PhiInsn.Visitor {
         private final SsaBasicBlock block;
+        private final ArrayList<SsaBasicBlock> blocks;
 
-        PhiVisitor(SsaBasicBlock block) {
+        public PhiVisitor(SsaBasicBlock block,
+                ArrayList<SsaBasicBlock> blocks) {
             this.block = block;
+            this.blocks = blocks;
         }
 
         public void visitPhiInsn(PhiInsn insn) {
-            ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
             RegisterSpecList sources = insn.getSources();
             RegisterSpec result = insn.getResult();
             int sz = sources.size();
@@ -245,19 +250,20 @@ public class SsaToRop {
      */
     private BasicBlockList convertBasicBlocks() {
         ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
-        // Exit block may be null
+
+        // Exit block may be null.
         SsaBasicBlock exitBlock = ssaMeth.getExitBlock();
 
         int ropBlockCount = ssaMeth.getCountReachableBlocks();
 
-        // Don't count the exit block, if it exists
+        // Don't count the exit block, if it exists.
         ropBlockCount -= (exitBlock == null) ? 0 : 1;
 
         BasicBlockList result = new BasicBlockList(ropBlockCount);
 
-        // Convert all the reachable blocks except the exit block
+        // Convert all the reachable blocks except the exit block.
         int ropBlockIndex = 0;
-        for(SsaBasicBlock b : blocks) {
+        for (SsaBasicBlock b : blocks) {
             if (b.isReachable() && b != exitBlock) {
                 result.set(ropBlockIndex++, convertBasicBlock(b));
             }
@@ -265,8 +271,8 @@ public class SsaToRop {
 
         // The exit block, which is discarded, must do nothing.
         if (exitBlock != null && exitBlock.getInsns().size() != 0) {
-            throw new RuntimeException
-                    ("Exit block must have no insns when leaving SSA form");
+            throw new RuntimeException(
+                    "Exit block must have no insns when leaving SSA form");
         }
 
         return result;
@@ -280,7 +286,6 @@ public class SsaToRop {
      * @throws RuntimeException on error
      */
     private void verifyValidExitPredecessor(SsaBasicBlock b) {
-
         ArrayList<SsaInsn> insns = b.getInsns();
         SsaInsn lastInsn = insns.get(insns.size() - 1);
         Rop opcode = lastInsn.getOpcode();
@@ -296,7 +301,7 @@ public class SsaToRop {
      * Converts a single basic block to rop form.
      *
      * @param block SSA block to process
-     * @return ROP block
+     * @return {@code non-null;} ROP block
      */
     private BasicBlock convertBasicBlock(SsaBasicBlock block) {
         IntList successorList = block.getRopLabelSuccessorList();
@@ -310,7 +315,7 @@ public class SsaToRop {
 
         if (successorList.contains(exitRopLabel)) {
             if (successorList.size() > 1) {
-                throw new RuntimeException (
+                throw new RuntimeException(
                         "Exit predecessor must have no other successors"
                                 + Hex.u2(block.getRopLabel()));
             } else {
@@ -351,7 +356,7 @@ public class SsaToRop {
     }
 
     /**
-     * This method is not presently used.
+     * <b>Note:</b> This method is not presently used.
      * 
      * @return a list of registers ordered by most-frequently-used to
      * least-frequently-used. Each register is listed once and only

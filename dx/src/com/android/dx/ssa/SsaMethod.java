@@ -73,6 +73,7 @@ public final class SsaMethod {
 
     /** indexed by register: the list of all insns that use a register */
     private ArrayList<SsaInsn>[] useList;
+
     /** A version of useList with each List unmodifiable */
     private List<SsaInsn>[] unmodifiableUseList;
 
