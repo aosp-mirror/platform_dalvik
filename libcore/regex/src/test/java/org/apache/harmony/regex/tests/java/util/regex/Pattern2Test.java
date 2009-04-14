@@ -909,8 +909,6 @@ public class Pattern2Test extends TestCase {
         args = {}
     )
     public void testUnicodeCategories() throws PatternSyntaxException {
-        Pattern p;
-        Matcher m;
         // Test Unicode categories using \p and \P
         // One letter codes: L, M, N, P, S, Z, C
         // Two letter codes: Lu, Nd, Sc, Sm, ...
@@ -955,67 +953,61 @@ public class Pattern2Test extends TestCase {
         // Co
         // Cn
         
-        
-        
         // TODO add more tests per category
-        String[][] tests = new String[][] { 
-            //{"Cc", "\u0000", "-\u0041"}, 
-            {"Cf", "\u202B"},
-            {"Co", "\uE000"},
-            {"Cs", "\uD800"},
-            {"Ll","a", "b", "x", "y", "z", "-A", "-Z"},
-            {"Lm","\u02B9"},
-            {"Lu","B", "C", "-c"},
-            {"Lo","\u05E2"},
-            {"Lt","\u01C5"},
-            {"Mc","\u0903"},
-            {"Me","\u06DE"},
-            {"Mn","\u0300"},
-            {"Nd","\u0030"},
-            {"Nl","\u2164"},
-            {"No","\u0BF0"},
-           // {"Pc","\u30FB"},
-            {"Pd","\u2015"},
-            {"Pe","\u207E"},
-            {"Po","\u00B7"},
-            {"Ps","\u0F3C"},
-            {"Sc","\u20A0"},
-            {"Sk","\u00B8"},
-            {"Sm","\u002B"},
-            {"So","\u0B70"},
-            {"Zl","\u2028"},
-            // {"Pi","\u200C"},
-            {"Zp","\u2029"}
-           
-            };
-        
-        for (int i=0; i < tests.length; i++) {
-            String[] tc = tests[i];
-            String cat = tc[0];
-            String pa = "{"+cat+"}";
-            String pat = "\\p"+pa;
-            String npat = "\\P"+pa;
-            p = Pattern.compile(pat);
-            Pattern pn = Pattern.compile(npat);
-            for (int j = 1; j < tc.length; j++) {
-                String t = tc[j];
-                boolean invert = t.startsWith("-");
-                if (invert) { 
-                    // test negative case, expected to fail
-                    t = t.substring(1);
-                }
-                boolean suc = p.matcher(t).matches() ^ invert;
-                boolean fail = pn.matcher(t).matches() ^ invert ;
+        //{"Cc", "\u0000", "-\u0041"}, 
+        testCategory("Cf", "\u202B");
+        testCategory("Co", "\uE000");
+        testCategory("Cs", "\uD800");
+        testCategory("Ll", "a", "b", "x", "y", "z", "-A", "-Z");
+        testCategory("Lm", "\u02B9");
+        testCategory("Lu", "B", "C", "-c");
+        testCategory("Lo", "\u05E2");
+        testCategory("Lt", "\u01C5");
+        testCategory("Mc", "\u0903");
+        testCategory("Me", "\u06DE");
+        testCategory("Mn", "\u0300");
+        testCategory("Nd", "\u0030");
+        testCategory("Nl", "\u2164");
+        testCategory("No", "\u0BF0");
+        // testCategory("Pc", "\u30FB");
+        testCategory("Pd", "\u2015");
+        testCategory("Pe", "\u207E");
+        testCategory("Po", "\u00B7");
+        testCategory("Ps", "\u0F3C");
+        testCategory("Sc", "\u20A0");
+        testCategory("Sk", "\u00B8");
+        testCategory("Sm", "\u002B");
+        testCategory("So", "\u0B70");
+        testCategory("Zl", "\u2028");
+        // testCategory("Pi", "\u200C");
+        testCategory("Zp", "\u2029");
+    }
+    
+    private void testCategory(String cat, String... matches) {
+        String pa = "{"+cat+"}";
+        String pat = "\\p"+pa;
+        String npat = "\\P"+pa;
+        Pattern p = Pattern.compile(pat);
+        Pattern pn = Pattern.compile(npat);
+        for (int j = 0; j < matches.length; j++) {
+            String t = matches[j];
+            boolean invert = t.startsWith("-");
+            if (invert) { 
+                // test negative case, expected to fail
+                t = t.substring(1);
+                assertFalse("expected '"+t+"' to not be matched " +
+                        "by pattern '"+pat, p.matcher(t).matches());
+                assertTrue("expected '"+t+"' to  " +
+                        "be matched by pattern '"+npat, pn.matcher(t).matches());                
+            } else {
                 assertTrue("expected '"+t+"' to be matched " +
-                        "by pattern '"+pat, suc);
+                        "by pattern '"+pat, p.matcher(t).matches());
                 assertFalse("expected '"+t+"' to  " +
-                        "not be matched by pattern '"+npat, fail);
-                
+                        "not be matched by pattern '"+npat, pn.matcher(t).matches());
             }
         }
-        
-       
     }
+    
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
         notes = "Verifies matcher(CharSequence input) method for input specified by Unicode blocks.",
@@ -1093,7 +1085,7 @@ public class Pattern2Test extends TestCase {
     }
     @TestTargetNew(
         level = TestLevel.ADDITIONAL,
-        notes = "",
+        notes = "these tests are still partial, see TODO in the code",
         method = "!",
         args = {}
     )
@@ -1112,10 +1104,11 @@ public class Pattern2Test extends TestCase {
         m = p.matcher("ananas");
         assertTrue(m.matches());
         assertEquals(4, m.groupCount());
-        assertEquals("anan",m.group(1));
-        assertEquals("an",m.group(2));
-        assertEquals("as",m.group(3));
-        assertEquals("as",m.group(4));
+        assertEquals("ananas", m.group(0));
+        assertEquals("anan", m.group(1));
+        assertEquals("an", m.group(2));
+        assertEquals("as", m.group(3));
+        assertEquals("as", m.group(4));
 
         // Test grouping without capture (?:...)
         p = Pattern.compile("(?:(?:an)+)(as)");
@@ -1123,6 +1116,12 @@ public class Pattern2Test extends TestCase {
         assertTrue(m.matches());
         assertEquals(1, m.groupCount());
         assertEquals("as", m.group(1));
+        try {
+            m.group(2);
+            fail("expected IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException ioobe) {
+            // expected
+        }
         
         // Test combination of grouping and capture
         // TODO
@@ -1187,6 +1186,20 @@ public class Pattern2Test extends TestCase {
         assertTrue(m.matches());
 
         // Test {<num>}, including 0, 1 and more
+        p = Pattern.compile("(abc){0}c");
+        m = p.matcher("abcc");
+        assertFalse(m.matches());
+        m = p.matcher("c");
+        assertTrue(m.matches());
+
+        p = Pattern.compile("(abc){1}c");
+        m = p.matcher("abcc");
+        assertTrue(m.matches());
+        m = p.matcher("c");
+        assertFalse(m.matches());
+        m = p.matcher("abcabcc");
+        assertFalse(m.matches());
+        
         p = Pattern.compile("(abc){2}c");
         m = p.matcher("abcc");
         assertFalse(m.matches());

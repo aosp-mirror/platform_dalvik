@@ -95,6 +95,7 @@ public class PatternTest extends TestCase {
         // some very simple test
         Pattern p = Pattern.compile("a");
         assertNotNull(p.matcher("bcde"));
+        assertNotSame(p.matcher("a"), p.matcher("a"));
     }
 
     /*
