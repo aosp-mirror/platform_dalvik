@@ -966,6 +966,12 @@ static void setThreadSelf(Thread* thread)
  * This is mainly of use to ensure that we don't leak resources if, for
  * example, a thread attaches itself to us with AttachCurrentThread and
  * then exits without notifying the VM.
+ *
+ * We could do the detach here instead of aborting, but this will lead to
+ * portability problems.  Other implementations do not do this check and
+ * will simply be unaware that the thread has exited, leading to resource
+ * leaks (and, if this is a non-daemon thread, an infinite hang when the
+ * VM tries to shut down).
  */
 static void threadExitCheck(void* arg)
 {
@@ -975,7 +981,6 @@ static void threadExitCheck(void* arg)
     assert(thread != NULL);
 
     if (thread->status != THREAD_ZOMBIE) {
-        /* TODO: instead of failing, we could call dvmDetachCurrentThread() */
         LOGE("Native thread exited without telling us\n");
         dvmAbort();
     }
