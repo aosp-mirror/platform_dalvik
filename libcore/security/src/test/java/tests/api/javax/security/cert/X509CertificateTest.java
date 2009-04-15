@@ -26,6 +26,7 @@ import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.SideEffect;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -121,6 +122,7 @@ public class X509CertificateTest extends TestCase {
 
     private Certificate javaxSSCert;
 
+    @Override
     protected void setUp() throws Exception {
         try {
             ByteArrayInputStream bais = new ByteArrayInputStream(base64cert
@@ -160,6 +162,18 @@ public class X509CertificateTest extends TestCase {
         }
     }
 
+    @Override
+    protected void tearDown() throws Exception {
+        if (myProvider != null) {
+//            Security.removeProvider(myProvider.getName());
+        }
+        if (mySSProvider != null) {
+//            Security.removeProvider(mySSProvider.getName());
+        }
+        
+        super.tearDown();
+    }
+    
     /**
      * X509Certificate() constructor testing.
      * @tests {@link X509Certificate#X509Certificate() }
@@ -758,6 +772,7 @@ public class X509CertificateTest extends TestCase {
       method = "verify",
       args = {java.security.PublicKey.class}
     )
+    @SideEffect("Destroys MD5 provider, hurts succeeding tests")
     public void testVerifyPublicKey() throws InvalidKeyException,
             NoSuchAlgorithmException, NoSuchProviderException,
             SignatureException, CertificateException {

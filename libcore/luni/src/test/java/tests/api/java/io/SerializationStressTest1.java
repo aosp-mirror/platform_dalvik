@@ -16,7 +16,8 @@
  */
 package tests.api.java.io;
 
-import dalvik.annotation.BrokenTest;
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
@@ -25,7 +26,9 @@ import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Vector;
 
+@SuppressWarnings("serial")
 @TestTargetClass(Serializable.class) 
 public class SerializationStressTest1 extends SerializationStressTest {
 
@@ -65,10 +68,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
 
         public void run() {
         }
+        
+        SpecTestSuperClass() {
+        }
     }
 
-    private static class SpecTest extends SpecTestSuperClass implements
-            Cloneable, Serializable {
+    private static class SpecTest extends SpecTestSuperClass implements Cloneable, Serializable {
         public java.lang.String instVar1;
 
         public static java.lang.String staticVar1;
@@ -116,7 +121,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
         private void readObject(java.io.ObjectInputStream in)
                 throws java.io.IOException, ClassNotFoundException {
             calledReadObject = true;
-            String s = ((String) in.readObject());
+            in.readObject();
         }
 
         private void writeObject(java.io.ObjectOutputStream out)
@@ -141,7 +146,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
         public void readObject(java.io.ObjectInputStream in)
                 throws java.io.IOException, ClassNotFoundException {
             calledReadObject = true;
-            String s = ((String) in.readObject());
+            in.readObject();
         }
 
         public void writeObject(java.io.ObjectOutputStream out)
@@ -338,6 +343,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
     private static class MyUnserializableExceptionWhenDumping implements
             java.io.Serializable {
         private static class MyException extends java.io.IOException {
+            @SuppressWarnings("unused")
             private Object notSerializable = new Object();
         };
 
@@ -706,7 +712,6 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
 
@@ -716,7 +721,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
             boolean passed = false;
             Throwable t = null;
             try {
-                objLoaded = dumpAndReload(objToSave);
+                dumpAndReload(objToSave);
             } catch (NotSerializableException ns) {
                 passed = true;
                 t = ns;
@@ -812,7 +817,6 @@ public class SerializationStressTest1 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @BrokenTest("throws IllegalAccessException on Android and InvalidClassException on RI")
     public void test_18_14_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -840,8 +844,10 @@ public class SerializationStressTest1 extends SerializationStressTest {
                     ((SpecTest) objLoaded).instVar1.equals(FOO));
 
         } catch (IOException e) {
+            e.printStackTrace();
             fail("Exception serializing " + objToSave + "\t->"
                     + e.toString());
+            
         } catch (ClassNotFoundException e) {
             fail("ClassNotFoundException reading Object type : "
                     + e.getMessage());
@@ -858,7 +864,6 @@ public class SerializationStressTest1 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @BrokenTest("throws IllegalAccessException on Android and InvalidClassException on RI")
     public void test_18_15_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1021,14 +1026,13 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             FieldOrder fieldOrder = new FieldOrder();
             objToSave = fieldOrder;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // This test is only useful for X-loading, so if it managed to
             // dump&load, we passed the test
             assertTrue(MSG_TEST_FAILED + objToSave, true);
@@ -1202,7 +1206,6 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
 
@@ -1210,7 +1213,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
             objToSave = justWriteObject;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Call writeObject on the instance even if it does not define
             // readObject
             assertTrue(MSG_TEST_FAILED + objToSave,
@@ -1243,15 +1246,17 @@ public class SerializationStressTest1 extends SerializationStressTest {
         Object objLoaded;
 
         try {
-            java.util.Vector vector = new java.util.Vector(1);
+            java.util.Vector<String> vector = new java.util.Vector<String>(1);
             vector.add(FOO);
             objToSave = vector;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
             objLoaded = dumpAndReload(objToSave);
             // Has to have the string there
+            @SuppressWarnings("unchecked")
+            java.util.Vector<String> obj = (Vector<String>)objLoaded;
             assertTrue(MSG_TEST_FAILED + objToSave, FOO
-                    .equals(((java.util.Vector) objLoaded).elementAt(0)));
+                    .equals(obj.elementAt(0)));
 
         } catch (IOException e) {
             fail("IOException serializing " + objToSave + " : "
@@ -1279,13 +1284,14 @@ public class SerializationStressTest1 extends SerializationStressTest {
         Object objLoaded;
 
         try {
-            java.util.Hashtable hashTable = new java.util.Hashtable(5);
+            java.util.Hashtable<String, String> hashTable = new java.util.Hashtable<String, String>(5);
             hashTable.put(FOO, FOO);
             objToSave = hashTable;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
             objLoaded = dumpAndReload(objToSave);
-            java.util.Hashtable loadedHashTable = (java.util.Hashtable) objLoaded;
+            @SuppressWarnings("unchecked")
+            java.util.Hashtable<String, String> loadedHashTable = (java.util.Hashtable<String, String>) objLoaded;
             // Has to have the key/value there (FOO -> FOO)
             assertTrue(MSG_TEST_FAILED + objToSave, FOO.equals(loadedHashTable
                     .get(FOO)));
@@ -1347,7 +1353,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @BrokenTest("Needs investigation. fails on RI, succeeds on Android. Maybe a bug in the RI.")
+    @KnownFailure("nested writeReplace is not handled")
     public void test_18_28_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1365,7 +1371,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
             assertTrue(
                     "Executed multiple levels of replacement (see PR 1F9RNT1), loaded= "
                             + objLoaded,
-                    objLoaded instanceof MultipleClassBasedReplacementWhenDumping.C1);
+                    objLoaded instanceof String);
 
         } catch (IOException e) {
             fail("IOException serializing " + objToSave + " : "
@@ -1426,14 +1432,13 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             ClassBasedReplacementWhenLoadingViolatesFieldType classBasedReplacementWhenLoadingViolatesFieldType = new ClassBasedReplacementWhenLoadingViolatesFieldType();
             objToSave = classBasedReplacementWhenLoadingViolatesFieldType;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // We cannot gere here, the load replacement must have caused a
             // field type violation
             fail(
@@ -1467,7 +1472,6 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             MyExceptionWhenDumping1 exceptionWhenDumping = new MyExceptionWhenDumping1();
@@ -1485,7 +1489,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
                     causedException);
             causedException = false;
             try {
-                objLoaded = reload();
+                reload();
                 // Although the spec says we should get a WriteAbortedException,
                 // the serialization format handle an Exception when reading
                 // primitive data so we get ClassCastException instead
@@ -1519,7 +1523,6 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             MyExceptionWhenDumping2 exceptionWhenDumping = new MyExceptionWhenDumping2();
@@ -1537,7 +1540,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
                     causedException);
             causedException = false;
             try {
-                objLoaded = reload();
+                reload();
             } catch (java.io.WriteAbortedException e) {
                 causedException = true;
             }
@@ -1570,7 +1573,6 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             NonSerializableExceptionWhenDumping nonSerializableExceptionWhenDumping = new NonSerializableExceptionWhenDumping();
@@ -1588,7 +1590,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
                     causedException);
             causedException = false;
             try {
-                objLoaded = reload();
+                reload();
             } catch (java.io.WriteAbortedException e) {
                 causedException = true;
             }
@@ -1615,13 +1617,11 @@ public class SerializationStressTest1 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @BrokenTest("succeeds on Android, but fails on RI with MyException being thrown.")
     public void test_18_33_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             MyUnserializableExceptionWhenDumping exceptionWhenDumping = new MyUnserializableExceptionWhenDumping();
@@ -1631,7 +1631,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
             boolean causedException = false;
             try {
                 dump(objToSave);
-            } catch (java.io.StreamCorruptedException e) {
+            } catch (java.io.ObjectStreamException e) {
                 causedException = true;
             }
             ;
@@ -1640,6 +1640,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
             // As the stream is corrupted, reading the stream will have
             // undefined results
         } catch (IOException e) {
+            e.printStackTrace();
             fail("IOException serializing " + objToSave + " : "
                     + e.getMessage());
         } catch (ClassNotFoundException e) {
@@ -1663,14 +1664,13 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             java.io.IOException ioe = new java.io.IOException();
             objToSave = ioe;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Has to be able to save/load an exception
             assertTrue(MSG_TEST_FAILED + objToSave, true);
 
@@ -1732,14 +1732,13 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             java.io.IOException ex = new java.io.InvalidClassException(FOO);
             objToSave = ex;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Has to be able to save/load an exception
             assertTrue(MSG_TEST_FAILED + objToSave, true);
 
@@ -1767,14 +1766,13 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             java.io.IOException ex = new java.io.InvalidObjectException(FOO);
             objToSave = ex;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Has to be able to save/load an exception
             assertTrue(MSG_TEST_FAILED + objToSave, true);
 
@@ -1802,14 +1800,13 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             java.io.IOException ex = new java.io.NotActiveException(FOO);
             objToSave = ex;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Has to be able to save/load an exception
             assertTrue(MSG_TEST_FAILED + objToSave, true);
 
@@ -1837,14 +1834,13 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             java.io.IOException ex = new java.io.NotSerializableException(FOO);
             objToSave = ex;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Has to be able to save/load an exception
             assertTrue(MSG_TEST_FAILED + objToSave, true);
 
@@ -1872,14 +1868,13 @@ public class SerializationStressTest1 extends SerializationStressTest {
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
         Object objToSave = null;
-        Object objLoaded;
 
         try {
             java.io.IOException ex = new java.io.StreamCorruptedException(FOO);
             objToSave = ex;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            dumpAndReload(objToSave);
             // Has to be able to save/load an exception
             assertTrue(MSG_TEST_FAILED + objToSave, true);
 

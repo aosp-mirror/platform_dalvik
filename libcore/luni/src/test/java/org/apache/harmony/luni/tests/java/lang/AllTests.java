@@ -31,7 +31,7 @@ public class AllTests {
 
     public static final Test suite() {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.lang");
-        
+
         suite.addTestSuite(AbstractMethodErrorTest.class);
         suite.addTestSuite(ArithmeticExceptionTest.class);
         suite.addTestSuite(ArrayIndexOutOfBoundsExceptionTest.class);
@@ -104,7 +104,7 @@ public class AllTests {
         suite.addTestSuite(StringBuilderTest.class);
         suite.addTestSuite(StringIndexOutOfBoundsExceptionTest.class);
         suite.addTestSuite(StringTest.class);
-        suite.addTestSuite(SystemTest.class); 
+        suite.addTestSuite(SystemTest.class);
         suite.addTestSuite(ThreadDeathTest.class);
         suite.addTestSuite(ThreadGroupTest.class);
         suite.addTestSuite(ThreadLocalTest.class);
@@ -119,6 +119,6 @@ public class AllTests {
         suite.addTestSuite(VerifyErrorTest.class);
         suite.addTestSuite(VirtualMachineErrorTest.class);
 
-    return suite;
+        return suite;
     }
 }

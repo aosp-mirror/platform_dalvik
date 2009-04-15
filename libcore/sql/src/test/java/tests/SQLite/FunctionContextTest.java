@@ -213,6 +213,7 @@ public class FunctionContextTest extends SQLiteTest {
         method = "set_result_zeroblob",
         args = {int.class}
     )
+    @KnownFailure("ZeroBlob not supported")
     public void testSet_result_zeroblob() throws Exception,
             UnsupportedEncodingException {
         Stmt st = null;

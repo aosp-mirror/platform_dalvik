@@ -39,13 +39,8 @@ public class LinkedListTest extends junit.framework.TestCase {
 
     LinkedList ll;
 
-    static Object[] objArray;
-    {
-        objArray = new Object[100];
-        for (int i = 0; i < objArray.length; i++)
-            objArray[i] = new Integer(i);
-    }
-
+    Object[] objArray;
+    
     /**
      * @tests java.util.LinkedList#LinkedList()
      */
@@ -833,9 +828,23 @@ public class LinkedListTest extends junit.framework.TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
+        
+        objArray = new Object[100];
+        for (int i = 0; i < objArray.length; i++) {
+            objArray[i] = new Integer(i);
+        }
+
         ll = new LinkedList();
         for (int i = 0; i < objArray.length; i++) {
             ll.add(objArray[i]);
         }
+    }
+    
+    @Override
+    protected void tearDown() throws Exception {
+        objArray = null;
+        ll = null;
+        
+        super.tearDown();
     }
 }

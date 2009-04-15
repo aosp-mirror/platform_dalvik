@@ -141,8 +141,6 @@ public class SecurityTest extends TestCase {
         args = {java.lang.String.class, java.lang.String.class}
     )
     @SuppressWarnings("deprecation")
-    @KnownFailure("Security.getAlgorithmProperty looks for "
-            + "\"propName.algName\" instead of \"Alg.propName.algName\"")
     public final void testGetAlgorithmPropertyLjava_lang_String_java_lang_String() {
         
         Provider provider = new MyProvider();
@@ -152,12 +150,12 @@ public class SecurityTest extends TestCase {
         provider.putAll(m);
         
         try {
-        Security.addProvider(provider);
-        
-        assertNotNull(Security.getAlgorithmProperty("algName", "propName"));
-
-        assertNull(Security.getAlgorithmProperty("DSA", null));
-        assertNull(Security.getAlgorithmProperty("DSA", "propName"));
+            Security.addProvider(provider);
+            
+            assertNotNull(Security.getAlgorithmProperty("algName", "propName"));
+    
+            assertNull(Security.getAlgorithmProperty("DSA", null));
+            assertNull(Security.getAlgorithmProperty("DSA", "propName"));
         } finally {
             Security.removeProvider(provider.getName());
         }

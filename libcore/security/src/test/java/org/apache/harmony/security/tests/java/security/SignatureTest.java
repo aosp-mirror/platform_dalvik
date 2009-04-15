@@ -22,6 +22,7 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
@@ -494,6 +495,7 @@ public class SignatureTest extends TestCase {
         method = "update",
         args = {byte[].class, int.class, int.class}
     )
+    @KnownFailure("Works on RI, need to investigate")
     public void testUpdatebyteArrayintint() throws Exception {
         MySignature1 s = new MySignature1("ABC");
         byte[] b = {1, 2, 3, 4};

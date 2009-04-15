@@ -16,6 +16,7 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -59,6 +60,7 @@ public class NumberFormatFieldTest extends junit.framework.TestCase {
         method = "readResolve",
         args = {}
     )
+    @KnownFailure("readResolve does not work properly")
     public void test_readResolve() {
         // test for method java.lang.Object readResolve()
 

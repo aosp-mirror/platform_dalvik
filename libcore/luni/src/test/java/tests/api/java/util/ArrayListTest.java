@@ -38,13 +38,8 @@ public class ArrayListTest extends junit.framework.TestCase {
 
     List alist;
 
-    static Object[] objArray;
-    {
-        objArray = new Object[100];
-        for (int i = 0; i < objArray.length; i++)
-            objArray[i] = new Integer(i);
-    }
-
+    Object[] objArray;
+    
     /**
      * @tests java.util.ArrayList#ArrayList()
      */
@@ -839,8 +834,23 @@ public class ArrayListTest extends junit.framework.TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
+        
+        objArray = new Object[100];
+        for (int i = 0; i < objArray.length; i++) {
+            objArray[i] = new Integer(i);
+        }
+        
         alist = new ArrayList();
-        for (int i = 0; i < objArray.length; i++)
+        for (int i = 0; i < objArray.length; i++) {
             alist.add(objArray[i]);
+        }
+    }
+    
+    @Override
+    protected void tearDown() throws Exception {
+        objArray = null;
+        alist = null;
+        
+        super.tearDown();
     }
 }

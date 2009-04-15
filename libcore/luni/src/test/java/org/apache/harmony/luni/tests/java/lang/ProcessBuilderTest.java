@@ -220,9 +220,9 @@ public class ProcessBuilderTest extends TestCase {
     )
     @SuppressWarnings("nls")
     public void testStart() throws IOException {
-        ProcessBuilder pb = new ProcessBuilder("java", "-version");
-        pb.directory(new File(System.getProperty("java.home") + File.separator
-                + "bin"));
+        String cmd = "Dalvik".equals(System.getProperty("java.vm.name")) ?
+                "dalvikvm" : "java";
+        ProcessBuilder pb = new ProcessBuilder(cmd, "-version");
 
         // Call the test target
         Process process = pb.start();

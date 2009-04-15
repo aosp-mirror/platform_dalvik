@@ -518,8 +518,8 @@ public class SocketChannelTest extends TestCase {
     public void testSocket_BasicStatusBeforeConnect() throws IOException {
         assertFalse(this.channel1.isConnected());// not connected
         Socket s1 = this.channel1.socket();
-	// RI fails here. RI returns 0 while spec says getLocalPort()
-	// shall return -1 for unbound socket
+        // RI fails here. RI returns 0 while spec says getLocalPort()
+        // shall return -1 for unbound socket
         assertSocketBeforeConnect(s1);
         Socket s2 = this.channel1.socket();
         // same
@@ -560,8 +560,8 @@ public class SocketChannelTest extends TestCase {
         assertTrue(this.channel1.isConnectionPending());
         Socket s1 = this.channel1.socket();
         // status of not connected
-	// RI fails here. RI returns 0 while spec says getLocalPort()
-	// shall return -1 for unbound socket 
+        // RI fails here. RI returns 0 while spec says getLocalPort()
+        // shall return -1 for unbound socket 
         assertSocketBeforeConnect(s1);
         Socket s2 = this.channel1.socket();
         // same

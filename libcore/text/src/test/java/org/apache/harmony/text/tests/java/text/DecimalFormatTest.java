@@ -1804,6 +1804,7 @@ public class DecimalFormatTest extends TestCase {
         method = "formatToCharacterIterator",
         args = {java.lang.Object.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatToCharacterIteratorLjava_lang_Object() {
 
         try {

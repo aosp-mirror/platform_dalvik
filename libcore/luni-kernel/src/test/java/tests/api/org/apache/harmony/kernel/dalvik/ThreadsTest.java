@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import sun.misc.Unsafe;
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -48,7 +49,7 @@ public class ThreadsTest extends TestCase {
         } catch (NoSuchFieldException ex) {
             INITIALIZEFAILED = new RuntimeException(ex);
         } catch (IllegalAccessException ex) {
-        	INITIALIZEFAILED = new RuntimeException(ex);
+            INITIALIZEFAILED = new RuntimeException(ex);
         }
     }
 
@@ -59,6 +60,7 @@ public class ThreadsTest extends TestCase {
         method = "unpark",
         args = {Object.class}
     )    
+    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkFor_1() {
         Parker parker = new Parker(false, 500);
         Thread parkerThread = new Thread(parker);
@@ -77,6 +79,7 @@ public class ThreadsTest extends TestCase {
         method = "unpark",
         args = {Object.class}
     )    
+    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkFor_2() {
         Parker parker = new Parker(false, 1000);
         Thread parkerThread = new Thread(parker);
@@ -95,6 +98,7 @@ public class ThreadsTest extends TestCase {
         method = "unpark",
         args = {Object.class}
     )    
+    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkFor_3() {
         Parker parker = new Parker(false, 1000);
         Thread parkerThread = new Thread(parker);
@@ -111,6 +115,7 @@ public class ThreadsTest extends TestCase {
         method = "unpark",
         args = {Object.class}
     )    
+    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkUntil_1() {
         Parker parker = new Parker(true, 500);
         Thread parkerThread = new Thread(parker);
@@ -129,6 +134,7 @@ public class ThreadsTest extends TestCase {
         method = "unpark",
         args = {Object.class}
     )    
+    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkUntil_2() {
         Parker parker = new Parker(true, 1000);
         Thread parkerThread = new Thread(parker);
@@ -147,6 +153,7 @@ public class ThreadsTest extends TestCase {
         method = "unpark",
         args = {Object.class}
     )    
+    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkUntil_3() {
         Parker parker = new Parker(true, 1000);
         Thread parkerThread = new Thread(parker);
@@ -292,7 +299,8 @@ public class ThreadsTest extends TestCase {
     
     @Override
     protected void setUp() throws Exception {
-    	if (INITIALIZEFAILED != null)
-    		throw INITIALIZEFAILED;
+        if (INITIALIZEFAILED != null) {
+            throw INITIALIZEFAILED;
+        }
     }
 }

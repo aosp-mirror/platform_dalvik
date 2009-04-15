@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,27 +21,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import dalvik.annotation.TestTargetNew;
-
 /**
- * Defines an annotation for test classes that allows to link them to the class
- * that is being tested. The current assumption is that the test are somewhat
- * organized according to the API classes they test. Might be too strict for
- * some cases.
+ * Defines an annotation to be used for specifying a test timeout. A test
+ * harness that supports timeouts should allow a test to be run for at least
+ * this time before killing it. Time is measured in seconds.
  * 
- * @since Android 1.0
+ * @hide
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE })
-public @interface TestTargetClass {
-    
+@Target({ ElementType.ANNOTATION_TYPE, ElementType.METHOD })
+public @interface Timeout {
+
     /**
-     * Specifies the class being tested.
+     * Specifies the test timeout in seconds.
      */
-    Class<?> value();
-    
-    /**
-     * Option to specify untested methods for the class.
-     */
-    TestTargetNew[] untestedMethods() default {};
+    int value();
+
 }

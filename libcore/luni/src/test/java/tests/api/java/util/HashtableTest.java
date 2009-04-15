@@ -988,5 +988,10 @@ public class HashtableTest extends junit.framework.TestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
+        ht10 = null;
+        ht100 = null;
+        htfull = null;
+        keyVector = null;
+        elmVector = null;
     }
 }

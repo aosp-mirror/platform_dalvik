@@ -17,7 +17,7 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
-import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -87,6 +87,7 @@ public class DriverManagerTest extends TestCase {
         method = "deregisterDriver",
         args = {java.sql.Driver.class}
     )
+    @KnownFailure("Not all Drivers are loaded in testsetup. Classloader issue in DriverManager.")
     public void testDeregisterDriver() throws Exception {
         // First get one of the drivers loaded by the test
         Driver aDriver;
@@ -345,7 +346,7 @@ public class DriverManagerTest extends TestCase {
     public void testGetDriver() throws SQLException {
         for (String element : validURLs) {
             Driver validDriver = DriverManager.getDriver(element);
-            assertNotNull(validDriver);
+            assertNotNull("Driver " + element + " not loaded", validDriver);
         } // end for
 
         for (String element : invalidURLs) {
@@ -377,8 +378,8 @@ public class DriverManagerTest extends TestCase {
         } // end while
 
         // Check that all the drivers are in the list...
-        assertEquals("testGetDrivers: Don't see all the loaded drivers - ", i,
-                numberLoaded);
+        assertEquals("testGetDrivers: Don't see all the loaded drivers - ", numberLoaded,
+                i);
     } // end method testGetDrivers()
 
     static int timeout1 = 25;
@@ -466,7 +467,9 @@ public class DriverManagerTest extends TestCase {
     )
     public void testRegisterDriver() throws ClassNotFoundException,
             SQLException, IllegalAccessException, InstantiationException {
-        String EXTRA_DRIVER_NAME = "org.apache.harmony.sql.tests.java.sql.TestHelper_Driver3";
+        // This is DRIVER3
+        // String EXTRA_DRIVER_NAME = 
+        // "org.apache.harmony.sql.tests.java.sql.TestHelper_Driver3";
 
         try {
             DriverManager.registerDriver(null);
@@ -477,10 +480,10 @@ public class DriverManagerTest extends TestCase {
 
         Driver theDriver = null;
         // Load another Driver that isn't in the basic set
-        Class<?> driverClass = Class.forName(EXTRA_DRIVER_NAME);
+        Class<?> driverClass = Class.forName(DRIVER3);
         theDriver = (Driver) driverClass.newInstance();
         DriverManager.registerDriver(theDriver);
-
+        
         assertTrue("testRegisterDriver: driver not in loaded set",
                 isDriverLoaded(theDriver));
         
@@ -627,18 +630,14 @@ public class DriverManagerTest extends TestCase {
             try {
                 Class<?> driverClass = Class.forName(element);
                 assertNotNull(driverClass);
-                // System.out.println("Loaded driver - classloader = " +
-                // driverClass.getClassLoader());
+                 System.out.println("Loaded driver - classloader = " +
+                 driverClass.getClassLoader());
                 numberLoaded++;
             } catch (ClassNotFoundException e) {
                 System.out.println("DriverManagerTest: failed to load Driver: "
                         + element);
             } // end try
         } // end for
-        /*
-         * System.out.println("DriverManagerTest: number of drivers loaded: " +
-         * numberLoaded);
-         */
         driversLoaded = true;
         return numberLoaded;
     } // end method loadDrivers()

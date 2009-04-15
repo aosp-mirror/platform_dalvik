@@ -253,16 +253,16 @@ public class ReferenceTest extends junit.framework.TestCase {
         @TestTargetNew(
             level = TestLevel.PARTIAL_COMPLETE,
             notes = "Makes sure that overridden versions of clear() and enqueue()  " +
-            		"get called, and that clear/enqueue/finalize happen in the  " +
-            		"right order for WeakReferences.",
+                    "get called, and that clear/enqueue/finalize happen in the  " +
+                    "right order for WeakReferences.",
             method = "clear",
             args = {}
         ),
         @TestTargetNew(
             level = TestLevel.PARTIAL_COMPLETE,
             notes = "Makes sure that overridden versions of clear() and enqueue()  " +
-            		"get called, and that clear/enqueue/finalize happen in the  " +
-            		"right order for WeakReferences.",
+                    "get called, and that clear/enqueue/finalize happen in the  " +
+                    "right order for WeakReferences.",
             method = "enqueue",
             args = {}
         )
@@ -393,9 +393,9 @@ public class ReferenceTest extends junit.framework.TestCase {
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
         notes = "Contrives a situation where the only reference to a string  " +
-        		"is a WeakReference from an object that is being finalized.  " +
-        		"Checks to make sure that the referent of the WeakReference  " +
-        		"is still pointing to a valid object.",
+                "is a WeakReference from an object that is being finalized.  " +
+                "Checks to make sure that the referent of the WeakReference  " +
+                "is still pointing to a valid object.",
         method = "get",
         args = {}
     )

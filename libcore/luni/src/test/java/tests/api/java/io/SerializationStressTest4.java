@@ -1193,51 +1193,59 @@ public class SerializationStressTest4 extends SerializationStressTest {
     //
     // }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Verifies serialization.",
-        method = "!Serialization",
-        args = {}
-    )
-    @BrokenTest("Needs investigation. Fails on RI and on Android with the same IOException.")
-    public void test_writeObject_Collections_UnmodifiableMap_UnmodifiableEntrySet() {
-        // Test for method void
-        // java.io.ObjectOutputStream.writeObject(java.util.Collections.UnmodifiableMap.UnmodifiableEntrySet)
-
-        Object objToSave = null;
-        Object objLoaded = null;
-
-        try {
-            objToSave = java.util.Collections.unmodifiableMap(MAP).entrySet();
-            if (DEBUG)
-                System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
-
-            // Has to have worked
-            boolean equals;
-            equals = ((java.util.Collection) objToSave).size() == ((java.util.Collection) objLoaded)
-                    .size();
-            if (equals) {
-                java.util.Iterator iter1 = ((java.util.Collection) objToSave)
-                        .iterator(), iter2 = ((java.util.Collection) objLoaded)
-                        .iterator();
-                while (iter1.hasNext())
-                    equals = equals && iter1.next().equals(iter2.next());
-            }
-            assertTrue(MSG_TEST_FAILED + objToSave, equals);
-        } catch (IOException e) {
-            fail("IOException serializing " + objToSave + " : "
-                    + e.getMessage());
-        } catch (ClassNotFoundException e) {
-            fail("ClassNotFoundException reading Object type : "
-                    + e.getMessage());
-        } catch (Error err) {
-            System.out.println("Error when obj = " + objToSave);
-            // err.printStackTrace();
-            throw err;
-        }
-
-    }
+    /*
+     * serializing java.util.Collections.UnmodifiableMap.UnmodifiableEntrySet tries to serialize
+     * java.util.HashMap.EntrySet which is not serializable  
+     */
+    // @TestTargetNew(
+    // level = TestLevel.COMPLETE,
+    // notes = "Verifies serialization.",
+    // method = "!Serialization",
+    // args = {}
+    // )
+    // @BrokenTest("Needs investigation. Fails on RI and on Android with the same IOException.")
+    // public void
+    // test_writeObject_Collections_UnmodifiableMap_UnmodifiableEntrySet() {
+    // // Test for method void
+    // //
+    // java.io.ObjectOutputStream.writeObject(java.util.Collections.UnmodifiableMap.UnmodifiableEntrySet)
+    //
+    // Object objToSave = null;
+    // Object objLoaded = null;
+    //
+    // try {
+    // objToSave = java.util.Collections.unmodifiableMap(MAP).entrySet();
+    // if (DEBUG)
+    // System.out.println("Obj = " + objToSave);
+    // objLoaded = dumpAndReload(objToSave);
+    //
+    // // Has to have worked
+    // boolean equals;
+    // equals = ((java.util.Collection) objToSave).size() ==
+    // ((java.util.Collection) objLoaded)
+    // .size();
+    // if (equals) {
+    // java.util.Iterator iter1 = ((java.util.Collection) objToSave)
+    // .iterator(), iter2 = ((java.util.Collection) objLoaded)
+    // .iterator();
+    // while (iter1.hasNext())
+    // equals = equals && iter1.next().equals(iter2.next());
+    // }
+    // assertTrue(MSG_TEST_FAILED + objToSave, equals);
+    // } catch (IOException e) {
+    // e.printStackTrace();
+    // fail("IOException serializing " + objToSave + " : "
+    // + e.getMessage());
+    // } catch (ClassNotFoundException e) {
+    // fail("ClassNotFoundException reading Object type : "
+    // + e.getMessage());
+    // } catch (Error err) {
+    // System.out.println("Error when obj = " + objToSave);
+    // // err.printStackTrace();
+    // throw err;
+    // }
+    //
+    // }
 
     @TestTargetNew(
         level = TestLevel.COMPLETE,

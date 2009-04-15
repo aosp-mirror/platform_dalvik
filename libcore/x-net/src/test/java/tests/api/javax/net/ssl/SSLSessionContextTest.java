@@ -1,6 +1,5 @@
 package tests.api.javax.net.ssl;
 
-import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -11,6 +10,7 @@ import junit.framework.TestCase;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSessionContext;
 
+import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
    
 /**
@@ -21,6 +21,7 @@ public class SSLSessionContextTest extends TestCase {
     
     /**
      * @throws NoSuchAlgorithmException 
+     * @throws KeyManagementException 
      * @tests javax.net.ssl.SSLSessionContex#getSessionCacheSize()
      * @tests javax.net.ssl.SSLSessionContex#setSessionCacheSize(int size)
      */
@@ -38,9 +39,10 @@ public class SSLSessionContextTest extends TestCase {
             args = {int.class}
         )
     })
-    @BrokenTest("getClientSessionContext returns null on android but does not on RI")
-    public final void test_sessionCacheSize() throws NoSuchAlgorithmException {
-        SSLSessionContext sc = SSLContext.getInstance("TLS")
+    public final void test_sessionCacheSize() throws NoSuchAlgorithmException, KeyManagementException {
+        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, null, null);
+        SSLSessionContext sc = context
                 .getClientSessionContext();
         sc.setSessionCacheSize(10);
         assertEquals("10 wasn't returned", 10, sc.getSessionCacheSize());
@@ -57,6 +59,7 @@ public class SSLSessionContextTest extends TestCase {
     
     /**
      * @throws NoSuchAlgorithmException 
+     * @throws KeyManagementException 
      * @tests javax.net.ssl.SSLSessionContex#getSessionTimeout()
      * @tests javax.net.ssl.SSLSessionContex#setSessionTimeout(int seconds)
      */
@@ -74,9 +77,10 @@ public class SSLSessionContextTest extends TestCase {
             args = {int.class}
         )
     })
-    @BrokenTest("getClientSessionContext returns null on android but does not on RI")
-    public final void test_sessionTimeout() throws NoSuchAlgorithmException {
-        SSLSessionContext sc = SSLContext.getInstance("TLS")
+    public final void test_sessionTimeout() throws NoSuchAlgorithmException, KeyManagementException {
+        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, null, null);
+        SSLSessionContext sc = context
                 .getClientSessionContext();
         sc.setSessionTimeout(100);
         assertEquals("100 wasn't returned", 100, sc.getSessionTimeout());
@@ -93,6 +97,7 @@ public class SSLSessionContextTest extends TestCase {
     
     /**
      * @throws NoSuchAlgorithmException 
+     * @throws KeyManagementException 
      * @tests javax.net.ssl.SSLSessionContex#getSession(byte[] sessionId)
      */
     @TestTargetNew(
@@ -101,9 +106,10 @@ public class SSLSessionContextTest extends TestCase {
         method = "getSession",
         args = {byte[].class}
     )
-    @BrokenTest("getClientSessionContext returns null on android but does not on RI")
-    public final void test_getSession() throws NoSuchAlgorithmException {
-        SSLSessionContext sc = SSLContext.getInstance("TLS")
+    public final void test_getSession() throws NoSuchAlgorithmException, KeyManagementException {
+        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, null, null);
+        SSLSessionContext sc = context
                 .getClientSessionContext();
         try {
             sc.getSession(null);
@@ -115,6 +121,7 @@ public class SSLSessionContextTest extends TestCase {
     
     /**
      * @throws NoSuchAlgorithmException 
+     * @throws KeyManagementException 
      * @tests javax.net.ssl.SSLSessionContex#getIds()
      */
     @TestTargetNew(
@@ -123,9 +130,10 @@ public class SSLSessionContextTest extends TestCase {
         method = "getIds",
         args = {}
     )
-    @BrokenTest("getClientSessionContext returns null on android but does not on RI")
-    public final void test_getIds() throws NoSuchAlgorithmException {
-        SSLSessionContext sc = SSLContext.getInstance("TLS")
+    public final void test_getIds() throws NoSuchAlgorithmException, KeyManagementException {
+        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, null, null);
+        SSLSessionContext sc = context
                 .getClientSessionContext();
         assertFalse(sc.getIds().hasMoreElements());
     }

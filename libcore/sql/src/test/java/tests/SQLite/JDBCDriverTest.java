@@ -157,7 +157,7 @@ public class JDBCDriverTest extends JDBCDriverFunctionalTest {
             method = "getMajorVersion",
             args = {}
         )
-    })    
+    })
     public void testGetMajorVersion() {
         if (this.jDriver != null) {
             assertTrue(jDriver.getMajorVersion() > 0);
@@ -252,7 +252,7 @@ public class JDBCDriverTest extends JDBCDriverFunctionalTest {
             method = "jdbcCompliant",
             args = {}
         )
-    })        
+    }) 
     public void testJdbcCompliant() {
         if (this.jDriver != null) {
             assertFalse(jDriver.jdbcCompliant());

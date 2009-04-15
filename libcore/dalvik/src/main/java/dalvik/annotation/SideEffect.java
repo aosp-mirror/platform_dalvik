@@ -21,22 +21,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import dalvik.annotation.TestTargetNew;
-
 /**
- * Defines an annotation for test classes that allows to link them to the class
- * that is being tested. The current assumption is that the test are somewhat
- * organized according to the API classes they test. Might be too strict for
- * some cases.
+ * Marks a test-case as either having a side-effect that other tests might
+ * notice or suffering from such a side effect. Such tests should be run in an
+ * isolated manner.
  * 
- * @since Android 1.0
+ * @hide
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.METHOD })
-public @interface TestTargets {
-    
+@Target({ ElementType.METHOD, ElementType.TYPE })
+public @interface SideEffect {
+
     /**
-     * Specifies the API methods that are tested by the annotated test method.
+     * Plain text reason for adding this annotation.
      */
-    TestTargetNew[] value();
+    String value();
+
 }

@@ -16,7 +16,6 @@
  */
 package tests.api.java.io;
 
-import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -87,16 +86,16 @@ public class SerializationStressTest3 extends SerializationStressTest {
         }
     }
 
-    private static class NonSerPrivateConstructor {
+    static class NonSerPrivateConstructor {
         public int f1;
 
         public static int valueAfterConstructor = 5;
 
-        private NonSerPrivateConstructor() {
+        NonSerPrivateConstructor() {
             f1 = valueAfterConstructor;
         }
 
-        public NonSerPrivateConstructor(String notUsed) {
+        NonSerPrivateConstructor(String notUsed) {
         }
     }
 
@@ -179,13 +178,13 @@ public class SerializationStressTest3 extends SerializationStressTest {
     }
 
     // -----------------------------------------------------------------------------------
-    private static class PrivateConstructorSub extends NonSerPrivateConstructor
+    static class PrivateConstructorSub extends NonSerPrivateConstructor
             implements java.io.Serializable {
         int fsub;
 
         static int subValueAfterConstructor = 11;
 
-        public PrivateConstructorSub() {
+        private PrivateConstructorSub() {
             super("notUsed");
             f1 = 7;
             fsub = subValueAfterConstructor;
@@ -512,7 +511,6 @@ public class SerializationStressTest3 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @BrokenTest("Needs investigation.Fails on Android with IlegalAccessException and RI with IOException: no valid constructor")
     public void test_18_85_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)

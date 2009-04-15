@@ -52,7 +52,15 @@ import dalvik.annotation.TestTargetNew;
  * 
  */
 public class ProviderTest extends TestCase {
-
+    /*
+     * Implementation note: The algorithm name ASH-1 might seem a bit strange,
+     * but since the algorithms cannot be uninstalled anymore we need to make
+     * sure there are not side-effects on other tests. Simply inserting SHA-1
+     * destroys the existing provider infrastructure.
+     */
+    
+    Provider[] storedProviders;
+    
     Provider p;
 
     /*
@@ -60,9 +68,31 @@ public class ProviderTest extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
+        
+        storedProviders = Security.getProviders();
+        
         p = new MyProvider();
     }
 
+    @Override
+    protected void tearDown() throws Exception {
+        System.setSecurityManager(null);
+        
+        p.remove("MessageDigest.ASH-1");
+        p.remove("MessageDigest.abc");
+        p.remove("Alg.Alias.MessageDigest.ASH1");
+        
+        for (Provider p: Security.getProviders()) {
+            Security.removeProvider(p.getName());
+        }
+
+        for (Provider p: storedProviders) {
+            Security.addProvider(p);
+        }
+        
+        super.tearDown();
+    }
+    
     /*
      * Class under test for void Provider()
      */
@@ -99,7 +129,7 @@ public class ProviderTest extends TestCase {
     )
     public final void testClear() {
         p.clear();
-        if (p.getProperty("MessageDigest.SHA-1") != null) {
+        if (p.getProperty("MessageDigest.ASH-1") != null) {
             fail("Provider contains properties");
         }
     }
@@ -110,7 +140,6 @@ public class ProviderTest extends TestCase {
             method = "clear",
             args = {}
         )
-    @KnownFailure("AccessController/AccessControlContext grants Permissions by default")
     public final void testClear_SecurityManager() {
         TestSecurityManager sm = new TestSecurityManager("clearProviderProperties.MyProvider");
         System.setSecurityManager(sm);
@@ -185,7 +214,7 @@ public class ProviderTest extends TestCase {
     )
     public final void testPutAllMap() {
         HashMap<String, String> hm = new HashMap<String, String>();
-        hm.put("MessageDigest.SHA-1", "aaa.bbb.ccc.ddd");
+        hm.put("MessageDigest.ASH-1", "aaa.bbb.ccc.ddd");
         hm.put("Property 1", "value 1");
         hm.put("serviceName.algName attrName", "attrValue");
         hm.put("Alg.Alias.engineClassName.aliasName", "stanbdardName");
@@ -196,7 +225,7 @@ public class ProviderTest extends TestCase {
                 || !"stanbdardName".equals(p.getProperty(
                         "Alg.Alias.engineClassName.aliasName").trim())
                 || !"aaa.bbb.ccc.ddd".equals(p.getProperty(
-                        "MessageDigest.SHA-1").trim())) {
+                        "MessageDigest.ASH-1").trim())) {
             fail("Incorrect property value");
         }
     }
@@ -211,7 +240,7 @@ public class ProviderTest extends TestCase {
         args = {}
     )
     public final void testEntrySet() {
-        p.put("MessageDigest.SHA-256", "aaa.bbb.ccc.ddd");
+        p.put("MessageDigest.ASH-256", "aaa.bbb.ccc.ddd");
 
         Set<Map.Entry<Object, Object>> s = p.entrySet();
         try {
@@ -226,12 +255,12 @@ public class ProviderTest extends TestCase {
             Entry<Object, Object> e = it.next();
             String key = (String) e.getKey();
             String val = (String) e.getValue();
-            if (key.equals("MessageDigest.SHA-1")
+            if (key.equals("MessageDigest.ASH-1")
                     && val.equals("SomeClassName")) {
                 continue;
             }
-            if (key.equals("Alg.Alias.MessageDigest.SHA1")
-                    && val.equals("SHA-1")) {
+            if (key.equals("Alg.Alias.MessageDigest.ASH1")
+                    && val.equals("ASH-1")) {
                 continue;
             }
             if (key.equals("MessageDigest.abc") && val.equals("SomeClassName")) {
@@ -244,7 +273,7 @@ public class ProviderTest extends TestCase {
             if (key.equals("Provider.id name") && val.equals("MyProvider")) {
                 continue;
             }
-            if (key.equals("MessageDigest.SHA-256")
+            if (key.equals("MessageDigest.ASH-256")
                     && val.equals("aaa.bbb.ccc.ddd")) {
                 continue;
             }
@@ -269,7 +298,7 @@ public class ProviderTest extends TestCase {
         args = {}
     )
     public final void testKeySet() {
-        p.put("MessageDigest.SHA-256", "aaa.bbb.ccc.ddd");
+        p.put("MessageDigest.ASH-256", "aaa.bbb.ccc.ddd");
 
         Set<Object> s = p.keySet();
         try {
@@ -283,9 +312,9 @@ public class ProviderTest extends TestCase {
         if (s1.size() != 8) {
             fail("Incorrect set size");
         }
-        if (!s1.contains("MessageDigest.SHA-256")
-                || !s1.contains("MessageDigest.SHA-1")
-                || !s1.contains("Alg.Alias.MessageDigest.SHA1")
+        if (!s1.contains("MessageDigest.ASH-256")
+                || !s1.contains("MessageDigest.ASH-1")
+                || !s1.contains("Alg.Alias.MessageDigest.ASH1")
                 || !s1.contains("MessageDigest.abc")
                 || !s1.contains("Provider.id info")
                 || !s1.contains("Provider.id className")
@@ -305,7 +334,7 @@ public class ProviderTest extends TestCase {
         args = {}
     )
     public final void testValues() {
-        p.put("MessageDigest.SHA-256", "aaa.bbb.ccc.ddd");
+        p.put("MessageDigest.ASH-256", "aaa.bbb.ccc.ddd");
 
         Collection<Object> c = p.values();
         try {
@@ -321,7 +350,7 @@ public class ProviderTest extends TestCase {
         }
         if (!c1.contains("MyProvider") || !c1.contains("aaa.bbb.ccc.ddd")
                 || !c1.contains("Provider for testing") || !c1.contains("1.0")
-                || !c1.contains("SomeClassName") || !c1.contains("SHA-1")
+                || !c1.contains("SomeClassName") || !c1.contains("ASH-1")
                 || !c1.contains(p.getClass().getName())) {
             fail("Incorrect set");
         }
@@ -337,9 +366,9 @@ public class ProviderTest extends TestCase {
         args = {java.lang.Object.class, java.lang.Object.class}
     )
     public final void testPutObjectObject() {
-        p.put("MessageDigest.SHA-1", "aaa.bbb.ccc.ddd");
+        p.put("MessageDigest.ASH-1", "aaa.bbb.ccc.ddd");
         p.put("Type.Algorithm", "className");
-        if (!"aaa.bbb.ccc.ddd".equals(p.getProperty("MessageDigest.SHA-1")
+        if (!"aaa.bbb.ccc.ddd".equals(p.getProperty("MessageDigest.ASH-1")
                 .trim())) {
             fail("Incorrect property value");
         }
@@ -356,7 +385,7 @@ public class ProviderTest extends TestCase {
                 continue;
             }
             if ("MessageDigest".equals(s.getType())
-                    && "SHA-1".equals(s.getAlgorithm())
+                    && "ASH-1".equals(s.getAlgorithm())
                     && "aaa.bbb.ccc.ddd".equals(s.getClassName())) {
                 continue;
             }
@@ -375,7 +404,6 @@ public class ProviderTest extends TestCase {
             method = "put",
             args = {java.lang.Object.class, java.lang.Object.class}
         )
-    @KnownFailure("AccessController/AccessControlContext grants Permissions by default")
     public final void testPutObjectObject_SecurityManager() {
 
         TestSecurityManager sm = new TestSecurityManager("putProviderProperty.MyProvider");
@@ -397,11 +425,11 @@ public class ProviderTest extends TestCase {
         args = {java.lang.Object.class}
     )
     public final void testRemoveObject() {
-        Object o = p.remove("MessageDigest.SHA-1");
+        Object o = p.remove("MessageDigest.ASH-1");
         if (!"SomeClassName".equals(o)) {
             fail("Incorrect return value");
         }
-        if (p.getProperty("MessageDigest.SHA-1") != null) {
+        if (p.getProperty("MessageDigest.ASH-1") != null) {
             fail("Provider contains properties");
         }
         if (p.getServices().size() != 1) {
@@ -425,7 +453,6 @@ public class ProviderTest extends TestCase {
         method = "remove",
         args = {java.lang.Object.class}
     )
-    @KnownFailure("AccessController/AccessControlContext grants Permissions by default")    
     public final void testRemoveObject_SecurityManager() {
         TestSecurityManager sm = new TestSecurityManager(
                 "removeProviderProperty.MyProvider");
@@ -444,8 +471,8 @@ public class ProviderTest extends TestCase {
         args = {java.lang.String.class, java.lang.String.class}
     )
     public final void testService1() {
-        p.put("MessageDigest.SHA-1", "AnotherClassName");
-        Provider.Service s = p.getService("MessageDigest", "SHA-1");
+        p.put("MessageDigest.ASH-1", "AnotherClassName");
+        Provider.Service s = p.getService("MessageDigest", "ASH-1");
         if (!"AnotherClassName".equals(s.getClassName())) {
             fail("Incorrect class name " + s.getClassName());
         }
@@ -458,7 +485,7 @@ public class ProviderTest extends TestCase {
         }
         
         try {
-            p.getService(null, "SHA-1");
+            p.getService(null, "ASH-1");
             fail("expected NullPointerException");
         } catch (NullPointerException e) {
             // ok
@@ -472,14 +499,14 @@ public class ProviderTest extends TestCase {
             args = {java.lang.String.class, java.lang.String.class}
         )
     public final void testService2() {
-        Provider[] pp = Security.getProviders("MessageDigest.SHA-1");
+        Provider[] pp = Security.getProviders("MessageDigest.ASH-1");
         if (pp == null) {
             return;
         }
         Provider p2 = pp[0];
-        String old = p2.getProperty("MessageDigest.SHA-1");
-        p2.put("MessageDigest.SHA-1", "AnotherClassName");
-        Provider.Service s = p2.getService("MessageDigest", "SHA-1");
+        String old = p2.getProperty("MessageDigest.ASH-1");
+        p2.put("MessageDigest.ASH-1", "AnotherClassName");
+        Provider.Service s = p2.getService("MessageDigest", "ASH-1");
         if (!"AnotherClassName".equals(s.getClassName())) {
             fail("Incorrect class name " + s.getClassName());
         }
@@ -748,9 +775,9 @@ public class ProviderTest extends TestCase {
 
         MyProvider() {
             super("MyProvider", 1.0, "Provider for testing");
-            put("MessageDigest.SHA-1", "SomeClassName");
+            put("MessageDigest.ASH-1", "SomeClassName");
             put("MessageDigest.abc", "SomeClassName");
-            put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
+            put("Alg.Alias.MessageDigest.ASH1", "ASH-1");
         }
 
         MyProvider(String name, double version, String info) {

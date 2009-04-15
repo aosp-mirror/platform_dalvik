@@ -53,32 +53,24 @@ import tests.support.Support_UnmodifiableMapTest;
 @TestTargetClass(Collections.class) 
 public class CollectionsTest extends junit.framework.TestCase {
 
-    LinkedList ll;
+    private LinkedList ll;
 
-    LinkedList myll;
+    private LinkedList myll;
 
-    LinkedList reversedLinkedList;
+    private LinkedList reversedLinkedList;
 
-    LinkedList myReversedLinkedList;
+    private LinkedList myReversedLinkedList;
 
-    Set s;
+    private Set s;
 
-    Set mys;
+    private Set mys;
 
-    HashMap hm;
+    private HashMap hm;
 
-    static Object[] objArray;
+    private Object[] objArray;
 
-    static Object[] myobjArray;
-    {
-        objArray = new Object[1000];
-        myobjArray = new Object[1000];
-        for (int i = 0; i < objArray.length; i++) {
-            objArray[i] = new Integer(i);
-            myobjArray[i] = new MyInt(i);
-        }
-    }
-
+    private Object[] myobjArray;
+    
     public static class ReversedMyIntComparator implements Comparator {
         public int compare(Object o1, Object o2) {
             return -((MyInt) o1).compareTo((MyInt) o2);
@@ -2459,6 +2451,13 @@ public class CollectionsTest extends junit.framework.TestCase {
      * is called before a test is executed.
      */
     protected void setUp() {
+        objArray = new Object[1000];
+        myobjArray = new Object[1000];
+        for (int i = 0; i < objArray.length; i++) {
+            objArray[i] = new Integer(i);
+            myobjArray[i] = new MyInt(i);
+        }
+
         ll = new LinkedList();
         myll = new LinkedList();
         s = new HashSet();
@@ -2483,6 +2482,16 @@ public class CollectionsTest extends junit.framework.TestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
+        objArray = null;
+        myobjArray = null;
+        
+        ll = null;
+        myll = null;
+        reversedLinkedList = null;
+        myReversedLinkedList = null;
+        s = null;
+        mys = null;
+        hm = null;
     }
 
     protected void doneSuite() {

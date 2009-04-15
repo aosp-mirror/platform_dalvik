@@ -70,9 +70,9 @@ import tests.support.Support_GetPutFieldsDeprecated;
 public class ObjectOutputStreamPutFieldTest extends junit.framework.TestCase {
 
     private final String FILENAME = 
-        "tests/api/java/io/testFields.ser";
+        "/tests/api/java/io/testFields.ser";
     private final String DEPRECATED_FILENAME = 
-        "tests/api/java/io/testFieldsDeprecated.ser";
+        "/tests/api/java/io/testFieldsDeprecated.ser";
 
     @TestTargets({
         @TestTargetNew(
@@ -193,7 +193,7 @@ public class ObjectOutputStreamPutFieldTest extends junit.framework.TestCase {
         InputStream refStream = null;
         
         try {
-            refStream = ClassLoader.getSystemResourceAsStream(path);
+            refStream = getClass().getResourceAsStream(path);
             bytesRead = refStream.read(streamContent);
             assertTrue("Test case implementation error: The byte array to " +
                        "store the reference file is too small.", 

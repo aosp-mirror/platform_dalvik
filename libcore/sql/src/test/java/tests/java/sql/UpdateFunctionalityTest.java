@@ -45,80 +45,64 @@ public class UpdateFunctionalityTest extends TestCase {
 
     private static Statement statement;
 
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
         super.setUp();
+        Support_SQL.loadDriver();
+        try {
+            conn = Support_SQL.getConnection();
+            statement = conn.createStatement();
+            createTestTables();
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
         DatabaseCreator.fillTestTable1(conn, numberOfRecords);
         DatabaseCreator.fillTestTable2(conn, numberOfRecords);
     }
 
-    protected void tearDown() throws Exception {
-        String deleteQuery1 = "DELETE FROM " + DatabaseCreator.TEST_TABLE1;
-        String deleteQuery2 = "DELETE FROM " + DatabaseCreator.TEST_TABLE2;
-
-        statement.execute(deleteQuery1);
-        statement.execute(deleteQuery2);
+    public void tearDown() throws Exception {
+        deleteTestTables();
+        statement.close();
+        conn.close();
+        
         super.tearDown();
     }
 
-    public static Test suite() {
-        TestSetup setup = new TestSetup(new TestSuite(
-                UpdateFunctionalityTest.class)) {
-            protected void setUp() throws Exception {
-                Support_SQL.loadDriver();
-                try {
-                    conn = Support_SQL.getConnection();
-                    statement = conn.createStatement();
-                    createTestTables();
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
-                }
-            }
+    protected void createTestTables() {
+        try {
+            DatabaseMetaData meta = conn.getMetaData();
+            ResultSet userTab = meta.getTables(null, null, null, null);
 
-            protected void tearDown() throws Exception {
-                deleteTestTables();
-                statement.close();
-                conn.close();
-            }
-
-            private void createTestTables() {
-                try {
-                    DatabaseMetaData meta = conn.getMetaData();
-                    ResultSet userTab = meta.getTables(null, null, null, null);
-
-                    while (userTab.next()) {
-                        String tableName = userTab.getString("TABLE_NAME");
-                        if (tableName.equals(DatabaseCreator.TEST_TABLE1)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE1);
-                        } else if (tableName
-                                .equals(DatabaseCreator.TEST_TABLE2)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE2);
-                        } else if (tableName
-                                .equals(DatabaseCreator.TEST_TABLE3)) {
-                            statement.execute(DatabaseCreator.DROP_TABLE3);
-                        }
-                    }
-                    userTab.close();
-
-                    statement.execute(DatabaseCreator.CREATE_TABLE3);
-                    statement.execute(DatabaseCreator.CREATE_TABLE2);
-                    statement.execute(DatabaseCreator.CREATE_TABLE1);
-
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
-                }
-            }
-
-            private void deleteTestTables() {
-                try {
+            while (userTab.next()) {
+                String tableName = userTab.getString("TABLE_NAME");
+                if (tableName.equals(DatabaseCreator.TEST_TABLE1)) {
                     statement.execute(DatabaseCreator.DROP_TABLE1);
+                } else if (tableName
+                        .equals(DatabaseCreator.TEST_TABLE2)) {
                     statement.execute(DatabaseCreator.DROP_TABLE2);
+                } else if (tableName
+                        .equals(DatabaseCreator.TEST_TABLE3)) {
                     statement.execute(DatabaseCreator.DROP_TABLE3);
-                } catch (SQLException e) {
-                    fail("Unexpected SQLException " + e.toString());
                 }
             }
-        };
-        return setup;
+            userTab.close();
+
+            statement.execute(DatabaseCreator.CREATE_TABLE3);
+            statement.execute(DatabaseCreator.CREATE_TABLE2);
+            statement.execute(DatabaseCreator.CREATE_TABLE1);
+
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
+    }
+
+    protected void deleteTestTables() {
+        try {
+            statement.execute(DatabaseCreator.DROP_TABLE1);
+            statement.execute(DatabaseCreator.DROP_TABLE2);
+            statement.execute(DatabaseCreator.DROP_TABLE3);
+        } catch (SQLException e) {
+            fail("Unexpected SQLException " + e.toString());
+        }
     }
 
     /**

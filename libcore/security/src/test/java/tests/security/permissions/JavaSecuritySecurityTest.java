@@ -186,5 +186,7 @@ public class JavaSecuritySecurityTest extends TestCase {
         Security.insertProviderAt(p, 0);
         assertTrue("java.security.Security.insertProviderAt() must call checkSecurityAccess on security manager", s.called);
         assertTrue("Argument of checkSecurityAccess is not correct", s.targets.contains("insertProvider.DummyProvider"));
+
+        Security.removeProvider(p.getName());
     }
 }

@@ -42,7 +42,7 @@ public class Main
             }
         } else {
             System.out.println("Running selected tests...");
-            TestRunner.main(args);
+            CoreTestRunner.main(args);
         }
         
         Runtime.getRuntime().halt(0);

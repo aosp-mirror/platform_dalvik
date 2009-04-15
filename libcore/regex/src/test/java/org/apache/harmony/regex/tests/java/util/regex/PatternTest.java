@@ -17,12 +17,6 @@
 
 package org.apache.harmony.regex.tests.java.util.regex;
 
-import dalvik.annotation.BrokenTest;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestLevel;
-
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +26,11 @@ import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 @TestTargetClass(
         value = Pattern.class,
@@ -88,12 +87,14 @@ public class PatternTest extends TestCase {
 
     @TestTargetNew(
         level = TestLevel.ADDITIONAL,
-        notes = "TODO empty test",
+        notes = "",
         method = "!",
         args = {}
     )
-    @BrokenTest("empty test")
     public void testMatcher() {
+        // some very simple test
+        Pattern p = Pattern.compile("a");
+        assertNotNull(p.matcher("bcde"));
     }
 
     /*

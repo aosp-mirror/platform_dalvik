@@ -17,15 +17,7 @@
 
 package tests.api.javax.net.ssl;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -40,15 +32,20 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLContextSpi;
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLSessionContext;
 import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSessionContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+import junit.framework.TestCase;
+
 import org.apache.harmony.security.tests.support.SpiEngUtils;
 import org.apache.harmony.xnet.tests.support.MySSLContextSpi;
-import junit.framework.TestCase;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 /**
  * Tests for <code>SSLContext</code> class constructors and methods.
@@ -108,15 +105,15 @@ public class SSLContext1Test extends TestCase {
         args = {javax.net.ssl.SSLContextSpi.class, java.security.Provider.class, java.lang.String.class}
     )
     public void test_ConstructorLjavax_net_ssl_SSLContextSpiLjava_security_ProviderLjava_lang_String()
-        throws KeyManagementException {
+        throws NoSuchAlgorithmException,
+            KeyManagementException {
         if (!DEFSupported) {
             fail(NotSupportMsg);
             return;
         }
         SSLContextSpi spi = new MySSLContextSpi();
-        SSLContext sslContext = new mySSLContext(spi, defaultProvider,
+        SSLContext sslContext = new MySslContext(spi, defaultProvider,
                 defaultProtocol);
-        assertNotNull("Not CertStore object", sslContext);
         assertEquals("Incorrect protocol", defaultProtocol,
                 sslContext.getProtocol());
         assertEquals("Incorrect provider", defaultProvider,
@@ -124,14 +121,18 @@ public class SSLContext1Test extends TestCase {
         TrustManager[] tm = null;
         KeyManager[] km = null;
         sslContext.init(km, tm, new SecureRandom());
+        assertNotNull("No SSLEngine created",
+                sslContext.createSSLEngine());
+        assertNotNull("No SSLEngine created",
+                sslContext.createSSLEngine("host", 8888));
         try {
             sslContext.init(km, tm, null);
-            fail("KeyManagementException should be thrown for null SEcureRandom");
+            fail("KeyManagementException should be thrown for null "
+                    + "SecureRandom");
         } catch (KeyManagementException e) {
-            // expected
         }
 
-        sslContext = new mySSLContext(null, null, null);
+        sslContext = new MySslContext(null, null, null);
         assertNull("Incorrect protocol", sslContext.getProtocol());
         assertNull("Incorrect provider", sslContext.getProvider());
         try {
@@ -159,7 +160,7 @@ public class SSLContext1Test extends TestCase {
     public void test_createSSLEngine() throws KeyManagementException {
         if (!DEFSupported) fail(NotSupportMsg);
         SSLContextSpi spi = new MySSLContextSpi();
-        SSLContext sslContext = new mySSLContext(spi, defaultProvider,
+        SSLContext sslContext = new MySslContext(spi, defaultProvider,
                 defaultProtocol);
         sslContext.init(null, null, new SecureRandom());        
         SSLEngine sslEngine = sslContext.createSSLEngine();
@@ -180,7 +181,7 @@ public class SSLContext1Test extends TestCase {
         throws KeyManagementException {
         if (!DEFSupported) fail(NotSupportMsg);
         SSLContextSpi spi = new MySSLContextSpi();
-        SSLContext sslContext = new mySSLContext(spi, defaultProvider,
+        SSLContext sslContext = new MySslContext(spi, defaultProvider,
                 defaultProtocol);
         sslContext.init(null, null, new SecureRandom());        
         SSLEngine sslEngine = sslContext.createSSLEngine("www.fortify.net", 80);
@@ -191,6 +192,7 @@ public class SSLContext1Test extends TestCase {
      * Test for <code>getClientSessionContext()</code>
      * <code>getServiceSessionContext()</code>
      * methods Assertion: returns correspondent object
+     * @throws KeyManagementException 
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
@@ -198,8 +200,7 @@ public class SSLContext1Test extends TestCase {
         method = "getClientSessionContext",
         args = {}
     )
-    @KnownFailure("Works on RI but throws NPE on Android, maybe related to SSLSessionContextTest issues")
-    public void test_getClientSessionContext() {
+    public void test_getClientSessionContext() throws NoSuchAlgorithmException, KeyManagementException {
         if (!DEFSupported) {
             fail(NotSupportMsg);
             return;
@@ -207,9 +208,10 @@ public class SSLContext1Test extends TestCase {
         SSLContext[] sslC = createSSLCon();
         assertNotNull("SSLContext objects were not created", sslC);
         for (int i = 0; i < sslC.length; i++) {
-            assertNotNull("Client session is incorrectly instantiated", 
+            sslC[i].init(null, null, null);
+            assertNotNull("Client session is incorrectly instantiated: " + i, 
                     sslC[i].getClientSessionContext());
-            assertNotNull("Server session is incorrectly instantiated", 
+            assertNotNull("Server session is incorrectly instantiated: " + i, 
                     sslC[i].getServerSessionContext());
         }
     }
@@ -220,11 +222,12 @@ public class SSLContext1Test extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
-        notes = "checks valid protocol values",
+        notes = "",
         method = "getInstance",
         args = {java.lang.String.class}
     )
-    public void test_getInstanceLjava_lang_String01() throws NoSuchAlgorithmException {
+    public void test_getInstanceLjava_lang_String01()
+            throws NoSuchAlgorithmException {
         if (!DEFSupported) {
             fail(NotSupportMsg);
             return;
@@ -232,7 +235,7 @@ public class SSLContext1Test extends TestCase {
         SSLContext sslContext;
         for (int i = 0; i < validValues.length; i++) {
             sslContext = SSLContext.getInstance(validValues[i]);
-            assertNotNull("Not SSLContext object", sslContext);
+            assertNotNull("No SSLContext created", sslContext);
             assertEquals("Invalid protocol", validValues[i],
                     sslContext.getProtocol());
         }
@@ -245,14 +248,14 @@ public class SSLContext1Test extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
-        notes = "checks invalid protocol values",
+        notes = "",
         method = "getInstance",
         args = {java.lang.String.class}
     )
     public void test_getInstanceLjava_lang_String02() {
         try {
             SSLContext.getInstance(null);
-            fail("NoSuchAlgorithmException or NullPointerException should be thrown (protocol is null)");
+            fail("NoSuchAlgorithmException or NullPointerException should be thrown (protocol is null");
         } catch (NoSuchAlgorithmException e) {
         } catch (NullPointerException e) {
         }
@@ -379,12 +382,11 @@ public class SSLContext1Test extends TestCase {
         for (int i = 0; i < validValues.length; i++) {
             sslContext = SSLContext.getInstance(validValues[i],
                     defaultProviderName);
-            assertTrue("Not SSLContext object",
-                    sslContext instanceof SSLContext);
-            assertEquals("Invalid protocol", sslContext.getProtocol(),
-                    validValues[i]);
-            assertEquals("Invalid provider", sslContext.getProvider(),
-                    defaultProvider);
+            assertNotNull("Not SSLContext created", sslContext);
+            assertEquals("Invalid protocol",
+                    validValues[i], sslContext.getProtocol());
+            assertEquals("Invalid provider",
+                    defaultProvider, sslContext.getProvider());
         }
     }
 
@@ -463,12 +465,9 @@ public class SSLContext1Test extends TestCase {
         for (int i = 0; i < validValues.length; i++) {
             sslContext = SSLContext
                     .getInstance(validValues[i], defaultProvider);
-            assertTrue("Not SSLContext object",
-                    sslContext instanceof SSLContext);
-            assertEquals("Invalid protocol", sslContext.getProtocol(),
-                    validValues[i]);
-            assertEquals("Invalid provider", sslContext.getProvider(),
-                    defaultProvider);
+            assertNotNull("Not SSLContext created", sslContext);
+            assertEquals("Invalid protocol", validValues[i], sslContext.getProtocol());
+            assertEquals("Invalid provider", defaultProvider, sslContext.getProvider());
         }
     }
     
@@ -487,11 +486,11 @@ public class SSLContext1Test extends TestCase {
         throws NoSuchAlgorithmException, NoSuchProviderException {
         if (!DEFSupported) fail(NotSupportMsg);
         SSLContextSpi spi = new MySSLContextSpi();
-        SSLContext sslContext = new mySSLContext(spi, defaultProvider,
+        SSLContext sslContext = new MySslContext(spi, defaultProvider,
                 defaultProtocol);
         assertEquals("Incorrect protocol",
                 defaultProtocol, sslContext.getProtocol());
-        sslContext = new mySSLContext(spi, defaultProvider,
+        sslContext = new MySslContext(spi, defaultProvider,
                 null);
         assertNull("Incorrect protocol", sslContext.getProtocol());
         sslContext = SSLContext.getInstance(defaultProtocol);
@@ -520,7 +519,7 @@ public class SSLContext1Test extends TestCase {
         throws NoSuchAlgorithmException, NoSuchProviderException {
         if (!DEFSupported) fail(NotSupportMsg);
         SSLContextSpi spi = new MySSLContextSpi();
-        SSLContext sslContext = new mySSLContext(spi, defaultProvider,
+        SSLContext sslContext = new MySslContext(spi, defaultProvider,
                 defaultProtocol);
         assertEquals("Incorrect provider",
                 defaultProvider, sslContext.getProvider());
@@ -561,9 +560,8 @@ public class SSLContext1Test extends TestCase {
         TrustManager[] tms = tmf.getTrustManagers();
         for (SSLContext sslCi : sslC) {
             sslCi.init(kmf.getKeyManagers(), tms, new SecureRandom());
-            assertTrue("Server context is incorrectly instantiated",
-                    sslCi.getServerSessionContext() instanceof SSLSessionContext);
-            assertNotNull("Null object returned", sslCi.getServerSessionContext());
+            assertNotNull("Server context is incorrectly instantiated", sslCi
+                    .getServerSessionContext());
         }
     }
 
@@ -613,9 +611,10 @@ public class SSLContext1Test extends TestCase {
         TrustManager[] tms = tmf.getTrustManagers();
         for (int i = 0; i < sslC.length; i++) {
             sslC[i].init(kms, tms, new SecureRandom());
-            assertTrue(sslC[i].getServerSocketFactory() instanceof SSLServerSocketFactory);
-            assertTrue(sslC[i].getSocketFactory() instanceof SSLSocketFactory);
-            assertNotNull("Null object returned", sslC[i].getServerSocketFactory());
+            assertNotNull("No SSLServerSocketFactory available",
+                    sslC[i].getServerSocketFactory());
+            assertNotNull("No SSLSocketFactory available",
+                    sslC[i].getSocketFactory());
         }
     }
 
@@ -648,9 +647,8 @@ public class SSLContext1Test extends TestCase {
          TrustManager[] tms = tmf.getTrustManagers();
          for (SSLContext sslCi : sslC) {
              sslCi.init(kmf.getKeyManagers(), tms, new SecureRandom());
-             assertTrue("Socket factory is incorrectly instantiated",
-                     sslCi.getSocketFactory() instanceof SSLSocketFactory);
-             assertNotNull("Null object returned", sslCi.getSocketFactory());
+             assertNotNull("Socket factory is incorrectly instantiated",
+                     sslCi.getSocketFactory());
          }
      }
 
@@ -673,7 +671,7 @@ public class SSLContext1Test extends TestCase {
          throws Exception {
          if (!DEFSupported) fail(NotSupportMsg);
          SSLContextSpi spi = new MySSLContextSpi();
-         SSLContext sslContext = new mySSLContext(spi, defaultProvider,
+         SSLContext sslContext = new MySslContext(spi, defaultProvider,
                  defaultProtocol);
          try {
              sslContext.createSSLEngine();
@@ -713,8 +711,8 @@ public class SSLContext1Test extends TestCase {
  * Addifional class to verify SSLContext constructor
  */
 
-class mySSLContext extends SSLContext {
-    public mySSLContext(SSLContextSpi spi, Provider prov, String alg) {
+class MySslContext extends SSLContext {
+    public MySslContext(SSLContextSpi spi, Provider prov, String alg) {
         super(spi, prov, alg);
     }
 }

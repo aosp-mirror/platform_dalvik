@@ -21,8 +21,8 @@ import SQLite.Database;
 import SQLite.Exception;
 import SQLite.Stmt;
 import SQLite.TableResult;
-import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
@@ -1001,7 +1001,7 @@ public class StmtTest extends SQLiteTest {
         method = "column_type",
         args = {int.class}
     )
-    @AndroidOnly("For numeric, float and blob wrong type is returned")
+    @KnownFailure("For numeric, float and blob wrong type is returned")
     public void testColumn_type() throws Exception {
         db.exec(createAllTypes, null);
         db.exec(insertAllTypes, null);
@@ -1066,7 +1066,7 @@ public class StmtTest extends SQLiteTest {
         method = "column_count",
         args = {}
     )
-    @AndroidOnly("Wrong value is returned in case of a prepared statment to "+
+    @KnownFailure("Wrong value is returned in case of a prepared statment to "+
             "which a '*' bound ")
     public void testColumn_count() throws Exception {
         
