@@ -90,18 +90,16 @@ StaticField* dvmFindStaticField(const ClassObject* clazz,
 
     assert(clazz != NULL);
 
+    /*
+     * Find a field with a matching name and signature.  As with instance
+     * fields, the VM allows you to have two fields with the same name so
+     * long as they have different types.
+     */
     pField = clazz->sfields;
     for (i = 0; i < clazz->sfieldCount; i++, pField++) {
-        if (strcmp(fieldName, pField->field.name) == 0) {
-            /*
-             * The name matches.  Unlike methods, we can't have two fields
-             * with the same names but differing types.
-             */
-            if (strcmp(signature, pField->field.signature) != 0) {
-                LOGW("Found field '%s', but sig is '%s' not '%s'\n",
-                    fieldName, pField->field.signature, signature);
-                return NULL;
-            }
+        if (strcmp(fieldName, pField->field.name) == 0 &&
+            strcmp(signature, pField->field.signature) == 0)
+        {
             return pField;
         }
     }
