@@ -389,17 +389,37 @@ public class TimestampTest extends TestCase {
     public void testValueOfString1() {
 
         Timestamp theReturn;
-        long[] theReturnTime = { 38720231, 38720231, 80279000, -38720691,
-                38720000};
-        int[] theReturnNanos = { 231000000, 231987654, 0, 309000000, 0,};
+
+        theReturn = Timestamp.valueOf("1970-01-01 10:45:20.231");
+        assertEquals("Wrong result for time test", 38720231,
+                theReturn.getTime());
+        assertEquals("Wrong result for nanos test", 231000000,
+                theReturn.getNanos());
+
+        theReturn = Timestamp.valueOf("1970-01-01 10:45:20.231987654");
+        assertEquals("Wrong result for time test", 38720231,
+                theReturn.getTime());
+        assertEquals("Wrong result for nanos test", 231987654,
+                theReturn.getNanos());
+
+        theReturn = Timestamp.valueOf("1970-01-01 22:17:59.0");
+        assertEquals("Wrong result for time test", 80279000,
+                theReturn.getTime());
+        assertEquals("Wrong result for nanos test", 0,
+                theReturn.getNanos());
+
+        theReturn = Timestamp.valueOf("1969-12-31 13:14:39.309");
+        assertEquals("Wrong result for time test", 38720691,
+                theReturn.getTime());
+        assertEquals("Wrong result for nanos test", 309000000,
+                theReturn.getNanos());
+
+        theReturn = Timestamp.valueOf("1970-01-01 10:45:20");
+        assertEquals("Wrong result for time test", 38720000,
+                theReturn.getTime());
+        assertEquals("Wrong result for nanos test", 0,
+                theReturn.getNanos());
         
-        String[] valid = { 
-                "1970-01-01 10:45:20.231",
-                "1970-01-01 10:45:20.231987654", 
-                "1970-01-01 22:17:59.0",
-                "1969-12-31 13:14:39.309", 
-                "1970-01-01 10:45:20",  
-        };
         String[] invalid = {
                 null,
                 "ABCDEFGHI", 
@@ -410,17 +430,10 @@ public class TimestampTest extends TestCase {
                 "1970-01-01 10:45:20.ABCD87654", 
                 "21-43-48",
         };
-        
-        for (int i = 0; i < valid.length; i++) {
-                theReturn = Timestamp.valueOf(valid[i]);
-                assertEquals(theReturnTime[i], theReturn.getTime());
-                assertEquals(theReturnNanos[i], theReturn.getNanos());
-        } // end for
-
         for (String element : invalid) {
             try {
                 theReturn = Timestamp.valueOf(element);
-                fail("Should throw IllegalArgumentException.");
+                fail("Should throw IllegalArgumentException for " + element);
             } catch (IllegalArgumentException e) {
                 //expected
             }
@@ -440,7 +453,8 @@ public class TimestampTest extends TestCase {
     public void testToString() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
-            assertEquals(STRING_GMT_ARRAY[i], theTimestamp.toString());
+            assertEquals("Wrong conversion for test " + i, STRING_GMT_ARRAY[i],
+                    theTimestamp.toString());
         } // end for
 
     } // end method testtoString
@@ -457,7 +471,8 @@ public class TimestampTest extends TestCase {
     public void testGetNanos() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
-            assertEquals(NANOS_ARRAY[i], theTimestamp.getNanos());
+            assertEquals("Wrong conversion for test " + i, NANOS_ARRAY[i],
+                    theTimestamp.getNanos());
         } // end for
 
     } // end method testgetNanos
@@ -478,11 +493,13 @@ public class TimestampTest extends TestCase {
 
             theTimestamp.setNanos(NANOS_ARRAY2[i]);
 
-            assertEquals(NANOS_ARRAY2[i], theTimestamp.getNanos());
+            assertEquals("Wrong conversion for test " + i, NANOS_ARRAY2[i],
+                    theTimestamp.getNanos());
             // Also check that these Timestamps with detailed nanos values
             // convert to
             // strings correctly
-            assertEquals(STRING_NANOS_ARRAY[i], theTimestamp.toString());
+            assertEquals("Wrong conversion for test " + i,
+                    STRING_NANOS_ARRAY[i], theTimestamp.toString());
         } // end for
 
         for (int i = 0; i < NANOS_INVALID.length; i++) {
