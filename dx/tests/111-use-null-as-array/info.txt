@@ -1,0 +1,9 @@
+This is a smoke test of dex conversion, which checks to see that uses
+of a known-null in contexts that require a specific type end up getting
+converted to the type in question. When executed, this sort of code
+will inevitably throw a NullPointerException, but if the opcode weren't
+correct, they would instead incorrectly fail verification.
+
+This test compares emitted code against a known-good (via eyeballing)
+version, so it is possible for this test to spuriously fail if other
+aspects of conversion end up altering the output in innocuous ways.
