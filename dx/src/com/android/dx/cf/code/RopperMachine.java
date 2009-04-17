@@ -259,16 +259,17 @@ import java.util.ArrayList;
     }
 
     /**
-     * @return true if a RET has ben encountered since the last call to 
-     * startBlock()
+     * @return {@code true} if a {@code ret} has ben encountered since
+     * the last call to {@code startBlock()}
      */
     public boolean hasRet() {
         return returnAddress != null;
     }
 
     /**
-     * @return {@code null-ok;} return address of a ret instruction if encountered
-     * since last call to startBlock(). null if no ret instruction encountered.
+     * @return {@code null-ok;} return address of a {@code ret}
+     * instruction if encountered since last call to startBlock().
+     * {@code null} if no ret instruction encountered.
      */
     public ReturnAddress getReturnAddress() {
         return returnAddress;
@@ -444,7 +445,7 @@ import java.util.ArrayList;
                     catches, MULTIANEWARRAY_METHOD);
             insns.add(insn);
 
-            // Add a move-result
+            // Add a move-result.
             rop = Rops.opMoveResult(MULTIANEWARRAY_METHOD.getPrototype()
                     .getReturnType());
             insn = new PlainInsn(rop, pos, objectReg, RegisterSpecList.EMPTY);
@@ -457,7 +458,6 @@ import java.util.ArrayList;
 
             opcode = ByteOps.CHECKCAST;
             sources = RegisterSpecList.make(objectReg);
-
         } else if (opcode == ByteOps.JSR) {
             // JSR has no Rop instruction
             hasJsr = true;
@@ -474,12 +474,14 @@ import java.util.ArrayList;
         }
 
         ropOpcode = jopToRopOpcode(opcode, cst);
-
         rop = Rops.ropFor(ropOpcode, destType, sources, cst);
 
         Insn moveResult = null;
         if (dest != null && rop.isCallLike()) {
-            // We're going to want to have a move-result in the next basic block
+            /*
+             * We're going to want to have a move-result in the next
+             * basic block.
+             */
             extraBlockCount++;
 
             moveResult = new PlainInsn(
@@ -488,8 +490,10 @@ import java.util.ArrayList;
 
             dest = null;
         } else if (dest != null && rop.canThrow()) {
-            // We're going to want to have a move-result-pseudo
-            // in the next basic block
+            /*
+             * We're going to want to have a move-result-pseudo in the
+             * next basic block.
+             */
             extraBlockCount++;
 
             moveResult = new PlainInsn(
@@ -599,11 +603,12 @@ import java.util.ArrayList;
         }
 
         /*
-         * If initValues is non-null, it means that the parser has seen a group
-         * of compatible constant initialization bytecodes that are applied to
-         * the current newarray. The action we take here is to convert these
-         * initialization bytecodes into a single fill-array-data ROP which lays
-         * out all the constant values in a table.
+         * If initValues is non-null, it means that the parser has
+         * seen a group of compatible constant initialization
+         * bytecodes that are applied to the current newarray. The
+         * action we take here is to convert these initialization
+         * bytecodes into a single fill-array-data ROP which lays out
+         * all the constant values in a table.
          */ 
         if (initValues != null) {
             extraBlockCount++;
@@ -619,8 +624,8 @@ import java.util.ArrayList;
      * instruction.
      * 
      * @param opcode the opcode being translated
-     * @param stackPointer {@code >= 0;} the stack pointer after the instruction's
-     * arguments have been popped
+     * @param stackPointer {@code >= 0;} the stack pointer after the
+     * instruction's arguments have been popped
      * @return {@code non-null;} the sources
      */
     private RegisterSpecList getSources(int opcode, int stackPointer) {

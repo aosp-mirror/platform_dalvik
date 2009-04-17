@@ -1113,13 +1113,14 @@ public final class Rops {
      * match what is returned. TODO: Revisit this issue.</p>
      * 
      * @param opcode the opcode
-     * @param dest {@code non-null;} destination type, or {@link Type#VOID} if none
+     * @param dest {@code non-null;} destination (result) type, or
+     * {@link Type#VOID} if none
      * @param sources {@code non-null;} list of source types
      * @param cst {@code null-ok;} associated constant, if any
      * @return {@code non-null;} an appropriate instance
      */
     public static Rop ropFor(int opcode, TypeBearer dest, TypeList sources,
-                             Constant cst) {
+            Constant cst) {
         switch (opcode) {
             case RegOps.NOP: return NOP;
             case RegOps.MOVE: return opMove(dest);
@@ -1165,19 +1166,31 @@ public final class Rops {
             case RegOps.MONITOR_EXIT: return MONITOR_EXIT;
             case RegOps.AGET: {
                 Type source = sources.getType(0);
+                Type componentType;
                 if (source == Type.KNOWN_NULL) {
-                    // Treat a known-null as an Object[] in this context.
-                    source = Type.OBJECT_ARRAY;
-                } 
-                return opAget(source.getComponentType());
+                    /*
+                     * Treat a known-null as an array of the expected
+                     * result type.
+                     */
+                    componentType = dest.getType();
+                } else {
+                    componentType = source.getComponentType();
+                }
+                return opAget(componentType);
             }
             case RegOps.APUT: {
                 Type source = sources.getType(1);
+                Type componentType;
                 if (source == Type.KNOWN_NULL) {
-                    // Treat a known-null as an Object[] in this context.
-                    source = Type.OBJECT_ARRAY;
-                } 
-                return opAput(source.getComponentType());
+                    /*
+                     * Treat a known-null as an array of the type being
+                     * stored.
+                     */
+                    componentType = sources.getType(0);
+                } else {
+                    componentType = source.getComponentType();
+                }
+                return opAput(componentType);
             }
             case RegOps.NEW_INSTANCE: return NEW_INSTANCE;
             case RegOps.NEW_ARRAY: return opNewArray(dest.getType());

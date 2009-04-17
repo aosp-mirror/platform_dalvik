@@ -35,14 +35,17 @@ import java.util.ArrayList;
 
 /**
  * Class which knows how to simulate the effects of executing bytecode.
- * 
+ *
  * <p><b>Note:</b> This class is not thread-safe. If multiple threads
  * need to use a single instance, they must synchronize access explicitly
  * between themselves.</p>
  */
 public class Simulator {
-    /** {@code non-null;} canned error message for local variable table mismatches */
-    private static final String LOCAL_MISMATCH_ERROR = 
+    /**
+     * {@code non-null;} canned error message for local variable
+     * table mismatches
+     */
+    private static final String LOCAL_MISMATCH_ERROR =
         "This is symptomatic of .class transformation tools that ignore " +
         "local variable information.";
     
@@ -131,7 +134,7 @@ public class Simulator {
     private class SimVisitor implements BytecodeArray.Visitor {
         /**
          * {@code non-null;} machine instance to use (just to avoid excessive
-         * cross-object field access) 
+         * cross-object field access)
          */
         private final Machine machine;
 
@@ -255,25 +258,21 @@ public class Simulator {
                     /*
                      * Change the type (which is to be pushed) to
                      * reflect the actual component type of the array
-                     * being popped.
+                     * being popped, unless it turns out to be a
+                     * known-null, in which case we just use the type
+                     * implied by the original instruction.
                      */
-                    Type requireType = type.getArrayType();
-                    type = frame.getStack().peekType(1);
-                    if (type == Type.KNOWN_NULL) {
-                        /*
-                         * The type is a known-null: Just treat the
-                         * popped type as whatever is expected. In
-                         * reality, unless this frame is revisited
-                         * (due to a branch merge), execution will
-                         * result in the throwing of a
-                         * NullPointerException, but claiming the
-                         * expected type at here should be good enough
-                         * for the purposes at this level.
-                         */
-                        type = requireType;
+                    Type foundArrayType = frame.getStack().peekType(1);
+                    Type requireArrayType;
+
+                    if (foundArrayType != Type.KNOWN_NULL) {
+                        requireArrayType = foundArrayType;
+                        type = foundArrayType.getComponentType();
+                    } else {
+                        requireArrayType = type.getArrayType();
                     }
-                    type = type.getComponentType();
-                    machine.popArgs(frame, requireType, Type.INT);
+
+                    machine.popArgs(frame, requireArrayType, Type.INT);
                     break;
                 }
                 case ByteOps.IADD:
@@ -292,7 +291,7 @@ public class Simulator {
                 case ByteOps.IUSHR: {
                     machine.popArgs(frame, type, Type.INT);
                     break;
-                }                    
+                }
                 case ByteOps.LCMP: {
                     machine.popArgs(frame, Type.LONG, Type.LONG);
                     break;
@@ -308,8 +307,28 @@ public class Simulator {
                     break;
                 }
                 case ByteOps.IASTORE: {
-                    Type arrayType = type.getArrayType();
-                    machine.popArgs(frame, arrayType, Type.INT, type);
+                    /*
+                     * Change the type (which is the type of the
+                     * element) to reflect the actual component type
+                     * of the array being popped, unless it turns out
+                     * to be a known-null, in which case we just use
+                     * the type implied by the original instruction.
+                     * The category 1 vs. 2 thing here is that, if the
+                     * element type is category 2, we have to skip over
+                     * one extra stack slot to find the array.
+                     */
+                    Type foundArrayType =
+                        frame.getStack().peekType(type.isCategory1() ? 2 : 3);
+                    Type requireArrayType;
+
+                    if (foundArrayType != Type.KNOWN_NULL) {
+                        requireArrayType = foundArrayType;
+                        type = foundArrayType.getComponentType();
+                    } else {
+                        requireArrayType = type.getArrayType();
+                    }
+
+                    machine.popArgs(frame, requireArrayType, Type.INT, type);
                     break;
                 }
                 case ByteOps.POP2:
