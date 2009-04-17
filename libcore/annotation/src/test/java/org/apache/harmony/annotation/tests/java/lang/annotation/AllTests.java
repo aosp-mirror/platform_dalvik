@@ -16,8 +16,6 @@
 
 package org.apache.harmony.annotation.tests.java.lang.annotation;
 
-import org.apache.harmony.nio_char.tests.java.nio.charset.ASCIICharsetEncoderTest;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
