@@ -1658,8 +1658,11 @@ static void untweakLoader(ClassObject* referrer, ClassObject* resClass)
  * file.
  *
  * Exceptions caused by failures are cleared before returning.
+ *
+ * On failure, returns NULL, and sets *pFailure if pFailure is not NULL.
  */
-ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
+ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
+    VerifyError* pFailure)
 {
     DvmDex* pDvmDex = referrer->pDvmDex;
     ClassObject* resClass;
@@ -1682,6 +1685,8 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
                 classIdx,
                 dexStringByTypeIdx(pDvmDex->pDexFile, classIdx));
             dvmClearOptException(dvmThreadSelf());
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_CLASS;
             return NULL;
         }
 
@@ -1695,6 +1700,8 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
     if (IS_CLASS_FLAG_SET(resClass, CLASS_MULTIPLE_DEFS)) {
         LOGI("DexOpt: not resolving ambiguous class '%s'\n",
             resClass->descriptor);
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_NO_CLASS;
         return NULL;
     }
 
@@ -1705,6 +1712,8 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
     if (!allowed) {
         LOGW("DexOpt: resolve class illegal access: %s -> %s\n",
             referrer->descriptor, resClass->descriptor);
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_ACCESS;
         return NULL;
     }
 
@@ -1713,8 +1722,11 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
 
 /*
  * Alternate version of dvmResolveInstField().
+ *
+ * On failure, returns NULL, and sets *pFailure if pFailure is not NULL.
  */
-InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx)
+InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
+    VerifyError* pFailure)
 {
     DvmDex* pDvmDex = referrer->pDvmDex;
     InstField* resField;
@@ -1729,10 +1741,12 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx)
         /*
          * Find the field's class.
          */
-        resClass = dvmOptResolveClass(referrer, pFieldId->classIdx);
+        resClass = dvmOptResolveClass(referrer, pFieldId->classIdx, pFailure);
         if (resClass == NULL) {
             //dvmClearOptException(dvmThreadSelf());
             assert(!dvmCheckException(dvmThreadSelf()));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_FIELD;
             return NULL;
         }
 
@@ -1743,6 +1757,8 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx)
             LOGD("DexOpt: couldn't find field %s.%s\n",
                 resClass->descriptor,
                 dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_FIELD;
             return NULL;
         }
 
@@ -1760,6 +1776,8 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx)
         LOGI("DexOpt: access denied from %s to field %s.%s\n",
             referrer->descriptor, resField->field.clazz->descriptor,
             resField->field.name);
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_ACCESS;
         return NULL;
     }
 
@@ -1770,8 +1788,11 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx)
  * Alternate version of dvmResolveStaticField().
  *
  * Does not force initialization of the resolved field's class.
+ *
+ * On failure, returns NULL, and sets *pFailure if pFailure is not NULL.
  */
-StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx)
+StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
+    VerifyError* pFailure)
 {
     DvmDex* pDvmDex = referrer->pDvmDex;
     StaticField* resField;
@@ -1786,10 +1807,12 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx)
         /*
          * Find the field's class.
          */
-        resClass = dvmOptResolveClass(referrer, pFieldId->classIdx);
+        resClass = dvmOptResolveClass(referrer, pFieldId->classIdx, pFailure);
         if (resClass == NULL) {
             //dvmClearOptException(dvmThreadSelf());
             assert(!dvmCheckException(dvmThreadSelf()));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_FIELD;
             return NULL;
         }
 
@@ -1798,6 +1821,8 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx)
                     dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
         if (resField == NULL) {
             LOGD("DexOpt: couldn't find static field\n");
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_FIELD;
             return NULL;
         }
 
@@ -1820,6 +1845,8 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx)
         LOGI("DexOpt: access denied from %s to field %s.%s\n",
             referrer->descriptor, resField->field.clazz->descriptor,
             resField->field.name);
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_ACCESS;
         return NULL;
     }
 
@@ -1845,7 +1872,7 @@ static void rewriteInstField(Method* method, u2* insns, OpCode newOpc)
     InstField* field;
     int byteOffset;
 
-    field = dvmOptResolveInstField(clazz, fieldIdx);
+    field = dvmOptResolveInstField(clazz, fieldIdx, NULL);
     if (field == NULL) {
         LOGI("DexOpt: unable to optimize field ref 0x%04x at 0x%02x in %s.%s\n",
             fieldIdx, (int) (insns - method->insns), clazz->descriptor,
@@ -1869,9 +1896,11 @@ static void rewriteInstField(Method* method, u2* insns, OpCode newOpc)
  * Alternate version of dvmResolveMethod().
  *
  * Doesn't throw exceptions, and checks access on every lookup.
+ *
+ * On failure, returns NULL, and sets *pFailure if pFailure is not NULL.
  */
 Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
-    MethodType methodType)
+    MethodType methodType, VerifyError* pFailure)
 {
     DvmDex* pDvmDex = referrer->pDvmDex;
     Method* resMethod;
@@ -1888,16 +1917,20 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
 
         pMethodId = dexGetMethodId(pDvmDex->pDexFile, methodIdx);
 
-        resClass = dvmOptResolveClass(referrer, pMethodId->classIdx);
+        resClass = dvmOptResolveClass(referrer, pMethodId->classIdx, pFailure);
         if (resClass == NULL) {
             /* can't find the class that the method is a part of */
             LOGV("DexOpt: can't find called method's class (?.%s)\n",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_METHOD;
             return NULL;
         }
         if (dvmIsInterfaceClass(resClass)) {
             /* method is part of an interface; this is wrong method for that */
             LOGW("DexOpt: method is in an interface\n");
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_GENERIC;
             return NULL;
         }
 
@@ -1923,6 +1956,8 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
         if (resMethod == NULL) {
             LOGV("DexOpt: couldn't find method '%s'\n",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_METHOD;
             return NULL;
         }
 
@@ -1931,6 +1966,8 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
             LOGW("DexOpt: pure-abstract method '%s' in %s\n",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx),
                 resClass->descriptor);
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_GENERIC;
             return NULL;
         }
 
@@ -1961,6 +1998,8 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
                 referrer->descriptor);
             free(desc);
         }
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_ACCESS;
         return NULL;
     }
 
@@ -1981,7 +2020,7 @@ static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc)
     Method* baseMethod;
     u2 methodIdx = insns[1];
 
-    baseMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_VIRTUAL);
+    baseMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_VIRTUAL, NULL);
     if (baseMethod == NULL) {
         LOGD("DexOpt: unable to optimize virt call 0x%04x at 0x%02x in %s.%s\n",
             methodIdx,
@@ -2025,7 +2064,7 @@ static bool rewriteDirectInvoke(Method* method, u2* insns)
     Method* calledMethod;
     u2 methodIdx = insns[1];
 
-    calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT);
+    calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT, NULL);
     if (calledMethod == NULL) {
         LOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s\n",
             methodIdx,
@@ -2057,6 +2096,8 @@ static bool rewriteDirectInvoke(Method* method, u2* insns)
 /*
  * Resolve an interface method reference.
  *
+ * No method access check here -- interface methods are always public.
+ *
  * Returns NULL if the method was not found.  Does not throw an exception.
  */
 Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
@@ -2075,7 +2116,7 @@ Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
 
         pMethodId = dexGetMethodId(pDvmDex->pDexFile, methodIdx);
 
-        resClass = dvmOptResolveClass(referrer, pMethodId->classIdx);
+        resClass = dvmOptResolveClass(referrer, pMethodId->classIdx, NULL);
         if (resClass == NULL) {
             /* can't find the class that the method is a part of */
             dvmClearOptException(dvmThreadSelf());
@@ -2151,7 +2192,7 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
 
     //return false;
 
-    calledMethod = dvmOptResolveMethod(clazz, methodIdx, methodType);
+    calledMethod = dvmOptResolveMethod(clazz, methodIdx, methodType, NULL);
     if (calledMethod == NULL) {
         LOGV("+++ DexOpt inline: can't find %d\n", methodIdx);
         return false;

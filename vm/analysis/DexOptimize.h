@@ -37,6 +37,22 @@ enum DexoptFlags {
 };
 
 /*
+ * An enumeration of problems that can turn up during verification.
+ */
+typedef enum VerifyError {
+    VERIFY_ERROR_NONE = 0,      /* no error; must be zero */
+    VERIFY_ERROR_GENERIC,       /* failed, details not important */
+
+    VERIFY_ERROR_NO_CLASS,      /* NoClassDefFoundError */
+    VERIFY_ERROR_NO_METHOD,     /* NoSuchMethodError */
+    VERIFY_ERROR_NO_FIELD,      /* NoSuchFieldError */
+    VERIFY_ERROR_CLASS_CHANGE,  /* IncompatibleClassChangeError */
+    VERIFY_ERROR_ACCESS,        /* IllegalAccessError */
+} VerifyError;
+
+#define VERIFY_OK(_failure) ((_failure) == VERIFY_ERROR_NONE)
+
+/*
  * Given the full path to a DEX or Jar file, and (if appropriate) the name
  * within the Jar, open the optimized version from the cache.
  *
@@ -82,11 +98,14 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
  * Abbreviated resolution functions, for use by optimization and verification
  * code.
  */
-ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx);
+ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
+    VerifyError* pFailure);
 Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
-        MethodType methodType);
+    MethodType methodType, VerifyError* pFailure);
 Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx);
-InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx);
-StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx);
+InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
+    VerifyError* pFailure);
+StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
+    VerifyError* pFailure);
 
 #endif /*_DALVIK_DEXOPTIMIZE*/
