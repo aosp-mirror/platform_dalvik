@@ -19,6 +19,7 @@ package tests.api.javax.xml.parsers;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -279,16 +280,7 @@ public class DocumentBuilderTest extends TestCase {
     )
     @KnownFailure("d.getChildNodes returns an unexpected/strange #Text node")
     public void test_parseLjava_io_File() throws IOException {
-        File f = File.createTempFile("simple", ".xml");
-        f.deleteOnExit();
-        InputStream xml = getClass().getResourceAsStream("/simple.xml");
-        FileOutputStream out = new FileOutputStream(f);
-        while (xml.available() > 0) {
-            out.write(xml.read());
-        }
-        out.flush();
-        out.close();
-        xml.close();
+        File f = resourceToTmpFile("/simple.xml");
 
         // case 1: Trivial use.
         try {
@@ -330,16 +322,7 @@ public class DocumentBuilderTest extends TestCase {
         }
 
         // case 4: Try to parse incorrect xml file
-        f = File.createTempFile("wrong", ".xml");
-        f.deleteOnExit();
-        xml = getClass().getResourceAsStream("/wrong.xml");
-        out = new FileOutputStream(f);
-        while (xml.available() > 0) {
-            out.write(xml.read());
-        }
-        out.flush();
-        out.close();
-        xml.close();
+        f = resourceToTmpFile("/wrong.xml");
         try {
             db.parse(f);
             fail("Expected SAXException was not thrown");
@@ -348,6 +331,22 @@ public class DocumentBuilderTest extends TestCase {
         } catch (SAXException sax) {
             // expected
         }
+    }
+
+    private File resourceToTmpFile(String path) throws IOException,
+            FileNotFoundException {
+        File f = File.createTempFile("out", ".xml");
+        f.deleteOnExit();
+        FileOutputStream out = new FileOutputStream(f);
+
+        InputStream xml = getClass().getResourceAsStream(path);
+        while (xml.available() > 0) {
+            out.write(xml.read());
+        }
+        out.flush();
+        out.close();
+        xml.close();
+        return f;
     }
 
     /**
