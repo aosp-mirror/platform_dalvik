@@ -78,6 +78,18 @@ public class TimeTest extends TestCase {
     static String[][] STRING_ARRAYS = { STRING_GMT_ARRAY, STRING_LA_ARRAY,
             STRING_JP_ARRAY };
 
+    private TimeZone old;
+
+    @Override
+    protected void setUp() {
+        old = TimeZone.getDefault();
+    }
+
+    @Override
+    protected void tearDown() {
+        TimeZone.setDefault(old);
+    }
+
     @SuppressWarnings("deprecation")
     @TestTargetNew(
         level = TestLevel.COMPLETE,
@@ -99,11 +111,12 @@ public class TimeTest extends TestCase {
         args = {long.class}
     )
     public void testTime() {
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT")); 
         Time theTime = new Time(TIME_TEST1);
 
         // The date should have been created
         assertNotNull(theTime);
-        assertTrue(theTime.toString().contains("10:45:20"));
+        assertTrue(theTime.toString().contains(STRING_TEST1));
     } // end method testTime()
 
     @TestTargetNew(
@@ -150,7 +163,7 @@ public class TimeTest extends TestCase {
         
         Time[] theReturns = { new Time(38720000), new Time(80279000),
                 new Time(47680000)};
-        String[] validTime = { "10:45:20", "22:17:59", "13:14:40", };
+        String[] validTime = { STRING_TEST1, STRING_TEST2, STRING_TEST3, };
         String[] invalidTime = { null, "ABCDEFGHI", "233104", "21-43-48" };
         
         for (int i = 0; i < validTime.length; i++) {
