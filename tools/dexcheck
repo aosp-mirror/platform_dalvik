@@ -6,6 +6,12 @@
 
 # Get the list of files.  Use "sed" to drop the trailing carriage return.
 files=`adb shell "cd /data/dalvik-cache; echo *" | sed -e s/.$//`
+if [ "$files" = "*" ]; then
+    echo 'ERROR: commands must run as root on device (try "adb root" first?)'
+    exit 1
+fi
+
+failure=0
 
 # Check each file in turn.  This is much faster with "dexdump -c", but that
 # was added post-cupcake.
@@ -13,13 +19,14 @@ files=`adb shell "cd /data/dalvik-cache; echo *" | sed -e s/.$//`
 # The dexdump found in older builds does not stop on checksum failures and
 # will likely crash.
 for file in $files; do
-	echo $file
-	errout=`adb shell "dexdump /data/dalvik-cache/$file > dev/null"`
-	errcount=`echo $errout | wc -w` > /dev/null
-	if [ $errcount != "0" ]; then
-		echo "  Failure in $file: $errout"
-	fi
+    echo $file
+    errout=`adb shell "dexdump /data/dalvik-cache/$file > dev/null"`
+    errcount=`echo $errout | wc -w` > /dev/null
+    if [ $errcount != "0" ]; then
+        echo "  Failure in $file: $errout"
+        failure=1
+    fi
 done
 
-exit 0
+exit $failure
 
