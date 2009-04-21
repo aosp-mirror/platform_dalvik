@@ -16,6 +16,7 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -200,6 +201,8 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
         args = {}
     )
     @SuppressWarnings("unchecked")
+    @KnownFailure("Class GenericType can not be found, "
+            + "maybe the wrong class loader is used to get the raw type?")
     public void testSimpleInheritance() throws Exception {
         Class<? extends SimpleInheritance> clazz = SimpleInheritance.class;
         TypeVariable<Class> subTypeVariable = getTypeParameter(clazz);

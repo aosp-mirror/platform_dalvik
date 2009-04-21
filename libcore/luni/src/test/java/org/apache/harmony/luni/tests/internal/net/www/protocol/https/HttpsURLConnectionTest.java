@@ -159,7 +159,6 @@ public class HttpsURLConnectionTest extends TestCase {
         method = "setDefaultHostnameVerifier",
         args = {javax.net.ssl.HostnameVerifier.class}
     )
-    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testHttpsConnection() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
@@ -218,7 +217,6 @@ public class HttpsURLConnectionTest extends TestCase {
             args = {int.class}
         )
     })
-    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testHttpsConnection_Not_Found_Response() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
@@ -444,7 +442,6 @@ public class HttpsURLConnectionTest extends TestCase {
         method = "setHostnameVerifier",
         args = {javax.net.ssl.HostnameVerifier.class}
     )
-    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testSetHostnameVerifier() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -494,7 +491,6 @@ public class HttpsURLConnectionTest extends TestCase {
         method = "setDoOutput",
         args = {boolean.class}
     )
-    @KnownFailure("Handshake fails.")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void test_doOutput() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -933,7 +929,7 @@ public class HttpsURLConnectionTest extends TestCase {
         if (store != null) {
             String ksFileName = "org/apache/harmony/luni/tests/key_store."
                     + KeyStore.getDefaultType().toLowerCase();
-            InputStream in = ClassLoader.getSystemClassLoader()
+            InputStream in = getClass().getClassLoader()
                     .getResourceAsStream(ksFileName);
             FileOutputStream out = new FileOutputStream(store);
             BufferedInputStream bufIn = new BufferedInputStream(in, 8192);

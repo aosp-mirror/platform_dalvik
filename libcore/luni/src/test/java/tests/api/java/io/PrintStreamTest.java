@@ -29,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.IllegalFormatException;
 import java.util.Locale;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -986,6 +987,7 @@ public class PrintStreamTest extends junit.framework.TestCase {
         method = "format",
         args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
         PrintStream tobj;
 
@@ -1098,6 +1100,7 @@ public class PrintStreamTest extends junit.framework.TestCase {
         method = "printf",
         args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_printfLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
         PrintStream tobj;
 

@@ -172,7 +172,6 @@ public class HttpURLConnectionTest extends TestCase {
         method = "getOutputStream",
         args = {}
     )
-    @BrokenTest("openConnection seems to return null, wrong config?")
     public void testGetOutputStream() throws Exception {
         // Regression for HARMONY-482
         MockServer httpServer =
@@ -204,7 +203,6 @@ public class HttpURLConnectionTest extends TestCase {
         method = "usingProxy",
         args = {}
     )
-    @KnownFailure("Not implemented")
     public void testUsingProxy() throws Exception {
         // Regression for HARMONY-570
         MockServer server = new MockServer("server");
@@ -251,7 +249,6 @@ public class HttpURLConnectionTest extends TestCase {
         method = "usingProxy",
         args = {}
     )
-    @KnownFailure("Not implemented")
     public void testUsingProxySelector() throws Exception {
         // Regression for HARMONY-570
         MockServer server = new MockServer("server");
@@ -307,7 +304,6 @@ public class HttpURLConnectionTest extends TestCase {
             args = {}
         )
     })
-    @KnownFailure("Not umplemented")
     public void testProxyAuthorization() throws Exception {
         // Set up test Authenticator
         Authenticator.setDefault(new Authenticator() {
