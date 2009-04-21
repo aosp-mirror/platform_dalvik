@@ -17,20 +17,26 @@
 
 package tests.api.java.net;
 
-import dalvik.annotation.BrokenTest; 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestTargets;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.SideEffect;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
+
+import org.apache.harmony.security.tests.support.TestCertUtils;
+
+import tests.support.Support_Configuration;
+import tests.support.Support_PortManager;
+import tests.support.Support_TestWebData;
+import tests.support.Support_TestWebServer;
+import tests.support.resource.Support_Resources;
 
 import java.io.File;
-import java.io.FilePermission;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.DatagramSocket;
 import java.net.MalformedURLException;
-import java.net.SocketException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandler;
@@ -38,21 +44,24 @@ import java.net.URLStreamHandlerFactory;
 import java.security.CodeSource;
 import java.security.Permission;
 import java.security.PermissionCollection;
-import java.security.Permissions;
 import java.security.cert.Certificate;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
+import java.util.List;
 import java.util.Vector;
 import java.util.jar.Manifest;
 
-import org.apache.harmony.luni.util.InvalidJarIndexException;
-import org.apache.harmony.security.tests.support.TestCertUtils;
-
-import tests.support.Support_Configuration;
-import tests.support.resource.Support_Resources;
-
-@TestTargetClass(URLClassLoader.class) 
+@TestTargetClass(
+    value = URLClassLoader.class,
+    untestedMethods = {
+        @TestTargetNew(
+            level = TestLevel.NOT_NECESSARY,
+            notes = "findClass uses defineClass which is not implemented",
+            method = "findClass",
+            args = {java.lang.String.class}
+        )
+    }
+)
 public class URLClassLoaderTest extends junit.framework.TestCase {
 
     class BogusClassLoader extends ClassLoader {
@@ -169,36 +178,52 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
      * @tests java.net.URLClassLoader#findResources(java.lang.String)
      */
     @TestTargetNew(
-        level = TestLevel.SUFFICIENT,
-        notes = "IOException checking missed.",
+        level = TestLevel.COMPLETE,
+        notes = "IOException checking missing. "
+            + "A test case that loads a resource from a webserver is missing.",
         method = "findResources",
         args = {java.lang.String.class}
     )
-    @BrokenTest("web address used from support doesn't work anymore")
-    public void test_findResourcesLjava_lang_String() throws IOException {
-        Enumeration res = null;
+    @SideEffect("Support_TestWebServer requires isolation.")
+    public void test_findResourcesLjava_lang_String() throws Exception {
+        Enumeration<URL> res = null;
         String[] resValues = { "This is a test resource file.",
-                "This is a resource from a subdir" };
+                "This is a resource from a subdir"};
+
+        String tmp = System.getProperty("java.io.tmpdir") + "/";
+
+        File tmpDir = new File(tmp);
+        File test1 = new File(tmp + "test0");
+        test1.deleteOnExit();
+        FileOutputStream out = new FileOutputStream(test1);
+        out.write(resValues[0].getBytes());
+        out.flush();
+        out.close();
+
+        File subDir = new File(tmp + "subdir/");
+        subDir.mkdir();
+        File test2 = new File(tmp + "subdir/test0");
+        test2.deleteOnExit();
+        out = new FileOutputStream(test2);
+        out.write(resValues[1].getBytes());
+        out.flush();
+        out.close();
 
         URL[] urls = new URL[2];
-        urls[0] = new URL(Support_Resources.getResourceURL("/"));
-        urls[1] = new URL(Support_Resources.getResourceURL("/subdir1/"));
+        urls[0] = new URL("file://" + tmpDir.getAbsolutePath() + "/");
+        urls[1] = new URL("file://" + subDir.getAbsolutePath() + "/");
+
         ucl = new URLClassLoader(urls);
-        res = ucl.findResources("RESOURCE.TXT");
+        res = ucl.findResources("test0");
         assertNotNull("Failed to locate resources", res);
 
         int i = 0;
         while (res.hasMoreElements()) {
-            StringBuffer sb = new StringBuffer();
-            InputStream is = ((URL) res.nextElement()).openStream();
-            int c;
-            while ((c = is.read()) != -1) {
-                sb.append((char) c);
-            }
+            StringBuffer sb = getResContent(res.nextElement());
             assertEquals("Returned incorrect resource/or in wrong order",
                     resValues[i++], sb.toString());
         }
-        assertTrue("Incorrect number of resources returned: " + i, i == 2);
+        assertEquals("Incorrect number of resources returned", 2, i);
     }
 
     /**
@@ -426,195 +451,49 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
             return super.getPermissions(codesource);
         }
     }
-    
-    /**
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @tests java.net.URLClassLoader#findClass(java.lang.String)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "findClass",
-        args = {java.lang.String.class}
-    )
-    @BrokenTest("")
-    public void test_findClassLjava_lang_String()
-            throws ClassNotFoundException, IOException {
-        File resources = Support_Resources.createTempFolder();
-        String resPath = resources.toString();
-        if (resPath.charAt(0) == '/' || resPath.charAt(0) == '\\') {
-            resPath = resPath.substring(1);
-        }
-
-        java.net.URL[] urls = new java.net.URL[1];
-        java.net.URLClassLoader ucl = null;
-        boolean classFound;
-        boolean exception;
-        boolean goodException;
-        Enumeration en;
-        boolean resourcesFound;
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_11.jar");
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_12.jar");
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_13.jar");
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_14.jar");
-        urls[0] = new URL("file:/" + resPath + "/JarIndex/hyts_11.jar");
-        ucl = URLClassLoader.newInstance(urls, null);
-        URL resURL = ucl.findResource("Test.txt");
-        URL reference = new URL("jar:file:/" + resPath.replace('\\', '/')
-                + "/JarIndex/hyts_14.jar!/Test.txt");
-        assertTrue("Resource not found: " + resURL + " ref: " + reference,
-                resURL.equals(reference));
-
-        Class c = Class.forName("cpack.CNothing", true, ucl);
-        assertNotNull(c);
-
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_21.jar");
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_22.jar");
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_23.jar");
-        urls[0] = new URL("file:/" + resPath + "/JarIndex/hyts_21.jar");
-        ucl = URLClassLoader.newInstance(urls, null);
-        en = ucl.findResources("bpack/");
-
-        try {
-            resourcesFound = true;
-            URL url1 = (URL) en.nextElement();
-            URL url2 = (URL) en.nextElement();
-            System.out.println(url1);
-            System.out.println(url2);
-            resourcesFound = resourcesFound
-                    && url1.equals(new URL("jar:file:/"
-                            + resPath.replace('\\', '/')
-                            + "/JarIndex/hyts_22.jar!/bpack/"));
-            resourcesFound = resourcesFound
-                    && url2.equals(new URL("jar:file:/"
-                            + resPath.replace('\\', '/')
-                            + "/JarIndex/hyts_23.jar!/bpack/"));
-            if (en.hasMoreElements()) {
-                resourcesFound = false;
-            }
-        } catch (NoSuchElementException e) {
-            resourcesFound = false;
-        }
-        assertTrue("Resources not found (1)", resourcesFound);
-
-        Class c2 = Class.forName("bpack.Homer", true, ucl);
-        assertNotNull(c2);
-
-        try {
-            Class.forName("bpack.Bart", true, ucl);
-            fail("InvalidJarIndexException should be thrown");
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            // expected
-        }
-
-        try {
-            Class.forName("Main4", true, ucl);
-            fail("ClassNotFoundException should be thrown");
-        } catch (ClassNotFoundException e) {
-            // Expected
-        }
-
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_22-new.jar");
-        urls[0] = new URL("file:/" + resPath + "/JarIndex/hyts_22-new.jar");
-        ucl = URLClassLoader.newInstance(urls, null);
-        assertNotNull("Cannot find resource", ucl.findResource("cpack/"));
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_11.jar");
-        urls[0] = new URL("file:/" + resPath + "/JarIndex/hyts_31.jar");
-        ucl = URLClassLoader.newInstance(urls, null);
-
-        try {
-            Class.forName("cpack.Mock", true, ucl);
-            fail("ClassNotFoundException should be thrown");
-        } catch (ClassNotFoundException e) {
-            // Expected
-        }
-
-        // testing circular reference
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_41.jar");
-        Support_Resources.copyFile(resources, "JarIndex", "hyts_42.jar");
-        urls[0] = new URL("file:/" + resPath + "/JarIndex/hyts_41.jar");
-        ucl = URLClassLoader.newInstance(urls, null);
-        en = ucl.findResources("bpack/");
-        resourcesFound = resourcesFound
-                && ((URL) en.nextElement()).equals(new URL("jar:file:/"
-                        + resPath.replace('\\', '/')
-                        + "/JarIndex/hyts_42.jar!/bpack/"));
-        assertTrue("Resources not found (2)", resourcesFound);
-        assertFalse("No more resources expected", en.hasMoreElements());
-       
-        // Regression test for HARMONY-2357.
-        try {
-            URLClassLoaderExt cl = new URLClassLoaderExt(new URL[557]);
-            cl.findClass("0");
-            fail("NullPointerException should be thrown");
-        } catch (NullPointerException npe) {
-            // Expected
-        }
-
-        // Regression test for HARMONY-2871.
-        URLClassLoader cl = new URLClassLoader(new URL[] { new URL("file:/foo.jar") });
-
-        try {
-            Class.forName("foo.Foo", false, cl);
-        } catch (Exception ex) {
-            // Don't care
-        }
-
-        try {
-            Class.forName("foo.Foo", false, cl);
-            fail("NullPointerException should be thrown");
-        } catch (ClassNotFoundException cnfe) {
-            // Expected
-        }
-    }
 
     /**
      * @tests java.net.URLClassLoader#findResource(java.lang.String)
      */
     @TestTargetNew(
-        level = TestLevel.COMPLETE,
+        level = TestLevel.PARTIAL_COMPLETE,
         notes = "",
         method = "findResource",
         args = {java.lang.String.class}
     )
-    @BrokenTest("web address used from support doesn't work anymore")
-    public void test_findResourceLjava_lang_String()
-            throws MalformedURLException {
-        URL res = null;
+    @SideEffect("Support_TestWebServer requires isolation.")
+    public void test_findResourceLjava_lang_String() throws Exception {
+        int port = Support_PortManager.getNextPort();
+        File tmp = File.createTempFile("test", ".txt");
 
-        URL[] urls = new URL[2];
-        urls[0] = new URL("http://" + Support_Configuration.HomeAddress);
-        urls[1] = new URL(Support_Resources.getResourceURL("/"));
-        ucl = new URLClassLoader(urls);
-        res = ucl.findResource("RESOURCE.TXT");
-        assertNotNull("Failed to locate resource", res);
+        Support_TestWebServer server = new Support_TestWebServer();
+        try {    
 
-        StringBuffer sb = new StringBuffer();
-        try {
-            java.io.InputStream is = res.openStream();
-
-            int c;
-            while ((c = is.read()) != -1) {
-                sb.append((char) c);
-            }
-            is.close();
-        } catch (IOException e) {
+            server.initServer(port, tmp.getAbsolutePath(), "text/html");
+    
+            URL[] urls = { new URL("http://localhost:" + port + "/") };
+            ucl = new URLClassLoader(urls);
+            URL res = ucl.findResource("test1");
+            assertNotNull("Failed to locate resource", res);
+    
+            StringBuffer sb = getResContent(res);
+            assertEquals("Returned incorrect resource", new String(Support_TestWebData.test1),
+                    sb.toString());
+        } finally {
+            server.close();
         }
-        assertTrue("Returned incorrect resource", !sb.toString().equals(
-                "This is a test resource file"));
     }
     
     @TestTargets({
         @TestTargetNew(
-            level = TestLevel.COMPLETE,
+            level = TestLevel.PARTIAL,
             notes = "Checks getResource, indirectly checks findResource",
+            clazz = ClassLoader.class,
             method = "getResource",
             args = {java.lang.String.class}
         ),
         @TestTargetNew(
-            level = TestLevel.COMPLETE,
+            level = TestLevel.PARTIAL_COMPLETE,
             notes = "Checks getResource, indirectly checks findResource",
             method = "findResource",
             args = {java.lang.String.class}
@@ -681,39 +560,75 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
      * Regression for Harmony-2237 
      */
     @TestTargetNew(
-        level = TestLevel.PARTIAL,
+        level = TestLevel.PARTIAL_COMPLETE,
         notes = "Regression test",
         method = "findResource",
         args = {java.lang.String.class}
     )
-    public void test_getResource() throws Exception {        
-        URLClassLoader urlLoader = getURLClassLoader();
-        assertNull(urlLoader.findResource("XXX")); //$NON-NLS-1$
+    @SideEffect("Support_TestWebServer requires isolation.")
+    public void test_findResource_String() throws Exception {
+        File tempFile1 = File.createTempFile("textFile", ".txt");
+        tempFile1.createNewFile();
+        tempFile1.deleteOnExit();
+        File tempFile2 = File.createTempFile("jarFile", ".jar");
+        tempFile2.delete();
+        tempFile2.deleteOnExit();
+
+        Support_TestWebServer server = new Support_TestWebServer();
+        int port = Support_PortManager.getNextPort();
+        try {
+            server.initServer(port, false);
+    
+            String tempPath1 = tempFile1.getParentFile().getAbsolutePath() + "/";
+            InputStream is = getClass().getResourceAsStream(
+                    "/tests/resources/hyts_patch.jar");
+            Support_Resources.copyLocalFileto(tempFile2, is);
+            String tempPath2 = tempFile2.getAbsolutePath();
+            String tempPath3 = "http://localhost:" + port + "/";
+            URLClassLoader urlLoader = getURLClassLoader(tempPath1, tempPath2);
+            assertNull("Found inexistant resource",
+                    urlLoader.findResource("XXX")); //$NON-NLS-1$
+            assertNotNull("Couldn't find resource from directory",
+                    urlLoader.findResource(tempFile1.getName())); //$NON-NLS-1$
+            assertNotNull("Couldn't find resource from jar",
+                    urlLoader.findResource("Blah.txt")); //$NON-NLS-1$
+            urlLoader = getURLClassLoader(tempPath1, tempPath2, tempPath3);
+            assertNotNull("Couldn't find resource from web",
+                    urlLoader.findResource("test1")); //$NON-NLS-1$
+            assertNull("Found inexistant resource from web",
+                    urlLoader.findResource("test3")); //$NON-NLS-1$
+        } finally {
+            server.close();
+        }
     }
 
-    private static URLClassLoader getURLClassLoader() {
-        String classPath = System.getProperty("java.class.path");
-        StringTokenizer tok = new StringTokenizer(classPath, File.pathSeparator);
-        Vector<URL> urlVec = new Vector<URL>();
-        String resPackage = Support_Resources.RESOURCE_PACKAGE;
-        try {
-            while (tok.hasMoreTokens()) {
-                String path = tok.nextToken();
-                String url;
-                if (new File(path).isDirectory())
-                    url = "file:" + path + resPackage + "subfolder/";
-                else
-                    url = "jar:file:" + path + "!" + resPackage + "subfolder/";
-                urlVec.addElement(new URL(url));
+    private static URLClassLoader getURLClassLoader(String... classPath)
+            throws MalformedURLException {
+        List<URL> urlList = new ArrayList<URL>();
+        for (String path : classPath) {
+            String url;
+            File f = new File(path);
+            if (f.isDirectory()) {
+                url = "file:" + path;
+            } else if (path.startsWith("http")) {
+                url = path;
+            } else {
+                url = "jar:file:" + path + "!/";
             }
-        } catch (MalformedURLException e) {
-            // do nothing
+            urlList.add(new URL(url));
         }
-        URL[] urls = new URL[urlVec.size()];
-        for (int i = 0; i < urlVec.size(); i++) {
-            urls[i] = urlVec.elementAt(i);
-        }            
-        URLClassLoader loader = new URLClassLoader(urls);
-        return loader;
+        return new URLClassLoader(urlList.toArray(new URL[urlList.size()]));
+    }
+
+    private StringBuffer getResContent(URL res) throws IOException {
+        StringBuffer sb = new StringBuffer();
+        InputStream is = res.openStream();
+   
+        int c;
+        while ((c = is.read()) != -1) {
+            sb.append((char) c);
+        }
+        is.close();
+        return sb;
     }
 }
