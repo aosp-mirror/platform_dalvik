@@ -398,6 +398,11 @@ INLINE JNIEnv* dvmGetThreadJNIEnv(Thread* self) { return self->jniEnv; }
 INLINE void dvmSetThreadJNIEnv(Thread* self, JNIEnv* env) { self->jniEnv = env;}
 
 /*
+ * Change the scheduler group of the current process
+ */
+int dvmChangeThreadSchedulerGroup(const char *group);
+
+/*
  * Update the priority value of the underlying pthread.
  */
 void dvmChangeThreadPriority(Thread* thread, int newPriority);
