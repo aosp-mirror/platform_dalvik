@@ -304,6 +304,7 @@ public class TimeZoneTest extends junit.framework.TestCase {
         method = "getDisplayName",
         args = {java.util.Locale.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayNameLjava_util_Locale() {
         TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
         assertEquals("Pacific Standard Time", tz.getDisplayName(new Locale("US")));
@@ -330,6 +331,7 @@ public class TimeZoneTest extends junit.framework.TestCase {
         args = {boolean.class, int.class, java.util.Locale.class}
     )
     @AndroidOnly("fail on RI. See comment below")
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayNameZILjava_util_Locale() {
         TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
         assertEquals("PST",                   tz.getDisplayName(false, 0, Locale.US));

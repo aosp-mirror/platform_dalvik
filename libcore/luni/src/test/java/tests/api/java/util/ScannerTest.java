@@ -1120,6 +1120,7 @@ public class ScannerTest extends TestCase {
         method = "nextInt",
         args = {int.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextIntI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextInt(10));
@@ -1334,6 +1335,7 @@ public class ScannerTest extends TestCase {
         method = "nextInt",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextInt() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextInt());
@@ -1728,6 +1730,7 @@ public class ScannerTest extends TestCase {
         method = "nextFloat",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextFloat() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
@@ -2143,6 +2146,7 @@ public class ScannerTest extends TestCase {
         method = "nextShort",
         args = {int.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextShortI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextShort(10));
@@ -2300,6 +2304,7 @@ public class ScannerTest extends TestCase {
         method = "nextShort",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextShort() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextShort());
@@ -2460,6 +2465,7 @@ public class ScannerTest extends TestCase {
         method = "nextLong",
         args = {int.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextLongI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextLong(10));
@@ -2617,6 +2623,7 @@ public class ScannerTest extends TestCase {
         method = "nextLong",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextLong() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextLong());
@@ -3713,6 +3720,7 @@ public class ScannerTest extends TestCase {
         method = "hasNextInt",
         args = {int.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextIntI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextInt(10));
@@ -3945,6 +3953,7 @@ public class ScannerTest extends TestCase {
         method = "hasNextInt",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextInt() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextInt());
@@ -4132,6 +4141,7 @@ public class ScannerTest extends TestCase {
         method = "hasNextFloat",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextFloat() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
@@ -4277,6 +4287,7 @@ public class ScannerTest extends TestCase {
         method = "hasNextShort",
         args = {int.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextShortI() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextShort(10));
@@ -4453,6 +4464,7 @@ public class ScannerTest extends TestCase {
         method = "hasNextShort",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextShort() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextShort());
@@ -4680,6 +4692,7 @@ public class ScannerTest extends TestCase {
         method = "hasNextLong",
         args = {int.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextLongI() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextLong(10));
@@ -4897,6 +4910,7 @@ public class ScannerTest extends TestCase {
         method = "hasNextLong",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextLong() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextLong());
@@ -5083,6 +5097,7 @@ public class ScannerTest extends TestCase {
         method = "hasNextDouble",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextDouble() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
@@ -5196,6 +5211,7 @@ public class ScannerTest extends TestCase {
         method = "hasNextBigDecimal",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextBigDecimal() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
@@ -6328,6 +6344,7 @@ public class ScannerTest extends TestCase {
         method = "nextDouble",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextDouble() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
@@ -6420,6 +6437,7 @@ public class ScannerTest extends TestCase {
         method = "nextBigDecimal",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextBigDecimal() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);

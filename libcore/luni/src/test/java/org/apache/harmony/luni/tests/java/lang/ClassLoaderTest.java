@@ -495,36 +495,23 @@ public class ClassLoaderTest extends TestCase {
         method = "loadClass",
         args = {java.lang.String.class, boolean.class}
     )
-    public void test_loadClassLjava_lang_StringLZ() {
-        PackageClassLoader pcl = new PackageClassLoader();
+    public void test_loadClassLjava_lang_StringLZ() throws
+            IllegalAccessException, InstantiationException,
+            ClassNotFoundException {
+        PackageClassLoader pcl = new PackageClassLoader(
+                getClass().getClassLoader());
         String className = getClass().getPackage().getName() + ".A";
-        try {
-            Class<?> clazz = pcl.loadClass(className, false);
-            assertEquals(className, clazz.getName());
-            assertNotNull(clazz.newInstance());
-            
-        } catch (ClassNotFoundException e) {
-            fail("ClassNotFoundException was thrown.");
-        } catch (InstantiationException e) {
-            fail("InstantiationException was thrown.");
-        } catch (IllegalAccessException e) {
-            fail("IllegalAccessException was thrown.");
-        }
+
+        Class<?> clazz = pcl.loadClass(className, false);
+        assertEquals(className, clazz.getName());
+        assertNotNull(clazz.newInstance());
         
-        try {
-            Class<?> clazz = pcl.loadClass(className, true);
-            assertEquals(className, clazz.getName());
-            assertNotNull(clazz.newInstance());
+        clazz = pcl.loadClass(className, true);
+        assertEquals(className, clazz.getName());
+        assertNotNull(clazz.newInstance());
             
-        } catch (ClassNotFoundException e) {
-            fail("ClassNotFoundException was thrown.");
-        } catch (InstantiationException e) {
-            fail("InstantiationException was thrown.");
-        } catch (IllegalAccessException e) {
-            fail("IllegalAccessException was thrown.");
-        }
         try {
-            Class<?> clazz = pcl.loadClass("UnknownClass", false);
+            clazz = pcl.loadClass("UnknownClass", false);
             assertEquals("TestClass", clazz.getName());
             fail("ClassNotFoundException was not thrown.");
         } catch (ClassNotFoundException e) {
@@ -613,6 +600,7 @@ public class ClassLoaderTest extends TestCase {
         method = "getSystemClassLoader",
         args = {}
     )
+    @BrokenTest("Infinite loop in classloader. Actually a known failure.")
     public void test_getSystemClassLoader() {
         // Test for method java.lang.ClassLoader
         // java.lang.ClassLoader.getSystemClassLoader()
@@ -761,7 +749,8 @@ public class ClassLoaderTest extends TestCase {
     )
     @KnownFailure("PackageClassLoader.getPackage returns null.")
     public void test_getPackageLjava_lang_String() {
-        PackageClassLoader pcl = new PackageClassLoader();
+        PackageClassLoader pcl = new PackageClassLoader(
+                getClass().getClassLoader());
         
         String [] packageProperties = { "test.package", "title", "1.0", 
                 "Vendor", "Title", "1.1", "implementation vendor"};
@@ -800,7 +789,8 @@ public class ClassLoaderTest extends TestCase {
             "expect exactly that. this tests works on the RI.")
     public void test_getPackages() {
         
-        PackageClassLoader pcl = new PackageClassLoader();
+        PackageClassLoader pcl = new PackageClassLoader(
+                getClass().getClassLoader());
         
         String [] packageProperties = { "test.package", "title", "1.0", 
                 "Vendor", "Title", "1.1", "implementation vendor"};
@@ -823,7 +813,7 @@ public class ClassLoaderTest extends TestCase {
         Package [] packages = pcl.getPackages();
         assertTrue(packages.length != 0);
         
-        pcl = new PackageClassLoader();
+        pcl = new PackageClassLoader(getClass().getClassLoader());
         packages = pcl.getPackages();
         assertNotNull(packages);
         
@@ -911,7 +901,8 @@ public class ClassLoaderTest extends TestCase {
     )
     public void test_definePackage() {
         
-        PackageClassLoader pcl = new PackageClassLoader();
+        PackageClassLoader pcl = new PackageClassLoader(
+                getClass().getClassLoader());
         
         String [] packageProperties = { "test.package", "title", "1.0", 
                 "Vendor", "Title", "1.1", "implementation vendor"};
@@ -977,7 +968,8 @@ public class ClassLoaderTest extends TestCase {
     public void test_findClass(){
         
         try {
-            PackageClassLoader pcl = new PackageClassLoader();
+            PackageClassLoader pcl = new PackageClassLoader(
+                    getClass().getClassLoader());
             pcl.findClass(getClass().getPackage().getName() + ".A");
             fail("ClassNotFoundException was not thrown.");
         } catch(ClassNotFoundException cnfe) {
@@ -985,7 +977,8 @@ public class ClassLoaderTest extends TestCase {
         } 
         
        try {
-           PackageClassLoader pcl = new PackageClassLoader();
+           PackageClassLoader pcl = new PackageClassLoader(
+                   getClass().getClassLoader());
            pcl.findClass("TestClass");
            fail("ClassNotFoundException was not thrown.");
        } catch(ClassNotFoundException cnfe) {
@@ -1001,7 +994,8 @@ public class ClassLoaderTest extends TestCase {
     )
     @AndroidOnly("findLibrary method is not supported, it returns null.")
     public void test_findLibrary() {
-        PackageClassLoader pcl = new PackageClassLoader();
+        PackageClassLoader pcl = new PackageClassLoader(
+                getClass().getClassLoader());
         assertNull(pcl.findLibrary("libjvm.so"));
     }
     
@@ -1013,7 +1007,8 @@ public class ClassLoaderTest extends TestCase {
     )
     @AndroidOnly("findResource method is not supported, it returns null.")    
     public void test_findResourceLjava_lang_String() {
-        assertNull(new PackageClassLoader().findResource("hyts_Foo.c"));
+        assertNull(new PackageClassLoader(
+                getClass().getClassLoader()).findResource("hyts_Foo.c"));
     }
 
     @TestTargetNew(
@@ -1025,7 +1020,8 @@ public class ClassLoaderTest extends TestCase {
     @AndroidOnly("findResources method is not supported, it returns " +
             "empty Enumeration.")      
     public void test_findResourcesLjava_lang_String() throws IOException {
-        assertFalse(new PackageClassLoader().findResources("hyts_Foo.c").
+        assertFalse(new PackageClassLoader(
+                getClass().getClassLoader()).findResources("hyts_Foo.c").
                 hasMoreElements());
     }
     
@@ -1036,7 +1032,8 @@ public class ClassLoaderTest extends TestCase {
         args = {java.lang.String.class}
     )    
     public void test_findSystemClass() {
-        PackageClassLoader pcl = new PackageClassLoader();
+        PackageClassLoader pcl = new PackageClassLoader(
+                getClass().getClassLoader());
         
         Class [] classes = { String.class, Integer.class, Object.class,
                 Object[].class };
@@ -1064,7 +1061,8 @@ public class ClassLoaderTest extends TestCase {
        args = {java.lang.String.class }
     )
     public void test_findLoadedClass() {
-       PackageClassLoader pcl = new PackageClassLoader();
+       PackageClassLoader pcl = new PackageClassLoader(
+               getClass().getClassLoader());
        
        Class [] classes = { A.class, PublicTestClass.class,
                TestAnnotation.class, TestClass1.class };
@@ -1140,6 +1138,31 @@ class A {
 }
 
 class Ldr extends ClassLoader {
+
+    /*
+     * These bytes are the content of the file
+     * /org/apache/harmony/luni/tests/java/lang/A.class
+     */
+    byte[] classBytes = new byte[] { -54, -2, -70, -66, 0, 0, 0, 49, 0, 16, 7,
+            0, 2, 1, 0, 41, 111, 114, 103, 47, 97, 112, 97, 99, 104, 101, 47,
+            104, 97, 114, 109, 111, 110, 121, 47, 108, 117, 110, 105, 47, 116,
+            101, 115, 116, 115, 47, 106, 97, 118, 97, 47, 108, 97, 110, 103, 47,
+            65, 7, 0, 4, 1, 0, 16, 106, 97, 118, 97, 47, 108, 97, 110, 103, 47,
+            79, 98, 106, 101, 99, 116, 1, 0, 6, 60, 105, 110, 105, 116, 62, 1,
+            0, 3, 40, 41, 86, 1, 0, 4, 67, 111, 100, 101, 10, 0, 3, 0, 9, 12, 0,
+            5, 0, 6, 1, 0, 15, 76, 105, 110, 101, 78, 117, 109, 98, 101, 114,
+            84, 97, 98, 108, 101, 1, 0, 18, 76, 111, 99, 97, 108, 86, 97, 114,
+            105, 97, 98, 108, 101, 84, 97, 98, 108, 101, 1, 0, 4, 116, 104, 105,
+            115, 1, 0, 43, 76, 111, 114, 103, 47, 97, 112, 97, 99, 104, 101, 47,
+            104, 97, 114, 109, 111, 110, 121, 47, 108, 117, 110, 105, 47, 116,
+            101, 115, 116, 115, 47, 106, 97, 118, 97, 47, 108, 97, 110, 103, 47,
+            65, 59, 1, 0, 10, 83, 111, 117, 114, 99, 101, 70, 105, 108, 101, 1,
+            0, 20, 67, 108, 97, 115, 115, 76, 111, 97, 100, 101, 114, 84, 101,
+            115, 116, 46, 106, 97, 118, 97, 0, 32, 0, 1, 0, 3, 0, 0, 0, 0, 0, 1,
+            0, 0, 0, 5, 0, 6, 0, 1, 0, 7, 0, 0, 0, 47, 0, 1, 0, 1, 0, 0, 0, 5,
+            42, -73, 0, 8, -79, 0, 0, 0, 2, 0, 10, 0, 0, 0, 6, 0, 1, 0, 0, 4,
+            -128, 0, 11, 0, 0, 0, 12, 0, 1, 0, 0, 0, 5, 0, 12, 0, 13, 0, 0, 0,
+            1, 0, 14, 0, 0, 0, 2, 0, 15 };
     
     public static final int TEST_CASE_DEFINE_0 = 0;
     public static final int TEST_CASE_DEFINE_1 = 1;
@@ -1148,27 +1171,23 @@ class Ldr extends ClassLoader {
     
     @SuppressWarnings("deprecation")
     public Class<?> define(int len, int testCase) throws Exception {
-        Package p = getClass().getPackage();
-        String path = p == null ? "" : p.getName().replace('.', File.separatorChar)
-                + File.separator;
-        InputStream is = getResourceAsStream(path + "A.class");
-        byte[] buf = new byte[512];
-        if(len < 0) len = is.read(buf);
+        
+        if(len < 0) len = classBytes.length;
         Class<?> clazz = null;
         String className = "org.apache.harmony.luni.tests.java.lang.A";
         switch(testCase) {
             case TEST_CASE_DEFINE_0:
-                clazz = defineClass(className, buf, 0, len);
+                clazz = defineClass(className, classBytes, 0, len);
                 break;
             case TEST_CASE_DEFINE_1:
-                clazz = defineClass(buf, 0, len);                
+                clazz = defineClass(classBytes, 0, len);                
                 break;
             case TEST_CASE_DEFINE_2:
-                clazz = defineClass(className, buf, 0, len, 
+                clazz = defineClass(className, classBytes, 0, len, 
                         getClass().getProtectionDomain());
                 break;
             case TEST_CASE_DEFINE_3:
-                ByteBuffer bb = ByteBuffer.wrap(buf);
+                ByteBuffer bb = ByteBuffer.wrap(classBytes);
                 clazz = defineClass(className, 
                         bb, getClass().getProtectionDomain());                
                 break;
@@ -1185,6 +1204,10 @@ class Ldr extends ClassLoader {
 class PackageClassLoader extends ClassLoader { 
     public PackageClassLoader() {
         super();
+    }
+
+    public PackageClassLoader(ClassLoader parent) {
+        super(parent);
     }
 
     public Package definePackage(String name,

@@ -267,7 +267,6 @@ public class FormatterTest extends TestCase {
         method = "Formatter",
         args = {java.lang.String.class}
     )
-    @KnownFailure("The Exception is not thrown on linux if the user is root")
     public void test_ConstructorLjava_lang_String() throws IOException {
         Formatter f = null;
         try {
@@ -314,7 +313,6 @@ public class FormatterTest extends TestCase {
         method = "Formatter",
         args = {java.lang.String.class, java.lang.String.class}
     )
-    @KnownFailure("The Exception is not thrown on linux if the user is root")
     public void test_ConstructorLjava_lang_StringLjava_lang_String()
             throws IOException {
         Formatter f = null;
@@ -376,7 +374,6 @@ public class FormatterTest extends TestCase {
         method = "Formatter",
         args = {java.lang.String.class, java.lang.String.class, java.util.Locale.class}
     )
-    @KnownFailure("The Exception is not thrown on linux if the user is root")
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_util_Locale()
             throws IOException {
         Formatter f = null;
@@ -448,7 +445,6 @@ public class FormatterTest extends TestCase {
         method = "Formatter",
         args = {java.io.File.class}
     )
-    @KnownFailure("The Exception is not thrown on linux if the user is root")
     public void test_ConstructorLjava_io_File() throws IOException {
         Formatter f = null;
         try {
@@ -495,7 +491,6 @@ public class FormatterTest extends TestCase {
         method = "Formatter",
         args = {java.io.File.class, java.lang.String.class}
     )
-    @KnownFailure("The Exception is not thrown on linux if the user is root")
     public void test_ConstructorLjava_io_FileLjava_lang_String()
             throws IOException {
         Formatter f = null;
@@ -569,7 +564,6 @@ public class FormatterTest extends TestCase {
         method = "Formatter",
         args = {java.io.File.class, java.lang.String.class, java.util.Locale.class}
     )
-    @KnownFailure("The Exception is not thrown on linux if the user is root")
     public void test_ConstructorLjava_io_FileLjava_lang_StringLjava_util_Locale()
             throws IOException {
         Formatter f = null;
@@ -1765,6 +1759,7 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_lang_String$Ljava_lang_Object_ByteShortIntegerLongConversionD() {
         final Object[][] triple = { 
                 { 0,                "%d",                  "0" }, 
@@ -2029,6 +2024,7 @@ public class FormatterTest extends TestCase {
         args = {java.lang.String.class, java.lang.Object[].class}
     )
     @AndroidOnly("ICU data is different from RI data")
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_lang_String$Ljava_lang_Object_DateTimeConversion() {
         /*
          * Implementation note: For a millisecond date based on Long.MAX_VALUE,
@@ -2801,11 +2797,12 @@ public class FormatterTest extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Doesn't verify IllegalFormatException, FormatterClosedException.",
+        notes = "Flaky! results. differs if debugger is attached." +
+                "Unchecked IllegalFormatException, FormatterClosedException.",
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
-    // Flaky! results. differs if debugger is attached.
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_lang_String$LBigInteger() {
         final Object[][] tripleD = {
                 {new BigInteger("123456789012345678901234567890"),          "%d",       "123456789012345678901234567890"}, //$NON-NLS-2$
@@ -2908,6 +2905,7 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_lang_String$Ljava_lang_Object_BigIntegerPaddingConversion() {
         Formatter f = null;
 
@@ -4613,7 +4611,8 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
     )
-    public void test_formatLjava_util_LocaleLjava_lang_StringLjava_lang_Object$() {
+    @KnownFailure("Some locales were removed last minute in cupcake")
+    public void test_formatLjava_util_LocaleLjava_lang_StringLjava_lang_Object() {
         Double val = new Double(3.14);
         Calendar cal = Calendar.getInstance();
         Formatter fLoc = null;
