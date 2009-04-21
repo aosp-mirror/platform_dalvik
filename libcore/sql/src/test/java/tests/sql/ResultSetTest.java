@@ -23,6 +23,7 @@ import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 import tests.support.DatabaseCreator;
 
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,7 +49,7 @@ public class ResultSetTest extends SQLTest {
      * @see junit.framework.TestCase#setUp()
      */
     @Override
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
         try {
             conn.setAutoCommit(false);
@@ -57,31 +58,17 @@ public class ResultSetTest extends SQLTest {
             stForward.execute(selectAllAnimals);
             target = stForward.getResultSet();
             assertNotNull(target);
-            /*
-            // Scrollable ResultSet  (not supported) TODO => Ticket 91
-            stScrollable = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
-                    ResultSet.CONCUR_READ_ONLY);
-            stScrollable.execute(selectAllAnimals);
-            scrollableTarget = stScrollable.getResultSet();
-            assertNotNull(scrollableTarget);
-            
-            //Writable ResultSet (not supported) TODO => Ticket 91
-            stWritable = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-            stWritable.execute(selectAllAnimals);
-            writableTarget = stWritable.getResultSet();
-            assertNotNull(writableTarget);
-            */
+
             // empty table
             stForward = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
                     ResultSet.CONCUR_READ_ONLY);
             stForward.execute(DatabaseCreator.CREATE_TABLE_SIMPLE1);
             stForward.execute(selectEmptyTable);
             emptyTarget = stForward.getResultSet();
-            
-            
+
         } catch (SQLException e) {
             fail("SQLException was thrown: " + e.getMessage());
-        } 
+        }
     }
 
     /* (non-Javadoc)

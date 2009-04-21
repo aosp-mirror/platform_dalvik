@@ -32,53 +32,49 @@ import java.sql.Statement;
 public class SQLTest extends TestCase {
     static Connection conn;
 
-    public void setUp() {
+    @Override
+    public void setUp() throws Exception {
         getSQLiteConnection();
         createZoo();
     }
 
-    private File dbFile;
+    protected File dbFile;
 
-    protected void getSQLiteConnection() {
+    protected void getSQLiteConnection() throws Exception {
         String tmp = System.getProperty("java.io.tmpdir");
-        assertEquals(tmp,System.getProperty("java.io.tmpdir"));
+        assertEquals(tmp, System.getProperty("java.io.tmpdir"));
         File tmpDir = new File(tmp);
-        try {
-            if (tmpDir.isDirectory()) {
-                dbFile = File.createTempFile("sqliteTest", ".db", tmpDir);
-                dbFile.deleteOnExit();
-            } else {
-                System.err.println("java.io.tmpdir does not exist");
-            }
-            
-            Class.forName("SQLite.JDBCDriver").newInstance();
-            conn = DriverManager.getConnection("jdbc:sqlite:/"
-                    + dbFile.getPath());
-            assertNotNull("Connection created ",conn);
-
-        } catch (IOException e) {
-            System.out.println("Problem creating file " + tmp);
-        } catch (Exception e) {
-            fail("Exception: " + e.toString());
+        if (tmpDir.isDirectory()) {
+            dbFile = File.createTempFile("sqliteTest", ".db", tmpDir);
+            dbFile.deleteOnExit();
+        } else {
+            System.err.println("java.io.tmpdir does not exist");
         }
+
+        Class.forName("SQLite.JDBCDriver").newInstance();
+        conn = DriverManager.getConnection("jdbc:sqlite:/" + dbFile.getPath());
+        assertNotNull("Connection created ", conn);
     }
 
+    @Override
     public void tearDown() {
-    Statement st = null;
+        Statement st = null;
         try {
             if (! conn.isClosed()) {
-            st = conn.createStatement();
-            st.execute("drop table if exists zoo");
+                st = conn.createStatement();
+                st.execute("drop table if exists zoo");
             }
         } catch (SQLException e) {
             fail("Couldn't drop table: " + e.getMessage());
         } finally {
-        try {
-            if (st != null) {
-            st.close();
-                conn.close();
+            try {
+                if (st != null) {
+                    st.close();
+                    conn.close();
+                }
+            } catch(SQLException ee) {
+                //ignore
             }
-                } catch(SQLException ee) {}
         }
     }
 
@@ -89,7 +85,7 @@ public class SQLTest extends TestCase {
                 "insert into zoo values (1, 'Kesha', 'parrot')",
                 "insert into zoo values (2, 'Yasha', 'sparrow')" };
         
-    Statement st = null;    
+        Statement st = null;    
         try {
             st = conn.createStatement();
             for (int i = 0; i < queries.length; i++) {
@@ -99,10 +95,12 @@ public class SQLTest extends TestCase {
             e.printStackTrace();
             fail("Unexpected exception: " + e.getMessage());
         } finally {
-        try {
-            st.close();
-         } catch (SQLException ee) {} 
-    }
+            try {
+                if (st != null) {
+                    st.close();
+                }
+             } catch (SQLException ee) {} 
+        }
     }
 
     public void createProcedure() {
@@ -110,7 +108,7 @@ public class SQLTest extends TestCase {
                 + " BEGIN "
                 + " INSERT INTO zoo(id, name, family) VALUES (parameter1, parameter2, parameter3); "
                 + "SELECT * FROM zoo;" + " END;";
-    Statement st = null;
+        Statement st = null;
         try {
             st = conn.createStatement();
             st.execute("DROP PROCEDURE IF EXISTS welcomeAnimal");
@@ -118,10 +116,10 @@ public class SQLTest extends TestCase {
         } catch (SQLException e) {
             fail("Unexpected exception: " + e.getMessage());
         } finally {
-        try {
-            st.close();
-         } catch (SQLException ee) {} 
-    }
+            try {
+                st.close();
+             } catch (SQLException ee) {} 
+        }
     }
 
     public int getCount(ResultSet rs) {

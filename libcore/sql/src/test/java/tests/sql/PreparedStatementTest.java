@@ -22,6 +22,7 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -88,7 +89,7 @@ public class PreparedStatementTest extends SQLTest {
                     + "'1221-09-22 10:11:55', 1, 2, 3, 4,"
                     + "'Test text message tiny', 'Test text message', 'Test text message medium', 'Test text message long');" };
 
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
         Statement st = null;
         try {

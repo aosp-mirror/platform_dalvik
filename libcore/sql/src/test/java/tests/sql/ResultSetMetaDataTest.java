@@ -22,6 +22,7 @@ import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -35,7 +36,8 @@ public class ResultSetMetaDataTest extends SQLTest {
     Statement st = null;
     ResultSet rs = null;
 
-    public void setUp() {
+    @Override
+    public void setUp() throws Exception {
         super.setUp();
         try {
             conn.setAutoCommit(false);
@@ -49,7 +51,8 @@ public class ResultSetMetaDataTest extends SQLTest {
             fail("Couldn't get ResultSetMetaData object");
         }
     }
-    
+
+    @Override
     public void tearDown() {
         try {
             rs.close();
