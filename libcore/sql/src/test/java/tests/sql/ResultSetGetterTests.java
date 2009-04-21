@@ -24,6 +24,7 @@ import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.DatabaseMetaData;
@@ -221,7 +222,7 @@ public class ResultSetGetterTests extends SQLTest {
     };
     
     @Override
-    public void setUp() {
+    public void setUp() throws Exception {
         super.setUp();
         try {
             conn.setAutoCommit(false);

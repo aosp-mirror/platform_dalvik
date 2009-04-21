@@ -2463,10 +2463,17 @@ public class FileTest extends junit.framework.TestCase {
         subDir.mkdir();
         assertTrue(subDir.exists());
 
+        URL url = getClass().getResource("/HelloWorld.txt");
+        String classPath = url.toString();
+        int idx = classPath.indexOf("!"); 
+        assertTrue("could not find the path of the test jar/apk", idx > 0);
+        classPath = classPath.substring(9, idx); // cutting off jar:file:
+
         Support_Exec.execJava(new String[] {
                 "tests.support.Support_DeleteOnExitTest",
                 dir.getAbsolutePath(), subDir.getAbsolutePath() },
-                new String[] { System.getProperty("java.class.path") }, false);
+                new String[] { System.getProperty("java.class.path"),
+                classPath }, false);
         Thread.sleep(2000);
         assertFalse(dir.exists());
         assertFalse(subDir.exists());
