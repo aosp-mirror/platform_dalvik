@@ -31,14 +31,12 @@ import java.nio.charset.Charset;
  */
 public class GBCharsetEncoderTest extends AbstractCharsetEncoderTestCase {
 
-    // charset for gb180303
-    private static final Charset CS = Charset.forName("gb18030");
-
     /*
      * @see CharsetEncoderTest#setUp()
      */
     protected void setUp() throws Exception {
-        cs = CS;
+        // charset for gb180303
+        cs = Charset.forName("gb18030");;
         super.setUp();
     }
 

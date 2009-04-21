@@ -22,8 +22,10 @@ import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.SQLWarning;
 import java.sql.Savepoint;
 import java.sql.Statement;
@@ -2776,24 +2778,16 @@ public class ConnectionTest extends SQLTest {
         method = "isClosed",
         args = {}
     )
-    public void testIsClosed() {
-        try {
-            assertFalse(conn.isClosed());
-            conn.close();
-            assertTrue(conn.isClosed());
-        } catch (SQLException e) {
-            fail("Error in implementation");
-            e.printStackTrace();
-        }
-        
-        try {
-            this.setUp();
-            assertFalse(conn.isClosed());
-            Statement st = conn.createStatement();
-            st.execute("select * from zoo");
-        } catch (SQLException e2) {
-            fail("Error in test setup");
-        }
+    public void testIsClosed() throws Exception {
+
+        assertFalse(conn.isClosed());
+        conn.close();
+        assertTrue(conn.isClosed());
+
+        conn = DriverManager.getConnection("jdbc:sqlite:/" + dbFile.getPath());
+        assertFalse(conn.isClosed());
+        Statement st = conn.createStatement();
+        st.execute("select * from zoo");
     }
     
 
