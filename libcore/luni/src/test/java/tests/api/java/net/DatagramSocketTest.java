@@ -158,7 +158,6 @@ public class DatagramSocketTest extends SocketTestCase {
         method = "DatagramSocket",
         args = {int.class}
     )
-    @KnownFailure("New DatagramSocket(1) doesn't throw an expected exception.")
     public void test_ConstructorI() {
         // Test for method java.net.DatagramSocket(int)
         try {

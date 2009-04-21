@@ -16,12 +16,14 @@
 
 package tests.api.java.net;
 
-import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,24 +37,17 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Permission;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
 
-import tests.support.Support_Configuration;
+import tests.support.Support_PortManager;
+import tests.support.Support_TestWebData;
+import tests.support.Support_TestWebServer;
 
-@TestTargetClass(
-    value = ResponseCache.class,
-    untestedMethods = {
-        @TestTargetNew(
-            level = TestLevel.NOT_FEASIBLE,
-            notes = "put method is not tested completely",
-            method = "put",
-            args = {java.net.URI.class, java.net.URLConnection.class}
-        )
-    }
-)
+@TestTargetClass(value = ResponseCache.class)
 public class ResponseCacheTest extends TestCase {
 
     
@@ -160,15 +155,13 @@ public class ResponseCacheTest extends TestCase {
         level = TestLevel.COMPLETE,
         notes = "",
         method = "get",
-        args = {java.net.URI.class, java.lang.String.class, java.util.Map.class}
+        args = {URI.class, String.class, Map.class}
     )
-    @BrokenTest("This test fails on both RI and android. Also only getting " +
-            "from the cache is tested. The put method is not tested.")
-    public void test_get_put() throws Exception {
-        
-        URL url  = new URL("http://" + 
-                Support_Configuration.SpecialInetTestAddress);
-        ResponseCache.setDefault(new TestResponseCache());
+    public void test_get() throws Exception {
+        String uri = "http://localhost/";
+        URL url  = new URL(uri);
+        TestResponseCache cache = new TestResponseCache(uri, true);
+        ResponseCache.setDefault(cache);
         HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
         httpCon.setUseCaches(true);
         httpCon.connect();
@@ -177,17 +170,65 @@ public class ResponseCacheTest extends TestCase {
         } catch(Exception e) {}
         
         InputStream is = httpCon.getInputStream();
-        byte [] array = new byte [10];
+        byte[] array = new byte [10];
         is.read(array);
+        assertEquals(url.toURI(), cache.getWasCalled);
         assertEquals("Cache test", new String(array));
-
-        try {
-            Thread.sleep(5000);
-        } catch(Exception e) {}
         is.close();
         httpCon.disconnect();
+
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "put",
+        args = {URI.class, URLConnection.class}
+    )
+    @KnownFailure("the call to put is made with a wrong uri."
+            + " The RI calls with http://localhost:<port>/test1,"
+            + " but android only calls with http://localhost:<port>")
+    public void test_put() throws Exception {
+        // Create test ResponseCache
+        TestResponseCache cache = new TestResponseCache(
+                "http://localhost/not_cached", false);
+        ResponseCache.setDefault(cache);
+
+        // Start Server
+        int port = Support_PortManager.getNextPort();
+        Support_TestWebServer s = new Support_TestWebServer();
+        try {
+            s.initServer(port, 10000, false);
+            Thread.currentThread().sleep(2500);
+    
+            // Create connection to server
+            URL url  = new URL("http://localhost:" + port + "/test1");
+            HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
+            httpCon.setUseCaches(true);
+            httpCon.connect();
+            Thread.currentThread().sleep(2500);
+    
+            // Check that a call to the cache was made.
+            assertEquals(url.toURI(), cache.getWasCalled);
+            // Make the HttpConnection get the content. It should try to
+            // put it into the cache.
+            httpCon.getContent();
+            // Check if put was called
+            assertEquals(url.toURI(), cache.putWasCalled);
+    
+            // get the 
+            InputStream is = httpCon.getInputStream();
+    
+            byte[] array = new byte[Support_TestWebData.test1.length];
+            is.read(array);
+            assertTrue(Arrays.equals(Support_TestWebData.tests[0], array));
+            is.close();
+            httpCon.disconnect();
+        } finally {
+            s.close();
+        }
+    }
+    
     /*
      * MockResponseCache for testSetDefault(ResponseCache)
      */
@@ -240,56 +281,61 @@ public class ResponseCacheTest extends TestCase {
             is = getClass().getResourceAsStream("/" + path + "/" + filename);
         }
 
-        public InputStream getBody() throws IOException {
+        @Override
+        public InputStream getBody() {
            return is;
         }
 
-         public Map getHeaders() throws IOException {
+        @Override
+         public Map getHeaders() {
            return null;
          }
     }
-    
+
     class TestCacheRequest extends CacheRequest {
-        
-        public TestCacheRequest(String filename,
-                            Map<String, List<String>> rspHeaders) {
-        }
-        public OutputStream getBody() throws IOException {
+
+        @Override
+        public OutputStream getBody() {
             return null;
         }
 
+        @Override
         public void abort() {
         }
     }
     
     class TestResponseCache extends ResponseCache {
-        
-        URI uri1 = null;    
-    
-        public CacheResponse get(URI uri, String rqstMethod, Map rqstHeaders)
-                throws IOException {
-          try {
-            uri1  = new URI("http://" + 
-                    Support_Configuration.SpecialInetTestAddress);
-          } catch (URISyntaxException e) {
-          }  
-          if (uri.equals(uri1)) {
-            return new TestCacheResponse("file1.cache");
-          }
-          return null;
+
+        URI uri1 = null;
+        boolean testGet = false;
+
+        public URI getWasCalled = null;
+        public URI putWasCalled = null;
+
+        TestResponseCache(String uri, boolean testGet) {
+            try {
+                uri1  = new URI(uri);            
+            } catch (URISyntaxException e) {
+            }
+            this.testGet = testGet;
         }
 
-       public CacheRequest put(URI uri, URLConnection conn)
-              throws IOException {
-           try {
-               uri1  = new URI("http://www.google.com");
-             } catch (URISyntaxException e) {
-             }  
-          if (uri.equals(uri1)) {
-              return new TestCacheRequest("file2.cache",
-                          conn.getHeaderFields());
-          }
-          return null;
+        @Override
+        public CacheResponse get(URI uri, String rqstMethod, Map rqstHeaders) {
+            getWasCalled = uri;
+            if (testGet && uri.equals(uri1)) {
+                return new TestCacheResponse("file1.cache");
+            }
+            return null;
+        }
+
+        @Override
+        public CacheRequest put(URI uri, URLConnection conn) {
+            putWasCalled = uri;
+            if (!testGet && uri.equals(uri1)) {
+                return new TestCacheRequest();
+            }
+            return null;
         }
     }
 }
