@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.Vector;
 
 @SuppressWarnings("serial")
@@ -1246,7 +1247,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
         Object objLoaded;
 
         try {
-            java.util.Vector<String> vector = new java.util.Vector<String>(1);
+            Vector<String> vector = new Vector<String>(1);
             vector.add(FOO);
             objToSave = vector;
             if (DEBUG)
@@ -1254,7 +1255,7 @@ public class SerializationStressTest1 extends SerializationStressTest {
             objLoaded = dumpAndReload(objToSave);
             // Has to have the string there
             @SuppressWarnings("unchecked")
-            java.util.Vector<String> obj = (Vector<String>)objLoaded;
+            Vector<String> obj = (Vector<String>) objLoaded;
             assertTrue(MSG_TEST_FAILED + objToSave, FOO
                     .equals(obj.elementAt(0)));
 
@@ -1284,14 +1285,14 @@ public class SerializationStressTest1 extends SerializationStressTest {
         Object objLoaded;
 
         try {
-            java.util.Hashtable<String, String> hashTable = new java.util.Hashtable<String, String>(5);
+            Hashtable<String, String> hashTable = new Hashtable<String, String>(5);
             hashTable.put(FOO, FOO);
             objToSave = hashTable;
             if (DEBUG)
                 System.out.println("Obj = " + objToSave);
             objLoaded = dumpAndReload(objToSave);
             @SuppressWarnings("unchecked")
-            java.util.Hashtable<String, String> loadedHashTable = (java.util.Hashtable<String, String>) objLoaded;
+            Hashtable<String, String> loadedHashTable = (Hashtable<String, String>) objLoaded;
             // Has to have the key/value there (FOO -> FOO)
             assertTrue(MSG_TEST_FAILED + objToSave, FOO.equals(loadedHashTable
                     .get(FOO)));
