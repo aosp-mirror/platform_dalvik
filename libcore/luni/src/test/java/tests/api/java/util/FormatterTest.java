@@ -284,10 +284,11 @@ public class FormatterTest extends TestCase {
         assertEquals(0, fileWithContent.length());
         f.close();
 
-        // FIXME This exception will not be thrown on linux if the user is root.
         try {
             f = new Formatter(readOnly.getPath());
-            fail("should throw FileNotFoundException");
+            if (!("root".equals(System.getProperty("user.name")))) {
+                fail("should throw FileNotFoundException");
+            }
         } catch (FileNotFoundException e) {
             // expected
         }
@@ -345,10 +346,11 @@ public class FormatterTest extends TestCase {
         assertEquals(0, fileWithContent.length());
         f.close();
 
-        // FIXME This exception will not be thrown on linux if the user is root.
         try {
             f = new Formatter(readOnly.getPath(), "UTF-16BE");
-            fail("should throw FileNotFoundException");
+            if (!("root".equals(System.getProperty("user.name")))) {
+                fail("should throw FileNotFoundException");
+            }
         } catch (FileNotFoundException e) {
             // expected
         }
@@ -414,11 +416,12 @@ public class FormatterTest extends TestCase {
         assertEquals(0, fileWithContent.length());
         f.close();
 
-        // FIXME This exception will not be thrown on linux if the user is root.
         try {
             f = new Formatter(readOnly.getPath(), Charset.defaultCharset()
                     .name(), Locale.ITALY);
-            fail("should throw FileNotFoundException");
+            if (!("root".equals(System.getProperty("user.name")))) {
+                fail("should throw FileNotFoundException");
+            }
         } catch (FileNotFoundException e) {
             // expected
         }
@@ -462,10 +465,11 @@ public class FormatterTest extends TestCase {
         assertEquals(0, fileWithContent.length());
         f.close();
 
-        // FIXME This exception will not be thrown on linux if the user is root.
         try {
             f = new Formatter(readOnly);
-            fail("should throw FileNotFoundException");
+            if (!("root".equals(System.getProperty("user.name")))) {
+                fail("should throw FileNotFoundException");
+            }
         } catch (FileNotFoundException e) {
             // expected
         }
@@ -509,10 +513,11 @@ public class FormatterTest extends TestCase {
         assertEquals(0, fileWithContent.length());
         f.close();
 
-        // FIXME This exception will not be thrown on linux if the user is root.
         try {
             f = new Formatter(readOnly, Charset.defaultCharset().name());
-            fail("should throw FileNotFoundException");
+            if (!("root".equals(System.getProperty("user.name")))) {
+                fail("should throw FileNotFoundException");
+            }
         } catch (FileNotFoundException e) {
             // expected
         }
@@ -602,11 +607,12 @@ public class FormatterTest extends TestCase {
         assertEquals(0, fileWithContent.length());
         f.close();
 
-        // FIXME This exception will not be thrown on linux if the user is root.
         try {
             f = new Formatter(readOnly.getPath(), Charset.defaultCharset()
                     .name(), Locale.ITALY);
-            fail("should throw FileNotFoundException");
+            if (!("root".equals(System.getProperty("user.name")))) {
+                fail("should throw FileNotFoundException");
+            }
         } catch (FileNotFoundException e) {
             // expected
         }
