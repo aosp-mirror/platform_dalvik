@@ -16,6 +16,7 @@
  */
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -236,6 +237,7 @@ public class PackageTest extends junit.framework.TestCase {
         method = "getName",
         args = {}
     )
+    @BrokenTest("Different behavior between cts host and run-core-test")
     public void test_getName() throws Exception {
         Package p = getTestPackage("hyts_pq.jar", "p.q.C");
         assertEquals("Package getName returns a wrong string", "p.q", p
@@ -403,6 +405,7 @@ public class PackageTest extends junit.framework.TestCase {
         method = "toString",
         args = {}
     )
+    @BrokenTest("Different behavior between cts host and run-core-test")
     public void test_toString() throws Exception {
         Package p = getTestPackage("hyts_c.jar", "p.C");
         assertTrue("Package toString returns wrong string", p.toString()
