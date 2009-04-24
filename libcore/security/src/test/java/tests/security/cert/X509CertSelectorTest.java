@@ -2456,14 +2456,11 @@ public class X509CertSelectorTest extends TestCase {
         // bytes = name.getEncoded();
         // bytesName = name.getEncodedName();
         bytes = new byte[] {-127, 8, 56, 50, 50, 46, 78, 97, 109, 101};
-        bytesName = new byte[] {-127, 8, 56, 50, 50, 46, 78, 97, 109, 101};
-        assertNotNull(bytes);
-        byte[] b = new byte[bytes.length];
-        b = bytes;
-        b[bytes.length-3] = (byte) 200;
+        bytesName = new byte[] {22, 8, 56, 50, 50, 46, 78, 97, 109, 101};
+        bytes[bytes.length-3] = (byte) 200;
         
         try {
-            theCertSelector.addPathToName(1, b);
+            theCertSelector.addPathToName(1, bytes);
         } catch (IOException e) {
             // ok
         }

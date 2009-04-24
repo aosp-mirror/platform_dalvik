@@ -15,7 +15,11 @@
  */
 package tests.targets.security;
 
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 @TestTargetClass(targets.KeyPairGenerators.DH.class)
 public class KeyPairGeneratorTestDH extends KeyPairGeneratorTest {
@@ -24,4 +28,25 @@ public class KeyPairGeneratorTestDH extends KeyPairGeneratorTest {
         super("DH", new KeyAgreementHelper("DH"));
     }
 
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.ADDITIONAL,
+            method = "initialize",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.ADDITIONAL,
+            method = "generateKeyPair",
+            args = {}
+        ),
+        @TestTargetNew(
+            level=TestLevel.COMPLETE,
+            method="method",
+            args={}
+        )
+    })
+    @BrokenTest("Takes ages due to DH computations. Disabling for now.")
+    public void testKeyPairGenerator() {
+        super.testKeyPairGenerator();
+    }
 }
