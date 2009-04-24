@@ -202,6 +202,40 @@ list, even if the debugger never sees them.  Having a debugger attached
 to a program that throws lots of exceptions can result in out-of-memory
 errors.  This will be fixed in a future release.
 </p><p>
+&nbsp;
+</p><p>
+The translation from Java bytecode to Dalvik bytecode may result in
+identical sequences of instructions being combined.  This can make it
+look like the wrong bit of code is being executed.  For example:
+<pre>    int test(int i) {
+        if (i == 1) {
+            return 0;
+        }
+        return 1;
+    }</pre>
+The Dalvik bytecode uses a common <code>return</code> instruction for both
+<code>return</code> statements, so when <code>i</code> is 1 the debugger
+will single-step through <code>return 0</code> and then <code>return 1</code>.
+</p><p>
+&nbsp;
+</p><p>
+Dalvik handles synchronized methods differently from other VMs.
+Instead of marking a method as <code>synchronized</code> and expecting
+the VM to handle the locks, <code>dx</code> inserts a "lock"
+instruction at the top of the method and an "unlock" instruction in a
+synthetic <code>finally</code> block.  As a result, when single-stepping
+a <code>return</code> statement, the "current line" cursor may jump to
+the last line in the method.
+</p><p>
+This can also affect the way the debugger processes exceptions.  The
+debugger may decide to break on an
+exception based on whether that exception is "caught" or "uncaught".  To
+be considered uncaught, there must be no matching <code>catch</code> block
+or <code>finally</code> clause between the current point of execution and
+the top of the thread.  An exception thrown within or below a synchronized
+method will always be considered "caught", so the debugger won't stop
+until the exception is re-thrown from the synthetic <code>finally</code> block.
+</p><p>
 
 
 <address>Copyright &copy; 2009 The Android Open Source Project</address>
