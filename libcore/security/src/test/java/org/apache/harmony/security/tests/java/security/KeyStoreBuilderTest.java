@@ -58,7 +58,7 @@ public class KeyStoreBuilderTest extends TestCase {
     private KeyStore.CallbackHandlerProtection callbackHand = new KeyStore.CallbackHandlerProtection(
             tmpCall);
 
-    private myProtectionParameter myProtParam = new myProtectionParameter(
+    private MyProtectionParameter myProtParam = new MyProtectionParameter(
             new byte[5]);
 
     public static String[] validValues = KeyStoreTestSupport.validValues;
@@ -69,7 +69,8 @@ public class KeyStoreBuilderTest extends TestCase {
     private static Provider defaultProvider = null;
 
     static {
-        defaultProvider = Security.getProviders("KeyFactory.DSA")[0];
+        defaultProvider = Security.getProviders(
+                "KeyStore." + KeyStore.getDefaultType())[0];
     }
 
     /*
@@ -209,7 +210,7 @@ public class KeyStoreBuilderTest extends TestCase {
                 assertTrue(pPar instanceof KeyStore.CallbackHandlerProtection);
                 break;
             case 3:
-                assertTrue(pPar instanceof myProtectionParameter);
+                assertTrue(pPar instanceof MyProtectionParameter);
                 break;
             default:
                 fail("Incorrect protection parameter");
@@ -239,7 +240,6 @@ public class KeyStoreBuilderTest extends TestCase {
         method = "newInstance",
         args = {java.lang.String.class, java.security.Provider.class, java.io.File.class, java.security.KeyStore.ProtectionParameter.class}
     )
-    @BrokenTest("different tests are not performed in the loop")
     public void testNewInstanceStringProviderFileProtectionParameter()
             throws Exception {
         
@@ -250,7 +250,7 @@ public class KeyStoreBuilderTest extends TestCase {
         KeyStore ks = null;
         KeyStore ks1 = null;
 
-        myProtectionParameter myPP = new myProtectionParameter(new byte[5]);
+        MyProtectionParameter myPP = new MyProtectionParameter(new byte[5]);
         // check exceptions
         try {
 
@@ -299,84 +299,110 @@ public class KeyStoreBuilderTest extends TestCase {
         }
 
         fl = createKS();
-        KeyStore.ProtectionParameter[] pp = { myPP, protPass, callbackHand };
-        for (int i = 0; i < pp.length; i++) {
-            if (i == 0) {
-                try {
-                    KeyStore.Builder.newInstance(KeyStore.getDefaultType(), null, fl, pp[i]);
-                    fail("IllegalArgumentException must be thrown for incorrect ProtectionParameter");
-                } catch (IllegalArgumentException e) {
-                }
-                try {
-                    KeyStore.Builder.newInstance(KeyStore.getDefaultType(), defaultProvider,
-                            fl, pp[i]);
-                    fail("IllegalArgumentException must be thrown for incorrect ProtectionParameter");
-                } catch (IllegalArgumentException e) {
-                }
-                continue;
-            }
-            ksB = KeyStore.Builder.newInstance(KeyStore.getDefaultType(), null, fl, pp[i]);
-            ksB1 = KeyStore.Builder.newInstance(KeyStore.getDefaultType(), defaultProvider,
-                    fl, pp[i]);
-            try {
-                ks = ksB.getKeyStore();
-                if (i == 2) {
-                    fail("KeyStoreException must be thrown for incorrect ProtectionParameter");
-                } else {
-                    assertEquals("Incorrect KeyStore size", ks.size(), 0);
-                }
-            } catch (KeyStoreException e) {
-                if (i == 2) {
-                    continue;
-                }
-                fail("Unexpected KeyException was thrown");
-            }
-            try {
-                ks1 = ksB1.getKeyStore();
-                if (i == 2) {
-                    fail("KeyStoreException must be thrown for incorrect ProtectionParameter");
-                }
-            } catch (KeyStoreException e) {
-                if (i == 2) {
-                    continue;
-                }
-                fail("Unexpected KeyException was thrown");
-            }
-            assertEquals("Incorrect KeyStore size", ks.size(), ks1.size());
-            Enumeration<String> iter = ks.aliases();
-            String aName;
+        
+        // Exception Tests with custom ProtectionParameter
+        try {
+            KeyStore.Builder.newInstance(KeyStore.getDefaultType(),
+                    null, fl, myPP);
+            fail("IllegalArgumentException must be "
+                    + "thrown for incorrect ProtectionParameter");
+        } catch (IllegalArgumentException e) {
+        }
+        try {
+            KeyStore.Builder.newInstance(KeyStore.getDefaultType(),
+                    defaultProvider, fl, myPP);
+            fail("IllegalArgumentException must be "
+                    + "thrown for incorrect ProtectionParameter");
+        } catch (IllegalArgumentException e) {
+        }
+        
+        // Tests with PasswordProtection
+        ksB = KeyStore.Builder.newInstance(KeyStore.getDefaultType(),
+                null, fl, protPass);
+        ksB1 = KeyStore.Builder.newInstance(KeyStore.getDefaultType(),
+                defaultProvider, fl, protPass);
+        try {
+            ks = ksB.getKeyStore();
+        } catch (KeyStoreException e) {
+            fail("Unexpected KeyException was thrown");
+        }
+        try {
+            ks1 = ksB1.getKeyStore();
+        } catch (KeyStoreException e) {
+            fail("Unexpected KeyException was thrown: " + e.getMessage());
+        }
+        assertEquals("Incorrect KeyStore size", ks.size(), ks1.size());
+        ;
 
-            while (iter.hasMoreElements()) {
-                aName = iter.nextElement();
-                try {
-                    assertEquals("Incorrect ProtectionParameter", ksB
-                            .getProtectionParameter(aName), pp[i]);
-                } catch (Exception e) {
-                    fail("Unexpected: " + e.toString()
-                            + " was thrown for alias: " + aName);
-                }
-            }
-
+        for (Enumeration<String> aliases = ks.aliases(); aliases.hasMoreElements(); ) {
+            String aName = aliases.nextElement();
             try {
-                assertEquals(ksB.getProtectionParameter("Bad alias"), pp[i]);
-            } catch (KeyStoreException e) {
-                // KeyStoreException might be thrown because there is no entry
-                // with such alias
+                assertEquals("Incorrect ProtectionParameter", ksB
+                        .getProtectionParameter(aName), protPass);
+            } catch (Exception e) {
+                fail("Unexpected: " + e.toString()
+                        + " was thrown for alias: " + aName);
             }
+        }
 
-            iter = ks1.aliases();
-            while (iter.hasMoreElements()) {
-                aName = iter.nextElement();
-                assertEquals("Incorrect ProtectionParameter", ksB1
-                        .getProtectionParameter(aName), pp[i]);
-            }
+        ksB.getKeyStore();
 
+        try {
+            assertEquals(ksB.getProtectionParameter("Bad alias"), null);
+        } catch (KeyStoreException e) {
+            // KeyStoreException might be thrown because there is no entry
+            // with such alias
+        }
+
+        
+        for (Enumeration<String> aliases = ks1.aliases(); aliases.hasMoreElements(); ) {
+            String aName = aliases.nextElement();
+            assertEquals("Incorrect ProtectionParameter", ksB1
+                    .getProtectionParameter(aName), protPass);
+        }
+
+        try {
+            assertEquals(ksB1.getProtectionParameter("Bad alias"), protPass);
+        } catch (KeyStoreException e) {
+            // KeyStoreException might be thrown because there is no entry
+            // with such alias
+        }
+            
+
+        // Tests with CallbackHandlerProtection
+        ksB = KeyStore.Builder.newInstance(KeyStore.getDefaultType(),
+                null, fl, callbackHand);
+        ksB1 = KeyStore.Builder.newInstance(KeyStore.getDefaultType(),
+                defaultProvider, fl, callbackHand);
+        try {
+            ks = ksB.getKeyStore();
+            fail("KeyStoreException must be thrown for incorrect "
+                    + "ProtectionParameter");
+        } catch (KeyStoreException e) {
+        }
+        try {
+            ks1 = ksB1.getKeyStore();
+            fail("KeyStoreException must be thrown for incorrect "
+                    + "ProtectionParameter");
+        } catch (KeyStoreException e) {
+        }
+        assertEquals("Incorrect KeyStore size", ks.size(), ks1.size());
+
+        for (Enumeration<String> aliases = ks.aliases(); aliases.hasMoreElements();) {
+            String aName = aliases.nextElement();
             try {
-                assertEquals(ksB1.getProtectionParameter("Bad alias"), pp[i]);
-            } catch (KeyStoreException e) {
-                // KeyStoreException might be thrown because there is no entry
-                // with such alias
+                assertEquals("Incorrect ProtectionParameter", ksB
+                        .getProtectionParameter(aName), callbackHand);
+            } catch (Exception e) {
+                fail("Unexpected: " + e.toString()
+                        + " was thrown for alias: " + aName);
             }
+        }
+
+        for (Enumeration<String> iter = ks1.aliases(); iter.hasMoreElements();) {
+            String aName = iter.nextElement();
+            assertEquals("Incorrect ProtectionParameter", ksB1
+                    .getProtectionParameter(aName), callbackHand);
         }
     }
 
@@ -411,7 +437,7 @@ public class KeyStoreBuilderTest extends TestCase {
             fail("NullPointerException must be thrown when ProtectionParameter is null");
         } catch (NullPointerException e) {
         }
-        myProtectionParameter myPP = new myProtectionParameter(new byte[5]);
+        MyProtectionParameter myPP = new MyProtectionParameter(new byte[5]);
         KeyStore.ProtectionParameter[] pp = { protPass, myPP, callbackHand };
         KeyStore.Builder ksB, ksB1;
         KeyStore ks = null;
@@ -501,8 +527,8 @@ public class KeyStoreBuilderTest extends TestCase {
     /**
      * Additional class for creating KeyStoreBuilder
      */
-    class myProtectionParameter implements KeyStore.ProtectionParameter {
-        public myProtectionParameter(byte[] param) {
+    class MyProtectionParameter implements KeyStore.ProtectionParameter {
+        public MyProtectionParameter(byte[] param) {
             if (param == null) {
                 throw new NullPointerException("param is null");
             }

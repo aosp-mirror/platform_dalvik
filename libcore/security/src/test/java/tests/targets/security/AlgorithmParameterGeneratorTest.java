@@ -60,7 +60,7 @@ public abstract class AlgorithmParameterGeneratorTest extends TestCase {
             fail(e.getMessage());
         }
 
-        generator.init(512);
+        generator.init(1024);
 
         AlgorithmParameters parameters = generator.generateParameters();
         

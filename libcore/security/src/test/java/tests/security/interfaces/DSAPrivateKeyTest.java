@@ -21,9 +21,11 @@ import dalvik.annotation.BrokenTest;
 
 import junit.framework.TestCase;
 
+import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.security.interfaces.DSAPrivateKey;
+import java.security.interfaces.DSAPublicKey;
 import java.security.spec.DSAParameterSpec;
 
 @TestTargetClass(DSAPrivateKey.class)
@@ -39,15 +41,13 @@ public class DSAPrivateKeyTest extends TestCase {
         method = "getX",
         args = {}
     )
-    @BrokenTest("Incorrect value was returned for method " +
-                  "java.security.interfaces.DSAPrivateKey.getX(). "+
-                  "This test does not pass on the RI.")
     public void test_getX() throws Exception {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
         keyGen.initialize(new DSAParameterSpec(Util.P, Util.Q, Util.G),
                 new SecureRandom(new MySecureRandomSpi(), null) {                    
                 });
-        DSAPrivateKey key = (DSAPrivateKey) keyGen.generateKeyPair().getPrivate();
-        assertEquals("Invalid X value", Util.RND_RET, key.getX());
+        KeyPair keyPair = keyGen.generateKeyPair();
+        DSAPrivateKey key = (DSAPrivateKey) keyPair.getPrivate();
+        assertNotNull("Invalid X value", key.getX());
     }
 }

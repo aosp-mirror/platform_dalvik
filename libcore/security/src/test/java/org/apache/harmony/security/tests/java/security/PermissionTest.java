@@ -22,17 +22,14 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.security.Permission;
 import java.security.SecurityPermission;
 
 import junit.framework.TestCase;
-
-import org.apache.harmony.security.tests.java.security.ProviderTest.TestSecurityManager;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 @TestTargetClass(Permission.class)
 /**
  * Tests for <code>Permission</code>
@@ -118,6 +115,23 @@ public class PermissionTest extends TestCase {
             System.setSecurityManager(old);
         }
         
+        class TestSecurityManager extends SecurityManager {
+            boolean called = false;
+            private final String permissionName;
+            
+            public TestSecurityManager(String permissionName) {
+                this.permissionName = permissionName;
+            }
+            
+            @Override
+            public void checkPermission(Permission permission) {
+                if (permission instanceof SecurityPermission
+                        && permissionName.equals(permission.getName())) {
+                    called = true;
+                    super.checkPermission(permission);
+                }
+            }
+        }
         
         TestSecurityManager sm = new TestSecurityManager("testGuardPermission");
         try {
@@ -126,7 +140,7 @@ public class PermissionTest extends TestCase {
             p.checkGuard(this);
             assertTrue("SecurityManager must be invoked", sm.called);
         } finally {
-            System.setSecurityManager(null);
+            System.setSecurityManager(old);
         }
         
     }

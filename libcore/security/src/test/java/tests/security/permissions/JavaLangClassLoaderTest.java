@@ -16,15 +16,23 @@
 
 package tests.security.permissions;
 
+import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import dalvik.system.DexFile;
+import dalvik.system.PathClassLoader;
 
 import junit.framework.TestCase;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.Permission;
+
+import tests.support.resource.Support_Resources;
 
 /*
  * This class tests the security permissions which are documented in
@@ -110,8 +118,10 @@ public class JavaLangClassLoaderTest extends TestCase {
             args = {}
         )
     })
-    @BrokenTest("RI and Android don't pass this test. Also this test must be executed with a new PathClassLoader")
-    public void test_getSystemClassLoader () {
+    @AndroidOnly("uses PathClassLoader and DexFile")
+    @BrokenTest("Endless loop in ClassLoader. Actually a known failure.")
+    public void test_getSystemClassLoader () throws IOException,
+            IllegalAccessException, InstantiationException {
         class TestSecurityManager extends SecurityManager {
             boolean called;
             void reset(){
@@ -125,23 +135,61 @@ public class JavaLangClassLoaderTest extends TestCase {
             }
         }
         
-        //System.out.println(ClassLoaderTest.class.getClassLoader());
-        //=>PathClassLoader
-
         TestSecurityManager s = new TestSecurityManager();
         System.setSecurityManager(s);
         
-        // TODO
-        // a new Class has to be defined in a new ClassLoader, then
-        // the check will be performed.
+        File tempFile = Support_Resources.createTempFile(".jar");
+        tempFile.delete();
+        
+        /*
+         * The testdex.jar contains the following two classes:
+         * 
+         * package tests.security.permissions.resources;
+         * 
+         * public class TestClass1 {
+         * 
+         *      public TestClass1() {
+         *          ClassLoader.getSystemClassLoader();
+         *      }
+         *  }
+         *
+         * package tests.security.permissions.resources;
+         * 
+         *  public class TestClass2 {
+         *
+         *      public TestClass2 () {
+         *          getClass().getClassLoader().getParent();
+         *      }
+         *  }
+         */
+        
+        InputStream is = Support_Resources.getResourceStream("testdex.jar");
+        Support_Resources.copyLocalFileto(tempFile, is);
+        DexFile dexfile = new DexFile(tempFile);
+        PathClassLoader pcl = new PathClassLoader("",
+                ClassLoader.getSystemClassLoader());
+        
+        Class<?> testClass = dexfile.loadClass(
+                "tests/security/permissions/resources/TestClass1", pcl);
+        
+        assertNotNull("failed to load TestlClass1", testClass);
         
         s.reset();
-        ClassLoader cl = ClassLoader.getSystemClassLoader();
-        assertTrue("ClassLoader.getSystemClassLoader() must call checkPermission on security manager", s.called);
+        testClass.newInstance();
         
+        assertTrue("ClassLoader.getSystemClassLoader() must call "
+                + "checkPermission on security manager", s.called);
+       
+        testClass = dexfile.loadClass(
+                "tests/security/permissions/resources/TestClass2", pcl);
+        
+        assertNotNull("failed to load TestClass2", testClass);
         s.reset();
-        cl.getParent();
-        assertTrue("Method getParent on a class loader must call checkPermission on security manager", s.called);
+        
+        testClass.newInstance();
+
+        assertTrue("Method getParent on a class loader must call "
+                + "checkPermission on security manager", s.called);
     }
 }
 
