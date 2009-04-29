@@ -15,7 +15,11 @@
  */
 package tests.targets.security;
 
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 import java.math.BigInteger;
 
@@ -38,6 +42,7 @@ public class AlgorithmParametersTestDH extends AlgorithmParametersTest {
             (byte) 0xCC, (byte) 0x35, (byte) 0x89, (byte) 0x18, (byte) 0x02,
             (byte) 0x18, (byte) 0xFE, (byte) 0xF4, (byte) 0x02, (byte) 0x3B,
             (byte) 0x5E, (byte) 0x8A, (byte) 0x42, (byte) 0xB3, (byte) 0x39};
+
     private static final byte[] Q = new byte[] {
             (byte) 0x00, (byte) 0x87, (byte) 0xE2, (byte) 0xD1, (byte) 0x8A,
             (byte) 0x23, (byte) 0x90, (byte) 0x3A, (byte) 0x0F, (byte) 0xC8,
@@ -52,6 +57,7 @@ public class AlgorithmParametersTestDH extends AlgorithmParametersTest {
             (byte) 0x68, (byte) 0x29, (byte) 0x93, (byte) 0x35, (byte) 0x05,
             (byte) 0xC5, (byte) 0xCB, (byte) 0xB8, (byte) 0x57, (byte) 0x8F,
             (byte) 0xB9, (byte) 0xC3, (byte) 0x36, (byte) 0x09, (byte) 0x51};
+
     private static final int l = 511;
 
     public AlgorithmParametersTestDH() {
@@ -60,4 +66,26 @@ public class AlgorithmParametersTestDH extends AlgorithmParametersTest {
 
     }
 
+    @TestTargets({
+        @TestTargetNew(
+                level=TestLevel.ADDITIONAL,
+                method="getInstance",
+                args={String.class}
+        ),
+        @TestTargetNew(
+                level=TestLevel.ADDITIONAL,
+                method="init",
+                args={byte[].class}
+        ),
+        @TestTargetNew(
+                level=TestLevel.COMPLETE,
+                method="method",
+                args={}
+        )
+    })
+    @BrokenTest("Suffers from DH slowness, disabling for now")
+    public void testAlgorithmParameters() {
+        super.testAlgorithmParameters();
+    }
+    
 }
