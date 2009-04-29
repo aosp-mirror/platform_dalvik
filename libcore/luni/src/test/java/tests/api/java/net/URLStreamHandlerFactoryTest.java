@@ -1,13 +1,5 @@
 package tests.api.java.net;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
-import junit.framework.TestCase;
-
-import tests.support.Support_Configuration;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -15,6 +7,13 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+
+import junit.framework.TestCase;
+import tests.support.Support_Configuration;
+import dalvik.annotation.SideEffect;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(URLStreamHandlerFactory.class) 
 public class URLStreamHandlerFactoryTest extends TestCase {
@@ -33,6 +32,7 @@ public class URLStreamHandlerFactoryTest extends TestCase {
         method = "createURLStreamHandler",
         args = {java.lang.String.class}
     )
+    @SideEffect("Leaves wrong StreamHandlerFactory behind, affects other tests")
     public void test_createURLStreamHandler() throws MalformedURLException {
         
         if(isTestable) {

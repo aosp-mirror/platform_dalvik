@@ -348,7 +348,7 @@ public class KeyStoreBuilderTest extends TestCase {
         ksB.getKeyStore();
 
         try {
-            assertEquals(ksB.getProtectionParameter("Bad alias"), null);
+            assertEquals(ksB.getProtectionParameter("Bad alias"), protPass);
         } catch (KeyStoreException e) {
             // KeyStoreException might be thrown because there is no entry
             // with such alias

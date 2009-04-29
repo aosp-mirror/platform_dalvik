@@ -17,6 +17,7 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -528,6 +529,7 @@ public class String2Test extends junit.framework.TestCase {
         method = "getBytes",
         args = {}
     )
+    @BrokenTest("Takes too long for the CTS host")
     public void test_getBytes() {
         // Test for method byte [] java.lang.String.getBytes()
         byte[] sbytes = hw1.getBytes();

@@ -17,6 +17,7 @@
 
 package org.apache.harmony.luni.tests.internal.net.www.protocol.http;
 
+import dalvik.annotation.SideEffect;
 import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass; 
@@ -304,6 +305,7 @@ public class HttpURLConnectionTest extends TestCase {
             args = {}
         )
     })
+    @SideEffect("Suffers from side effect of other, currently unknown test")
     public void testProxyAuthorization() throws Exception {
         // Set up test Authenticator
         Authenticator.setDefault(new Authenticator() {
