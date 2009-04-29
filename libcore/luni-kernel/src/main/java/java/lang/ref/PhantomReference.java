@@ -35,7 +35,7 @@ package java.lang.ref;
 /**
  * Implements a phantom reference, which is the weakest of the three types of
  * references. Once the garbage collector decides that an object {@code obj} is
- * <a href="package.html#definitions>phantom-reachable</a>, it is being enqueued
+ * phantom-reachable, it is being enqueued
  * on the corresponding queue, but its referent is not cleared. That is, the
  * reference queue of the phantom reference must explicitly be processed by some
  * application code. As a consequence, a phantom reference that is not

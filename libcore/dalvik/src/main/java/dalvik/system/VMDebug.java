@@ -134,7 +134,7 @@ public final class VMDebug {
     /**
      * Start method tracing, specifying a file name as well as a default
      * buffer size. See <a
-     * href="{@docRoot}reference/traceview.html"> Running the
+     * href="{@docRoot}guide/developing/tools/traceview.html"> Running the
      * Traceview Debugging Program</a> for information about reading
      * trace files.
      * 
