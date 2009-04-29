@@ -147,17 +147,11 @@ public class Support_Resources {
      * @return - resource input stream
      */
     public static InputStream getResourceStream(String name) {
-//ATTENTION:
-//    Against class.getResourceStream(name) the name can start with a "/".
-//    Against classLoader.getResourceStream NOT!
         
-        InputStream is;
-//        is = Support_Resources.class.getClassLoader().getResourceAsStream(name); This would work without leading "/"
-        is = Support_Resources.class.getResourceAsStream(name);
-//        is = ClassLoader.getSystemClassLoader().getResourceAsStream(name); This would work without leading "/"
+        InputStream is = Support_Resources.class.getResourceAsStream(name);
 
         if (is == null) {
-            name = "/tests/resources/" + name;
+            name = RESOURCE_PACKAGE + name;
             is = Support_Resources.class.getResourceAsStream(name);
             if (is == null) {
                 throw new RuntimeException("Failed to load resource: " + name);
