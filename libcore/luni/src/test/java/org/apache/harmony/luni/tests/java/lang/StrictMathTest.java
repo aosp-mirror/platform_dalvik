@@ -1459,4 +1459,31 @@ public class StrictMathTest extends junit.framework.TestCase {
         assertEquals("Returned incorrect value", 5.6E-45f, Math
                 .ulp(9.403954E-38f), 0f);
     }
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Stress test.",
+        method = "pow",
+        args = {double.class, double.class}
+    )
+    public void test_pow_stress() {
+        assertTrue(Double.longBitsToDouble(-4610068591539890326L) ==
+                StrictMath.pow(-1.0000000000000002e+00,
+                        4.5035996273704970e+15));
+        assertTrue(Double.longBitsToDouble(4601023824101950163L) == 
+                StrictMath.pow(-9.9999999999999978e-01,
+                        4.035996273704970e+15));
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Stress test.",
+        method = "tan",
+        args = {double.class}
+    )
+    public void test_tan_stress(){
+        assertTrue(Double.longBitsToDouble(4850236541654588678L) == 
+            StrictMath.tan(1.7765241907548024E+269));
+    }
+    
 }

@@ -38,7 +38,6 @@ public class AllTests
         suite.addTest(tests.crypto.AllTests.suite());
         suite.addTest(tests.dom.AllTests.suite());
         suite.addTest(tests.logging.AllTests.suite());
-        suite.addTest(tests.luni.AllTests.suite());
         suite.addTest(tests.luni.AllTestsIo.suite());
         suite.addTest(tests.luni.AllTestsLang.suite());
         suite.addTest(tests.luni.AllTestsNet.suite());
