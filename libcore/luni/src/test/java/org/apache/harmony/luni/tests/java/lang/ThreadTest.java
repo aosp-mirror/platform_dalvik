@@ -147,6 +147,8 @@ public class ThreadTest extends junit.framework.TestCase {
     Thread st, ct, spinner;
 
     static boolean calledMySecurityManager = false;
+    
+    boolean wasInterrupted = false;
 
     /**
      * @tests java.lang.Thread#Thread()
@@ -1427,56 +1429,50 @@ public class ThreadTest extends junit.framework.TestCase {
         args = {long.class}
     )
     public void test_sleepJ() {
-        // Test for method void java.lang.Thread.sleep(long)
-
-        // TODO : Test needs enhancing.
-        long stime = 0, ftime = 0;
+        // Note: Not too much we can test here that can be reliably measured.
+        
+        // Check that basic behavior is about right (with some tolerance)
+        long stime = System.currentTimeMillis();
+        
         try {
-            stime = System.currentTimeMillis();
             Thread.sleep(1000);
-            ftime = System.currentTimeMillis();
         } catch (InterruptedException e) {
-            fail("Unexpected interrupt received");
+            fail("Unexpected InterruptedException was thrown");
         }
-        assertTrue("Failed to sleep long enough", (ftime - stime) >= 800);
-        
-        counter = 0;
-        st = new Thread() {
-           
-            public void run() {
-                while(true) {
-                    try {
-                        sleep(1000);
-                        counter++;
-                    } catch(InterruptedException e) {
-                        
-                    }
-                }
-            }
-        };
-       
-        st.start();
 
-        try {
-            Thread.sleep(5000);
-        } catch(InterruptedException e) {
-            fail("InterruptedException was thrown.");
-        }
-        assertEquals(4, counter);
+        long ftime = System.currentTimeMillis();
         
+        assertTrue("Failed to sleep long enough", (ftime - stime) >= 500);
+        assertTrue("Failed to wake up early enough", (ftime - stime) <= 1500);
+        
+        // Check that interrupt works
         st = new Thread() {
             public void run() {
                 try {
                     sleep(10000);
-                    fail("InterruptedException is thrown.");
                 } catch(InterruptedException ie) {
-                    //exception
+                    wasInterrupted = true;
                 }
             }
         };
 
         st.start();
+        
+        try {
+            Thread.sleep(5000);
+        } catch(InterruptedException e) {
+            fail("Unexpected InterruptedException was thrown");
+        }
+        
         st.interrupt();
+        
+        try {
+            Thread.sleep(5000);
+        } catch(InterruptedException e) {
+            fail("Unexpected InterruptedException was thrown");
+        }
+        
+        assertTrue(wasInterrupted);
     }
 
     /**
@@ -1489,57 +1485,50 @@ public class ThreadTest extends junit.framework.TestCase {
         args = {long.class, int.class}
     )
     public void test_sleepJI() {
-        // Test for method void java.lang.Thread.sleep(long, int)
-
-        // TODO : Test needs revisiting.
-        long stime = 0, ftime = 0;
+        // Note: Not too much we can test here that can be reliably measured.
+        
+        // Check that basic behavior is about right (with some tolerance)
+        long stime = System.currentTimeMillis();
+        
         try {
-            stime = System.currentTimeMillis();
-            Thread.sleep(1000, 999999);
-            ftime = System.currentTimeMillis();
+            Thread.sleep(1000, 99999);
         } catch (InterruptedException e) {
-            fail("Unexpected interrupt received");
+            fail("Unexpected InterruptedException was thrown");
         }
-        long result = ftime - stime;
-        assertTrue("Failed to sleep long enough: " + result, result >= 900
-                && result <= 1100);
-        
-        counter = 0;
-        st = new Thread() {
-           
-            public void run() {
-                while(true) {
-                    try {
-                        sleep(0, 999999);
-                        counter++;
-                    } catch(InterruptedException e) {
-                        
-                    }
-                }
-            }
-        };
-       
-        st.start();
 
-        try {
-            Thread.sleep(2, 999999);
-        } catch(InterruptedException e) {
-            fail("InterruptedException was thrown.");
-        }
-        assertEquals(2, counter);
+        long ftime = System.currentTimeMillis();
         
+        assertTrue("Failed to sleep long enough", (ftime - stime) >= 500);
+        assertTrue("Failed to wake up early enough", (ftime - stime) <= 1500);
+        
+        // Check that interrupt works
         st = new Thread() {
             public void run() {
                 try {
-                    sleep(10000, 999999);
-                    fail("InterruptedException is thrown.");
+                    sleep(10000, 99999);
                 } catch(InterruptedException ie) {
-                    //exception
+                    wasInterrupted = true;
                 }
             }
         };
+
         st.start();
+        
+        try {
+            Thread.sleep(5000, 99999);
+        } catch(InterruptedException e) {
+            fail("Unexpected InterruptedException was thrown");
+        }
+        
         st.interrupt();
+        
+        try {
+            Thread.sleep(5000);
+        } catch(InterruptedException e) {
+            fail("Unexpected InterruptedException was thrown");
+        }
+        
+        assertTrue(wasInterrupted);
     }
 
     /**

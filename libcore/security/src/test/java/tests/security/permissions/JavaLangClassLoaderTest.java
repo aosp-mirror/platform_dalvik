@@ -23,15 +23,16 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 import dalvik.system.DexFile;
-import dalvik.system.PathClassLoader;
 
 import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.security.Permission;
 
+import tests.support.Support_ClassLoader;
 import tests.support.resource.Support_Resources;
 
 /*
@@ -118,7 +119,7 @@ public class JavaLangClassLoaderTest extends TestCase {
             args = {}
         )
     })
-    @AndroidOnly("uses PathClassLoader and DexFile")
+    @AndroidOnly("uses DexFile")
     @BrokenTest("Endless loop in ClassLoader. Actually a known failure.")
     public void test_getSystemClassLoader () throws IOException,
             IllegalAccessException, InstantiationException {
@@ -129,7 +130,8 @@ public class JavaLangClassLoaderTest extends TestCase {
             }
             @Override
             public void checkPermission(Permission permission){
-                if(permission instanceof RuntimePermission && "getClassLoader".equals(permission.getName())){
+                if(permission instanceof RuntimePermission &&
+                        "getClassLoader".equals(permission.getName())){
                     called = true;
                 }
             }
@@ -166,7 +168,7 @@ public class JavaLangClassLoaderTest extends TestCase {
         InputStream is = Support_Resources.getResourceStream("testdex.jar");
         Support_Resources.copyLocalFileto(tempFile, is);
         DexFile dexfile = new DexFile(tempFile);
-        PathClassLoader pcl = new PathClassLoader("",
+        ClassLoader pcl = Support_ClassLoader.getInstance(new URL(""),
                 ClassLoader.getSystemClassLoader());
         
         Class<?> testClass = dexfile.loadClass(

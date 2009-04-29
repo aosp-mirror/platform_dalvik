@@ -177,18 +177,6 @@ public class X509CertificateTest extends TestCase {
         }
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        if (myProvider != null) {
-//            Security.removeProvider(myProvider.getName());
-        }
-        if (mySSProvider != null) {
-//            Security.removeProvider(mySSProvider.getName());
-        }
-        
-        super.tearDown();
-    }
-    
     /**
      * X509Certificate() constructor testing.
      * @tests {@link X509Certificate#X509Certificate() }
@@ -875,6 +863,7 @@ public class X509CertificateTest extends TestCase {
       method = "verify",
       args = {java.security.PublicKey.class, java.lang.String.class}
     )
+    @SideEffect("Destroys MD5 provider, hurts succeeding tests")
     public void testVerifyPublicKeyString() throws InvalidKeyException,
             java.security.cert.CertificateException, NoSuchAlgorithmException,
             NoSuchProviderException, SignatureException, IOException,
