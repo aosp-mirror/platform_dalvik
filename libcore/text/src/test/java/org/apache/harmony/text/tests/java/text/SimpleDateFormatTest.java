@@ -17,6 +17,7 @@
 package org.apache.harmony.text.tests.java.text;
 
 import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
@@ -757,10 +758,12 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
         args = {java.lang.String.class, java.text.ParsePosition.class}
     )
     @AndroidOnly("ICU specific...")
+    @BrokenTest("Different behavior between cts host and run-core-test")
     public void test_parseLjava_lang_StringLjava_text_ParsePosition() {
         // Test for method java.util.Date
         // java.text.SimpleDateFormat.parse(java.lang.String,
         // java.text.ParsePosition)
+
         TestFormat test = new TestFormat(
                 "test_formatLjava_util_DateLjava_lang_StringBufferLjava_text_FieldPosition");
 
@@ -887,7 +890,19 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
 
         test.parse("yyyyMMddHHmmss", "19990913171901", new GregorianCalendar(
                 1999, Calendar.SEPTEMBER, 13, 17, 19, 01).getTime(), 0, 14);
+    }
 
+    /**
+     * @tests java.text.SimpleDateFormat#parse(java.lang.String,
+     *        java.text.ParsePosition)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "parse",
+        args = {java.lang.String.class, java.text.ParsePosition.class}
+    )
+    @AndroidOnly("ICU specific...")
+    public void test_parseLjava_lang_StringLjava_text_ParsePosition_2() {
         Date d = new Date(1015822800000L);
         SimpleDateFormat df = new SimpleDateFormat("", new Locale("en", "US"));
         df.setTimeZone(TimeZone.getTimeZone("EST"));

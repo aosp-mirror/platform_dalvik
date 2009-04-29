@@ -560,6 +560,7 @@ public class ClassTest extends junit.framework.TestCase {
         args = {}
     )
     @AndroidOnly("Uses dalvik.system.PathClassLoader.")
+    @BrokenTest("Different behavior between cts host and run-core-test")
     public void test_getPackage() {
 
       Package thisPackage = getClass().getPackage();

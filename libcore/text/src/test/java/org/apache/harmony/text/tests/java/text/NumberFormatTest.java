@@ -560,6 +560,7 @@ public class NumberFormatTest extends TestCase {
     )
     public void test_getCurrencyInstance() {
 
+        Locale.setDefault(Locale.US);
         NumberFormat format = NumberFormat.getCurrencyInstance();
 
         assertNotSame("Instance is null", null, format);

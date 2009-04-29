@@ -46,6 +46,7 @@ import tests.api.javax.xml.parsers.SAXParserTestSupport.MyHandler;
 import tests.api.org.xml.sax.support.BrokenInputStream;
 import tests.api.org.xml.sax.support.MethodLogger;
 import tests.api.org.xml.sax.support.MockHandler;
+import tests.support.resource.Support_Resources;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
@@ -144,7 +145,7 @@ public class SAXParserTest extends TestCase {
         return this.getClass().getResourceAsStream(name);        
     }
     
-    public SAXParserTest() throws Exception{
+    public void initFiles() throws Exception {
         // we differntiate between a validating and a non validating parser
         try {
             SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
@@ -153,45 +154,40 @@ public class SAXParserTest extends TestCase {
             fail("could not obtain a SAXParser");
         }
 
-        // nwf = non well formed, wf = well formed 
-        list_wf = new File[] {File.createTempFile(
-                SAXParserTestSupport.XML_WF + "staff","xml")};
-        list_nwf = new File[] {File.createTempFile(
-                SAXParserTestSupport.XML_NWF + "staff","xml")};
+        String tmpPath = System.getProperty("java.io.tmpdir");
 
-        copyFile(getResource(SAXParserTestSupport.XML_WF + "staff.xml"),
-                list_wf[0].getAbsolutePath());
-        copyFile(getResource(SAXParserTestSupport.XML_WF + "staff.dtd"),
-                File.createTempFile(SAXParserTestSupport.XML_WF + "staff",
-                        "dtd").getAbsolutePath());
-        copyFile(getResource(SAXParserTestSupport.XML_NWF + "staff.xml"),
-                list_nwf[0].getAbsolutePath());
-        copyFile(getResource(SAXParserTestSupport.XML_NWF + "staff.dtd"),
-                File.createTempFile(SAXParserTestSupport.XML_NWF + "staff",
-                        "dtd").getAbsolutePath());
+        // nwf = not well formed, wf = well formed 
+        list_wf = new File[] {new File(tmpPath + "/" + 
+                SAXParserTestSupport.XML_WF + "staff.xml")};
+        list_nwf = new File[] {new File(tmpPath + "/" +
+                SAXParserTestSupport.XML_NWF + "staff.xml")};
+        list_out_dh = new File[] {new File(tmpPath + "/" +
+                SAXParserTestSupport.XML_WF_OUT_DH + "staff.out")};
+        list_out_hb = new File[] {new File(tmpPath + "/" +
+                SAXParserTestSupport.XML_WF_OUT_HB + "staff.out")};
 
-        list_out_dh = new File[] {File.createTempFile(
-                SAXParserTestSupport.XML_WF_OUT_DH + "staff", "out")};
-        list_out_hb = new File[] {File.createTempFile(
-                SAXParserTestSupport.XML_WF_OUT_HB + "staff", "out")};
-        copyFile(getResource(SAXParserTestSupport.XML_WF_OUT_HB + "staff.out"),
-                list_out_hb[0].getAbsolutePath());
-        copyFile(getResource(SAXParserTestSupport.XML_WF_OUT_DH + "staff.out"),
-                list_out_dh[0].getAbsolutePath());
-    }
+        list_wf[0].deleteOnExit();
+        list_nwf[0].deleteOnExit();
+        list_out_hb[0].deleteOnExit();
+        list_out_dh[0].deleteOnExit();
 
-    private void copyFile(InputStream toCopy, String target) throws Exception {
-        new File(target).getParentFile().mkdirs();
-        OutputStream writer = new FileOutputStream(target);
-        byte[] buffer = new byte[512];
-        int i = toCopy.read(buffer);
-        while (i >= 0) {
-            writer.write(buffer,0,i);
-            i = toCopy.read(buffer);
-        }
-        writer.flush();
-        writer.close();
-        toCopy.close();
+
+        Support_Resources.copyLocalFileto(list_wf[0],
+                getResource(SAXParserTestSupport.XML_WF + "staff.xml"));
+        Support_Resources.copyLocalFileto(new File(
+                tmpPath + "/" + SAXParserTestSupport.XML_WF + "staff.dtd"),
+                getResource(SAXParserTestSupport.XML_WF + "staff.dtd"));
+
+        Support_Resources.copyLocalFileto(list_nwf[0],
+                getResource(SAXParserTestSupport.XML_NWF + "staff.xml"));
+        Support_Resources.copyLocalFileto(new File(
+                tmpPath + "/" + SAXParserTestSupport.XML_NWF + "staff.dtd"),
+                getResource(SAXParserTestSupport.XML_NWF + "staff.dtd"));
+
+        Support_Resources.copyLocalFileto(list_out_dh[0],
+                getResource(SAXParserTestSupport.XML_WF_OUT_DH + "staff.out"));
+        Support_Resources.copyLocalFileto(list_out_hb[0],
+                getResource(SAXParserTestSupport.XML_WF_OUT_HB + "staff.out"));
     }
     
     @Override
@@ -203,6 +199,7 @@ public class SAXParserTest extends TestCase {
         ns = new HashMap<String, String>();
         attr = new HashMap<String, String>();
         el = new Vector<String>();
+        initFiles();
     }
 
     @Override
@@ -350,7 +347,9 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {java.io.File.class, org.xml.sax.helpers.DefaultHandler.class}
     )
-    public void _test_parseLjava_io_FileLorg_xml_sax_helpers_DefaultHandler()
+    @KnownFailure("The default handler doesn't get the qName value supplied. " +
+            "We either need to change the test, or fix the parser.")
+    public void test_parseLjava_io_FileLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
         for(int i = 0; i < list_wf.length; i++) {
@@ -457,8 +456,9 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {org.xml.sax.InputSource.class, org.xml.sax.helpers.DefaultHandler.class}
     )
-    
-    public void _test_parseLorg_xml_sax_InputSourceLorg_xml_sax_helpers_DefaultHandler()
+    @KnownFailure("The default handler doesn't get the qName value supplied. " +
+            "We either need to change the test, or fix the parser.")
+    public void test_parseLorg_xml_sax_InputSourceLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
         for(int i = 0; i < list_wf.length; i++) {
@@ -623,7 +623,9 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class}
     )
-    public void _test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandler()
+    @KnownFailure("The default handler doesn't get the qName value supplied. " +
+            "We either need to change the test, or fix the parser.")
+    public void test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
         for(int i = 0; i < list_wf.length; i++) {
@@ -673,7 +675,9 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class, java.lang.String.class}
     )
-    public void _test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandlerLjava_lang_String() {
+    @KnownFailure("The default handler doesn't get the qName value supplied. " +
+            "We either need to change the test, or fix the parser.")
+    public void test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandlerLjava_lang_String() {
         for(int i = 0; i < list_wf.length; i++) {
             try {
                 HashMap<String, String> hm = sp.readFile(
@@ -948,7 +952,9 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {java.lang.String.class, org.xml.sax.helpers.DefaultHandler.class}
     )
-    public void _test_parseLjava_lang_StringLorg_xml_sax_helpers_DefaultHandler()
+    @KnownFailure("The default handler doesn't get the qName value supplied. " +
+            "We either need to change the test, or fix the parser.")
+    public void test_parseLjava_lang_StringLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
         for(int i = 0; i < list_wf.length; i++) {
@@ -956,14 +962,14 @@ public class SAXParserTest extends TestCase {
             HashMap<String, String> hm = new SAXParserTestSupport().readFile(
                     list_out_dh[i].getPath());
             MyDefaultHandler dh = new MyDefaultHandler();
-            parser.parse(list_wf[i].getPath(), dh);
+            parser.parse(list_wf[i].toURI().toString(), dh);
             assertTrue(SAXParserTestSupport.equalsMaps(hm, dh.createData()));
         }
 
         for(int i = 0; i < list_nwf.length; i++) {
             try {
                 MyDefaultHandler dh = new MyDefaultHandler();
-                parser.parse(list_nwf[i].getPath(), dh);
+                parser.parse(list_nwf[i].toURI().toString(), dh);
                 fail("SAXException is not thrown");
             } catch(org.xml.sax.SAXException se) {
                 //expected
@@ -979,7 +985,7 @@ public class SAXParserTest extends TestCase {
         }
 
         try {
-            parser.parse(list_wf[0].getPath(), (DefaultHandler) null);
+            parser.parse(list_wf[0].toURI().toString(), (DefaultHandler) null);
         } catch(java.lang.IllegalArgumentException iae) {
             fail("java.lang.IllegalArgumentException is thrown");
         }

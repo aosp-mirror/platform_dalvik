@@ -970,6 +970,26 @@ public class SocketHandlerTest extends TestCase {
     }
 
     /*
+     * A mock stream handler, expose setOutputStream.
+     */
+    public static class MockHandler extends Handler {
+        public MockHandler() throws Exception {
+        }
+
+        @Override
+        public void close() {
+        }
+
+        @Override
+        public void flush() {
+        }
+
+        @Override
+        public void publish(LogRecord record) {
+        }
+    }
+
+    /*
      * A server thread that accepts an incoming connection request and reads any
      * incoming data into an byte array.
      */

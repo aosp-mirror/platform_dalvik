@@ -409,7 +409,7 @@ public class TimestampTest extends TestCase {
                 theReturn.getNanos());
 
         theReturn = Timestamp.valueOf("1969-12-31 13:14:39.309");
-        assertEquals("Wrong result for time test", 38720691,
+        assertEquals("Wrong result for time test", -38720691,
                 theReturn.getTime());
         assertEquals("Wrong result for nanos test", 309000000,
                 theReturn.getNanos());
