@@ -24,6 +24,10 @@ import junit.framework.TestCase;
 
 import org.xml.sax.helpers.ParserFactory;
 
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.Map.Entry;
+
 @SuppressWarnings("deprecation")
 @TestTargetClass(ParserFactory.class)
 public class ParserFactoryTest extends TestCase {
@@ -36,6 +40,9 @@ public class ParserFactoryTest extends TestCase {
     )
     public void testMakeParser() throws ClassNotFoundException,
             IllegalAccessException, InstantiationException {
+
+        System.clearProperty("org.xml.sax.parser");
+
         // Property not set at all
         try {
             ParserFactory.makeParser();

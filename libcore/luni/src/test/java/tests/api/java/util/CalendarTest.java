@@ -1283,6 +1283,7 @@ public class CalendarTest extends junit.framework.TestCase {
         args = {int.class}
     )
     public void test_EdgeCases() {
+        Locale.setDefault(Locale.US);
         Calendar c = Calendar.getInstance();
         
         c.setTimeInMillis(Long.MAX_VALUE);
