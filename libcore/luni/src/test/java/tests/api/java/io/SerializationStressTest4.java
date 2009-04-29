@@ -17,12 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.BrokenTest;
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.File;
 import java.io.FilePermission;
 import java.io.IOException;
@@ -53,6 +47,10 @@ import java.util.TimeZone;
 
 import tests.support.Support_Configuration;
 import tests.support.Support_Proxy_I1;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(java.io.Serializable.class) 
 public class SerializationStressTest4 extends SerializationStressTest {
@@ -2668,6 +2666,7 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
+    @KnownFailure("Proxy support broken when user classloader involved")
     public void test_writeObject_Proxy() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.security.GuardedObject)
