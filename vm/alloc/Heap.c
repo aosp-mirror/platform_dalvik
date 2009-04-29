@@ -775,6 +775,11 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
         /* Current value is numerically greater than "normal", which
          * in backward UNIX terms means lower priority.
          */
+
+        if (priorityResult == ANDROID_PRIORITY_BACKGROUND) {
+            dvmChangeThreadSchedulerGroup(NULL);
+        }
+
         if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
             LOGI_HEAP("Unable to elevate priority from %d to %d\n",
                 priorityResult, ANDROID_PRIORITY_NORMAL);
@@ -1022,6 +1027,10 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
                 oldThreadPriority, strerror(errno));
         } else {
             LOGD_HEAP("Reset priority to %d\n", oldThreadPriority);
+        }
+
+        if (oldThreadPriority == ANDROID_PRIORITY_BACKGROUND) {
+            dvmChangeThreadSchedulerGroup("bg_non_interactive");
         }
     }
     gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;
