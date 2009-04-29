@@ -74,7 +74,7 @@ public abstract class KeyPairGeneratorTest extends TestCase {
             )
     })
     public void testKeyPairGenerator() {
-        generator.initialize(512);
+        generator.initialize(1024);
 
         KeyPair keyPair = generator.generateKeyPair();
 

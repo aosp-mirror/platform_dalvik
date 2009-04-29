@@ -62,6 +62,15 @@ import javax.security.cert.CertificateExpiredException;
 import javax.security.cert.CertificateNotYetValidException;
 import javax.security.cert.X509Certificate;
 
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import tests.targets.security.cert.CertificateFactoryTestX509;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
 /**
  */
 @TestTargetClass(X509Certificate.class)
@@ -90,21 +99,29 @@ public class X509CertificateTest extends TestCase {
             + "7jrj84/GZlhm09DsCFQCBKGKCGbrP64VtUt4JPmLjW1VxQA==\n"
             + "-----END CERTIFICATE-----";
    
-   /**
-    * Copy of CertPathValidatorTestPKIX.selfSignedCert
+   /*
+    * a self-signed certificate
     */
-   private static final String selfSignedCert = "-----BEGIN CERTIFICATE-----\n"
-        + "MIICSDCCAbECBEk2ZvswDQYJKoZIhvcNAQEEBQAwazELMAkGA1UEBhMCQU4xEDAOBgNVBAgTB0Fu\n"
-        + "ZHJvaWQxEDAOBgNVBAcTB0FuZHJvaWQxEDAOBgNVBAoTB0FuZHJvaWQxEDAOBgNVBAsTB0FuZHJv\n"
-        + "aWQxFDASBgNVBAMTC0FuZHJvaWQgQ1RTMB4XDTA4MTIwMzExMDExNVoXDTM2MDQyMDExMDExNVow\n"
-        + "azELMAkGA1UEBhMCQU4xEDAOBgNVBAgTB0FuZHJvaWQxEDAOBgNVBAcTB0FuZHJvaWQxEDAOBgNV\n"
-        + "BAoTB0FuZHJvaWQxEDAOBgNVBAsTB0FuZHJvaWQxFDASBgNVBAMTC0FuZHJvaWQgQ1RTMIGfMA0G\n"
-        + "CSqGSIb3DQEBAQUAA4GNADCBiQKBgQCAMd+N1Bu2eiI4kukOLvFlpTSEHTGplN2vvw76T7jSZinx\n"
-        + "WcrtLe6qH1uPffbVNW4/BRn6OywbcynazEdqEUa09hWtHYmUsXpRPyGUBScNnyF751SGA2JIQUfg\n"
-        + "3gi3gT3h32Z64AIHnn5gsGDJkeWOHx6/uVOV7iqr7cwPdLp03QIDAQABMA0GCSqGSIb3DQEBBAUA\n"
-        + "A4GBAGG46Udsh6U7bSkJsyPPmSCCEkGr14L8F431UuaWbLvQVDtyPv8vtdJilyUTVnlWM6JNGV/q\n"
-        + "bgHuLbohkVXn9l68GtgQ7QDexHJE5hEDG/S7cYNi9GhrCfzAjEed13VMntZHZ0XQ4E7jBOmhcMAY\n"
-        + "DC9BBx1sVKoji17RP4R8CTf1\n" + "-----END CERTIFICATE-----";
+   private static final String selfSignedCert = "-----BEGIN CERTIFICATE-----\n" +
+   "MIIDPzCCAqigAwIBAgIBADANBgkqhkiG9w0BAQUFADB5MQswCQYDVQQGEwJBTjEQ" +
+   "MA4GA1UECBMHQW5kcm9pZDEQMA4GA1UEChMHQW5kcm9pZDEQMA4GA1UECxMHQW5k" +
+   "cm9pZDEQMA4GA1UEAxMHQW5kcm9pZDEiMCAGCSqGSIb3DQEJARYTYW5kcm9pZEBh" +
+   "bmRyb2lkLmNvbTAeFw0wOTAzMjAxNzAwMDZaFw0xMjAzMTkxNzAwMDZaMHkxCzAJ" +
+   "BgNVBAYTAkFOMRAwDgYDVQQIEwdBbmRyb2lkMRAwDgYDVQQKEwdBbmRyb2lkMRAw" +
+   "DgYDVQQLEwdBbmRyb2lkMRAwDgYDVQQDEwdBbmRyb2lkMSIwIAYJKoZIhvcNAQkB" +
+   "FhNhbmRyb2lkQGFuZHJvaWQuY29tMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKB" +
+   "gQCqQkDtkiEXmV8O5EK4y2Y9YyoWNDx70z4fqD+9muuzJGuM5NovMbxhBycuKHF3" +
+   "WK60iXzrsAYkB1c8VHHbcUEFqz2fBdLKyxy/nYohlo8TYSVpEjt3vfc0sgmp4FKU" +
+   "RDHO2z3rZPHWysV9L9ZvjeQpiwaYipU9epdBmvFmxQmCDQIDAQABo4HWMIHTMB0G" +
+   "A1UdDgQWBBTnm32QKeqQC38IQXZOQSPoQyypAzCBowYDVR0jBIGbMIGYgBTnm32Q" +
+   "KeqQC38IQXZOQSPoQyypA6F9pHsweTELMAkGA1UEBhMCQU4xEDAOBgNVBAgTB0Fu" +
+   "ZHJvaWQxEDAOBgNVBAoTB0FuZHJvaWQxEDAOBgNVBAsTB0FuZHJvaWQxEDAOBgNV" +
+   "BAMTB0FuZHJvaWQxIjAgBgkqhkiG9w0BCQEWE2FuZHJvaWRAYW5kcm9pZC5jb22C" +
+   "AQAwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOBgQAUmDApQu+r5rglS1WF" +
+   "BKXE3R2LasFvbBwdw2E0MAc0TWqLVW91VW4VWMX4r+C+c7rZpYXXtRqFRCuI/czL" +
+   "0e1GaUP/Wa6bXBcm2u7Iv2dVAaAOELmFSVTZeR57Lm9lT9kQLp24kmNndIsiDW3T" +
+   "XZ4pY/k2kxungOKx8b8pGYE9Bw==\n" +
+   "-----END CERTIFICATE-----";
 
     private java.security.cert.X509Certificate cert;
 
@@ -133,10 +150,8 @@ public class X509CertificateTest extends TestCase {
             this.tbt_cert = X509Certificate.getInstance(cert.getEncoded());
 
             // non self signed cert
-            this.javaCert = (java.security.cert.X509Certificate) cf
-                    .generateCertificate(new ByteArrayInputStream(
-                            CertificateFactoryTestX509.encodedCertificate
-                                    .getBytes()));
+            this.javaCert = (java.security.cert.X509Certificate)cf
+                    .generateCertificate(new ByteArrayInputStream(selfSignedCert.getBytes()));
             this.javaxCert = X509Certificate.getInstance(javaCert.getEncoded());
             myProvider = cf.getProvider();
             Security.addProvider(myProvider);
@@ -748,7 +763,6 @@ public class X509CertificateTest extends TestCase {
        
        key = javaxSSCert.getPublicKey();
        assertNotNull(key);
-       assertFalse(javaxSSCert.getPublicKey().equals(javaSSCert.getPublicKey()));
        assertEquals(key.getAlgorithm(),"RSA");
        
        //assertTrue(mySSProvider.containsKey(key));
@@ -766,9 +780,9 @@ public class X509CertificateTest extends TestCase {
     @TestTargetNew(
       level = TestLevel.SUFFICIENT,
       notes = " CertificateException not supported."+
-      	      "NoSuchAlgorithmException, NoSuchProviderException can be "+
-      	      "implemented only with working Cert. Verification fails (see failing) "+
-      	      "precondition assertions",
+              "NoSuchAlgorithmException, NoSuchProviderException can be "+
+              "implemented only with working Cert. Verification fails "+
+              "(see failing) precondition assertions",
       method = "verify",
       args = {java.security.PublicKey.class}
     )
@@ -857,12 +871,10 @@ public class X509CertificateTest extends TestCase {
      */
     @TestTargetNew(
       level = TestLevel.SUFFICIENT,
-      notes = "only exception testing: there is an error with the self signed "+
-              "certificate. Should verify.",
+      notes = "",
       method = "verify",
       args = {java.security.PublicKey.class, java.lang.String.class}
     )
-    @BrokenTest("there is an error with the self signed certificate")
     public void testVerifyPublicKeyString() throws InvalidKeyException,
             java.security.cert.CertificateException, NoSuchAlgorithmException,
             NoSuchProviderException, SignatureException, IOException,
@@ -884,9 +896,19 @@ public class X509CertificateTest extends TestCase {
         }
         Security.addProvider(myProvider);
         
+        Provider[] providers = Security.getProviders("Signature.MD5withRSA");
+        if (providers == null || providers.length == 0) {
+            fail("no Provider for Signature.MD5withRSA");
+            return;
+        }
         
         // self signed cert: should verify with provider
-        javaxSSCert.verify(javaxSSCert.getPublicKey(), mySSProvider.getName());
+        try {
+            javaxSSCert.verify(javaxSSCert.getPublicKey(),
+                    providers[0].getName());
+        } catch (SignatureException e) {
+            fail("blu");
+        }
 
     }
 

@@ -49,7 +49,7 @@ public class DHTest extends TestCase {
         }
         
         AlgorithmParameterGenerator algorithmparametergenerator = AlgorithmParameterGenerator.getInstance("DH");
-        algorithmparametergenerator.init(960, new SecureRandom());
+        algorithmparametergenerator.init(1024, new SecureRandom());
         AlgorithmParameters algorithmparameters = algorithmparametergenerator.generateParameters();
         DHParameterSpec dhparameterspec = algorithmparameters.getParameterSpec(DHParameterSpec.class);
 

@@ -72,6 +72,8 @@ public class AllTests {
         suite.addTestSuite(KeyStoreTestPKCS12.class);
         
         suite.addTestSuite(SecureRandomTestSHA1PRNG.class);
+        
+        suite.addTestSuite(DHTest.class);
 
         // $JUnit-END$
         return suite;
