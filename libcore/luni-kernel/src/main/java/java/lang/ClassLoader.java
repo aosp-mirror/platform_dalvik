@@ -634,7 +634,7 @@ public abstract class ClassLoader {
      */
     final boolean isAncestorOf(ClassLoader child) {
         for (ClassLoader current = child; current != null;
-                current = child.parent) {
+                current = current.parent) {
             if (current == this) {
                 return true;
             }
