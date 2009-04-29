@@ -35,7 +35,7 @@ package java.lang.ref;
 /**
  * Implements a weak reference, which is the middle of the three types of
  * references. Once the garbage collector decides that an object {@code obj} is
- * is <a href="package.html#definitions>weakly-reachable</a>, the following
+ * is weakly-reachable, the following
  * happens:
  * 
  * <ul>
