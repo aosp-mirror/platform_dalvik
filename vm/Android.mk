@@ -41,46 +41,50 @@ ifeq ($(WITH_MONITOR_TRACKING),true)
   LOCAL_CFLAGS += -DWITH_MONITOR_TRACKING
 endif
 
-#
-# "Debug" profile:
-# - debugger enabled
-# - profiling enabled
-# - tracked-reference verification enabled
-# - allocation limits enabled
-# - GDB helpers enabled
-# - LOGV
-# - assert()  (NDEBUG is handled in the build system)
-#
-ifeq ($(TARGET_BUILD_TYPE),debug)
-LOCAL_CFLAGS += -DWITH_INSTR_CHECKS
-LOCAL_CFLAGS += -DWITH_EXTRA_OBJECT_VALIDATION
-LOCAL_CFLAGS += -DWITH_TRACKREF_CHECKS
-LOCAL_CFLAGS += -DWITH_ALLOC_LIMITS
-LOCAL_CFLAGS += -DWITH_EXTRA_GC_CHECKS=1
-#LOCAL_CFLAGS += -DCHECK_MUTEX
-#LOCAL_CFLAGS += -DPROFILE_FIELD_ACCESS
-LOCAL_CFLAGS += -DDVM_SHOW_EXCEPTION=3
-# add some extra stuff to make it easier to examine with GDB
-LOCAL_CFLAGS += -DEASY_GDB
+# Make DEBUG_DALVIK_VM default to true when building the simulator.
+ifeq ($(TARGET_SIMULATOR),true)
+  ifeq ($(strip $(DEBUG_DALVIK_VM)),)
+    DEBUG_DALVIK_VM := true
+  endif
 endif
 
-
-#
-# "Performance" profile:
-# - all development features disabled
-# - compiler optimizations enabled (redundant for "release" builds)
-# - (debugging and profiling still enabled)
-#
-ifeq ($(TARGET_BUILD_TYPE),release)
-#LOCAL_CFLAGS += -DNDEBUG -DLOG_NDEBUG=1
-# "-O2" is redundant for device (release) but useful for sim (debug)
-#LOCAL_CFLAGS += -O2 -Winline
-#LOCAL_CFLAGS += -DWITH_EXTRA_OBJECT_VALIDATION
-LOCAL_CFLAGS += -DWITH_EXTRA_GC_CHECKS=1
-LOCAL_CFLAGS += -DDVM_SHOW_EXCEPTION=1
-# if you want to try with assertions on the device, add:
-#LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT
-endif
+ifeq ($(strip $(DEBUG_DALVIK_VM)),true)
+  #
+  # "Debug" profile:
+  # - debugger enabled
+  # - profiling enabled
+  # - tracked-reference verification enabled
+  # - allocation limits enabled
+  # - GDB helpers enabled
+  # - LOGV
+  # - assert()  (NDEBUG is handled in the build system)
+  #
+  LOCAL_CFLAGS += -DWITH_INSTR_CHECKS
+  LOCAL_CFLAGS += -DWITH_EXTRA_OBJECT_VALIDATION
+  LOCAL_CFLAGS += -DWITH_TRACKREF_CHECKS
+  LOCAL_CFLAGS += -DWITH_ALLOC_LIMITS
+  LOCAL_CFLAGS += -DWITH_EXTRA_GC_CHECKS=1
+  #LOCAL_CFLAGS += -DCHECK_MUTEX
+  #LOCAL_CFLAGS += -DPROFILE_FIELD_ACCESS
+  LOCAL_CFLAGS += -DDVM_SHOW_EXCEPTION=3
+  # add some extra stuff to make it easier to examine with GDB
+  LOCAL_CFLAGS += -DEASY_GDB
+else  # !DALVIK_VM_DEBUG
+  #
+  # "Performance" profile:
+  # - all development features disabled
+  # - compiler optimizations enabled (redundant for "release" builds)
+  # - (debugging and profiling still enabled)
+  #
+  #LOCAL_CFLAGS += -DNDEBUG -DLOG_NDEBUG=1
+  # "-O2" is redundant for device (release) but useful for sim (debug)
+  #LOCAL_CFLAGS += -O2 -Winline
+  #LOCAL_CFLAGS += -DWITH_EXTRA_OBJECT_VALIDATION
+  LOCAL_CFLAGS += -DWITH_EXTRA_GC_CHECKS=1
+  LOCAL_CFLAGS += -DDVM_SHOW_EXCEPTION=1
+  # if you want to try with assertions on the device, add:
+  #LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT
+endif  # !DALVIK_VM_DEBUG
 
 # bug hunting: checksum and verify interpreted stack when making JNI calls
 #LOCAL_CFLAGS += -DWITH_JNI_STACK_CHECK
