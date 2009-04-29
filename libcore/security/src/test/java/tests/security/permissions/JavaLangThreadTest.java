@@ -23,9 +23,10 @@ import java.security.Permission;
 import junit.framework.TestCase;
 import tests.support.Support_ClassLoader;
 import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestLevel;
 
 /*
  * This class tests the security permissions which are documented in
@@ -142,6 +143,8 @@ public class JavaLangThreadTest extends TestCase {
         args = {}
     )
     @AndroidOnly("RI impl differs from RI spec, Android impl does not.")
+    @BrokenTest("Suffers from endless loop in getClassLoader(), actually a"
+            + "@KnownFailure, but we don't want to hang the test harness")
     public void test_getContextClassLoader() {
         class TestSecurityManager extends SecurityManager {
             boolean called;

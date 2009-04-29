@@ -393,7 +393,8 @@ public class PolicyTest extends TestCase {
 
         // Regression for HARMONY-1963 and HARMONY-2910
         
-        String policyFile = ClassLoader.getSystemClassLoader().getResource("PolicyTest.txt").toString();
+        String policyFile = getClass().getClassLoader().getResource(
+                "PolicyTest.txt").toString();
         String oldSysProp = System.getProperty(JAVA_SECURITY_POLICY);
         Policy oldPolicy = Policy.getPolicy();
 

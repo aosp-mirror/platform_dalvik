@@ -194,7 +194,9 @@ public class DatagramSocketTest extends SocketTestCase {
         
         try {
             DatagramSocket ds = new java.net.DatagramSocket(1);
-            fail("SocketException was not thrown.");
+            if (!("root".equals(System.getProperty("user.name")))) {
+                fail("SocketException was not thrown.");
+            }
         } catch (SocketException e) {
             //expected
         }
