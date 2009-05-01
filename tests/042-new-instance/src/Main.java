@@ -16,6 +16,8 @@
 
 import java.lang.reflect.Constructor;
 
+import java.lang.reflect.Constructor;
+
 /**
  * Test instance creation.
  */
