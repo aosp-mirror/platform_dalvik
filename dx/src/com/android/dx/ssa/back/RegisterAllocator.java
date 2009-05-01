@@ -34,7 +34,7 @@ import java.util.BitSet;
 import java.util.ArrayList;
 
 /**
- * Base class of all register allocators
+ * Base class of all register allocators.
  */
 public abstract class RegisterAllocator {
     /** method being processed */
@@ -79,8 +79,7 @@ public abstract class RegisterAllocator {
      * @return {@code 1..2}
      */
     protected final int getCategoryForSsaReg(int reg) {
-        SsaInsn definition;
-        definition = ssaMeth.getDefinitionForRegister(reg);
+        SsaInsn definition = ssaMeth.getDefinitionForRegister(reg);
 
         if (definition == null) {
             // an undefined reg
@@ -108,7 +107,7 @@ public abstract class RegisterAllocator {
      * move-param (ie, this is a method parameter).
      * 
      * @param reg register in question
-     * @return true if this is a method parameter
+     * @return {@code true} if this is a method parameter
      */
     protected boolean isDefinitionMoveParam(int reg) {
         SsaInsn defInsn = ssaMeth.getDefinitionForRegister(reg);
@@ -135,12 +134,11 @@ public abstract class RegisterAllocator {
      */
     protected final RegisterSpec insertMoveBefore(SsaInsn insn,
             RegisterSpec reg) {
-
         SsaBasicBlock block = insn.getBlock();
         ArrayList<SsaInsn> insns = block.getInsns();
         int insnIndex = insns.indexOf(insn);
 
-        if (insnIndex < 0 ) {
+        if (insnIndex < 0) {
             throw new IllegalArgumentException (
                     "specified insn is not in this block");
         }
@@ -184,11 +182,11 @@ public abstract class RegisterAllocator {
 
         IntIterator liveOutIter = liveOut.iterator();
 
-        while(liveOutIter.hasNext()) {
+        while (liveOutIter.hasNext()) {
             interference.add(newReg, liveOutIter.next());
         }
 
-        // Everything that's a source in the last insn interferes
+        // Everything that's a source in the last insn interferes.
         RegisterSpecList sources = insn.getSources();
         int szSources = sources.size();
 
