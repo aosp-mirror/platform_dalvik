@@ -1,10 +1,20 @@
 // Copyright 2007 The Android Open Source Project
 
+import java.lang.reflect.Constructor;
+
 /**
  * Test instance creation.
  */
 public class Main {
     public static void main(String[] args) {
+        testClassNewInstance();
+        testConstructorNewInstance();
+    }
+
+    /**
+     * Tests Class.newInstance().
+     */
+    static void testClassNewInstance() {
         // should succeed
         try {
             Class c = Class.forName("LocalClass");
@@ -27,22 +37,89 @@ public class Main {
             ex.printStackTrace();
         }
 
-        LocalClass2.main();
+        LocalClass3.main();
+
+        try {
+            MaybeAbstract ma = new MaybeAbstract();
+            System.err.println("ERROR: MaybeAbstract succeeded unexpectedly");
+        } catch (InstantiationError ie) {
+            System.out.println("Got expected InstantationError");
+        } catch (Exception ex) {
+            System.err.println("Got unexpected MaybeAbstract failure");
+        }
+    }
+
+    /**
+     * Tests Constructor.newInstance().
+     */
+    static void testConstructorNewInstance() {
+        // should fail -- getConstructor only returns public constructors
+        try {
+            Class c = Class.forName("LocalClass");
+            Constructor cons = c.getConstructor(new Class[0] /*(Class[])null*/);
+            System.err.println("Cons LocalClass succeeded unexpectedly");
+        } catch (NoSuchMethodException nsme) {
+            System.out.println("Cons LocalClass failed as expected");
+        } catch (Exception ex) {
+            System.err.println("Cons LocalClass failed strangely");
+            ex.printStackTrace();
+        }
+
+        // should succeed
+        try {
+            Class c = Class.forName("LocalClass2");
+            Constructor cons = c.getConstructor((Class[]) null);
+            Object obj = cons.newInstance();
+            System.out.println("Cons LocalClass2 succeeded");
+        } catch (Exception ex) {
+            System.err.println("Cons LocalClass2 failed");
+            ex.printStackTrace();
+        }
+
+        // should fail
+        try {
+            Class c = Class.forName("otherpackage.PackageAccess");
+            Constructor cons = c.getConstructor(new Class[0] /*(Class[])null*/);
+            System.err.println("ERROR: Cons PackageAccess succeeded unexpectedly");
+        } catch (NoSuchMethodException nsme) {
+            System.out.println("Cons got expected PackageAccess complaint");
+        } catch (Exception ex) {
+            System.err.println("Cons got unexpected PackageAccess failure");
+            ex.printStackTrace();
+        }
+
+        // should fail
+        try {
+            Class c = Class.forName("MaybeAbstract");
+            Constructor cons = c.getConstructor(new Class[0] /*(Class[])null*/);
+            Object obj = cons.newInstance();
+            System.err.println("ERROR: Cons MaybeAbstract succeeded unexpectedly");
+        } catch (InstantiationException ie) {
+            // note InstantiationException vs. InstantiationError
+            System.out.println("Cons got expected InstantationException");
+        } catch (Exception ex) {
+            System.err.println("Cons got unexpected MaybeAbstract failure");
+            ex.printStackTrace();
+        }
     }
 }
 
 class LocalClass {
-  // this class has a default constructor with package visibility
+    // this class has a default constructor with package visibility
+}
+
+class LocalClass2 {
+    public LocalClass2() {}
 }
 
 
-class LocalClass2 {
+class LocalClass3 {
     public static void main() {
         try {
             CC.newInstance();
-            System.out.println("LocalClass2 succeeded");
+            System.out.println("LocalClass3 succeeded");
         } catch (Exception ex) {
-            System.err.println("Got unexpected LocalClass2 failure");
+            System.err.println("Got unexpected LocalClass3 failure");
             ex.printStackTrace();
         }
     }
