@@ -39,6 +39,12 @@ static void Dalvik_java_lang_reflect_Constructor_getConstructorModifiers(
 /*
  * public int constructNative(Object[] args, Class declaringClass,
  *     Class[] parameterTypes, int slot, boolean noAccessCheck)
+ *
+ * We get here through Constructor.newInstance().  The Constructor object
+ * would not be available if the constructor weren't public (per the
+ * definition of Class.getConstructor), so we can skip the method access
+ * check.  We can also safely assume the constructor isn't associated
+ * with an interface, array, or primitive class.
  */
 static void Dalvik_java_lang_reflect_Constructor_constructNative(
     const u4* args, JValue* pResult)
@@ -51,6 +57,22 @@ static void Dalvik_java_lang_reflect_Constructor_constructNative(
     bool noAccessCheck = (args[5] != 0);
     Object* newObj;
     Method* meth;
+
+    if (dvmIsAbstractClass(declaringClass)) {
+        dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationException;",
+            declaringClass->descriptor);
+        RETURN_VOID();
+    }
+
+    /* initialize the class if it hasn't been already */
+    if (!dvmIsClassInitialized(declaringClass)) {
+        if (!dvmInitClass(declaringClass)) {
+            LOGW("Class init failed in Constructor.constructNative (%s)\n",
+                declaringClass->descriptor);
+            assert(dvmCheckException(dvmThreadSelf()));
+            RETURN_VOID();
+        }
+    }
 
     newObj = dvmAllocObject(declaringClass, ALLOC_DEFAULT);
     if (newObj == NULL)
