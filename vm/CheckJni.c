@@ -736,21 +736,34 @@ static void* createGuardedCopy(const void* buf, size_t len, bool modOkay)
 /*
  * Verify the guard area and, if "modOkay" is false, that the data itself
  * has not been altered.
+ *
+ * The caller has already checked that "dataBuf" is non-NULL.
  */
 static bool checkGuardedCopy(const void* dataBuf, bool modOkay)
 {
+    static const u4 kMagicCmp = kGuardMagic;
     const u1* fullBuf = ((const u1*) dataBuf) - kGuardLen / 2;
     const GuardExtra* pExtra = getGuardExtra(dataBuf);
-    size_t len = pExtra->originalLen;
+    size_t len;
     const u2* pat;
     int i;
 
-    if (pExtra->magic != kGuardMagic) {
-        LOGE("JNI: guard magic does not match (found 0x%08x) "
+    /*
+     * Before we do anything with "pExtra", check the magic number.  We
+     * do the check with memcmp rather than "==" in case the pointer is
+     * unaligned.  If it points to completely bogus memory we're going
+     * to crash, but there's no easy way around that.
+     */
+    if (memcmp(&pExtra->magic, &kMagicCmp, 4) != 0) {
+        u1 buf[4];
+        memcpy(buf, &pExtra->magic, 4);
+        LOGE("JNI: guard magic does not match (found 0x%02x%02x%02x%02x) "
              "-- incorrect data pointer %p?\n",
-            pExtra->magic, dataBuf);
+            buf[3], buf[2], buf[1], buf[0], dataBuf); /* assume little endian */
         return false;
     }
+
+    len = pExtra->originalLen;
 
     /* check bottom half of guard; skip over optional checksum storage */
     pat = (u2*) fullBuf;
