@@ -648,6 +648,7 @@ bool dvmPrepMainForJni(JNIEnv* pEnv)
 /*
  * Finish preparing the main thread, allocating some objects to represent
  * it.  As part of doing so, we finish initializing Thread and ThreadGroup.
+ * This will execute some interpreted code (e.g. class initializers).
  */
 bool dvmPrepMainThread(void)
 {
@@ -712,22 +713,6 @@ bool dvmPrepMainThread(void)
     }
 
     /*
-     * Set the context class loader.
-     */
-    Object* systemLoader = dvmGetSystemClassLoader();
-    if (systemLoader == NULL) {
-        LOGW("WARNING: system class loader is NULL (setting main ctxt)\n");
-        /* keep going */
-    }
-    int ctxtClassLoaderOffset = dvmFindFieldOffset(gDvm.classJavaLangThread,
-        "contextClassLoader", "Ljava/lang/ClassLoader;");
-    if (ctxtClassLoaderOffset < 0) {
-        LOGE("Unable to find contextClassLoader field in Thread\n");
-        return false;
-    }
-    dvmSetFieldObject(threadObj, ctxtClassLoaderOffset, systemLoader);
-
-    /*
      * Allocate and construct a VMThread.
      */
     vmThreadObj = dvmAllocObject(gDvm.classJavaLangVMThread, ALLOC_DEFAULT);
@@ -751,12 +736,31 @@ bool dvmPrepMainThread(void)
 
     /*
      * Stuff the VMThread back into the Thread.  From this point on, other
-     * Threads will see that this Thread is running.
+     * Threads will see that this Thread is running (at least, they would,
+     * if there were any).
      */
     dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread,
         vmThreadObj);
 
     thread->threadObj = threadObj;
+
+    /*
+     * Set the context class loader.  This invokes a ClassLoader method,
+     * which could conceivably call Thread.currentThread(), so we want the
+     * Thread to be fully configured before we do this.
+     */
+    Object* systemLoader = dvmGetSystemClassLoader();
+    if (systemLoader == NULL) {
+        LOGW("WARNING: system class loader is NULL (setting main ctxt)\n");
+        /* keep going */
+    }
+    int ctxtClassLoaderOffset = dvmFindFieldOffset(gDvm.classJavaLangThread,
+        "contextClassLoader", "Ljava/lang/ClassLoader;");
+    if (ctxtClassLoaderOffset < 0) {
+        LOGE("Unable to find contextClassLoader field in Thread\n");
+        return false;
+    }
+    dvmSetFieldObject(threadObj, ctxtClassLoaderOffset, systemLoader);
 
     /*
      * Finish our thread prep.
