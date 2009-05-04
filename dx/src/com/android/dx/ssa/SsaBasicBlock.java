@@ -461,7 +461,7 @@ public final class SsaBasicBlock {
 
         // Update us
         for (int i = successorList.size() - 1 ;  i >= 0; i--) {
-            if(successorList.get(i) == other.index) {
+            if (successorList.get(i) == other.index) {
                 successorList.set(i, newSucc.index);
             }
         }
@@ -499,7 +499,7 @@ public final class SsaBasicBlock {
         }
 
         for (int i = successorList.size() - 1 ;  i >= 0; i--) {
-            if(successorList.get(i) == oldIndex) {
+            if (successorList.get(i) == oldIndex) {
                 successorList.set(i, newIndex);
             }
         }
@@ -885,7 +885,7 @@ public final class SsaBasicBlock {
 
                     // Does the move-exception result reg interfere with the
                     // phi moves?
-                    for(SsaInsn insn: toSchedule) {
+                    for (SsaInsn insn : toSchedule) {
                         if (insn.isResultReg(moveExceptionResult)
                                 || insn.isRegASource(moveExceptionResult)) {
                             moveExceptionInterferes = true;
@@ -952,7 +952,7 @@ public final class SsaBasicBlock {
      * @param visitor {@code non-null;} callback interface
      */
     public void forEachInsn(SsaInsn.Visitor visitor) {
-        for (SsaInsn insn: insns) {
+        for (SsaInsn insn : insns) {
             insn.accept(visitor);
         }
     }

@@ -194,13 +194,13 @@ public final class Ropper {
             IntList successors = new IntList(callerBlocks.size());
 
             /*
-             * For each subroutine caller, get it's target. If the target is us,
-             * add the ret target (subroutine successor) to our list
+             * For each subroutine caller, get it's target. If the
+             * target is us, add the ret target (subroutine successor)
+             * to our list
              */
 
-            for(int label = callerBlocks.nextSetBit(0); label >= 0 
-                    ; label = callerBlocks.nextSetBit(label+1)) {
-
+            for (int label = callerBlocks.nextSetBit(0); label >= 0;
+                 label = callerBlocks.nextSetBit(label+1)) {
                 BasicBlock subCaller = labelToBlock(label);
                 successors.add(subCaller.getSuccessors().get(0));
             }
@@ -221,9 +221,8 @@ public final class Ropper {
         void mergeToSuccessors(Frame frame, int[] workSet) {
             int sz = callerBlocks.size();
 
-            for(int label = callerBlocks.nextSetBit(0); label >= 0
-                    ; label = callerBlocks.nextSetBit(label+1)) {
-
+            for (int label = callerBlocks.nextSetBit(0); label >= 0;
+                 label = callerBlocks.nextSetBit(label+1)) {
                 BasicBlock subCaller = labelToBlock(label);
                 int succLabel = subCaller.getSuccessors().get(0);
 
@@ -1399,9 +1398,8 @@ public final class Ropper {
              */
             int newSubStartLabel = mapOrAllocateLabel(subroutineStart);
 
-            for(int label = workList.nextSetBit(0); label >= 0
-                    ; label = workList.nextSetBit(0)) {
-
+            for (int label = workList.nextSetBit(0); label >= 0;
+                 label = workList.nextSetBit(0)) {
                 workList.clear(label);
                 int newLabel = origLabelToCopiedLabel.get(label);
 
@@ -1421,7 +1419,8 @@ public final class Ropper {
             addOrReplaceBlockNoDelete(
                 new BasicBlock(b.getLabel(), b.getInsns(),
                     IntList.makeImmutable (newSubStartLabel),
-                            newSubStartLabel), labelToSubroutines.get(b.getLabel()));
+                            newSubStartLabel),
+                labelToSubroutines.get(b.getLabel()));
        }
 
         /**

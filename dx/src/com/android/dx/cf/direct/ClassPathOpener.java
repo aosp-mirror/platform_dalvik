@@ -220,8 +220,7 @@ public class ClassPathOpener {
 
         consumer.onProcessArchiveStart(file);
 
-        for (ZipEntry one: entriesList) {
-
+        for (ZipEntry one : entriesList) {
             if (one.isDirectory()) {
                 continue;
             }

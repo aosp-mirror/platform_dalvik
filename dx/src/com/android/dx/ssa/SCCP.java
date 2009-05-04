@@ -102,11 +102,11 @@ public class SCCP {
      */
     private void addUsersToWorklist(int reg, int latticeValue) {
         if (latticeValue == VARYING) {
-            for (SsaInsn insn: ssaMeth.getUseListForRegister(reg)) {
+            for (SsaInsn insn : ssaMeth.getUseListForRegister(reg)) {
                 varyingWorklist.add(insn);
             }
         } else {
-            for (SsaInsn insn: ssaMeth.getUseListForRegister(reg)) {
+            for (SsaInsn insn : ssaMeth.getUseListForRegister(reg)) {
                 ssaWorklist.add(insn);
             }
         }
@@ -160,6 +160,7 @@ public class SCCP {
         int phiResultValue = TOP;
         Constant phiConstant = null;
         int sourceSize = sources.size();
+
         for (int i = 0; i < sourceSize; i++) {
             int predBlockIndex = insn.predBlockIndexForSourcesIndex(i);
             int sourceReg = sources.get(i).getReg();
@@ -194,7 +195,7 @@ public class SCCP {
      * @param block Block to visit
      */
     private void simulateBlock(SsaBasicBlock block) {
-        for (SsaInsn insn: block.getInsns()) {
+        for (SsaInsn insn : block.getInsns()) {
             if (insn instanceof PhiInsn) {
                 simulatePhi((PhiInsn) insn);
             } else {
@@ -464,7 +465,7 @@ public class SCCP {
              * Update the sources RegisterSpec's of all non-move uses.
              * These will be used in later steps.
              */
-            for(SsaInsn insn: ssaMeth.getUseListForRegister(reg)) {
+            for (SsaInsn insn : ssaMeth.getUseListForRegister(reg)) {
                 if (insn.isPhiOrMove()) {
                     continue;
                 }
@@ -477,7 +478,6 @@ public class SCCP {
                 RegisterSpec spec = sources.get(index);
                 RegisterSpec newSpec
                         = spec.withType((TypedConstant)latticeConstants[reg]);
-
 
                 nInsn.changeOneSource(index, newSpec);
             }

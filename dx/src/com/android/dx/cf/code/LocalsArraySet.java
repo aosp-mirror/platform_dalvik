@@ -89,7 +89,7 @@ public class LocalsArraySet extends LocalsArray {
         secondaries = new ArrayList(toCopy.secondaries.size());
 
         int sz = toCopy.secondaries.size();
-        for(int i = 0; i < sz; i++) {
+        for (int i = 0; i < sz; i++) {
             LocalsArray la = toCopy.secondaries.get(i);
 
             if (la == null) {
@@ -106,7 +106,7 @@ public class LocalsArraySet extends LocalsArray {
     public void setImmutable() {
         primary.setImmutable();
 
-        for (LocalsArray la: secondaries) {
+        for (LocalsArray la : secondaries) {
             if (la != null) {
                 la.setImmutable();
             }
@@ -127,7 +127,7 @@ public class LocalsArraySet extends LocalsArray {
         primary.annotate(ex);
 
         int sz = secondaries.size();
-        for(int label = 0; label < sz; label++) {
+        for (int label = 0; label < sz; label++) {
             LocalsArray la = secondaries.get(label);
 
             if (la != null) {
@@ -149,7 +149,7 @@ public class LocalsArraySet extends LocalsArray {
         sb.append('\n');
 
         int sz = secondaries.size();
-        for(int label = 0; label < sz; label++) {
+        for (int label = 0; label < sz; label++) {
             LocalsArray la = secondaries.get(label);
 
             if (la != null) {
@@ -178,7 +178,7 @@ public class LocalsArraySet extends LocalsArray {
 
         primary.makeInitialized(type);
 
-        for (LocalsArray la: secondaries) {
+        for (LocalsArray la : secondaries) {
             if (la != null) {
                 la.makeInitialized(type);
             }
@@ -198,7 +198,7 @@ public class LocalsArraySet extends LocalsArray {
 
         primary.set(idx, type);
 
-        for (LocalsArray la: secondaries) {
+        for (LocalsArray la : secondaries) {
             if (la != null) {
                 la.set(idx, type);
             }
@@ -218,7 +218,7 @@ public class LocalsArraySet extends LocalsArray {
 
         primary.invalidate(idx);
 
-        for (LocalsArray la: secondaries) {
+        for (LocalsArray la : secondaries) {
             if (la != null) {
                 la.invalidate(idx);
             }

@@ -141,7 +141,8 @@ class SsaRenamer implements Runnable {
 
         // Rename each block in dom-tree DFS order.
         ssaMeth.forEachBlockDepthFirstDom(new SsaBasicBlock.Visitor() {
-            public void visitBlock (SsaBasicBlock block, SsaBasicBlock unused) {
+            public void visitBlock (SsaBasicBlock block,
+                    SsaBasicBlock unused) {
                 new BlockRenamer(block).process();
             }
         });
@@ -157,7 +158,7 @@ class SsaRenamer implements Runnable {
             int[] versions = new int[ropRegCount];
 
             int sz = ssaRegToRopReg.size();
-            for(int i = 0; i < sz; i++) {
+            for (int i = 0; i < sz; i++) {
                 int ropReg =  ssaRegToRopReg.get(i);
                 System.out.println(i +"\t" + ropReg + "["
                         + versions[ropReg] + "]");
@@ -305,7 +306,7 @@ class SsaRenamer implements Runnable {
                 int reg = registerSpec.getReg();
 
                 // for debugging: assert that the mapped types are compatible
-                if(DEBUG) {
+                if (DEBUG) {
                     RegisterSpec newVersion = currentMapping[reg];
                     if (newVersion.getBasicType() != Type.BT_VOID
                             && registerSpec.getBasicFrameType()
@@ -358,7 +359,7 @@ class SsaRenamer implements Runnable {
 
             // Store the start states for our dom children
             boolean first = true;
-            for (SsaBasicBlock child: block.getDomChildren()) {
+            for (SsaBasicBlock child : block.getDomChildren()) {
                 if (child != block) {
                     RegisterSpec[] childStart;
 
@@ -611,9 +612,7 @@ class SsaRenamer implements Runnable {
             BitSet successors = block.getSuccessors();
             for (int i = successors.nextSetBit(0); i >= 0;
                     i = successors.nextSetBit(i + 1)) {
-
                 SsaBasicBlock successor = ssaMeth.getBlocks().get(i);
-
                 successor.forEachPhiInsn(visitor);
             }
         }

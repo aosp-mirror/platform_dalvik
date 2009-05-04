@@ -145,7 +145,7 @@ public class LivenessAnalyzer {
     }
 
     /**
-     * From Appel algorithm 19.17
+     * From Appel algorithm 19.17.
      */
     public void run() {
         List<SsaInsn> useList = ssaMeth.getUseListForRegister(regV);
@@ -154,11 +154,11 @@ public class LivenessAnalyzer {
             nextFunction = DONE;
 
             if (insn instanceof PhiInsn) {
-                // If s is a phi-function with V as it's ith argument
+                // If s is a phi-function with V as it's ith argument.
                 PhiInsn phi = (PhiInsn) insn;
 
-                for (SsaBasicBlock pred: phi.predBlocksForReg(regV, ssaMeth)) {
-
+                for (SsaBasicBlock pred :
+                         phi.predBlocksForReg(regV, ssaMeth)) {
                     blockN = pred;
 
                     nextFunction = LIVE_OUT_AT_BLOCK;
@@ -188,7 +188,7 @@ public class LivenessAnalyzer {
     }
 
     /**
-     * "v is live-out at n"
+     * "v is live-out at n."
      */
     private void liveOutAtBlock() {
         if (! visitedBlocks.get(blockN.getIndex())) {
@@ -207,7 +207,7 @@ public class LivenessAnalyzer {
     }
 
     /**
-     * "v is live-in at s"
+     * "v is live-in at s."
      */
     private void liveInAtStatement() {
         // if s is the first statement in block N
@@ -226,14 +226,14 @@ public class LivenessAnalyzer {
     }
 
     /**
-     * "v is live-out at s"
+     * "v is live-out at s."
      */
     private void liveOutAtStatement() {
         SsaInsn statement = blockN.getInsns().get(statementIndex);
         RegisterSpec rs = statement.getResult();
 
         if (!statement.isResultReg(regV)) {
-            if(rs != null) {
+            if (rs != null) {
                 interference.add(regV, rs.getReg());
             }
             nextFunction = LIVE_IN_AT_STATEMENT;

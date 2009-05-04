@@ -212,8 +212,8 @@ public class SsaConverter {
 
             // successors list is modified in loop below
             BitSet successors = (BitSet)block.getSuccessors().clone();
-            for(int j = successors.nextSetBit(0);
-                    j >= 0; j = successors.nextSetBit(j+1)) {
+            for (int j = successors.nextSetBit(0);
+                 j >= 0; j = successors.nextSetBit(j+1)) {
 
                 SsaBasicBlock succ = blocks.get(j);
 
@@ -282,8 +282,7 @@ public class SsaConverter {
         for (int bi = 0, s = ssaBlocks.size(); bi < s; bi++) {
             SsaBasicBlock b = ssaBlocks.get(bi);
 
-            for (SsaInsn insn: b.getInsns()) {
-
+            for (SsaInsn insn : b.getInsns()) {
                 RegisterSpec rs = insn.getResult();
 
                 if (rs != null) {
