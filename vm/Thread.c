@@ -691,6 +691,22 @@ bool dvmPrepMainThread(void)
     }
 
     /*
+     * Set the context class loader.
+     */
+    Object* systemLoader = dvmGetSystemClassLoader();
+    if (systemLoader == NULL) {
+        LOGW("WARNING: system class loader is NULL (setting main ctxt)\n");
+        /* keep going */
+    }
+    int ctxtClassLoaderOffset = dvmFindFieldOffset(gDvm.classJavaLangThread,
+        "contextClassLoader", "Ljava/lang/ClassLoader;");
+    if (ctxtClassLoaderOffset < 0) {
+        LOGE("Unable to find contextClassLoader field in Thread\n");
+        return false;
+    }
+    dvmSetFieldObject(threadObj, ctxtClassLoaderOffset, systemLoader);
+
+    /*
      * Allocate and construct a VMThread.
      */
     vmThreadObj = dvmAllocObject(gDvm.classJavaLangVMThread, ALLOC_DEFAULT);
