@@ -58,16 +58,16 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     /** Register mapper which will be our result */
     private final InterferenceRegisterMapper mapper;
 
-    /** end of rop registers range (starting at 0) reserved for parameters. */
+    /** end of rop registers range (starting at 0) reserved for parameters */
     private final int paramRangeEnd;
 
-    /** set of Rop registers reserved for parameters or local variables. */
+    /** set of rop registers reserved for parameters or local variables */
     private final BitSet reservedRopRegs;
 
-    /** set of Rop registers that have been used by anything.*/
+    /** set of rop registers that have been used by anything */
     private final BitSet usedRopRegs;
 
-    /** true if converter should take steps to minimize rop-form registers*/
+    /** true if converter should take steps to minimize rop-form registers */
     private final boolean minimizeRegisters;
 
     /**
@@ -130,7 +130,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
         if (DEBUG) System.out.println("--->Mapping invoke-range");
         handleInvokeRangeInsns();
-        
+
         if (DEBUG) {
             System.out.println("--->Mapping local-associated non-params");
         }
@@ -167,7 +167,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Maps all local-associated parameters to Rop registers.
+     * Maps all local-associated parameters to rop registers.
      */
     private void handleLocalAssociatedParams() {
         for (ArrayList<RegisterSpec> ssaRegs : localVariables.values()) {
@@ -175,7 +175,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             int paramIndex = -1;
             int paramCategory = 0;
 
-            // First, find out if this local variable is a parameter
+            // First, find out if this local variable is a parameter.
             for (int i = 0; i < sz; i++) {
                 RegisterSpec ssaSpec = ssaRegs.get(i);
                 int ssaReg = ssaSpec.getReg();
@@ -190,31 +190,31 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             }
 
             if (paramIndex < 0) {
-                // this local wasn't a parameter
+                // This local wasn't a parameter.
                 continue;
             }
 
-            // Any remaining local-associated registers will be mapped later
+            // Any remaining local-associated registers will be mapped later.
             tryMapRegs(ssaRegs, paramIndex, paramCategory, true);
         }
     }
 
     /**
      * Gets the parameter index for SSA registers that are method parameters.
-     * -1 is returned for non-parameter registers.
+     * {@code -1} is returned for non-parameter registers.
      *
      * @param ssaReg {@code >=0;} SSA register to look up
-     * @return parameter index or -1 if not a parameter
+     * @return parameter index or {@code -1} if not a parameter
      */
     private int getParameterIndexForReg(int ssaReg) {
         SsaInsn defInsn = ssaMeth.getDefinitionForRegister(ssaReg);
         if (defInsn == null) {
             return -1;
         }
-        
+
         Rop opcode = defInsn.getOpcode();
 
-        // opcode == null for phi insns
+        // opcode == null for phi insns.
         if (opcode != null && opcode.getOpcode() == RegOps.MOVE_PARAM) {
             CstInsn origInsn = (CstInsn) defInsn.getOriginalRopInsn();
             return  ((CstInteger) origInsn.getConstant()).getValue();
@@ -224,7 +224,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Maps all local-associated registers that are not parameters. 
+     * Maps all local-associated registers that are not parameters.
      * Tries to find an unreserved range that's wide enough for all of
      * the SSA registers, and then tries to map them all to that
      * range. If not all fit, a new range is tried until all registers
@@ -238,7 +238,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             do {
                 int maxCategory = 1;
 
-                // compute max category for remaining unmapped registers
+                // Compute max category for remaining unmapped registers.
                 int sz = specs.size();
                 for (int i = 0; i < sz; i++) {
                     RegisterSpec ssaSpec = specs.get(i);
@@ -253,7 +253,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
                 done = tryMapRegs(specs, ropReg, maxCategory, true);
 
-                // Increment for next call to findNext
+                // Increment for next call to findNext.
                 ropReg++;
             } while (!done);
         }
@@ -266,9 +266,11 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      *
      * @param specs {@code non-null;} SSA registers to attempt to map
      * @param ropReg {@code >=0;} rop register to map to
-     * @param maxAllowedCategory 1 or 2, maximum category allowed in mapping.
-     * @param markReserved do so if true
-     * @return true if all registers wew mapped, false if some remain unmapped.
+     * @param maxAllowedCategory {@code 1..2;} maximum category
+     * allowed in mapping.
+     * @param markReserved do so if {@code true}
+     * @return {@code true} if all registers were mapped, {@code false}
+     * if some remain unmapped
      */
     private boolean tryMapRegs(
             ArrayList<RegisterSpec> specs, int ropReg,
@@ -296,9 +298,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      *
      * @param ssaSpec {@code non-null;} SSA register
      * @param ropReg {@code >=0;} rop register
-     * @param maxAllowedCategory 1 or 2, the maximum category that the SSA
-     * register is allowed to be.
-     * @return true if map succeeded, false if not.
+     * @param maxAllowedCategory {@code 1..2;} the maximum category
+     * that the SSA register is allowed to be
+     * @return {@code true} if map succeeded, {@code false} if not
      */
     private boolean tryMapReg(RegisterSpec ssaSpec, int ropReg,
             int maxAllowedCategory) {
@@ -313,7 +315,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Marks a range of Rop registers as "reserved for a local variable"
+     * Marks a range of rop registers as "reserved for a local variable."
      *
      * @param ropReg {@code >= 0;} rop register to reserve
      * @param category {@code > 0;} width to reserve
@@ -323,12 +325,12 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Checks to see if any Rop registers in the specified range are reserved
-     * for local variables or parameters
+     * Checks to see if any rop registers in the specified range are reserved
+     * for local variables or parameters.
      *
-     * @param ropRangeStart {@code >= 0;} lowest Rop register
-     * @param width {@code > 0;} number of Rop registers in range.
-     * @return true if any register in range is marked reserved
+     * @param ropRangeStart {@code >= 0;} lowest rop register
+     * @param width {@code > 0;} number of rop registers in range.
+     * @return {@code true} if any register in range is marked reserved
      */
     private boolean rangeContainsReserved(int ropRangeStart, int width) {
         for (int i = ropRangeStart; i < (ropRangeStart + width); i++) {
@@ -340,21 +342,21 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Returns true if given rop register represents the "this" pointer
-     * for a non-static method
+     * Returns true if given rop register represents the {@code this} pointer
+     * for a non-static method.
      *
      * @param startReg rop register
      * @return true if the "this" pointer is located here.
      */
     private boolean isThisPointerReg(int startReg) {
-        // "this" is always the first parameter
+        // "this" is always the first parameter.
         return startReg == 0 && !ssaMeth.isStatic();
     }
 
     /**
-     * Finds a range of unreserved Rop registers.
+     * Finds a range of unreserved rop registers.
      *
-     * @param startReg {@code >= 0;} a Rop register to start the search at
+     * @param startReg {@code >= 0;} a rop register to start the search at
      * @param width {@code > 0;} the width, in registers, required.
      * @return {@code >= 0;} start of available register range.
      */
@@ -384,10 +386,10 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
     /**
      * Finds a range of rop regs that can be used for local variables.
-     * If {@code MIX_LOCALS_AND_OTHER} is false, this means any
+     * If {@code MIX_LOCALS_AND_OTHER} is {@code false}, this means any
      * rop register that has not yet been used.
      *
-     * @param startReg {@code >= 0;} a Rop register to start the search at
+     * @param startReg {@code >= 0;} a rop register to start the search at
      * @param width {@code > 0;} the width, in registers, required.
      * @return {@code >= 0;} start of available register range.
      */
@@ -433,7 +435,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             RegisterSpec ssaSpec = getDefinitionSpecForSsaReg(ssaReg);
             if (paramIndex >= 0) {
                 addMapping(ssaSpec, paramIndex);
-            }            
+            }
         }
     }
 
@@ -447,7 +449,8 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Handles check cast results to reuse the same source register if possible
+     * Handles check cast results to reuse the same source register if
+     * possible.
      */
     private void handleCheckCastResults() {
         for (NormalSsaInsn insn : moveResultPseudoInsns) {
@@ -502,8 +505,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Maps all non-parameter, non-local variable
-     * registers.
+     * Maps all non-parameter, non-local variable registers.
      */
     private void handleNormalUnassociated() {
         int szSsaRegs = ssaMeth.getRegCount();
@@ -536,24 +538,24 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      *
      * @param ssaSpec {@code non-null;} SSA spec
      * @param ropReg prosepctive new-namespace reg
-     * @return true if mapping is possible
+     * @return {@code true} if mapping is possible
      */
     private boolean canMapReg(RegisterSpec ssaSpec, int ropReg) {
         int category = ssaSpec.getCategory();
         return !(spansParamRange(ropReg, category)
                 || mapper.interferes(ssaSpec, ropReg));
     }
- 
+
     /**
-     * Returns true if the specified Rop register + category
+     * Returns true if the specified rop register + category
      * will cross the boundry between the lower {@code paramWidth}
      * registers reserved for method params and the upper registers. We cannot
      * allocate a register that spans the param block and the normal block,
      * because we will be moving the param block to high registers later.
-     * 
+     *
      * @param ssaReg register in new namespace
      * @param category width that the register will have
-     * @return true in the case noted above.
+     * @return {@code true} in the case noted above
      */
     private boolean spansParamRange(int ssaReg, int category) {
         return ((ssaReg < paramRangeEnd)
@@ -583,6 +585,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
             /**
              * This method collects three types of instructions:
+             *
              * 1) Adds a local variable assignment to the
              *    {@code localVariables} map.
              * 2) Add move-result-pseudo to the
@@ -627,16 +630,16 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     }
 
     /**
-     * Adds a mapping from an SSA register to a Rop register.
+     * Adds a mapping from an SSA register to a rop register.
      * {@link #canMapReg} should have already been called.
      *
      * @param ssaSpec {@code non-null;} SSA register to map from
-     * @param ropReg {@code >=0;} Rop register to map to
+     * @param ropReg {@code >=0;} rop register to map to
      */
     private void addMapping(RegisterSpec ssaSpec, int ropReg) {
         int ssaReg = ssaSpec.getReg();
 
-        // An assertion
+        // An assertion.
         if (ssaRegsMapped.get(ssaReg) || !canMapReg(ssaSpec, ropReg)) {
             throw new RuntimeException(
                     "attempt to add invalid register mapping");
@@ -656,7 +659,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
     /**
      * Maps the source registers of the specified instruction such that they
-     * will fall in a contiguous range in Rop form. Moves are inserted as
+     * will fall in a contiguous range in rop form. Moves are inserted as
      * necessary to allow the range to be allocated.
      *
      * @param insn {@code non-null;} insn whos sources to process
@@ -689,17 +692,20 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
                 int szSimilar = similarRegisters.size();
 
-                // Try to map all SSA registers also associated with this local
+                /*
+                 * Try to map all SSA registers also associated with
+                 * this local.
+                 */
                 for (int j = 0; j < szSimilar; j++) {
                     RegisterSpec similarSpec = similarRegisters.get(j);
                     int similarReg = similarSpec.getReg();
 
-                    // ...and don't map anything that's also a source...
+                    // Don't map anything that's also a source.
                     if (-1 != sources.indexOfRegister(similarReg)) {
                         continue;
                     }
 
-                    // Registers left unmapped will get handled later
+                    // Registers left unmapped will get handled later.
                     tryMapReg(similarSpec, curRopReg, category);
                 }
             }
@@ -709,9 +715,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
     /**
      * Find a contiguous rop register range that fits the specified
      * instruction's sources. First, try to center the range around
-     * sources that have already been mapped to Rop registers. If that fails,
+     * sources that have already been mapped to rop registers. If that fails,
      * just find a new contiguous range that doesn't interfere.
-     * 
+     *
      * @param insn {@code non-null;} the insn whose sources need to
      * fit. Must be last insn in basic block.
      * @return {@code >= 0;} rop register of start of range
@@ -730,7 +736,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             rangeLength += categoriesForIndex[i];
         }
 
-        // The highest score of fits tried so far
+        // the highest score of fits tried so far
         int maxScore = Integer.MIN_VALUE;
         // the high scoring range's start
         int resultRangeStart = -1;
@@ -739,7 +745,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
         /*
          * First, go through each source that's already been mapped. Try
-         * to center the range around the Rop register this source is mapped
+         * to center the range around the rop register this source is mapped
          * to.
          */
         int rangeStartOffset = 0;
@@ -797,7 +803,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
         }
 
         /*
-         * Now, insert any moves required
+         * Now, insert any moves required.
          */
 
         for (int i = resultMovesRequired.nextSetBit(0); i >= 0;
@@ -814,13 +820,13 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      * around an already-mapped source register;
      *
      * @param insn {@code non-null;} insn to build range for
-     * @param rangeLength {@code >=0;} length required in register units.
+     * @param rangeLength {@code >=0;} length required in register units
      * @param categoriesForIndex {@code non-null;} indexed by source index;
-     * the category for each source.
+     * the category for each source
      * @param outMovesRequired {@code non-null;} an output parameter indexed by
      * source index that will contain the set of sources which need
-     * moves inserted.
-     * @return the rop register that starts the fitting range.
+     * moves inserted
+     * @return the rop register that starts the fitting range
      */
     private int findAnyFittingRange(NormalSsaInsn insn, int rangeLength,
             int[] categoriesForIndex, BitSet outMovesRequired) {
@@ -847,12 +853,12 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      * @param ropReg {@code >= 0;} rop reg that begins range
      * @param insn {@code non-null;} insn to plan range for
      * @param categoriesForIndex {@code non-null;} indexed by source index;
-     * the category for each source.
+     * the category for each source
      * @param outMovesRequired {@code non-null;} an output parameter indexed by
      * source index that will contain the set of sources which need
-     * moves inserted.
+     * moves inserted
      * @return the width of the fit that that does not involve added moves or
-     * -1 if "no fit possible"
+     * {@code -1} if "no fit possible"
      */
     private int fitPlanForRange(int ropReg, NormalSsaInsn insn,
             int[] categoriesForIndex, BitSet outMovesRequired) {
@@ -862,7 +868,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
         IntSet liveOut = insn.getBlock().getLiveOutRegs();
         RegisterSpecList liveOutSpecs = ssaSetToSpecs(liveOut);
 
-        // An SSA reg may only be mapped into a range once
+        // An SSA reg may only be mapped into a range once.
         BitSet seen = new BitSet(ssaMeth.getRegCount());
 
         for (int i = 0; i < szSources ; i++) {
@@ -876,7 +882,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
 
             if (ssaRegsMapped.get(ssaReg)
                     && mapper.oldToNew(ssaReg) == ropReg) {
-                // A register already mapped appropriately
+                // This is a register that is already mapped appropriately.
                 fitWidth += category;
             } else if (rangeContainsReserved(ropReg, category)) {
                 fitWidth = -1;
@@ -884,19 +890,20 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
             } else if (!ssaRegsMapped.get(ssaReg)
                     && canMapReg(ssaSpec, ropReg)
                     && !seen.get(ssaReg)) {
-                // A register that can be mapped appropriately
+                // This is a register that can be mapped appropriately.
                 fitWidth += category;
             } else if (!mapper.areAnyPinned(liveOutSpecs, ropReg, category)
                     && !mapper.areAnyPinned(sources, ropReg, category)) {
                 /*
-                 * A source that can be moved
-                 * We can insert a move as long as:
+                 * This is a source that can be moved. We can insert a
+                 * move as long as:
                  *
-                 *  - no SSA register pinned to the desired rop reg
-                 * is live out on the block
-                 *  - no SSA register pinned to desired rop reg is
-                 *  a source of this insn (since this may require
-                 * overlapping moves, which we can't presently handle)
+                 *   * no SSA register pinned to the desired rop reg
+                 *     is live out on the block
+                 *
+                 *   * no SSA register pinned to desired rop reg is
+                 *     a source of this insn (since this may require
+                 *     overlapping moves, which we can't presently handle)
                  */
 
                 outMovesRequired.set(i);
@@ -926,12 +933,12 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
         while (iter.hasNext()) {
             result.set(i++, getDefinitionSpecForSsaReg(iter.next()));
         }
-        
+
         return result;
     }
 
     /**
-     * Gets a local item associated with an ssa register, if one exists
+     * Gets a local item associated with an ssa register, if one exists.
      *
      * @param ssaReg {@code >= 0;} SSA register
      * @return {@code null-ok;} associated local item or null
