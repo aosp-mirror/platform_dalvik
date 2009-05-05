@@ -150,13 +150,13 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      */
     private void printLocalVars() {
         System.out.println("Printing local vars");
-        for (Map.Entry<LocalItem, ArrayList<RegisterSpec>> e:
+        for (Map.Entry<LocalItem, ArrayList<RegisterSpec>> e :
                 localVariables.entrySet()) {
             StringBuilder regs = new StringBuilder();
 
             regs.append('{');
             regs.append(' ');
-            for(RegisterSpec reg: e.getValue()) {
+            for (RegisterSpec reg : e.getValue()) {
                 regs.append('v');
                 regs.append(reg.getReg());
                 regs.append(' ');
@@ -441,7 +441,7 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      * Handles all insns that want a register range for their sources.
      */
     private void handleInvokeRangeInsns() {
-        for(NormalSsaInsn insn : invokeRangeInsns) {
+        for (NormalSsaInsn insn : invokeRangeInsns) {
             adjustAndMapSourceRangeRange(insn);
         }
     }
@@ -800,10 +800,9 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
          * Now, insert any moves required
          */
 
-        for (int i = resultMovesRequired.nextSetBit(0); i >= 0
-                ; i = resultMovesRequired.nextSetBit(i+1)) {
-            insn.changeOneSource(i,
-                    insertMoveBefore(insn, sources.get(i)));
+        for (int i = resultMovesRequired.nextSetBit(0); i >= 0;
+             i = resultMovesRequired.nextSetBit(i+1)) {
+            insn.changeOneSource(i, insertMoveBefore(insn, sources.get(i)));
         }
 
         return resultRangeStart;
@@ -938,9 +937,8 @@ public class FirstFitLocalCombiningAllocator extends RegisterAllocator {
      * @return {@code null-ok;} associated local item or null
      */
     private LocalItem getLocalItemForReg(int ssaReg) {
-        for(Map.Entry<LocalItem, ArrayList<RegisterSpec>> entry:
-                localVariables.entrySet()) {
-
+        for (Map.Entry<LocalItem, ArrayList<RegisterSpec>> entry :
+                 localVariables.entrySet()) {
             for (RegisterSpec spec : entry.getValue()) {
                 if (spec.getReg() == ssaReg) {
                     return entry.getKey();

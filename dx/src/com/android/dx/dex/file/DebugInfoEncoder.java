@@ -392,7 +392,7 @@ public final class DebugInfoEncoder {
          * entry for the 'this' pointer.
          */
         if (!isStatic) {
-            for (LocalList.Entry arg: methodArgs) {
+            for (LocalList.Entry arg : methodArgs) {
                 if (curParam == arg.getRegister()) {
                     lastEntryForReg[curParam] = arg;
                     break;
@@ -420,7 +420,7 @@ public final class DebugInfoEncoder {
 
             mark = output.getCursor();
 
-            for (LocalList.Entry arg: methodArgs) {
+            for (LocalList.Entry arg : methodArgs) {
                 if (curParam == arg.getRegister()) {
                     found = arg;
 

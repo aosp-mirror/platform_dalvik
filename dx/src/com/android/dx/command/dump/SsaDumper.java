@@ -134,7 +134,8 @@ public class SsaDumper extends BlockDumper {
 
             BitSet preds = block.getPredecessors();
 
-            for(int i=preds.nextSetBit(0); i>=0; i=preds.nextSetBit(i+1)) {
+            for (int i = preds.nextSetBit(0); i >= 0;
+                 i = preds.nextSetBit(i+1)) {
                 sb.append("  pred ");
                 sb.append(Hex.u2(ssaMeth.blockIndexToRopLabel(i)));
                 sb.append('\n');
@@ -143,7 +144,7 @@ public class SsaDumper extends BlockDumper {
             sb.append("  live in:" + block.getLiveInRegs());
             sb.append("\n");
 
-            for (SsaInsn insn: block.getInsns()) {
+            for (SsaInsn insn : block.getInsns()) {
                 sb.append("  ");
                 sb.append(insn.toHuman());
                 sb.append('\n');

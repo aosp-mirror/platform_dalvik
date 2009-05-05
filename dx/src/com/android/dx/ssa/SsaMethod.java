@@ -203,7 +203,7 @@ public final class SsaMethod {
 
         blocks.add(exitBlock);
 
-        for (SsaBasicBlock block: blocks) {
+        for (SsaBasicBlock block : blocks) {
             block.exitBlockFixup(exitBlock);
         }
 
@@ -348,7 +348,7 @@ public final class SsaMethod {
     public int getCountReachableBlocks() {
         int ret = 0;
 
-        for (SsaBasicBlock b: blocks) {
+        for (SsaBasicBlock b : blocks) {
             // Blocks that have been disconnected don't count.
             if (b.isReachable()) {
                 ret++;
@@ -365,7 +365,7 @@ public final class SsaMethod {
      */
     public void mapRegisters(RegisterMapper mapper) {
         for (SsaBasicBlock block : getBlocks()) {
-            for (SsaInsn insn: block.getInsns()) {
+            for (SsaInsn insn : block.getInsns()) {
                 insn.mapRegisters(mapper);
             }
         }
@@ -501,7 +501,7 @@ public final class SsaMethod {
         RegisterSpecList sources = insn.getSources();
         int szNew = sources.size();
 
-        for(int i = 0; i < szNew; i++) {
+        for (int i = 0; i < szNew; i++) {
             int reg = sources.get(i).getReg();
             useList[reg].add(insn);
         }
@@ -520,8 +520,9 @@ public final class SsaMethod {
         if (oldSources == null) {
             return;
         }
+
         int szNew = oldSources.size();
-        for(int i = 0; i < szNew; i++) {
+        for (int i = 0; i < szNew; i++) {
             if (!useList[oldSources.get(i).getReg()].remove(insn)) {
                 throw new RuntimeException("use not found");
             }
@@ -657,7 +658,7 @@ public final class SsaMethod {
         if (defn.getLocalAssignment() != null) return true;
 
         // If not, is there a mark-local insn?
-        for (SsaInsn use: getUseListForRegister(spec.getReg())) {
+        for (SsaInsn use : getUseListForRegister(spec.getReg())) {
             Insn insn = use.getOriginalRopInsn();
 
             if (insn != null
@@ -698,7 +699,7 @@ public final class SsaMethod {
      * @param visitor {@code non-null;} callback interface
      */
     public void forEachInsn(SsaInsn.Visitor visitor) {
-        for (SsaBasicBlock block: blocks) {
+        for (SsaBasicBlock block : blocks) {
             block.forEachInsn(visitor);
         }
     }
@@ -709,7 +710,7 @@ public final class SsaMethod {
      *
      */
     public void forEachPhiInsn(PhiInsn.Visitor v) {
-        for (SsaBasicBlock block: blocks) {
+        for (SsaBasicBlock block : blocks) {
             block.forEachPhiInsn(v);
         }
     }
@@ -794,7 +795,7 @@ public final class SsaMethod {
      * @param deletedInsns {@code non-null;} insns to delete
      */
     public void deleteInsns(Set<SsaInsn> deletedInsns) {
-        for (SsaBasicBlock block: getBlocks()) {
+        for (SsaBasicBlock block : getBlocks()) {
             ArrayList<SsaInsn> insns = block.getInsns();
 
             for (int i = insns.size() - 1; i >= 0; i--) {

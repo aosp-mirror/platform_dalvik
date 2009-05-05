@@ -132,7 +132,7 @@ public class DomFront {
 
             sb.append('{');
             boolean comma = false;
-            for (SsaBasicBlock child: node.getDomChildren()) {
+            for (SsaBasicBlock child : node.getDomChildren()) {
                 if (comma) {
                     sb.append(',');
                 }

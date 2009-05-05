@@ -37,7 +37,6 @@ import java.util.HashSet;
  * by the {@code Main.Arguments} instance.
  */
 class AnnotationLister {
-
     /**
      * The string name of the pseudo-class that
      * contains package-wide annotations
@@ -59,7 +58,7 @@ class AnnotationLister {
 
     /** Processes based on configuration specified in constructor. */
     void process() {
-        for (String path: args.files) {
+        for (String path : args.files) {
             ClassPathOpener opener;
 
             opener = new ClassPathOpener(path, true,
@@ -147,7 +146,7 @@ class AnnotationLister {
             return;
         }
 
-        for (Annotation anAnn: ann.getAnnotations().getAnnotations()) {
+        for (Annotation anAnn : ann.getAnnotations().getAnnotations()) {
             String annClassName
                     = anAnn.getType().getClassType().getClassName();
             if (args.aclass.equals(annClassName)) {
@@ -181,7 +180,7 @@ class AnnotationLister {
         }
 
 
-        for (Annotation anAnn: ann.getAnnotations().getAnnotations()) {
+        for (Annotation anAnn : ann.getAnnotations().getAnnotations()) {
             String annClassName
                     = anAnn.getType().getClassType().getClassName();
             if (args.aclass.equals(annClassName)) {
@@ -198,7 +197,7 @@ class AnnotationLister {
      * @param packageName {@code non-null;} name of package
      */
     private void printMatchPackage(String packageName) {
-        for(Main.PrintType pt: args.printTypes) {
+        for (Main.PrintType pt : args.printTypes) {
             switch (pt) {
                 case CLASS:
                 case INNERCLASS:
@@ -219,11 +218,12 @@ class AnnotationLister {
      * @param cf {@code non-null;} matching class
      */
     private void printMatch(DirectClassFile cf) {
-        for(Main.PrintType pt: args.printTypes) {
+        for (Main.PrintType pt : args.printTypes) {
             switch (pt) {
                 case CLASS:
                     String classname;
-                    classname = cf.getThisClass().getClassType().getClassName();
+                    classname =
+                        cf.getThisClass().getClassType().getClassName();
                     classname = classname.replace('/','.');
                     System.out.println(classname);
                     break;

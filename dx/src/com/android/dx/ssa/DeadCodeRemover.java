@@ -101,7 +101,6 @@ public class DeadCodeRemover {
 
                 int sz = sources.size();
                 for (int i = 0; i < sz; i++) {
-
                     // Delete this insn from all usage lists.
                     RegisterSpec source = sources.get(i);
                     useList[source.getReg()].remove(insnS);
@@ -153,7 +152,7 @@ public class DeadCodeRemover {
         // This register is only used in operations that have no side effect.
         set.set(regV);
 
-        for (SsaInsn use: useList[regV]) {
+        for (SsaInsn use : useList[regV]) {
             RegisterSpec result = use.getResult();
 
             if (result == null
