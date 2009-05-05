@@ -132,11 +132,11 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
             tempFileName = tempName;
         }
 
-        result = dexUnzipToFile(fileName, tempName, quiet);
+        result = dexUnzipToFile(fileName, tempFileName, quiet);
         
         if (result == kUTFRSuccess) {
             //printf("+++ Good unzip to '%s'\n", tempName);
-            fileName = tempName;
+            fileName = tempFileName;
             removeTemp = true;
         } else if (result == kUTFRNotZip) {
             if (!quiet) {
