@@ -60,33 +60,34 @@ public class LivenessAnalyzer {
     private final InterferenceGraph interference;
 
     /** block "n" in Appel 19.17 */
-    SsaBasicBlock blockN;
+    private SsaBasicBlock blockN;
 
-    /** index of statement {@code s} in {@code blockN}*/
+    /** index of statement {@code s} in {@code blockN} */
     private int statementIndex;
 
-    /** the next function to call. one of the four constants below */
-    private int nextFunction;
+    /** the next function to call */
+    private NextFunction nextFunction;
 
-    /** constants for nextFunction */
-    static final int LIVE_IN_AT_STATEMENT = 1;
-    static final int LIVE_OUT_AT_STATEMENT = 2;
-    static final int LIVE_OUT_AT_BLOCK = 3;
-    static final int DONE = 4;
+    /** constants for {@link #nextFunction} */
+    private static enum NextFunction {
+        LIVE_IN_AT_STATEMENT,
+            LIVE_OUT_AT_STATEMENT,
+            LIVE_OUT_AT_BLOCK,
+            DONE;
+    }
 
     /**
      * Runs register liveness algorithm for a method, updating the
      * live in/out information in {@code SsaBasicBlock} instances and
      * returning an interference graph.
      *
-     * @param ssaMeth {@code non-null;} Method to process.
+     * @param ssaMeth {@code non-null;} method to process
      * @return {@code non-null;} interference graph indexed by SSA
-     * registers in both directions.
+     * registers in both directions
      */
     public static InterferenceGraph constructInterferenceGraph(
             SsaMethod ssaMeth) {
         int szRegs = ssaMeth.getRegCount();
-
         InterferenceGraph interference = new InterferenceGraph(szRegs);
 
         for (int i = 0; i < szRegs; i++) {
@@ -109,10 +110,12 @@ public class LivenessAnalyzer {
      */
     private LivenessAnalyzer(SsaMethod ssaMeth, int reg,
             InterferenceGraph interference) {
+        int blocksSz = ssaMeth.getBlocks().size();
+
         this.ssaMeth = ssaMeth;
         this.regV = reg;
-        visitedBlocks = new BitSet(ssaMeth.getBlocks().size());
-        liveOutBlocks = new BitSet(ssaMeth.getBlocks().size());
+        visitedBlocks = new BitSet(blocksSz);
+        liveOutBlocks = new BitSet(blocksSz);
         this.interference = interference;
     }
 
@@ -122,20 +125,20 @@ public class LivenessAnalyzer {
      * serves as the dispatcher instead.
      */
     private void handleTailRecursion() {
-        while (nextFunction != DONE) {
+        while (nextFunction != NextFunction.DONE) {
             switch (nextFunction) {
                 case LIVE_IN_AT_STATEMENT:
-                    nextFunction = DONE;
+                    nextFunction = NextFunction.DONE;
                     liveInAtStatement();
                     break;
 
                 case LIVE_OUT_AT_STATEMENT:
-                    nextFunction = DONE;
+                    nextFunction = NextFunction.DONE;
                     liveOutAtStatement();
                     break;
 
                 case LIVE_OUT_AT_BLOCK:
-                    nextFunction = DONE;
+                    nextFunction = NextFunction.DONE;
                     liveOutAtBlock();
                     break;
 
@@ -151,7 +154,7 @@ public class LivenessAnalyzer {
         List<SsaInsn> useList = ssaMeth.getUseListForRegister(regV);
 
         for (SsaInsn insn : useList) {
-            nextFunction = DONE;
+            nextFunction = NextFunction.DONE;
 
             if (insn instanceof PhiInsn) {
                 // If s is a phi-function with V as it's ith argument.
@@ -161,7 +164,7 @@ public class LivenessAnalyzer {
                          phi.predBlocksForReg(regV, ssaMeth)) {
                     blockN = pred;
 
-                    nextFunction = LIVE_OUT_AT_BLOCK;
+                    nextFunction = NextFunction.LIVE_OUT_AT_BLOCK;
                     handleTailRecursion();
                 }
             } else {
@@ -173,7 +176,7 @@ public class LivenessAnalyzer {
                             "insn not found in it's own block");
                 }
 
-                nextFunction = LIVE_IN_AT_STATEMENT;
+                nextFunction = NextFunction.LIVE_IN_AT_STATEMENT;
                 handleTailRecursion();
             }
         }
@@ -182,7 +185,7 @@ public class LivenessAnalyzer {
         while ((nextLiveOutBlock = liveOutBlocks.nextSetBit(0)) >= 0) {
             blockN = ssaMeth.getBlocks().get(nextLiveOutBlock);
             liveOutBlocks.clear(nextLiveOutBlock);
-            nextFunction = LIVE_OUT_AT_BLOCK;
+            nextFunction = NextFunction.LIVE_OUT_AT_BLOCK;
             handleTailRecursion();
         }
     }
@@ -202,7 +205,7 @@ public class LivenessAnalyzer {
 
             // Live out at last statement in blockN
             statementIndex = insns.size() - 1;
-            nextFunction = LIVE_OUT_AT_STATEMENT;
+            nextFunction = NextFunction.LIVE_OUT_AT_STATEMENT;
         }
     }
 
@@ -221,7 +224,7 @@ public class LivenessAnalyzer {
         } else {
             // Let s' be the statement preceeding s
             statementIndex -= 1;
-            nextFunction = LIVE_OUT_AT_STATEMENT;
+            nextFunction = NextFunction.LIVE_OUT_AT_STATEMENT;
         }
     }
 
@@ -236,7 +239,7 @@ public class LivenessAnalyzer {
             if (rs != null) {
                 interference.add(regV, rs.getReg());
             }
-            nextFunction = LIVE_IN_AT_STATEMENT;
+            nextFunction = NextFunction.LIVE_IN_AT_STATEMENT;
         }
     }
 

@@ -54,11 +54,11 @@ import java.util.HashMap;
  * current block has been processed, this mapping table is then copied
  * and used as the initial state for child blocks.<p>
  */
-class SsaRenamer implements Runnable {
-
+public class SsaRenamer implements Runnable {
+    /** debug flag */
     private static final boolean DEBUG = false;
 
-    /** Method we're processing */
+    /** method we're processing */
     private final SsaMethod ssaMeth;
 
     /** next available SSA register */
@@ -68,7 +68,7 @@ class SsaRenamer implements Runnable {
     private final int ropRegCount;
 
     /**
-     * Indexed by block index; register version state for each block start.
+     * indexed by block index; register version state for each block start.
      * This list is updated by each dom parent for its children. The only
      * sub-arrays that exist at any one time are the start states for blocks
      * yet to be processed by a {@code BlockRenamer} instance.
@@ -79,8 +79,8 @@ class SsaRenamer implements Runnable {
     private final ArrayList<LocalItem> ssaRegToLocalItems;
 
     /**
-     * Maps SSA registers back to the original rop number.
-     * Used for debug only.
+     * maps SSA registers back to the original rop number. Used for
+     * debug only.
      */
     private IntList ssaRegToRopReg;
 
@@ -90,13 +90,14 @@ class SsaRenamer implements Runnable {
      * @param ssaMeth {@code non-null;} un-renamed SSA method that will
      * be renamed.
      */
-    SsaRenamer (final SsaMethod ssaMeth) {
+    public SsaRenamer(SsaMethod ssaMeth) {
         ropRegCount = ssaMeth.getRegCount();
 
         this.ssaMeth = ssaMeth;
+
         /*
          * Reserve the first N registers in the SSA register space for
-         * "version 0" registers
+         * "version 0" registers.
          */
         nextSsaReg = ropRegCount;
         startsForBlocks = new RegisterSpec[ssaMeth.getBlocks().size()][];
@@ -138,7 +139,6 @@ class SsaRenamer implements Runnable {
      * in-place.
      */
     public void run() {
-
         // Rename each block in dom-tree DFS order.
         ssaMeth.forEachBlockDepthFirstDom(new SsaBasicBlock.Visitor() {
             public void visitBlock (SsaBasicBlock block,
@@ -152,9 +152,11 @@ class SsaRenamer implements Runnable {
 
         if (DEBUG) {
             System.out.println("SSA\tRop");
-            // We're going to compute the version of the rop register
-            // by keeping a running total of how many times the rop register
-            // has been mapped.
+            /*
+             * We're going to compute the version of the rop register
+             * by keeping a running total of how many times the rop
+             * register has been mapped.
+             */
             int[] versions = new int[ropRegCount];
 
             int sz = ssaRegToRopReg.size();
@@ -168,7 +170,8 @@ class SsaRenamer implements Runnable {
     }
 
     /**
-     * Duplicates a RegisterSpec array
+     * Duplicates a RegisterSpec array.
+     *
      * @param orig {@code non-null;} array to duplicate
      * @return {@code non-null;} new instance
      */
@@ -224,8 +227,8 @@ class SsaRenamer implements Runnable {
     }
 
     /**
-     * Returns true if a and b are equal or are both null
-
+     * Returns true if a and b are equal or are both null.
+     *
      * @param a null-ok
      * @param b null-ok
      * @return Returns true if a and b are equal or are both null
@@ -243,22 +246,22 @@ class SsaRenamer implements Runnable {
         private final SsaBasicBlock block;
 
         /**
-         * {@code non-null;} indexed by old register name. The current top of the
-         * version stack as seen by this block. It's initialized from
-         * the ending state of its dom parent, updated as the block's
-         * instructions are processed, and then copied to each one of its
-         * dom children.
+         * {@code non-null;} indexed by old register name. The current
+         * top of the version stack as seen by this block. It's
+         * initialized from the ending state of its dom parent,
+         * updated as the block's instructions are processed, and then
+         * copied to each one of its dom children.
          */
         private final RegisterSpec[] currentMapping;
 
         /**
-         * Contains the set of moves we need to keep
-         * to preserve local var info. All other moves will be deleted.
+         * contains the set of moves we need to keep to preserve local
+         * var info. All other moves will be deleted.
          */
         private final HashSet<SsaInsn> movesToKeep;
 
         /**
-         * Maps the set of insns to replace after renaming is finished
+         * maps the set of insns to replace after renaming is finished
          * on the block.
          */
         private final HashMap<SsaInsn, SsaInsn> insnsToReplace;
@@ -288,8 +291,8 @@ class SsaRenamer implements Runnable {
          * as the current block's instructions are processed.
          */
         private class RenamingMapper extends RegisterMapper {
-
-            RenamingMapper() {
+            public RenamingMapper() {
+                // This space intentionally left blank.
             }
 
             /** {@inheritDoc} */
@@ -305,7 +308,7 @@ class SsaRenamer implements Runnable {
 
                 int reg = registerSpec.getReg();
 
-                // for debugging: assert that the mapped types are compatible
+                // For debugging: assert that the mapped types are compatible.
                 if (DEBUG) {
                     RegisterSpec newVersion = currentMapping[reg];
                     if (newVersion.getBasicType() != Type.BT_VOID
@@ -339,7 +342,7 @@ class SsaRenamer implements Runnable {
 
             updateSuccessorPhis();
 
-            // Delete all move insns in this block
+            // Delete all move insns in this block.
             ArrayList<SsaInsn> insns = block.getInsns();
             int szInsns = insns.size();
 
@@ -350,29 +353,27 @@ class SsaRenamer implements Runnable {
                 replaceInsn = insnsToReplace.get(insn);
 
                 if (replaceInsn != null) {
-                    insns.set(i, replaceInsn);                    
+                    insns.set(i, replaceInsn);
                 } else if (insn.isNormalMoveInsn()
                         && !movesToKeep.contains(insn)) {
                     insns.remove(i);
                 }
             }
 
-            // Store the start states for our dom children
+            // Store the start states for our dom children.
             boolean first = true;
             for (SsaBasicBlock child : block.getDomChildren()) {
                 if (child != block) {
-                    RegisterSpec[] childStart;
-
-                    // don't bother duplicating the array for the first child
-                    childStart = first ? currentMapping
-                            : dupArray(currentMapping);
+                    // Don't bother duplicating the array for the first child.
+                    RegisterSpec[] childStart = first ? currentMapping
+                        : dupArray(currentMapping);
 
                     startsForBlocks[child.getIndex()] = childStart;
                     first = false;
                 }
             }
 
-            // currentMapping is owned by a child now
+            // currentMapping is owned by a child now.
         }
 
         /**
@@ -414,15 +415,15 @@ class SsaRenamer implements Runnable {
                 }
             }
 
-            // All further steps are for registers with local information
+            // All further steps are for registers with local information.
             if (ssaRegLocal == null) {
                 return;
             }
 
-            // Record that this SSA reg has been associated with a local
+            // Record that this SSA reg has been associated with a local.
             setNameForSsaReg(ssaReg);
 
-            // Ensure that no other SSA regs are associated with this local
+            // Ensure that no other SSA regs are associated with this local.
             for (int i = currentMapping.length - 1; i >= 0; i--) {
                 RegisterSpec cur = currentMapping[i];
 
@@ -437,7 +438,7 @@ class SsaRenamer implements Runnable {
          * {@inheritDoc}
          *
          * Phi insns have their result registers renamed.
-         * */
+         */
         public void visitPhiInsn(PhiInsn phi) {
             /* don't process sources for phi's */
             processResultReg(phi);
@@ -453,7 +454,7 @@ class SsaRenamer implements Runnable {
          */
         public void visitMoveInsn(NormalSsaInsn insn) {
             /*
-             * for moves: copy propogate the move if we can, but don't
+             * For moves: copy propogate the move if we can, but don't
              * if we need to preserve local variable info and the
              * result has a different name than the source.
              */
@@ -465,7 +466,8 @@ class SsaRenamer implements Runnable {
             insn.mapSourceRegisters(mapper);
             int ssaSourceReg = insn.getSources().get(0).getReg();
 
-            LocalItem sourceLocal = currentMapping[ropSourceReg].getLocalItem();
+            LocalItem sourceLocal
+                = currentMapping[ropSourceReg].getLocalItem();
             LocalItem resultLocal = ropResult.getLocalItem();
 
             /*
@@ -476,25 +478,26 @@ class SsaRenamer implements Runnable {
              */
 
             LocalItem newLocal
-                    = (resultLocal == null) ? sourceLocal : resultLocal;
-
+                = (resultLocal == null) ? sourceLocal : resultLocal;
             LocalItem associatedLocal = getLocalForNewReg(ssaSourceReg);
 
-            // If we take the new local, will only one local have ever
-            // been associated with this SSA reg?
+            /*
+             * If we take the new local, will only one local have ever
+             * been associated with this SSA reg?
+             */
             boolean onlyOneAssociatedLocal
                     = associatedLocal == null || newLocal == null
                     || newLocal.equals(associatedLocal);
-                    
+
             /*
-             * If we're going to copy-propogate, then the ssa register spec
-             * that's going to go into the mapping is made up of the
-             * source register number mapped from above, the type
+             * If we're going to copy-propogate, then the ssa register
+             * spec that's going to go into the mapping is made up of
+             * the source register number mapped from above, the type
              * of the result, and the name either from the result (if
              * specified) or inherited from the existing mapping.
              *
-             * The move source has incomplete type information
-             * in null object cases, so the result type is used.
+             * The move source has incomplete type information in null
+             * object cases, so the result type is used.
              */
             RegisterSpec ssaReg
                     = RegisterSpec.makeLocalOptional(
@@ -510,15 +513,12 @@ class SsaRenamer implements Runnable {
 
                 addMapping(ropResultReg, ssaReg);
             } else if (onlyOneAssociatedLocal && sourceLocal == null) {
-
                 /*
                  * The register was previously unnamed. This means that a
                  * local starts after it's first assignment in SSA form
                  */
 
-                RegisterSpecList ssaSources;
-
-                ssaSources = RegisterSpecList.make(
+                RegisterSpecList ssaSources = RegisterSpecList.make(
                         RegisterSpec.make(ssaReg.getReg(),
                                 ssaReg.getType(), newLocal));
 
@@ -529,12 +529,12 @@ class SsaRenamer implements Runnable {
 
                 insnsToReplace.put(insn, newInsn);
 
-                // Just map as above
+                // Just map as above.
                 addMapping(ropResultReg, ssaReg);
             } else {
                 /*
-                 * Do not copy-propogate, since the two registers
-                 * have two different local-variable names
+                 * Do not copy-propogate, since the two registers have
+                 * two different local-variable names.
                  */
                 processResultReg(insn);
 
@@ -595,11 +595,12 @@ class SsaRenamer implements Runnable {
                     ropReg = insn.getRopResultReg();
 
                     /*
-                     * Never add a version 0 register as a phi operand.
-                     * Version 0 registers represent the initial register state,
-                     * and thus are never significant. Furthermore,
-                     * the register liveness algorithm doesn't properly
-                     * count them as "live in" at the beginning of the method.
+                     * Never add a version 0 register as a phi
+                     * operand. Version 0 registers represent the
+                     * initial register state, and thus are never
+                     * significant. Furthermore, the register liveness
+                     * algorithm doesn't properly count them as "live
+                     * in" at the beginning of the method.
                      */
 
                     RegisterSpec stackTop = currentMapping[ropReg];

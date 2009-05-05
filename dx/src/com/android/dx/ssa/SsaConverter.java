@@ -30,19 +30,20 @@ public class SsaConverter {
     public static boolean DEBUG = false;
 
     /**
-     * returns an SSA representation, edge-split and with phi functions placed
+     * Returns an SSA representation, edge-split and with phi
+     * functions placed.
+     *
      * @param rmeth input
      * @param paramWidth the total width, in register-units, of the method's
      * parameters
-     * @param isStatic true if this method has no 'this'
+     * @param isStatic {@code true} if this method has no {@code this}
      * pointer argument
      * @return output in SSA form
      */
-    public static SsaMethod convertToSsaMethod(RopMethod rmeth, 
+    public static SsaMethod convertToSsaMethod(RopMethod rmeth,
             int paramWidth, boolean isStatic) {
-        SsaMethod result;
-
-        result = SsaMethod.newFromRopMethod(rmeth, paramWidth, isStatic);
+        SsaMethod result
+            = SsaMethod.newFromRopMethod(rmeth, paramWidth, isStatic);
 
         edgeSplit(result);
 
@@ -52,7 +53,7 @@ public class SsaConverter {
         new SsaRenamer(result).run();
 
         /*
-         * Exit block, added here,  is not considered for edge splitting
+         * The exit block, added here, is not considered for edge splitting
          * or phi placement since no actual control flows to it.
          */
         result.makeExitBlock();
@@ -62,10 +63,12 @@ public class SsaConverter {
 
     /**
      * Returns an SSA represention with only the edge-splitter run.
+     *
      * @param rmeth method to process
      * @param paramWidth width of all arguments in the method
-     * @param isStatic true if this method has no 'this' pointer argument
-     * @return an SSA represention with only the edge-splitter run.
+     * @param isStatic {@code true} if this method has no {@code this}
+     * pointer argument
+     * @return an SSA represention with only the edge-splitter run
      */
     public static SsaMethod testEdgeSplit (RopMethod rmeth, int paramWidth,
             boolean isStatic) {
@@ -80,10 +83,12 @@ public class SsaConverter {
     /**
      * Returns an SSA represention with only the steps through the
      * phi placement run.
+     *
      * @param rmeth method to process
      * @param paramWidth width of all arguments in the method
-     * @param isStatic true if this method has no 'this' pointer argument
-     * @return an SSA represention with only the edge-splitter run.
+     * @param isStatic {@code true} if this method has no {@code this}
+     * pointer argument
+     * @return an SSA represention with only the edge-splitter run
      */
     public static SsaMethod testPhiPlacement (RopMethod rmeth, int paramWidth,
             boolean isStatic) {
@@ -100,7 +105,8 @@ public class SsaConverter {
     }
 
     /**
-     * See Appel section 19.1
+     * See Appel section 19.1:
+     *
      * Converts CFG into "edge-split" form, such that each node either a
      * unique successor or unique predecessor.<p>
      *
@@ -109,11 +115,10 @@ public class SsaConverter {
      * value to have a primary successor that has no other
      * predecessor. This ensures move statements can always be
      * inserted correctly when phi statements are removed.
-     * 
+     *
      * @param result method to process
      */
     private static void edgeSplit(SsaMethod result) {
-
         edgeSplitPredecessors(result);
         edgeSplitMoveExceptionsAndResults(result);
         edgeSplitSuccessors(result);
@@ -122,13 +127,16 @@ public class SsaConverter {
     /**
      * Inserts Z nodes as new predecessors for every node that has multiple
      * successors and multiple predecessors.
+     *
      * @param result {@code non-null;} method to process
      */
     private static void edgeSplitPredecessors(SsaMethod result) {
         ArrayList<SsaBasicBlock> blocks = result.getBlocks();
-        
-        // New blocks are added to the end of the block list during
-        // this iteration
+
+        /*
+         * New blocks are added to the end of the block list during
+         * this iteration.
+         */
         for (int i = blocks.size() - 1; i >= 0; i-- ) {
             SsaBasicBlock block = blocks.get(i);
             if (nodeNeedsUniquePredecessor(block)) {
@@ -139,11 +147,10 @@ public class SsaConverter {
 
     /**
      * @param block {@code non-null;} block in question
-     * @return true if this node needs to have a unique predecessor created for
-     * it.
+     * @return {@code true} if this node needs to have a unique
+     * predecessor created for it
      */
     private static boolean nodeNeedsUniquePredecessor(SsaBasicBlock block) {
-
         /*
          * Any block with that has both multiple successors and multiple
          * predecessors needs a new predecessor node.
@@ -161,56 +168,65 @@ public class SsaConverter {
      * We may need room to insert move insns later, so make sure to split
      * any block that starts with a move-exception such that there is a
      * unique move-exception block for each predecessor.
+     *
      * @param ssaMeth method to process
      */
     private static void edgeSplitMoveExceptionsAndResults(SsaMethod ssaMeth) {
         ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
 
-        // New blocks are added to the end of the block list during
-        // this iteration
+        /*
+         * New blocks are added to the end of the block list during
+         * this iteration.
+         */
         for (int i = blocks.size() - 1; i >= 0; i-- ) {
             SsaBasicBlock block = blocks.get(i);
-        
-            // Any block that starts with a move-exception and has more than
-            // one predecessor...
+
+            /*
+             * Any block that starts with a move-exception and has more than
+             * one predecessor...
+             */
             if (!block.isExitBlock()
-                    && block.getPredecessors().cardinality() > 1 
+                    && block.getPredecessors().cardinality() > 1
                     && block.getInsns().get(0).isMoveException()) {
 
-                // block.getPredecessors() is changed in the loop below
+                // block.getPredecessors() is changed in the loop below.
                 BitSet preds = (BitSet)block.getPredecessors().clone();
                 for (int j = preds.nextSetBit(0); j >= 0;
-                        j = preds.nextSetBit(j + 1)) {
-
+                     j = preds.nextSetBit(j + 1)) {
                     SsaBasicBlock predecessor = blocks.get(j);
+                    SsaBasicBlock zNode
+                        = predecessor.insertNewSuccessor(block);
 
-                    SsaBasicBlock zNode = predecessor.insertNewSuccessor(block);
-
-                    // Make sure to place the move-exception as the
-                    // first insn...
+                    /*
+                     * Make sure to place the move-exception as the
+                     * first insn.
+                     */
                     zNode.getInsns().add(0, block.getInsns().get(0).clone());
                 }
 
-                // remove the move-exception from the original block...
+                // Remove the move-exception from the original block.
                 block.getInsns().remove(0);
             }
         }
     }
 
     /**
-     * Inserts Z nodes for every node that needs a new 
+     * Inserts Z nodes for every node that needs a new
      * successor.
+     *
      * @param result {@code non-null;} method to process
      */
     private static void edgeSplitSuccessors(SsaMethod result) {
         ArrayList<SsaBasicBlock> blocks = result.getBlocks();
 
-        // New blocks are added to the end of the block list during
-        // this iteration
+        /*
+         * New blocks are added to the end of the block list during
+         * this iteration.
+         */
         for (int i = blocks.size() - 1; i >= 0; i-- ) {
             SsaBasicBlock block = blocks.get(i);
 
-            // successors list is modified in loop below
+            // Successors list is modified in loop below.
             BitSet successors = (BitSet)block.getSuccessors().clone();
             for (int j = successors.nextSetBit(0);
                  j >= 0; j = successors.nextSetBit(j+1)) {
@@ -225,17 +241,17 @@ public class SsaConverter {
     }
 
     /**
-     * Returns true if block and successor need a Z-node between them.
-     * Presently, this is true if the final instruction has any sources
-     * or results and the current successor block has more than one
-     * predecessor.
+     * Returns {@code true} if block and successor need a Z-node
+     * between them. Presently, this is {@code true} if the final
+     * instruction has any sources or results and the current
+     * successor block has more than one predecessor.
+     *
      * @param block predecessor node
      * @param succ successor node
-     * @return true if a Z node is needed
+     * @return {@code true} if a Z node is needed
      */
     private static boolean needsNewSuccessor(SsaBasicBlock block,
             SsaBasicBlock succ) {
-
         ArrayList<SsaInsn> insns = block.getInsns();
         SsaInsn lastInsn = insns.get(insns.size() - 1);
 
@@ -245,11 +261,14 @@ public class SsaConverter {
     }
 
     /**
-     * See Appel algorithm 19.6
+     * See Appel algorithm 19.6:
+     *
      * Place Phi functions in appropriate locations.
      *
-     * @param ssaMeth {@code non-null;} method to process. Modifications made in-place
-     * @param localInfo {@code non-null;} Local variable info, used when placing phis
+     * @param ssaMeth {@code non-null;} method to process.
+     * Modifications are made in-place.
+     * @param localInfo {@code non-null;} local variable info, used
+     * when placing phis
      */
     private static void placePhiFunctions (SsaMethod ssaMeth,
             LocalVariableInfo localInfo) {
@@ -296,11 +315,8 @@ public class SsaConverter {
 
             for (int i = 0; i < regCount; i++) {
                 StringBuilder sb = new StringBuilder();
-
                 sb.append('v').append(i).append(": ");
-
                 sb.append(defsites[i].toString());
-
                 System.out.println(sb);
             }
         }
@@ -314,15 +330,14 @@ public class SsaConverter {
         for (int reg = 0, s = ssaMeth.getRegCount() ; reg < s ; reg++ ) {
             int workBlockIndex;
 
-            /* Worklist set starts out with each node where reg is assigned */
+            /* Worklist set starts out with each node where reg is assigned. */
 
-            worklist = (BitSet)(defsites[reg].clone());
+            worklist = (BitSet) (defsites[reg].clone());
 
             while (0 <= (workBlockIndex = worklist.nextSetBit(0))) {
                 worklist.clear(workBlockIndex);
                 IntIterator dfIterator
-                        = domInfos[workBlockIndex]
-                        .dominanceFrontiers.iterator();
+                    = domInfos[workBlockIndex].dominanceFrontiers.iterator();
 
                 while (dfIterator.hasNext()) {
                     int dfBlockIndex = dfIterator.next();
@@ -352,11 +367,8 @@ public class SsaConverter {
 
             for (int i = 0; i < regCount; i++) {
                 StringBuilder sb = new StringBuilder();
-
                 sb.append('v').append(i).append(": ");
-
                 sb.append(phisites[i].toString());
-
                 System.out.println(sb);
             }
         }
