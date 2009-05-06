@@ -29,10 +29,10 @@
 #include <sys/mman.h>
 #include <sched.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #ifdef HAVE_ANDROID_OS
 # define UPDATE_MAGIC_PAGE      1
-# define MAGIC_PAGE_BASE_ADDR   0x08000000
 # ifndef PAGESIZE
 #  define PAGESIZE              4096
 # endif
@@ -177,13 +177,20 @@ bool dvmProfilingStartup(void)
      * We could key this off of the "ro.kernel.qemu" property, but there's
      * no real harm in doing this on a real device.
      */
-    gDvm.emulatorTracePage = mmap((void*) MAGIC_PAGE_BASE_ADDR,
-        PAGESIZE, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_SHARED|MAP_ANON, -1, 0);
-    if (gDvm.emulatorTracePage == MAP_FAILED) {
-        LOGE("Unable to mmap magic page (0x%08x)\n", MAGIC_PAGE_BASE_ADDR);
-        return false;
+    int fd = open("/dev/qemu_trace", O_RDWR);
+    if (fd < 0) {
+        LOGV("Unable to open /dev/qemu_trace\n");
+    } else {
+        gDvm.emulatorTracePage = mmap(0, PAGESIZE, PROT_READ|PROT_WRITE,
+                                      MAP_SHARED, fd, 0);
+        close(fd);
+        if (gDvm.emulatorTracePage == MAP_FAILED) {
+            LOGE("Unable to mmap /dev/qemu_trace\n");
+            gDvm.emulatorTracePage = NULL;
+        } else {
+            *(u4*) gDvm.emulatorTracePage = 0;
+        }
     }
-    *(u4*) gDvm.emulatorTracePage = 0;
 #else
     assert(gDvm.emulatorTracePage == NULL);
 #endif
@@ -639,7 +646,7 @@ void dvmEmitEmulatorTrace(const Method* method, int action)
         return;
     assert(method->insns != NULL);
 
-    u4* pMagic = ((u4*) MAGIC_PAGE_BASE_ADDR) +1;
+    u4* pMagic = (u4*) gDvm.emulatorTracePage;
 
     /*
      * The dexlist output shows the &DexCode.insns offset value, which
@@ -702,6 +709,10 @@ void dvmMethodTraceClassPrepEnd(void)
  */
 void dvmEmulatorTraceStart(void)
 {
+    /* If we could not map the emulator trace page, then do not enable tracing */
+    if (gDvm.emulatorTracePage == NULL)
+        return;
+
     updateActiveProfilers(1);
 
     /* in theory we should make this an atomic inc; in practice not important */
@@ -717,7 +728,7 @@ void dvmEmulatorTraceStop(void)
 {
     if (gDvm.emulatorTraceEnableCount == 0) {
         LOGE("ERROR: emulator tracing not enabled\n");
-        dvmAbort();
+        return;
     }
     updateActiveProfilers(-1);
     /* in theory we should make this an atomic inc; in practice not important */
