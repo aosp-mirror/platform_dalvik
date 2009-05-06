@@ -162,6 +162,12 @@ The global reference is guaranteed to be valid until you call
 <code>DeleteGlobalRef</code>.
 </p><p>
 All JNI methods accept both local and global references as arguments.
+It's possible for references to the same object to have different values;
+for example, the return values from consecutive calls to
+<code>NewGlobalRef</code> on the same object may be different.
+<strong>To see if two references refer to the same object,
+you must use the <code>IsSameObject</code> function.</strong>  Never compare
+references with "==" in native code.
 </p><p>
 Programmers are required to "not excessively allocate" local references.  In practical terms this means
 that if you're creating large numbers of local references, perhaps while running through an array of
@@ -201,9 +207,10 @@ so you need to hang on to the string length as well as
 the string pointer.
 
 </p><p>
-<strong>Don't forget to Release the strings you Get</strong>.  The string functions return <code>jchar*</code> or <code>jbyte*</code>, which
-are pointers to primitive types rather than local references.  They are
-guaranteed valid until Release is called, which means they are not
+<strong>Don't forget to Release the strings you Get</strong>.  The
+string functions return <code>jchar*</code> or <code>jbyte*</code>, which
+are C-style pointers to primitive data rather than local references.  They
+are guaranteed valid until Release is called, which means they are not
 released when the native method returns.
 </p><p>
 </p><p>
