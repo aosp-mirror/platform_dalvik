@@ -29,6 +29,8 @@
 #define HAVE_BOTH_SQLITE 1
 #endif
 
+#define CANT_PASS_VALIST_AS_CHARPTR
+
 #include "sqlite_jni.h"
 
 #if defined(_WIN32) || !defined(CANT_PASS_VALIST_AS_CHARPTR)
