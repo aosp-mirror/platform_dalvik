@@ -16,6 +16,7 @@
 
 package tests.api.java.lang;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
@@ -62,6 +63,7 @@ public class ProcessManagerTest extends TestCase {
         method = "waitFor",
         args = {}
     )
+    @BrokenTest("Sporadic failures in CTS, but not in CoreTestRunner")
     public void testSleep() throws IOException {
         String[] commands = { "sleep", "1" };
         process = Runtime.getRuntime().exec(commands, null, null);
