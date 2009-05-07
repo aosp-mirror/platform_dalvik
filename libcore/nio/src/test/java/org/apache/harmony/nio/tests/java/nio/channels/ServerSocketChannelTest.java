@@ -22,6 +22,7 @@ import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -573,6 +574,7 @@ public class ServerSocketChannelTest extends TestCase {
         method = "accept",
         args = {}
     )    
+    @BrokenTest("Sporadic timeouts in CTS, but not in CoreTestRunner")
     public void test_accept_socket_read_Block_RWLargeData() throws IOException {
         serverChannel.socket().bind(localAddr1);
         ByteBuffer buf = ByteBuffer.allocate(CAPACITY_64KB);
@@ -597,6 +599,7 @@ public class ServerSocketChannelTest extends TestCase {
         method = "accept",
         args = {}
     )    
+    @BrokenTest("Sporadic timeouts in CTS, but not in CoreTestRunner")
     public void test_accept_socket_read_NonBlock_RWLargeData()
             throws Exception {
         serverChannel.configureBlocking(false);
@@ -623,6 +626,7 @@ public class ServerSocketChannelTest extends TestCase {
         method = "accept",
         args = {}
     )
+    @BrokenTest("Sporadic timeouts in CTS, but not in CoreTestRunner")
     public void test_accept_socket_write_NonBlock_RWLargeData()
             throws Exception {
         serverChannel.configureBlocking(false);
@@ -648,6 +652,7 @@ public class ServerSocketChannelTest extends TestCase {
         method = "accept",
         args = {}
     )
+    @BrokenTest("Sporadic timeouts in CTS, but not in CoreTestRunner")
     public void test_accept_socket_write_Block_RWLargeData() throws Exception {
         serverChannel.socket().bind(localAddr1);
         byte[] writeContent = new byte[CAPACITY_64KB];
