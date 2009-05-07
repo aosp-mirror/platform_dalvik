@@ -23,6 +23,7 @@
 package tests.security.cert;
 
 import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -1842,6 +1843,7 @@ public class PKIXParametersTest extends TestCase {
         method = "PKIXParameters",
         args = {java.security.KeyStore.class}
     )
+    @BrokenTest("Fails in CTS environment, but passes in CoreTestRunner")
     public final void testPKIXParametersKeyStore04() throws Exception {
 
 
