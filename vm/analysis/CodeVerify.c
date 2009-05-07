@@ -3544,6 +3544,9 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
          * can't reject them.  We can ask the optimizer to replace the
          * instructions with a magic "always throw InstantiationError"
          * instruction.  (Not enough bytes to sub in a method call.)
+         *
+         * TODO (xyz): check for abstract/interface, cause an
+         * InstantiationError to be thrown.
          */
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vB, &failure);
         if (resClass == NULL) {
@@ -5111,6 +5114,7 @@ sput_1nr_common:
      * If the object reference was null, the field-get returns the "wildcard"
      * type, which is acceptable for any operation.
      */
+    case OP_THROW_VERIFICATION_ERROR:
     case OP_EXECUTE_INLINE:
     case OP_INVOKE_DIRECT_EMPTY:
     case OP_IGET_QUICK:
@@ -5146,7 +5150,6 @@ sput_1nr_common:
     case OP_UNUSED_EA:
     case OP_UNUSED_EB:
     case OP_UNUSED_EC:
-    case OP_UNUSED_ED:
     case OP_UNUSED_EF:
     case OP_UNUSED_F1:
     case OP_UNUSED_FC:

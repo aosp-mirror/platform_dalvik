@@ -41,7 +41,7 @@ enum DexoptFlags {
  */
 typedef enum VerifyError {
     VERIFY_ERROR_NONE = 0,      /* no error; must be zero */
-    VERIFY_ERROR_GENERIC,       /* failed, details not important */
+    VERIFY_ERROR_GENERIC,       /* VerifyError */
 
     VERIFY_ERROR_NO_CLASS,      /* NoClassDefFoundError */
     VERIFY_ERROR_NO_METHOD,     /* NoSuchMethodError */
