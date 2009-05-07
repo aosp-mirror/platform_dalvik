@@ -636,6 +636,23 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
 
 
 /*
+ * Throw an exception for a problem identified by the verifier.
+ *
+ * This is used by the invoke-verification-error instruction.  It always
+ * throws an exception.
+ *
+ * "kind" indicates the kind of failure encountered by the verifier.  The
+ * meaning of "ref" is kind-specific; it's usually an index to a
+ * class, field, or method reference.
+ */
+void dvmThrowVerificationError(const DvmDex* pDvmDex, int kind, int ref)
+{
+    // TODO
+    dvmThrowException("Ljava/lang/VerifyError;", NULL);
+}
+
+
+/*
  * Main interpreter loop entry point.  Select "standard" or "debug"
  * interpreter and switch between them as required.
  *

@@ -3147,8 +3147,12 @@ OP_END
 HANDLE_OPCODE(OP_UNUSED_EC)
 OP_END
 
-/* File: c/OP_UNUSED_ED.c */
-HANDLE_OPCODE(OP_UNUSED_ED)
+/* File: c/OP_THROW_VERIFICATION_ERROR.c */
+HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR)
+    vsrc1 = INST_AA(inst);
+    ref = FETCH(1);             /* class/field/method ref */
+    dvmThrowVerificationError(methodClassDex, vsrc1, ref);
+    GOTO_exceptionThrown();
 OP_END
 
 /* File: c/OP_EXECUTE_INLINE.c */

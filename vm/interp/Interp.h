@@ -26,6 +26,11 @@
 void dvmInterpret(Thread* thread, const Method* method, JValue* pResult);
 
 /*
+ * Throw an exception for a problem detected by the verifier.
+ */
+void dvmThrowVerificationError(const DvmDex* pDvmDex, int kind, int ref);
+
+/*
  * Breakpoint optimization table.
  */
 void dvmInitBreakpoints();

@@ -5805,10 +5805,10 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_ED: /* 0xed */
-/* File: x86/OP_UNUSED_ED.S */
-/* File: x86/unused.S */
-    jmp     common_abort
+.L_OP_THROW_VERIFICATION_ERROR: /* 0xed */
+/* File: x86/OP_THROW_VERIFICATION_ERROR.S */
+    /* TODO */
+    call    dvmAbort
 
 
 /* ------------------------------ */
