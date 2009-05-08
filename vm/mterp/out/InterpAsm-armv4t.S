@@ -966,11 +966,9 @@ dalvik_inst:
     cmp     r1, #CLASS_INITIALIZED      @ has class been initialized?
     bne     .LOP_NEW_INSTANCE_needinit        @ no, init class now
 .LOP_NEW_INSTANCE_initialized: @ r0=class
-    ldr     r3, [r0, #offClassObject_accessFlags]   @ r3<- clazz->accessFlags
-    tst     r3, #(ACC_INTERFACE|ACC_ABSTRACT)   @ abstract or interface?
     mov     r1, #ALLOC_DONT_TRACK       @ flags for alloc call
-    beq     .LOP_NEW_INSTANCE_finish          @ concrete class, continue
-    b       .LOP_NEW_INSTANCE_abstract        @ fail
+    bl      dvmAllocObject              @ r0<- new object
+    b       .LOP_NEW_INSTANCE_finish          @ continue
 
 /* ------------------------------ */
     .balign 64
@@ -7453,8 +7451,9 @@ d2i_doconv:
      * exception is indicated by AA, with some detail provided by BBBB.
      */
     /* op AA, ref@BBBB */
-    ldr     r0, [rGLUE, #offGlue_methodClassDex]    @ r0<- glue->methodClassDex
+    ldr     r0, [rGLUE, #offGlue_method]    @ r0<- glue->method
     FETCH(r2, 1)                        @ r2<- BBBB
+    EXPORT_PC()                         @ export the PC
     mov     r1, rINST, lsr #8           @ r1<- AA
     bl      dvmThrowVerificationError   @ always throws
     b       common_exceptionThrown      @ handle exception
@@ -7971,8 +7970,7 @@ dvmAsmSisterStart:
 /* continuation for OP_NEW_INSTANCE */
 
     .balign 32                          @ minimize cache lines
-.LOP_NEW_INSTANCE_finish: @ r0=class
-    bl      dvmAllocObject              @ r0<- new object
+.LOP_NEW_INSTANCE_finish: @ r0=new object
     mov     r3, rINST, lsr #8           @ r3<- AA
     cmp     r0, #0                      @ failed?
     beq     common_exceptionThrown      @ yes, handle the exception
@@ -8007,18 +8005,6 @@ dvmAsmSisterStart:
     cmp     r0, #0                      @ got null?
     bne     .LOP_NEW_INSTANCE_resolved        @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
-
-    /*
-     * We can't instantiate an abstract class or interface, so throw an
-     * InstantiationError with the class descriptor as the message.
-     *
-     *  r0 holds class object
-     */
-.LOP_NEW_INSTANCE_abstract:
-    ldr     r1, [r0, #offClassObject_descriptor]
-    ldr     r0, .LstrInstantiationErrorPtr
-    bl      dvmThrowExceptionWithClassMessage
-    b       common_exceptionThrown
 
 .LstrInstantiationErrorPtr:
     .word   .LstrInstantiationError

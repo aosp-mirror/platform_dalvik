@@ -5806,11 +5806,17 @@ dvmAsmInstructionStart = .L_OP_NOP
 /* ------------------------------ */
     .balign 64
 .L_OP_THROW_VERIFICATION_ERROR: /* 0xed */
-/* File: x86/OP_THROW_VERIFICATION_ERROR.S */
-    /* TODO */
-    call    dvmAbort
-
-
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_THROW_VERIFICATION_ERROR     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_EXECUTE_INLINE: /* 0xee */
@@ -6391,6 +6397,7 @@ dvmAsmSisterStart:
 /* continuation for OP_NEW_INSTANCE */
 
 .LOP_NEW_INSTANCE_initialized:  # on entry, ecx<- class
+    /* TODO: remove test for interface/abstract, now done in verifier */
     testl     $(ACC_INTERFACE|ACC_ABSTRACT),offClassObject_accessFlags(%ecx)
     movl      $ALLOC_DONT_TRACK,OUT_ARG1(%esp)
     jne       .LOP_NEW_INSTANCE_abstract
@@ -6441,6 +6448,7 @@ dvmAsmSisterStart:
     jmp     common_exceptionThrown      # no, handle exception
 
     /*
+     * TODO: remove this
      * We can't instantiate an abstract class or interface, so throw an
      * InstantiationError with the class descriptor as the message.
      *

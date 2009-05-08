@@ -100,7 +100,7 @@ fi
 if [ "$VALGRIND" = "y" ]; then
     msg "Running with valgrind"
     valgrind_cmd="valgrind"
-    #valgrind_cmd="$valgrind_cmd --leak-check=full"
+    #valgrind_cmd="valgrind --leak-check=full"
 else
     valgrind_cmd=""
 fi

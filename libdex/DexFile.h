@@ -735,6 +735,9 @@ DEX_INLINE const char* dexGetSourceFile(
     return dexStringById(pDexFile, pClassDef->sourceFileIdx);
 }
 
+/* get the size, in bytes, of a DexCode */
+size_t dexGetDexCodeSize(const DexCode* pCode);
+
 /* Get the list of "tries" for the given DexCode. */
 DEX_INLINE const DexTry* dexGetTries(const DexCode* pCode) {
     const u2* insnsEnd = &pCode->insns[pCode->insnsSize];
@@ -753,6 +756,7 @@ DEX_INLINE const u1* dexGetCatchHandlerData(const DexCode* pCode) {
     return (const u1*) &pTries[pCode->triesSize];
 }
 
+/* get a pointer to the start of the debugging data */
 DEX_INLINE const u1* dexGetDebugInfoStream(const DexFile* pDexFile,
     const DexCode* pCode)
 {

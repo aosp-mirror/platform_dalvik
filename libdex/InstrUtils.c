@@ -604,7 +604,7 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
             flags = kInstrCanSwitch | kInstrCanContinue;
             break;
 
-        /* optimizer-generated instructions */
+        /* verifier/optimizer-generated instructions */
         case OP_THROW_VERIFICATION_ERROR:
             flags = kInstrCanThrow;
             break;

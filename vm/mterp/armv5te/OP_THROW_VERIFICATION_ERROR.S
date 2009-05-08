@@ -5,8 +5,9 @@
      * exception is indicated by AA, with some detail provided by BBBB.
      */
     /* op AA, ref@BBBB */
-    ldr     r0, [rGLUE, #offGlue_methodClassDex]    @ r0<- glue->methodClassDex
+    ldr     r0, [rGLUE, #offGlue_method]    @ r0<- glue->method
     FETCH(r2, 1)                        @ r2<- BBBB
+    EXPORT_PC()                         @ export the PC
     mov     r1, rINST, lsr #8           @ r1<- AA
     bl      dvmThrowVerificationError   @ always throws
     b       common_exceptionThrown      @ handle exception

@@ -120,9 +120,9 @@ static RegType getInvocationThis(const RegType* insnRegs,\
     VerifyError* pFailure);
 static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,\
     u4 vsrc, RegType checkType, VerifyError* pFailure);
-static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,\
+static bool doCodeVerification(Method* meth, InsnFlags* insnFlags,\
     RegisterTable* regTable, UninitInstanceMap* uninitMap);
-static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,\
+static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,\
     RegisterTable* regTable, RegType* workRegs, int insnIdx,
     UninitInstanceMap* uninitMap, int* pStartGuess);
 static ClassObject* findCommonSuperclass(ClassObject* c1, ClassObject* c2);
@@ -1055,7 +1055,7 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
             //char* curMethodDesc =
             //    dexProtoCopyMethodDescriptor(&meth->prototype);
 
-            LOGE("Could not find method %s.%s, referenced from "
+            LOGI("Could not find method %s.%s, referenced from "
                  "method %s.%s\n",
                  dotMissingClass, methodName/*, methodDesc*/,
                  dotMethClass, meth->name/*, curMethodDesc*/);
@@ -1069,7 +1069,8 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
             dvmMethodTypeStr(methodType), pDecInsn->vB,
             classDescriptor, methodName, methodDesc);
         free(methodDesc);
-        *pFailure = VERIFY_ERROR_NO_METHOD;
+        if (VERIFY_OK(*pFailure))       /* not set for interface resolve */
+            *pFailure = VERIFY_ERROR_NO_METHOD;
         goto fail;
     }
 
@@ -2457,7 +2458,7 @@ static void checkFinalFieldAccess(const Method* meth, const Field* field,
     if (meth->clazz != field->clazz) {
         LOG_VFY_METH(meth, "VFY: can't modify final field %s.%s\n",
             field->clazz->descriptor, field->name);
-        *pFailure = VERIFY_ERROR_ACCESS;
+        *pFailure = VERIFY_ERROR_ACCESS_FIELD;
         return;
     }
 
@@ -2793,6 +2794,121 @@ static void verifyFilledNewArrayRegs(const Method* meth,
 
 
 /*
+ * Replace an instruction with "throw-verification-error".  This allows us to
+ * defer error reporting until the code path is first used.
+ *
+ * The throw-verification-error instruction requires two code units.  Some
+ * of the replaced instructions require three; the third code unit will
+ * receive a "nop".  The instruction's length will be left unchanged
+ * in "insnFlags".
+ *
+ * IMPORTANT: this may replace meth->insns with a pointer to a new copy of
+ * the instructions.
+ *
+ * Returns "true" on success.
+ */
+static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
+    int insnIdx, VerifyError failure)
+{
+    const u2* oldInsns = meth->insns + insnIdx;
+    u2 oldInsn = *oldInsns;
+    bool result = false;
+
+    dvmMakeCodeReadWrite(meth);
+
+    //LOGD("  was 0x%04x\n", oldInsn);
+    u2* newInsns = (u2*) meth->insns + insnIdx;
+
+    /*
+     * Generate the new instruction out of the old.
+     *
+     * First, make sure this is an instruction we're expecting to stomp on.
+     */
+    switch (oldInsn & 0xff) {
+    case OP_CONST_CLASS:                // insn[1] == class ref, 2 bytes
+    case OP_CHECK_CAST:
+    case OP_INSTANCE_OF:
+    case OP_NEW_INSTANCE:
+    case OP_NEW_ARRAY:
+
+    case OP_FILLED_NEW_ARRAY:           // insn[1] == class ref, 3 bytes
+    case OP_FILLED_NEW_ARRAY_RANGE:
+
+    case OP_IGET:                       // insn[1] == field ref, 2 bytes
+    case OP_IGET_BOOLEAN:
+    case OP_IGET_BYTE:
+    case OP_IGET_CHAR:
+    case OP_IGET_SHORT:
+    case OP_IGET_WIDE:
+    case OP_IGET_OBJECT:
+    case OP_IPUT:
+    case OP_IPUT_BOOLEAN:
+    case OP_IPUT_BYTE:
+    case OP_IPUT_CHAR:
+    case OP_IPUT_SHORT:
+    case OP_IPUT_WIDE:
+    case OP_IPUT_OBJECT:
+    case OP_SGET:
+    case OP_SGET_BOOLEAN:
+    case OP_SGET_BYTE:
+    case OP_SGET_CHAR:
+    case OP_SGET_SHORT:
+    case OP_SGET_WIDE:
+    case OP_SGET_OBJECT:
+    case OP_SPUT:
+    case OP_SPUT_BOOLEAN:
+    case OP_SPUT_BYTE:
+    case OP_SPUT_CHAR:
+    case OP_SPUT_SHORT:
+    case OP_SPUT_WIDE:
+    case OP_SPUT_OBJECT:
+
+    case OP_INVOKE_VIRTUAL:             // insn[1] == method ref, 3 bytes
+    case OP_INVOKE_VIRTUAL_RANGE:
+    case OP_INVOKE_SUPER:
+    case OP_INVOKE_SUPER_RANGE:
+    case OP_INVOKE_DIRECT:
+    case OP_INVOKE_DIRECT_RANGE:
+    case OP_INVOKE_STATIC:
+    case OP_INVOKE_STATIC_RANGE:
+    case OP_INVOKE_INTERFACE:
+    case OP_INVOKE_INTERFACE_RANGE:
+        break;
+    default:
+        /* could handle this in a generic way, but this is probably safer */
+        LOG_VFY("GLITCH: verifier asked to replace opcode 0x%02x\n",
+            oldInsn & 0xff);
+        goto bail;
+    }
+
+    /* write a NOP over the third code unit, if necessary */
+    int width = dvmInsnGetWidth(insnFlags, insnIdx);
+    switch (width) {
+    case 2:
+        /* nothing to do */
+        break;
+    case 3:
+        newInsns[2] = OP_NOP;
+        break;
+    default:
+        /* whoops */
+        LOGE("ERROR: stomped a %d-unit instruction with a verifier error\n",
+            width);
+        dvmAbort();
+    }
+
+    /* encode the opcode, with the failure code in the high byte */
+    newInsns[0] = OP_THROW_VERIFICATION_ERROR | (failure << 8);
+
+    result = true;
+
+bail:
+    dvmMakeCodeReadOnly(meth);
+    return result;
+}
+
+
+/*
  * ===========================================================================
  *      Entry point and driver loop
  * ===========================================================================
@@ -2801,7 +2917,7 @@ static void verifyFilledNewArrayRegs(const Method* meth,
 /*
  * Entry point for the detailed code-flow analysis.
  */
-bool dvmVerifyCodeFlow(const Method* meth, InsnFlags* insnFlags,
+bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
     UninitInstanceMap* uninitMap)
 {
     bool result = false;
@@ -2951,7 +3067,7 @@ bail:
  * instruction if a register contains an uninitialized instance created
  * by that same instrutcion.
  */
-static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
+static bool doCodeVerification(Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, UninitInstanceMap* uninitMap)
 {
     const int insnsSize = dvmGetMethodInsnsSize(meth);
@@ -3109,10 +3225,14 @@ static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
         dvmInsnSetChanged(insnFlags, insnIdx, false);
     }
 
-    if (DEAD_CODE_SCAN) {
+    if (DEAD_CODE_SCAN && !IS_METHOD_FLAG_SET(meth, METHOD_ISWRITABLE)) {
         /*
-         * Scan for dead code.  There's nothing "evil" about dead code, but it
-         * indicates a flaw somewhere down the line, possibly in the verifier.
+         * Scan for dead code.  There's nothing "evil" about dead code
+         * (besides the wasted space), but it indicates a flaw somewhere
+         * down the line, possibly in the verifier.
+         *
+         * If we've rewritten "always throw" instructions into the stream,
+         * we are almost certainly going to have some dead code.
          */
         int deadStart = -1;
         for (insnIdx = 0; insnIdx < insnsSize;
@@ -3178,8 +3298,11 @@ bail:
  * if execution at that point needs to be (re-)evaluated.  Register changes
  * are merged into "regTypes" at the target addresses.  Does not set or
  * clear any other flags in "insnFlags".
+ *
+ * This may alter meth->insns if we need to replace an instruction with
+ * throw-verification-error.
  */
-static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
+static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, RegType* workRegs, int insnIdx,
     UninitInstanceMap* uninitMap, int* pStartGuess)
 {
@@ -3223,7 +3346,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 #endif
     dexDecodeInstruction(gDvm.instrFormat, insns, &decInsn);
 
-    const int nextFlags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
+    int nextFlags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
 
     /*
      * Make a copy of the previous register state.  If the instruction
@@ -3539,15 +3662,6 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         break;
 
     case OP_NEW_INSTANCE:
-        /*
-         * We can check for interface and abstract classes here, but we
-         * can't reject them.  We can ask the optimizer to replace the
-         * instructions with a magic "always throw InstantiationError"
-         * instruction.  (Not enough bytes to sub in a method call.)
-         *
-         * TODO (xyz): check for abstract/interface, cause an
-         * InstantiationError to be thrown.
-         */
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vB, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
@@ -3557,6 +3671,14 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             assert(failure != VERIFY_ERROR_GENERIC);
         } else {
             RegType uninitType;
+
+            /* can't create an instance of an interface or abstract class */
+            if (dvmIsAbstractClass(resClass) || dvmIsInterfaceClass(resClass)) {
+                LOG_VFY("VFY: new-instance on interface or abstract class %s\n",
+                    resClass->descriptor);
+                failure = VERIFY_ERROR_INSTANTIATION;
+                break;
+            }
 
             /* add resolved class to uninit map if not already there */
             int uidx = dvmSetUninitInstance(uninitMap, insnIdx, resClass);
@@ -5081,6 +5203,13 @@ sput_1nr_common:
             kRegTypeInteger, kRegTypeInteger, true, &failure);
         break;
 
+    /*
+     * This falls into the general category of "optimized" instructions,
+     * which don't generally appear during verification.  Because it's
+     * inserted in the course of verification, we can expect to see it here.
+     */
+    case OP_THROW_VERIFICATION_ERROR:
+        break;
 
     /*
      * Verifying "quickened" instructions is tricky, because we have
@@ -5114,7 +5243,6 @@ sput_1nr_common:
      * If the object reference was null, the field-get returns the "wildcard"
      * type, which is acceptable for any operation.
      */
-    case OP_THROW_VERIFICATION_ERROR:
     case OP_EXECUTE_INLINE:
     case OP_INVOKE_DIRECT_EMPTY:
     case OP_IGET_QUICK:
@@ -5166,9 +5294,27 @@ sput_1nr_common:
     }
 
     if (!VERIFY_OK(failure)) {
-        LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
-            decInsn.opCode, insnIdx);
-        goto bail;
+        if (failure == VERIFY_ERROR_GENERIC || gDvm.optimizing) {
+            /* immediate failure, reject class */
+            LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
+                decInsn.opCode, insnIdx);
+            goto bail;
+        } else {
+            /* replace opcode and continue on */
+            LOGD("VFY: replacing opcode 0x%02x at 0x%04x\n",
+                decInsn.opCode, insnIdx);
+            if (!replaceFailingInstruction(meth, insnFlags, insnIdx, failure)) {
+                LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
+                    decInsn.opCode, insnIdx);
+                goto bail;
+            }
+            /* IMPORTANT: meth->insns may have been changed */
+            insns = meth->insns + insnIdx;
+
+            /* continue on as if we just handled a throw-verification-error */
+            failure = VERIFY_ERROR_NONE;
+            nextFlags = kInstrCanThrow;
+        }
     }
 
     /*
@@ -5334,6 +5480,7 @@ sput_1nr_common:
 bail:
     return result;
 }
+
 
 /*
  * callback function used in dumpRegTypes to print local vars

@@ -64,8 +64,9 @@ Throw.one
 Throw.twoA
 Throw.twoN
 Throw.rethrow
-Caught: java.lang.VerifyError: UnresTest1
-Caught (retry): java.lang.VerifyError: UnresTest1
-Caught: java.lang.VerifyError: UnresTest2
+UnresTest1...
+UnresTest1...
+UnresTest2...
+UnresTest2 done
 InternedString.run
 Done!

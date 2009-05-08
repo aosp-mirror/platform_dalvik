@@ -1962,9 +1962,11 @@ void dvmFreeClassInnards(ClassObject* clazz)
         int directMethodCount = clazz->directMethodCount;
         clazz->directMethods = NULL;
         clazz->directMethodCount = -1;
+        dvmLinearReadWrite(clazz->classLoader, directMethods);
         for (i = 0; i < directMethodCount; i++) {
             freeMethodInnards(&directMethods[i]);
         }
+        dvmLinearReadOnly(clazz->classLoader, directMethods);
         dvmLinearFree(clazz->classLoader, directMethods);
     }
     if (clazz->virtualMethods != NULL) {
@@ -1972,9 +1974,11 @@ void dvmFreeClassInnards(ClassObject* clazz)
         int virtualMethodCount = clazz->virtualMethodCount;
         clazz->virtualMethodCount = -1;
         clazz->virtualMethods = NULL;
+        dvmLinearReadWrite(clazz->classLoader, virtualMethods);
         for (i = 0; i < virtualMethodCount; i++) {
             freeMethodInnards(&virtualMethods[i]);
         }
+        dvmLinearReadOnly(clazz->classLoader, virtualMethods);
         dvmLinearFree(clazz->classLoader, virtualMethods);
     }
 
@@ -2022,6 +2026,14 @@ static void freeMethodInnards(Method* meth)
     if (pMap != NULL && dvmRegisterMapGetOnHeap(pMap)) {
         dvmFreeRegisterMap((RegisterMap*) pMap);
         meth->registerMap = NULL;
+    }
+
+    /*
+     * We may have copied the instructions.
+     */
+    if (IS_METHOD_FLAG_SET(meth, METHOD_ISWRITABLE)) {
+        DexCode* methodDexCode = (DexCode*) dvmGetMethodCode(meth);
+        dvmLinearFree(meth->clazz->classLoader, methodDexCode);
     }
 }
 
@@ -2097,6 +2109,55 @@ static void loadMethodFromDex(ClassObject* clazz, const DexMethod* pDexMethod,
         }
     }
 }
+
+/*
+ * We usually map bytecode directly out of the DEX file, which is mapped
+ * shared read-only.  If we want to be able to modify it, we have to make
+ * a new copy.
+ *
+ * Once copied, the code will be in the LinearAlloc region, which may be
+ * marked read-only.
+ *
+ * The bytecode instructions are embedded inside a DexCode structure, so we
+ * need to copy all of that.  (The dvmGetMethodCode function backs up the
+ * instruction pointer to find the start of the DexCode.)
+ */
+void dvmMakeCodeReadWrite(Method* meth)
+{
+    DexCode* methodDexCode = (DexCode*) dvmGetMethodCode(meth);
+
+    if (IS_METHOD_FLAG_SET(meth, METHOD_ISWRITABLE)) {
+        dvmLinearReadWrite(meth->clazz->classLoader, methodDexCode);
+        return;
+    }
+
+    assert(!dvmIsNativeMethod(meth) && !dvmIsAbstractMethod(meth));
+
+    size_t dexCodeSize = dexGetDexCodeSize(methodDexCode);
+    LOGD("Making a copy of %s.%s code (%d bytes)\n",
+        meth->clazz->descriptor, meth->name, dexCodeSize);
+
+    DexCode* newCode =
+        (DexCode*) dvmLinearAlloc(meth->clazz->classLoader, dexCodeSize);
+    memcpy(newCode, methodDexCode, dexCodeSize);
+
+    meth->insns = newCode->insns;
+    SET_METHOD_FLAG(meth, METHOD_ISWRITABLE);
+}
+
+/*
+ * Mark the bytecode read-only.
+ *
+ * If the contents of the DexCode haven't actually changed, we could revert
+ * to the original shared page.
+ */
+void dvmMakeCodeReadOnly(Method* meth)
+{
+    DexCode* methodDexCode = (DexCode*) dvmGetMethodCode(meth);
+    LOGV("+++ marking %p read-only\n", methodDexCode);
+    dvmLinearReadOnly(meth->clazz->classLoader, methodDexCode);
+}
+
 
 /*
  * jniArgInfo (32-bit int) layout:

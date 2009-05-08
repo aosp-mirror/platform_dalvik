@@ -43,11 +43,14 @@ typedef enum VerifyError {
     VERIFY_ERROR_NONE = 0,      /* no error; must be zero */
     VERIFY_ERROR_GENERIC,       /* VerifyError */
 
-    VERIFY_ERROR_NO_CLASS,      /* NoClassDefFoundError */
-    VERIFY_ERROR_NO_METHOD,     /* NoSuchMethodError */
-    VERIFY_ERROR_NO_FIELD,      /* NoSuchFieldError */
-    VERIFY_ERROR_CLASS_CHANGE,  /* IncompatibleClassChangeError */
-    VERIFY_ERROR_ACCESS,        /* IllegalAccessError */
+    VERIFY_ERROR_NO_CLASS,      /* NoClassDefFoundError (ref=class) */
+    VERIFY_ERROR_NO_FIELD,      /* NoSuchFieldError (ref=field) */
+    VERIFY_ERROR_NO_METHOD,     /* NoSuchMethodError (ref=method) */
+    VERIFY_ERROR_ACCESS_CLASS,  /* IllegalAccessError (ref=class) */
+    VERIFY_ERROR_ACCESS_FIELD,  /* IllegalAccessError (ref=field) */
+    VERIFY_ERROR_ACCESS_METHOD, /* IllegalAccessError (ref=method) */
+    VERIFY_ERROR_CLASS_CHANGE,  /* IncompatibleClassChangeError (ref=class) */
+    VERIFY_ERROR_INSTANTIATION, /* InstantiationError (ref=class) */
 } VerifyError;
 
 #define VERIFY_OK(_failure) ((_failure) == VERIFY_ERROR_NONE)

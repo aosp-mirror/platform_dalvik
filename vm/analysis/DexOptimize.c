@@ -611,8 +611,8 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
                     }
                 }
 
-                updateChecksum(dexAddr, dexLength,
-                    (DexHeader*) pDvmDex->pHeader);
+                DexHeader* pHeader = (DexHeader*)pDvmDex->pHeader;
+                updateChecksum(dexAddr, dexLength, pHeader);
 
                 dvmDexFileFree(pDvmDex);
             }
@@ -1713,7 +1713,7 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
         LOGW("DexOpt: resolve class illegal access: %s -> %s\n",
             referrer->descriptor, resClass->descriptor);
         if (pFailure != NULL)
-            *pFailure = VERIFY_ERROR_ACCESS;
+            *pFailure = VERIFY_ERROR_ACCESS_CLASS;
         return NULL;
     }
 
@@ -1745,8 +1745,7 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
         if (resClass == NULL) {
             //dvmClearOptException(dvmThreadSelf());
             assert(!dvmCheckException(dvmThreadSelf()));
-            if (pFailure != NULL)
-                *pFailure = VERIFY_ERROR_NO_FIELD;
+            if (pFailure != NULL) { assert(!VERIFY_OK(*pFailure)); }
             return NULL;
         }
 
@@ -1777,7 +1776,7 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
             referrer->descriptor, resField->field.clazz->descriptor,
             resField->field.name);
         if (pFailure != NULL)
-            *pFailure = VERIFY_ERROR_ACCESS;
+            *pFailure = VERIFY_ERROR_ACCESS_FIELD;
         return NULL;
     }
 
@@ -1811,8 +1810,7 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
         if (resClass == NULL) {
             //dvmClearOptException(dvmThreadSelf());
             assert(!dvmCheckException(dvmThreadSelf()));
-            if (pFailure != NULL)
-                *pFailure = VERIFY_ERROR_NO_FIELD;
+            if (pFailure != NULL) { assert(!VERIFY_OK(*pFailure)); }
             return NULL;
         }
 
@@ -1846,7 +1844,7 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
             referrer->descriptor, resField->field.clazz->descriptor,
             resField->field.name);
         if (pFailure != NULL)
-            *pFailure = VERIFY_ERROR_ACCESS;
+            *pFailure = VERIFY_ERROR_ACCESS_FIELD;
         return NULL;
     }
 
@@ -1919,11 +1917,13 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
 
         resClass = dvmOptResolveClass(referrer, pMethodId->classIdx, pFailure);
         if (resClass == NULL) {
-            /* can't find the class that the method is a part of */
+            /*
+             * Can't find the class that the method is a part of, or don't
+             * have permission to access the class.
+             */
             LOGV("DexOpt: can't find called method's class (?.%s)\n",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx));
-            if (pFailure != NULL)
-                *pFailure = VERIFY_ERROR_NO_METHOD;
+            if (pFailure != NULL) { assert(!VERIFY_OK(*pFailure)); }
             return NULL;
         }
         if (dvmIsInterfaceClass(resClass)) {
@@ -1999,7 +1999,7 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
             free(desc);
         }
         if (pFailure != NULL)
-            *pFailure = VERIFY_ERROR_ACCESS;
+            *pFailure = VERIFY_ERROR_ACCESS_METHOD;
         return NULL;
     }
 

@@ -635,6 +635,95 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
 }
 
 
+
+/*
+ * Helpers for dvmThrowVerificationError().
+ *
+ * Each returns a newly-allocated string.
+ */
+#define kThrowShow_accessFromClass     1
+static char* classNameFromIndex(const Method* method, int ref, int flags)
+{
+    static const int kBufLen = 256;
+    const DvmDex* pDvmDex = method->clazz->pDvmDex;
+    const char* className = dexStringByTypeIdx(pDvmDex->pDexFile, ref);
+    char* dotClassName = dvmDescriptorToDot(className);
+    if (flags == 0)
+        return dotClassName;
+
+    char* result = (char*) malloc(kBufLen);
+
+    if ((flags & kThrowShow_accessFromClass) != 0) {
+        char* dotFromName = dvmDescriptorToDot(method->clazz->descriptor);
+        snprintf(result, kBufLen, "tried to access class %s from class %s",
+            dotClassName, dotFromName);
+        free(dotFromName);
+    } else {
+        assert(false);      // should've been caught above
+        result[0] = '\0';
+    }
+
+    free(dotClassName);
+    return result;
+}
+static char* fieldNameFromIndex(const Method* method, int ref, int flags)
+{
+    static const int kBufLen = 256;
+    const DvmDex* pDvmDex = method->clazz->pDvmDex;
+    const DexFieldId* pFieldId;
+    const char* className;
+    const char* fieldName;
+
+    pFieldId = dexGetFieldId(pDvmDex->pDexFile, ref);
+    className = dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->classIdx);
+    fieldName = dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx);
+
+    char* dotName = dvmDescriptorToDot(className);
+    char* result = (char*) malloc(kBufLen);
+
+    if ((flags & kThrowShow_accessFromClass) != 0) {
+        char* dotFromName = dvmDescriptorToDot(method->clazz->descriptor);
+        snprintf(result, kBufLen, "tried to access field %s.%s from class %s",
+            dotName, fieldName, dotFromName);
+        free(dotFromName);
+    } else {
+        snprintf(result, kBufLen, "%s.%s", dotName, fieldName);
+    }
+
+    free(dotName);
+    return result;
+}
+static char* methodNameFromIndex(const Method* method, int ref, int flags)
+{
+    static const int kBufLen = 384;
+    const DvmDex* pDvmDex = method->clazz->pDvmDex;
+    const DexMethodId* pMethodId;
+    const char* className;
+    const char* methodName;
+
+    pMethodId = dexGetMethodId(pDvmDex->pDexFile, ref);
+    className = dexStringByTypeIdx(pDvmDex->pDexFile, pMethodId->classIdx);
+    methodName = dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx);
+
+    char* dotName = dvmDescriptorToDot(className);
+    char* result = (char*) malloc(kBufLen);
+
+    if ((flags & kThrowShow_accessFromClass) != 0) {
+        char* dotFromName = dvmDescriptorToDot(method->clazz->descriptor);
+        char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
+        snprintf(result, kBufLen,
+            "tried to access method %s.%s:%s from class %s",
+            dotName, methodName, desc, dotFromName);
+        free(dotFromName);
+        free(desc);
+    } else {
+        snprintf(result, kBufLen, "%s.%s", dotName, methodName);
+    }
+
+    free(dotName);
+    return result;
+}
+
 /*
  * Throw an exception for a problem identified by the verifier.
  *
@@ -645,10 +734,59 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
  * meaning of "ref" is kind-specific; it's usually an index to a
  * class, field, or method reference.
  */
-void dvmThrowVerificationError(const DvmDex* pDvmDex, int kind, int ref)
+void dvmThrowVerificationError(const Method* method, int kind, int ref)
 {
-    // TODO
-    dvmThrowException("Ljava/lang/VerifyError;", NULL);
+    const char* exceptionName = "Ljava/lang/VerifyError;";
+    char* msg = NULL;
+
+    switch ((VerifyError) kind) {
+    case VERIFY_ERROR_NO_CLASS:
+        exceptionName = "Ljava/lang/NoClassDefFoundError;";
+        msg = classNameFromIndex(method, ref, 0);
+        break;
+    case VERIFY_ERROR_NO_FIELD:
+        exceptionName = "Ljava/lang/NoSuchFieldError;";
+        msg = fieldNameFromIndex(method, ref, 0);
+        break;
+    case VERIFY_ERROR_NO_METHOD:
+        exceptionName = "Ljava/lang/NoSuchMethodError;";
+        msg = methodNameFromIndex(method, ref, 0);
+        break;
+    case VERIFY_ERROR_ACCESS_CLASS:
+        exceptionName = "Ljava/lang/IllegalAccessError;";
+        msg = classNameFromIndex(method, ref, kThrowShow_accessFromClass);
+        break;
+    case VERIFY_ERROR_ACCESS_FIELD:
+        exceptionName = "Ljava/lang/IllegalAccessError;";
+        msg = fieldNameFromIndex(method, ref, kThrowShow_accessFromClass);
+        break;
+    case VERIFY_ERROR_ACCESS_METHOD:
+        exceptionName = "Ljava/lang/IllegalAccessError;";
+        msg = methodNameFromIndex(method, ref, kThrowShow_accessFromClass);
+        break;
+    case VERIFY_ERROR_CLASS_CHANGE:
+        exceptionName = "Ljava/lang/IncompatibleClassChangeError;";
+        msg = classNameFromIndex(method, ref, 0);
+        break;
+    case VERIFY_ERROR_INSTANTIATION:
+        exceptionName = "Ljava/lang/InstantiationError;";
+        msg = classNameFromIndex(method, ref, 0);
+        break;
+
+    case VERIFY_ERROR_GENERIC:
+        /* generic VerifyError; use default exception, no message */
+        break;
+    case VERIFY_ERROR_NONE:
+        /* should never happen; use default exception */
+        assert(false);
+        msg = strdup("weird - no error specified");
+        break;
+
+    /* no default clause -- want warning if enum updated */
+    }
+
+    dvmThrowException(exceptionName, msg);
+    free(msg);
 }
 
 

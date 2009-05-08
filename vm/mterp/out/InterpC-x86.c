@@ -1193,6 +1193,15 @@ GOTO_TARGET_DECL(exceptionThrown);
     FINISH(2);
 
 
+/* File: c/OP_THROW_VERIFICATION_ERROR.c */
+HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR)
+    EXPORT_PC();
+    vsrc1 = INST_AA(inst);
+    ref = FETCH(1);             /* class/field/method ref */
+    dvmThrowVerificationError(curMethod, vsrc1, ref);
+    GOTO_exceptionThrown();
+OP_END
+
 /* File: c/gotoTargets.c */
 /*
  * C footer.  This has some common code shared by the various targets.

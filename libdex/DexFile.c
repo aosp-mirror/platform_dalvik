@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Access the contents of a .dex file.
  */
 
 #include "DexFile.h"
 #include "DexProto.h"
+#include "DexCatch.h"
 #include "Leb128.h"
 #include "sha1.h"
 #include "ZipArchive.h"
@@ -887,6 +889,43 @@ u4 dexComputeChecksum(const DexHeader* pHeader)
 
 
 /*
+ * Compute the size, in bytes, of a DexCode.
+ */
+size_t dexGetDexCodeSize(const DexCode* pCode)
+{
+    /*
+     * The catch handler data is the last entry.  It has a variable number
+     * of variable-size pieces, so we need to create an iterator.
+     */
+    u4 handlersSize;
+    u4 offset;
+    u4 ui;
+
+    if (pCode->triesSize != 0) {
+        handlersSize = dexGetHandlersSize(pCode);
+        offset = dexGetFirstHandlerOffset(pCode);
+    } else {
+        handlersSize = 0;
+        offset = 0;
+    }
+
+    for (ui = 0; ui < handlersSize; ui++) {
+        DexCatchIterator iterator;
+        dexCatchIteratorInit(&iterator, pCode, offset);
+        offset = dexCatchIteratorGetEndOffset(&iterator, pCode);
+    }
+
+    const u1* handlerData = dexGetCatchHandlerData(pCode);
+
+    //LOGD("+++ pCode=%p handlerData=%p last offset=%d\n",
+    //    pCode, handlerData, offset);
+
+    /* return the size of the catch handler + everything before it */
+    return (handlerData - (u1*) pCode) + offset;
+}
+
+
+/*
  * ===========================================================================
  *      Debug info
  * ===========================================================================
@@ -1185,3 +1224,4 @@ invalid_stream:
         free(methodDescriptor);
     }
 }
+

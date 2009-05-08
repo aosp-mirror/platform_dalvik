@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Linear memory allocation, tied to class loaders.
  */
@@ -148,7 +149,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
         LOGE("LinearAlloc mmap(%d) failed: %s\n", pHdr->mapLength,
             strerror(errno));
         free(pHdr);
-	close(fd);
+        close(fd);
         return NULL;
     }
 
