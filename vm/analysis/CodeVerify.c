@@ -5173,13 +5173,11 @@ sput_1nr_common:
             updateRegisters(meth, insnFlags, regTable, insnIdx+insnWidth,
                 workRegs);
         } else {
-            /* if not yet visited, or regs were updated, set "changed" */
-            if (!dvmInsnIsVisited(insnFlags, insnIdx+insnWidth) ||
-                compareRegisters(workRegs, entryRegs,
-                    insnRegCount + kExtraRegs) != 0)
-            {
-                dvmInsnSetChanged(insnFlags, insnIdx+insnWidth, true);
-            }
+            /*
+             * We didn't record register data for the next entry, so we have
+             * to assume that something has changed and re-evaluate it.
+             */
+            dvmInsnSetChanged(insnFlags, insnIdx+insnWidth, true);
         }
     }
 
