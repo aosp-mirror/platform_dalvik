@@ -3163,6 +3163,7 @@ static bool createIftable(ClassObject* clazz)
     }
 
     if (mirandaCount != 0) {
+        static const int kManyMirandas = 150;   /* arbitrary */
         Method* newVirtualMethods;
         Method* meth;
         int oldMethodCount, oldVtableCount;
@@ -3170,6 +3171,17 @@ static bool createIftable(ClassObject* clazz)
         for (i = 0; i < mirandaCount; i++) {
             LOGVV("MIRANDA %d: %s.%s\n", i,
                 mirandaList[i]->clazz->descriptor, mirandaList[i]->name);
+        }
+        if (mirandaCount > kManyMirandas) {
+            /*
+             * Some obfuscators like to create an interface with a huge
+             * pile of methods, declare classes as implementing it, and then
+             * only define a couple of methods.  This leads to a rather
+             * massive collection of Miranda methods and a lot of wasted
+             * space, sometimes enough to blow out the LinearAlloc cap.
+             */
+            LOGD("Note: class %s has %d unimplemented (abstract) methods\n",
+                clazz->descriptor, mirandaCount);
         }
 
         /*
@@ -3237,6 +3249,9 @@ static bool createIftable(ClassObject* clazz)
          * Now we need to create the fake methods.  We clone the abstract
          * method definition from the interface and then replace a few
          * things.
+         *
+         * The Method will be an "abstract native", with nativeFunc set to
+         * dvmAbstractMethodStub().
          */
         meth = clazz->virtualMethods + oldMethodCount;
         for (i = 0; i < mirandaCount; i++, meth++) {

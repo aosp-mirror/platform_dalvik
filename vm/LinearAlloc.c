@@ -68,7 +68,7 @@ guard the pages on debug builds.  Handy when tracking down corruption.
 #define BLOCK_ALIGN         8
 
 /* default length of memory segment (worst case is probably "dexopt") */
-#define DEFAULT_MAX_LENGTH  (4*1024*1024)
+#define DEFAULT_MAX_LENGTH  (5*1024*1024)
 
 /* leave enough space for a length word */
 #define HEADER_EXTRA        4
@@ -313,7 +313,8 @@ void* dvmLinearAlloc(Object* classLoader, size_t size)
          * works if the users of these functions actually free everything
          * they allocate.
          */
-        LOGE("LinearAlloc exceeded capacity, last=%d\n", (int) size);
+        LOGE("LinearAlloc exceeded capacity (%d), last=%d\n",
+            pHdr->mapLength, (int) size);
         dvmAbort();
     }
 
