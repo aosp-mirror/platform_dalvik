@@ -26,33 +26,31 @@ import org.apache.harmony.auth.internal.nls.Messages;
  * <i>target name</i> of the permission specifies which methods are allowed
  * without specifying the concrete action lists. Possible target names and
  * associated authentication permissions are:
- * 
+ *
  * <pre>
  *    doAs                      invoke Subject.doAs methods.
  *    doAsPrivileged            invoke the Subject.doAsPrivileged methods.
  *    getSubject                invoke Subject.getSubject().
  *    getSubjectFromDomainCombiner    invoke SubjectDomainCombiner.getSubject().
  *    setReadOnly               invoke Subject.setReadonly().
- *    modifyPrincipals          modify the set of principals 
+ *    modifyPrincipals          modify the set of principals
  *                              associated with a Subject.
  *    modifyPublicCredentials   modify the set of public credentials
  *                              associated with a Subject.
  *    modifyPrivateCredentials  modify the set of private credentials
  *                              associated with a Subject.
- *    refreshCredential         invoke the refresh method on a credential of a 
+ *    refreshCredential         invoke the refresh method on a credential of a
  *                              refreshable credential class.
  *    destroyCredential         invoke the destroy method on a credential of a
  *                              destroyable credential class.
  *    createLoginContext.<i>name</i>   instantiate a LoginContext with the
  *                              specified name. The wildcard name ('*')
  *                              allows to a LoginContext of any name.
- *    getLoginConfiguration     invoke the getConfiguration method of 
+ *    getLoginConfiguration     invoke the getConfiguration method of
  *                              javax.security.auth.login.Configuration.
- *    refreshLoginConfiguration Invoke the refresh method of 
+ *    refreshLoginConfiguration Invoke the refresh method of
  *                              javax.security.auth.login.Configuration.
  * </pre>
- * 
- * @since Android 1.0
  */
 public final class AuthPermission extends BasicPermission {
 
@@ -77,7 +75,7 @@ public final class AuthPermission extends BasicPermission {
 
     /**
      * Creates an authentication permission with the specified target name.
-     * 
+     *
      * @param name
      *            the target name of this authentication permission.
      */
@@ -87,7 +85,7 @@ public final class AuthPermission extends BasicPermission {
 
     /**
      * Creates an authentication permission with the specified target name.
-     * 
+     *
      * @param name
      *            the target name of this authentication permission.
      * @param actions

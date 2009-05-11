@@ -25,8 +25,6 @@ import org.apache.harmony.auth.internal.nls.Messages;
 /**
  * Is used in conjunction with a {@link CallbackHandler} to retrieve a password
  * when needed.
- * 
- * @since Android 1.0
  */
 public class PasswordCallback implements Callback, Serializable {
 
@@ -47,7 +45,7 @@ public class PasswordCallback implements Callback, Serializable {
 
     /**
      * Creates a new {@code PasswordCallback} instance.
-     * 
+     *
      * @param prompt
      *            the message that should be displayed to the user
      * @param echoOn
@@ -62,7 +60,7 @@ public class PasswordCallback implements Callback, Serializable {
     /**
      * Returns the prompt that was specified when creating this {@code
      * PasswordCallback}
-     * 
+     *
      * @return the prompt
      */
     public String getPrompt() {
@@ -72,7 +70,7 @@ public class PasswordCallback implements Callback, Serializable {
     /**
      * Queries whether this {@code PasswordCallback} expects user input to be
      * echoed, which is specified during the creation of the object.
-     * 
+     *
      * @return {@code true} if (and only if) user input should be echoed
      */
     public boolean isEchoOn() {
@@ -83,7 +81,7 @@ public class PasswordCallback implements Callback, Serializable {
      * Sets the password. The {@link CallbackHandler} that performs the actual
      * provisioning or input of the password needs to call this method to hand
      * back the password to the security service that requested it.
-     * 
+     *
      * @param password
      *            the password. A copy of this is stored, so subsequent changes
      *            to the input array do not affect the {@code PasswordCallback}.
@@ -101,7 +99,7 @@ public class PasswordCallback implements Callback, Serializable {
      * Returns the password. The security service that needs the password
      * usually calls this method once the {@link CallbackHandler} has finished
      * its work.
-     * 
+     *
      * @return the password. A copy of the internal password is created and
      *         returned, so subsequent changes to the internal password do not
      *         affect the result.

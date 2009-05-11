@@ -19,8 +19,6 @@ package javax.security.auth;
 
 /**
  * Signals that the {@link Destroyable#destroy()} method failed.
- * 
- * @since Android 1.0
  */
 public class DestroyFailedException extends Exception {
 
@@ -35,7 +33,7 @@ public class DestroyFailedException extends Exception {
 
     /**
      * Creates an exception of type {@code DestroyFailedException}.
-     * 
+     *
      * @param message
      *            A detail message that describes the reason for this exception.
      */
