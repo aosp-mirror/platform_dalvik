@@ -17,6 +17,7 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -195,6 +196,7 @@ public class TimeZoneTest extends junit.framework.TestCase {
         method = "setDefault",
         args = {java.util.TimeZone.class}
     )
+    @BrokenTest("Runner sets timezone before test, hence old value != default")
     public void test_setDefaultLjava_util_TimeZone() {
         TimeZone oldDefault = TimeZone.getDefault();
         TimeZone zone = new SimpleTimeZone(45, "TEST");
