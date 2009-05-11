@@ -22,6 +22,7 @@ import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -2671,6 +2672,7 @@ public class SocketChannelTest extends TestCase {
         method = "write",
         args = {java.nio.ByteBuffer.class}
     )
+    @BrokenTest("Occasionally fail in CTS, but works in CoreTestRunner")
     public void test_writeLjava_nio_ByteBuffer_Nonblocking_HugeData() throws IOException {
         // initialize write content
         ByteBuffer writeContent = ByteBuffer.allocate(CAPACITY_HUGE);
