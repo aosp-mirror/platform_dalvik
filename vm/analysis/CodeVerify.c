@@ -5200,19 +5200,18 @@ sput_1nr_common:
         if (!checkMoveException(meth, insnIdx+insnWidth, "next"))
             goto bail;
 
-        /*
-         * We want to update the registers and set the "changed" flag on the
-         * next instruction (if necessary).  We may not be storing register
-         * changes for all addresses, so for non-branch targets we just
-         * compare "entry" vs. "work" to see if we've changed anything.
-         */
         if (getRegisterLine(regTable, insnIdx+insnWidth) != NULL) {
+            /*
+             * Merge registers into what we have for the next instruction,
+             * and set the "changed" flag if needed.
+             */
             updateRegisters(meth, insnFlags, regTable, insnIdx+insnWidth,
                 workRegs);
         } else {
             /*
-             * We didn't record register data for the next entry, so we have
-             * to assume that something has changed and re-evaluate it.
+             * We're not recording register data for the next instruction,
+             * so we don't know what the prior state was.  We have to
+             * assume that something has changed and re-evaluate it.
              */
             dvmInsnSetChanged(insnFlags, insnIdx+insnWidth, true);
         }
