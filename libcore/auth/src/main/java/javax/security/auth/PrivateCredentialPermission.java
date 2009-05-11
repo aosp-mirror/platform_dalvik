@@ -31,11 +31,11 @@ import org.apache.harmony.auth.internal.nls.Messages;
  * Protects private credential objects belonging to a {@code Subject}. It has
  * only one action which is "read". The target name of this permission has a
  * special syntax:
- * 
+ *
  * <pre>
  * targetName = CredentialClass {PrincipalClass &quot;PrincipalName&quot;}*
  * </pre>
- * 
+ *
  * First it states a credential class and is followed then by a list of one or
  * more principals identifying the subject.
  * <p>
@@ -43,12 +43,11 @@ import org.apache.harmony.auth.internal.nls.Messages;
  * Principal} class followed by the principal name in quotes. For example, the
  * following file may define permission to read the private credentials of a
  * principal named "Bob": "com.sun.PrivateCredential com.sun.Principal \"Bob\""
- * </p>
+ * <p>
  * The syntax also allows the use of the wildcard "*" in place of {@code
  * CredentialClass} or {@code PrincipalClass} and/or {@code PrincipalName}.
- * 
+ *
  * @see Principal
- * @since Android 1.0
  */
 public final class PrivateCredentialPermission extends Permission {
 
@@ -69,7 +68,7 @@ public final class PrivateCredentialPermission extends Permission {
      * Creates a new permission for private credentials specified by the target
      * name {@code name} and an {@code action}. The action is always
      * {@code "read"}.
-     * 
+     *
      * @param name
      *            the target name of the permission.
      * @param action
@@ -197,13 +196,13 @@ public final class PrivateCredentialPermission extends Permission {
      * dimension of the array corresponds to the number of principals. The
      * second dimension defines either the name of the {@code PrincipalClass}
      * [x][0] or the value of {@code PrincipalName} [x][1].
-     * 
+     * <p>
      * This corresponds to the the target name's syntax:
-     * 
+     *
      * <pre>
      * targetName = CredentialClass {PrincipalClass &quot;PrincipalName&quot;}*
      * </pre>
-     * 
+     *
      * @return the principal classes and names associated with this {@code
      *         PrivateCredentialPermission}.
      */
@@ -225,7 +224,7 @@ public final class PrivateCredentialPermission extends Permission {
 
     /**
      * Returns the class name of the credential associated with this permission.
-     * 
+     *
      * @return the class name of the credential associated with this permission.
      */
     public String getCredentialClass() {

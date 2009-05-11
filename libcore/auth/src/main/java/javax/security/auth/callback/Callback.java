@@ -20,8 +20,6 @@ package javax.security.auth.callback;
 /**
  * Defines an empty base interface for all {@code Callback}s used during
  * authentication.
- * 
- * @since Android 1.0
  */
 public interface Callback {
 }

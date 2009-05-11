@@ -29,13 +29,11 @@ import org.apache.harmony.security.x501.Name;
 
 /**
  * Represents an X.500 principal, which holds the distinguished name of some
- * network entity. An example of a distinguished name is {@code "O=Google,
- * OU=Android, C=US"}. The class can be instantiated from a byte representation
+ * network entity. An example of a distinguished name is {@code "O=SomeOrg,
+ * OU=SomeOrgUnit, C=US"}. The class can be instantiated from a byte representation
  * of an object identifier (OID), an ASN.1 DER-encoded version, or a simple
  * string holding the distinguished name. The representations must follow either
  * RFC 2253, RFC 1779, or RFC2459.
- * 
- * @since Android 1.0
  */
 public final class X500Principal implements Serializable, Principal {
 
@@ -65,10 +63,10 @@ public final class X500Principal implements Serializable, Principal {
     /**
      * Creates a new X500Principal from a given ASN.1 DER encoding of a
      * distinguished name.
-     * 
+     *
      * @param name
      *            the ASN.1 DER-encoded distinguished name
-     * 
+     *
      * @throws IllegalArgumentException
      *             if the ASN.1 DER-encoded distinguished name is incorrect
      */
@@ -91,11 +89,11 @@ public final class X500Principal implements Serializable, Principal {
     /**
      * Creates a new X500Principal from a given ASN.1 DER encoding of a
      * distinguished name.
-     * 
+     *
      * @param in
      *            an {@code InputStream} holding the ASN.1 DER-encoded
      *            distinguished name
-     * 
+     *
      * @throws IllegalArgumentException
      *             if the ASN.1 DER-encoded distinguished name is incorrect
      */
@@ -118,10 +116,10 @@ public final class X500Principal implements Serializable, Principal {
     /**
      * Creates a new X500Principal from a string representation of a
      * distinguished name.
-     * 
+     *
      * @param name
      *            the string representation of the distinguished name
-     * 
+     *
      * @throws IllegalArgumentException
      *             if the string representation of the distinguished name is
      *             incorrect
@@ -155,8 +153,8 @@ public final class X500Principal implements Serializable, Principal {
 
     /**
      * Returns an ASN.1 DER-encoded representation of the distinguished name
-     * contained in this X.500 principal. 
-     * 
+     * contained in this X.500 principal.
+     *
      * @return the ASN.1 DER-encoded representation
      */
     public byte[] getEncoded() {
@@ -167,9 +165,9 @@ public final class X500Principal implements Serializable, Principal {
     }
 
     /**
-     * Returns a human-readable string representation of the distinguished name 
+     * Returns a human-readable string representation of the distinguished name
      * contained in this X.500 principal.
-     * 
+     *
      * @return the string representation
      */
     public String getName() {
@@ -185,12 +183,12 @@ public final class X500Principal implements Serializable, Principal {
      * some canonicalizing operations like removing leading and trailing
      * whitespace, lower-casing the whole name, and bringing it into a
      * normalized Unicode representation.
-     * 
+     *
      * @param format
      *            the name of the format to use for the representation
-     * 
+     *
      * @return the string representation
-     * 
+     *
      * @throws IllegalArgumentException
      *             if the {@code format} argument is not one of the three
      *             mentioned above

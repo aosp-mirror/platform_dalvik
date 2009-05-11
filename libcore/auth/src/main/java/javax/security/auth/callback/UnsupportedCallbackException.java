@@ -20,8 +20,6 @@ package javax.security.auth.callback;
 /**
  * Thrown when a {@link CallbackHandler} does not support a particular {@link
  * Callback}.
- * 
- * @since Android 1.0
  */
 public class UnsupportedCallbackException extends Exception {
 
@@ -32,7 +30,7 @@ public class UnsupportedCallbackException extends Exception {
     /**
      * Creates a new exception instance and initializes it with just the
      * unsupported {@code Callback}, but no error message.
-     * 
+     *
      * @param callback
      *            the {@code Callback}
      */
@@ -44,7 +42,7 @@ public class UnsupportedCallbackException extends Exception {
     /**
      * Creates a new exception instance and initializes it with both the
      * unsupported {@code Callback} and an error message.
-     * 
+     *
      * @param callback
      *            the {@code Callback}
      * @param message
@@ -57,7 +55,7 @@ public class UnsupportedCallbackException extends Exception {
 
     /**
      * Returns the unsupported {@code Callback} that triggered this exception.
-     * 
+     *
      * @return the {@code Callback}
      */
     public Callback getCallback() {

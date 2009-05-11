@@ -20,8 +20,6 @@ package javax.security.auth;
 /**
  * Allows for special treatment of sensitive information, when it comes to
  * destroying or clearing of the data.
- * 
- * @since Android 1.0
  */
 public interface Destroyable {
 
@@ -29,7 +27,7 @@ public interface Destroyable {
      * Erases the sensitive information. Once an object is destroyed any calls
      * to its methods will throw an {@code IllegalStateException}. If it does
      * not succeed a DestroyFailedException is thrown.
-     * 
+     *
      * @throws DestroyFailedException
      *             if the information cannot be erased.
      */
@@ -37,7 +35,7 @@ public interface Destroyable {
 
     /**
      * Returns {@code true} once an object has been safely destroyed.
-     * 
+     *
      * @return whether the object has been safely destroyed.
      */
     boolean isDestroyed();

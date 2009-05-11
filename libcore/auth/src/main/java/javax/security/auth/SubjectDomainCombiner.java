@@ -25,8 +25,6 @@ import java.util.Set;
 /**
  * Merges permissions based on code source and code signers with permissions
  * granted to the specified {@link Subject}.
- * 
- * @since Android 1.0
  */
 public class SubjectDomainCombiner implements DomainCombiner {
 
@@ -39,7 +37,7 @@ public class SubjectDomainCombiner implements DomainCombiner {
 
     /**
      * Creates a domain combiner for the entity provided in {@code subject}.
-     * 
+     *
      * @param subject
      *            the entity to which this domain combiner is associated.
      */
@@ -53,7 +51,7 @@ public class SubjectDomainCombiner implements DomainCombiner {
 
     /**
      * Returns the entity to which this domain combiner is associated.
-     * 
+     *
      * @return the entity to which this domain combiner is associated.
      */
     public Subject getSubject() {
@@ -68,7 +66,7 @@ public class SubjectDomainCombiner implements DomainCombiner {
     /**
      * Merges the {@code ProtectionDomain} with the {@code Principal}s
      * associated with the subject of this {@code SubjectDomainCombiner}.
-     * 
+     *
      * @param currentDomains
      *            the {@code ProtectionDomain}s associated with the context of
      *            the current thread. The domains must be sorted according to
