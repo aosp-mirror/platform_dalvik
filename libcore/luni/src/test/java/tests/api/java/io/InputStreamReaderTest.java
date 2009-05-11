@@ -726,10 +726,12 @@ public class InputStreamReaderTest extends TestCase {
             char[] chars = new char[8192];
             int at = 0;
 
-            outer:
             for (;;) {
                 int amt = isr.read(chars);
-                if (amt <= 0) break;
+                if (amt <= 0) {
+                    break;
+                }
+
                 for (int i = 0; i < amt; i++) {
                     char c = chars[i];
                     if (at < prefixLength) {
