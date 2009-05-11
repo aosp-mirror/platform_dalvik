@@ -197,6 +197,10 @@ public final class CharsetEncoderICU extends CharsetEncoder {
         data[INVALID_CHARS] = 0;
         data[INPUT_HELD] = 0;
         savedInputHeldLen = 0;
+        // BEGIN android-added
+        output = null;
+        input = null;
+        // END android-added
     }
 
     /**
