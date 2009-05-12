@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package java.util.logging;
 
 import java.text.MessageFormat;
@@ -26,41 +25,24 @@ import java.util.ResourceBundle;
  * string representation. Head and tail strings are sometimes used to wrap a set
  * of records. The {@code getHead} and {@code getTail} methods are used for this
  * purpose.
- * 
- * @since Android 1.0
  */
 public abstract class Formatter {
 
-    /*
-     * -------------------------------------------------------------------
-     * Constructors
-     * -------------------------------------------------------------------
-     */
-
     /**
      * Constructs a {@code Formatter} object.
-     * 
-     * @since Android 1.0
      */
     protected Formatter() {
         super();
     }
 
-    /*
-     * -------------------------------------------------------------------
-     * Methods
-     * -------------------------------------------------------------------
-     */
-
     /**
      * Converts a {@link LogRecord} object into a string representation. The
      * resulted string is usually localized and includes the message field of
      * the record.
-     * 
+     *
      * @param r
      *            the log record to be formatted into a string.
      * @return the formatted string.
-     * @since Android 1.0
      */
     public abstract String format(LogRecord r);
 
@@ -71,16 +53,13 @@ public abstract class Formatter {
      * <p>
      * The message string is firstly localized using the {@code ResourceBundle}
      * object associated with the supplied {@code LogRecord}.
-     * </p>
      * <p>
      * Notice : if message contains "{0", then java.text.MessageFormat is used.
      * Otherwise no formatting is performed.
-     * </p>
-     * 
+     *
      * @param r
      *            the log record to be formatted.
      * @return the string resulted from the formatting.
-     * @since Android 1.0
      */
     public String formatMessage(LogRecord r) {
         String pattern = r.getMessage();
@@ -114,14 +93,12 @@ public abstract class Formatter {
     /**
      * Gets the head string used to wrap a set of log records. This base class
      * always returns an empty string.
-     * 
+     *
      * @param h
      *            the target handler.
      * @return the head string used to wrap a set of log records, empty in this
      *         implementation.
-     * @since Android 1.0
      */
-    @SuppressWarnings("unused")
     public String getHead(Handler h) {
         return ""; //$NON-NLS-1$
     }
@@ -129,17 +106,13 @@ public abstract class Formatter {
     /**
      * Gets the tail string used to wrap a set of log records. This base class
      * always returns the empty string.
-     * 
+     *
      * @param h
      *            the target handler.
      * @return the tail string used to wrap a set of log records, empty in this
      *         implementation.
-     * @since Android 1.0
      */
-    @SuppressWarnings("unused")
     public String getTail(Handler h) {
         return ""; //$NON-NLS-1$
     }
-
 }
-

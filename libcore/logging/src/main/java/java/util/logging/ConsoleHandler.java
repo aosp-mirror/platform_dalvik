@@ -38,19 +38,13 @@ package java.util.logging;
  * handler will use to encode log messages, defaults to {@code null} if this
  * property is not found or has an invalid value.
  * </ul>
- * </p>
  * <p>
  * This class is not thread-safe.
- * </p>
- * 
- * @since Android 1.0
  */
 public class ConsoleHandler extends StreamHandler {
 
     /**
      * Constructs a {@code ConsoleHandler} object.
-     * 
-     * @since Android 1.0
      */
     public ConsoleHandler() {
         super(System.err);
@@ -58,8 +52,6 @@ public class ConsoleHandler extends StreamHandler {
 
     /**
      * Closes this handler. The {@code System.err} is flushed but not closed.
-     * 
-     * @since Android 1.0
      */
     @Override
     public void close() {
@@ -68,16 +60,13 @@ public class ConsoleHandler extends StreamHandler {
 
     /**
      * Logs a record if necessary. A flush operation will be done.
-     * 
+     *
      * @param record
      *            the log record to be logged.
-     * 
-     * @since Android 1.0
      */
     @Override
     public void publish(LogRecord record) {
         super.publish(record);
         super.flush();
-
     }
 }
