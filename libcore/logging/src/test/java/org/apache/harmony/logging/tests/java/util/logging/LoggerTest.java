@@ -29,6 +29,8 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.LoggingPermission;
+import java.io.File;
+import java.io.FileInputStream;
 
 import junit.framework.TestCase;
 
@@ -4626,6 +4628,26 @@ public class LoggerTest extends TestCase {
         } finally {
             System.setSecurityManager(originalSecurityManager);
         }
+    }
+
+    /*
+     * test initHandler
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "initHandler",
+        args = {}
+    )
+    public void test_initHandler() throws Exception {
+        File logProps = new File(LOGGING_CONFIG_FILE);
+        LogManager lm = LogManager.getLogManager();
+        lm.readConfiguration(new FileInputStream(logProps));
+
+        Logger log = Logger.getLogger("");
+        // can log properly
+        Handler[] handlers = log.getHandlers();
+        assertEquals(2, handlers.length);
     }
 
 

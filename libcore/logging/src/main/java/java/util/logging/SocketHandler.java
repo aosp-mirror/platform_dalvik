@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 
-
 package java.util.logging;
 
-import java.net.Socket;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 
 import org.apache.harmony.logging.internal.nls.Messages;
 
@@ -48,16 +47,14 @@ import org.apache.harmony.logging.internal.nls.Messages;
  * <li>java.util.logging.SocketHandler.encoding specifies the port number that
  * this handler should connect to. There's no default value for this property.
  * </ul>
- * </p>
  * <p>
  * This handler buffers the outgoing messages, but flushes each time a log
  * record has been published.
- * </p>
  * <p>
  * This class is not thread-safe.
- * </p>
  */
 public class SocketHandler extends StreamHandler {
+
     // default level
     private static final String DEFAULT_LEVEL = "ALL"; //$NON-NLS-1$
 
@@ -71,7 +68,7 @@ public class SocketHandler extends StreamHandler {
      * Constructs a {@code SocketHandler} object using the properties read by
      * the log manager, including the host name and port number. Default
      * formatting uses the XMLFormatter class and level is set to ALL.
-     * 
+     *
      * @throws IOException
      *             if failed to connect to the specified host and port.
      * @throws IllegalArgumentException
@@ -92,7 +89,7 @@ public class SocketHandler extends StreamHandler {
      * Constructs a {@code SocketHandler} object using the specified host name
      * and port number together with other properties read by the log manager.
      * Default formatting uses the XMLFormatter class and level is set to ALL.
-     * 
+     *
      * @param host
      *            the host name
      * @param port
@@ -146,7 +143,7 @@ public class SocketHandler extends StreamHandler {
 
     /**
      * Closes this handler. The network connection to the host is also closed.
-     * 
+     *
      * @throws SecurityException
      *             If a security manager determines that the caller does not
      *             have the required permission to control this handler.
@@ -168,7 +165,7 @@ public class SocketHandler extends StreamHandler {
 
     /**
      * Logs a record if necessary. A flush operation will be done afterwards.
-     * 
+     *
      * @param record
      *            the log record to be logged.
      */
@@ -177,5 +174,4 @@ public class SocketHandler extends StreamHandler {
         super.publish(record);
         super.flush();
     }
-
 }

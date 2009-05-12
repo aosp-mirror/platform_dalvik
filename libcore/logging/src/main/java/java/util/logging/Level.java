@@ -41,8 +41,6 @@ import dalvik.system.VMStack;
  * INFO, WARNING, SEVERE. There are two additional predefined levels, which are
  * ALL and OFF. ALL indicates logging all messages, and OFF indicates logging no
  * messages.
- * </p>
- * @since Android 1.0
  */
 public class Level implements Serializable {
 
@@ -52,70 +50,52 @@ public class Level implements Serializable {
 
     /**
      * The OFF level provides no logging messages.
-     * 
-     * @since Android 1.0
      */
     public static final Level OFF = new Level("OFF", Integer.MAX_VALUE); //$NON-NLS-1$
 
     /**
      * The SEVERE level provides severe failure messages.
-     * 
-     * @since Android 1.0
      */
     public static final Level SEVERE = new Level("SEVERE", 1000); //$NON-NLS-1$
 
     /**
      * The WARNING level provides warnings.
-     * 
-     * @since Android 1.0
      */
     public static final Level WARNING = new Level("WARNING", 900); //$NON-NLS-1$
 
     /**
      * The INFO level provides informative messages.
-     * 
-     * @since Android 1.0
      */
     public static final Level INFO = new Level("INFO", 800); //$NON-NLS-1$
 
     /**
      * The CONFIG level provides static configuration messages.
-     * 
-     * @since Android 1.0
      */
     public static final Level CONFIG = new Level("CONFIG", 700); //$NON-NLS-1$
 
     /**
      * The FINE level provides tracing messages.
-     * 
-     * @since Android 1.0
      */
     public static final Level FINE = new Level("FINE", 500); //$NON-NLS-1$
 
     /**
      * The FINER level provides more detailed tracing messages.
-     * 
-     * @since Android 1.0
      */
     public static final Level FINER = new Level("FINER", 400); //$NON-NLS-1$
 
     /**
      * The FINEST level provides highly detailed tracing messages.
-     * 
-     * @since Android 1.0
      */
     public static final Level FINEST = new Level("FINEST", 300); //$NON-NLS-1$
 
     /**
      * The ALL level provides all logging messages.
-     * 
-     * @since Android 1.0
      */
     public static final Level ALL = new Level("ALL", Integer.MIN_VALUE); //$NON-NLS-1$
 
     /**
      * Parses a level name into a {@code Level} object.
-     * 
+     *
      * @param name
      *            the name of the desired {@code level}, which cannot be
      *            {@code null}.
@@ -124,13 +104,8 @@ public class Level implements Serializable {
      *             if {@code name} is {@code null}.
      * @throws IllegalArgumentException
      *             if {@code name} is not valid.
-     * @since Android 1.0
      */
     public static Level parse(String name) throws IllegalArgumentException {
-        // BEGIN android-note
-        // final modifier removed and IAE added to get closer to the RI
-        // copied from newer version of harmony
-        // END android-note
         if (name == null) {
             // logging.1C=The 'name' parameter is null.
             throw new NullPointerException(Messages.getString("logging.1C")); //$NON-NLS-1$
@@ -155,8 +130,8 @@ public class Level implements Serializable {
 
             if (isNameAnInt) {
                 /*
-                 * Loop through levels a second time, so that the
-                 * returned instance will be passed on the order of construction.
+                 * Loop through levels a second time, so that the returned
+                 * instance will be passed on the order of construction.
                  */
                 for (Level level : levels) {
                     if (nameAsInt == level.intValue()) {
@@ -168,7 +143,8 @@ public class Level implements Serializable {
 
         if (!isNameAnInt) {
             // logging.1D=Cannot parse this name: {0}
-            throw new IllegalArgumentException(Messages.getString("logging.1D", name)); //$NON-NLS-1$
+            throw new IllegalArgumentException(Messages.getString(
+                    "logging.1D", name)); //$NON-NLS-1$
         }
 
         return new Level(name, nameAsInt);
@@ -176,21 +152,21 @@ public class Level implements Serializable {
 
     /**
      * The name of this Level.
-     * 
+     *
      * @serial
      */
     private final String name;
 
     /**
      * The integer value indicating the level.
-     * 
+     *
      * @serial
      */
     private final int value;
 
     /**
      * The name of the resource bundle used to localize the level name.
-     * 
+     *
      * @serial
      */
     private final String resourceBundleName;
@@ -204,14 +180,13 @@ public class Level implements Serializable {
     /**
      * Constructs an instance of {@code Level} taking the supplied name and
      * level value.
-     * 
+     *
      * @param name
      *            the name of the level.
      * @param level
      *            an integer value indicating the level.
      * @throws NullPointerException
      *             if {@code name} is {@code null}.
-     * @since Android 1.0             
      */
     protected Level(String name, int level) {
         this(name, level, null);
@@ -220,7 +195,7 @@ public class Level implements Serializable {
     /**
      * Constructs an instance of {@code Level} taking the supplied name, level
      * value and resource bundle name.
-     * 
+     *
      * @param name
      *            the name of the level.
      * @param level
@@ -229,7 +204,6 @@ public class Level implements Serializable {
      *            the name of the resource bundle to use.
      * @throws NullPointerException
      *             if {@code name} is {@code null}.
-     * @since Android 1.0
      */
     protected Level(String name, int level, String resourceBundleName) {
         if (name == null) {
@@ -256,9 +230,8 @@ public class Level implements Serializable {
 
     /**
      * Gets the name of this level.
-     * 
+     *
      * @return this level's name.
-     * @since Android 1.0
      */
     public String getName() {
         return this.name;
@@ -266,9 +239,8 @@ public class Level implements Serializable {
 
     /**
      * Gets the name of the resource bundle associated with this level.
-     * 
+     *
      * @return the name of this level's resource bundle.
-     * @since Android 1.0
      */
     public String getResourceBundleName() {
         return this.resourceBundleName;
@@ -276,20 +248,17 @@ public class Level implements Serializable {
 
     /**
      * Gets the integer value indicating this level.
-     * 
+     *
      * @return this level's integer value.
-     * @since Android 1.0
      */
     public final int intValue() {
         return this.value;
     }
 
     /**
-     * <p>
      * Serialization helper method to maintain singletons and add any new
      * levels.
-     * </p>
-     * 
+     *
      * @return the resolved instance.
      */
     private Object readResolve() {
@@ -298,7 +267,7 @@ public class Level implements Serializable {
                 if (value != level.value) {
                     continue;
                 }
-                if (!name.equals(name)) {
+                if (!name.equals(level.name)) {
                     continue;
                 }
                 if (resourceBundleName == level.resourceBundleName) {
@@ -316,7 +285,7 @@ public class Level implements Serializable {
 
     /**
      * Serialization helper to setup transient resource bundle instance.
-     * 
+     *
      * @param in
      *            the input stream to read the instance data from.
      * @throws IOException
@@ -324,7 +293,8 @@ public class Level implements Serializable {
      * @throws ClassNotFoundException
      *             if a class is not found.
      */
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream in) throws IOException,
+            ClassNotFoundException {
         in.defaultReadObject();
         if (resourceBundleName != null) {
             try {
@@ -339,9 +309,8 @@ public class Level implements Serializable {
      * Gets the localized name of this level. The default locale is used. If no
      * resource bundle is associated with this level then the original level
      * name is returned.
-     * 
+     *
      * @return the localized name of this level.
-     * @since Android 1.0
      */
     public String getLocalizedName() {
         if (rb == null) {
@@ -358,12 +327,11 @@ public class Level implements Serializable {
     /**
      * Compares two {@code Level} objects for equality. They are considered to
      * be equal if they have the same level value.
-     * 
+     *
      * @param o
      *            the other object to compare this level to.
      * @return {@code true} if this object equals to the supplied object,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -380,9 +348,8 @@ public class Level implements Serializable {
 
     /**
      * Returns the hash code of this {@code Level} object.
-     * 
+     *
      * @return this level's hash code.
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -392,9 +359,8 @@ public class Level implements Serializable {
     /**
      * Returns the string representation of this {@code Level} object. In
      * this case, it is the level's name.
-     * 
+     *
      * @return the string representation of this level.
-     * @since Android 1.0
      */
     @Override
     public final String toString() {

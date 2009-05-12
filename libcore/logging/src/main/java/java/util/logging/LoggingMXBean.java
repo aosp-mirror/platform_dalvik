@@ -25,29 +25,28 @@ import java.util.List;
  * The ObjectName for identifying the {@code LoggingMXBean} in a bean server is
  * {@link LogManager#LOGGING_MXBEAN_NAME}.
  * </p>
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public interface LoggingMXBean {
+
     /**
      * Gets the string value of the logging level of a logger. An empty string
      * is returned when the logger's level is defined by its parent. A
      * {@code null} is returned if the specified logger does not exist.
-     * 
+     *
      * @param loggerName
      *            the name of the logger lookup.
      * @return a {@code String} if the logger is found, otherwise {@code null}.
      * @see Level#getName()
-     * @since Android 1.0
      */
     String getLoggerLevel(String loggerName);
 
     /**
      * Gets a list of all currently registered logger names. This is performed
      * using the {@link LogManager#getLoggerNames()}.
-     * 
+     *
      * @return a list of logger names.
-     * @since Android 1.0
      */
     List<String> getLoggerNames();
 
@@ -55,18 +54,17 @@ public interface LoggingMXBean {
      * Gets the name of the parent logger of a logger. If the logger doesn't
      * exist then {@code null} is returned. If the logger is the root logger,
      * then an empty {@code String} is returned.
-     * 
+     *
      * @param loggerName
      *            the name of the logger to lookup.
      * @return a {@code String} if the logger was found, otherwise {@code null}.
-     * @since Android 1.0
      */
     String getParentLoggerName(String loggerName);
 
     /**
      * Sets the log level of a logger. LevelName set to {@code null} means the
      * level is inherited from the nearest non-null ancestor.
-     * 
+     *
      * @param loggerName
      *            the name of the logger to set the level on, which must not be
      *            {@code null}.
@@ -79,7 +77,6 @@ public interface LoggingMXBean {
      *             if a security manager exists and the caller doesn't have
      *             LoggingPermission("control").
      * @see Level#parse(String)
-     * @since Android 1.0
      */
     void setLoggerLevel(String loggerName, String levelName);
 }
