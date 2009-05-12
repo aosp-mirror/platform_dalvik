@@ -22,8 +22,8 @@ package java.lang.annotation;
  * syntactically incorrect and the annotation parser is unable to process it.
  * This exception is unlikely to ever occur, given that the code has been
  * compiled by an ordinary Java compiler.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public class AnnotationFormatError extends Error {
 
@@ -31,11 +31,9 @@ public class AnnotationFormatError extends Error {
 
     /**
      * Constructs an instance with the message provided.
-     * 
+     *
      * @param message
      *            the details of the error.
-     *            
-     * @since Android 1.0
      */
     public AnnotationFormatError(String message) {
         super(message);
@@ -43,14 +41,11 @@ public class AnnotationFormatError extends Error {
 
     /**
      * Constructs an instance with a message and a cause.
-     * 
+     *
      * @param message
      *            the details of the error.
-     * 
      * @param cause
      *            the cause of the error or {@code null} if none.
-     * 
-     * @since Android 1.0
      */
     public AnnotationFormatError(String message, Throwable cause) {
         super(message, cause);
@@ -60,11 +55,9 @@ public class AnnotationFormatError extends Error {
      * Constructs an instance with a cause. If the cause is not
      * {@code null}, then {@code cause.toString()} is used as the
      * error's message.
-     * 
+     *
      * @param cause
      *            the cause of the error or {@code null} if none.
-     * 
-     * @since Android 1.0
      */
     public AnnotationFormatError(Throwable cause) {
         super(cause == null ? null : cause.toString(), cause);
