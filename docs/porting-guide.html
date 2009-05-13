@@ -334,6 +334,12 @@ Some instructions are replaced by <code>dexopt</code>, notably when
 that you are testing the basic form of the instruction, add the
 <code>--no-optimize</code> option.
 </p><p>
+There is no in-built instruction tracing mechanism.  If you want
+to know for sure that your implementation of an opcode handler
+is being used, the easiest approach is to insert a "printf"
+call.  For an example, look at <code>common_squeak</code> in
+<code>dalvik/vm/mterp/armv5te/footer.S</code>.
+</p><p>
 At some point you need to ensure that debuggers and profiling work with
 your interpreter.  The easiest way to do this is to simply connect a
 debugger or toggle profiling.  (A future test suite may include some
