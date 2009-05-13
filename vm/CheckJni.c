@@ -35,6 +35,116 @@
 
 #include <zlib.h>
 
+static void abortMaybe(void);       // fwd
+
+
+/*
+ * ===========================================================================
+ *      JNI call bridge wrapper
+ * ===========================================================================
+ */
+
+/*
+ * Check the result of a native method call that returns an object reference.
+ *
+ * The primary goal here is to verify that native code is returning the
+ * correct type of object.  If it's declared to return a String but actually
+ * returns a byte array, things will fail in strange ways later on.
+ *
+ * This can be a fairly expensive operation, since we have to look up the
+ * return type class by name in method->clazz' class loader.  We take a
+ * shortcut here and allow the call to succeed if the descriptor strings
+ * match.  This will allow some false-positives when a class is redefined
+ * by a class loader, but that's rare enough that it doesn't seem worth
+ * testing for.
+ */
+static void checkCallCommon(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    assert(pResult->l != NULL);
+    ClassObject* objClazz = ((Object*)pResult->l)->clazz;
+
+    /*
+     * Make sure that pResult->l is an instance of the type this
+     * method was expected to return.
+     */
+    const char* declType = dexProtoGetReturnType(&method->prototype);
+    const char* objType = objClazz->descriptor;
+    if (strcmp(declType, objType) == 0) {
+        /* names match; ignore class loader issues and allow it */
+        LOGV("Check %s.%s: %s io %s (FAST-OK)\n",
+            method->clazz->descriptor, method->name, objType, declType);
+    } else {
+        /*
+         * Names didn't match.  We need to resolve declType in the context
+         * of method->clazz->classLoader, and compare the class objects
+         * for equality.
+         *
+         * Since we're returning an instance of declType, it's safe to
+         * assume that it has been loaded and initialized (or, for the case
+         * of an array, generated), so we can just look for it in the
+         * loaded-classes list.
+         */
+        ClassObject* declClazz;
+
+        declClazz = dvmLookupClass(declType, method->clazz->classLoader, false);
+        if (declClazz == NULL) {
+            LOGW("JNI WARNING: method declared to return '%s' returned '%s'\n",
+                declType, objType);
+            LOGW("             failed in %s.%s ('%s' not found)\n",
+                method->clazz->descriptor, method->name, declType);
+            abortMaybe();
+            return;
+        }
+        if (!dvmInstanceof(objClazz, declClazz)) {
+            LOGW("JNI WARNING: method declared to return '%s' returned '%s'\n",
+                declType, objType);
+            LOGW("             failed in %s.%s\n",
+                method->clazz->descriptor, method->name);
+            abortMaybe();
+            return;
+        } else {
+            LOGV("Check %s.%s: %s io %s (SLOW-OK)\n",
+                method->clazz->descriptor, method->name, objType, declType);
+        }
+    }
+}
+
+/*
+ * Check a call into native code.
+ */
+void dvmCheckCallJNIMethod(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    dvmCallJNIMethod(args, pResult, method, self);
+    if (method->shorty[0] == 'L' && !dvmCheckException(self) &&
+        pResult->l != NULL)
+    {
+        checkCallCommon(args, pResult, method, self);
+    }
+}
+
+/*
+ * Check a synchronized call into native code.
+ */
+void dvmCheckCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    dvmCallSynchronizedJNIMethod(args, pResult, method, self);
+    if (method->shorty[0] == 'L' && !dvmCheckException(self) &&
+        pResult->l != NULL)
+    {
+        checkCallCommon(args, pResult, method, self);
+    }
+}
+
+
+/*
+ * ===========================================================================
+ *      JNI function helpers
+ * ===========================================================================
+ */
+
 #define JNI_ENTER()     dvmChangeStatus(NULL, THREAD_RUNNING)
 #define JNI_EXIT()      dvmChangeStatus(NULL, THREAD_NATIVE)
 
@@ -143,7 +253,7 @@ static void showLocation(const Method* meth, const char* func)
 /*
  * Abort if we are configured to bail out on JNI warnings.
  */
-static inline void abortMaybe()
+static void abortMaybe(void)
 {
     JavaVMExt* vm = (JavaVMExt*) gDvm.vmList;
     if (vm->warnError) {

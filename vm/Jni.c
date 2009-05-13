@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Dalvik implementation of JNI interfaces.
  */
@@ -859,14 +860,7 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
         /* keep going, I guess */
     }
 
-    /*
-     * Point "nativeFunc" at the JNI bridge, and overload "insns" to
-     * point at the actual function.
-     */
-    if (dvmIsSynchronizedMethod(method))
-        dvmSetNativeFunc(method, dvmCallSynchronizedJNIMethod, fnPtr);
-    else
-        dvmSetNativeFunc(method, dvmCallJNIMethod, fnPtr);
+    dvmUseJNIBridge(method, fnPtr);
 
     LOGV("JNI-registered %s.%s %s\n", clazz->descriptor, methodName,
         signature);
@@ -874,6 +868,34 @@ static bool dvmRegisterJNIMethod(ClassObject* clazz, const char* methodName,
 
 bail:
     return result;
+}
+
+/*
+ * Returns "true" if CheckJNI is enabled in the VM.
+ */
+static bool dvmIsCheckJNIEnabled(void)
+{
+    JavaVMExt* vm = (JavaVMExt*) gDvm.vmList;
+    return vm->useChecked;
+}
+
+/*
+ * Point "method->nativeFunc" at the JNI bridge, and overload "method->insns"
+ * to point at the actual function.
+ */
+void dvmUseJNIBridge(Method* method, void* func)
+{
+    if (dvmIsCheckJNIEnabled()) {
+        if (dvmIsSynchronizedMethod(method))
+            dvmSetNativeFunc(method, dvmCheckCallSynchronizedJNIMethod, func);
+        else
+            dvmSetNativeFunc(method, dvmCheckCallJNIMethod, func);
+    } else {
+        if (dvmIsSynchronizedMethod(method))
+            dvmSetNativeFunc(method, dvmCallSynchronizedJNIMethod, func);
+        else
+            dvmSetNativeFunc(method, dvmCallJNIMethod, func);
+    }
 }
 
 /*
@@ -3375,6 +3397,10 @@ static const struct JNIInvokeInterface gInvokeInterface = {
 /*
  * Enable "checked JNI" after the VM has partially started.  This must
  * only be called in "zygote" mode, when we have one thread running.
+ *
+ * This doesn't attempt to rewrite the JNI call bridge associated with
+ * native methods, so we won't get those checks for any methods that have
+ * already been resolved.
  */
 void dvmLateEnableCheckedJni(void)
 {

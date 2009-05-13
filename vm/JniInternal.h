@@ -113,11 +113,23 @@ INLINE void dvmSetJniEnvThreadId(JNIEnv* pEnv, Thread* self)
 
 /*
  * JNI call bridges.  Not usually called directly.
+ *
+ * The "Check" versions are used when CheckJNI is enabled.
  */
 void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method,
     Thread* self);
 void dvmCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
     const Method* method, Thread* self);
+void dvmCheckCallJNIMethod(const u4* args, JValue* pResult,
+    const Method* method, Thread* self);
+void dvmCheckCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
+    const Method* method, Thread* self);
+
+/*
+ * Configure "method" to use the JNI bridge to call "func".
+ */
+void dvmUseJNIBridge(Method* method, void* func);
+
 
 /*
  * Enable the "checked" versions.

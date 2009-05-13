@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Native method resolution.
  *
@@ -61,6 +62,10 @@ void dvmNativeShutdown(void)
  * Initializes method's class if necessary.
  *
  * An exception is thrown on resolution failure.
+ *
+ * (This should not be taking "const Method*", because it modifies the
+ * structure, but the declaration needs to match the DalvikBridgeFunc
+ * type definition.)
  */
 void dvmResolveNativeMethod(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
@@ -107,10 +112,8 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
     /* now scan any DLLs we have loaded for JNI signatures */
     func = lookupSharedLibMethod(method);
     if (func != NULL) {
-        if (dvmIsSynchronizedMethod(method))
-            dvmSetNativeFunc(method, dvmCallSynchronizedJNIMethod, func);
-        else
-            dvmSetNativeFunc(method, dvmCallJNIMethod, func);
+        /* found it, point it at the JNI bridge and then call it */
+        dvmUseJNIBridge((Method*) method, func);
         dvmCallJNIMethod(args, pResult, method, self);
         return;
     }
