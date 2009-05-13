@@ -20,8 +20,8 @@ package java.lang.annotation;
 /**
  * Defines a meta-annotation for determining what {@link ElementType}s an
  * annotation can be applied to.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

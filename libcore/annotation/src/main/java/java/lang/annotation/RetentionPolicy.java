@@ -21,8 +21,8 @@ package java.lang.annotation;
  * Defines an enumeration for annotation retention policies. Used in conjunction
  * with the {@link Retention} annotation to specify an annotation's time-to-live
  * in the overall development life cycle.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public enum RetentionPolicy {
     /**

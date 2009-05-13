@@ -21,8 +21,8 @@ package java.lang.annotation;
  * Defines an enumeration for Java program elements. It is used in conjunction
  * with the {@link Target} meta-annotation to restrict the use of an annotation
  * to certain program elements.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public enum ElementType {
     /**
