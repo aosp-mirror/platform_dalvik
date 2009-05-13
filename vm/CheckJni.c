@@ -1299,7 +1299,7 @@ static jfieldID Check_GetStaticFieldID(JNIEnv* env, jclass clazz,
     return result;
 }
 
-#define GET_STATIC_TYPE_FIELD(_ctype, _jname, _isref)                       \
+#define GET_STATIC_TYPE_FIELD(_ctype, _jname)                               \
     static _ctype Check_GetStatic##_jname##Field(JNIEnv* env, jclass clazz, \
         jfieldID fieldID)                                                   \
     {                                                                       \
@@ -1312,15 +1312,15 @@ static jfieldID Check_GetStaticFieldID(JNIEnv* env, jclass clazz,
         CHECK_EXIT(env);                                                    \
         return result;                                                      \
     }
-GET_STATIC_TYPE_FIELD(jobject, Object, true);
-GET_STATIC_TYPE_FIELD(jboolean, Boolean, false);
-GET_STATIC_TYPE_FIELD(jbyte, Byte, false);
-GET_STATIC_TYPE_FIELD(jchar, Char, false);
-GET_STATIC_TYPE_FIELD(jshort, Short, false);
-GET_STATIC_TYPE_FIELD(jint, Int, false);
-GET_STATIC_TYPE_FIELD(jlong, Long, false);
-GET_STATIC_TYPE_FIELD(jfloat, Float, false);
-GET_STATIC_TYPE_FIELD(jdouble, Double, false);
+GET_STATIC_TYPE_FIELD(jobject, Object);
+GET_STATIC_TYPE_FIELD(jboolean, Boolean);
+GET_STATIC_TYPE_FIELD(jbyte, Byte);
+GET_STATIC_TYPE_FIELD(jchar, Char);
+GET_STATIC_TYPE_FIELD(jshort, Short);
+GET_STATIC_TYPE_FIELD(jint, Int);
+GET_STATIC_TYPE_FIELD(jlong, Long);
+GET_STATIC_TYPE_FIELD(jfloat, Float);
+GET_STATIC_TYPE_FIELD(jdouble, Double);
 
 #define SET_STATIC_TYPE_FIELD(_ctype, _jname, _ftype)                       \
     static void Check_SetStatic##_jname##Field(JNIEnv* env, jclass clazz,   \
@@ -1344,7 +1344,7 @@ SET_STATIC_TYPE_FIELD(jlong, Long, PRIM_LONG);
 SET_STATIC_TYPE_FIELD(jfloat, Float, PRIM_FLOAT);
 SET_STATIC_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
 
-#define GET_TYPE_FIELD(_ctype, _jname, _isref)                              \
+#define GET_TYPE_FIELD(_ctype, _jname)                                      \
     static _ctype Check_Get##_jname##Field(JNIEnv* env, jobject obj,        \
         jfieldID fieldID)                                                   \
     {                                                                       \
@@ -1356,15 +1356,15 @@ SET_STATIC_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_EXIT(env);                                                    \
         return result;                                                      \
     }
-GET_TYPE_FIELD(jobject, Object, true);
-GET_TYPE_FIELD(jboolean, Boolean, false);
-GET_TYPE_FIELD(jbyte, Byte, false);
-GET_TYPE_FIELD(jchar, Char, false);
-GET_TYPE_FIELD(jshort, Short, false);
-GET_TYPE_FIELD(jint, Int, false);
-GET_TYPE_FIELD(jlong, Long, false);
-GET_TYPE_FIELD(jfloat, Float, false);
-GET_TYPE_FIELD(jdouble, Double, false);
+GET_TYPE_FIELD(jobject, Object);
+GET_TYPE_FIELD(jboolean, Boolean);
+GET_TYPE_FIELD(jbyte, Byte);
+GET_TYPE_FIELD(jchar, Char);
+GET_TYPE_FIELD(jshort, Short);
+GET_TYPE_FIELD(jint, Int);
+GET_TYPE_FIELD(jlong, Long);
+GET_TYPE_FIELD(jfloat, Float);
+GET_TYPE_FIELD(jdouble, Double);
 
 #define SET_TYPE_FIELD(_ctype, _jname, _ftype)                              \
     static void Check_Set##_jname##Field(JNIEnv* env, jobject obj,          \
@@ -1387,8 +1387,7 @@ SET_TYPE_FIELD(jlong, Long, PRIM_LONG);
 SET_TYPE_FIELD(jfloat, Float, PRIM_FLOAT);
 SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
 
-#define CALL_VIRTUAL(_ctype, _jname, _retfail, _retdecl, _retasgn, _retok,  \
-        _retsig)                                                            \
+#define CALL_VIRTUAL(_ctype, _jname, _retdecl, _retasgn, _retok, _retsig)   \
     static _ctype Check_Call##_jname##Method(JNIEnv* env, jobject obj,      \
         jmethodID methodID, ...)                                            \
     {                                                                       \
@@ -1428,19 +1427,19 @@ SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_VIRTUAL(jobject, Object, NULL, Object* result, result=, result, 'L');
-CALL_VIRTUAL(jboolean, Boolean, 0, jboolean result, result=, result, 'Z');
-CALL_VIRTUAL(jbyte, Byte, 0, jbyte result, result=, result, 'B');
-CALL_VIRTUAL(jchar, Char, 0, jchar result, result=, result, 'C');
-CALL_VIRTUAL(jshort, Short, 0, jshort result, result=, result, 'S');
-CALL_VIRTUAL(jint, Int, 0, jint result, result=, result, 'I');
-CALL_VIRTUAL(jlong, Long, 0, jlong result, result=, result, 'J');
-CALL_VIRTUAL(jfloat, Float, 0.0f, jfloat result, result=, *(float*)&result, 'F');
-CALL_VIRTUAL(jdouble, Double, 0.0, jdouble result, result=, *(double*)&result, 'D');
-CALL_VIRTUAL(void, Void, , , , , 'V');
+CALL_VIRTUAL(jobject, Object, Object* result, result=, result, 'L');
+CALL_VIRTUAL(jboolean, Boolean, jboolean result, result=, result, 'Z');
+CALL_VIRTUAL(jbyte, Byte, jbyte result, result=, result, 'B');
+CALL_VIRTUAL(jchar, Char, jchar result, result=, result, 'C');
+CALL_VIRTUAL(jshort, Short, jshort result, result=, result, 'S');
+CALL_VIRTUAL(jint, Int, jint result, result=, result, 'I');
+CALL_VIRTUAL(jlong, Long, jlong result, result=, result, 'J');
+CALL_VIRTUAL(jfloat, Float, jfloat result, result=, result, 'F');
+CALL_VIRTUAL(jdouble, Double, jdouble result, result=, result, 'D');
+CALL_VIRTUAL(void, Void, , , , 'V');
 
-#define CALL_NONVIRTUAL(_ctype, _jname, _retfail, _retdecl, _retasgn,       \
-        _retok, _retsig)                                                    \
+#define CALL_NONVIRTUAL(_ctype, _jname, _retdecl, _retasgn, _retok,         \
+        _retsig)                                                            \
     static _ctype Check_CallNonvirtual##_jname##Method(JNIEnv* env,         \
         jobject obj, jclass clazz, jmethodID methodID, ...)                 \
     {                                                                       \
@@ -1483,20 +1482,19 @@ CALL_VIRTUAL(void, Void, , , , , 'V');
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_NONVIRTUAL(jobject, Object, NULL, Object* result, result=, (Object*)(u4)result, 'L');
-CALL_NONVIRTUAL(jboolean, Boolean, 0, jboolean result, result=, result, 'Z');
-CALL_NONVIRTUAL(jbyte, Byte, 0, jbyte result, result=, result, 'B');
-CALL_NONVIRTUAL(jchar, Char, 0, jchar result, result=, result, 'C');
-CALL_NONVIRTUAL(jshort, Short, 0, jshort result, result=, result, 'S');
-CALL_NONVIRTUAL(jint, Int, 0, jint result, result=, result, 'I');
-CALL_NONVIRTUAL(jlong, Long, 0, jlong result, result=, result, 'J');
-CALL_NONVIRTUAL(jfloat, Float, 0.0f, jfloat result, result=, *(float*)&result, 'F');
-CALL_NONVIRTUAL(jdouble, Double, 0.0, jdouble result, result=, *(double*)&result, 'D');
-CALL_NONVIRTUAL(void, Void, , , , , 'V');
+CALL_NONVIRTUAL(jobject, Object, Object* result, result=, result, 'L');
+CALL_NONVIRTUAL(jboolean, Boolean, jboolean result, result=, result, 'Z');
+CALL_NONVIRTUAL(jbyte, Byte, jbyte result, result=, result, 'B');
+CALL_NONVIRTUAL(jchar, Char, jchar result, result=, result, 'C');
+CALL_NONVIRTUAL(jshort, Short, jshort result, result=, result, 'S');
+CALL_NONVIRTUAL(jint, Int, jint result, result=, result, 'I');
+CALL_NONVIRTUAL(jlong, Long, jlong result, result=, result, 'J');
+CALL_NONVIRTUAL(jfloat, Float, jfloat result, result=, result, 'F');
+CALL_NONVIRTUAL(jdouble, Double, jdouble result, result=, result, 'D');
+CALL_NONVIRTUAL(void, Void, , , , 'V');
 
 
-#define CALL_STATIC(_ctype, _jname, _retfail, _retdecl, _retasgn, _retok,   \
-        _retsig)                                                            \
+#define CALL_STATIC(_ctype, _jname, _retdecl, _retasgn, _retok, _retsig)    \
     static _ctype Check_CallStatic##_jname##Method(JNIEnv* env,             \
         jclass clazz, jmethodID methodID, ...)                              \
     {                                                                       \
@@ -1536,16 +1534,16 @@ CALL_NONVIRTUAL(void, Void, , , , , 'V');
         CHECK_EXIT(env);                                                    \
         return _retok;                                                      \
     }
-CALL_STATIC(jobject, Object, NULL, Object* result, result=, (Object*)(u4)result, 'L');
-CALL_STATIC(jboolean, Boolean, 0, jboolean result, result=, result, 'Z');
-CALL_STATIC(jbyte, Byte, 0, jbyte result, result=, result, 'B');
-CALL_STATIC(jchar, Char, 0, jchar result, result=, result, 'C');
-CALL_STATIC(jshort, Short, 0, jshort result, result=, result, 'S');
-CALL_STATIC(jint, Int, 0, jint result, result=, result, 'I');
-CALL_STATIC(jlong, Long, 0, jlong result, result=, result, 'J');
-CALL_STATIC(jfloat, Float, 0.0f, jfloat result, result=, *(float*)&result, 'F');
-CALL_STATIC(jdouble, Double, 0.0, jdouble result, result=, *(double*)&result, 'D');
-CALL_STATIC(void, Void, , , , , 'V');
+CALL_STATIC(jobject, Object, Object* result, result=, result, 'L');
+CALL_STATIC(jboolean, Boolean, jboolean result, result=, result, 'Z');
+CALL_STATIC(jbyte, Byte, jbyte result, result=, result, 'B');
+CALL_STATIC(jchar, Char, jchar result, result=, result, 'C');
+CALL_STATIC(jshort, Short, jshort result, result=, result, 'S');
+CALL_STATIC(jint, Int, jint result, result=, result, 'I');
+CALL_STATIC(jlong, Long, jlong result, result=, result, 'J');
+CALL_STATIC(jfloat, Float, jfloat result, result=, result, 'F');
+CALL_STATIC(jdouble, Double, jdouble result, result=, result, 'D');
+CALL_STATIC(void, Void, , , , 'V');
 
 static jstring Check_NewString(JNIEnv* env, const jchar* unicodeChars,
     jsize len)
