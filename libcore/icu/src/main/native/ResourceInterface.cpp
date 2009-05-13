@@ -943,7 +943,7 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz,
 
 
 
-    jclass obj_class = env->FindClass("java/lang/Object");
+    jclass obj_class = env->FindClass("[Ljava/lang/Object;");
     jclass integer_class = env->FindClass("java/lang/Integer");
     jmethodID integerInit = env->GetMethodID(integer_class, "<init>", "(I)V");
     jobjectArray result;
