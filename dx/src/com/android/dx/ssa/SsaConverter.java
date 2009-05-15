@@ -27,7 +27,7 @@ import java.util.BitSet;
  * Converts ROP methods to SSA Methods
  */
 public class SsaConverter {
-    public static boolean DEBUG = false;
+    public static final boolean DEBUG = false;
 
     /**
      * Returns an SSA representation, edge-split and with phi

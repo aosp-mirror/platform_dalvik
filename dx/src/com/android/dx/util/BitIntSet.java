@@ -118,12 +118,6 @@ public class BitIntSet implements IntSet {
 
                 return ret;
             }
-
-            /** @inheritDoc */
-            public void remove() {
-                BitIntSet.this.remove(idx);
-                idx = Bits.findFirst(bits, idx+1);
-            }
         };
     }
 

@@ -78,7 +78,6 @@ public final class StdCatchBuilder implements CatchBuilder {
 
     /** {@inheritDoc} */
     public boolean hasAnyCatches() {
-        HashSet<Type> result = new HashSet<Type>(20);
         BasicBlockList blocks = method.getBlocks();
         int size = blocks.size();
         

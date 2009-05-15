@@ -514,9 +514,6 @@ public final class ValueEncoder {
      * @param cst {@code non-null;} the constant to add contents for
      */
     public static void addContents(DexFile file, Constant cst) {
-        TypeIdsSection typeIds = file.getTypeIds();
-        StringIdsSection stringIds = file.getStringIds();
-
         if (cst instanceof CstAnnotation) {
             addContents(file, ((CstAnnotation) cst).getAnnotation());
         } else if (cst instanceof CstArray) {

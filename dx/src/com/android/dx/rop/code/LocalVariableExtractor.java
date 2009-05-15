@@ -101,7 +101,6 @@ public final class LocalVariableExtractor {
          * state *before* executing it to be what is merged into
          * exception targets.
          */
-        Insn lastInsn = insns.getLast();
         boolean canThrowDuringLastInsn = block.hasExceptionHandlers() &&
             (insns.getLast().getResult() != null);
         int freezeSecondaryStateAt = insnSz - 1;

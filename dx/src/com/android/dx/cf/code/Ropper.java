@@ -219,8 +219,6 @@ public final class Ropper {
          * @param workSet {@code non-null;} workset to update
          */
         void mergeToSuccessors(Frame frame, int[] workSet) {
-            int sz = callerBlocks.size();
-
             for (int label = callerBlocks.nextSetBit(0); label >= 0;
                  label = callerBlocks.nextSetBit(label+1)) {
                 BasicBlock subCaller = labelToBlock(label);

@@ -176,10 +176,6 @@ public abstract class RegisterAllocator {
          */
 
         IntSet liveOut = block.getLiveOutRegs();
-
-        RegisterSpec result = insn.getResult();
-        int resultReg = (result == null) ? -1 : result.getReg();
-
         IntIterator liveOutIter = liveOut.iterator();
 
         while (liveOutIter.hasNext()) {

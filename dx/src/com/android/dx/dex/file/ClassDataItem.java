@@ -342,8 +342,6 @@ public final class ClassDataItem extends OffsettedItem {
      */
     private void encodeOutput(DexFile file, AnnotatedOutput out) {
         boolean annotates = out.annotates();
-        int svSize = (staticValuesConstant == null) ? 0 :
-            staticValuesConstant.getList().size();
 
         if (annotates) {
             out.annotate(0, offsetString() + " class data for " +

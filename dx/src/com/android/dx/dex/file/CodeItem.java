@@ -114,7 +114,6 @@ public final class CodeItem extends OffsettedItem {
 
     /** {@inheritDoc} */
     public void addContents(DexFile file) {
-        MixedItemSection wordData = file.getWordData();
         MixedItemSection byteData = file.getByteData();
         TypeIdsSection typeIds = file.getTypeIds();
 

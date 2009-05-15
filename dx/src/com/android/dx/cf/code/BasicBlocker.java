@@ -32,19 +32,23 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     /** {@code non-null;} method being converted */
     private final ConcreteMethod method;
 
-    /** {@code non-null;} work set; bits indicate offsets in need of examination */
+    /**
+     * {@code non-null;} work set; bits indicate offsets in need of
+     * examination
+     */
     private final int[] workSet;
 
     /**
-     * {@code non-null;} live set; bits indicate potentially-live opcodes; contrawise,
-     * a bit that isn't on is either in the middle of an instruction or is
-     * a definitely-dead opcode 
+     * {@code non-null;} live set; bits indicate potentially-live
+     * opcodes; contrawise, a bit that isn't on is either in the
+     * middle of an instruction or is a definitely-dead opcode
      */
     private final int[] liveSet;
 
     /**
-     * {@code non-null;} block start set; bits indicate the starts of basic blocks,
-     * including the opcodes that start blocks of definitely-dead code 
+     * {@code non-null;} block start set; bits indicate the starts of
+     * basic blocks, including the opcodes that start blocks of
+     * definitely-dead code
      */
     private final int[] blockSet;
 
@@ -265,7 +269,6 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
      * @return {@code non-null;} the list of basic blocks
      */
     private ByteBlockList getBlockList() {
-        ByteCatchList catches = method.getCatches();
         BytecodeArray bytes = method.getCode();
         ByteBlock[] bbs = new ByteBlock[bytes.size()];
         int count = 0;

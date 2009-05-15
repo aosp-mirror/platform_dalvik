@@ -77,7 +77,6 @@ public final class LocalVariableList extends FixedSizeList {
     public static LocalVariableList mergeDescriptorsAndSignatures(
             LocalVariableList descriptorList,
             LocalVariableList signatureList) {
-        int signatureSize = signatureList.size();
         int descriptorSize = descriptorList.size();
         LocalVariableList result = new LocalVariableList(descriptorSize);
 

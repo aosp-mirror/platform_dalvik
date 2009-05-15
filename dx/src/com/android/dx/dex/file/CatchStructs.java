@@ -195,14 +195,11 @@ public final class CatchStructs {
     public void writeTo(DexFile file, AnnotatedOutput out) {
         finishProcessingIfNecessary();
 
-        TypeIdsSection typeIds = file.getTypeIds();
-        int tableSize = table.size();
-        int handlersSize = handlerOffsets.size();
-        
         if (out.annotates()) {
             annotateEntries("  ", null, out);
         }
 
+        int tableSize = table.size();
         for (int i = 0; i < tableSize; i++) {
             CatchTable.Entry one = table.get(i);
             int start = one.getStart();

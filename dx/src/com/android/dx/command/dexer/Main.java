@@ -215,8 +215,9 @@ public class Main {
     /**
      * Processes one pathname element.
      *
-     * @param pathname {@code non-null;} the pathname to process. May be the path of
-     * a class file, a jar file, or a directory containing class files.
+     * @param pathname {@code non-null;} the pathname to process. May
+     * be the path of a class file, a jar file, or a directory
+     * containing class files.
      * @return whether any processing actually happened
      */
     private static boolean processOne(String pathname) {
@@ -237,7 +238,8 @@ public class Main {
             }
             public void onProcessArchiveStart(File file) {
                 if (args.verbose) {
-                    DxConsole.out.println("processing archive " + file + "...");
+                    DxConsole.out.println("processing archive " + file +
+                            "...");
                 }
             }
         });
@@ -316,7 +318,8 @@ public class Main {
      * class. If there is a problem, this updates the error count and
      * throws an exception to stop processing.
      * 
-     * @param name {@code non-null;} the fully-qualified internal-form class name
+     * @param name {@code non-null;} the fully-qualified internal-form
+     * class name
      */
     private static void checkClassName(String name) {
         boolean bogus = false;
@@ -464,7 +467,8 @@ public class Main {
      * Creates a jar file from the resources and given dex file array.
      *
      * @param fileName {@code non-null;} name of the file
-     * @param dexArray {@code non-null;} array containing the dex file to include
+     * @param dexArray {@code non-null;} array containing the dex file
+     * to include
      * @return whether the creation was successful
      */
     private static boolean createJar(String fileName, byte[] dexArray) {
@@ -629,7 +633,8 @@ public class Main {
      * Dumps any method with the given name in the given file.
      *
      * @param dex {@code non-null;} the dex file
-     * @param fqName {@code non-null;} the fully-qualified name of the method(s)
+     * @param fqName {@code non-null;} the fully-qualified name of the
+     * method(s)
      * @param out {@code non-null;} where to dump to
      */
     private static void dumpMethod(DexFile dex, String fqName,
@@ -891,8 +896,6 @@ public class Main {
             }
 
             int fileCount = args.length - at;
-            fileNames = new String[fileCount];
-            System.arraycopy(args, at, fileNames, 0, fileCount);
 
             if (fileCount == 0) {
                 if (!emptyOk) {
@@ -901,8 +904,12 @@ public class Main {
                 }
             } else if (emptyOk) {
                 System.out.println("ignoring input files");
-                at = args.length;
+                at = 0;
+                fileCount = 0;
             }
+
+            fileNames = new String[fileCount];
+            System.arraycopy(args, at, fileNames, 0, fileCount);
 
             if ((humanOutName == null) && (methodToDump != null)) {
                 humanOutName = "-";

@@ -598,15 +598,19 @@ public final class RegisterSpec
         /** {@code non-null;} type loaded or stored */
         private TypeBearer type;
 
-        /** {@code null-ok;} local variable associated with this register, if any */
+        /**
+         * {@code null-ok;} local variable associated with this
+         * register, if any
+         */
         private LocalItem local;
 
         /**
          * Set all the instance variables.
          * 
          * @param reg {@code >= 0;} the register number
-         * @param type {@code non-null;} the type (or possibly actual value) which
-         * is loaded from or stored to the indicated register
+         * @param type {@code non-null;} the type (or possibly actual
+         * value) which is loaded from or stored to the indicated
+         * register
          * @param local {@code null-ok;} the associated local variable, if any
          * @return {@code non-null;} an appropriately-constructed instance
          */

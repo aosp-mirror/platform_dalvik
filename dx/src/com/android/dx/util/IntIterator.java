@@ -35,10 +35,4 @@ public interface IntIterator {
      * @throws java.util.NoSuchElementException if no next element exists
      */
     int next();
-
-    /**
-     * Removes a value from the collection underlying this iterator.
-     * May throw UnsupportedOperationException().
-     */
-//    void remove();
 }

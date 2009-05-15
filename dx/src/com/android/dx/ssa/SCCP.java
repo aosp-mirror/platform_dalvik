@@ -137,9 +137,6 @@ public class SCCP {
         }
     }
     
-    private boolean setLatticeValueTo(int reg, int value) {
-        return setLatticeValueTo(reg, value, null);
-    }
     /**
      * Simulates a PHI node and set the lattice for the result
      * to the approriate value.

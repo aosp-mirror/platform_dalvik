@@ -107,7 +107,6 @@ public final class ArrayData extends VariableSizeInsn {
     /** {@inheritDoc} */
     @Override
     public void writeTo(AnnotatedOutput out) {
-        int baseAddress = user.getAddress();
         int sz = values.size();
 
         out.writeShort(0x300 | DalvOps.NOP);

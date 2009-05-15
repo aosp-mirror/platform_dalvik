@@ -213,7 +213,8 @@ public abstract class OffsettedItem extends Item
      * the given offset. It is only valid to call this method once per
      * instance.
      * 
-     * @param addedTo {@code non-null;} the section this instance has been added to
+     * @param addedTo {@code non-null;} the section this instance has
+     * been added to
      * @param offset {@code >= 0;} the desired offset from the start of the
      * section where this instance was placed
      * @return {@code >= 0;} the offset that this instance should be placed at

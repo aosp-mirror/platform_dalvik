@@ -31,8 +31,9 @@ import java.util.HashSet;
  */
 public class OptimizerOptions {
     /**
-     * {@code null-ok;} hash set of class name + method names that should be optimized.
-     * null if this constraint was not specified on the command line
+     * {@code null-ok;} hash set of class name + method names that
+     * should be optimized. {@code null} if this constraint was not
+     * specified on the command line
      */
     private static HashSet<String> optimizeList;
 
@@ -97,7 +98,6 @@ public class OptimizerOptions {
 
         try {
             FileReader fr = new FileReader(filename);
-
             BufferedReader bfr = new BufferedReader(fr);
 
             String line;
@@ -105,6 +105,8 @@ public class OptimizerOptions {
             while (null != (line = bfr.readLine())) {
                 result.add(line);
             }
+
+            fr.close();
         } catch (IOException ex) {
             // Let the exception percolate up as a RuntimeException.
             throw new RuntimeException("Error with optimize list: " +
