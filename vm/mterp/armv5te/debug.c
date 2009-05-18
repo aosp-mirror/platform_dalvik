@@ -63,12 +63,12 @@ void dvmMterpPrintMethod(Method* method)
      * It is a direct (non-virtual) method if it is static, private,
      * or a constructor.
      */
-    bool isDirect = 
+    bool isDirect =
         ((method->accessFlags & (ACC_STATIC|ACC_PRIVATE)) != 0) ||
         (method->name[0] == '<');
 
     char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        
+
     printf("<%c:%s.%s %s> ",
             isDirect ? 'D' : 'V',
             method->clazz->descriptor,
