@@ -361,8 +361,7 @@ public final class PhiInsn extends SsaInsn {
         public final int blockIndex;
         public final int ropLabel;       // only used for debugging
 
-        public Operand(final RegisterSpec regSpec, final int blockIndex,
-                final int ropLabel) {
+        public Operand(RegisterSpec regSpec, int blockIndex, int ropLabel) {
             this.regSpec = regSpec;
             this.blockIndex = blockIndex;
             this.ropLabel = ropLabel;

@@ -52,9 +52,6 @@ public class DomFront {
 
         /** {@code >= 0 after run();} the index of the immediate dominator */
         public int idom = -1;
-
-        /** depth-first traversal index */
-        public int traversalIndex;
     }
 
     /**

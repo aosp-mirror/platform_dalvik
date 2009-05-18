@@ -161,8 +161,8 @@ public class SsaRenamer implements Runnable {
 
             int sz = ssaRegToRopReg.size();
             for (int i = 0; i < sz; i++) {
-                int ropReg =  ssaRegToRopReg.get(i);
-                System.out.println(i +"\t" + ropReg + "["
+                int ropReg = ssaRegToRopReg.get(i);
+                System.out.println(i + "\t" + ropReg + "["
                         + versions[ropReg] + "]");
                 versions[ropReg]++;
             }

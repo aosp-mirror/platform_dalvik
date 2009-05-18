@@ -357,7 +357,7 @@ public final class ByteArray {
      * simply so that the cursor of a wrapped {@link #MyInputStream}
      * instance may be easily determined.
      */
-    public class MyDataInputStream extends DataInputStream {
+    public static class MyDataInputStream extends DataInputStream {
         /** {@code non-null;} the underlying {@link #MyInputStream} */
         private final MyInputStream wrapped;
         

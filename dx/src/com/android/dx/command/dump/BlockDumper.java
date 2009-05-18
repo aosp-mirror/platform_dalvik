@@ -59,9 +59,6 @@ public class BlockDumper
      */
     protected DirectClassFile classFile;
 
-    /** {@code null-ok;} most recently parsed code attribute */
-    private AttCode codeAtt;
-
     /** whether or not to suppress dumping */
     protected boolean suppressDump;
 
@@ -101,7 +98,6 @@ public class BlockDumper
 
         this.rop = rop;
         this.classFile = null;
-        this.codeAtt = null;
         this.suppressDump = true;
         this.first = true;
         this.optimize = args.optimize;

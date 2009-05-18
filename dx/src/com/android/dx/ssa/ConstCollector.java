@@ -17,19 +17,20 @@
 package com.android.dx.ssa;
 
 import com.android.dx.rop.code.*;
-import com.android.dx.rop.type.TypeBearer;
+import com.android.dx.rop.cst.Constant;
+import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.cst.TypedConstant;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
-import com.android.dx.rop.cst.Constant;
-import com.android.dx.rop.cst.TypedConstant;
-import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.type.TypeBearer;
 
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Collects constants that are used more than once at the top of the
@@ -167,8 +168,7 @@ public class ConstCollector {
             if (insn == null) continue;
 
             RegisterSpec result = insn.getResult();
-
-            TypeBearer typeBearer = insn.getResult().getTypeBearer();
+            TypeBearer typeBearer = result.getTypeBearer();
 
             if (!typeBearer.isConstant()) continue;
 
@@ -217,13 +217,10 @@ public class ConstCollector {
         }
 
         // Collect constants that have been reused.
-        Iterator<TypedConstant> it = countUses.keySet().iterator();
         ArrayList<TypedConstant> constantList = new ArrayList<TypedConstant>();
-        while (it.hasNext()) {
-            TypedConstant cst = it.next();
-
-            if (countUses.get(cst) > 1) {
-                constantList.add(cst);
+        for (Map.Entry<TypedConstant, Integer> entry : countUses.entrySet()) {
+            if (entry.getValue() > 1) {
+                constantList.add(entry.getKey());
             }
         }
 
@@ -243,6 +240,7 @@ public class ConstCollector {
 
                 return ret;
             }
+
             public boolean equals (Object obj) {
                 return obj == this;
             }

@@ -135,7 +135,8 @@ public final class LocalList extends FixedSizeList {
          * 
          * @param address {@code >= 0;} address 
          * @param disposition {@code non-null;} disposition of the local
-         * @param spec {@code non-null;} register spec representing the variable
+         * @param spec {@code non-null;} register spec representing
+         * the variable
          */
         public Entry(int address, Disposition disposition, RegisterSpec spec) {
             if (address < 0) {
@@ -260,7 +261,8 @@ public final class LocalList extends FixedSizeList {
         /**
          * Gets the number of the register holding the variable.
          * 
-         * @return {@code >= 0;} the number fo the register holding the variable
+         * @return {@code >= 0;} the number of the register holding
+         * the variable
          */
         public int getRegister() {
             return spec.getReg();
@@ -472,12 +474,6 @@ public final class LocalList extends FixedSizeList {
         private int lastAddress;
 
         /**
-         * {@code >= 0;} result index where the first element for the most
-         * recent address is stored
-         */
-        private int startIndexForAddress;
-
-        /**
          * Constructs an instance.
          */
         public MakeState(int initialSize) {
@@ -486,7 +482,6 @@ public final class LocalList extends FixedSizeList {
             regs = null;
             endIndices = null;
             lastAddress = 0;
-            startIndexForAddress = 0;
         }
 
         /**
@@ -563,7 +558,8 @@ public final class LocalList extends FixedSizeList {
          * Starts a local at the given address.
          * 
          * @param address {@code >= 0;} the address
-         * @param startedLocal {@code non-null;} spec representing the started local
+         * @param startedLocal {@code non-null;} spec representing the
+         * started local
          */
         public void startLocal(int address, RegisterSpec startedLocal) {
             int regNum = startedLocal.getReg();
@@ -680,7 +676,8 @@ public final class LocalList extends FixedSizeList {
          * Ends a local at the given address.
          *
          * @param address {@code >= 0;} the address
-         * @param endedLocal {@code non-null;} spec representing the local being ended
+         * @param endedLocal {@code non-null;} spec representing the
+         * local being ended
          */
         public void endLocal(int address, RegisterSpec endedLocal) {
             int regNum = endedLocal.getReg();
@@ -716,7 +713,8 @@ public final class LocalList extends FixedSizeList {
          * disposition.
          * 
          * @param address {@code >= 0;} the address
-         * @param endedLocal {@code non-null;} spec representing the local being ended
+         * @param endedLocal {@code non-null;} spec representing the
+         * local being ended
          * @return {@code true} iff this method found the case in question
          * and adjusted things accordingly
          */

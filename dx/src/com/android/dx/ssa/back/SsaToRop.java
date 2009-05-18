@@ -174,7 +174,7 @@ public class SsaToRop {
         
         for (SsaBasicBlock block : blocks) {
             // Add moves in all the pred blocks for each phi insn.
-            block.forEachPhiInsn(new PhiVisitor(block, blocks));
+            block.forEachPhiInsn(new PhiVisitor(blocks));
 
             // Delete the phi insns.
             block.removeAllPhiInsns();
@@ -194,12 +194,9 @@ public class SsaToRop {
      * adding move instructions to predecessors based on phi insns.
      */
     private static class PhiVisitor implements PhiInsn.Visitor {
-        private final SsaBasicBlock block;
         private final ArrayList<SsaBasicBlock> blocks;
 
-        public PhiVisitor(SsaBasicBlock block,
-                ArrayList<SsaBasicBlock> blocks) {
-            this.block = block;
+        public PhiVisitor(ArrayList<SsaBasicBlock> blocks) {
             this.blocks = blocks;
         }
 
