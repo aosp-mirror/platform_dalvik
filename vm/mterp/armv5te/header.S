@@ -33,7 +33,9 @@ r15 (pc) can be tinkered with directly
 r0 holds returns of <= 4 bytes
 r0-r1 hold returns of 8 bytes, low word in r0
 
-Callee must save/restore r4+ (except r12) if it modifies them.
+Callee must save/restore r4+ (except r12) if it modifies them.  If VFP
+is present, registers s16-s31 (a/k/a d8-d15, a/k/a q4-q7) must be preserved,
+s0-s15 (d0-d7, q0-a3) do not need to be.
 
 Stack is "full descending".  Only the arguments that don't fit in the first 4
 registers are placed on the stack.  "sp" points at the first stacked argument
@@ -172,6 +174,12 @@ unspecified registers or condition codes.
  */
 #define GET_VREG(_reg, _vreg)   ldr     _reg, [rFP, _vreg, lsl #2]
 #define SET_VREG(_reg, _vreg)   str     _reg, [rFP, _vreg, lsl #2]
+
+/*
+ * Convert a virtual register index into an address.
+ */
+#define VREG_INDEX_TO_ADDR(_reg, _vreg) \
+        add     _reg, rFP, _vreg, lsl #2
 
 /*
  * This is a #include, not a %include, because we want the C pre-processor
