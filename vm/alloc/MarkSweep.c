@@ -1208,6 +1208,7 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
 {
     const ClassObject *const classJavaLangClass = gDvm.classJavaLangClass;
     size_t i;
+    void **origPtrs = ptrs;
 
     for (i = 0; i < numPtrs; i++) {
         DvmHeapChunk *hc;
@@ -1270,11 +1271,10 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
 #endif
         }
 #endif
-
-//TODO: provide a heapsource function that takes a list of pointers to free
-//      and call it outside of this loop.
-        dvmHeapSourceFree(hc);
     }
+    // TODO: dvmHeapSourceFreeList has a loop, just like the above
+    // does. Consider collapsing the two loops to save overhead.
+    dvmHeapSourceFreeList(numPtrs, origPtrs);
 
     return true;
 }
