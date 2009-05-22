@@ -25,8 +25,6 @@ import java.util.zip.ZipOutputStream;
 /**
  * The {@code JarOutputStream} is used to write data in the {@code JarFile}
  * format to an arbitrary output stream
- * 
- * @since Android 1.0
  */
 public class JarOutputStream extends ZipOutputStream {
 
@@ -79,7 +77,6 @@ public class JarOutputStream extends ZipOutputStream {
      * @throws IOException
      *             if an error occurs writing to the entry.
      * @see ZipEntry
-     * @since Android 1.0
      */
     @Override
     public void putNextEntry(ZipEntry ze) throws IOException {

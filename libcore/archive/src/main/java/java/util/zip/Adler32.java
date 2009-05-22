@@ -17,14 +17,12 @@
 
 package java.util.zip;
 
-
 /**
  * The Adler-32 class is used to compute the {@code Adler32} checksum from a set
  * of data. Compared to the CRC-32 algorithm it trades reliabilty for speed.
  * Refer to RFC 1950 for the specification.
- * 
+ *
  * @see CRC32
- * @since Android 1.0
  */
 public class Adler32 implements java.util.zip.Checksum {
 
@@ -34,7 +32,6 @@ public class Adler32 implements java.util.zip.Checksum {
      * Returns the {@code Adler32} checksum for all input received.
      * 
      * @return The checksum for this instance.
-     * @since Android 1.0
      */
     public long getValue() {
         return adler;
@@ -42,8 +39,6 @@ public class Adler32 implements java.util.zip.Checksum {
 
     /**
      * Reset this instance to its initial checksum.
-     * 
-     * @since Android 1.0
      */
     public void reset() {
         adler = 1;
@@ -55,7 +50,6 @@ public class Adler32 implements java.util.zip.Checksum {
      * 
      * @param i
      *            the byte to update checksum with.
-     * @since Android 1.0
      */
     public void update(int i) {
         adler = updateByteImpl(i, adler);
@@ -66,7 +60,6 @@ public class Adler32 implements java.util.zip.Checksum {
      * 
      * @param buf
      *            bytes to update checksum with.
-     * @since Android 1.0
      */
     public void update(byte[] buf) {
         update(buf, 0, buf.length);
@@ -85,7 +78,6 @@ public class Adler32 implements java.util.zip.Checksum {
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code offset > buf.length} or {@code nbytes} is negative
      *             or {@code offset + nbytes > buf.length}.
-     * @since Android 1.0
      */
     public void update(byte[] buf, int off, int nbytes) {
         // avoid int overflow, check null buf

@@ -15,23 +15,25 @@
  * limitations under the License.
  */
 
+#include "jni.h"
 #include "hy2sie.h"
-
 #include "zlib.h"
-
+#include "sieb.h"
 
 JNIEXPORT jlong JNICALL
 Java_java_util_zip_Adler32_updateImpl (JNIEnv * env, jobject recv,
                                        jbyteArray buf, int off, int len,
                                        jlong crc)
 {
-  PORT_ACCESS_FROM_ENV (env);
-
   jbyte *b;
   jboolean isCopy;
   jlong result;
 
   b = (*env)->GetPrimitiveArrayCritical (env, buf, &isCopy);
+  if (b == NULL) {
+    throwNewOutOfMemoryError(env, "");
+    return 0;
+  }
   result = (jlong) adler32 ((uLong) crc, (Bytef *) (b + off), (uInt) len);
   (*env)->ReleasePrimitiveArrayCritical (env, buf, b, JNI_ABORT);
 
@@ -42,9 +44,8 @@ JNIEXPORT jlong JNICALL
 Java_java_util_zip_Adler32_updateByteImpl (JNIEnv * env, jobject recv,
                                            jint val, jlong crc)
 {
-  PORT_ACCESS_FROM_ENV (env);
-
-  return adler32 ((uLong) crc, (Bytef *) (&val), 1);
+  Bytef bytefVal = val;
+  return adler32 ((uLong) crc, (Bytef *) (&bytefVal), 1);
 }
 
 

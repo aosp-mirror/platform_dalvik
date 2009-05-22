@@ -421,6 +421,27 @@ public class AttributesTest extends TestCase {
         assertNull(attribute.get(name));
     }
 
+    /**
+     * @tests java.util.jar.Attributes.hashCode()
+     */
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "hashCode",
+            args = {}
+    )
+    public void test_hashCode_consistent_with_map() {
+        MockAttributes mockAttr = new MockAttributes();
+        mockAttr.putValue("1", "one");
+        assertEquals(mockAttr.getMap().hashCode(), mockAttr.hashCode());
+    }
+
+    private static class MockAttributes extends Attributes {
+        public Map<Object, Object> getMap() {
+            return map;
+        }
+    }
+
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
@@ -470,7 +491,7 @@ public class AttributesTest extends TestCase {
     }
 
     @TestTargetNew(
-        level = TestLevel.COMPLETE,
+        level = TestLevel.PARTIAL_COMPLETE,
         notes = "",
         method = "hashCode",
         args = {}

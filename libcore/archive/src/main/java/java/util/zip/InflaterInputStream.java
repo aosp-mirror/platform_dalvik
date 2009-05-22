@@ -17,7 +17,6 @@
 
 package java.util.zip;
 
-
 import java.io.EOFException;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -31,31 +30,24 @@ import org.apache.harmony.archive.internal.nls.Messages;
  * (see <a href="http://www.gzip.org/algorithm.txt">specification</a>).
  * Basically it wraps the {@code Inflater} class and takes care of the
  * buffering.
- * 
+ *
  * @see Inflater
  * @see DeflaterOutputStream
- * @since Android 1.0
  */
 public class InflaterInputStream extends FilterInputStream {
 
     /**
      * The inflater used for this stream.
-     * 
-     * @since Android 1.0
      */
     protected Inflater inf;
 
     /**
      * The input buffer used for decompression.
-     * 
-     * @since Android 1.0
      */
     protected byte[] buf;
 
     /**
      * The length of the buffer.
-     * 
-     * @since Android 1.0
      */
     protected int len;
 
@@ -74,10 +66,9 @@ public class InflaterInputStream extends FilterInputStream {
      * InputStream} from which the compressed data is to be read from. Default
      * settings for the {@code Inflater} and internal buffer are be used. In
      * particular the Inflater expects a ZLIB header from the input stream.
-     * 
+     *
      * @param is
      *            the {@code InputStream} to read data from.
-     * @since Android 1.0
      */
     public InflaterInputStream(InputStream is) {
         this(is, new Inflater(), BUF_SIZE);
@@ -86,12 +77,11 @@ public class InflaterInputStream extends FilterInputStream {
     /**
      * This constructor lets you pass a specifically initialized Inflater,
      * for example one that expects no ZLIB header.
-     * 
+     *
      * @param is
      *            the {@code InputStream} to read data from.
      * @param inf
      *            the specific {@code Inflater} for uncompressing data.
-     * @since Android 1.0 
      */
     public InflaterInputStream(InputStream is, Inflater inf) {
         this(is, inf, BUF_SIZE);
@@ -100,14 +90,13 @@ public class InflaterInputStream extends FilterInputStream {
     /**
      * This constructor lets you specify both the {@code Inflater} as well as
      * the internal buffer size to be used.
-     * 
+     *
      * @param is
      *            the {@code InputStream} to read data from.
      * @param inf
      *            the specific {@code Inflater} for uncompressing data.
      * @param bsize
      *            the size to be used for the internal buffer.
-     * @since Android 1.0
      */
     public InflaterInputStream(InputStream is, Inflater inf, int bsize) {
         super(is);
@@ -129,11 +118,10 @@ public class InflaterInputStream extends FilterInputStream {
 
     /**
      * Reads a single byte of decompressed data.
-     * 
+     *
      * @return the byte read.
      * @throws IOException
      *             if an error occurs reading the byte.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -147,7 +135,7 @@ public class InflaterInputStream extends FilterInputStream {
     /**
      * Reads up to {@code nbytes} of decompressed data and stores it in
      * {@code buffer} starting at {@code off}.
-     * 
+     *
      * @param buffer
      *            the buffer to write data to.
      * @param off
@@ -157,7 +145,6 @@ public class InflaterInputStream extends FilterInputStream {
      * @return Number of uncompressed bytes read
      * @throws IOException
      *             if an IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public int read(byte[] buffer, int off, int nbytes) throws IOException {
@@ -197,7 +184,7 @@ public class InflaterInputStream extends FilterInputStream {
                     if (len == -1) {
                         throw new EOFException();
                     }
-                    throw (IOException)(new IOException().initCause(e));
+                    throw (IOException) (new IOException().initCause(e));
                 }
                 if (result > 0) {
                     return result;
@@ -208,20 +195,18 @@ public class InflaterInputStream extends FilterInputStream {
                     return -1;
                 } else if (len == -1) {
                     throw new EOFException();
-                // If result == 0, fill() and try again
+                    // If result == 0, fill() and try again
                 }
             } while (true);
         }
         throw new ArrayIndexOutOfBoundsException();
     }
 
-    
     /**
      * Fills the input buffer with data to be decompressed.
-     * 
+     *
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     protected void fill() throws IOException {
         if (closed) {
@@ -246,17 +231,21 @@ public class InflaterInputStream extends FilterInputStream {
 
     /**
      * Skips up to n bytes of uncompressed data.
-     * 
+     *
      * @param nbytes
      *            the number of bytes to skip.
      * @return the number of uncompressed bytes skipped.
      * @throws IOException
      *             if an error occurs skipping.
-     * @since Android 1.0
      */
     @Override
     public long skip(long nbytes) throws IOException {
         if (nbytes >= 0) {
+            // BEGIN android-changed
+            if (buf == null) {
+                buf = new byte[BUF_SIZE];
+            }
+            // END android-changed
             long count = 0, rem = 0;
             while (count < nbytes) {
                 int x = read(buf, 0,
@@ -275,11 +264,10 @@ public class InflaterInputStream extends FilterInputStream {
 
     /**
      * Returns whether data can be read from this stream.
-     * 
+     *
      * @return 0 if this stream has been closed, 1 otherwise.
      * @throws IOException
      *             If an error occurs.
-     * @since Android 1.0
      */
     @Override
     public int available() throws IOException {
@@ -295,10 +283,9 @@ public class InflaterInputStream extends FilterInputStream {
 
     /**
      * Closes the input stream.
-     * 
+     *
      * @throws IOException
      *             If an error occurs closing the input stream.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -309,17 +296,15 @@ public class InflaterInputStream extends FilterInputStream {
             super.close();
         }
     }
-    
+
     /**
-     * This implementation overrides the super type implementation to do nothing
-     * at all.
-     * 
+     * Marks the current position in the stream. This implementation overrides
+     * the super type implementation to do nothing at all.
+     *
      * @param readlimit
      *            of no use.
-     * @since Android 1.0
      */
     @Override
-    @SuppressWarnings("unused")
     public void mark(int readlimit) {
         // do nothing
     }
@@ -328,22 +313,20 @@ public class InflaterInputStream extends FilterInputStream {
      * Reset the position of the stream to the last marked position. This
      * implementation overrides the supertype implementation and always throws
      * an {@link IOException IOException} when called.
-     * 
+     *
      * @throws IOException
      *             if the method is called
-     * @since Android 1.0
      */
     @Override
-    public void reset() throws IOException{
+    public void reset() throws IOException {
         throw new IOException();
     }
-    
+
     /**
      * Returns whether the receiver implements {@code mark} semantics. This type
      * does not support {@code mark()}, so always responds {@code false}.
-     * 
+     *
      * @return false, always
-     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {

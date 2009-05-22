@@ -17,12 +17,9 @@
 
 package java.util.zip;
 
-
 /**
  * The CRC32 class is used to compute a CRC32 checksum from data provided as
  * input value.
- * 
- * @since Android 1.0
  */
 public class CRC32 implements java.util.zip.Checksum {
 
@@ -34,7 +31,6 @@ public class CRC32 implements java.util.zip.Checksum {
      * Returns the CRC32 checksum for all input received.
      * 
      * @return The checksum for this instance.
-     * @since Android 1.0
      */
     public long getValue() {
         return crc;
@@ -42,8 +38,6 @@ public class CRC32 implements java.util.zip.Checksum {
 
     /**
      * Resets the CRC32 checksum to it initial state.
-     * 
-     * @since Android 1.0
      */
     public void reset() {
         tbytes = crc = 0;
@@ -52,10 +46,9 @@ public class CRC32 implements java.util.zip.Checksum {
 
     /**
      * Updates this checksum with the byte value provided as integer.
-     * 
+     *
      * @param val
      *            represents the byte to update the checksum.
-     * @since Android 1.0
      */
     public void update(int val) {
         crc = updateByteImpl((byte) val, crc);
@@ -66,7 +59,6 @@ public class CRC32 implements java.util.zip.Checksum {
      * 
      * @param buf
      *            the buffer holding the data to update the checksum with.
-     * @since Android 1.0
      */
     public void update(byte[] buf) {
         update(buf, 0, buf.length);
@@ -82,7 +74,6 @@ public class CRC32 implements java.util.zip.Checksum {
      *            the offset in {@code buf} to obtain data from.
      * @param nbytes
      *            the number of bytes to read from {@code buf}.
-     * @since Android 1.0
      */
     public void update(byte[] buf, int off, int nbytes) {
         // avoid int overflow, check null buf

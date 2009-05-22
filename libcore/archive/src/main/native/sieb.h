@@ -7,9 +7,8 @@
 
 
 
-void throwNewOutOfMemoryError (JNIEnv * env, const char *message);
-void throwNewIllegalArgumentException (JNIEnv * env, const char *message);
-void throwNewIllegalStateException (JNIEnv * env, const char *message);
+void throwNewOutOfMemoryError (JNIEnv * env,
+                               const char *message);
 
 
 void * sieb_malloc (JNIEnv * env, size_t byteCnt);

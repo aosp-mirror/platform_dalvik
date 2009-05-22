@@ -17,7 +17,6 @@
 
 package java.util.zip;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,33 +31,26 @@ import org.apache.harmony.archive.internal.nls.Messages;
  * {@code ZipOutputStream} is used to write {@code ZipEntries} to the underlying
  * stream. Output from {@code ZipOutputStream} conforms to the {@code ZipFile}
  * file format.
- * </p>
  * <p>
  * While {@code DeflaterOutputStream} can write a compressed <i>ZIP-archive</i>
  * entry, this extension can write uncompressed entries as well. In this case
  * special rules apply, for this purpose refer to the <a
  * href="http://www.pkware.com/documents/casestudies/APPNOTE.TXT">file format
  * specification</a>.
- * </p>
- * 
+ *
  * @see ZipEntry
  * @see ZipFile
- * @since Android 1.0
  */
 public class ZipOutputStream extends DeflaterOutputStream implements
         ZipConstants {
 
     /**
      * Indicates deflated entries.
-     * 
-     * @since Android 1.0
      */
     public static final int DEFLATED = 8;
 
     /**
      * Indicates uncompressed entries.
-     * 
-     * @since Android 1.0
      */
     public static final int STORED = 0;
 
@@ -90,7 +82,6 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * 
      * @param p1
      *            the {@code OutputStream} to write the data to.
-     * @since Android 1.0
      */
     public ZipOutputStream(OutputStream p1) {
         super(p1, new Deflater(Deflater.DEFAULT_COMPRESSION, true));
@@ -102,7 +93,6 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * 
      * @throws IOException
      *             If an error occurs closing the stream.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -119,7 +109,6 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * 
      * @throws IOException
      *             If an error occurs closing the entry.
-     * @since Android 1.0
      */
     public void closeEntry() throws IOException {
         if (cDir == null) {
@@ -205,7 +194,6 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * 
      * @throws IOException
      *             if an error occurs while terminating the stream.
-     * @since Android 1.0
      */
     @Override
     public void finish() throws IOException {
@@ -253,7 +241,6 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * @throws IOException
      *             If an error occurs storing the entry.
      * @see #write
-     * @since Android 1.0
      */
     public void putNextEntry(ZipEntry ze) throws java.io.IOException {
         if (currentEntry != null) {
@@ -286,7 +273,8 @@ public class ZipOutputStream extends DeflaterOutputStream implements
         nameLength = utf8Count(ze.name);
         if (nameLength > 0xffff) {
             /* [MSG "archive.2A", "Name too long: {0}"] */
-            throw new IllegalArgumentException(Messages.getString("archive.2A", ze.name)); //$NON-NLS-1$
+            throw new IllegalArgumentException(Messages.getString(
+                    "archive.2A", ze.name)); //$NON-NLS-1$
         }
 
         def.setLevel(compressLevel);
@@ -338,7 +326,6 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * 
      * @param comment
      *            the comment associated with the file.
-     * @since Android 1.0
      */
     public void setComment(String comment) {
         if (comment.length() > 0xFFFF) {
@@ -355,7 +342,6 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * @param level
      *            the compression level (ranging from -1 to 8).
      * @see Deflater
-     * @since Android 1.0
      */
     public void setLevel(int level) {
         if (level < Deflater.DEFAULT_COMPRESSION
@@ -372,7 +358,6 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * 
      * @param method
      *            the compression method to use.
-     * @since Android 1.0
      */
     public void setMethod(int method) {
         if (method != STORED && method != DEFLATED) {
@@ -398,11 +383,17 @@ public class ZipOutputStream extends DeflaterOutputStream implements
 
     }
 
+    /**
+     * Writes data for the current entry to the underlying stream.
+     * 
+     * @exception IOException
+     *                If an error occurs writing to the stream
+     */
     @Override
     public void write(byte[] buffer, int off, int nbytes)
             throws java.io.IOException {
         // avoid int overflow, check null buf
-        if ((off > buffer.length) || (nbytes < 0) || (off < 0)
+        if ((off < 0 || (nbytes < 0) || off > buffer.length)
                 || (buffer.length - off < nbytes)) {
             throw new IndexOutOfBoundsException();
         }
