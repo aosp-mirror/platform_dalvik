@@ -478,7 +478,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
 
     cc = stat(cpe->fileName, &sb);
     if (cc < 0) {
-        LOGW("Unable to stat classpath element '%s'\n", cpe->fileName);
+        LOGD("Unable to stat classpath element '%s'\n", cpe->fileName);
         return false;
     }
     if (S_ISDIR(sb.st_mode)) {
@@ -510,6 +510,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
         return true;
     }
 
+    LOGD("Unable to process classpath element '%s'\n", cpe->fileName);
     return false;
 }
 
@@ -517,13 +518,13 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
  * Convert a colon-separated list of directories, Zip files, and DEX files
  * into an array of ClassPathEntry structs.
  *
- * If we're unable to load a bootstrap class path entry, we fail.  This
- * is necessary to preserve the dependencies implied by optimized DEX files
- * (e.g. if the same class appears in multiple places).
- *
  * During normal startup we fail if there are no entries, because we won't
  * get very far without the basic language support classes, but if we're
  * optimizing a DEX file we allow it.
+ *
+ * If entries are added or removed from the bootstrap class path, the
+ * dependencies in the DEX files will break, and everything except the
+ * very first entry will need to be regenerated.
  */
 static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
 {
@@ -583,16 +584,8 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
             cpe[idx].ptr = NULL;
 
             if (!prepareCpe(&tmp, isBootstrap)) {
-                LOGD("Failed on '%s' (boot=%d)\n", tmp.fileName, isBootstrap);
                 /* drop from list and continue on */
                 free(tmp.fileName);
-
-                if (isBootstrap || gDvm.optimizing) {
-                    /* if boot path entry or we're optimizing, this is fatal */
-                    free(cpe);
-                    cpe = NULL;
-                    goto bail;
-                }
             } else {
                 /* copy over, pointers and all */
                 if (tmp.fileName[0] != '/')
