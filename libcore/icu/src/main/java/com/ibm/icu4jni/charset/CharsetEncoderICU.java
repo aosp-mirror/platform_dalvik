@@ -46,6 +46,11 @@ public final class CharsetEncoderICU extends CharsetEncoder {
     private char[] input = null;
     private byte[] output = null;
 
+    // BEGIN android-added
+    private char[] allocatedInput = null;
+    private byte[] allocatedOutput = null;
+    // END android-added
+
     // These instance variables are
     // always assigned in the methods
     // before being used. This class
@@ -197,10 +202,6 @@ public final class CharsetEncoderICU extends CharsetEncoder {
         data[INVALID_CHARS] = 0;
         data[INPUT_HELD] = 0;
         savedInputHeldLen = 0;
-        // BEGIN android-added
-        output = null;
-        input = null;
-        // END android-added
     }
 
     /**
@@ -332,9 +333,12 @@ public final class CharsetEncoderICU extends CharsetEncoder {
             return out.position();
         }else{
             outEnd = out.remaining();
-            if(output==null || (outEnd > output.length)){
-                output = new byte[outEnd];
+            // BEGIN android-added
+            if (allocatedOutput == null || (outEnd > allocatedOutput.length)) {
+                allocatedOutput = new byte[outEnd];
             }
+            output = allocatedOutput;
+            // END android-added
             //since the new 
             // buffer start position 
             // is 0
@@ -349,9 +353,12 @@ public final class CharsetEncoderICU extends CharsetEncoder {
             return in.position()+savedInputHeldLen;/*exclude the number fo bytes held in previous conversion*/
         }else{
             inEnd = in.remaining();
-            if(input==null|| (inEnd > input.length)){ 
-                input = new char[inEnd];
+            // BEGIN android-added
+            if (allocatedInput == null || (inEnd > allocatedInput.length)) {
+                allocatedInput = new char[inEnd];
             }
+            input = allocatedInput;
+            // END android-added
             // save the current position
             int pos = in.position();
             in.get(input,0,inEnd);
@@ -375,6 +382,10 @@ public final class CharsetEncoderICU extends CharsetEncoder {
         } else {
             out.put(output, 0, data[OUTPUT_OFFSET]);
         }
+        // BEGIN android-added
+        // release reference to output array, which may not be ours
+        output = null;
+        // END android-added
     }
     private final void setPosition(CharBuffer in){
 
@@ -408,5 +419,10 @@ public final class CharsetEncoderICU extends CharsetEncoder {
             in.position(in.position() - savedInputHeldLen);
         }     
 // END android-added
+
+        // BEGIN android-added
+        // release reference to input array, which may not be ours
+        input = null;
+        // END android-added
     }
 }

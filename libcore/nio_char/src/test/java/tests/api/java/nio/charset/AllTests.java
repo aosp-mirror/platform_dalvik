@@ -112,6 +112,8 @@ public class AllTests {
         suite.addTestSuite(Charset_macintosh.class);
         suite.addTestSuite(Charset_GSM0338.class);
 
+        suite.addTestSuite(CharsetEncoderDecoderBufferTest.class);
+
         return suite;
     }
 }
