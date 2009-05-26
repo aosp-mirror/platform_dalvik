@@ -615,37 +615,44 @@ void dvmDumpObject(const Object* obj)
     }
 
     clazz = obj->clazz;
-    LOGV("----- Object dump: %p (%s, %d bytes) -----\n",
+    LOGD("----- Object dump: %p (%s, %d bytes) -----\n",
         obj, clazz->descriptor, (int) clazz->objectSize);
     //printHexDump(obj, clazz->objectSize);
-    LOGV("  Fields:\n");
-    for (i = 0; i < clazz->ifieldCount; i++) {
-        const InstField* pField = &clazz->ifields[i];
-        char type = pField->field.signature[0];
+    LOGD("  Fields:\n");
+    while (clazz != NULL) {
+        LOGD("    -- %s\n", clazz->descriptor);
+        for (i = 0; i < clazz->ifieldCount; i++) {
+            const InstField* pField = &clazz->ifields[i];
+            char type = pField->field.signature[0];
 
-        if (type == 'F' || type == 'D') {
-            double dval;
+            if (type == 'F' || type == 'D') {
+                double dval;
 
-            if (type == 'F')
-                dval = dvmGetFieldFloat(obj, pField->byteOffset);
-            else
-                dval = dvmGetFieldDouble(obj, pField->byteOffset);
+                if (type == 'F')
+                    dval = dvmGetFieldFloat(obj, pField->byteOffset);
+                else
+                    dval = dvmGetFieldDouble(obj, pField->byteOffset);
 
-            LOGV("  %2d: '%s' '%s' flg=%04x %.3f\n", i, pField->field.name,
-                pField->field.signature, pField->field.accessFlags, dval);
-        } else {
-            long long lval;
+                LOGD("    %2d: '%s' '%s' af=%04x off=%d %.3f\n", i,
+                    pField->field.name, pField->field.signature,
+                    pField->field.accessFlags, pField->byteOffset, dval);
+            } else {
+                u8 lval;
 
-            if (pField->field.signature[0] == 'J')
-                lval = dvmGetFieldLong(obj, pField->byteOffset);
-            else if (pField->field.signature[0] == 'Z')
-                lval = dvmGetFieldBoolean(obj, pField->byteOffset);
-            else
-                lval = dvmGetFieldInt(obj, pField->byteOffset);
+                if (type == 'J')
+                    lval = dvmGetFieldLong(obj, pField->byteOffset);
+                else if (type == 'Z')
+                    lval = dvmGetFieldBoolean(obj, pField->byteOffset);
+                else
+                    lval = dvmGetFieldInt(obj, pField->byteOffset);
 
-            LOGV("  %2d: '%s' '%s' af=%04x 0x%llx\n", i, pField->field.name,
-                pField->field.signature, pField->field.accessFlags, lval);
+                LOGD("    %2d: '%s' '%s' af=%04x off=%d 0x%08llx\n", i,
+                    pField->field.name, pField->field.signature,
+                    pField->field.accessFlags, pField->byteOffset, lval);
+            }
         }
+
+        clazz = clazz->super;
     }
 }
 

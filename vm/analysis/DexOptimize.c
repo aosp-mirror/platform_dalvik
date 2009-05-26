@@ -1684,9 +1684,24 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
             LOGV("DexOpt: class %d (%s) not found\n",
                 classIdx,
                 dexStringByTypeIdx(pDvmDex->pDexFile, classIdx));
+            if (pFailure != NULL) {
+                /* dig through the wrappers to find the original failure */
+                Object* excep = dvmGetException(dvmThreadSelf());
+                while (true) {
+                    Object* cause = dvmGetExceptionCause(excep);
+                    if (cause == NULL)
+                        break;
+                    excep = cause;
+                }
+                if (strcmp(excep->clazz->descriptor,
+                    "Ljava/lang/IncompatibleClassChangeError;") == 0)
+                {
+                    *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                } else {
+                    *pFailure = VERIFY_ERROR_NO_CLASS;
+                }
+            }
             dvmClearOptException(dvmThreadSelf());
-            if (pFailure != NULL)
-                *pFailure = VERIFY_ERROR_NO_CLASS;
             return NULL;
         }
 

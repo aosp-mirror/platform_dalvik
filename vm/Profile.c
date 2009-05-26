@@ -668,7 +668,7 @@ void dvmEmitEmulatorTrace(const Method* method, int action)
          * Fortunately, the trace tools can get by without the address, but
          * it would be nice to fix this.
          */
-         addr = method->nativeFunc;
+         addr = (u4) method->nativeFunc;
     } else {
         /*
          * The dexlist output shows the &DexCode.insns offset value, which

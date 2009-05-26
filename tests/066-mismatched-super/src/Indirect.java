@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-/*
- * Test field access through reflection.
+/**
+ * Error indirection class.
+ *
+ * Some VMs will load this class and fail on the "new" call, others will
+ * refuse to load this class at all.
  */
-public class Main {
-    public static void main(String[] args) {
-        try {
-            Indirect.main();
-            System.err.println("Succeeded unexpectedly");
-        } catch (IncompatibleClassChangeError icce) {
-            System.out.println("Got expected ICCE");
-        }
+public class Indirect {
+    public static void main() {
+        Base base = new Base();
     }
 }
 

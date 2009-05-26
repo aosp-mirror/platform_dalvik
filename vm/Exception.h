@@ -123,6 +123,13 @@ bool dvmIsCheckedException(const Object* exception);
 void dvmWrapException(const char* newExcepStr);
 
 /*
+ * Get the "cause" field from an exception.
+ *
+ * Returns NULL if the field is null or uninitialized.
+ */
+Object* dvmGetExceptionCause(const Object* exception);
+
+/*
  * Print the exception stack trace on stderr.  Calls the exception's
  * print function.
  */

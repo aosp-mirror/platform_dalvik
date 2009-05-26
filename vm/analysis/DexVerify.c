@@ -36,7 +36,14 @@ bool dvmVerificationStartup(void)
     gDvm.instrWidth = dexCreateInstrWidthTable();
     gDvm.instrFormat = dexCreateInstrFormatTable();
     gDvm.instrFlags = dexCreateInstrFlagsTable();
-    return (gDvm.instrWidth != NULL && gDvm.instrFormat!= NULL);
+    if (gDvm.instrWidth == NULL || gDvm.instrFormat == NULL ||
+        gDvm.instrFlags == NULL)
+    {
+        LOGE("Unable to create instruction tables\n");
+        return false;
+    }
+
+    return true;
 }
 
 /*

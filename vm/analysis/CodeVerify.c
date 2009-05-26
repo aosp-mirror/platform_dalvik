@@ -2944,9 +2944,13 @@ bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
     if (gDvm.classJavaLangString == NULL)
         gDvm.classJavaLangString =
             dvmFindSystemClassNoInit("Ljava/lang/String;");
-    if (gDvm.classJavaLangThrowable == NULL)
+    if (gDvm.classJavaLangThrowable == NULL) {
         gDvm.classJavaLangThrowable =
             dvmFindSystemClassNoInit("Ljava/lang/Throwable;");
+        gDvm.offJavaLangThrowable_cause =
+            dvmFindFieldOffset(gDvm.classJavaLangThrowable,
+                "cause", "Ljava/lang/Throwable;");
+    }
     if (gDvm.classJavaLangObject == NULL)
         gDvm.classJavaLangObject =
             dvmFindSystemClassNoInit("Ljava/lang/Object;");
