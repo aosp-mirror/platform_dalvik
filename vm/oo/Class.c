@@ -4001,17 +4001,32 @@ static bool checkMethodDescriptorClasses(const Method* meth,
  *
  * What we need to do is ensure that the classes named in the method
  * descriptors in our ancestors and ourselves resolve to the same class
- * objects.  The only time this matters is when the classes come from
- * different class loaders, and the resolver might come up with a
- * different answer for the same class name depending on context.
+ * objects.  We can get conflicts when the classes come from different
+ * class loaders, and the resolver comes up with different results for
+ * the same class name in different contexts.
  *
- * We don't need to check to see if an interface's methods match with
- * its superinterface's methods, because you can't instantiate an
- * interface and do something inappropriate with it.  If interface I1
- * extends I2 and is implemented by C, and I1 and I2 are in separate
- * class loaders and have conflicting views of other classes, we will
- * catch the conflict when we process C.  Anything that implements I1 is
- * doomed to failure, but we don't need to catch that while processing I1.
+ * An easy way to cause the problem is to declare a base class that uses
+ * class Foo in a method signature (e.g. as the return type).  Then,
+ * define a subclass and a different version of Foo, and load them from a
+ * different class loader.  If the subclass overrides the method, it will
+ * have a different concept of what Foo is than its parent does, so even
+ * though the method signature strings are identical, they actually mean
+ * different things.
+ *
+ * A call to the method through a base-class reference would be treated
+ * differently than a call to the method through a subclass reference, which
+ * isn't the way polymorphism works, so we have to reject the subclass.
+ * If the subclass doesn't override the base method, then there's no
+ * problem, because calls through base-class references and subclass
+ * references end up in the same place.
+ *
+ * We don't need to check to see if an interface's methods match with its
+ * superinterface's methods, because you can't instantiate an interface
+ * and do something inappropriate with it.  If interface I1 extends I2
+ * and is implemented by C, and I1 and I2 are in separate class loaders
+ * and have conflicting views of other classes, we will catch the conflict
+ * when we process C.  Anything that implements I1 is doomed to failure,
+ * but we don't need to catch that while processing I1.
  *
  * On failure, throws an exception and returns "false".
  */
@@ -4029,11 +4044,11 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
         clazz->classLoader != clazz->super->classLoader)
     {
         /*
-         * Walk through every method declared in the superclass, and
-         * compare resolved descriptor components.  We pull the Method
-         * structs out of the vtable.  It doesn't matter whether we get
-         * the struct from the parent or child, since we just need the
-         * UTF-8 descriptor, which must match.
+         * Walk through every overridden method and compare resolved
+         * descriptor components.  We pull the Method structs out of
+         * the vtable.  It doesn't matter whether we get the struct from
+         * the parent or child, since we just need the UTF-8 descriptor,
+         * which must match.
          *
          * We need to do this even for the stuff inherited from Object,
          * because it's possible that the new class loader has redefined
@@ -4046,7 +4061,9 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
         //    clazz->super->descriptor, clazz->super->classLoader);
         for (i = clazz->super->vtableCount - 1; i >= 0; i--) {
             meth = clazz->vtable[i];
-            if (!checkMethodDescriptorClasses(meth, clazz->super, clazz)) {
+            if (meth != clazz->super->vtable[i] &&
+                !checkMethodDescriptorClasses(meth, clazz->super, clazz))
+            {
                 LOGW("Method mismatch: %s in %s (cl=%p) and super %s (cl=%p)\n",
                     meth->name, clazz->descriptor, clazz->classLoader,
                     clazz->super->descriptor, clazz->super->classLoader);

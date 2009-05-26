@@ -1,4 +1,18 @@
-// Copyright 2008 The Android Open Source Project
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,6 +42,8 @@ public class FancyLoader extends ClassLoader {
 
     /* on Dalvik, this is a DexFile; otherwise, it's null */
     private Class mDexClass;
+
+    private Object mDexFile;
 
     /**
      * Construct FancyLoader, grabbing a reference to the DexFile class
@@ -64,26 +80,29 @@ public class FancyLoader extends ClassLoader {
     private Class<?> findClassDalvik(String name)
         throws ClassNotFoundException {
 
-        Constructor ctor;
-        Object dexFile;
+        if (mDexFile == null) {
+            synchronized (FancyLoader.class) {
+                Constructor ctor;
+                /*
+                 * Construct a DexFile object through reflection.
+                 */
+                try {
+                    ctor = mDexClass.getConstructor(new Class[] {String.class});
+                } catch (NoSuchMethodException nsme) {
+                    throw new ClassNotFoundException("getConstructor failed",
+                        nsme);
+                }
 
-        /*
-         * Construct a DexFile object through reflection.
-         */
-        try {
-            ctor = mDexClass.getConstructor(new Class[] { String.class });
-        } catch (NoSuchMethodException nsme) {
-            throw new ClassNotFoundException("getConstructor failed", nsme);
-        }
-
-        try {
-            dexFile = ctor.newInstance(DEX_FILE);
-        } catch (InstantiationException ie) {
-            throw new ClassNotFoundException("newInstance failed", ie);
-        } catch (IllegalAccessException iae) {
-            throw new ClassNotFoundException("newInstance failed", iae);
-        } catch (InvocationTargetException ite) {
-            throw new ClassNotFoundException("newInstance failed", ite);
+                try {
+                    mDexFile = ctor.newInstance(DEX_FILE);
+                } catch (InstantiationException ie) {
+                    throw new ClassNotFoundException("newInstance failed", ie);
+                } catch (IllegalAccessException iae) {
+                    throw new ClassNotFoundException("newInstance failed", iae);
+                } catch (InvocationTargetException ite) {
+                    throw new ClassNotFoundException("newInstance failed", ite);
+                }
+            }
         }
 
         /*
@@ -99,7 +118,7 @@ public class FancyLoader extends ClassLoader {
         }
 
         try {
-            meth.invoke(dexFile, name, this);
+            meth.invoke(mDexFile, name, this);
         } catch (IllegalAccessException iae) {
             throw new ClassNotFoundException("loadClass failed", iae);
         } catch (InvocationTargetException ite) {

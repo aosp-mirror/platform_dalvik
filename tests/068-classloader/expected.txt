@@ -4,6 +4,7 @@ Got expected access exception #1
 Got expected CNFE/IAE #2
 Got expected CNFE/IAE #3
 Got expected LinkageError on DE
+Got DEO result DoubledExtendOkay 1
 Ctor: doubled implement, type 1
 DoubledImplement one
 Got LinkageError on DI (early)

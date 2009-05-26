@@ -51,6 +51,7 @@ public class Main {
         testAccess3(loader);
 
         testExtend(loader);
+        testExtendOkay(loader);
         testImplement(loader);
         testIfaceImplement(loader);
     }
@@ -170,6 +171,54 @@ public class Main {
             System.err.println("(result=" + result + ")");
         } catch (LinkageError le) {
             System.out.println("Got expected LinkageError on DE");
+            return;
+        }
+    }
+
+    /**
+     * Test a doubled class that extends the base class, but is okay since
+     * it doesn't override the base class method.
+     */
+    static void testExtendOkay(ClassLoader loader) {
+        Class doubledExtendOkayClass;
+        Object obj;
+
+        /* get the "alternate" version of DoubledExtendOkay */
+        try {
+            doubledExtendOkayClass = loader.loadClass("DoubledExtendOkay");
+        } catch (ClassNotFoundException cnfe) {
+            System.err.println("loadClass failed: " + cnfe);
+            return;
+        }
+
+        /* instantiate */
+        try {
+            obj = doubledExtendOkayClass.newInstance();
+        } catch (InstantiationException ie) {
+            System.err.println("newInstance failed: " + ie);
+            return;
+        } catch (IllegalAccessException iae) {
+            System.err.println("newInstance failed: " + iae);
+            return;
+        } catch (LinkageError le) {
+            System.err.println("Got unexpected LinkageError on DEO");
+            le.printStackTrace();
+            return;
+        }
+
+        /* use the base class reference to get a CL-specific instance */
+        BaseOkay baseRef = (BaseOkay) obj;
+        DoubledExtendOkay de = baseRef.getExtended();
+
+        /* try to call through it */
+        try {
+            String result;
+
+            result = BaseOkay.doStuff(de);
+            System.out.println("Got DEO result " + result);
+        } catch (LinkageError le) {
+            System.err.println("Got unexpected LinkageError on DEO");
+            le.printStackTrace();
             return;
         }
     }
