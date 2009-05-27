@@ -52,6 +52,7 @@ public class Main {
 
         testExtend(loader);
         testExtendOkay(loader);
+        testInterface(loader);
         testImplement(loader);
         testIfaceImplement(loader);
     }
@@ -221,6 +222,53 @@ public class Main {
             le.printStackTrace();
             return;
         }
+    }
+
+    /**
+     * Try to access a doubled class through a class that implements
+     * an interface declared in a different class.
+     */
+    static void testInterface(ClassLoader loader) {
+        Class getDoubledClass;
+        Object obj;
+
+        /* get the "alternate" version of GetDoubled */
+        try {
+            getDoubledClass = loader.loadClass("GetDoubled");
+        } catch (ClassNotFoundException cnfe) {
+            System.err.println("loadClass failed: " + cnfe);
+            return;
+        }
+
+        /* instantiate */
+        try {
+            obj = getDoubledClass.newInstance();
+        } catch (InstantiationException ie) {
+            System.err.println("newInstance failed: " + ie);
+            return;
+        } catch (IllegalAccessException iae) {
+            System.err.println("newInstance failed: " + iae);
+            return;
+        } catch (LinkageError le) {
+            // Dalvik bails here
+            System.err.println("Got LinkageError on GD");
+            return;
+        }
+
+        /*
+         * Cast the object to the interface, and try to use it.
+         */
+        IGetDoubled iface = (IGetDoubled) obj;
+        try {
+            /* "de" will be the wrong variety of DoubledExtend */
+            DoubledExtend de = iface.getDoubled();
+            // reference impl bails here
+            String str = de.getStr();
+        } catch (LinkageError le) {
+            System.err.println("Got LinkageError on GD");
+            return;
+        }
+        System.err.println("Should have failed by now on GetDoubled");
     }
 
     /**

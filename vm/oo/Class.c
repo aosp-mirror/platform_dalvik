@@ -4053,6 +4053,9 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
          * We need to do this even for the stuff inherited from Object,
          * because it's possible that the new class loader has redefined
          * a basic class like String.
+         *
+         * We don't need to check stuff defined in a superclass because
+         * it was checked when the superclass was loaded.
          */
         const Method* meth;
 
@@ -4075,7 +4078,12 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
     }
 
     /*
-     * Check all interfaces we implement.
+     * Check the methods defined by this class against the interfaces it
+     * implements.  If we inherited the implementation from a superclass,
+     * we have to check it against the superclass (which might be in a
+     * different class loader).  If the superclass also implements the
+     * interface, we could skip the check since by definition it was
+     * performed when the class was loaded.
      */
     for (i = 0; i < clazz->iftableCount; i++) {
         const InterfaceEntry* iftable = &clazz->iftable[i];
@@ -4091,7 +4099,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
                 vtableIndex = iftable->methodIndexArray[j];
                 meth = clazz->vtable[vtableIndex];
 
-                if (!checkMethodDescriptorClasses(meth, iface, clazz)) {
+                if (!checkMethodDescriptorClasses(meth, iface, meth->clazz)) {
                     LOGW("Method mismatch: %s in %s (cl=%p) and "
                             "iface %s (cl=%p)\n",
                         meth->name, clazz->descriptor, clazz->classLoader,

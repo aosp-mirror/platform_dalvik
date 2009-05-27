@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,14 @@
  * limitations under the License.
  */
 
-/**
- * Common base class.
+/*
+ * The interface we implement was declared in a different class loader,
+ * which means the DoubledExtend we return is not the one it was declared
+ * to return.
  */
-public class BaseOkay implements IDoubledExtendOkay {
-    public BaseOkay() {}
-
-    public DoubledExtendOkay getExtended() {
-        return new DoubledExtendOkay();
+public class GetDoubled implements IGetDoubled {
+    public DoubledExtend getDoubled() {
+        return new DoubledExtend();
     }
-
-    public static String doStuff(DoubledExtendOkay dt) {
-        return dt.getStr();
-    }
-}
-
-/**
- * Interface that declares the not-overridden method.  This exists to ensure
- * that the existence of an interface doesn't trip the check.
- */
-interface IDoubledExtendOkay {
-    public DoubledExtendOkay getExtended();
 }
 

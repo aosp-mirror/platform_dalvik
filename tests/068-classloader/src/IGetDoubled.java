@@ -15,25 +15,9 @@
  */
 
 /**
- * Common base class.
+ * Interface, loaded from one loader, used from another.
  */
-public class BaseOkay implements IDoubledExtendOkay {
-    public BaseOkay() {}
-
-    public DoubledExtendOkay getExtended() {
-        return new DoubledExtendOkay();
-    }
-
-    public static String doStuff(DoubledExtendOkay dt) {
-        return dt.getStr();
-    }
-}
-
-/**
- * Interface that declares the not-overridden method.  This exists to ensure
- * that the existence of an interface doesn't trip the check.
- */
-interface IDoubledExtendOkay {
-    public DoubledExtendOkay getExtended();
+public interface IGetDoubled {
+    public DoubledExtend getDoubled();
 }
 
