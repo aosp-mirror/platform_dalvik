@@ -15,9 +15,19 @@
  */
 
 /**
- * Interface, loaded from one loader, used from another.
+ * Verify that we don't reject this with a LinkageError.
  */
-public interface IGetDoubled {
-    public DoubledExtendOkay getDoubled();
+public class AbstractGet extends AbstractBase {
+    public DoubledExtendOkay getExtended() {
+        return new DoubledExtendOkay();
+    }
+}
+
+/**
+ * Abstract class, does not declare getAbstract.  This cause the VM to
+ * generate a "miranda" method.
+ */
+abstract class AbstractBase extends BaseOkay {
+    public abstract DoubledExtendOkay getExtended();
 }
 

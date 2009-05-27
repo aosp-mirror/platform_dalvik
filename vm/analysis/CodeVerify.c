@@ -3531,8 +3531,9 @@ static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
                 if (!dvmIsInterfaceClass(declClass) &&
                     !dvmInstanceof(resClass, declClass))
                 {
-                    LOG_VFY("VFY: returning %s, declared %s\n",
-                            resClass->descriptor, declClass->descriptor);
+                    LOG_VFY("VFY: returning %s (cl=%p), declared %s (cl=%p)\n",
+                            resClass->descriptor, resClass->classLoader,
+                            declClass->descriptor, declClass->classLoader);
                     failure = VERIFY_ERROR_GENERIC;
                     break;
                 }

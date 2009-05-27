@@ -6,6 +6,7 @@ Got expected CNFE/IAE #3
 Got expected LinkageError on DE
 Got DEO result DoubledExtendOkay 1
 Got LinkageError on GD
+Got LinkageError on TA
 Ctor: doubled implement, type 1
 DoubledImplement one
 Got LinkageError on DI (early)

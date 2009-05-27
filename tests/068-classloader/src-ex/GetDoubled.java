@@ -20,8 +20,8 @@
  * to return.
  */
 public class GetDoubled implements IGetDoubled {
-    public DoubledExtend getDoubled() {
-        return new DoubledExtend();
+    public DoubledExtendOkay getDoubled() {
+        return new DoubledExtendOkay();
     }
 }
 

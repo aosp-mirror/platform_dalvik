@@ -25,6 +25,8 @@ public class Main {
         FancyLoader loader;
 
         loader = new FancyLoader(ClassLoader.getSystemClassLoader());
+        //System.out.println("SYSTEM: " + ClassLoader.getSystemClassLoader());
+        //System.out.println("ALTERN: " + loader);
 
         /*
          * This statement has no effect on this program, but it can
@@ -53,6 +55,7 @@ public class Main {
         testExtend(loader);
         testExtendOkay(loader);
         testInterface(loader);
+        testAbstract(loader);
         testImplement(loader);
         testIfaceImplement(loader);
     }
@@ -232,7 +235,7 @@ public class Main {
         Class getDoubledClass;
         Object obj;
 
-        /* get the "alternate" version of GetDoubled */
+        /* get GetDoubled from the "alternate" class loader */
         try {
             getDoubledClass = loader.loadClass("GetDoubled");
         } catch (ClassNotFoundException cnfe) {
@@ -251,7 +254,7 @@ public class Main {
             return;
         } catch (LinkageError le) {
             // Dalvik bails here
-            System.err.println("Got LinkageError on GD");
+            System.out.println("Got LinkageError on GD");
             return;
         }
 
@@ -260,15 +263,60 @@ public class Main {
          */
         IGetDoubled iface = (IGetDoubled) obj;
         try {
-            /* "de" will be the wrong variety of DoubledExtend */
-            DoubledExtend de = iface.getDoubled();
+            /* "de" will be the wrong variety of DoubledExtendOkay */
+            DoubledExtendOkay de = iface.getDoubled();
             // reference impl bails here
             String str = de.getStr();
         } catch (LinkageError le) {
-            System.err.println("Got LinkageError on GD");
+            System.out.println("Got LinkageError on GD");
             return;
         }
         System.err.println("Should have failed by now on GetDoubled");
+    }
+
+    /**
+     * Throw an abstract class into the middle and see what happens.
+     */
+    static void testAbstract(ClassLoader loader) {
+        Class abstractGetClass;
+        Object obj;
+
+        /* get AbstractGet from the "alternate" loader */
+        try {
+            abstractGetClass = loader.loadClass("AbstractGet");
+        } catch (ClassNotFoundException cnfe) {
+            System.err.println("loadClass ta failed: " + cnfe);
+            return;
+        }
+
+        /* instantiate */
+        try {
+            obj = abstractGetClass.newInstance();
+        } catch (InstantiationException ie) {
+            System.err.println("newInstance failed: " + ie);
+            return;
+        } catch (IllegalAccessException iae) {
+            System.err.println("newInstance failed: " + iae);
+            return;
+        } catch (LinkageError le) {
+            System.out.println("Got LinkageError on TA");
+            return;
+        }
+
+        /* use the base class reference to get a CL-specific instance */
+        BaseOkay baseRef = (BaseOkay) obj;
+        DoubledExtendOkay de = baseRef.getExtended();
+
+        /* try to call through it */
+        try {
+            String result;
+
+            result = BaseOkay.doStuff(de);
+        } catch (LinkageError le) {
+            System.out.println("Got LinkageError on TA");
+            return;
+        }
+        System.err.println("Should have failed by now in testAbstract");
     }
 
     /**
