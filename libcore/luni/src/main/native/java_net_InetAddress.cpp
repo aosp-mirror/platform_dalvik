@@ -16,6 +16,8 @@
 
 #define LOG_TAG "InetAddress"
 
+#define LOG_DNS 0
+
 #include "JNIHelp.h"
 #include "utils/Log.h"
 #include "jni.h"
@@ -59,6 +61,7 @@ static void throwNullPointerException(JNIEnv* env)
     }
 }
 
+#if LOG_DNS
 static void logIpString(struct addrinfo* ai, const char* name)
 {
     char ipString[INET6_ADDRSTRLEN];
@@ -71,6 +74,11 @@ static void logIpString(struct addrinfo* ai, const char* name)
         LOGE("%s: getnameinfo: %s", name, gai_strerror(result));
     }
 }
+#else
+static inline void logIpString(struct addrinfo* ai, const char* name)
+{
+}
+#endif
 
 static jobjectArray getAllByNameUsingAdb(JNIEnv* env, const char* name)
 {
