@@ -129,6 +129,13 @@ static bool startup(struct JdwpState* state, const JdwpStartupParams* pParams)
     return true;
 }
 
+/*
+ * Receive a file descriptor from ADB.  The fd can be used to communicate
+ * directly with a debugger or DDMS.
+ *
+ * Returns the file descriptor on success, -1 on call failure.  If ADB
+ * went away, this closes netState->controlSock and returns -2.
+ */
 static int  receiveClientFd(JdwpNetState*  netState)
 {
     struct msghdr    msg;
@@ -165,6 +172,10 @@ static int  receiveClientFd(JdwpNetState*  netState)
         LOGE("receiving file descriptor from ADB failed (socket %d): %s\n",
              netState->controlSock, strerror(errno));
         return -1;
+    } else if (ret == 0) {
+        close(netState->controlSock);
+        netState->controlSock = -1;
+        return -2;
     }
 
     return ((int*)CMSG_DATA(cmsg))[0];
@@ -180,9 +191,11 @@ static int  receiveClientFd(JdwpNetState*  netState)
 static bool acceptConnection(struct JdwpState* state)
 {
     JdwpNetState*  netState = state->netState;
+    int retryCount = 0;
 
     /* first, ensure that we get a connection to the ADB daemon */
     
+retry:
     if (netState->controlSock < 0)
     {
         int        sleep_ms     = 500;
@@ -205,6 +218,19 @@ static bool acceptConnection(struct JdwpState* state)
         buff[4] = 0;
 
         for (;;) {
+            /*
+             * If adbd isn't running, because USB debugging was disabled or
+             * perhaps the system is restarting it for "adb root", the
+             * connect() will fail.  We loop here forever waiting for it
+             * to come back.
+             *
+             * Waking up and polling every couple of seconds is generally a
+             * bad thing to do, but we only do this if the application is
+             * debuggable *and* adbd isn't running.  Still, for the sake
+             * of battery life, we should consider timing out and giving
+             * up after a few minutes in case somebody ships an app with
+             * the debuggable flag set.
+             */
             int  ret = connect(netState->controlSock,
                                &netState->controlAddr.controlAddrPlain,
                                netState->controlAddrLen);
@@ -237,12 +263,23 @@ static bool acceptConnection(struct JdwpState* state)
     LOGV("trying to receive file descriptor from ADB\n");
     /* now we can receive a client file descriptor */
     netState->clientSock = receiveClientFd(netState);
-    if (netState->clientSock >= 0) {
-        LOGI("received file descriptor %d from ADB\n", netState->clientSock);
+    if (netState->clientSock == -1) {
+        return false;
+    } else if (netState->clientSock == -2) {
+        LOGD("adbd dropped us; retrying connection\n");
+        assert(netState->controlSock < 0);
+        if (++retryCount > 5) {
+            /* shouldn't be possible, but we check it just in case */
+            LOGE("max retries exceeded\n");
+            return false;
+        }
+        goto retry;
+    } else {
+        LOGV("received file descriptor %d from ADB\n", netState->clientSock);
         netState->awaitingHandshake = 1;
         netState->inputCount = 0;
+        return true;
     }
-    return (netState->clientSock >= 0);
 }
 
 /*
@@ -538,9 +575,7 @@ static bool processIncoming(JdwpState* state)
             {
                 LOGI("Ignoring second debugger -- accepting and dropping\n");
                 int  sock = receiveClientFd(netState);
-                if (sock < 0)
-                    LOGI("Weird -- client fd reception failed\n");
-                else
+                if (sock >= 0)
                     close(sock);
             }
             if (netState->clientSock >= 0 &&
@@ -557,7 +592,7 @@ static bool processIncoming(JdwpState* state)
                     return true;
                 } else if (readCount == 0) {
                     /* EOF hit -- far end went away */
-                    LOGD("+++ peer disconnected\n");
+                    LOGV("+++ peer disconnected\n");
                     goto fail;
                 } else
                     break;
