@@ -232,15 +232,15 @@ else
 endif
 
 ifeq ($(TARGET_ARCH),arm)
-  #TARGET_ARCH_VERSION := armv5te-vfp
+  #TARGET_ARCH_VARIANT := armv5te-vfp
   LOCAL_SRC_FILES += \
 		arch/arm/CallOldABI.S \
 		arch/arm/CallEABI.S \
 		arch/arm/HintsEABI.c
   # Select architecture specific sources (armv4t,armv5te etc)
   LOCAL_SRC_FILES += \
-		mterp/out/InterpC-$(TARGET_ARCH_VERSION).c.arm \
-		mterp/out/InterpAsm-$(TARGET_ARCH_VERSION).S
+		mterp/out/InterpC-$(TARGET_ARCH_VARIANT).c.arm \
+		mterp/out/InterpAsm-$(TARGET_ARCH_VARIANT).S
   LOCAL_SHARED_LIBRARIES += libdl
 else
   ifeq ($(TARGET_ARCH),x86)
