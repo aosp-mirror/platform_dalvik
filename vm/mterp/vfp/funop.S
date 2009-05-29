@@ -6,9 +6,9 @@
      */
     /* unop vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
+    mov     r9, rINST, lsr #8           @ r9<- A+
     VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     flds    s0, [r3]                    @ s0<- vB
-    mov     r9, rINST, lsr #8           @ r9<- A+
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     and     r9, r9, #15                 @ r9<- A
     $instr                              @ s1<- op
