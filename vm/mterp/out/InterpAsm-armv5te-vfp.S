@@ -3536,9 +3536,9 @@ dalvik_inst:
      */
     /* unop vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
+    mov     r9, rINST, lsr #8           @ r9<- A+
     VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     flds    s0, [r3]                    @ s0<- vB
-    mov     r9, rINST, lsr #8           @ r9<- A+
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     and     r9, r9, #15                 @ r9<- A
     fsitos  s1, s0                              @ s1<- op
@@ -3561,9 +3561,9 @@ dalvik_inst:
      */
     /* unop vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
+    mov     r9, rINST, lsr #8           @ r9<- A+
     VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     flds    s0, [r3]                    @ s0<- vB
-    mov     r9, rINST, lsr #8           @ r9<- A+
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     and     r9, r9, #15                 @ r9<- A
     fsitod  d0, s0                              @ d0<- op
@@ -3664,9 +3664,9 @@ dalvik_inst:
      */
     /* unop vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
+    mov     r9, rINST, lsr #8           @ r9<- A+
     VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     flds    s0, [r3]                    @ s0<- vB
-    mov     r9, rINST, lsr #8           @ r9<- A+
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     and     r9, r9, #15                 @ r9<- A
     ftosizs s1, s0                              @ s1<- op
@@ -3718,9 +3718,9 @@ dalvik_inst:
      */
     /* unop vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
+    mov     r9, rINST, lsr #8           @ r9<- A+
     VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     flds    s0, [r3]                    @ s0<- vB
-    mov     r9, rINST, lsr #8           @ r9<- A+
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     and     r9, r9, #15                 @ r9<- A
     fcvtds  d0, s0                              @ d0<- op
@@ -3743,9 +3743,9 @@ dalvik_inst:
      */
     /* unop vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
+    mov     r9, rINST, lsr #8           @ r9<- A+
     VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     fldd    d0, [r3]                    @ d0<- vB
-    mov     r9, rINST, lsr #8           @ r9<- A+
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     and     r9, r9, #15                 @ r9<- A
     ftosizd  s0, d0                              @ s0<- op
@@ -3799,9 +3799,9 @@ dalvik_inst:
      */
     /* unop vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
+    mov     r9, rINST, lsr #8           @ r9<- A+
     VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     fldd    d0, [r3]                    @ d0<- vB
-    mov     r9, rINST, lsr #8           @ r9<- A+
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     and     r9, r9, #15                 @ r9<- A
     fcvtsd  s0, d0                              @ s0<- op
@@ -4814,10 +4814,10 @@ dalvik_inst:
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    flds    s1, [r3]                    @ s1<- vCC
     and     r2, r0, #255                @ r2<- BB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
     VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    flds    s1, [r3]                    @ s1<- vCC
     flds    s0, [r2]                    @ s0<- vBB
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
@@ -4844,10 +4844,10 @@ dalvik_inst:
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    flds    s1, [r3]                    @ s1<- vCC
     and     r2, r0, #255                @ r2<- BB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
     VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    flds    s1, [r3]                    @ s1<- vCC
     flds    s0, [r2]                    @ s0<- vBB
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
@@ -4874,10 +4874,10 @@ dalvik_inst:
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    flds    s1, [r3]                    @ s1<- vCC
     and     r2, r0, #255                @ r2<- BB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
     VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    flds    s1, [r3]                    @ s1<- vCC
     flds    s0, [r2]                    @ s0<- vBB
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
@@ -4904,10 +4904,10 @@ dalvik_inst:
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    flds    s1, [r3]                    @ s1<- vCC
     and     r2, r0, #255                @ r2<- BB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
     VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    flds    s1, [r3]                    @ s1<- vCC
     flds    s0, [r2]                    @ s0<- vBB
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
@@ -4977,10 +4977,10 @@ dalvik_inst:
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    fldd    d1, [r3]                    @ d1<- vCC
     and     r2, r0, #255                @ r2<- BB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
     VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    fldd    d1, [r3]                    @ d1<- vCC
     fldd    d0, [r2]                    @ d0<- vBB
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
@@ -5007,10 +5007,10 @@ dalvik_inst:
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    fldd    d1, [r3]                    @ d1<- vCC
     and     r2, r0, #255                @ r2<- BB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
     VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    fldd    d1, [r3]                    @ d1<- vCC
     fldd    d0, [r2]                    @ d0<- vBB
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
@@ -5037,10 +5037,10 @@ dalvik_inst:
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    fldd    d1, [r3]                    @ d1<- vCC
     and     r2, r0, #255                @ r2<- BB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
     VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    fldd    d1, [r3]                    @ d1<- vCC
     fldd    d0, [r2]                    @ d0<- vBB
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
@@ -5067,10 +5067,10 @@ dalvik_inst:
     FETCH(r0, 1)                        @ r0<- CCBB
     mov     r9, rINST, lsr #8           @ r9<- AA
     mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    fldd    d1, [r3]                    @ d1<- vCC
     and     r2, r0, #255                @ r2<- BB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
     VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    fldd    d1, [r3]                    @ d1<- vCC
     fldd    d0, [r2]                    @ d0<- vBB
 
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
@@ -5987,10 +5987,10 @@ dalvik_inst:
      */
     /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
-    flds    s1, [r3]                    @ s1<- vB
     mov     r9, rINST, lsr #8           @ r9<- A+
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     and     r9, r9, #15                 @ r9<- A
+    flds    s1, [r3]                    @ s1<- vB
     VREG_INDEX_TO_ADDR(r9, r9)          @ r9<- &vA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     flds    s0, [r9]                    @ s0<- vA
@@ -6015,10 +6015,10 @@ dalvik_inst:
      */
     /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
-    flds    s1, [r3]                    @ s1<- vB
     mov     r9, rINST, lsr #8           @ r9<- A+
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     and     r9, r9, #15                 @ r9<- A
+    flds    s1, [r3]                    @ s1<- vB
     VREG_INDEX_TO_ADDR(r9, r9)          @ r9<- &vA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     flds    s0, [r9]                    @ s0<- vA
@@ -6043,10 +6043,10 @@ dalvik_inst:
      */
     /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
-    flds    s1, [r3]                    @ s1<- vB
     mov     r9, rINST, lsr #8           @ r9<- A+
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     and     r9, r9, #15                 @ r9<- A
+    flds    s1, [r3]                    @ s1<- vB
     VREG_INDEX_TO_ADDR(r9, r9)          @ r9<- &vA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     flds    s0, [r9]                    @ s0<- vA
@@ -6071,10 +6071,10 @@ dalvik_inst:
      */
     /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
-    flds    s1, [r3]                    @ s1<- vB
     mov     r9, rINST, lsr #8           @ r9<- A+
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     and     r9, r9, #15                 @ r9<- A
+    flds    s1, [r3]                    @ s1<- vB
     VREG_INDEX_TO_ADDR(r9, r9)          @ r9<- &vA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     flds    s0, [r9]                    @ s0<- vA
@@ -6141,10 +6141,10 @@ dalvik_inst:
      */
     /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
-    fldd    d1, [r3]                    @ d1<- vB
     mov     r9, rINST, lsr #8           @ r9<- A+
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     and     r9, r9, #15                 @ r9<- A
+    fldd    d1, [r3]                    @ d1<- vB
     VREG_INDEX_TO_ADDR(r9, r9)          @ r9<- &vA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     fldd    d0, [r9]                    @ d0<- vA
@@ -6170,10 +6170,10 @@ dalvik_inst:
      */
     /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
-    fldd    d1, [r3]                    @ d1<- vB
     mov     r9, rINST, lsr #8           @ r9<- A+
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     and     r9, r9, #15                 @ r9<- A
+    fldd    d1, [r3]                    @ d1<- vB
     VREG_INDEX_TO_ADDR(r9, r9)          @ r9<- &vA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     fldd    d0, [r9]                    @ d0<- vA
@@ -6199,10 +6199,10 @@ dalvik_inst:
      */
     /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
-    fldd    d1, [r3]                    @ d1<- vB
     mov     r9, rINST, lsr #8           @ r9<- A+
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     and     r9, r9, #15                 @ r9<- A
+    fldd    d1, [r3]                    @ d1<- vB
     VREG_INDEX_TO_ADDR(r9, r9)          @ r9<- &vA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     fldd    d0, [r9]                    @ d0<- vA
@@ -6228,10 +6228,10 @@ dalvik_inst:
      */
     /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
-    fldd    d1, [r3]                    @ d1<- vB
     mov     r9, rINST, lsr #8           @ r9<- A+
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     and     r9, r9, #15                 @ r9<- A
+    fldd    d1, [r3]                    @ d1<- vB
     VREG_INDEX_TO_ADDR(r9, r9)          @ r9<- &vA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     fldd    d0, [r9]                    @ d0<- vA

@@ -8,10 +8,10 @@
      */
     /* binop/2addr vA, vB */
     mov     r3, rINST, lsr #12          @ r3<- B
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
-    fldd    d1, [r3]                    @ d1<- vB
     mov     r9, rINST, lsr #8           @ r9<- A+
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vB
     and     r9, r9, #15                 @ r9<- A
+    fldd    d1, [r3]                    @ d1<- vB
     VREG_INDEX_TO_ADDR(r9, r9)          @ r9<- &vA
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     fldd    d0, [r9]                    @ d0<- vA
