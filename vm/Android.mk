@@ -184,6 +184,21 @@ LOCAL_SRC_FILES := \
 	test/AtomicSpeed.c \
 	test/TestHash.c
 
+ifeq ($(WITH_JIT_TUNING),true)
+  LOCAL_CFLAGS += -DWITH_JIT_TUNING
+endif
+
+ifeq ($(WITH_JIT),true)
+  LOCAL_CFLAGS += -DWITH_JIT
+  LOCAL_SRC_FILES += \
+	../dexdump/OpCodeNames.c \
+	compiler/Compiler.c \
+	compiler/Frontend.c \
+	compiler/Utility.c \
+	compiler/IntermediateRep.c \
+	interp/Jit.c
+endif
+
 WITH_HPROF := $(strip $(WITH_HPROF))
 ifeq ($(WITH_HPROF),)
   WITH_HPROF := true
@@ -242,6 +257,14 @@ ifeq ($(TARGET_ARCH),arm)
 		mterp/out/InterpC-$(TARGET_ARCH_VARIANT).c.arm \
 		mterp/out/InterpAsm-$(TARGET_ARCH_VARIANT).S
   LOCAL_SHARED_LIBRARIES += libdl
+  # TODO - may become TARGET_ARCH_VARIANT specific
+  ifeq ($(WITH_JIT),true)
+    LOCAL_SRC_FILES += \
+		compiler/codegen/armv5te/Codegen.c \
+		compiler/codegen/armv5te/Assemble.c \
+		compiler/codegen/armv5te/ArchUtility.c \
+		compiler/template/out/CompilerTemplateAsm-armv5te.S
+  endif
 else
   ifeq ($(TARGET_ARCH),x86)
     LOCAL_SRC_FILES += \

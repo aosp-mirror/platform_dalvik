@@ -146,6 +146,8 @@ struct StackSaveArea {
         const u2*   currentPc;
     } xtra;
 
+    /* Native return pointer for JIT, or 0 if interpreted */
+    const u2* returnAddr;
 #ifdef PAD_SAVE_AREA
     u4          pad3, pad4, pad5;
 #endif

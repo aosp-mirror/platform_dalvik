@@ -54,6 +54,9 @@ typedef enum ExecutionMode {
     kExecutionModeUnknown = 0,
     kExecutionModeInterpPortable,
     kExecutionModeInterpFast,
+#if defined(WITH_JIT)
+    kExecutionModeJit,
+#endif
 } ExecutionMode;
 
 /*
@@ -328,6 +331,8 @@ struct DvmGlobals {
      *  (3) a thread has hit a breakpoint or exception that the debugger
      *      has marked as a "suspend all" event;
      *  (4) the SignalCatcher caught a signal that requires suspension.
+     *  (5) (if implemented) the JIT needs to perform a heavyweight
+     *      rearrangement of the translation cache or JitTable.
      *
      * Because we use "safe point" self-suspension, it is never safe to
      * do a blocking "lock" call on this mutex -- if it has been acquired,
@@ -611,5 +616,101 @@ struct DvmGlobals {
 };
 
 extern struct DvmGlobals gDvm;
+
+#if defined(WITH_JIT)
+/*
+ * JIT-specific global state
+ */
+struct DvmJitGlobals {
+    /*
+     * Guards writes to Dalvik PC (dPC), translated code address (codeAddr) and
+     * chain fields within the JIT hash table.  Note carefully the access
+     * mechanism.
+     * Only writes are guarded, and the guarded fields must be updated in a
+     * specific order using atomic operations.  Further, once a field is
+     * written it cannot be changed without halting all threads.
+     *
+     * The write order is:
+     *    1) codeAddr
+     *    2) dPC
+     *    3) chain [if necessary]
+     *
+     * This mutex also guards both read and write of curJitTableEntries.
+     */
+    pthread_mutex_t tableLock;
+
+    /* The JIT hash table.  Note that for access speed, copies of this pointer
+     * are stored in each thread. */
+    struct JitEntry *pJitEntryTable;
+
+    /* Array of profile threshold counters */
+    unsigned char *pProfTable;
+    unsigned char *pProfTableCopy;
+
+    /* Size of JIT hash table in entries.  Must be a power of 2 */
+    unsigned int maxTableEntries;
+
+    /* Trigger for trace selection */
+    unsigned short threshold;
+
+    /* JIT Compiler Control */
+    bool               haltCompilerThread;
+    bool               blockingMode;
+    pthread_t          compilerHandle;
+    pthread_mutex_t    compilerLock;
+    pthread_cond_t     compilerQueueActivity;
+    pthread_cond_t     compilerQueueEmpty;
+    int                compilerQueueLength;
+    int                compilerHighWater;
+    int                compilerWorkEnqueueIndex;
+    int                compilerWorkDequeueIndex;
+    CompilerWorkOrder  compilerWorkQueue[COMPILER_WORK_QUEUE_SIZE];
+
+    /* JIT internal stats */
+    int                compilerMaxQueued;
+    int                addrLookupsFound;
+    int                addrLookupsNotFound;
+    int                noChainExit;
+    int                normalExit;
+    int                puntExit;
+    int                translationChains;
+    int                invokeNoOpt;
+    int                InvokeChain;
+    int                returnOp;
+
+    /* Compiled code cache */
+    void* codeCache;
+
+    /* Bytes already used in the code cache */
+    unsigned int codeCacheByteUsed;
+
+    /* Number of installed compilations in the cache */
+    unsigned int numCompilations;
+
+    /* Flag to indicate that the code cache is full */
+    bool codeCacheFull;
+
+    /* true/false: compile/reject opcodes specified in the -Xjitop list */
+    bool includeSelectedOp;
+
+    /* true/false: compile/reject methods specified in the -Xjitmethod list */
+    bool includeSelectedMethod;
+
+    /* Disable JIT for selected opcodes - one bit for each opcode */
+    char opList[32];
+
+    /* Disable JIT for selected methods */
+    HashTable *methodTable;
+
+    /* Record how many times an opcode has been JIT'ed */
+    int opHistogram[256];
+
+    /* Flag to dump all compiled code */
+    bool printMe;
+};
+
+extern struct DvmJitGlobals gDvmJit;
+
+#endif
 
 #endif /*_DALVIK_GLOBALS*/

@@ -192,6 +192,9 @@ static void* signalCatcherThreadStart(void* arg)
     sigemptyset(&mask);
     sigaddset(&mask, SIGQUIT);
     sigaddset(&mask, SIGUSR1);
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+    sigaddset(&mask, SIGUSR2);
+#endif
 
     while (true) {
         int rcvd;
@@ -253,6 +256,11 @@ loop:
             LOGI("SIGUSR1 forcing GC (no HPROF)\n");
             dvmCollectGarbage(false);
 #endif
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+        } else if (rcvd == SIGUSR2) {
+            gDvmJit.printMe ^= true;
+            dvmCompilerDumpStats();
+#endif
         } else {
             LOGE("unexpected signal %d\n", rcvd);
         }
@@ -260,4 +268,3 @@ loop:
 
     return NULL;
 }
-

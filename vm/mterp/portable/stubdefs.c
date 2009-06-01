@@ -28,6 +28,7 @@
         inst = FETCH(0);                                                    \
         CHECK_DEBUG_AND_PROF();                                             \
         CHECK_TRACKED_REFS();                                               \
+        CHECK_JIT();                                                        \
         goto *handlerTable[INST_INST(inst)];                                \
     }
 #else

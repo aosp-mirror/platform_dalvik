@@ -19,6 +19,7 @@
 #include "interp/InterpDefs.h"
 #include "mterp/Mterp.h"
 #include <math.h>                   // needed for fmod, fmodf
+#include "mterp/common/FindInterface.h"
 
 /*
  * Configuration defines.  These affect the C implementations, i.e. the
@@ -327,27 +328,19 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * If we're building without debug and profiling support, we never switch.
  */
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
+#if defined(WITH_JIT)
+# define NEED_INTERP_SWITCH(_current) (                                     \
+    (_current == INTERP_STD) ?                                              \
+        dvmJitDebuggerOrProfilerActive(interpState->jitState) :             \
+        !dvmJitDebuggerOrProfilerActive(interpState->jitState) )
+#else
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
         dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
+#endif
 #else
 # define NEED_INTERP_SWITCH(_current) (false)
 #endif
-
-/*
- * Look up an interface on a class using the cache.
- */
-INLINE Method* dvmFindInterfaceMethodInCache(ClassObject* thisClass,
-    u4 methodIdx, const Method* method, DvmDex* methodClassDex)
-{
-#define ATOMIC_CACHE_CALC \
-    dvmInterpFindInterfaceMethod(thisClass, methodIdx, method, methodClassDex)
-
-    return (Method*) ATOMIC_CACHE_LOOKUP(methodClassDex->pInterfaceCache,
-                DEX_INTERFACE_CACHE_SIZE, thisClass, methodIdx);
-
-#undef ATOMIC_CACHE_CALC
-}
 
 /*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the
@@ -412,4 +405,3 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #endif
     return true;
 }
-

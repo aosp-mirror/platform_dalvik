@@ -168,12 +168,22 @@ unspecified registers or condition codes.
  * interpreter, we don't have to worry about pre-ARMv5 THUMB interwork.
  */
 #define GOTO_OPCODE(_reg)       add     pc, rIBASE, _reg, lsl #${handler_size_bits}
+#define GOTO_OPCODE_IFEQ(_reg)  addeq   pc, rIBASE, _reg, lsl #${handler_size_bits}
+#define GOTO_OPCODE_IFNE(_reg)  addne   pc, rIBASE, _reg, lsl #${handler_size_bits}
 
 /*
  * Get/set the 32-bit value from a Dalvik register.
  */
 #define GET_VREG(_reg, _vreg)   ldr     _reg, [rFP, _vreg, lsl #2]
 #define SET_VREG(_reg, _vreg)   str     _reg, [rFP, _vreg, lsl #2]
+
+#if defined(WITH_JIT)
+/*
+ * Null definition for overhead measuring purposes
+ */
+#define GET_JIT_TABLE(_reg)         ldr     _reg,[rGLUE,#offGlue_pJitTable]
+#define GET_JIT_PROF_TABLE(_reg)    ldr     _reg,[rGLUE,#offGlue_pJitProfTable]
+#endif
 
 /*
  * Convert a virtual register index into an address.
