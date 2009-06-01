@@ -49,6 +49,11 @@ public final class CharsetDecoderICU extends CharsetDecoder{
     
     private  byte[] input = null;
     private  char[] output= null;
+
+    // BEGIN android-added
+    private byte[] allocatedInput = null;
+    private char[] allocatedOutput = null;
+    // END android-added
     
     // These instance variables are
     // always assigned in the methods
@@ -286,9 +291,12 @@ public final class CharsetDecoderICU extends CharsetDecoder{
             return out.position();
         }else{
             outEnd = out.remaining();
-            if(output==null || (outEnd > output.length)){
-                output = new char[outEnd];
+            // BEGIN android-added
+            if (allocatedOutput == null || (outEnd > allocatedOutput.length)) {
+                allocatedOutput = new char[outEnd];
             }
+            output = allocatedOutput;
+            // END android-added
             //since the new 
             // buffer start position 
             // is 0
@@ -303,9 +311,12 @@ public final class CharsetDecoderICU extends CharsetDecoder{
             return in.position()+savedInputHeldLen;/*exclude the number fo bytes held in previous conversion*/
         }else{
             inEnd = in.remaining();
-            if(input==null|| (inEnd > input.length)){ 
-                input = new byte[inEnd];
+            // BEGIN android-added
+            if (allocatedInput == null || (inEnd > allocatedInput.length)) {
+                allocatedInput = new byte[inEnd];
             }
+            input = allocatedInput;
+            // END android-added
             // save the current position
             int pos = in.position();
             in.get(input,0,inEnd);
@@ -324,6 +335,10 @@ public final class CharsetDecoderICU extends CharsetDecoder{
         }else{
             out.put(output,0,data[OUTPUT_OFFSET]);
         }
+        // BEGIN android-added
+        // release reference to output array, which may not be ours
+        output = null;
+        // END android-added
     }
     private final void setPosition(ByteBuffer in){
 
@@ -338,5 +353,9 @@ public final class CharsetDecoderICU extends CharsetDecoder{
             savedInputHeldLen = data[INPUT_HELD];
             in.position(in.position() - savedInputHeldLen);
         }       
+        // BEGIN android-added
+        // release reference to input array, which may not be ours
+        input = null;
+        // END android-added
     }
 }
