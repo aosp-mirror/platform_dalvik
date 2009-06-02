@@ -49,6 +49,7 @@ struct JdwpNetState {
     int                 controlSock;
     int                 clientSock;
     bool                awaitingHandshake;
+    bool                shuttingDown;
     int                 wakeFds[2];
 
     int                 inputCount;
@@ -196,8 +197,10 @@ static bool acceptConnection(struct JdwpState* state)
     /* first, ensure that we get a connection to the ADB daemon */
     
 retry:
-    if (netState->controlSock < 0)
-    {
+    if (netState->shuttingDown)
+        return false;
+
+    if (netState->controlSock < 0) {
         int        sleep_ms     = 500;
         const int  sleep_max_ms = 2*1000;
         char       buff[5];
@@ -263,6 +266,9 @@ retry:
     LOGV("trying to receive file descriptor from ADB\n");
     /* now we can receive a client file descriptor */
     netState->clientSock = receiveClientFd(netState);
+    if (netState->shuttingDown)
+        return false;       // suppress logs and additional activity
+
     if (netState->clientSock == -1) {
         return false;
     } else if (netState->clientSock == -2) {
@@ -323,6 +329,8 @@ static void adbStateShutdown(struct JdwpNetState* netState)
 
     if (netState == NULL)
         return;
+
+    netState->shuttingDown = true;
 
     clientSock = netState->clientSock;
     if (clientSock >= 0) {
