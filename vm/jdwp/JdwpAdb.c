@@ -134,8 +134,8 @@ static bool startup(struct JdwpState* state, const JdwpStartupParams* pParams)
  * Receive a file descriptor from ADB.  The fd can be used to communicate
  * directly with a debugger or DDMS.
  *
- * Returns the file descriptor on success, -1 on call failure.  If ADB
- * went away, this closes netState->controlSock and returns -2.
+ * Returns the file descriptor on success.  On failure, returns -1 and
+ * closes netState->controlSock.
  */
 static int  receiveClientFd(JdwpNetState*  netState)
 {
@@ -169,14 +169,16 @@ static int  receiveClientFd(JdwpNetState*  netState)
         ret = recvmsg(netState->controlSock, &msg, 0);
     } while (ret < 0 && errno == EINTR);
 
-    if (ret < 0) {
-        LOGE("receiving file descriptor from ADB failed (socket %d): %s\n",
-             netState->controlSock, strerror(errno));
-        return -1;
-    } else if (ret == 0) {
+    if (ret <= 0) {
+        if (ret < 0) {
+            LOGW("receiving file descriptor from ADB failed (socket %d): %s\n",
+                 netState->controlSock, strerror(errno));
+        } else {
+            LOGI("adbd disconnected\n");
+        }
         close(netState->controlSock);
         netState->controlSock = -1;
-        return -2;
+        return -1;
     }
 
     return ((int*)CMSG_DATA(cmsg))[0];
@@ -269,14 +271,9 @@ retry:
     if (netState->shuttingDown)
         return false;       // suppress logs and additional activity
 
-    if (netState->clientSock == -1) {
-        return false;
-    } else if (netState->clientSock == -2) {
-        LOGD("adbd dropped us; retrying connection\n");
-        assert(netState->controlSock < 0);
+    if (netState->clientSock < 0) {
         if (++retryCount > 5) {
-            /* shouldn't be possible, but we check it just in case */
-            LOGE("max retries exceeded\n");
+            LOGE("adb connection max retries exceeded\n");
             return false;
         }
         goto retry;
@@ -581,10 +578,18 @@ static bool processIncoming(JdwpState* state)
             if (netState->controlSock >= 0 &&
                 FD_ISSET(netState->controlSock, &readfds))
             {
-                LOGI("Ignoring second debugger -- accepting and dropping\n");
                 int  sock = receiveClientFd(netState);
-                if (sock >= 0)
+                if (sock >= 0) {
+                    LOGI("Ignoring second debugger -- accepting and dropping\n");
                     close(sock);
+                } else {
+                    assert(netState->controlSock < 0);
+                    /*
+                     * Remote side most likely went away, so our next read
+                     * on netState->clientSock will fail and throw us out
+                     * of the loop.
+                     */
+                }
             }
             if (netState->clientSock >= 0 &&
                 FD_ISSET(netState->clientSock, &readfds))
