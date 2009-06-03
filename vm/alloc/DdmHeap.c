@@ -224,9 +224,17 @@ heap_chunk_callback(const void *chunkptr, size_t chunklen,
      * allocation units used by the chunk.
      */
     {
+        size_t needed = (((chunklen/ALLOCATION_UNIT_SIZE + 255) / 256) * 2);
         size_t bytesLeft = ctx->bufLen - (size_t)(ctx->p - ctx->buf);
-        if (bytesLeft < (((chunklen/ALLOCATION_UNIT_SIZE + 255) / 256) * 2)) {
+        if (bytesLeft < needed) {
             flush_hpsg_chunk(ctx);
+        }
+
+        bytesLeft = ctx->bufLen - (size_t)(ctx->p - ctx->buf);
+        if (bytesLeft < needed) {
+            LOGW("chunk is too big to transmit (chunklen=%zd, %zd bytes)\n",
+                chunklen, needed);
+            return;
         }
     }
 
@@ -345,7 +353,12 @@ enum HpsgWhat {
     HPSG_WHAT_DISTINCT_OBJECTS = 1,
 };
 
-#define HPSx_CHUNK_SIZE (4096 - 16)
+/*
+ * Maximum chunk size.  Obtain this from the formula:
+ *
+ * (((maximum_heap_size / ALLOCATION_UNIT_SIZE) + 255) / 256) * 2
+ */
+#define HPSx_CHUNK_SIZE (16384 - 16)
 
 void dlmalloc_walk_heap(void(*)(const void*, size_t, const void*, size_t, void*),void*);
 
