@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * An async worker thread to handle certain heap operations that
  * need to be done in a separate thread to avoid synchronization
@@ -342,12 +343,20 @@ static void* heapWorkerThreadStart(void* arg)
         /* Trim the heap if we were asked to. */
         trimtime = gDvm.gcHeap->heapWorkerNextTrim;
         if (trimtime.tv_sec != 0 && trimtime.tv_nsec != 0) {
-            struct timeval now;
+            struct timespec now;
 
-            gettimeofday(&now, NULL);
+#ifdef HAVE_TIMEDWAIT_MONOTONIC
+            clock_gettime(CLOCK_MONOTONIC, &now);       // relative time
+#else
+            struct timeval tvnow;
+            gettimeofday(&tvnow, NULL);                 // absolute time
+            now.tv_sec = tvnow.tv_sec;
+            now.tv_nsec = tvnow.tv_usec * 1000;
+#endif
+
             if (trimtime.tv_sec < now.tv_sec ||
                 (trimtime.tv_sec == now.tv_sec && 
-                 trimtime.tv_nsec <= now.tv_usec * 1000))
+                 trimtime.tv_nsec <= now.tv_nsec))
             {
                 size_t madvisedSizes[HEAP_SOURCE_MAX_HEAP_COUNT];
 
@@ -377,8 +386,13 @@ static void* heapWorkerThreadStart(void* arg)
 
         /* sleep until signaled */
         if (timedwait) {
+#ifdef HAVE_TIMEDWAIT_MONOTONIC
+            cc = pthread_cond_timedwait_monotonic(&gDvm.heapWorkerCond,
+                    &gDvm.heapWorkerLock, &trimtime);
+#else
             cc = pthread_cond_timedwait(&gDvm.heapWorkerCond,
                     &gDvm.heapWorkerLock, &trimtime);
+#endif
             assert(cc == 0 || cc == ETIMEDOUT || cc == EINTR);
         } else {
             cc = pthread_cond_wait(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
@@ -494,9 +508,14 @@ void dvmScheduleHeapSourceTrim(size_t timeoutSec)
     } else {
         struct timeval now;
 
+#ifdef HAVE_TIMEDWAIT_MONOTONIC
+        clock_gettime(CLOCK_MONOTONIC, &timeout);
+        timeout.tv_sec += timeoutSec;
+#else
         gettimeofday(&now, NULL);
         timeout.tv_sec = now.tv_sec + timeoutSec;
         timeout.tv_nsec = now.tv_usec * 1000;
+#endif
         dvmSignalHeapWorker(false);
     }
     gcHeap->heapWorkerNextTrim = timeout;
