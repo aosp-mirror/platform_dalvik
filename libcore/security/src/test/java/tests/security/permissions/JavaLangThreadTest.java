@@ -143,8 +143,6 @@ public class JavaLangThreadTest extends TestCase {
         args = {}
     )
     @AndroidOnly("RI impl differs from RI spec, Android impl does not.")
-    @BrokenTest("Suffers from endless loop in getClassLoader(), actually a"
-            + "@KnownFailure, but we don't want to hang the test harness")
     public void test_getContextClassLoader() {
         class TestSecurityManager extends SecurityManager {
             boolean called;

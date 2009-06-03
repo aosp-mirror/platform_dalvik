@@ -600,7 +600,6 @@ public class ClassLoaderTest extends TestCase {
         method = "getSystemClassLoader",
         args = {}
     )
-    @BrokenTest("Infinite loop in classloader. Actually a known failure.")
     public void test_getSystemClassLoader() {
         // Test for method java.lang.ClassLoader
         // java.lang.ClassLoader.getSystemClassLoader()
