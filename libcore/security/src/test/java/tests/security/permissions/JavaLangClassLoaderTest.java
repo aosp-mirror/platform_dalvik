@@ -17,7 +17,6 @@
 package tests.security.permissions;
 
 import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -120,7 +119,6 @@ public class JavaLangClassLoaderTest extends TestCase {
         )
     })
     @AndroidOnly("uses DexFile")
-    @BrokenTest("Endless loop in ClassLoader. Actually a known failure.")
     public void test_getSystemClassLoader () throws IOException,
             IllegalAccessException, InstantiationException {
         class TestSecurityManager extends SecurityManager {
@@ -142,6 +140,10 @@ public class JavaLangClassLoaderTest extends TestCase {
         
         File tempFile = Support_Resources.createTempFile(".jar");
         tempFile.delete();
+        tempFile.deleteOnExit();
+        File tempCache = Support_Resources.createTempFile(".dex");
+        tempCache.delete();
+        tempCache.deleteOnExit();
         
         /*
          * The testdex.jar contains the following two classes:
@@ -167,8 +169,10 @@ public class JavaLangClassLoaderTest extends TestCase {
         
         InputStream is = Support_Resources.getResourceStream("testdex.jar");
         Support_Resources.copyLocalFileto(tempFile, is);
-        DexFile dexfile = new DexFile(tempFile);
-        ClassLoader pcl = Support_ClassLoader.getInstance(new URL(""),
+        DexFile dexfile = DexFile.loadDex(tempFile.getAbsolutePath(),
+                tempCache.getAbsolutePath(), 0);
+        ClassLoader pcl = Support_ClassLoader.getInstance(
+                new URL(Support_Resources.getResourceURL("testdex.jar")),
                 ClassLoader.getSystemClassLoader());
         
         Class<?> testClass = dexfile.loadClass(
