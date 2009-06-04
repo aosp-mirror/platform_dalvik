@@ -42,6 +42,11 @@
 #include <utils/LogSocket.h>
 #include "AndroidSystemNatives.h"
 
+// Temporary hack to build on systems that don't have up-to-date libc headers.
+#ifndef IPV6_TCLASS
+#define IPV6_TCLASS 67
+#endif
+
 /**
  * @name Socket Errors
  * Error codes for socket operations
