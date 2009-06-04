@@ -24,7 +24,12 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+// Temporary hack to fix the sim build until bionic is updated.
+#ifdef HAVE_ANDROID_OS
 #include <netinet/in6.h>
+#else
+#define ipv6mr_ifindex ipv6mr_interface
+#endif
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <sys/time.h>
@@ -3210,7 +3215,8 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
     // LOGD("ENTER setSocketOptionImpl");
 
     int handle, result;
-    int intVal, intSize = sizeof(int);
+    int intVal;
+    socklen_t intSize = sizeof(int);
     unsigned char byteVal;
     socklen_t byteSize = sizeof(unsigned char);
     struct sockaddr_storage sockVal;
