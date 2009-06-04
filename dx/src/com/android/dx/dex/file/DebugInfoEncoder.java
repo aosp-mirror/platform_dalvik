@@ -901,7 +901,7 @@ public final class DebugInfoEncoder {
                     "Signed value where unsigned required: " + n);
         }
 
-        output.writeSignedLeb128(n);
+        output.writeUnsignedLeb128(n);
     }
 
     /**
