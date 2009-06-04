@@ -539,16 +539,6 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_SPUT_SHORT:
         case OP_SPUT_WIDE:
         case OP_SPUT_OBJECT:
-        case OP_INVOKE_VIRTUAL:
-        case OP_INVOKE_VIRTUAL_RANGE:
-        case OP_INVOKE_SUPER:
-        case OP_INVOKE_SUPER_RANGE:
-        case OP_INVOKE_DIRECT:
-        case OP_INVOKE_DIRECT_RANGE:
-        case OP_INVOKE_STATIC:
-        case OP_INVOKE_STATIC_RANGE:
-        case OP_INVOKE_INTERFACE:
-        case OP_INVOKE_INTERFACE_RANGE:
         case OP_DIV_INT:
         case OP_REM_INT:
         case OP_DIV_LONG:
@@ -562,6 +552,19 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_DIV_INT_LIT8:
         case OP_REM_INT_LIT8:
             flags = kInstrCanContinue | kInstrCanThrow;
+            break;
+
+        case OP_INVOKE_VIRTUAL:
+        case OP_INVOKE_VIRTUAL_RANGE:
+        case OP_INVOKE_SUPER:
+        case OP_INVOKE_SUPER_RANGE:
+        case OP_INVOKE_DIRECT:
+        case OP_INVOKE_DIRECT_RANGE:
+        case OP_INVOKE_STATIC:
+        case OP_INVOKE_STATIC_RANGE:
+        case OP_INVOKE_INTERFACE:
+        case OP_INVOKE_INTERFACE_RANGE:
+            flags = kInstrCanContinue | kInstrCanThrow | kInstrInvoke;
             break;
 
         case OP_RETURN_VOID:
@@ -579,7 +582,7 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_GOTO:
         case OP_GOTO_16:
         case OP_GOTO_32:
-            flags = kInstrCanBranch;
+            flags = kInstrCanBranch | kInstrUnconditional;
             break;
 
         /* conditional branches */
@@ -617,12 +620,15 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_IPUT_QUICK:
         case OP_IPUT_WIDE_QUICK:
         case OP_IPUT_OBJECT_QUICK:
+            flags = kInstrCanContinue | kInstrCanThrow;
+            break;
+
         case OP_INVOKE_VIRTUAL_QUICK:
         case OP_INVOKE_VIRTUAL_QUICK_RANGE:
         case OP_INVOKE_SUPER_QUICK:
         case OP_INVOKE_SUPER_QUICK_RANGE:
         case OP_INVOKE_DIRECT_EMPTY:
-            flags = kInstrCanContinue | kInstrCanThrow;
+            flags = kInstrCanContinue | kInstrCanThrow | kInstrInvoke;
             break;
 
         /* these should never appear */
@@ -651,6 +657,7 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_UNUSED_FD:
         case OP_UNUSED_FE:
         case OP_UNUSED_FF:
+            flags = kInstrNoJit;
             break;
 
         /*
@@ -1238,4 +1245,3 @@ int dexGetInstrOrTableWidthAbs(const InstructionWidth* widths, const u2* insns)
     }
     return width;
 }
-

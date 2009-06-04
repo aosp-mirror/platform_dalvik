@@ -836,6 +836,9 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
         newSaveArea->prevFrame = fp;
         newSaveArea->savedPc = pc;
+#if defined(WITH_JIT)
+        newSaveArea->returnAddr = 0;
+#endif
         newSaveArea->method = methodToCall;
 
         if (!dvmIsNativeMethod(methodToCall)) {
@@ -929,4 +932,3 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
     }
     assert(false);      // should not get here
 GOTO_TARGET_END
-

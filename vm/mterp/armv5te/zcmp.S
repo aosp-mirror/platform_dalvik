@@ -16,7 +16,17 @@
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 

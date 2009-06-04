@@ -22,6 +22,9 @@
 
 #include "Dalvik.h"
 #include "interp/InterpDefs.h"
+#if defined(WITH_JIT)
+#include "interp/Jit.h"
+#endif
 
 /*
  * Interpreter state, passed into C functions from assembly stubs.  The

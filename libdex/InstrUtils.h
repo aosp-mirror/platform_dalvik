@@ -99,6 +99,9 @@ enum InstructionFlags {
     kInstrCanSwitch     = 1 << 2,   // switch statement
     kInstrCanThrow      = 1 << 3,   // could cause an exception to be thrown
     kInstrCanReturn     = 1 << 4,   // returns, no additional statements
+    kInstrInvoke        = 1 << 5,   // a flavor of invoke
+    kInstrUnconditional = 1 << 6,   // unconditional branch
+    kInstrNoJit         = 1 << 7,   // don't jit trace containing this
 };
 
 

@@ -175,12 +175,22 @@ unspecified registers or condition codes.
  * interpreter, we don't have to worry about pre-ARMv5 THUMB interwork.
  */
 #define GOTO_OPCODE(_reg)       add     pc, rIBASE, _reg, lsl #6
+#define GOTO_OPCODE_IFEQ(_reg)  addeq   pc, rIBASE, _reg, lsl #6
+#define GOTO_OPCODE_IFNE(_reg)  addne   pc, rIBASE, _reg, lsl #6
 
 /*
  * Get/set the 32-bit value from a Dalvik register.
  */
 #define GET_VREG(_reg, _vreg)   ldr     _reg, [rFP, _vreg, lsl #2]
 #define SET_VREG(_reg, _vreg)   str     _reg, [rFP, _vreg, lsl #2]
+
+#if defined(WITH_JIT)
+/*
+ * Null definition for overhead measuring purposes
+ */
+#define GET_JIT_TABLE(_reg)         ldr     _reg,[rGLUE,#offGlue_pJitTable]
+#define GET_JIT_PROF_TABLE(_reg)    ldr     _reg,[rGLUE,#offGlue_pJitProfTable]
+#endif
 
 /*
  * Convert a virtual register index into an address.
@@ -302,10 +312,21 @@ dvmMterpStdRun:
     cmp     r1, #kInterpEntryInstr      @ usual case?
     bne     .Lnot_instr                 @ no, handle it
 
+#if defined(WITH_JIT)
+.Lno_singleStep:
+    /* Entry is always a possible trace start */
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_INST()
+    cmp    r0,#0
+    bne    common_updateProfile
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+#else
     /* start executing the instruction at rPC */
     FETCH_INST()                        @ load rINST from rPC
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 .Lnot_instr:
     cmp     r1, #kInterpEntryReturn     @ were we returning from a method?
@@ -314,6 +335,22 @@ dvmMterpStdRun:
 .Lnot_return:
     cmp     r1, #kInterpEntryThrow      @ were we throwing an exception?
     beq     common_exceptionThrown
+
+#if defined(WITH_JIT)
+.Lnot_throw:
+    ldr     r0,[rGLUE, #offGlue_jitResume]
+    ldr     r2,[rGLUE, #offGlue_jitResumePC]
+    cmp     r1, #kInterpEntryResume     @ resuming after Jit single-step?
+    bne     .Lbad_arg
+    cmp     rPC,r2
+    bne     .Lno_singleStep             @ must have branched, don't resume
+    mov     r1, #kInterpEntryInstr
+    strb    r1, [rGLUE, #offGlue_entryPoint]
+    ldr     rINST, .LdvmCompilerTemplate
+    bx      r0                          @ re-enter the translation
+.LdvmCompilerTemplate:
+    .word   dvmCompilerTemplateStart
+#endif
 
 .Lbad_arg:
     ldr     r0, strBadEntryPoint
@@ -1111,10 +1148,18 @@ dalvik_inst:
     movs    r9, r0, asr #24             @ r9<- ssssssAA (sign-extended)
     mov     r9, r9, lsl #1              @ r9<- byte offset
     bmi     common_backwardBranch       @ backward branch, do periodic checks
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
+#endif
 
 /* ------------------------------ */
     .balign 64
@@ -1130,9 +1175,18 @@ dalvik_inst:
     FETCH_S(r0, 1)                      @ r0<- ssssAAAA (sign-extended)
     movs    r9, r0, asl #1              @ r9<- byte offset, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 /* ------------------------------ */
@@ -1157,10 +1211,18 @@ dalvik_inst:
     orrs    r0, r0, r1, lsl #16         @ r0<- AAAAaaaa, check sign
     mov     r9, r0, asl #1              @ r9<- byte offset
     ble     common_backwardBranch       @ backward branch, do periodic checks
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
+#endif
 
 /* ------------------------------ */
     .balign 64
@@ -1186,9 +1248,18 @@ dalvik_inst:
     movs    r9, r0, asl #1              @ r9<- branch byte offset, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
     beq     common_backwardBranch       @ (want to use BLE but V is unknown)
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 /* ------------------------------ */
@@ -1216,9 +1287,18 @@ dalvik_inst:
     movs    r9, r0, asl #1              @ r9<- branch byte offset, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
     beq     common_backwardBranch       @ (want to use BLE but V is unknown)
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1465,9 +1545,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1495,9 +1582,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1525,9 +1619,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1555,9 +1656,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1585,9 +1693,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1615,9 +1730,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1642,9 +1764,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1669,9 +1801,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1696,9 +1838,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1723,9 +1875,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1750,9 +1912,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1777,9 +1949,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -9292,14 +9474,191 @@ d2l_doconv:
 dvmAsmSisterEnd:
 
 /* File: armv5te/footer.S */
+
 /*
  * ===========================================================================
  *  Common subroutines and data
  * ===========================================================================
  */
 
+
+
     .text
     .align  2
+
+#if defined(WITH_JIT)
+/*
+ * Return from the translation cache to the interpreter when the compiler is
+ * having issues translating/executing a Dalvik instruction. We have to skip
+ * the code cache lookup otherwise it is possible to indefinitely bouce
+ * between the interpreter and the code cache if the instruction that fails
+ * to be compiled happens to be at a trace start.
+ */
+    .global dvmJitToInterpPunt
+dvmJitToInterpPunt:
+    mov    rPC, r0
+#ifdef EXIT_STATS
+    mov    r0,lr
+    bl     dvmBumpPunt;
+#endif
+    EXPORT_PC()
+    adrl   rIBASE, dvmAsmInstructionStart
+    FETCH_INST()
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+
+/*
+ * Return to the interpreter to handle a single instruction.
+ * On entry:
+ *    r0 <= PC
+ *    r1 <= PC of resume instruction
+ *    lr <= resume point in translation
+ */
+    .global dvmJitToInterpSingleStep
+dvmJitToInterpSingleStep:
+    str    lr,[rGLUE,#offGlue_jitResume]
+    str    r1,[rGLUE,#offGlue_jitResumePC]
+    mov    r1,#kInterpEntryInstr
+    @ enum is 4 byte in aapcs-EABI
+    str    r1, [rGLUE, #offGlue_entryPoint]
+    mov    rPC,r0
+    EXPORT_PC()
+    adrl   rIBASE, dvmAsmInstructionStart
+    mov    r2,#kJitSingleStep     @ Ask for single step and then revert
+    str    r2,[rGLUE,#offGlue_jitState]
+    mov    r1,#1                  @ set changeInterp to bail to debug interp
+    b      common_gotoBail
+
+
+/*
+ * Return from the translation cache and immediately request
+ * a translation for the exit target.  Commonly used following
+ * invokes.
+ */
+    .global dvmJitToTraceSelect
+dvmJitToTraceSelect:
+    ldr    rPC,[r14, #-1]           @ get our target PC
+    add    rINST,r14,#-5            @ save start of chain branch
+    mov    r0,rPC
+    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    cmp    r0,#0
+    beq    2f
+    mov    r1,rINST
+    bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
+    ldr    rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
+    bx     r0                       @ continue native execution
+
+/* No translation, so request one if profiling isn't disabled*/
+2:
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_INST()
+    cmp    r0, #0
+    bne    common_selectTrace
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+
+/*
+ * Return from the translation cache to the interpreter.
+ * The return was done with a BLX from thumb mode, and
+ * the following 32-bit word contains the target rPC value.
+ * Note that lr (r14) will have its low-order bit set to denote
+ * its thumb-mode origin.
+ *
+ * We'll need to stash our lr origin away, recover the new
+ * target and then check to see if there is a translation available
+ * for our new target.  If so, we do a translation chain and
+ * go back to native execution.  Otherwise, it's back to the
+ * interpreter (after treating this entry as a potential
+ * trace start).
+ */
+    .global dvmJitToInterpNormal
+dvmJitToInterpNormal:
+    ldr    rPC,[r14, #-1]           @ get our target PC
+    add    rINST,r14,#-5            @ save start of chain branch
+#ifdef EXIT_STATS
+    bl     dvmBumpNormal
+#endif
+    mov    r0,rPC
+    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    cmp    r0,#0
+    beq    1f                       @ go if not, otherwise do chain
+    mov    r1,rINST
+    bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
+    ldr    rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
+    bx     r0                       @ continue native execution
+
+/*
+ * Return from the translation cache to the interpreter to do method invocation.
+ * Check if translation exists for the callee, but don't chain to it.
+ */
+    .global dvmJitToInterpNoChain
+dvmJitToInterpNoChain:
+#ifdef EXIT_STATS
+    bl     dvmBumpNoChain
+#endif
+    mov    r0,rPC
+    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    cmp    r0,#0
+    bxne   r0                       @ continue native execution if so
+
+/*
+ * No translation, restore interpreter regs and start interpreting.
+ * rGLUE & rFP were preserved in the translated code, and rPC has
+ * already been restored by the time we get here.  We'll need to set
+ * up rIBASE & rINST, and load the address of the JitTable into r0.
+ */
+1:
+    EXPORT_PC()
+    adrl   rIBASE, dvmAsmInstructionStart
+    FETCH_INST()
+    GET_JIT_PROF_TABLE(r0)
+    @ NOTE: intended fallthrough
+/*
+ * Common code to update potential trace start counter, and initiate
+ * a trace-build if appropriate.  On entry, rPC should point to the
+ * next instruction to execute, and rINST should be already loaded with
+ * the next opcode word, and r0 holds a pointer to the jit profile
+ * table (pJitProfTable).
+ */
+common_testUpdateProfile:
+    cmp     r0,#0
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE_IFEQ(ip)       @ if not profiling, fallthrough otherwise */
+
+common_updateProfile:
+    eor     r3,rPC,rPC,lsr #12 @ cheap, but fast hash function
+    lsl     r3,r3,#23          @ shift out excess 511
+    ldrb    r1,[r0,r3,lsr #23] @ get counter
+    GET_INST_OPCODE(ip)
+    subs    r1,r1,#1           @ decrement counter
+    strb    r1,[r0,r3,lsr #23] @ and store it
+    GOTO_OPCODE_IFNE(ip)       @ if not threshold, fallthrough otherwise */
+
+/*
+ * Here, we switch to the debug interpreter to request
+ * trace selection.  First, though, check to see if there
+ * is already a native translation in place (and, if so,
+ * jump to it now).
+ */
+    mov     r1,#255
+    strb    r1,[r0,r3,lsr #23] @ reset counter
+    EXPORT_PC()
+    mov     r0,rPC
+    bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
+    cmp     r0,#0
+    ldrne   rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
+    beq     common_selectTrace
+    bxne    r0                          @ jump to the translation
+common_selectTrace:
+    mov     r2,#kJitTSelectRequest      @ ask for trace selection
+    str     r2,[rGLUE,#offGlue_jitState]
+    mov     r1,#1                       @ set changeInterp
+    b       common_gotoBail
+
+.LdvmCompilerTemplateStart:
+    .word   dvmCompilerTemplateStart
+
+#endif
 
 /*
  * Common code when a backward branch is taken.
@@ -9310,9 +9669,18 @@ dvmAsmSisterEnd:
 common_backwardBranch:
     mov     r0, #kInterpEntryInstr
     bl      common_periodicChecks
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 /*
@@ -9486,6 +9854,10 @@ common_invokeMethodNoRange:
 #endif
     str     rFP, [r10, #offStackSaveArea_prevFrame]
     str     rPC, [r10, #offStackSaveArea_savedPc]
+#if defined(WITH_JIT)
+    mov     r9, #0
+    str     r9, [r10, #offStackSaveArea_returnAddr]
+#endif
     str     r0, [r10, #offStackSaveArea_method]
     tst     r3, #ACC_NATIVE
     bne     .LinvokeNative
@@ -9514,11 +9886,22 @@ common_invokeMethodNoRange:
     @ r0=methodToCall, r1=newFp, r2=self, r3=newMethodClass, r9=newINST
     str     r0, [rGLUE, #offGlue_method]    @ glue->method = methodToCall
     str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    mov     rFP, r1                         @ fp = newFp
+    GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
+    mov     rINST, r9                       @ publish new rINST
+    str     r1, [r2, #offThread_curFrame]   @ self->curFrame = newFp
+    cmp     r0,#0
+    bne     common_updateProfile
+    GOTO_OPCODE(ip)                         @ jump to next instruction
+#else
     mov     rFP, r1                         @ fp = newFp
     GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
     mov     rINST, r9                       @ publish new rINST
     str     r1, [r2, #offThread_curFrame]   @ self->curFrame = newFp
     GOTO_OPCODE(ip)                         @ jump to next instruction
+#endif
 
 .LinvokeNative:
     @ Prep for the native call
@@ -9624,10 +10007,26 @@ common_returnFromMethod:
     str     r2, [rGLUE, #offGlue_method]@ glue->method = newSave->method
     ldr     r1, [r10, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
     str     rFP, [r3, #offThread_curFrame]  @ self->curFrame = fp
+#if defined(WITH_JIT)
+    ldr     r3, [r0, #offStackSaveArea_returnAddr] @ r3 = saveArea->returnAddr
+    GET_JIT_PROF_TABLE(r0)
+    mov     rPC, r9                     @ publish new rPC
+    str     r1, [rGLUE, #offGlue_methodClassDex]
+    cmp     r3, #0                      @ caller is compiled code
+    bne     1f
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+1:
+    ldr     rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
+    blx     r3
+#else
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     mov     rPC, r9                     @ publish new rPC
     str     r1, [rGLUE, #offGlue_methodClassDex]
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
     /*
      * Return handling, calls through "glue code".
@@ -9650,11 +10049,18 @@ common_returnFromMethod:
  *
  * This does not return.
  */
+     .global dvmMterpCommonExceptionThrown
+dvmMterpCommonExceptionThrown:
 common_exceptionThrown:
 .LexceptionNew:
     mov     r0, #kInterpEntryThrow
     mov     r9, #0
     bl      common_periodicChecks
+
+#if defined(WITH_JIT)
+    mov     r2,#kJitTSelectAbort        @ abandon trace selection in progress
+    str     r2,[rGLUE,#offGlue_jitState]
+#endif
 
     ldr     r10, [rGLUE, #offGlue_self] @ r10<- glue->self
     ldr     r9, [r10, #offThread_exception] @ r9<- self->exception

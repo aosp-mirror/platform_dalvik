@@ -26,6 +26,7 @@
 #include "interp/InterpDefs.h"
 #include "mterp/Mterp.h"
 #include <math.h>                   // needed for fmod, fmodf
+#include "mterp/common/FindInterface.h"
 
 /*
  * Configuration defines.  These affect the C implementations, i.e. the
@@ -334,27 +335,19 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * If we're building without debug and profiling support, we never switch.
  */
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
+#if defined(WITH_JIT)
+# define NEED_INTERP_SWITCH(_current) (                                     \
+    (_current == INTERP_STD) ?                                              \
+        dvmJitDebuggerOrProfilerActive(interpState->jitState) :             \
+        !dvmJitDebuggerOrProfilerActive(interpState->jitState) )
+#else
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
         dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
+#endif
 #else
 # define NEED_INTERP_SWITCH(_current) (false)
 #endif
-
-/*
- * Look up an interface on a class using the cache.
- */
-INLINE Method* dvmFindInterfaceMethodInCache(ClassObject* thisClass,
-    u4 methodIdx, const Method* method, DvmDex* methodClassDex)
-{
-#define ATOMIC_CACHE_CALC \
-    dvmInterpFindInterfaceMethod(thisClass, methodIdx, method, methodClassDex)
-
-    return (Method*) ATOMIC_CACHE_LOOKUP(methodClassDex->pInterfaceCache,
-                DEX_INTERFACE_CACHE_SIZE, thisClass, methodIdx);
-
-#undef ATOMIC_CACHE_CALC
-}
 
 /*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the
@@ -420,12 +413,13 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     return true;
 }
 
-
 /* File: portable/portstd.c */
 #define INTERP_FUNC_NAME dvmInterpretStd
 #define INTERP_TYPE INTERP_STD
 
 #define CHECK_DEBUG_AND_PROF() ((void)0)
+
+#define CHECK_JIT() ((void)0)
 
 /* File: portable/stubdefs.c */
 /*
@@ -458,6 +452,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         inst = FETCH(0);                                                    \
         CHECK_DEBUG_AND_PROF();                                             \
         CHECK_TRACKED_REFS();                                               \
+        CHECK_JIT();                                                        \
         goto *handlerTable[INST_INST(inst)];                                \
     }
 #else
@@ -1199,9 +1194,30 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
     const Method* methodToCall;
     bool methodCallRange;
 
+
 #if defined(THREADED_INTERP)
     /* static computed goto table */
     DEFINE_GOTO_TABLE(handlerTable);
+#endif
+
+#if defined(WITH_JIT)
+#if 0
+    LOGD("*DebugInterp - entrypoint is %d, tgt is 0x%x, %s\n",
+         interpState->entryPoint,
+         interpState->pc,
+         interpState->method->name);
+#endif
+
+#if INTERP_TYPE == INTERP_DBG
+    /* Check to see if we've got a trace selection request.  If we do,
+     * but something is amiss, revert to the fast interpreter.
+     */
+    if (dvmJitCheckTraceRequest(self,interpState)) {
+        interpState->nextMode = INTERP_STD;
+        //LOGD("** something wrong, exiting\n");
+        return true;
+    }
+#endif
 #endif
 
     /* copy state in */
@@ -3858,6 +3874,9 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
         newSaveArea->prevFrame = fp;
         newSaveArea->savedPc = pc;
+#if defined(WITH_JIT)
+        newSaveArea->returnAddr = 0;
+#endif
         newSaveArea->method = methodToCall;
 
         if (!dvmIsNativeMethod(methodToCall)) {
@@ -3951,7 +3970,6 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
     }
     assert(false);      // should not get here
 GOTO_TARGET_END
-
 
 /* File: portable/enddefs.c */
 /*--- end of opcodes ---*/

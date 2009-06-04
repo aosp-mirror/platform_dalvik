@@ -73,6 +73,9 @@
 #include "libdex/InstrUtils.h"
 #include "AllocTracker.h"
 #include "PointerSet.h"
+#if defined(WITH_JIT)
+#include "compiler/Compiler.h"
+#endif
 #include "Globals.h"
 #include "reflect/Reflect.h"
 #include "oo/TypeCheck.h"

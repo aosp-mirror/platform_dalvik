@@ -789,7 +789,6 @@ void dvmThrowVerificationError(const Method* method, int kind, int ref)
     free(msg);
 }
 
-
 /*
  * Main interpreter loop entry point.  Select "standard" or "debug"
  * interpreter and switch between them as required.
@@ -805,6 +804,27 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 {
     InterpState interpState;
     bool change;
+#if defined(WITH_JIT)
+    /* Interpreter entry points from compiled code */
+    extern void dvmJitToInterpNormal();
+    extern void dvmJitToInterpNoChain();
+    extern void dvmJitToInterpPunt();
+    extern void dvmJitToInterpSingleStep();
+    extern void dvmJitToTraceSelect();
+
+    /* 
+     * Reserve a static entity here to quickly setup runtime contents as
+     * gcc will issue block copy instructions.
+     */
+    static struct JitToInterpEntries jitToInterpEntries = {
+        dvmJitToInterpNormal,
+        dvmJitToInterpNoChain,
+        dvmJitToInterpPunt,
+        dvmJitToInterpSingleStep,
+        dvmJitToTraceSelect,
+    };
+#endif
+
 
 #if defined(WITH_TRACKREF_CHECKS)
     interpState.debugTrackedRefStart =
@@ -812,6 +832,12 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 #endif
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
     interpState.debugIsMethodEntry = true;
+#endif
+#if defined(WITH_JIT)
+    interpState.jitState = gDvmJit.pJitEntryTable ? kJitNormal : kJitOff;
+
+    /* Setup the Jit-to-interpreter entry points */
+    interpState.jitToInterpEntries = jitToInterpEntries;
 #endif
 
     /*
@@ -848,6 +874,14 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     Interpreter stdInterp;
     if (gDvm.executionMode == kExecutionModeInterpFast)
         stdInterp = dvmMterpStd;
+#if defined(WITH_JIT)
+    else if (gDvm.executionMode == kExecutionModeJit)
+/* If profiling overhead can be kept low enough, we can use a profiling
+ * mterp fast for both Jit and "fast" modes.  If overhead is too high,
+ * create a specialized profiling interpreter.
+ */
+        stdInterp = dvmMterpStd;
+#endif
     else
         stdInterp = dvmInterpretStd;
 
@@ -858,7 +892,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
             LOGVV("threadid=%d: interp STD\n", self->threadId);
             change = (*stdInterp)(self, &interpState);
             break;
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
+#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER) || defined(WITH_JIT)
         case INTERP_DBG:
             LOGVV("threadid=%d: interp DBG\n", self->threadId);
             change = dvmInterpretDbg(self, &interpState);
@@ -871,4 +905,3 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 
     *pResult = interpState.retval;
 }
-
