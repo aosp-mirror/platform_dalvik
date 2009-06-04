@@ -15,6 +15,7 @@
  * the VM-specific behavior isolated in VMThread.
  */
 
+#define LOG_TAG "DecimalFormatInterface"
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "unicode/unum.h"
@@ -28,7 +29,6 @@
 #include <string.h>
 #include "cutils/log.h"
 
-#define LOG_TAG "DecimalFormatInterface"
 
 static UBool icuError(JNIEnv *env, UErrorCode errorcode)
 {
