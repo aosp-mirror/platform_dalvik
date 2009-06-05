@@ -39,7 +39,6 @@
 
 #include <cutils/properties.h>
 #include <cutils/adb_networking.h>
-#include <utils/LogSocket.h>
 #include "AndroidSystemNatives.h"
 
 // Temporary hack to build on systems that don't have up-to-date libc headers.
@@ -287,24 +286,6 @@ static jbyteArray socketAddressToAddressBytes(JNIEnv *env,
     env->SetByteArrayRegion(byteArray, 0, addressLength, (jbyte *) rawAddress);
 
     return byteArray;
-}
-
-/**
- * Wrapper function for log_socket_connect, which is currently disabled.
- * TODO: either unbreak log_socket_connect and fix it to take strings or IP
- * addresses or remove it. After that, remove this function.
- *
- * @param fd the socket file descriptor to enable logging on
- * @param address pointer to the socket address the socket is connecting to
- */
-static void logSocketConnect(int fd, struct sockaddr_storage *address) {
-    // Since connection logging is disabled for now, don't implement IPv6
-    // support for it just yet.
-    if (address->ss_family == AF_INET) {
-        struct sockaddr_in *sin = (struct sockaddr_in *) address;
-        log_socket_connect(fd, ntohl(sin->sin_addr.s_addr),
-                ntohs(sin->sin_port));
-    }
 }
 
 /**
@@ -862,7 +843,6 @@ static int pollSelectWait(JNIEnv *env, jobject fileDescriptor, int timeout, int 
                 }
 
             } else if (0 > result) {
-                log_socket_close(handle, result);
                 throwSocketException(env, result);
             }
             poll = 0;
@@ -879,7 +859,6 @@ static int pollSelectWait(JNIEnv *env, jobject fileDescriptor, int timeout, int 
 
                 continue; // try again
             } else if (0 > result) {
-                log_socket_close(handle, result);
                 throwSocketException(env, result);
             }
             poll = 0;
@@ -998,8 +977,6 @@ static int sockConnectWithTimeout(int handle, struct sockaddr_storage addr,
             // LOGD("-connect ret %d errno %d (via adb)", rc, errno);
 
         } else {
-            logSocketConnect(handle, &addr);
-
             /* set the socket to non-blocking */
             int block = JNI_TRUE;
             rc = ioctl(handle, FIONBIO, &block);
@@ -1659,11 +1636,9 @@ static jint osNetworkSystem_readSocketDirectImpl(JNIEnv* env, jclass clazz,
         return -1;
     } else if (ret == -1) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
         return 0;
     }
-    add_recv_stats(handle, ret);
     return ret;
 }
 
@@ -1726,7 +1701,6 @@ static jint osNetworkSystem_writeSocketDirectImpl(JNIEnv* env, jclass clazz,
     result = send(handle, (jbyte *) message, (int) count, SOCKET_NOFLAGS);
     if (result < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
 
         if (SOCKERR_WOULDBLOCK == err){
             jclass socketExClass,errorCodeExClass;
@@ -1763,7 +1737,6 @@ static jint osNetworkSystem_writeSocketDirectImpl(JNIEnv* env, jclass clazz,
         return 0;
     }
 
-    add_send_stats(handle, result);
     return result;
 }
 
@@ -1943,7 +1916,6 @@ static void osNetworkSystem_connectStreamWithTimeoutSocketImpl(JNIEnv* env,
         sockConnectWithTimeout(handle, address, 0, SOCKET_STEP_DONE, context);
         goto bail;
     } else if (result != SOCKERR_NOTCONNECTED) {
-        log_socket_close(handle, result);
         sockConnectWithTimeout(handle, address, 0, SOCKET_STEP_DONE,
                                context);
         /* we got an error other than NOTCONNECTED so we cannot continue */
@@ -1998,7 +1970,6 @@ static void osNetworkSystem_connectStreamWithTimeoutSocketImpl(JNIEnv* env,
             if (hasTimeout) {
                 remainingTimeout = finishTime - time_msec_clock();
                 if (remainingTimeout <= 0) {
-                    log_socket_close(handle, result);
                     sockConnectWithTimeout(handle, address, 0,
                             SOCKET_STEP_DONE, context);
                     jniThrowException(env,
@@ -2010,7 +1981,6 @@ static void osNetworkSystem_connectStreamWithTimeoutSocketImpl(JNIEnv* env,
                 remainingTimeout = 100;
             }
         } else {
-            log_socket_close(handle, result);
             sockConnectWithTimeout(handle, address, remainingTimeout,
                                    SOCKET_STEP_DONE, context);
             if ((SOCKERR_CONNRESET == result) ||
@@ -2131,7 +2101,6 @@ static void osNetworkSystem_listenStreamSocketImpl(JNIEnv* env, jclass clazz,
 
     if (ret < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
         return;
     }
@@ -2161,7 +2130,6 @@ static jint osNetworkSystem_availableStreamImpl(JNIEnv* env, jclass clazz,
         } else if (SOCKERR_INTERRUPTED == result) {
             continue;
         } else if (0 > result) {
-            log_socket_close(handle, result);
             throwSocketException(env, result);
             return 0;
         }
@@ -2171,11 +2139,9 @@ static jint osNetworkSystem_availableStreamImpl(JNIEnv* env, jclass clazz,
 
     if (0 > result) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
         return 0;
     }
-    add_recv_stats(handle, result);
     return result;
 }
 
@@ -2214,7 +2180,6 @@ static void osNetworkSystem_acceptSocketImpl(JNIEnv* env, jclass clazz,
 
     if (ret < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
         return;
     }
@@ -2274,7 +2239,6 @@ static void osNetworkSystem_sendUrgentDataImpl(JNIEnv* env, jclass clazz,
     result = send(handle, (jbyte *) &value, 1, MSG_OOB);
     if (result < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
     }
 }
@@ -2292,14 +2256,11 @@ static void osNetworkSystem_connectDatagramImpl2(JNIEnv* env, jclass clazz,
     if (ret < 0)  // Exception has already been thrown.
         return;
 
-    logSocketConnect(handle, &sockAddr);
-
     do {
         ret = connect(handle, (struct sockaddr *) &sockAddr, sizeof(sockAddr));
     } while (ret < 0 && errno == EINTR);
     if (ret < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
     }
 }
@@ -2321,7 +2282,6 @@ static void osNetworkSystem_disconnectDatagramImpl(JNIEnv* env, jclass clazz,
      } while (result < 0 && errno == EINTR);
     if (result < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
     }
 }
@@ -2350,7 +2310,6 @@ static jboolean osNetworkSystem_socketBindImpl2(JNIEnv* env, jclass clazz,
     } while (ret < 0 && errno == EINTR);
     if (ret < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         jniThrowException(env, "java/net/BindException", netLookupErrorString(err));
         return 0;
     }
@@ -2384,7 +2343,6 @@ static jint osNetworkSystem_peekDatagramImpl(JNIEnv* env, jclass clazz,
     } while (length < 0 && errno == EINTR);
     if (length < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
         return 0;
     }
@@ -2394,7 +2352,6 @@ static jint osNetworkSystem_peekDatagramImpl(JNIEnv* env, jclass clazz,
         return -1;
 
     port = getSocketAddressPort(&sockAddr);
-    add_recv_stats(handle, length);
     return port;
 }
 
@@ -2426,7 +2383,6 @@ static jint osNetworkSystem_receiveDatagramDirectImpl(JNIEnv* env, jclass clazz,
     } while (actualLength < 0 && errno == EINTR);
     if (actualLength < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
         return 0;
     }
@@ -2444,7 +2400,6 @@ static jint osNetworkSystem_receiveDatagramDirectImpl(JNIEnv* env, jclass clazz,
         env->SetIntField(packet, gCachedFields.dpack_length,
                 (jint) actualLength);
     }
-    add_recv_stats(handle, actualLength);
     return (jint) actualLength;
 }
 
@@ -2503,7 +2458,6 @@ static jint osNetworkSystem_recvConnectedDatagramDirectImpl(JNIEnv* env,
     if ( packet != NULL) {
         env->SetIntField(packet, gCachedFields.dpack_length, actualLength);
     }
-    add_recv_stats(handle, actualLength);
     return actualLength;
 }
 
@@ -2561,12 +2515,10 @@ static jint osNetworkSystem_sendDatagramDirectImpl(JNIEnv* env, jclass clazz,
                 || (SOCKERR_CONNECTION_REFUSED == err)) {
             return 0;
         } else {
-            log_socket_close(handle, err);
             throwSocketException(env, err);
             return 0;
         }
     }
-    add_send_stats(handle, result);
     return (jint) result;
 }
 
@@ -2603,12 +2555,10 @@ static jint osNetworkSystem_sendConnectedDatagramDirectImpl(JNIEnv* env,
         if ((SOCKERR_CONNRESET == err) || (SOCKERR_CONNECTION_REFUSED == err)) {
             return 0;
         } else {
-            log_socket_close(handle, err);
             throwSocketException(env, err);
             return 0;
         }
     }
-    add_send_stats(handle, length);
     return result;
 }
 
@@ -2691,7 +2641,6 @@ static jint osNetworkSystem_receiveStreamImpl(JNIEnv* env, jclass clazz,
      * to the Java input stream
      */
     if (0 < result) {
-        add_recv_stats(handle, result);
         return result;
     } else if (0 == result) {
         return -1;
@@ -2702,7 +2651,6 @@ static jint osNetworkSystem_receiveStreamImpl(JNIEnv* env, jclass clazz,
                               netLookupErrorString(SOCKERR_TIMEOUT));
         } else {
             int err = convertError(errno);
-            log_socket_close(handle, err);
             throwSocketException(env, err);
         }
         return 0;
@@ -2746,7 +2694,6 @@ static jint osNetworkSystem_sendStreamImpl(JNIEnv* env, jclass clazz,
             }
             env->ReleaseByteArrayElements(data, message, 0);
             int err = convertError(result);
-            log_socket_close(handle, err);
             throwSocketException(env, err);
             return 0;
         }
@@ -2754,7 +2701,6 @@ static jint osNetworkSystem_sendStreamImpl(JNIEnv* env, jclass clazz,
     }
 
     env->ReleaseByteArrayElements(data, message, 0);
-    add_send_stats(handle, sent);
     return sent;
 }
 
@@ -2776,7 +2722,6 @@ static void osNetworkSystem_shutdownInputImpl(JNIEnv* env, jobject obj,
 
     if (ret < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
         return;
     }
@@ -2799,7 +2744,6 @@ static void osNetworkSystem_shutdownOutputImpl(JNIEnv* env, jobject obj,
 
     if (ret < 0) {
         int err = convertError(errno);
-        log_socket_close(handle, err);
         throwSocketException(env, err);
         return;
     }
@@ -2855,7 +2799,6 @@ static jint osNetworkSystem_sendDatagramImpl2(JNIEnv* env, jclass clazz,
         } while (result < 0 && errno == EINTR);
         if (result < 0) {
             int err = convertError(errno);
-            log_socket_close(handle, err);
             throwSocketException(env, err);
             free(message);
             return 0;
@@ -2865,7 +2808,6 @@ static jint osNetworkSystem_sendDatagramImpl2(JNIEnv* env, jclass clazz,
     }
 
     free(message);
-    add_send_stats(handle, sent);
     return sent;
 }
 
@@ -3482,8 +3424,6 @@ static void osNetworkSystem_socketCloseImpl(JNIEnv* env, jclass clazz,
         throwSocketException(env, SOCKERR_BADSOCKET);
         return;
     }
-
-    log_socket_close(handle, SOCKET_CLOSE_LOCAL);
 
     jniSetFileDescriptorOfFD(env, fileDescriptor, -1);
 

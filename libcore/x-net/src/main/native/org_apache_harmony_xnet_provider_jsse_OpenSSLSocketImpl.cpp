@@ -36,8 +36,6 @@
 #include <openssl/rand.h>
 #include <openssl/ssl.h>
 
-#include <utils/LogSocket.h>
-
 #include "org_apache_harmony_xnet_provider_jsse_common.h"
 
 /**
@@ -693,7 +691,6 @@ static int sslRead(SSL* ssl, char* buf, jint len, int* sslReturnCode,
         switch (error) {
              // Sucessfully read at least one byte.
             case SSL_ERROR_NONE: {
-                add_recv_stats(fd, result);
                 return result;
             }
 
@@ -861,7 +858,6 @@ static int sslWrite(SSL* ssl, const char* buf, jint len, int* sslReturnCode,
             }
         }
     }
-    add_send_stats(fd, count);
     // LOGD("Successfully wrote %d bytes", count);
     
     return count;
