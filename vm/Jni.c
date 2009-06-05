@@ -2780,8 +2780,8 @@ static void* GetDirectBufferAddress(JNIEnv * env, jobject buf)
         goto bail;
     }
 
-    tempMethod = (*env)->GetMethodID(env, tempClass, "getBaseAddress",
-             "()Lorg/apache/harmony/luni/platform/PlatformAddress;");
+    tempMethod = (*env)->GetMethodID(env, tempClass, "getEffectiveAddress",
+             "()Lorg/apache/harmony/luni/platform/PlatformAddress;");        
     if(!tempMethod){
         goto bail;
     }
