@@ -1212,17 +1212,17 @@ void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
     register uint32_t rPC       asm("r4");
     register uint32_t rFP       asm("r5");
     register uint32_t rGLUE     asm("r6");
-    register uint32_t rIBASE    asm("r7");
-    register uint32_t rINST     asm("r8");
+    register uint32_t rINST     asm("r7");
+    register uint32_t rIBASE    asm("r8");
     register uint32_t r9        asm("r9");
     register uint32_t r10       asm("r10");
 
     extern char dvmAsmInstructionStart[];
 
     printf("REGS: r0=%08x r1=%08x r2=%08x r3=%08x\n", r0, r1, r2, r3);
-    printf("    : rPC=%08x rFP=%08x rGLUE=%08x rIBASE=%08x\n",
-        rPC, rFP, rGLUE, rIBASE);
-    printf("    : rINST=%08x r9=%08x r10=%08x\n", rINST, r9, r10);
+    printf("    : rPC=%08x rFP=%08x rGLUE=%08x rINST=%08x\n",
+        rPC, rFP, rGLUE, rINST);
+    printf("    : rIBASE=%08x r9=%08x r10=%08x\n", rIBASE, r9, r10);
 
     MterpGlue* glue = (MterpGlue*) rGLUE;
     const Method* method = glue->method;
