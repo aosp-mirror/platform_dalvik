@@ -63,8 +63,8 @@ The following registers have fixed assignments:
   r4  rPC       interpreted program counter, used for fetching instructions
   r5  rFP       interpreted frame pointer, used for accessing locals and args
   r6  rGLUE     MterpGlue pointer
-  r7  rIBASE    interpreted instruction base pointer, used for computed goto
-  r8  rINST     first 16-bit code unit of current instruction
+  r7  rINST     first 16-bit code unit of current instruction
+  r8  rIBASE    interpreted instruction base pointer, used for computed goto
 
 Macros are provided for common operations.  Each macro MUST emit only
 one instruction to make instruction-counting easier.  They MUST NOT alter
@@ -75,8 +75,8 @@ unspecified registers or condition codes.
 #define rPC     r4
 #define rFP     r5
 #define rGLUE   r6
-#define rIBASE  r7
-#define rINST   r8
+#define rINST   r7
+#define rIBASE  r8
 
 /* save/restore the PC and/or FP from the glue struct */
 #define LOAD_PC_FROM_GLUE()     ldr     rPC, [rGLUE, #offGlue_pc]
@@ -9556,6 +9556,7 @@ dvmJitToTraceSelect:
 
 /* No translation, so request one if profiling isn't disabled*/
 2:
+    adrl   rIBASE, dvmAsmInstructionStart
     GET_JIT_PROF_TABLE(r0)
     FETCH_INST()
     cmp    r0, #0

@@ -74,6 +74,7 @@ dvmJitToTraceSelect:
 
 /* No translation, so request one if profiling isn't disabled*/
 2:
+    adrl   rIBASE, dvmAsmInstructionStart
     GET_JIT_PROF_TABLE(r0)
     FETCH_INST()
     cmp    r0, #0

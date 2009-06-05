@@ -69,8 +69,8 @@ registers in compiled code
 
   reg nick      purpose
   r4  rPC       interpreted program counter, used for fetching instructions
-  r7  rIBASE    interpreted instruction base pointer, used for computed goto
-  r8  rINST     first 16-bit code unit of current instruction
+  r7  rINST     first 16-bit code unit of current instruction
+  r8  rIBASE    interpreted instruction base pointer, used for computed goto
 
 Macros are provided for common operations.  Each macro MUST emit only
 one instruction to make instruction-counting easier.  They MUST NOT alter
@@ -81,8 +81,8 @@ unspecified registers or condition codes.
 #define rPC     r4
 #define rFP     r5
 #define rGLUE   r6
-#define rIBASE  r7
-#define rINST   r8
+#define rINST   r7
+#define rIBASE  r8
 
 /*
  * Given a frame pointer, find the stack save area.
