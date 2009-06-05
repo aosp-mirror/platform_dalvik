@@ -363,6 +363,12 @@ struct DvmGlobals {
     pthread_cond_t  threadSuspendCountCond;
 
     /*
+     * Sum of all threads' suspendCount fields.  The JIT needs to know if any
+     * thread is suspended.  Guarded by threadSuspendCountLock.
+     */
+    int  sumThreadSuspendCount;
+
+    /*
      * MUTEX ORDERING: when locking multiple mutexes, always grab them in
      * this order to avoid deadlock:
      *

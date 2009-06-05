@@ -95,5 +95,6 @@ void *dvmCompileMethod(Method *method);
 void *dvmCompileTrace(JitTraceDescription *trace);
 void dvmCompilerDumpStats(void);
 void dvmCompilerDrainQueue(void);
+void dvmJitUnchainAll(void);
 
 #endif /* _DALVIK_VM_COMPILER */

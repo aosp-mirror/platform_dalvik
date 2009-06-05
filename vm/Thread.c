@@ -234,6 +234,16 @@ static void threadExitCheck(void* arg);
 static void waitForThreadSuspend(Thread* self, Thread* thread);
 static int getThreadPriorityFromSystem(void);
 
+/*
+ * The JIT needs to know if any thread is suspended.  We do this by
+ * maintaining a global sum of all threads' suspend counts.  All suspendCount
+ * updates should go through this after aquiring threadSuspendCountLock.
+ */
+static inline void dvmAddToThreadSuspendCount(int *pSuspendCount, int delta)
+{
+    *pSuspendCount += delta;
+    gDvm.sumThreadSuspendCount += delta;
+}
 
 /*
  * Initialize thread list and main thread's environment.  We need to set
@@ -1556,6 +1566,12 @@ static void threadExitUncaughtException(Thread* self, Object* group)
     }
 
 bail:
+#if defined(WITH_JIT)
+    /* Remove this thread's suspendCount from global suspendCount sum */
+    lockThreadSuspendCount();
+    dvmAddToThreadSuspendCount(&self->suspendCount, -self->suspendCount);
+    unlockThreadSuspendCount();
+#endif
     dvmReleaseTrackedAlloc(exception, self);
 }
 
@@ -2132,7 +2148,7 @@ void dvmSuspendThread(Thread* thread)
     //assert(thread->handle != dvmJdwpGetDebugThread(gDvm.jdwpState));
 
     lockThreadSuspendCount();
-    thread->suspendCount++;
+    dvmAddToThreadSuspendCount(&thread->suspendCount, 1);
     thread->dbgSuspendCount++;
 
     LOG_THREAD("threadid=%d: suspend++, now=%d\n",
@@ -2161,7 +2177,7 @@ void dvmResumeThread(Thread* thread)
 
     lockThreadSuspendCount();
     if (thread->suspendCount > 0) {
-        thread->suspendCount--;
+        dvmAddToThreadSuspendCount(&thread->suspendCount, -1);
         thread->dbgSuspendCount--;
     } else {
         LOG_THREAD("threadid=%d:  suspendCount already zero\n",
@@ -2199,7 +2215,7 @@ void dvmSuspendSelf(bool jdwpActivity)
      * though.
      */
     lockThreadSuspendCount();
-    self->suspendCount++;
+    dvmAddToThreadSuspendCount(&self->suspendCount, 1);
     self->dbgSuspendCount++;
 
     /*
@@ -2337,10 +2353,12 @@ static void dumpWedgedThread(Thread* thread)
  *
  * TODO: track basic stats about time required to suspend VM.
  */
+#define FIRST_SLEEP (250*1000)    /* 0.25s */
+#define MORE_SLEEP  (750*1000)    /* 0.75s */
 static void waitForThreadSuspend(Thread* self, Thread* thread)
 {
     const int kMaxRetries = 10;
-    const int kSpinSleepTime = 750*1000;        /* 0.75s */
+    int spinSleepTime = FIRST_SLEEP;
 
     int sleepIter = 0;
     int retryCount = 0;
@@ -2350,7 +2368,18 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
         if (sleepIter == 0)         // get current time on first iteration
             startWhen = dvmGetRelativeTimeUsec();
 
-        if (!dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
+#if defined (WITH_JIT)
+        /*
+         * If we're still waiting after the first timeout,
+         * unchain all translations.
+         */
+        if (gDvmJit.pJitEntryTable && retryCount > 0) {
+            LOGD("JIT unchain all attempt #%d",retryCount);
+            dvmJitUnchainAll();
+        }
+#endif
+
+        if (!dvmIterativeSleep(sleepIter++, spinSleepTime, startWhen)) {
             LOGW("threadid=%d (h=%d): spin on suspend threadid=%d (handle=%d)\n",
                 self->threadId, (int)self->handle,
                 thread->threadId, (int)thread->handle);
@@ -2358,6 +2387,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
 
             // keep going; could be slow due to valgrind
             sleepIter = 0;
+            spinSleepTime = MORE_SLEEP;
 
             if (retryCount++ == kMaxRetries) {
                 LOGE("threadid=%d: stuck on threadid=%d, giving up\n",
@@ -2431,7 +2461,7 @@ void dvmSuspendAllThreads(SuspendCause why)
             thread->handle == dvmJdwpGetDebugThread(gDvm.jdwpState))
             continue;
 
-        thread->suspendCount++;
+        dvmAddToThreadSuspendCount(&thread->suspendCount, 1);
         if (why == SUSPEND_FOR_DEBUG || why == SUSPEND_FOR_DEBUG_EVENT)
             thread->dbgSuspendCount++;
     }
@@ -2506,7 +2536,7 @@ void dvmResumeAllThreads(SuspendCause why)
             continue;
 
         if (thread->suspendCount > 0) {
-            thread->suspendCount--;
+            dvmAddToThreadSuspendCount(&thread->suspendCount, -1);
             if (why == SUSPEND_FOR_DEBUG || why == SUSPEND_FOR_DEBUG_EVENT)
                 thread->dbgSuspendCount--;
         } else {
@@ -2562,7 +2592,8 @@ void dvmUndoDebuggerSuspensions(void)
         }
 
         assert(thread->suspendCount >= thread->dbgSuspendCount);
-        thread->suspendCount -= thread->dbgSuspendCount;
+        dvmAddToThreadSuspendCount(&thread->suspendCount,
+                                   -thread->dbgSuspendCount);
         thread->dbgSuspendCount = 0;
     }
     unlockThreadSuspendCount();
@@ -3524,4 +3555,3 @@ void dvmGcScanRootThreadGroups()
      */
     gcScanAllThreads();
 }
-

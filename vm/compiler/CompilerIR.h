@@ -28,6 +28,13 @@ typedef enum BBType {
     EXCEPTION_HANDLING,
 } BBType;
 
+typedef struct ChainCellCounts {
+    union {
+        u1 count[CHAINING_CELL_LAST];
+        u4 dummyForAlignment;
+    } u;
+} ChainCellCounts;
+
 typedef struct LIR {
     int offset;
     struct LIR *next;

@@ -206,28 +206,6 @@ void dvmJitShutdown(void)
     }
 }
 
-/* Returns the signed branch displacement of a Dalvik instruction. */
-int dvmGetBranchDisplacement( DecodedInstruction* decInsn )
-{
-    int res = 0;
-    switch (dexGetInstrFormat(gDvm.instrFormat, decInsn->opCode)) {
-        case kFmt22t:
-            res = decInsn->vC;
-            break;
-        case kFmt20t:
-        case kFmt21t:
-            res = decInsn->vB;
-            break;
-        case kFmt10t:
-        case kFmt30t:
-            res = decInsn->vA;
-            break;
-        default:
-            dvmAbort();
-    }
-    return res;
-}
-
 /*
  * Adds to the current trace request one instruction at a time, just
  * before that instruction is interpreted.  This is the primary trace
@@ -394,6 +372,11 @@ static inline struct JitEntry *findJitEntry(const u2* pc)
 void* dvmJitGetCodeAddr(const u2* dPC)
 {
     int idx = dvmJitHash(dPC);
+
+    /* If anything is suspended, don't re-enter the code cache */
+    if (gDvm.sumThreadSuspendCount > 0) {
+        return NULL;
+    }
 
     /* Expect a high hit rate on 1st shot */
     if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {

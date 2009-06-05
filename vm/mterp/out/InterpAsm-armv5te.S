@@ -9546,7 +9546,9 @@ dvmJitToTraceSelect:
     mov    r1,rINST
     bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
     ldr    rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
-    bx     r0                       @ continue native execution
+    cmp    r0,#0                    @ successful chain?
+    bxne   r0                       @ continue native execution
+    b      toInterpreter            @ didn't chain - resume with interpreter
 
 /* No translation, so request one if profiling isn't disabled*/
 2:
@@ -9582,11 +9584,13 @@ dvmJitToInterpNormal:
     mov    r0,rPC
     bl     dvmJitGetCodeAddr        @ Is there a translation?
     cmp    r0,#0
-    beq    1f                       @ go if not, otherwise do chain
+    beq    toInterpreter            @ go if not, otherwise do chain
     mov    r1,rINST
     bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
     ldr    rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
-    bx     r0                       @ continue native execution
+    cmp    r0,#0                    @ successful chain?
+    bxne   r0                       @ continue native execution
+    b      toInterpreter            @ didn't chain - resume with interpreter
 
 /*
  * Return from the translation cache to the interpreter to do method invocation.
@@ -9608,7 +9612,7 @@ dvmJitToInterpNoChain:
  * already been restored by the time we get here.  We'll need to set
  * up rIBASE & rINST, and load the address of the JitTable into r0.
  */
-1:
+toInterpreter:
     EXPORT_PC()
     adrl   rIBASE, dvmAsmInstructionStart
     FETCH_INST()

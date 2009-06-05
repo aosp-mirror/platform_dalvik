@@ -216,14 +216,25 @@ Armv5teEncodingMap EncodingMap[ARMV5TE_LAST] = {
 #define PADDING_MOV_R0_R0               0x1C00
 
 /* Write the numbers in the literal pool to the codegen stream */
-static void writeDataContent(CompilationUnit *cUnit)
+static void installDataContent(CompilationUnit *cUnit)
 {
-    int *dataPtr = (int *) (cUnit->codeBuffer + cUnit->dataOffset);
+    int *dataPtr = (int *) (cUnit->baseAddr + cUnit->dataOffset);
     Armv5teLIR *dataLIR = (Armv5teLIR *) cUnit->wordList;
     while (dataLIR) {
         *dataPtr++ = dataLIR->operands[0];
         dataLIR = NEXT_LIR(dataLIR);
     }
+}
+
+/* Returns the size of a Jit trace description */
+static int jitTraceDescriptionSize(const JitTraceDescription *desc)
+{
+    int runCount;
+    for (runCount = 0; ; runCount++) {
+        if (desc->trace[runCount].frag.runEnd)
+           break;
+    }
+    return sizeof(JitCodeDesc) + ((runCount+1) * sizeof(JitTraceRun));
 }
 
 /* Return TRUE if error happens */
@@ -383,19 +394,58 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
 }
 
 /*
+ * Translation layout in the code cache.  Note that the codeAddress pointer
+ * in JitTable will point directly to the code body (field codeAddress).  The
+ * chain cell offset codeAddress - 2, and (if present) executionCount is at
+ * codeAddress - 6.
+ *
+ *      +----------------------------+
+ *      | Execution count            |  -> [Optional] 4 bytes
+ *      +----------------------------+
+ *   +--| Offset to chain cell counts|  -> 2 bytes
+ *   |  +----------------------------+
+ *   |  | Code body                  |  -> Start address for translation
+ *   |  |                            |     variable in 2-byte chunks
+ *   |  .                            .     (JitTable's codeAddress points here)
+ *   |  .                            .
+ *   |  |                            |
+ *   |  +----------------------------+
+ *   |  | Chaining Cells             |  -> 8 bytes each, must be 4 byte aligned
+ *   |  .                            .
+ *   |  .                            .
+ *   |  |                            |
+ *   |  +----------------------------+
+ *   +->| Chaining cell counts       |  -> 4 bytes, chain cell counts by type
+ *      +----------------------------+
+ *      | Trace description          |  -> variable sized
+ *      .                            .
+ *      |                            |
+ *      +----------------------------+
+ *      | Literal pool               |  -> 4-byte aligned, variable size
+ *      .                            .
+ *      .                            .
+ *      |                            |
+ *      +----------------------------+
+ *
  * Go over each instruction in the list and calculate the offset from the top
  * before sending them off to the assembler. If out-of-range branch distance is
  * seen rearrange the instructions a bit to correct it.
  */
+#define CHAIN_CELL_OFFSET_SIZE 2
 void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
 {
     LIR *lir;
     Armv5teLIR *armLIR;
     int offset;
     int i;
+    ChainCellCounts chainCellCounts;
+    u2 chainCellOffset;
+    int descSize = jitTraceDescriptionSize(cUnit->traceDesc);
 
 retry:
-    for (armLIR = (Armv5teLIR *) cUnit->firstLIRInsn, offset = 0;
+    /* Beginning offset needs to allow space for chain cell offset */
+    for (armLIR = (Armv5teLIR *) cUnit->firstLIRInsn,
+         offset = CHAIN_CELL_OFFSET_SIZE;
          armLIR;
          armLIR = NEXT_LIR(armLIR)) {
         armLIR->generic.offset = offset;
@@ -413,8 +463,15 @@ retry:
     }
 
     /* Const values have to be word aligned */
-    offset = ((offset + 3) >> 2) << 2;
+    offset = (offset + 3) & ~3;
 
+    /* Add space for chain cell counts & trace description */
+    chainCellOffset = offset;
+    offset += sizeof(chainCellCounts) + descSize;
+
+    assert((offset & 0x3) == 0);  /* Should still be word aligned */
+
+    /* Set up offsets for literals */
     cUnit->dataOffset = offset;
 
     for (lir = cUnit->wordList; lir; lir = lir->next) {
@@ -424,12 +481,14 @@ retry:
 
     cUnit->totalSize = offset;
 
-    if (gDvmJit.codeCacheByteUsed + offset > CODE_CACHE_SIZE) {
+    if (gDvmJit.codeCacheByteUsed + cUnit->totalSize > CODE_CACHE_SIZE) {
         gDvmJit.codeCacheFull = true;
         cUnit->baseAddr = NULL;
         return;
     }
-    cUnit->codeBuffer = dvmCompilerNew(offset, true);
+
+    /* Allocate enough space for the code block */
+    cUnit->codeBuffer = dvmCompilerNew(chainCellOffset, true);
     if (cUnit->codeBuffer == NULL) {
         LOGE("Code buffer allocation failure\n");
         cUnit->baseAddr = NULL;
@@ -442,19 +501,36 @@ retry:
     if (needRetry)
         goto retry;
 
-    writeDataContent(cUnit);
-
     cUnit->baseAddr = (char *) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed;
     gDvmJit.codeCacheByteUsed += offset;
 
+    /* Install the chain cell offset */
+    *((char*)cUnit->baseAddr) = chainCellOffset;
 
-    /* Install the compilation */
-    memcpy(cUnit->baseAddr, cUnit->codeBuffer, offset);
+    /* Install the code block */
+    memcpy((char*)cUnit->baseAddr + 2, cUnit->codeBuffer, chainCellOffset - 2);
     gDvmJit.numCompilations++;
 
+    /* Install the chaining cell counts */
+    for (i=0; i< CHAINING_CELL_LAST; i++) {
+        chainCellCounts.u.count[i] = cUnit->numChainingCells[i];
+    }
+    memcpy((char*)cUnit->baseAddr + chainCellOffset, &chainCellCounts,
+           sizeof(chainCellCounts));
+
+    /* Install the trace description */
+    memcpy((char*)cUnit->baseAddr + chainCellOffset + sizeof(chainCellCounts),
+           cUnit->traceDesc, descSize);
+
+    /* Write the literals directly into the code cache */
+    installDataContent(cUnit);
+
     /* Flush dcache and invalidate the icache to maintain coherence */
-    cacheflush((intptr_t) cUnit->baseAddr,
-               (intptr_t) (cUnit->baseAddr + offset), 0);
+    cacheflush((long)cUnit->baseAddr,
+               (long)(cUnit->baseAddr + offset), 0);
+
+    /* Adjust baseAddr to point to executable code */
+    cUnit->baseAddr = (char*)cUnit->baseAddr + CHAIN_CELL_OFFSET_SIZE;
 }
 
 /*
@@ -466,7 +542,8 @@ retry:
  * Where HH is 10 for the 1st inst, and 11 for the second and
  * the "o" field is each instruction's 11-bit contribution to the
  * 22-bit branch offset.
- * TUNING: use a single-instruction variant if it reaches.
+ * If the target is nearby, use a single-instruction bl.
+ * If one or more threads is suspended, don't chain.
  */
 void* dvmJitChain(void* tgtAddr, u4* branchAddr)
 {
@@ -476,24 +553,117 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
     u4 thumb2;
     u4 newInst;
 
-    assert((branchOffset >= -(1<<22)) && (branchOffset <= ((1<<22)-2)));
+    if (gDvm.sumThreadSuspendCount == 0) {
+        assert((branchOffset >= -(1<<22)) && (branchOffset <= ((1<<22)-2)));
 
-    gDvmJit.translationChains++;
+        gDvmJit.translationChains++;
 
-    COMPILER_TRACE_CHAINING(
-        LOGD("Jit Runtime: chaining 0x%x to 0x%x\n",
-             (int) branchAddr, (int) tgtAddr & -2));
-    if ((branchOffset < -2048) | (branchOffset > 2046)) {
-        thumb1 =  (0xf000 | ((branchOffset>>12) & 0x7ff));
-        thumb2 =  (0xf800 | ((branchOffset>> 1) & 0x7ff));
-    } else {
-        thumb1 =  (0xe000 | ((branchOffset>> 1) & 0x7ff));
-        thumb2 =  0x4300;  /* nop -> or r0, r0 */
+        COMPILER_TRACE_CHAINING(
+            LOGD("Jit Runtime: chaining 0x%x to 0x%x\n",
+                 (int) branchAddr, (int) tgtAddr & -2));
+        if ((branchOffset < -2048) | (branchOffset > 2046)) {
+            thumb1 =  (0xf000 | ((branchOffset>>12) & 0x7ff));
+            thumb2 =  (0xf800 | ((branchOffset>> 1) & 0x7ff));
+        } else {
+            thumb1 =  (0xe000 | ((branchOffset>> 1) & 0x7ff));
+            thumb2 =  0x4300;  /* nop -> or r0, r0 */
+        }
+
+        newInst = thumb2<<16 | thumb1;
+        *branchAddr = newInst;
+        cacheflush((long)branchAddr, (long)branchAddr + 4, 0);
     }
 
-    newInst = thumb2<<16 | thumb1;
-    *branchAddr = newInst;
-    cacheflush((intptr_t) branchAddr, (intptr_t) branchAddr + 4, 0);
-
     return tgtAddr;
+}
+
+/*
+ * Unchain a trace given the starting address of the translation
+ * in the code cache.  Refer to the diagram in dvmCompilerAssembleLIR.
+ * Returns the address following the last cell unchained.  Note that
+ * the incoming codeAddr is a thumb code address, and therefore has
+ * the low bit set.
+ */
+u4* dvmJitUnchain(void* codeAddr)
+{
+    u2* pChainCellOffset = (u2*)((char*)codeAddr - 3);
+    u2 chainCellOffset = *pChainCellOffset;
+    ChainCellCounts *pChainCellCounts =
+          (ChainCellCounts*)((char*)codeAddr + chainCellOffset -3);
+    int cellCount;
+    u4* pChainCells;
+    u4* pStart;
+    u4 thumb1;
+    u4 thumb2;
+    u4 newInst;
+    int i,j;
+
+    /* Get total count of chain cells */
+    for (i = 0, cellCount = 0; i < CHAINING_CELL_LAST; i++) {
+        cellCount += pChainCellCounts->u.count[i];
+    }
+
+    /* Locate the beginning of the chain cell region */
+    pStart = pChainCells = (u4*)((char*)pChainCellCounts - (cellCount * 8));
+
+    /* The cells are sorted in order - walk through them and reset */
+    for (i = 0; i < CHAINING_CELL_LAST; i++) {
+        for (j = 0; j < pChainCellCounts->u.count[i]; j++) {
+            int targetOffset;
+            switch(i) {
+                case CHAINING_CELL_GENERIC:
+                    targetOffset = offsetof(InterpState,
+                          jitToInterpEntries.dvmJitToInterpNormal);
+                    break;
+                case CHAINING_CELL_POST_INVOKE:
+                case CHAINING_CELL_INVOKE:
+                    targetOffset = offsetof(InterpState,
+                          jitToInterpEntries.dvmJitToTraceSelect);
+                    break;
+                default:
+                    dvmAbort();
+            }
+            /*
+             * Arm code sequence for a chaining cell is:
+             *     ldr  r0, rGLUE, #<word offset>
+             *     blx  r0
+             */
+            COMPILER_TRACE_CHAINING(
+                LOGD("Jit Runtime: unchaining 0x%x", (int)pChainCells));
+            targetOffset = targetOffset >> 2;  /* convert to word offset */
+            thumb1 = 0x6800 | (targetOffset << 6) | (rGLUE << 3) | (r0 << 0);
+            thumb2 = 0x4780 | (r0 << 3);
+            newInst = thumb2<<16 | thumb1;
+            *pChainCells = newInst;
+            pChainCells += 2;  /* Advance by 2 words */
+        }
+    }
+    return pChainCells;
+}
+
+/* Unchain all translation in the cache. */
+void dvmJitUnchainAll()
+{
+    u4* lowAddress = NULL;
+    u4* highAddress = NULL;
+    unsigned int i;
+    if (gDvmJit.pJitEntryTable != NULL) {
+        COMPILER_TRACE_CHAINING(LOGD("Jit Runtime: unchaining all"));
+        dvmLockMutex(&gDvmJit.tableLock);
+        for (i = 0; i < gDvmJit.maxTableEntries; i++) {
+            if (gDvmJit.pJitEntryTable[i].dPC &&
+                   gDvmJit.pJitEntryTable[i].codeAddress) {
+                u4* lastAddress;
+                lastAddress =
+                      dvmJitUnchain(gDvmJit.pJitEntryTable[i].codeAddress);
+                if (lowAddress == NULL ||
+                      (u4*)gDvmJit.pJitEntryTable[i].codeAddress < lowAddress)
+                    lowAddress = lastAddress;
+                if (lastAddress > highAddress)
+                    highAddress = lastAddress;
+            }
+        }
+        cacheflush((long)lowAddress, (long)highAddress, 0);
+        dvmUnlockMutex(&gDvmJit.tableLock);
+    }
 }
