@@ -507,7 +507,7 @@ dalvik_inst:
     add     r3, rFP, r3, lsl #2         @ r3<- &fp[BBBB]
     add     r2, rFP, r2, lsl #2         @ r2<- &fp[AAAA]
     ldmia   r3, {r0-r1}                 @ r0/r1<- fp[BBBB]
-    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r2, {r0-r1}                 @ fp[AAAA]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
