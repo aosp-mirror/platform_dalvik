@@ -240,6 +240,10 @@ loop:
 
             logThreadStacks();
 
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+            dvmCompilerDumpStats();
+#endif
+
             if (false) {
                 dvmLockMutex(&gDvm.jniGlobalRefLock);
                 dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");

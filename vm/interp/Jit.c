@@ -222,7 +222,6 @@ void dvmJitShutdown(void)
  * because returns cannot throw in a way that causes problems for the
  * translated code.
  */
-#define MAX_TRACE_LEN 100
 int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
 {
     int flags,i,len;
@@ -278,7 +277,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                 if (decInsn.opCode == OP_THROW) {
                     interpState->jitState = kJitTSelectEnd;
                 }
-                if (interpState->totalTraceLen >= MAX_TRACE_LEN) {
+                if (interpState->totalTraceLen >= JIT_MAX_TRACE_LEN) {
                     interpState->jitState = kJitTSelectEnd;
                 }
                 if (debugOrProfile) {

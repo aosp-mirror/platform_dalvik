@@ -602,10 +602,11 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
 
     loadValue(cUnit, vArray, r2);
     loadValue(cUnit, vIndex, r3);
-    genNullCheck(cUnit, r2, mir->offset, NULL); /* null object? */
+    /* null object? */
+    Armv5teLIR * pcrLabel = genNullCheck(cUnit, r2, mir->offset, NULL);
     newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r2, lenOffset >> 2);  /* Get len */
     newLIR2(cUnit, ARMV5TE_ADD_RI8, r2, dataOffset); /* r2 -> array data */
-    genBoundsCheck(cUnit, r3, r0, mir->offset, NULL);
+    genBoundsCheck(cUnit, r3, r0, mir->offset, pcrLabel);
     /* at this point, r2 points to array, r3 is unscaled index */
     if (scale==3) {
         loadValuePair(cUnit, vSrc, r0, r1);
@@ -2491,9 +2492,9 @@ static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)
  * Dalvik PC and special-purpose registers are reconstructed here.
  */
 
-/* Chaining cell for normal-ending compiles (eg branches) */
-static void handleGenericChainingCell(CompilationUnit *cUnit,
-                                      unsigned int offset)
+/* Chaining cell for code that may need warmup. */
+static void handleNormalChainingCell(CompilationUnit *cUnit,
+                                     unsigned int offset)
 {
     newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, rGLUE,
         offsetof(InterpState, jitToInterpEntries.dvmJitToInterpNormal) >> 2);
@@ -2502,11 +2503,11 @@ static void handleGenericChainingCell(CompilationUnit *cUnit,
 }
 
 /*
- * Chaining cell for instructions that immediately following a method
- * invocation.
+ * Chaining cell for instructions that immediately following already translated
+ * code.
  */
-static void handlePostInvokeChainingCell(CompilationUnit *cUnit,
-                                         unsigned int offset)
+static void handleHotChainingCell(CompilationUnit *cUnit,
+                                  unsigned int offset)
 {
     newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, rGLUE,
         offsetof(InterpState, jitToInterpEntries.dvmJitToTraceSelect) >> 2);
@@ -2559,6 +2560,12 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 
     BasicBlock **blockList = cUnit->blockList;
 
+    /*
+     * Reserve space at the beginning of each translation with fillers
+     * + Chain cell count (2 bytes)
+     */
+    newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
+
     /* Handle the content in each basic block */
     for (i = 0; i < cUnit->numBlocks; i++) {
         blockList[i]->visited = true;
@@ -2578,11 +2585,11 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             labelList[i].opCode = ARMV5TE_PSEUDO_NORMAL_BLOCK_LABEL;
         } else {
             switch (blockList[i]->blockType) {
-                case CHAINING_CELL_GENERIC:
-                    labelList[i].opCode = ARMV5TE_PSEUDO_CHAINING_CELL_GENERIC;
+                case CHAINING_CELL_NORMAL:
+                    labelList[i].opCode = ARMV5TE_PSEUDO_CHAINING_CELL_NORMAL;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
-                        &chainingListByType[CHAINING_CELL_GENERIC], (void *) i);
+                        &chainingListByType[CHAINING_CELL_NORMAL], (void *) i);
                     break;
                 case CHAINING_CELL_INVOKE:
                     labelList[i].opCode = ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE;
@@ -2592,12 +2599,12 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     dvmInsertGrowableList(
                         &chainingListByType[CHAINING_CELL_INVOKE], (void *) i);
                     break;
-                case CHAINING_CELL_POST_INVOKE:
+                case CHAINING_CELL_HOT:
                     labelList[i].opCode =
-                        ARMV5TE_PSEUDO_CHAINING_CELL_POST_INVOKE;
+                        ARMV5TE_PSEUDO_CHAINING_CELL_HOT;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
-                        &chainingListByType[CHAINING_CELL_POST_INVOKE],
+                        &chainingListByType[CHAINING_CELL_HOT],
                         (void *) i);
                     break;
                 case PC_RECONSTRUCTION:
@@ -2732,10 +2739,17 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                      dalvikFormat);
                 dvmAbort();
                 break;
-            } else {
-              gDvmJit.opHistogram[dalvikOpCode]++;
             }
         }
+        /*
+         * Check if the block is terminated due to trace length constraint -
+         * insert an unconditional branch to the chaining cell.
+         */
+        if (blockList[i]->needFallThroughBranch) {
+            genUnconditionalBranch(cUnit,
+                                   &labelList[blockList[i]->fallThrough->id]);
+        }
+
     }
 
     /* Handle the codegen in predefined order */
@@ -2763,16 +2777,16 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 
 
             switch (blockList[blockId]->blockType) {
-                case CHAINING_CELL_GENERIC:
-                    handleGenericChainingCell(cUnit,
+                case CHAINING_CELL_NORMAL:
+                    handleNormalChainingCell(cUnit,
                       blockList[blockId]->startOffset);
                     break;
                 case CHAINING_CELL_INVOKE:
                     handleInvokeChainingCell(cUnit,
                         blockList[blockId]->containingMethod);
                     break;
-                case CHAINING_CELL_POST_INVOKE:
-                    handlePostInvokeChainingCell(cUnit,
+                case CHAINING_CELL_HOT:
+                    handleHotChainingCell(cUnit,
                         blockList[blockId]->startOffset);
                     break;
                 default:
@@ -2797,7 +2811,8 @@ void *dvmCompilerDoWork(CompilerWorkOrder *work)
            res = dvmCompileMethod(work->info);
            break;
        case kWorkOrderTrace:
-           res = dvmCompileTrace(work->info);
+           /* Start compilation with maximally allowed trace length */
+           res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN);
            break;
        default:
            res = NULL;

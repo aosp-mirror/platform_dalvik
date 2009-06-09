@@ -92,7 +92,7 @@ void dvmCompilerShutdown(void);
 bool dvmCompilerWorkEnqueue(const u2* pc, WorkOrderKind kind, void* info);
 void *dvmCheckCodeCache(void *method);
 void *dvmCompileMethod(Method *method);
-void *dvmCompileTrace(JitTraceDescription *trace);
+void *dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts);
 void dvmCompilerDumpStats(void);
 void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);

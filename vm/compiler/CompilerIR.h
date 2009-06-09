@@ -19,8 +19,8 @@
 
 typedef enum BBType {
     /* For coding convenience reasons chaining cell types should appear first */
-    CHAINING_CELL_GENERIC = 0,
-    CHAINING_CELL_POST_INVOKE,
+    CHAINING_CELL_NORMAL = 0,
+    CHAINING_CELL_HOT,
     CHAINING_CELL_INVOKE,
     CHAINING_CELL_LAST,
     DALVIK_BYTECODE,
@@ -56,6 +56,7 @@ typedef struct BasicBlock {
     unsigned int startOffset;
     const Method *containingMethod;     // For blocks from the callee
     BBType blockType;
+    bool needFallThroughBranch;         // For blocks ended due to length limit
     MIR *firstMIRInsn;
     MIR *lastMIRInsn;
     struct BasicBlock *fallThrough;
@@ -64,6 +65,7 @@ typedef struct BasicBlock {
 } BasicBlock;
 
 typedef struct CompilationUnit {
+    int numInsts;
     int numBlocks;
     BasicBlock **blockList;
     const Method *method;
@@ -72,12 +74,14 @@ typedef struct CompilationUnit {
     LIR *lastLIRInsn;
     LIR *wordList;
     GrowableList pcReconstructionList;
-    int dataOffset;
-    int totalSize;
+    int headerSize;                     // bytes before the first code ptr
+    int dataOffset;                     // starting offset of literal pool
+    int totalSize;                      // header + code size
     unsigned char *codeBuffer;
     void *baseAddr;
     bool printMe;
     bool allSingleStep;
+    bool halveInstCount;
     int numChainingCells[CHAINING_CELL_LAST];
     LIR *firstChainingLIR[CHAINING_CELL_LAST];
 } CompilationUnit;
