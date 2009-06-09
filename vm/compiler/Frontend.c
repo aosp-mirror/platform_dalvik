@@ -183,11 +183,10 @@ static inline bool isUnconditionalBranch(MIR *insn)
  * first and they will be passed to the codegen routines to convert Dalvik
  * bytecode into machine code.
  */
-void *dvmCompileTrace(JitTraceDescription *desc)
+void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
 {
     const DexCode *dexCode = dvmGetMethodCode(desc->method);
     const JitTraceRun* currRun = &desc->trace[0];
-    bool done = false;
     unsigned int curOffset = currRun->frag.startOffset;
     unsigned int numInsts = currRun->frag.numInsts;
     const u2 *codePtr = dexCode->insns + curOffset;
@@ -275,7 +274,11 @@ void *dvmCompileTrace(JitTraceDescription *desc)
              desc->method->name, curOffset);
     }
 
-    while (!done) {
+    /*
+     * Analyze the trace descriptor and include up to the maximal number
+     * of Dalvik instructions into the IR.
+     */
+    while (1) {
         MIR *insn;
         int width;
         insn = dvmCompilerNew(sizeof(MIR),false);
@@ -284,9 +287,14 @@ void *dvmCompileTrace(JitTraceDescription *desc)
         insn->width = width;
         traceSize += width;
         dvmCompilerAppendMIR(curBB, insn);
-        if (--numInsts==0) {
+        cUnit.numInsts++;
+        /* Instruction limit reached - terminate the trace here */
+        if (cUnit.numInsts >= numMaxInsts) {
+            break;
+        }
+        if (--numInsts == 0) {
             if (currRun->frag.runEnd) {
-                done = true;
+                break;
             } else {
                 curBB = dvmCompilerNewBB(DALVIK_BYTECODE);
                 lastBB->next = curBB;
@@ -337,10 +345,29 @@ void *dvmCompileTrace(JitTraceDescription *desc)
             }
         }
 
+        int flags = dexGetInstrFlags(gDvm.instrFlags,
+                                     lastInsn->dalvikInsn.opCode);
+
+        /*
+         * Some blocks are ended by non-control-flow-change instructions,
+         * currently only due to trace length constraint. In this case we need
+         * to generate an explicit branch at the end of the block to jump to
+         * the chaining cell.
+         */
+        curBB->needFallThroughBranch =
+            (flags & (kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
+                      kInstrInvoke)) == 0;
+
         /* Target block not included in the trace */
         if (targetOffset != curOffset && curBB->taken == NULL) {
-            lastBB->next = dvmCompilerNewBB(
-                isInvoke ? CHAINING_CELL_INVOKE : CHAINING_CELL_GENERIC);
+            if (isInvoke) {
+                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_INVOKE);
+            /* For unconditional branches, request a hot chaining cell */
+            } else {
+                lastBB->next = dvmCompilerNewBB(flags & kInstrUnconditional ?
+                                                  CHAINING_CELL_HOT :
+                                                  CHAINING_CELL_NORMAL);
+            }
             lastBB = lastBB->next;
             lastBB->id = numBlocks++;
             if (isInvoke) {
@@ -354,8 +381,16 @@ void *dvmCompileTrace(JitTraceDescription *desc)
 
         /* Fallthrough block not included in the trace */
         if (!isUnconditionalBranch(lastInsn) && curBB->fallThrough == NULL) {
-            lastBB->next = dvmCompilerNewBB(
-                isInvoke ? CHAINING_CELL_POST_INVOKE : CHAINING_CELL_GENERIC);
+            /*
+             * If the chaining cell is after an invoke or
+             * instruction that cannot change the control flow, request a hot
+             * chaining cell.
+             */
+            if (isInvoke || curBB->needFallThroughBranch) {
+                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_HOT);
+            } else {
+                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_NORMAL);
+            }
             lastBB = lastBB->next;
             lastBB->id = numBlocks++;
             lastBB->startOffset = fallThroughOffset;
@@ -410,18 +445,34 @@ void *dvmCompileTrace(JitTraceDescription *desc)
     /* Convert MIR to LIR, etc. */
     dvmCompilerMIR2LIR(&cUnit);
 
-    /* Convert LIR into machine code */
+    /* Convert LIR into machine code. */
     dvmCompilerAssembleLIR(&cUnit);
 
     if (cUnit.printMe) {
-        dvmCompilerCodegenDump(&cUnit);
-        LOGD("End %s%s", desc->method->clazz->descriptor, desc->method->name);
+        if (cUnit.halveInstCount) {
+            LOGD("Assembler aborted");
+        } else {
+            dvmCompilerCodegenDump(&cUnit);
+        }
+        LOGD("End %s%s, %d Dalvik instructions",
+             desc->method->clazz->descriptor, desc->method->name,
+             cUnit.numInsts);
     }
 
     /* Reset the compiler resource pool */
     dvmCompilerArenaReset();
 
-    return cUnit.baseAddr;
+    /*
+     * Things have gone smoothly - publish the starting address of
+     * translation's entry point.
+     */
+    if (!cUnit.halveInstCount) {
+        return cUnit.baseAddr + cUnit.headerSize;
+
+    /* Halve the instruction count and retry again */
+    } else {
+        return dvmCompileTrace(desc, cUnit.numInsts / 2);
+    }
 }
 
 /*
@@ -599,5 +650,5 @@ void *dvmCompileMethod(Method *method)
 
     dvmCompilerArenaReset();
 
-    return cUnit.baseAddr;
+    return cUnit.baseAddr + cUnit.headerSize;
 }

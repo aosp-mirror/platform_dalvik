@@ -708,9 +708,6 @@ struct DvmJitGlobals {
     /* Disable JIT for selected methods */
     HashTable *methodTable;
 
-    /* Record how many times an opcode has been JIT'ed */
-    int opHistogram[256];
-
     /* Flag to dump all compiled code */
     bool printMe;
 };

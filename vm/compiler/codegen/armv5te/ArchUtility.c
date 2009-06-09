@@ -161,11 +161,11 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
     switch(lir->opCode) {
         case ARMV5TE_PSEUDO_TARGET_LABEL:
             break;
-        case ARMV5TE_PSEUDO_CHAINING_CELL_GENERIC:
-            LOGD("-------- chaining cell (generic): 0x%04x\n", dest);
+        case ARMV5TE_PSEUDO_CHAINING_CELL_NORMAL:
+            LOGD("-------- chaining cell (normal): 0x%04x\n", dest);
             break;
-        case ARMV5TE_PSEUDO_CHAINING_CELL_POST_INVOKE:
-            LOGD("-------- chaining cell (post-invoke): 0x%04x\n", dest);
+        case ARMV5TE_PSEUDO_CHAINING_CELL_HOT:
+            LOGD("-------- chaining cell (hot): 0x%04x\n", dest);
             break;
         case ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE:
             LOGD("-------- chaining cell (invoke): %s/%p\n",

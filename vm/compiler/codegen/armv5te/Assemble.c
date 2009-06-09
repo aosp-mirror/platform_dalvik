@@ -242,13 +242,12 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
 {
     short *bufferAddr = (short *) cUnit->codeBuffer;
     Armv5teLIR *lir;
-    bool retry = false;
 
     for (lir = (Armv5teLIR *) cUnit->firstLIRInsn; lir; lir = NEXT_LIR(lir)) {
         if (lir->opCode < 0) {
             if ((lir->opCode == ARMV5TE_PSEUDO_ALIGN4) &&
-                (lir->operands[0] == 1) &&
-                !retry) {
+                /* 1 means padding is needed */
+                (lir->operands[0] == 1)) {
                 *bufferAddr++ = PADDING_MOV_R0_R0;
             }
             continue;
@@ -264,6 +263,9 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                 LOGE("PC-rel distance is not multiples of 4: %d\n", delta);
                 dvmAbort();
             }
+            if (delta > 1023) {
+                return true;
+            }
             lir->operands[1] = delta >> 2;
         } else if (lir->opCode == ARMV5TE_B_COND) {
             Armv5teLIR *targetLIR = (Armv5teLIR *) lir->generic.target;
@@ -271,74 +273,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
             if (delta > 254 || delta < -256) {
-                /* Pull in the PC reconstruction code inline */
-                if (targetLIR->opCode == ARMV5TE_PSEUDO_PC_RECONSTRUCTION_CELL){
-                    /*
-                     * The original code is:
-                     *
-                     * bxx targetLIR
-                     * origNextLir
-                     *       :
-                     *       :
-                     * targetLIR (a PC reconstruction cell)
-                     *       :
-                     * lastLIR (should be a unconditional branch)
-                     *
-                     * The distance from bxx to targetLIR is too far, so we want
-                     * to rearrange the code to be:
-                     *
-                     * bxx targetLIR
-                     * branchoverLIR to origNextLir
-                     * targetLIR (a PC reconstruction cell)
-                     *       :
-                     * lastLIR (should be a unconditional branch)
-                     * origNextLir
-                     *
-                     * Although doing so adds a unconditional branchover
-                     * instruction, it can be predicted for free by ARM so
-                     * the penalty should be minimal.
-                     */
-                    Armv5teLIR *pcrLIR = targetLIR;
-                    Armv5teLIR *lastLIR = pcrLIR;
-                    Armv5teLIR *origNextLIR = NEXT_LIR(lir);
-
-                    /*
-                     * Find out the last instruction in the PC reconstruction
-                     * cell
-                     */
-                    while (lastLIR->opCode != ARMV5TE_B_UNCOND) {
-                        lastLIR = NEXT_LIR(lastLIR);
-                    }
-
-                    /* Yank out the PCR code */
-                    PREV_LIR_LVALUE(NEXT_LIR(lastLIR)) =
-                        (LIR *) PREV_LIR(targetLIR);
-                    NEXT_LIR_LVALUE(PREV_LIR(targetLIR)) =
-                        (LIR *) NEXT_LIR(lastLIR);
-
-                    /* Create the branch over instruction */
-                    Armv5teLIR *branchoverLIR =
-                        dvmCompilerNew(sizeof(Armv5teLIR), true);
-                    branchoverLIR->opCode = ARMV5TE_B_UNCOND;
-                    branchoverLIR->generic.target = (LIR *) origNextLIR;
-
-                    /* Reconnect the instructions */
-                    NEXT_LIR_LVALUE(lir) = (LIR *) branchoverLIR;
-                    PREV_LIR_LVALUE(branchoverLIR) = (LIR *) lir;
-
-                    NEXT_LIR_LVALUE(branchoverLIR) = (LIR *) targetLIR;
-                    PREV_LIR_LVALUE(targetLIR) = (LIR *) branchoverLIR;
-
-                    NEXT_LIR_LVALUE(lastLIR) = (LIR *) origNextLIR;
-                    PREV_LIR_LVALUE(origNextLIR) = (LIR *) lastLIR;
-
-                    retry = true;
-                    continue;
-                } else {
-                    LOGE("Conditional branch distance out of range: %d\n",
-                         delta);
-                    dvmAbort();
-                }
+                return true;
             }
             lir->operands[0] = delta >> 1;
         } else if (lir->opCode == ARMV5TE_B_UNCOND) {
@@ -368,14 +303,6 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             NEXT_LIR(lir)->operands[0] = (delta>> 1) & 0x7ff;
         }
 
-        /*
-         * The code offset will be recalculated, just continue to check if
-         * there are other places where code will be rescheduled and do not
-         * write to the output buffer
-         */
-        if (retry) {
-            continue;
-        }
         Armv5teEncodingMap *encoder = &EncodingMap[lir->opCode];
         short bits = encoder->skeleton;
         int i;
@@ -390,7 +317,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
         }
         *bufferAddr++ = bits;
     }
-    return retry;
+    return false;
 }
 
 /*
@@ -436,16 +363,13 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
 {
     LIR *lir;
     Armv5teLIR *armLIR;
-    int offset;
+    int offset = 0;
     int i;
     ChainCellCounts chainCellCounts;
-    u2 chainCellOffset;
     int descSize = jitTraceDescriptionSize(cUnit->traceDesc);
 
-retry:
     /* Beginning offset needs to allow space for chain cell offset */
-    for (armLIR = (Armv5teLIR *) cUnit->firstLIRInsn,
-         offset = CHAIN_CELL_OFFSET_SIZE;
+    for (armLIR = (Armv5teLIR *) cUnit->firstLIRInsn;
          armLIR;
          armLIR = NEXT_LIR(armLIR)) {
         armLIR->generic.offset = offset;
@@ -466,7 +390,15 @@ retry:
     offset = (offset + 3) & ~3;
 
     /* Add space for chain cell counts & trace description */
-    chainCellOffset = offset;
+    u4 chainCellOffset = offset;
+    Armv5teLIR *chainCellOffsetLIR = (Armv5teLIR *) (cUnit->firstLIRInsn);
+    assert(chainCellOffset < 0x10000);
+    assert(chainCellOffsetLIR->opCode == ARMV5TE_16BIT_DATA &&
+           chainCellOffsetLIR->operands[0] == CHAIN_CELL_OFFSET_TAG);
+
+    /* Replace the CHAIN_CELL_OFFSET_TAG with the real value */
+    chainCellOffsetLIR->operands[0] = chainCellOffset;
+
     offset += sizeof(chainCellCounts) + descSize;
 
     assert((offset & 0x3) == 0);  /* Should still be word aligned */
@@ -495,20 +427,24 @@ retry:
         return;
     }
 
-    bool needRetry = assembleInstructions(
+    bool assemblerFailure = assembleInstructions(
         cUnit, (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed);
 
-    if (needRetry)
-        goto retry;
+    /*
+     * Currently the only reason that can cause the assembler to fail is due to
+     * trace length - cut it in half and retry.
+     */
+    if (assemblerFailure) {
+        cUnit->halveInstCount = true;
+        return;
+    }
 
     cUnit->baseAddr = (char *) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed;
+    cUnit->headerSize = CHAIN_CELL_OFFSET_SIZE;
     gDvmJit.codeCacheByteUsed += offset;
 
-    /* Install the chain cell offset */
-    *((char*)cUnit->baseAddr) = chainCellOffset;
-
     /* Install the code block */
-    memcpy((char*)cUnit->baseAddr + 2, cUnit->codeBuffer, chainCellOffset - 2);
+    memcpy((char*)cUnit->baseAddr, cUnit->codeBuffer, chainCellOffset);
     gDvmJit.numCompilations++;
 
     /* Install the chaining cell counts */
@@ -528,9 +464,6 @@ retry:
     /* Flush dcache and invalidate the icache to maintain coherence */
     cacheflush((long)cUnit->baseAddr,
                (long)(cUnit->baseAddr + offset), 0);
-
-    /* Adjust baseAddr to point to executable code */
-    cUnit->baseAddr = (char*)cUnit->baseAddr + CHAIN_CELL_OFFSET_SIZE;
 }
 
 /*
@@ -611,11 +544,11 @@ u4* dvmJitUnchain(void* codeAddr)
         for (j = 0; j < pChainCellCounts->u.count[i]; j++) {
             int targetOffset;
             switch(i) {
-                case CHAINING_CELL_GENERIC:
+                case CHAINING_CELL_NORMAL:
                     targetOffset = offsetof(InterpState,
                           jitToInterpEntries.dvmJitToInterpNormal);
                     break;
-                case CHAINING_CELL_POST_INVOKE:
+                case CHAINING_CELL_HOT:
                 case CHAINING_CELL_INVOKE:
                     targetOffset = offsetof(InterpState,
                           jitToInterpEntries.dvmJitToTraceSelect);
