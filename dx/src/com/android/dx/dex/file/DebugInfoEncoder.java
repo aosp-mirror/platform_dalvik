@@ -96,8 +96,8 @@ public final class DebugInfoEncoder {
     /**
      * Creates an instance.
      *
-     * @param pl {@code null-ok;} positions (line numbers) to encode
-     * @param ll {@code null-ok;} local variables to encode
+     * @param positions {@code null-ok;} positions (line numbers) to encode
+     * @param locals {@code null-ok;} local variables to encode
      * @param file {@code null-ok;} may only be {@code null} if simply using
      * this class to do a debug print
      * @param codeSize
@@ -105,19 +105,18 @@ public final class DebugInfoEncoder {
      * @param isStatic
      * @param ref
      */
-    public DebugInfoEncoder(PositionList pl, LocalList ll,
+    public DebugInfoEncoder(PositionList positions, LocalList locals,
             DexFile file, int codeSize, int regSize,
             boolean isStatic, CstMethodRef ref) {
-        this.positions = pl;
-        this.locals = ll;
+        this.positions = positions;
+        this.locals = locals;
         this.file = file;
-        output = new ByteArrayAnnotatedOutput();
         this.desc = ref.getPrototype();
         this.isStatic = isStatic;
-
         this.codeSize = codeSize;
         this.regSize = regSize;
 
+        output = new ByteArrayAnnotatedOutput();
         lastEntryForReg = new LocalList.Entry[regSize];
     }
 
@@ -190,7 +189,7 @@ public final class DebugInfoEncoder {
 
         return result;
     }
-    
+
     private byte[] convert0() throws IOException {
         ArrayList<PositionList.Entry> sortedPositions = buildSortedPositions();
         ArrayList<LocalList.Entry> methodArgs = extractMethodArguments();
@@ -204,21 +203,22 @@ public final class DebugInfoEncoder {
             annotate(1, String.format("%04x: prologue end",address));
         }
 
-        int szp = sortedPositions.size();
-        int szl = locals.size();
+        int positionsSz = sortedPositions.size();
+        int localsSz = locals.size();
 
         // Current index in sortedPositions
-        int curp = 0;
+        int curPositionIdx = 0;
         // Current index in locals
-        int curl = 0;
+        int curLocalIdx = 0;
 
         for (;;) {
             /*
              * Emit any information for the current address.
              */
 
-            curl = emitLocalsAtAddress(curl);
-            curp = emitPositionsAtAddress(curp, sortedPositions);
+            curLocalIdx = emitLocalsAtAddress(curLocalIdx);
+            curPositionIdx =
+                emitPositionsAtAddress(curPositionIdx, sortedPositions);
 
             /*
              * Figure out what the next important address is.
@@ -227,12 +227,12 @@ public final class DebugInfoEncoder {
             int nextAddrL = Integer.MAX_VALUE; // local variable
             int nextAddrP = Integer.MAX_VALUE; // position (line number)
 
-            if (curl < szl) {
-                nextAddrL = locals.get(curl).getAddress();
+            if (curLocalIdx < localsSz) {
+                nextAddrL = locals.get(curLocalIdx).getAddress();
             }
 
-            if (curp < szp) {
-                nextAddrP = sortedPositions.get(curp).getAddress();
+            if (curPositionIdx < positionsSz) {
+                nextAddrP = sortedPositions.get(curPositionIdx).getAddress();
             }
 
             int next = Math.min(nextAddrP, nextAddrL);
@@ -249,12 +249,12 @@ public final class DebugInfoEncoder {
             if (next == codeSize
                     && nextAddrL == Integer.MAX_VALUE
                     && nextAddrP == Integer.MAX_VALUE) {
-                break;                
+                break;
             }
 
             if (next == nextAddrP) {
                 // Combined advance PC + position entry
-                emitPosition(sortedPositions.get(curp++));
+                emitPosition(sortedPositions.get(curPositionIdx++));
             } else {
                 emitAdvancePc(next - address);
             }
@@ -271,96 +271,96 @@ public final class DebugInfoEncoder {
      * locals} and including all subsequent activity at the same
      * address.
      *
-     * @param curl Current index in locals
-     * @return new value for {@code curl}
+     * @param curLocalIdx Current index in locals
+     * @return new value for {@code curLocalIdx}
      * @throws IOException
      */
-    private int emitLocalsAtAddress(int curl)
+    private int emitLocalsAtAddress(int curLocalIdx)
             throws IOException {
         int sz = locals.size();
 
         // TODO: Don't emit ends implied by starts.
 
-        while ((curl < sz)
-                && (locals.get(curl).getAddress() == address)) {
-            LocalList.Entry lle = locals.get(curl++);
-            int reg = lle.getRegister();
-            LocalList.Entry prevlle = lastEntryForReg[reg];
+        while ((curLocalIdx < sz)
+                && (locals.get(curLocalIdx).getAddress() == address)) {
+            LocalList.Entry entry = locals.get(curLocalIdx++);
+            int reg = entry.getRegister();
+            LocalList.Entry prevEntry = lastEntryForReg[reg];
 
-            if (lle == prevlle) {
+            if (entry == prevEntry) {
                 /*
                  * Here we ignore locals entries for parameters,
                  * which have already been represented and placed in the
                  * lastEntryForReg array.
                  */
                 continue;
-            } 
+            }
 
             // At this point we have a new entry one way or another.
-            lastEntryForReg[reg] = lle;
+            lastEntryForReg[reg] = entry;
 
-            if (lle.isStart()) {
-                if ((prevlle != null) && lle.matches(prevlle)) {
+            if (entry.isStart()) {
+                if ((prevEntry != null) && entry.matches(prevEntry)) {
                     /*
                      * The previous local in this register has the same
                      * name and type as the one being introduced now, so
                      * use the more efficient "restart" form.
                      */
-                    if (prevlle.isStart()) {
+                    if (prevEntry.isStart()) {
                         /*
                          * We should never be handed a start when a
                          * a matching local is already active.
                          */
                         throw new RuntimeException("shouldn't happen");
                     }
-                    emitLocalRestart(lle);
+                    emitLocalRestart(entry);
                 } else {
-                    emitLocalStart(lle);
+                    emitLocalStart(entry);
                 }
             } else {
                 /*
                  * Only emit a local end if it is *not* due to a direct
                  * replacement. Direct replacements imply an end of the
                  * previous local in the same register.
-                 * 
+                 *
                  * TODO: Make sure the runtime can deal with implied
                  * local ends from category-2 interactions, and when so,
                  * also stop emitting local ends for those cases.
                  */
-                if (lle.getDisposition()
+                if (entry.getDisposition()
                         != LocalList.Disposition.END_REPLACED) {
-                    emitLocalEnd(lle);
+                    emitLocalEnd(entry);
                 }
             }
         }
 
-        return curl;
+        return curLocalIdx;
     }
 
     /**
      * Emits all positions that occur at the current {@code address}
      *
-     * @param curp Current index in sortedPositions
+     * @param curPositionIdx Current index in sortedPositions
      * @param sortedPositions positions, sorted by ascending address
-     * @return new value for {@code curp}
+     * @return new value for {@code curPositionIdx}
      * @throws IOException
      */
-    private int emitPositionsAtAddress(int curp,
+    private int emitPositionsAtAddress(int curPositionIdx,
             ArrayList<PositionList.Entry> sortedPositions)
             throws IOException {
-
-        int szp = sortedPositions.size();
-        while (curp < szp
-                && sortedPositions.get(curp).getAddress() == address) {
-            emitPosition(sortedPositions.get(curp++));
+        int positionsSz = sortedPositions.size();
+        while ((curPositionIdx < positionsSz)
+                && (sortedPositions.get(curPositionIdx).getAddress()
+                        == address)) {
+            emitPosition(sortedPositions.get(curPositionIdx++));
         }
-        return curp;
+        return curPositionIdx;
     }
 
     /**
      * Emits the header sequence, which consists of LEB128-encoded initial
      * line number and string indicies for names of all non-"this" arguments.
-     *  
+     *
      * @param sortedPositions positions, sorted by ascending address
      * @param methodArgs local list entries for method argumens arguments,
      * in left-to-right order omitting "this"
@@ -406,7 +406,7 @@ public final class DebugInfoEncoder {
         output.writeUnsignedLeb128(szParamTypes);
 
         if (annotate) {
-            annotate(output.getCursor() - mark, 
+            annotate(output.getCursor() - mark,
                     String.format("parameters_size: %04x", szParamTypes));
         }
 
@@ -833,7 +833,7 @@ public final class DebugInfoEncoder {
         if (deltaLines < DBG_LINE_BASE
                 || deltaLines > (DBG_LINE_BASE + DBG_LINE_RANGE -1)) {
 
-            throw new RuntimeException("Parameter out of range");            
+            throw new RuntimeException("Parameter out of range");
         }
 
         return (deltaLines - DBG_LINE_BASE)
@@ -865,7 +865,7 @@ public final class DebugInfoEncoder {
     }
 
     /**
-     * Emits an  {@link DebugInfoConstants#DBG_ADVANCE_PC DBG_ADVANCE_PC} 
+     * Emits an  {@link DebugInfoConstants#DBG_ADVANCE_PC DBG_ADVANCE_PC}
      * sequence.
      *
      * @param deltaAddress {@code >= 0;} amount to change program counter by
