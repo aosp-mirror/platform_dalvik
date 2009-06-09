@@ -102,40 +102,36 @@ MTERP_OFFSET(offGlue_pDebuggerActive,   MterpGlue, pDebuggerActive, 40)
 MTERP_OFFSET(offGlue_pActiveProfilers,  MterpGlue, pActiveProfilers, 44)
 MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 48)
 #if defined(WITH_JIT)
-MTERP_OFFSET(offGlue_pJitTable,         MterpGlue, pJitTable, 56)
-MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 60)
-MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 64)
-MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 68)
-MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 72)
+MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 56)
+MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 60)
+MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 64)
+MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 68)
 #endif
 #elif defined(WITH_DEBUGGER)
 MTERP_OFFSET(offGlue_pDebuggerActive,   MterpGlue, pDebuggerActive, 40)
 MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 44)
 #if defined(WITH_JIT)
-MTERP_OFFSET(offGlue_pJitTable,         MterpGlue, pJitTable, 52)
-MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 56)
-MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 60)
-MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 64)
-MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 68)
+MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 52)
+MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 56)
+MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 60)
+MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 64)
 #endif
 #elif defined(WITH_PROFILER)
 MTERP_OFFSET(offGlue_pActiveProfilers,  MterpGlue, pActiveProfilers, 40)
 MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 44)
 #if defined(WITH_JIT)
-MTERP_OFFSET(offGlue_pJitTable,         MterpGlue, pJitTable, 52)
-MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 56)
-MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 60)
-MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 64)
-MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 68)
-#endif
-#else
-MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 40)
-#if defined(WITH_JIT)
-MTERP_OFFSET(offGlue_pJitTable,         MterpGlue, pJitTable, 48)
 MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 52)
 MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 56)
 MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 60)
 MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 64)
+#endif
+#else
+MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 40)
+#if defined(WITH_JIT)
+MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 48)
+MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 52)
+MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 56)
+MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 60)
 #endif
 #endif
 /* make sure all JValue union members are stored at the same offset */
@@ -268,4 +264,3 @@ MTERP_CONSTANT(ALLOC_DONT_TRACK,    0x02)
 
 /* opcode number */
 MTERP_CONSTANT(OP_MOVE_EXCEPTION,   0x0d)
-

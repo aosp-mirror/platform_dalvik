@@ -28,13 +28,16 @@
 /*
  * JitTable hash function.
  */
-static inline u4 dvmJitHash( const u2* p ) {
-    /*
-     * TODO - Might make sense to keep "maxTableEntries - 1" as its own
-     * variable for speed reasons.
-     */
-    return ((((u4)p>>12)^(u4)p)>>1) & (gDvmJit.maxTableEntries-1);
+
+static inline u4 dvmJitHashMask( const u2* p, u4 mask ) {
+    return ((((u4)p>>12)^(u4)p)>>1) & (mask);
 }
+
+static inline u4 dvmJitHash( const u2* p ) {
+    return dvmJitHashMask( p, gDvmJit.jitTableMask );
+}
+
+
 
 /*
  * Entries in the JIT's address lookup hash table.
@@ -56,7 +59,10 @@ void* dvmJitGetCodeAddr(const u2* dPC);
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC);
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState);
 void* dvmJitChain(void* tgtAddr, u4* branchAddr);
-void dvmJitStopTranslationRequests();
-void dvmJitStats();
+void dvmJitStopTranslationRequests(void);
+void dvmJitStats(void);
+bool dvmJitResizeJitTable(unsigned int size);
+struct JitEntry *dvmFindJitEntry(const u2* pc);
+
 
 #endif /*_DALVIK_INTERP_JIT*/

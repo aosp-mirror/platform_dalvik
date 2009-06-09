@@ -122,7 +122,6 @@ typedef struct InterpState {
     /*
      * Local copies of field from gDvm placed here for fast access
      */
-    struct JitEntry*   pJitTable;
     unsigned char*     pJitProfTable;
     JitState           jitState;
     void*              jitResume;

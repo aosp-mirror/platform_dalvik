@@ -78,7 +78,6 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     glue->interpStackEnd = self->interpStackEnd;
     glue->pSelfSuspendCount = &self->suspendCount;
 #if defined(WITH_JIT)
-    glue->pJitTable = gDvmJit.pJitEntryTable;
     glue->pJitProfTable = gDvmJit.pProfTable;
 #endif
 #if defined(WITH_DEBUGGER)

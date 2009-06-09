@@ -1011,7 +1011,8 @@ static void setCommandLineDefaults()
      *        frameworks/base/core/jni/AndroidRuntime.cpp
      */
     gDvmJit.blockingMode = false;
-    gDvmJit.maxTableEntries = 2048;
+    gDvmJit.jitTableSize = 512;
+    gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
     gDvmJit.threshold = 200;
 #else
     gDvm.executionMode = kExecutionModeInterpFast;

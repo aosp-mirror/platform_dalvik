@@ -178,10 +178,7 @@ unspecified registers or condition codes.
 #define SET_VREG(_reg, _vreg)   str     _reg, [rFP, _vreg, lsl #2]
 
 #if defined(WITH_JIT)
-/*
- * Null definition for overhead measuring purposes
- */
-#define GET_JIT_TABLE(_reg)         ldr     _reg,[rGLUE,#offGlue_pJitTable]
+#define GET_JIT_ENABLED(_reg)       ldr     _reg,[rGLUE,#offGlue_jitEnabled]
 #define GET_JIT_PROF_TABLE(_reg)    ldr     _reg,[rGLUE,#offGlue_pJitProfTable]
 #endif
 

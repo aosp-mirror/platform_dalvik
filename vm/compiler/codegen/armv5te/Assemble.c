@@ -583,7 +583,7 @@ void dvmJitUnchainAll()
     if (gDvmJit.pJitEntryTable != NULL) {
         COMPILER_TRACE_CHAINING(LOGD("Jit Runtime: unchaining all"));
         dvmLockMutex(&gDvmJit.tableLock);
-        for (i = 0; i < gDvmJit.maxTableEntries; i++) {
+        for (i = 0; i < gDvmJit.jitTableSize; i++) {
             if (gDvmJit.pJitEntryTable[i].dPC &&
                    gDvmJit.pJitEntryTable[i].codeAddress) {
                 u4* lastAddress;

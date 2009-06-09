@@ -123,6 +123,11 @@ static void *compilerThreadStart(void *arg)
                 dvmUnlockMutex(&gDvmJit.compilerLock);
                 /* Check whether there is a suspend request on me */
                 dvmCheckSuspendPending(NULL);
+                /* Is JitTable filling up? */
+                if (gDvmJit.jitTableEntriesUsed >
+                    (gDvmJit.jitTableSize - gDvmJit.jitTableSize/4)) {
+                    dvmJitResizeJitTable(gDvmJit.jitTableSize * 2);
+                }
                 if (gDvmJit.haltCompilerThread) {
                     LOGD("Compiler shutdown in progress - discarding request");
                 } else {

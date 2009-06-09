@@ -65,17 +65,17 @@ int dvmJitStartup(void)
     dvmInitMutex(&gDvmJit.tableLock);
     if (res && gDvm.executionMode == kExecutionModeJit) {
         struct JitEntry *pJitTable = NULL;
-        int tableSize = sizeof(*pJitTable) * gDvmJit.maxTableEntries;
         unsigned char *pJitProfTable = NULL;
+        assert(gDvm.jitTableSize &&
+            !(gDvm.jitTableSize & (gDvmJit.jitTableSize - 1))); // Power of 2?
         dvmLockMutex(&gDvmJit.tableLock);
-        assert(sizeof(*pJitTable) == 12);
-        pJitTable = (struct JitEntry*)malloc(tableSize);
+        pJitTable = (struct JitEntry*)
+                    calloc(gDvmJit.jitTableSize, sizeof(*pJitTable));
         if (!pJitTable) {
             LOGE("jit table allocation failed\n");
             res = false;
             goto done;
         }
-        memset(pJitTable,0,tableSize);
         /*
          * NOTE: the profile table must only be allocated once, globally.
          * Profiling is turned on and off by nulling out gDvm.pJitProfTable
@@ -91,8 +91,8 @@ int dvmJitStartup(void)
             goto done;
         }
         memset(pJitProfTable,0,JIT_PROF_SIZE);
-        for (i=0; i < gDvmJit.maxTableEntries; i++) {
-           pJitTable[i].chain = gDvmJit.maxTableEntries;
+        for (i=0; i < gDvmJit.jitTableSize; i++) {
+           pJitTable[i].chain = gDvmJit.jitTableSize;
         }
         /* Is chain field wide enough for termination pattern? */
         assert(pJitTable[0].chain == gDvm.maxJitTableEntries);
@@ -100,6 +100,8 @@ int dvmJitStartup(void)
 
 done:
         gDvmJit.pJitEntryTable = pJitTable;
+        gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
+        gDvmJit.jitTableEntriesUsed = 0;
         gDvmJit.pProfTableCopy = gDvmJit.pProfTable = pJitProfTable;
         dvmUnlockMutex(&gDvmJit.tableLock);
     }
@@ -155,13 +157,13 @@ void dvmJitStats()
     int chains;
     if (gDvmJit.pJitEntryTable) {
         for (i=0, chains=hit=not_hit=0;
-             i < (int) gDvmJit.maxTableEntries;
+             i < (int) gDvmJit.jitTableSize;
              i++) {
             if (gDvmJit.pJitEntryTable[i].dPC != 0)
                 hit++;
             else
                 not_hit++;
-            if (gDvmJit.pJitEntryTable[i].chain != gDvmJit.maxTableEntries)
+            if (gDvmJit.pJitEntryTable[i].chain != gDvmJit.jitTableSize)
                 chains++;
         }
         LOGD(
@@ -354,7 +356,7 @@ static inline struct JitEntry *findJitEntry(const u2* pc)
     if (gDvmJit.pJitEntryTable[idx].dPC == pc)
         return &gDvmJit.pJitEntryTable[idx];
     else {
-        int chainEndMarker = gDvmJit.maxTableEntries;
+        int chainEndMarker = gDvmJit.jitTableSize;
         while (gDvmJit.pJitEntryTable[idx].chain != chainEndMarker) {
             idx = gDvmJit.pJitEntryTable[idx].chain;
             if (gDvmJit.pJitEntryTable[idx].dPC == pc)
@@ -362,6 +364,46 @@ static inline struct JitEntry *findJitEntry(const u2* pc)
         }
     }
     return NULL;
+}
+
+struct JitEntry *dvmFindJitEntry(const u2* pc)
+{
+    return findJitEntry(pc);
+}
+
+/*
+ * Allocate an entry in a JitTable.  Assumes caller holds lock, if
+ * applicable.  Normally used for table resizing.  Will complain (die)
+ * if entry already exists in the table or if table is full.
+ */
+static struct JitEntry *allocateJitEntry(const u2* pc, struct JitEntry *table,
+                                  u4 size)
+{
+    struct JitEntry *p;
+    unsigned int idx;
+    unsigned int prev;
+    idx = dvmJitHashMask(pc, size-1);
+    while ((table[idx].chain != size) && (table[idx].dPC != pc)) {
+        idx = table[idx].chain;
+    }
+    assert(table[idx].dPC != pc);  /* Already there */
+    if (table[idx].dPC == NULL) {
+        /* use this slot */
+        return &table[idx];
+    }
+    /* Find a free entry and chain it in */
+    prev = idx;
+    while (true) {
+        idx++;
+        if (idx == size)
+            idx = 0;  /* Wraparound */
+        if ((table[idx].dPC == NULL) || (idx == prev))
+            break;
+    }
+    assert(idx != prev);
+    table[prev].chain = idx;
+    assert(table[idx].dPC == NULL);
+    return &table[idx];
 }
 
 /*
@@ -384,7 +426,7 @@ void* dvmJitGetCodeAddr(const u2* dPC)
 #endif
         return gDvmJit.pJitEntryTable[idx].codeAddress;
     } else {
-        int chainEndMarker = gDvmJit.maxTableEntries;
+        int chainEndMarker = gDvmJit.jitTableSize;
         while (gDvmJit.pJitEntryTable[idx].chain != chainEndMarker) {
             idx = gDvmJit.pJitEntryTable[idx].chain;
             if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
@@ -444,7 +486,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
             resetProfileCounts();
             res = true;   /* Stale profile - abort */
         } else if (interpState->jitState == kJitTSelectRequest) {
-            u4 chainEndMarker = gDvmJit.maxTableEntries;
+            u4 chainEndMarker = gDvmJit.jitTableSize;
             u4 idx = dvmJitHash(interpState->pc);
 
             /* Walk the bucket chain to find an exact match for our PC */
@@ -503,6 +545,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                 if (gDvmJit.pJitEntryTable[idx].dPC == NULL) {
                    /* Allocate the slot */
                     gDvmJit.pJitEntryTable[idx].dPC = interpState->pc;
+                    gDvmJit.jitTableEntriesUsed++;
                 } else {
                    /*
                     * Table is full.  We could resize it, but that would
@@ -545,5 +588,69 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
     }
     return res;
 }
+
+/*
+ * Resizes the JitTable.  Must be a power of 2, and returns true on failure.
+ * Stops all threads, and thus is a heavyweight operation.
+ */
+bool dvmJitResizeJitTable( unsigned int size )
+{
+    struct JitEntry *pNewTable;
+    u4 newMask;
+    unsigned int i;
+
+    assert(gDvm.pJitEntryTable != NULL);
+    assert(size && !(size & (size - 1)));   /* Is power of 2? */
+
+    LOGD("Jit: resizing JitTable from %d to %d", gDvmJit.jitTableSize, size);
+
+    newMask = size - 1;
+
+    if (size <= gDvmJit.jitTableSize) {
+        return true;
+    }
+
+    pNewTable = (struct JitEntry*)calloc(size, sizeof(*pNewTable));
+    if (pNewTable == NULL) {
+        return true;
+    }
+    for (i=0; i< size; i++) {
+        pNewTable[i].chain = size;  /* Initialize chain termination */
+    }
+
+    /* Stop all other interpreting/jit'ng threads */
+    dvmSuspendAllThreads(SUSPEND_FOR_JIT);
+
+    /*
+     * At this point, only the compiler thread may be in contention
+     * for the jitEntryTable (it is not affected by the thread suspension).
+     * Aquire the lock.
+     */
+
+    dvmLockMutex(&gDvmJit.tableLock);
+
+    for (i=0; i < gDvmJit.jitTableSize; i++) {
+        if (gDvmJit.pJitEntryTable[i].dPC) {
+            struct JitEntry *p;
+            p = allocateJitEntry(gDvmJit.pJitEntryTable[i].dPC,
+                 pNewTable, size);
+            p->dPC = gDvmJit.pJitEntryTable[i].dPC;
+            p->codeAddress = gDvmJit.pJitEntryTable[i].codeAddress;
+        }
+    }
+
+    free(gDvmJit.pJitEntryTable);
+    gDvmJit.pJitEntryTable = pNewTable;
+    gDvmJit.jitTableSize = size;
+    gDvmJit.jitTableMask = size - 1;
+
+    dvmUnlockMutex(&gDvmJit.tableLock);
+
+    /* Restart the world */
+    dvmResumeAllThreads(SUSPEND_FOR_JIT);
+
+    return false;
+}
+
 
 #endif /* WITH_JIT */

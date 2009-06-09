@@ -69,7 +69,6 @@ dvmJitToTraceSelect:
     beq    2f
     mov    r1,rINST
     bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
-    ldr    rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
     cmp    r0,#0                    @ successful chain?
     bxne   r0                       @ continue native execution
     b      toInterpreter            @ didn't chain - resume with interpreter
@@ -111,7 +110,6 @@ dvmJitToInterpNormal:
     beq    toInterpreter            @ go if not, otherwise do chain
     mov    r1,rINST
     bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
-    ldr    rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
     cmp    r0,#0                    @ successful chain?
     bxne   r0                       @ continue native execution
     b      toInterpreter            @ didn't chain - resume with interpreter
@@ -175,7 +173,6 @@ common_updateProfile:
     mov     r0,rPC
     bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
     cmp     r0,#0
-    ldrne   rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
     beq     common_selectTrace
     bxne    r0                          @ jump to the translation
 common_selectTrace:
@@ -183,9 +180,6 @@ common_selectTrace:
     str     r2,[rGLUE,#offGlue_jitState]
     mov     r1,#1                       @ set changeInterp
     b       common_gotoBail
-
-.LdvmCompilerTemplateStart:
-    .word   dvmCompilerTemplateStart
 
 #endif
 
@@ -542,14 +536,11 @@ common_returnFromMethod:
     mov     rPC, r9                     @ publish new rPC
     str     r1, [rGLUE, #offGlue_methodClassDex]
     cmp     r3, #0                      @ caller is compiled code
-    bne     1f
+    blxne   r3
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     cmp     r0,#0
     bne     common_updateProfile
     GOTO_OPCODE(ip)                     @ jump to next instruction
-1:
-    ldr     rINST, .LdvmCompilerTemplateStart @ rINST is rCBASE in compiled code
-    blx     r3
 #else
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     mov     rPC, r9                     @ publish new rPC

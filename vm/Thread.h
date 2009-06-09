@@ -255,6 +255,9 @@ typedef enum SuspendCause {
     SUSPEND_FOR_DEBUG_EVENT,
     SUSPEND_FOR_STACK_DUMP,
     SUSPEND_FOR_DEX_OPT,
+#if defined(WITH_JIT)
+    SUSPEND_FOR_JIT,
+#endif
 } SuspendCause;
 void dvmSuspendThread(Thread* thread);
 void dvmSuspendSelf(bool jdwpActivity);

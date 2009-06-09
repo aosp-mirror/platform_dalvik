@@ -654,7 +654,13 @@ struct DvmJitGlobals {
     unsigned char *pProfTableCopy;
 
     /* Size of JIT hash table in entries.  Must be a power of 2 */
-    unsigned int maxTableEntries;
+    unsigned int jitTableSize;
+
+    /* Mask used in hash function for JitTable.  Should be jitTableSize-1 */
+    unsigned int jitTableMask;
+
+    /* How many entries in the JitEntryTable are in use */
+    unsigned int jitTableEntriesUsed;
 
     /* Trigger for trace selection */
     unsigned short threshold;
