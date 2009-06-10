@@ -1941,6 +1941,13 @@ static void checkUnop(RegType* insnRegs, const int insnRegCount,
  *
  * Assumes we've already validated reg1/reg2.
  *
+ * TODO: consider generalizing this.  The key principle is that the
+ * result of a bitwise operation can only be as wide as the widest of
+ * the operands.  You can safely AND/OR/XOR two chars together and know
+ * you still have a char, so it's reasonable for the compiler or "dx"
+ * to skip the int-to-char instruction.  (We need to do this for boolean
+ * because there is no int-to-boolean operation.)
+ *
  * Returns true if both args are Boolean, Zero, or One.
  */
 static bool upcastBooleanOp(RegType* insnRegs, const int insnRegCount,
@@ -4421,9 +4428,17 @@ iput_1nr_common:
             ClassObject* fieldClass;
             InstField* instField;
 
-            /* make sure the source register has the correct type */
             srcType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
                         &failure);
+
+            /*
+             * javac generates synthetic functions that write byte values
+             * into boolean fields.
+             */
+            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
+                srcType = kRegTypeBoolean;
+
+            /* make sure the source register has the correct type */
             if (!canConvertTo1nr(srcType, tmpType)) {
                 LOG_VFY("VFY: invalid reg type %d on iput instr (need %d)\n",
                     srcType, tmpType);
@@ -4676,11 +4691,19 @@ sput_1nr_common:
             RegType srcType, fieldType;
             StaticField* staticField;
 
-            /* make sure the source register has the correct type */
             srcType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
                         &failure);
+
+            /*
+             * javac generates synthetic functions that write byte values
+             * into boolean fields.
+             */
+            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
+                srcType = kRegTypeBoolean;
+
+            /* make sure the source register has the correct type */
             if (!canConvertTo1nr(srcType, tmpType)) {
-                LOG_VFY("VFY: invalid reg type %d on iput instr (need %d)\n",
+                LOG_VFY("VFY: invalid reg type %d on sput instr (need %d)\n",
                     srcType, tmpType);
                 failure = VERIFY_ERROR_GENERIC;
                 break;
