@@ -17,7 +17,6 @@
 
 package java.util.zip;
 
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,49 +27,40 @@ import org.apache.harmony.archive.internal.nls.Messages;
  * The {@code GZIPInputStream} class is used to read data stored in the GZIP
  * format, reading and decompressing GZIP data from the underlying stream into
  * its buffer.
- * 
- * @since Android 1.0
  */
-public class GZIPInputStream extends java.util.zip.InflaterInputStream {
+public class GZIPInputStream extends InflaterInputStream {
+
+    private static final int FCOMMENT = 16;
+
+    private static final int FEXTRA = 4;
+
+    private static final int FHCRC = 2;
+
+    private static final int FNAME = 8;
+
+    /**
+     * The magic header for the GZIP format.
+     */
+    public final static int GZIP_MAGIC = 0x8b1f;
 
     /**
      * The checksum algorithm used when handling uncompressed data.
-     * 
-     * @since Android 1.0
      */
     protected CRC32 crc = new CRC32();
 
     /**
      * Indicates the end of the input stream.
-     * 
-     * @since Android 1.0
      */
     protected boolean eos = false;
 
     /**
-     * The magic header for the GZIP format.
-     * 
-     * @since Android 1.0
-     */
-    public final static int GZIP_MAGIC = 0x8b1f;
-
-    private static final int FHCRC = 2;
-
-    private static final int FEXTRA = 4;
-
-    private static final int FNAME = 8;
-
-    private static final int FCOMMENT = 16;
-
-    /**
      * Construct a {@code GZIPInputStream} to read from GZIP data from the
      * underlying stream.
-     * 
+     *
      * @param is
      *            the {@code InputStream} to read data from.
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     public GZIPInputStream(InputStream is) throws IOException {
         this(is, BUF_SIZE);
@@ -86,7 +76,6 @@ public class GZIPInputStream extends java.util.zip.InflaterInputStream {
      *            the internal read buffer size.
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     public GZIPInputStream(InputStream is, int size) throws IOException {
         super(is, new Inflater(true), size);
@@ -134,6 +123,15 @@ public class GZIPInputStream extends java.util.zip.InflaterInputStream {
         }
     }
 
+    /**
+     * Closes this stream and any underlying streams.
+     */
+    @Override
+    public void close() throws IOException {
+        eos = true;
+        super.close();
+    }
+
     private long getLong(byte[] buffer, int off) {
         long l = 0;
         l |= (buffer[off] & 0xFF);
@@ -147,12 +145,23 @@ public class GZIPInputStream extends java.util.zip.InflaterInputStream {
         return (buffer[off] & 0xFF) | ((buffer[off + 1] & 0xFF) << 8);
     }
 
+    /**
+     * Reads and decompresses GZIP data from the underlying stream into the
+     * given buffer.
+     *
+     * @param buffer
+     *            Buffer to receive data
+     * @param off
+     *            Offset in buffer to store data
+     * @param nbytes
+     *            Number of bytes to read
+     */
     @Override
     public int read(byte[] buffer, int off, int nbytes) throws IOException {
         if (closed) {
             throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
         }
-        if(eof){
+        if (eof) {
             return -1;
         }
         // avoid int overflow, check null buffer
@@ -164,17 +173,15 @@ public class GZIPInputStream extends java.util.zip.InflaterInputStream {
             } else if (!eos) {
                 eos = true;
                 // Get non-compressed bytes read by fill
-                // BEGIN android-changed
-                // copied from newer version of harmony
                 int size = inf.getRemaining();
                 final int trailerSize = 8; // crc (4 bytes) + total out (4
-                                            // bytes)
+                // bytes)
                 byte[] b = new byte[trailerSize];
                 int copySize = (size > trailerSize) ? trailerSize : size;
 
                 System.arraycopy(buf, len - size, b, 0, copySize);
-                readFully(b, copySize, trailerSize - copySize);                
-                // END android-changed
+                readFully(b, copySize, trailerSize - copySize);
+
                 if (getLong(b, 0) != crc.getValue()) {
                     throw new IOException(Messages.getString("archive.20")); //$NON-NLS-1$
                 }
@@ -185,12 +192,6 @@ public class GZIPInputStream extends java.util.zip.InflaterInputStream {
             return val;
         }
         throw new ArrayIndexOutOfBoundsException();
-    }
-    
-    @Override
-    public void close() throws IOException {
-        eos = true;
-        super.close();
     }
 
     private void readFully(byte[] buffer, int offset, int length)

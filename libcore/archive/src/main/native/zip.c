@@ -15,31 +15,23 @@
  * limitations under the License.
  */
 
-package java.util.zip;
+#include "zip.h"
+#include "jni.h"
 
 /**
- * {@code DataFormatException} is used to indicate an error in the format of a
- * particular data stream which is to be uncompressed.
- */
-public class DataFormatException extends Exception {
+  * Throw java.lang.IllegalStateException
+  */
+void
+throwNewIllegalStateException (JNIEnv * env, const char *message)
+{
+  jniThrowException(env, "java/lang/IllegalStateException", message);
+}
 
-    private static final long serialVersionUID = 2219632870893641452L;
-
-    /**
-     * Constructs a new {@code DataFormatException} instance.
-     */
-    public DataFormatException() {
-        super();
-    }
-
-    /**
-     * Constructs a new {@code DataFormatException} instance with the specified
-     * message.
-     *
-     * @param detailMessage
-     *            the detail message for the exception.
-     */
-    public DataFormatException(String detailMessage) {
-        super(detailMessage);
-    }
+/**
+  * Throw java.lang.IllegalArgumentException
+  */
+void
+throwNewIllegalArgumentException (JNIEnv * env, const char *message)
+{
+  jniThrowException(env, "java/lang/IllegalArgumentException", message);
 }

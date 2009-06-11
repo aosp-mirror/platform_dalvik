@@ -20,8 +20,6 @@ package java.util.zip;
 /**
  * Holds information about a checksum which was computed with the methods
  * implementing a checksum algorithm.
- * 
- * @since Android 1.0
  */
 public interface Checksum {
 
@@ -29,37 +27,32 @@ public interface Checksum {
      * Returns the current calculated checksum value.
      * 
      * @return the checksum.
-     * @since Android 1.0
      */
     public long getValue();
 
     /**
      * Resets the checksum value applied before beginning calculations on a new
      * stream of data.
-     * 
-     * @since Android 1.0
      */
     public void reset();
 
     /**
-     * Updates the checksum value with the given byte.
-     * 
-     * @param val
-     *            the byte to update the checksum with.
-     * @since Android 1.0
-     */
-    public void update(int val);
-
-    /**
      * Updates the checksum with the given bytes.
-     * 
+     *
      * @param buf
      *            the byte array from which to read the bytes.
      * @param off
      *            the initial position in {@code buf} to read the bytes from.
      * @param nbytes
      *            the number of bytes to read from {@code buf}.
-     * @since Android 1.0
      */
     public void update(byte[] buf, int off, int nbytes);
+
+    /**
+     * Updates the checksum value with the given byte.
+     * 
+     * @param val
+     *            the byte to update the checksum with.
+     */
+    public void update(int val);
 }

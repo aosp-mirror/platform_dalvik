@@ -22,8 +22,6 @@ import java.util.zip.ZipException;
 /**
  * This runtime exception is thrown when a problem occurs while reading a JAR
  * file.
- * 
- * @since Android 1.0
  */
 public class JarException extends ZipException {
 
@@ -31,8 +29,6 @@ public class JarException extends ZipException {
 
     /**
      * Constructs a new {@code JarException} instance.
-     * 
-     * @since Android 1.0
      */
     public JarException() {
         super();
@@ -41,10 +37,9 @@ public class JarException extends ZipException {
     /**
      * Constructs a new {@code JarException} instance with the specified
      * message.
-     * 
+     *
      * @param detailMessage
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public JarException(String detailMessage) {
         super(detailMessage);

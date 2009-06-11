@@ -27,8 +27,6 @@ import java.util.SortedMap;
 
 /**
  * Class factory for {@link Pack200.Packer} and {@link Pack200.Unpacker}.
- * 
- * @since Android 1.0
  */
 public abstract class Pack200 {
 
@@ -39,8 +37,8 @@ public abstract class Pack200 {
     /**
      * Prevent this class from being instantiated.
      */
-    private Pack200(){
-        //do nothing
+    private Pack200() {
+        // do nothing
     }
 
     /**
@@ -50,10 +48,8 @@ public abstract class Pack200 {
      * {@code 'java.util.jar.Pack200.Packer'}. If this system property is
      * defined an instance of the specified class is returned, otherwise the
      * system's default implementation is returned.
-     * </p>
      * 
      * @return an instance of {@code Packer}
-     * @since Android 1.0
      */
     public static Pack200.Packer newPacker() {
         return (Packer) AccessController
@@ -82,10 +78,8 @@ public abstract class Pack200 {
      * property {@code 'java.util.jar.Pack200.Unpacker'}. If this system
      * property is defined an instance of the specified class is returned,
      * otherwise the system's default implementation is returned.
-     * </p>
      * 
      * @return a instance of {@code Unpacker}.
-     * @since Android 1.0
      */
     public static Pack200.Unpacker newUnpacker() {
         return (Unpacker) AccessController
@@ -107,150 +101,109 @@ public abstract class Pack200 {
     /**
      * The interface defining the API for converting a JAR file to an output
      * stream in the Pack200 format.
-     * 
-     * @since Android 1.0
      */
     public static interface Packer {
 
         /**
          * the format of a class attribute name.
-         * 
-         * @since Android 1.0
          */
         static final String CLASS_ATTRIBUTE_PFX = "pack.class.attribute."; //$NON-NLS-1$
 
         /**
          * the format of a code attribute name.
-         * 
-         * @since Android 1.0
          */
         static final String CODE_ATTRIBUTE_PFX = "pack.code.attribute."; //$NON-NLS-1$
 
         /**
          * the deflation hint to set in the output archive.
-         * 
-         * @since Android 1.0
          */
         static final String DEFLATE_HINT = "pack.deflate.hint";//$NON-NLS-1$
 
         /**
          * the indicated amount of effort to use in compressing the archive.
-         * 
-         * @since Android 1.0
          */
         static final String EFFORT = "pack.effort";//$NON-NLS-1$
 
         /**
          * a String representation for {@code error}.
-         * 
-         * @since Android 1.0
          */
         static final String ERROR = "error";//$NON-NLS-1$
 
         /**
          * a String representation of {@code false}.
-         * 
-         * @since Android 1.0
          */
         static final String FALSE = "false";//$NON-NLS-1$
 
         /**
          * the format of a field attribute name.
-         * 
-         * @since Android 1.0
          */
         static final String FIELD_ATTRIBUTE_PFX = "pack.field.attribute.";//$NON-NLS-1$
 
         /**
          * a String representation for {@code keep}.
-         * 
-         * @since Android 1.0
          */
         static final String KEEP = "keep";//$NON-NLS-1$
 
         /**
          * decide if all elements shall transmit in their original order.
-         * 
-         * @since Android 1.0
          */
         static final String KEEP_FILE_ORDER = "pack.keep.file.order";//$NON-NLS-1$
 
         /**
          * a String representation for {@code latest}.
-         * 
-         * @since Android 1.0
          */
         static final String LATEST = "latest";//$NON-NLS-1$
 
         /**
          * the format of a method attribute name.
-         * 
-         * @since Android 1.0
          */
         static final String METHOD_ATTRIBUTE_PFX = "pack.method.attribute.";//$NON-NLS-1$
 
         /**
          * if it shall attempt to determine the latest modification time if this
          * is set to {@code LATEST}.
-         * 
-         * @since Android 1.0
          */
         static final String MODIFICATION_TIME = "pack.modification.time";//$NON-NLS-1$
 
         /**
          * a String representation of {@code pass}.
-         * 
-         * @since Android 1.0
          */
         static final String PASS = "pass";//$NON-NLS-1$
 
         /**
          * the file that will not be compressed.
-         * 
-         * @since Android 1.0
          */
         static final String PASS_FILE_PFX = "pack.pass.file.";//$NON-NLS-1$
 
         /**
          * packer progress as a percentage.
-         * 
-         * @since Android 1.0
          */
         static final String PROGRESS = "pack.progress";//$NON-NLS-1$
 
         /**
          * The number of bytes of each archive segment.
-         * 
-         * @since Android 1.0
          */
         static final String SEGMENT_LIMIT = "pack.segment.limit";//$NON-NLS-1$
 
         /**
          * a String representation of {@code strip}.
-         * 
-         * @since Android 1.0
          */
         static final String STRIP = "strip";//$NON-NLS-1$
 
         /**
          * a String representation of {@code true}.
-         * 
-         * @since Android 1.0
          */
         static final String TRUE = "true";//$NON-NLS-1$
 
         /**
          * the action to take if an unknown attribute is encountered.
-         * 
-         * @since Android 1.0
          */
         static final String UNKNOWN_ATTRIBUTE = "pack.unknown.attribute";//$NON-NLS-1$
 
         /**
          * Returns a sorted map of the properties of this packer.
-         * 
+         *
          * @return the properties of the packer.
-         * @since Android 1.0
          */
         SortedMap<String, String> properties();
 
@@ -263,7 +216,6 @@ public abstract class Pack200 {
          *            stream of compressed data.
          * @throws IOException
          *             if I/O exception occurs.
-         * @since Android 1.0
          */
         void pack(JarFile in, OutputStream out) throws IOException;
 
@@ -277,7 +229,6 @@ public abstract class Pack200 {
          *            stream of compressed data.
          * @throws IOException
          *             if I/O exception occurs.
-         * @since Android 1.0
          */
         void pack(JarInputStream in, OutputStream out) throws IOException;
 
@@ -301,52 +252,39 @@ public abstract class Pack200 {
     /**
      * The interface defining the API for converting a packed stream in the
      * Pack200 format to a JAR file.
-     * 
-     * @since Android 1.0
      */
     public static interface Unpacker {
 
         /**
          * The String indicating if the unpacker should ignore all transmitted
          * values,can be replaced by either {@code true} or {@code false}.
-         * 
-         * @since Android 1.0
          */
         static final String DEFLATE_HINT = "unpack.deflate.hint";//$NON-NLS-1$
 
         /**
          * a String representation of {@code false}.
-         * 
-         * @since Android 1.0
          */
         static final String FALSE = "false";//$NON-NLS-1$
 
         /**
          * a String representation of {@code keep}.
-         * 
-         * @since Android 1.0
          */
         static final String KEEP = "keep";//$NON-NLS-1$
 
         /**
          * the progress as a {@code percentage}.
-         * 
-         * @since Android 1.0
          */
         static final String PROGRESS = "unpack.progress";//$NON-NLS-1$
 
         /**
          * a String representation of {@code true}.
-         * 
-         * @since Android 1.0
          */
         static final String TRUE = "true";//$NON-NLS-1$
 
         /**
          * Returns a sorted map of the properties of this unpacker.
-         * 
+         *
          * @return the properties of unpacker.
-         * @since Android 1.0
          */
         SortedMap<String, String> properties();
 
@@ -359,7 +297,6 @@ public abstract class Pack200 {
          *            JAR output stream of uncompressed data.
          * @throws IOException
          *             if I/O exception occurs.
-         * @since Android 1.0
          */
         void unpack(InputStream in, JarOutputStream out) throws IOException;
 
@@ -373,7 +310,6 @@ public abstract class Pack200 {
          *            JAR output stream of uncompressed data.
          * @throws IOException
          *             if I/O exception occurs.
-         * @since Android 1.0
          */
         void unpack(File in, JarOutputStream out) throws IOException;
 

@@ -7,7 +7,8 @@ LOCAL_SRC_FILES := \
 	java_util_zip_CRC32.c \
 	java_util_zip_Deflater.c \
 	java_util_zip_Inflater.c \
-  zipalloc.c \
+	zip.c \
+	zipalloc.c \
 	sieb.c
 
 LOCAL_C_INCLUDES += \

@@ -27,7 +27,6 @@
 
 package org.apache.harmony.archive.internal.nls;
 
-
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Locale;
@@ -50,7 +49,7 @@ import org.apache.harmony.luni.util.MsgHelp;
  * is looked up, or resource bundle support is not available, the key itself
  * will be returned as the associated message. This means that the <em>KEY</em>
  * should a reasonable human-readable (english) string.
- * 
+ *
  */
 public class Messages {
 
@@ -61,7 +60,7 @@ public class Messages {
 
     /**
      * Retrieves a message which has no arguments.
-     * 
+     *
      * @param msg
      *            String the key to look up.
      * @return String the message for that key in the system message bundle.
@@ -74,7 +73,7 @@ public class Messages {
 
     /**
      * Retrieves a message which takes 1 argument.
-     * 
+     *
      * @param msg
      *            String the key to look up.
      * @param arg
@@ -87,7 +86,7 @@ public class Messages {
 
     /**
      * Retrieves a message which takes 1 integer argument.
-     * 
+     *
      * @param msg
      *            String the key to look up.
      * @param arg
@@ -100,7 +99,7 @@ public class Messages {
 
     /**
      * Retrieves a message which takes 1 character argument.
-     * 
+     *
      * @param msg
      *            String the key to look up.
      * @param arg
@@ -113,7 +112,7 @@ public class Messages {
 
     /**
      * Retrieves a message which takes 2 arguments.
-     * 
+     *
      * @param msg
      *            String the key to look up.
      * @param arg1
@@ -128,7 +127,7 @@ public class Messages {
 
     /**
      * Retrieves a message which takes several arguments.
-     * 
+     *
      * @param msg
      *            String the key to look up.
      * @param args

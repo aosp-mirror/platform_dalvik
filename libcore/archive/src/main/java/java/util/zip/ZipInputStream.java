@@ -17,7 +17,6 @@
 
 package java.util.zip;
 
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,18 +35,14 @@ import org.apache.harmony.luni.util.Util;
  * the so called ZIP entries. Therefore when reading from a {@code
  * ZipInputStream} first the entry's attributes will be retrieved with {@code
  * getNextEntry} before its data is read.
- * </p>
  * <p>
  * While {@code InflaterInputStream} can read a compressed <i>ZIP-archive</i>
  * entry, this extension can read uncompressed entries as well.
- * </p>
  * <p>
  * Use {@code ZipFile} if you can access the archive as a file directly.
- * </p>
- * 
+ *
  * @see ZipEntry
  * @see ZipFile
- * @since Android 1.0
  */
 public class ZipInputStream extends InflaterInputStream implements ZipConstants {
     static final int DEFLATED = 8;
@@ -58,7 +53,7 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     static final int ZIPLocalHeaderVersionNeeded = 20;
 
-    // BEGI android-removed
+    // BEGIN android-removed
     // private boolean zipClosed = false;
     // END android-removed
 
@@ -82,10 +77,9 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     /**
      * Constructs a new {@code ZipInputStream} from the specified input stream.
-     * 
+     *
      * @param stream
      *            the input stream to representing a ZIP archive.
-     * @since Android 1.0
      */
     public ZipInputStream(InputStream stream) {
         super(new PushbackInputStream(stream, BUF_SIZE), new Inflater(true));
@@ -96,10 +90,9 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     /**
      * Closes this {@code ZipInputStream}.
-     * 
+     *
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -113,10 +106,9 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     /**
      * Closes the current ZIP entry and positions to read the next entry.
-     * 
+     *
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     public void closeEntry() throws IOException {
         // BEGIN android-changed
@@ -173,13 +165,12 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     /**
      * Reads the next entry from this {@code ZipInputStream}.
-     * 
+     *
      * @return the next {@code ZipEntry} contained in the input stream.
      * @throws IOException
      *             if the stream is not positioned at the beginning of an entry
      *             or if an other {@code IOException} occurs.
      * @see ZipEntry
-     * @since Android 1.0
      */
     public ZipEntry getNextEntry() throws IOException {
         if (currentEntry != null) {
@@ -274,6 +265,18 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     /* Read 4 bytes from the buffer and store it as an int */
 
+    /**
+     * Reads up to the specified number of uncompressed bytes into the buffer
+     * starting at the offset.
+     *
+     * @param buffer
+     *            a byte array
+     * @param start
+     *            the starting offset into the buffer
+     * @param length
+     *            the number of bytes to read
+     * @return the number of bytes read
+     */
     @Override
     public int read(byte[] buffer, int start, int length) throws IOException {
         // BEGIN android-changed
@@ -340,13 +343,12 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     /**
      * Skips up to the specified number of bytes in the current ZIP entry.
-     * 
+     *
      * @param value
      *            the number of bytes to skip.
      * @return the number of bytes skipped.
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     @Override
     public long skip(long value) throws IOException {
@@ -364,15 +366,14 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
             return skipped;
         }
         throw new IllegalArgumentException();
-}
+    }
 
     /**
      * Returns 0 if the {@code EOF} has been reached, otherwise returns 1.
-     * 
+     *
      * @return 0 after {@code EOF} of current entry, 1 otherwise.
      * @throws IOException
      *             if an IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public int available() throws IOException {
@@ -389,11 +390,10 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     /**
      * creates a {@link ZipEntry } with the given name.
-     * 
+     *
      * @param name
      *            the name of the entry.
      * @return the created {@code ZipEntry}.
-     * @since Android 1.0
      */
     protected ZipEntry createZipEntry(String name) {
         return new ZipEntry(name);

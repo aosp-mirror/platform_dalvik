@@ -17,7 +17,6 @@
 
 package java.util.zip;
 
-
 interface ZipConstants {
 
     public static final long LOCSIG = 0x4034b50, EXTSIG = 0x8074b50,

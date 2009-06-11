@@ -17,7 +17,6 @@
 
 package java.util.zip;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -26,8 +25,6 @@ import java.io.InputStream;
  * same time as the data, on which the checksum is computed, is read from a
  * stream. The purpose of this checksum is to establish data integrity,
  * comparing the computed checksum against a published checksum value.
- * 
- * @since Android 1.0
  */
 public class CheckedInputStream extends java.io.FilterInputStream {
 
@@ -42,7 +39,6 @@ public class CheckedInputStream extends java.io.FilterInputStream {
      *            the input stream to calculate checksum from.
      * @param csum
      *            an entity implementing the checksum algorithm.
-     * @since Android 1.0
      */
     public CheckedInputStream(InputStream is, Checksum csum) {
         super(is);
@@ -57,7 +53,6 @@ public class CheckedInputStream extends java.io.FilterInputStream {
      *         otherwise.
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -84,7 +79,6 @@ public class CheckedInputStream extends java.io.FilterInputStream {
      *         end of the filtered stream while reading the data.
      * @throws IOException
      *             if this stream is closed or some I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public int read(byte[] buf, int off, int nbytes) throws IOException {
@@ -99,7 +93,6 @@ public class CheckedInputStream extends java.io.FilterInputStream {
      * Returns the checksum calculated on the stream read so far.
      * 
      * @return the updated checksum.
-     * @since Android 1.0
      */
     public Checksum getChecksum() {
         return check;
@@ -114,7 +107,6 @@ public class CheckedInputStream extends java.io.FilterInputStream {
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
      * @return the number of bytes skipped.
-     * @since Android 1.0
      */
     @Override
     public long skip(long nbytes) throws IOException {

@@ -30,39 +30,49 @@ public class Util {
                 return false;
             }
 
-            s1 = s1.substring(start1, start1 + length);
-            s2 = s2.substring(start2, start2 + length);
-
-            return toASCIILowerCase(s1).equals(toASCIILowerCase(s2));
+            char c1, c2;
+            for (int i = 0; i < length; i++) {
+                if ((c1 = s1.charAt(start1++)) != (c2 = s2.charAt(start2++))
+                        && toASCIIUpperCase(c1) != toASCIIUpperCase(c2)) {
+                    return false;
+                }
+            }
+            return true;
         }
         throw new NullPointerException();
     }
 
-    public static String toASCIILowerCase(String s) {
-        int len = s.length();
-        StringBuilder buffer = new StringBuilder(len);
-        for (int i = 0; i < len; i++) {
-            char c = s.charAt(i);
-            if ('A' <= c && c <= 'Z') {
-                buffer.append((char) (c + ('a' - 'A')));
-            } else {
-                buffer.append(c);
+    public static final boolean equalsIgnoreCase(byte[] buf1, byte[] buf2) {
+        if (buf1 == buf2) {
+            return true;
+        }
+
+        if (buf1 == null || buf2 == null || buf1.length != buf2.length) {
+            return false;
+        }
+
+        byte b1, b2;
+
+        for (int i = 0; i < buf1.length; i++) {
+            if ((b1 = buf1[i]) != (b2 = buf2[i])
+                    && toASCIIUpperCase(b1) != toASCIIUpperCase(b2)) {
+                return false;
             }
         }
-        return buffer.toString();
+        return true;
     }
 
-    public static String toASCIIUpperCase(String s) {
-        int len = s.length();
-        StringBuilder buffer = new StringBuilder(len);
-        for (int i = 0; i < len; i++) {
-            char c = s.charAt(i);
-            if ('a' <= c && c <= 'z') {
-                buffer.append((char) (c - ('a' - 'A')));
-            } else {
-                buffer.append(c);
-            }
+    static final char toASCIIUpperCase(char c) {
+        if ('a' <= c && c <= 'z') {
+            return (char) (c - ('a' - 'A'));
         }
-        return buffer.toString();
+        return c;
+    }
+
+    static final byte toASCIIUpperCase(byte b) {
+        if ('a' <= b && b <= 'z') {
+            return (byte) (b - ('a' - 'A'));
+        }
+        return b;
     }
 }
