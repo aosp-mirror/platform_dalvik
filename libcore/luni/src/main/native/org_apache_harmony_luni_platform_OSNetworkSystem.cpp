@@ -24,12 +24,6 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-// Temporary hack to fix the sim build until bionic is updated.
-#ifdef HAVE_ANDROID_OS
-#include <netinet/in6.h>
-#else
-#define ipv6mr_ifindex ipv6mr_interface
-#endif
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <sys/time.h>
@@ -1368,7 +1362,7 @@ static void mcastAddDropMembership (JNIEnv * env, int handle, jobject optVal,
                 memset(&ipv6Request, 0, requestLength);
                 ipv6Request.ipv6mr_multiaddr =
                         ((struct sockaddr_in6 *) &sockaddrP)->sin6_addr;
-                ipv6Request.ipv6mr_ifindex = interfaceIndex;
+                ipv6Request.ipv6mr_interface = interfaceIndex;
                 multicastRequest = &ipv6Request;
                 level = IPPROTO_IPV6;
                 break;
