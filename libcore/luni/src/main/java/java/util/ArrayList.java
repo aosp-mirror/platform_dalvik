@@ -424,20 +424,16 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
             increment = 12;
         }
         E[] newArray = newElementArray(size + increment);
-        if (location < size / 2) {
-            int newFirst = newArray.length - (size + required);
-            System.arraycopy(array, location, newArray, location + increment,
-                    size - location);
-            System.arraycopy(array, firstIndex, newArray, newFirst, location);
-            firstIndex = newFirst;
-            lastIndex = newArray.length;
-        } else {
-            System.arraycopy(array, firstIndex, newArray, 0, location);
-            System.arraycopy(array, location, newArray, location + required,
-                    size - location);
-            firstIndex = 0;
-            lastIndex += required;
-        }
+        int newFirst = increment - required;
+        // Copy elements after location to the new array skipping inserted
+        // elements
+        System.arraycopy(array, location + firstIndex, newArray, newFirst
+                + location + required, size - location);
+        // Copy elements before location to the new array from firstIndex
+        System.arraycopy(array, firstIndex, newArray, newFirst, location);
+        firstIndex = newFirst;
+        lastIndex = size + increment;
+
         array = newArray;
     }
 
