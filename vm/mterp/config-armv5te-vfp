@@ -43,32 +43,32 @@ import armv5te/entry.S
 
 # opcode list; argument to op-start is default directory
 op-start armv5te
-    op OP_ADD_DOUBLE vfp
-    op OP_ADD_DOUBLE_2ADDR vfp
-    op OP_ADD_FLOAT vfp
-    op OP_ADD_FLOAT_2ADDR vfp
-    op OP_CMPG_DOUBLE vfp
-    op OP_CMPG_FLOAT vfp
-    op OP_CMPL_DOUBLE vfp
-    op OP_CMPL_FLOAT vfp
-    op OP_DIV_DOUBLE vfp
-    op OP_DIV_DOUBLE_2ADDR vfp
-    op OP_DIV_FLOAT vfp
-    op OP_DIV_FLOAT_2ADDR vfp
-    op OP_DOUBLE_TO_FLOAT vfp
-    op OP_DOUBLE_TO_INT vfp
-    op OP_FLOAT_TO_DOUBLE vfp
-    op OP_FLOAT_TO_INT vfp
-    op OP_INT_TO_DOUBLE vfp
-    op OP_INT_TO_FLOAT vfp
-    op OP_MUL_DOUBLE vfp
-    op OP_MUL_DOUBLE_2ADDR vfp
-    op OP_MUL_FLOAT vfp
-    op OP_MUL_FLOAT_2ADDR vfp
-    op OP_SUB_DOUBLE vfp
-    op OP_SUB_DOUBLE_2ADDR vfp
-    op OP_SUB_FLOAT vfp
-    op OP_SUB_FLOAT_2ADDR vfp
+    op OP_ADD_DOUBLE arm-vfp
+    op OP_ADD_DOUBLE_2ADDR arm-vfp
+    op OP_ADD_FLOAT arm-vfp
+    op OP_ADD_FLOAT_2ADDR arm-vfp
+    op OP_CMPG_DOUBLE arm-vfp
+    op OP_CMPG_FLOAT arm-vfp
+    op OP_CMPL_DOUBLE arm-vfp
+    op OP_CMPL_FLOAT arm-vfp
+    op OP_DIV_DOUBLE arm-vfp
+    op OP_DIV_DOUBLE_2ADDR arm-vfp
+    op OP_DIV_FLOAT arm-vfp
+    op OP_DIV_FLOAT_2ADDR arm-vfp
+    op OP_DOUBLE_TO_FLOAT arm-vfp
+    op OP_DOUBLE_TO_INT arm-vfp
+    op OP_FLOAT_TO_DOUBLE arm-vfp
+    op OP_FLOAT_TO_INT arm-vfp
+    op OP_INT_TO_DOUBLE arm-vfp
+    op OP_INT_TO_FLOAT arm-vfp
+    op OP_MUL_DOUBLE arm-vfp
+    op OP_MUL_DOUBLE_2ADDR arm-vfp
+    op OP_MUL_FLOAT arm-vfp
+    op OP_MUL_FLOAT_2ADDR arm-vfp
+    op OP_SUB_DOUBLE arm-vfp
+    op OP_SUB_DOUBLE_2ADDR arm-vfp
+    op OP_SUB_FLOAT arm-vfp
+    op OP_SUB_FLOAT_2ADDR arm-vfp
 
     # use trivial integer operation
     #op OP_NEG_DOUBLE armv5te
