@@ -1302,7 +1302,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_CMPL_FLOAT: /* 0x2d */
-/* File: vfp/OP_CMPL_FLOAT.S */
+/* File: arm-vfp/OP_CMPL_FLOAT.S */
     /*
      * Compare two floating-point values.  Puts 0, 1, or -1 into the
      * destination register based on the results of the comparison.
@@ -1341,7 +1341,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_CMPG_FLOAT: /* 0x2e */
-/* File: vfp/OP_CMPG_FLOAT.S */
+/* File: arm-vfp/OP_CMPG_FLOAT.S */
     /*
      * Compare two floating-point values.  Puts 0, 1, or -1 into the
      * destination register based on the results of the comparison.
@@ -1380,7 +1380,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_CMPL_DOUBLE: /* 0x2f */
-/* File: vfp/OP_CMPL_DOUBLE.S */
+/* File: arm-vfp/OP_CMPL_DOUBLE.S */
     /*
      * Compare two floating-point values.  Puts 0, 1, or -1 into the
      * destination register based on the results of the comparison.
@@ -1419,7 +1419,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_CMPG_DOUBLE: /* 0x30 */
-/* File: vfp/OP_CMPG_DOUBLE.S */
+/* File: arm-vfp/OP_CMPG_DOUBLE.S */
     /*
      * Compare two floating-point values.  Puts 0, 1, or -1 into the
      * destination register based on the results of the comparison.
@@ -3705,8 +3705,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_INT_TO_FLOAT: /* 0x82 */
-/* File: vfp/OP_INT_TO_FLOAT.S */
-/* File: vfp/funop.S */
+/* File: arm-vfp/OP_INT_TO_FLOAT.S */
+/* File: arm-vfp/funop.S */
     /*
      * Generic 32-bit unary floating-point operation.  Provide an "instr"
      * line that specifies an instruction that performs "s1 = op s0".
@@ -3730,8 +3730,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_INT_TO_DOUBLE: /* 0x83 */
-/* File: vfp/OP_INT_TO_DOUBLE.S */
-/* File: vfp/funopWider.S */
+/* File: arm-vfp/OP_INT_TO_DOUBLE.S */
+/* File: arm-vfp/funopWider.S */
     /*
      * Generic 32bit-to-64bit floating point unary operation.  Provide an
      * "instr" line that specifies an instruction that performs "d0 = op s0".
@@ -3833,8 +3833,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_FLOAT_TO_INT: /* 0x87 */
-/* File: vfp/OP_FLOAT_TO_INT.S */
-/* File: vfp/funop.S */
+/* File: arm-vfp/OP_FLOAT_TO_INT.S */
+/* File: arm-vfp/funop.S */
     /*
      * Generic 32-bit unary floating-point operation.  Provide an "instr"
      * line that specifies an instruction that performs "s1 = op s0".
@@ -3887,8 +3887,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_FLOAT_TO_DOUBLE: /* 0x89 */
-/* File: vfp/OP_FLOAT_TO_DOUBLE.S */
-/* File: vfp/funopWider.S */
+/* File: arm-vfp/OP_FLOAT_TO_DOUBLE.S */
+/* File: arm-vfp/funopWider.S */
     /*
      * Generic 32bit-to-64bit floating point unary operation.  Provide an
      * "instr" line that specifies an instruction that performs "d0 = op s0".
@@ -3912,8 +3912,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DOUBLE_TO_INT: /* 0x8a */
-/* File: vfp/OP_DOUBLE_TO_INT.S */
-/* File: vfp/funopNarrower.S */
+/* File: arm-vfp/OP_DOUBLE_TO_INT.S */
+/* File: arm-vfp/funopNarrower.S */
     /*
      * Generic 64bit-to-32bit unary floating point operation.  Provide an
      * "instr" line that specifies an instruction that performs "s0 = op d0".
@@ -3968,8 +3968,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DOUBLE_TO_FLOAT: /* 0x8c */
-/* File: vfp/OP_DOUBLE_TO_FLOAT.S */
-/* File: vfp/funopNarrower.S */
+/* File: arm-vfp/OP_DOUBLE_TO_FLOAT.S */
+/* File: arm-vfp/funopNarrower.S */
     /*
      * Generic 64bit-to-32bit unary floating point operation.  Provide an
      * "instr" line that specifies an instruction that performs "s0 = op d0".
@@ -4980,8 +4980,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_FLOAT: /* 0xa6 */
-/* File: vfp/OP_ADD_FLOAT.S */
-/* File: vfp/fbinop.S */
+/* File: arm-vfp/OP_ADD_FLOAT.S */
+/* File: arm-vfp/fbinop.S */
     /*
      * Generic 32-bit floating-point operation.  Provide an "instr" line that
      * specifies an instruction that performs "s2 = s0 op s1".  Because we
@@ -5010,8 +5010,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_FLOAT: /* 0xa7 */
-/* File: vfp/OP_SUB_FLOAT.S */
-/* File: vfp/fbinop.S */
+/* File: arm-vfp/OP_SUB_FLOAT.S */
+/* File: arm-vfp/fbinop.S */
     /*
      * Generic 32-bit floating-point operation.  Provide an "instr" line that
      * specifies an instruction that performs "s2 = s0 op s1".  Because we
@@ -5040,8 +5040,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_MUL_FLOAT: /* 0xa8 */
-/* File: vfp/OP_MUL_FLOAT.S */
-/* File: vfp/fbinop.S */
+/* File: arm-vfp/OP_MUL_FLOAT.S */
+/* File: arm-vfp/fbinop.S */
     /*
      * Generic 32-bit floating-point operation.  Provide an "instr" line that
      * specifies an instruction that performs "s2 = s0 op s1".  Because we
@@ -5070,8 +5070,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_FLOAT: /* 0xa9 */
-/* File: vfp/OP_DIV_FLOAT.S */
-/* File: vfp/fbinop.S */
+/* File: arm-vfp/OP_DIV_FLOAT.S */
+/* File: arm-vfp/fbinop.S */
     /*
      * Generic 32-bit floating-point operation.  Provide an "instr" line that
      * specifies an instruction that performs "s2 = s0 op s1".  Because we
@@ -5143,8 +5143,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_DOUBLE: /* 0xab */
-/* File: vfp/OP_ADD_DOUBLE.S */
-/* File: vfp/fbinopWide.S */
+/* File: arm-vfp/OP_ADD_DOUBLE.S */
+/* File: arm-vfp/fbinopWide.S */
     /*
      * Generic 64-bit double-precision floating point binary operation.
      * Provide an "instr" line that specifies an instruction that performs
@@ -5173,8 +5173,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_DOUBLE: /* 0xac */
-/* File: vfp/OP_SUB_DOUBLE.S */
-/* File: vfp/fbinopWide.S */
+/* File: arm-vfp/OP_SUB_DOUBLE.S */
+/* File: arm-vfp/fbinopWide.S */
     /*
      * Generic 64-bit double-precision floating point binary operation.
      * Provide an "instr" line that specifies an instruction that performs
@@ -5203,8 +5203,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_MUL_DOUBLE: /* 0xad */
-/* File: vfp/OP_MUL_DOUBLE.S */
-/* File: vfp/fbinopWide.S */
+/* File: arm-vfp/OP_MUL_DOUBLE.S */
+/* File: arm-vfp/fbinopWide.S */
     /*
      * Generic 64-bit double-precision floating point binary operation.
      * Provide an "instr" line that specifies an instruction that performs
@@ -5233,8 +5233,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_DOUBLE: /* 0xae */
-/* File: vfp/OP_DIV_DOUBLE.S */
-/* File: vfp/fbinopWide.S */
+/* File: arm-vfp/OP_DIV_DOUBLE.S */
+/* File: arm-vfp/fbinopWide.S */
     /*
      * Generic 64-bit double-precision floating point binary operation.
      * Provide an "instr" line that specifies an instruction that performs
@@ -6155,8 +6155,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_FLOAT_2ADDR: /* 0xc6 */
-/* File: vfp/OP_ADD_FLOAT_2ADDR.S */
-/* File: vfp/fbinop2addr.S */
+/* File: arm-vfp/OP_ADD_FLOAT_2ADDR.S */
+/* File: arm-vfp/fbinop2addr.S */
     /*
      * Generic 32-bit floating point "/2addr" binary operation.  Provide
      * an "instr" line that specifies an instruction that performs
@@ -6183,8 +6183,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_FLOAT_2ADDR: /* 0xc7 */
-/* File: vfp/OP_SUB_FLOAT_2ADDR.S */
-/* File: vfp/fbinop2addr.S */
+/* File: arm-vfp/OP_SUB_FLOAT_2ADDR.S */
+/* File: arm-vfp/fbinop2addr.S */
     /*
      * Generic 32-bit floating point "/2addr" binary operation.  Provide
      * an "instr" line that specifies an instruction that performs
@@ -6211,8 +6211,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_MUL_FLOAT_2ADDR: /* 0xc8 */
-/* File: vfp/OP_MUL_FLOAT_2ADDR.S */
-/* File: vfp/fbinop2addr.S */
+/* File: arm-vfp/OP_MUL_FLOAT_2ADDR.S */
+/* File: arm-vfp/fbinop2addr.S */
     /*
      * Generic 32-bit floating point "/2addr" binary operation.  Provide
      * an "instr" line that specifies an instruction that performs
@@ -6239,8 +6239,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_FLOAT_2ADDR: /* 0xc9 */
-/* File: vfp/OP_DIV_FLOAT_2ADDR.S */
-/* File: vfp/fbinop2addr.S */
+/* File: arm-vfp/OP_DIV_FLOAT_2ADDR.S */
+/* File: arm-vfp/fbinop2addr.S */
     /*
      * Generic 32-bit floating point "/2addr" binary operation.  Provide
      * an "instr" line that specifies an instruction that performs
@@ -6308,8 +6308,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_DOUBLE_2ADDR: /* 0xcb */
-/* File: vfp/OP_ADD_DOUBLE_2ADDR.S */
-/* File: vfp/fbinopWide2addr.S */
+/* File: arm-vfp/OP_ADD_DOUBLE_2ADDR.S */
+/* File: arm-vfp/fbinopWide2addr.S */
     /*
      * Generic 64-bit floating point "/2addr" binary operation.  Provide
      * an "instr" line that specifies an instruction that performs
@@ -6337,8 +6337,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_DOUBLE_2ADDR: /* 0xcc */
-/* File: vfp/OP_SUB_DOUBLE_2ADDR.S */
-/* File: vfp/fbinopWide2addr.S */
+/* File: arm-vfp/OP_SUB_DOUBLE_2ADDR.S */
+/* File: arm-vfp/fbinopWide2addr.S */
     /*
      * Generic 64-bit floating point "/2addr" binary operation.  Provide
      * an "instr" line that specifies an instruction that performs
@@ -6366,8 +6366,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_MUL_DOUBLE_2ADDR: /* 0xcd */
-/* File: vfp/OP_MUL_DOUBLE_2ADDR.S */
-/* File: vfp/fbinopWide2addr.S */
+/* File: arm-vfp/OP_MUL_DOUBLE_2ADDR.S */
+/* File: arm-vfp/fbinopWide2addr.S */
     /*
      * Generic 64-bit floating point "/2addr" binary operation.  Provide
      * an "instr" line that specifies an instruction that performs
@@ -6395,8 +6395,8 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_DIV_DOUBLE_2ADDR: /* 0xce */
-/* File: vfp/OP_DIV_DOUBLE_2ADDR.S */
-/* File: vfp/fbinopWide2addr.S */
+/* File: arm-vfp/OP_DIV_DOUBLE_2ADDR.S */
+/* File: arm-vfp/fbinopWide2addr.S */
     /*
      * Generic 64-bit floating point "/2addr" binary operation.  Provide
      * an "instr" line that specifies an instruction that performs
