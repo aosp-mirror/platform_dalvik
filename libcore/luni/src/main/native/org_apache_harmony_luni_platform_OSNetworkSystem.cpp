@@ -934,6 +934,77 @@ unsigned short ip_checksum(unsigned short* buffer, int size) {
 }
 
 /**
+ * Converts an IPv4 address to an IPv4-mapped IPv6 address. Performs no error
+ * checking.
+ *
+ * @param address the address to convert. Must contain an IPv4 address.
+ * @param outputAddress the converted address. Will contain an IPv6 address.
+ * @param mapUnspecified if true, convert 0.0.0.0 to ::ffff:0:0; if false, to ::
+ */
+static void ipv4ToMappedAddress(struct sockaddr_storage *address,
+        struct sockaddr_storage *outputAddress, bool mapUnspecified) {
+  memset(outputAddress, 0, sizeof(struct sockaddr_storage));
+  const struct sockaddr_in *sin = ((struct sockaddr_in *) address);
+  struct sockaddr_in6 *sin6 = ((struct sockaddr_in6 *) outputAddress);
+  sin6->sin6_family = AF_INET6;
+  sin6->sin6_addr.s6_addr32[3] = sin->sin_addr.s_addr;
+  if (sin->sin_addr.s_addr != 0  || mapUnspecified) {
+      sin6->sin6_addr.s6_addr32[2] = htonl(0xffff);
+  }
+  sin6->sin6_port = sin->sin_port;
+}
+
+/**
+ * Wrapper for connect() that converts IPv4 addresses to IPv4-mapped IPv6
+ * addresses if necessary.
+ *
+ * @param socket the filedescriptor of the socket to connect
+ * @param socketAddress the address to connect to
+ */
+static int doConnect(int socket, struct sockaddr_storage *socketAddress) {
+    struct sockaddr_storage mappedAddress;
+    struct sockaddr_storage *realAddress;
+    if (socketAddress->ss_family == AF_INET &&
+        getSocketAddressFamily(socket) == AF_INET6) {
+        ipv4ToMappedAddress(socketAddress, &mappedAddress, true);
+        realAddress = &mappedAddress;
+    } else {
+        realAddress = socketAddress;
+    }
+    int ret;
+    do {
+        ret = connect(socket, (struct sockaddr *) realAddress,
+                sizeof(struct sockaddr_storage));
+    } while (ret < 0 && errno == EINTR);
+    return ret;
+}
+
+/**
+ * Wrapper for bind() that converts IPv4 addresses to IPv4-mapped IPv6
+ * addresses if necessary.
+ *
+ * @param socket the filedescriptor of the socket to connect
+ * @param socketAddress the address to connect to
+ */
+static int doBind(int socket, struct sockaddr_storage *socketAddress) {
+    struct sockaddr_storage mappedAddress;
+    struct sockaddr_storage *realAddress;
+    if (socketAddress->ss_family == AF_INET &&
+        getSocketAddressFamily(socket) == AF_INET6) {
+        ipv4ToMappedAddress(socketAddress, &mappedAddress, false);
+        realAddress = &mappedAddress;
+    } else {
+        realAddress = socketAddress;
+    }
+    int ret;
+    do {
+        ret = bind(socket, (struct sockaddr *) realAddress,
+                sizeof(struct sockaddr_storage));
+    } while (ret < 0 && errno == EINTR);
+    return ret;
+}
+
+/**
  * Establish a connection to a peer with a timeout.  This function is called
  * repeatedly in order to carry out the connect and to allow other tasks to
  * proceed on certain platforms. The caller must first call with
@@ -986,10 +1057,7 @@ static int sockConnectWithTimeout(int handle, struct sockaddr_storage addr,
 
             // LOGD("+connect to address 0x%08x (via normal) on handle %d",
             //         addr.sin_addr.s_addr, handle);
-            do {
-                rc = connect(handle, (struct sockaddr *) &addr,
-                        sizeof(struct sockaddr));
-            } while (rc < 0 && errno == EINTR);
+            doConnect(handle, &addr);
             // LOGD("-connect to address 0x%08x (via normal) returned %d",
             //         addr.sin_addr.s_addr, (int) rc);
 
@@ -2073,9 +2141,7 @@ static void osNetworkSystem_socketBindImpl(JNIEnv* env, jclass clazz,
         return;
     }
 
-    do {
-        ret = bind(handle, (const sockaddr*) &sockaddress, sizeof(sockaddress));
-    } while (ret < 0 && errno == EINTR);
+    ret = doBind(handle, &sockaddress);
     if (ret < 0) {
         jniThrowException(env, "java/net/BindException",
                 netLookupErrorString(convertError(errno)));
@@ -2256,9 +2322,7 @@ static void osNetworkSystem_connectDatagramImpl2(JNIEnv* env, jclass clazz,
     if (ret < 0)  // Exception has already been thrown.
         return;
 
-    do {
-        ret = connect(handle, (struct sockaddr *) &sockAddr, sizeof(sockAddr));
-    } while (ret < 0 && errno == EINTR);
+    ret = doConnect(handle, &sockAddr);
     if (ret < 0) {
         int err = convertError(errno);
         throwSocketException(env, err);
@@ -2275,11 +2339,7 @@ static void osNetworkSystem_disconnectDatagramImpl(JNIEnv* env, jclass clazz,
     memset(&sockAddr, 0, sizeof(sockAddr));
     sockAddr.ss_family = AF_UNSPEC;
 
-    int result;
-    do {
-        result = connect(handle, (struct sockaddr *) &sockAddr,
-                sizeof(sockAddr));
-     } while (result < 0 && errno == EINTR);
+    int result = doConnect(handle, &sockAddr);
     if (result < 0) {
         int err = convertError(errno);
         throwSocketException(env, err);
@@ -2305,9 +2365,7 @@ static jboolean osNetworkSystem_socketBindImpl2(JNIEnv* env, jclass clazz,
         return 0;
     }
 
-    do {
-        ret = bind(handle, (const sockaddr*) &sockaddress, sizeof(sockaddress));
-    } while (ret < 0 && errno == EINTR);
+    ret = doBind(handle, &sockaddress);
     if (ret < 0) {
         int err = convertError(errno);
         jniThrowException(env, "java/net/BindException", netLookupErrorString(err));
