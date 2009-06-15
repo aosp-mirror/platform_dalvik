@@ -9856,6 +9856,38 @@ common_dumpRegs:
     bx      lr
     .endif
 
+#if 0
+/*
+ * Experiment on VFP mode.
+ *
+ * uint32_t setFPSCR(uint32_t val, uint32_t mask)
+ *
+ * Updates the bits specified by "mask", setting them to the values in "val".
+ */
+setFPSCR:
+    and     r0, r0, r1                  @ make sure no stray bits are set
+    fmrx    r2, fpscr                   @ get VFP reg
+    mvn     r1, r1                      @ bit-invert mask
+    and     r2, r2, r1                  @ clear masked bits
+    orr     r2, r2, r0                  @ set specified bits
+    fmxr    fpscr, r2                   @ set VFP reg
+    mov     r0, r2                      @ return new value
+    bx      lr
+
+    .align  2
+    .global dvmConfigureFP
+    .type   dvmConfigureFP, %function
+dvmConfigureFP:
+    stmfd   sp!, {ip, lr}
+    /* 0x03000000 sets DN/FZ */
+    /* 0x00009f00 clears the six exception enable flags */
+    bl      common_squeak0
+    mov     r0, #0x03000000             @ r0<- 0x03000000
+    add     r1, r0, #0x9f00             @ r1<- 0x03009f00
+    bl      setFPSCR
+    ldmfd   sp!, {ip, pc}
+#endif
+
 
 /*
  * String references, must be close to the code that uses them.
