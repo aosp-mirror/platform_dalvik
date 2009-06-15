@@ -272,7 +272,7 @@ static jstring InetAddress_gethostbyaddr(JNIEnv* env, jobject obj,
             socklen = sizeof(struct sockaddr_in6);
             memset(sin6, 0, sizeof(struct sockaddr_in6));
             sin6->sin6_family = AF_INET6;
-            memcpy(&sin6->sin6_addr.s6_addr, rawAddress, 4);
+            memcpy(&sin6->sin6_addr.s6_addr, rawAddress, 16);
             env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
             break;
         default:
