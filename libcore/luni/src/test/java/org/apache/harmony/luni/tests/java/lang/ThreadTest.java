@@ -604,8 +604,6 @@ public class ThreadTest extends junit.framework.TestCase {
         method = "getContextClassLoader",
         args = {}
     )
-    @KnownFailure("The context class loader is not inherited by a new thread."
-            + " On android the initial context class loader is alsways null.")
     public void test_getContextClassLoader() {
         // Test for method java.lang.ClassLoader
         // java.lang.Thread.getContextClassLoader()
@@ -614,28 +612,6 @@ public class ThreadTest extends junit.framework.TestCase {
         assertTrue("Incorrect class loader returned",
                 t.getContextClassLoader() == Thread.currentThread()
                         .getContextClassLoader());
-        t.start();
-
- /*       SecurityManager sm = new SecurityManager() {
-
-            public void checkPermission(Permission perm) {
-                if(perm.getName().equals("getClassLoader")) {
-                    throw new SecurityException();
-                }
-            }
-        };
-
-        SecurityManager oldSm = System.getSecurityManager();
-        System.setSecurityManager(sm);
-        try {
-            t.getContextClassLoader();
-            fail("Should throw SecurityException");
-        } catch (SecurityException e) {
-            // expected
-        } finally {
-           System.setSecurityManager(oldSm);
-        }
-*/        
     }
 
     /**
