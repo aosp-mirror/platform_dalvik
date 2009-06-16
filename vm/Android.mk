@@ -257,12 +257,12 @@ ifeq ($(TARGET_ARCH),arm)
 		mterp/out/InterpC-$(TARGET_ARCH_VARIANT).c.arm \
 		mterp/out/InterpAsm-$(TARGET_ARCH_VARIANT).S
   LOCAL_SHARED_LIBRARIES += libdl
-  # TODO - may become TARGET_ARCH_VARIANT specific
   ifeq ($(WITH_JIT),true)
     LOCAL_SRC_FILES += \
 		compiler/codegen/armv5te/Codegen.c \
 		compiler/codegen/armv5te/Assemble.c \
 		compiler/codegen/armv5te/ArchUtility.c \
+		compiler/codegen/armv5te/FpCodegen-$(TARGET_ARCH_VARIANT).c \
 		compiler/template/out/CompilerTemplateAsm-armv5te.S
   endif
 else

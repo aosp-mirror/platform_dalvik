@@ -19,22 +19,9 @@
 #include "libdex/OpCode.h"
 #include "dexdump/OpCodeNames.h"
 #include "vm/compiler/CompilerInternals.h"
+#include "FpCodegen.h"
 #include "Armv5teLIR.h"
 #include "vm/mterp/common/FindInterface.h"
-
-/* Create the TemplateOpcode enum */
-#define JIT_TEMPLATE(X) TEMPLATE_##X,
-typedef enum {
-#include "../../template/armv5te/TemplateOpList.h"
-/*
- * For example,
- *     TEMPLATE_CMP_LONG,
- *     TEMPLATE_RETURN,
- *     ...
- */
-    TEMPLATE_LAST_MARK,
-} TemplateOpCode;
-#undef JIT_TEMPLATE
 
 /* Array holding the entry offset of each template relative to the first one */
 static intptr_t templateEntryOffsets[TEMPLATE_LAST_MARK];
@@ -338,7 +325,6 @@ static void loadValueAddress(CompilationUnit *cUnit, int vSrc, int rDest)
         newLIR3(cUnit, ARMV5TE_ADD_RRR, rDest, rFP, rDest);
     }
 }
-
 
 /* Load a single value from rFP[src] and store them into rDest */
 static void loadValue(CompilationUnit *cUnit, int vSrc, int rDest)
@@ -653,9 +639,8 @@ static bool genShiftOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
      storeValuePair(cUnit, r0, r1, vDest, r2);
      return false;
 }
-
-static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
-                            int vSrc1, int vSrc2)
+bool dvmCompilerGenArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
+                                        int vDest, int vSrc1, int vSrc2)
 {
     void* funct;
     /* TODO: use a proper include file to define these */
@@ -704,8 +689,8 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
     return false;
 }
 
-static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
-                             int vSrc1, int vSrc2)
+bool dvmCompilerGenArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
+                                         int vDest, int vSrc1, int vSrc2)
 {
     void* funct;
     /* TODO: use a proper include file to define these */
@@ -960,22 +945,22 @@ static bool genArithOp(CompilationUnit *cUnit, MIR *mir)
         return genArithOpInt(cUnit,mir, vA, vB, vC);
     }
     if ((opCode >= OP_ADD_FLOAT_2ADDR) && (opCode <= OP_REM_FLOAT_2ADDR)) {
-        return genArithOpFloat(cUnit,mir, vA, vA, vB);
+        return dvmCompilerGenArithOpFloat(cUnit,mir, vA, vA, vB);
     }
     if ((opCode >= OP_ADD_FLOAT) && (opCode <= OP_REM_FLOAT)) {
-        return genArithOpFloat(cUnit,mir, vA, vB, vC);
+        return dvmCompilerGenArithOpFloat(cUnit, mir, vA, vB, vC);
     }
     if ((opCode >= OP_ADD_DOUBLE_2ADDR) && (opCode <= OP_REM_DOUBLE_2ADDR)) {
-        return genArithOpDouble(cUnit,mir, vA, vA, vB);
+        return dvmCompilerGenArithOpDouble(cUnit,mir, vA, vA, vB);
     }
     if ((opCode >= OP_ADD_DOUBLE) && (opCode <= OP_REM_DOUBLE)) {
-        return genArithOpDouble(cUnit,mir, vA, vB, vC);
+        return dvmCompilerGenArithOpDouble(cUnit,mir, vA, vB, vC);
     }
     return true;
 }
 
-static bool genConversion(CompilationUnit *cUnit, MIR *mir, void *funct,
-                          int srcSize, int tgtSize)
+static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
+                                     int srcSize, int tgtSize)
 {
     loadConstant(cUnit, r2, (int)funct);
     if (srcSize == 1) {
@@ -1475,13 +1460,10 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
     return false;
 }
 
-static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
+bool dvmCompilerGenConversionPortable(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode opCode = mir->dalvikInsn.opCode;
-    int vSrc1Dest = mir->dalvikInsn.vA;
-    int vSrc2 = mir->dalvikInsn.vB;
 
-    /* TODO - find the proper include file to declare these */
     float  __aeabi_i2f(  int op1 );
     int    __aeabi_f2iz( float op1 );
     float  __aeabi_d2f(  double op1 );
@@ -1493,31 +1475,57 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
     long   __aeabi_d2lz( double op1 );
     double __aeabi_l2d(  long op1 );
 
+    switch (opCode) {
+        case OP_INT_TO_FLOAT:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_i2f, 1, 1);
+        case OP_FLOAT_TO_INT:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_f2iz, 1, 1);
+        case OP_DOUBLE_TO_FLOAT:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_d2f, 2, 1);
+        case OP_FLOAT_TO_DOUBLE:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_f2d, 1, 2);
+        case OP_INT_TO_DOUBLE:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_i2d, 1, 2);
+        case OP_DOUBLE_TO_INT:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_d2iz, 2, 1);
+        case OP_FLOAT_TO_LONG:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_f2lz, 1, 2);
+        case OP_LONG_TO_FLOAT:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_l2f, 2, 1);
+        case OP_DOUBLE_TO_LONG:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_d2lz, 2, 2);
+        case OP_LONG_TO_DOUBLE:
+            return genConversionCall(cUnit, mir, (void*)__aeabi_l2d, 2, 2);
+        default:
+            return true;
+    }
+    return false;
+}
+
+static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
+{
+    OpCode opCode = mir->dalvikInsn.opCode;
+    int vSrc1Dest = mir->dalvikInsn.vA;
+    int vSrc2 = mir->dalvikInsn.vB;
+
+    /* TODO - find the proper include file to declare these */
+
     if ( (opCode >= OP_ADD_INT_2ADDR) && (opCode <= OP_REM_DOUBLE_2ADDR)) {
         return genArithOp( cUnit, mir );
     }
 
     switch (opCode) {
         case OP_INT_TO_FLOAT:
-            return genConversion(cUnit, mir, (void*)__aeabi_i2f, 1, 1);
         case OP_FLOAT_TO_INT:
-            return genConversion(cUnit, mir, (void*)__aeabi_f2iz, 1, 1);
         case OP_DOUBLE_TO_FLOAT:
-            return genConversion(cUnit, mir, (void*)__aeabi_d2f, 2, 1);
         case OP_FLOAT_TO_DOUBLE:
-            return genConversion(cUnit, mir, (void*)__aeabi_f2d, 1, 2);
         case OP_INT_TO_DOUBLE:
-            return genConversion(cUnit, mir, (void*)__aeabi_i2d, 1, 2);
         case OP_DOUBLE_TO_INT:
-            return genConversion(cUnit, mir, (void*)__aeabi_d2iz, 2, 1);
         case OP_FLOAT_TO_LONG:
-            return genConversion(cUnit, mir, (void*)__aeabi_f2lz, 1, 2);
         case OP_LONG_TO_FLOAT:
-            return genConversion(cUnit, mir, (void*)__aeabi_l2f, 2, 1);
         case OP_DOUBLE_TO_LONG:
-            return genConversion(cUnit, mir, (void*)__aeabi_d2lz, 2, 2);
         case OP_LONG_TO_DOUBLE:
-            return genConversion(cUnit, mir, (void*)__aeabi_l2d, 2, 2);
+            return dvmCompilerGenConversion(cUnit, mir);
         case OP_NEG_INT:
         case OP_NOT_INT:
             return genArithOpInt(cUnit, mir, vSrc1Dest, vSrc1Dest, vSrc2);
@@ -1525,9 +1533,11 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
         case OP_NOT_LONG:
             return genArithOpLong(cUnit,mir, vSrc1Dest, vSrc1Dest, vSrc2);
         case OP_NEG_FLOAT:
-            return genArithOpFloat(cUnit,mir,vSrc1Dest,vSrc1Dest,vSrc2);
+            return dvmCompilerGenArithOpFloat(cUnit, mir, vSrc1Dest,
+                                              vSrc1Dest, vSrc2);
         case OP_NEG_DOUBLE:
-            return genArithOpDouble(cUnit,mir,vSrc1Dest,vSrc1Dest,vSrc2);
+            return dvmCompilerGenArithOpDouble(cUnit, mir, vSrc1Dest,
+                                               vSrc1Dest, vSrc2);
         case OP_MOVE_WIDE:
             loadValuePair(cUnit, mir->dalvikInsn.vB, r0, r1);
             storeValuePair(cUnit, r0, r1, mir->dalvikInsn.vA, r2);
@@ -2036,34 +2046,15 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
     }
 
     switch (opCode) {
+        case OP_CMPL_FLOAT:
+        case OP_CMPG_FLOAT:
+        case OP_CMPL_DOUBLE:
+        case OP_CMPG_DOUBLE:
+            return dvmCompilerGenCmpX(cUnit, mir, vA, vB, vC);
         case OP_CMP_LONG:
             loadValuePair(cUnit,vB, r0, r1);
             loadValuePair(cUnit, vC, r2, r3);
             genDispatchToHandler(cUnit, TEMPLATE_CMP_LONG);
-            storeValue(cUnit, r0, vA, r1);
-            break;
-        case OP_CMPL_FLOAT:
-            loadValue(cUnit, vB, r0);
-            loadValue(cUnit, vC, r1);
-            genDispatchToHandler(cUnit, TEMPLATE_CMPL_FLOAT);
-            storeValue(cUnit, r0, vA, r1);
-            break;
-        case OP_CMPG_FLOAT:
-            loadValue(cUnit, vB, r0);
-            loadValue(cUnit, vC, r1);
-            genDispatchToHandler(cUnit, TEMPLATE_CMPG_FLOAT);
-            storeValue(cUnit, r0, vA, r1);
-            break;
-        case OP_CMPL_DOUBLE:
-            loadValueAddress(cUnit, vB, r0);
-            loadValueAddress(cUnit, vC, r1);
-            genDispatchToHandler(cUnit, TEMPLATE_CMPL_DOUBLE);
-            storeValue(cUnit, r0, vA, r1);
-            break;
-        case OP_CMPG_DOUBLE:
-            loadValueAddress(cUnit, vB, r0);
-            loadValueAddress(cUnit, vC, r1);
-            genDispatchToHandler(cUnit, TEMPLATE_CMPG_DOUBLE);
             storeValue(cUnit, r0, vA, r1);
             break;
         case OP_AGET_WIDE:
@@ -2904,4 +2895,42 @@ void dvmCompilerArchDump(void)
     if (strlen(buf)) {
         LOGD("dalvik.vm.jitop = %s", buf);
     }
+}
+
+/*
+ * Exported version of loadValueAddress
+ * TODO: revisit source file structure
+ */
+void dvmCompilerLoadValueAddress(CompilationUnit *cUnit, int vSrc, int rDest)
+{
+    loadValueAddress(cUnit, vSrc, rDest);
+}
+
+/*
+ * Exported version of genDispatchToHandler
+ * TODO: revisit source file structure
+ */
+void dvmCompilerGenDispatchToHandler(CompilationUnit *cUnit, 
+                                     TemplateOpCode opCode)
+{
+    genDispatchToHandler(cUnit, opCode);
+}
+
+/*
+ * Exported version of loadValue
+ * TODO: revisit source file structure
+ */
+void dvmCompilerLoadValue(CompilationUnit *cUnit, int vSrc, int rDest)
+{
+    loadValue(cUnit, vSrc, rDest);
+}
+
+/*
+ * Exported version of storeValue
+ * TODO: revisit source file structure
+ */
+void dvmCompilerStoreValue(CompilationUnit *cUnit, int rSrc, int vDest,
+                       int rScratch)
+{
+    storeValue(cUnit, rSrc, vDest, rScratch);
 }
