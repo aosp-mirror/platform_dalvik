@@ -508,6 +508,8 @@ public class Thread implements Runnable {
 
         this.priority = currentThread.getPriority();
 
+        this.contextClassLoader = currentThread.contextClassLoader;
+
         // Transfer over InheritableThreadLocals.
         if (currentThread.inheritableValues != null) {
             inheritableValues
