@@ -1057,7 +1057,7 @@ static int sockConnectWithTimeout(int handle, struct sockaddr_storage addr,
 
             // LOGD("+connect to address 0x%08x (via normal) on handle %d",
             //         addr.sin_addr.s_addr, handle);
-            doConnect(handle, &addr);
+            rc = doConnect(handle, &addr);
             // LOGD("-connect to address 0x%08x (via normal) returned %d",
             //         addr.sin_addr.s_addr, (int) rc);
 
