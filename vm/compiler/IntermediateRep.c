@@ -57,3 +57,21 @@ void dvmCompilerAppendLIR(CompilationUnit *cUnit, LIR *lir)
         cUnit->lastLIRInsn = lir;
     }
 }
+
+/*
+ * Insert an LIR instruction before the current instruction, which cannot be the
+ * first instruction.
+ *
+ * prevLIR <-> newLIR <-> currentLIR
+ */
+void dvmCompilerInsertLIRBefore(LIR *currentLIR, LIR *newLIR)
+{
+    if (currentLIR->prev == NULL)
+        dvmAbort();
+    LIR *prevLIR = currentLIR->prev;
+
+    prevLIR->next = newLIR;
+    newLIR->prev = prevLIR;
+    newLIR->next = currentLIR;
+    currentLIR->prev = newLIR;
+}

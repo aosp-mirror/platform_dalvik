@@ -145,7 +145,18 @@ typedef enum Armv5teOpCode {
     ARMV5TE_LAST,
 } Armv5teOpCode;
 
-/* Struct used to define the snippet posotions for each Thumb opcode */
+/* Bit flags describing the behavior of each native opcode */
+typedef enum Armv5teOpFeatureFlags {
+    IS_BRANCH =           1 << 1,
+    CLOBBER_DEST =        1 << 2,
+    CLOBBER_SRC1 =        1 << 3,
+    NO_OPERAND =          1 << 4,
+    IS_UNARY_OP =         1 << 5,
+    IS_BINARY_OP =        1 << 6,
+    IS_TERTIARY_OP =      1 << 7,
+} Armv5teOpFeatureFlags;
+
+/* Struct used to define the snippet positions for each Thumb opcode */
 typedef struct Armv5teEncodingMap {
     short skeleton;
     struct {
@@ -153,7 +164,7 @@ typedef struct Armv5teEncodingMap {
         int start;
     } fieldLoc[3];
     Armv5teOpCode opCode;
-    int operands;
+    int flags;
     char *name;
     char* fmt;
 } Armv5teEncodingMap;
@@ -168,7 +179,9 @@ extern Armv5teEncodingMap EncodingMap[ARMV5TE_LAST];
 typedef struct Armv5teLIR {
     LIR generic;
     Armv5teOpCode opCode;
-    int operands[3]; /* dest, src1, src2 */
+    int operands[3];    // [0..2] = [dest, src1, src2]
+    bool isNop;         // LIR is optimized away
+    int age;            // default is 0, set lazily by the optimizer
 } Armv5teLIR;
 
 /* Utility macros to traverse the LIR/Armv5teLIR list */

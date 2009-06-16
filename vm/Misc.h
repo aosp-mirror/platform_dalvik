@@ -180,6 +180,7 @@ void dvmFreeBitVector(BitVector* pBits);
 int dvmAllocBit(BitVector* pBits);
 bool dvmSetBit(BitVector* pBits, int num);
 void dvmClearBit(BitVector* pBits, int num);
+void dvmClearAllBits(BitVector* pBits);
 bool dvmIsBitSet(const BitVector* pBits, int num);
 
 /* count the number of bits that have been set */

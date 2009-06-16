@@ -193,11 +193,15 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             LOGD("L%#06x:\n", dest);
             break;
         default:
+            if (lir->isNop) {
+                break;
+            }
             buildInsnString(EncodingMap[lir->opCode].name, lir, opName,
                             baseAddr, 256);
             buildInsnString(EncodingMap[lir->opCode].fmt, lir, buf, baseAddr,
                             256);
-            LOGD("%p (%04x): %-8s%s\n", baseAddr + offset, offset, opName, buf);
+            LOGD("%p (%04x): %-8s%s\n",
+                 baseAddr + offset, offset, opName, buf);
             break;
     }
 }

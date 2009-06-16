@@ -23,6 +23,10 @@ bool dvmCompilerGenArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
 {
     TemplateOpCode opCode;
 
+    /*
+     * Don't attempt to optimize register usage since these opcodes call out to
+     * the handlers.
+     */
     switch (mir->dalvikInsn.opCode) {
         case OP_ADD_FLOAT_2ADDR:
         case OP_ADD_FLOAT:
@@ -60,6 +64,10 @@ bool dvmCompilerGenArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
 {
     TemplateOpCode opCode;
 
+    /*
+     * Don't attempt to optimize register usage since these opcodes call out to
+     * the handlers.
+     */
     switch (mir->dalvikInsn.opCode) {
         case OP_ADD_DOUBLE_2ADDR:
         case OP_ADD_DOUBLE:
@@ -137,6 +145,11 @@ bool dvmCompilerGenCmpX(CompilationUnit *cUnit, MIR *mir, int vDest,
                                 int vSrc1, int vSrc2)
 {
     TemplateOpCode template;
+
+    /*
+     * Don't attempt to optimize register usage since these opcodes call out to
+     * the handlers.
+     */
     switch(mir->dalvikInsn.opCode) {
         case OP_CMPL_FLOAT:
             template = TEMPLATE_CMPL_FLOAT_VFP;

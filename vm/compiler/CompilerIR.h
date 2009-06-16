@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "codegen/Optimizer.h"
+
 #ifndef _DALVIK_VM_COMPILER_IR
 #define _DALVIK_VM_COMPILER_IR
 
@@ -84,6 +86,8 @@ typedef struct CompilationUnit {
     bool halveInstCount;
     int numChainingCells[CHAINING_CELL_LAST];
     LIR *firstChainingLIR[CHAINING_CELL_LAST];
+    RegisterScoreboard registerScoreboard;      // Track register dependency
+    int optRound;                       // round number to tell an LIR's age
 } CompilationUnit;
 
 BasicBlock *dvmCompilerNewBB(BBType blockType);
@@ -91,6 +95,8 @@ BasicBlock *dvmCompilerNewBB(BBType blockType);
 void dvmCompilerAppendMIR(BasicBlock *bb, MIR *mir);
 
 void dvmCompilerAppendLIR(CompilationUnit *cUnit, LIR *lir);
+
+void dvmCompilerInsertLIRBefore(LIR *currentLIR, LIR *newLIR);
 
 /* Debug Utilities */
 void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit);

@@ -189,6 +189,8 @@ ifeq ($(WITH_JIT_TUNING),true)
 endif
 
 ifeq ($(WITH_JIT),true)
+  # NOTE: Turn on assertion for JIT for now
+  LOCAL_CFLAGS += -DWITH_DALVIK_ASSERT
   LOCAL_CFLAGS += -DWITH_JIT
   LOCAL_SRC_FILES += \
 	../dexdump/OpCodeNames.c \
@@ -263,6 +265,8 @@ ifeq ($(TARGET_ARCH),arm)
 		compiler/codegen/armv5te/Assemble.c \
 		compiler/codegen/armv5te/ArchUtility.c \
 		compiler/codegen/armv5te/FpCodegen-$(TARGET_ARCH_VARIANT).c \
+		compiler/codegen/armv5te/LocalOptimizations.c \
+		compiler/codegen/armv5te/GlobalOptimizations.c \
 		compiler/template/out/CompilerTemplateAsm-armv5te.S
   endif
 else
