@@ -2033,6 +2033,123 @@ static void checkBinop2addr(RegType* insnRegs, const int insnRegCount,
     setRegisterType(insnRegs, insnRegCount, pDecInsn->vA, dstType, pFailure);
 }
 
+/*
+ * Treat right-shifting as a narrowing conversion when possible.
+ *
+ * For example, right-shifting an int 24 times results in a value that can
+ * be treated as a byte.
+ *
+ * Things get interesting when contemplating sign extension.  Right-
+ * shifting an integer by 16 yields a value that can be represented in a
+ * "short" but not a "char", but an unsigned right shift by 16 yields a
+ * value that belongs in a char rather than a short.  (Consider what would
+ * happen if the result of the shift were cast to a char or short and then
+ * cast back to an int.  If sign extension, or the lack thereof, causes
+ * a change in the 32-bit representation, then the conversion was lossy.)
+ *
+ * A signed right shift by 17 on an integer results in a short.  An unsigned
+ * right shfit by 17 on an integer results in a posshort, which can be
+ * assigned to a short or a char.
+ *
+ * An unsigned right shift on a short can actually expand the result into
+ * a 32-bit integer.  For example, 0xfffff123 >>> 8 becomes 0x00fffff1,
+ * which can't be represented in anything smaller than an int.
+ *
+ * javac does not generate code that takes advantage of this, but some
+ * of the code optimizers do.  It's generally a peephole optimization
+ * that replaces a particular sequence, e.g. (bipush 24, ishr, i2b) is
+ * replaced by (bipush 24, ishr).  Knowing that shifting a short 8 times
+ * to the right yields a byte is really more than we need to handle the
+ * code that's out there, but support is not much more complex than just
+ * handling integer.
+ *
+ * Right-shifting never yields a boolean value.
+ *
+ * Returns the new register type.
+ */
+static RegType adjustForRightShift(RegType* workRegs, const int insnRegCount,
+    int reg, unsigned int shiftCount, bool isUnsignedShift,
+    VerifyError* pFailure)
+{
+    RegType srcType = getRegisterType(workRegs, insnRegCount, reg, pFailure);
+    RegType newType;
+
+    /* no-op */
+    if (shiftCount == 0)
+        return srcType;
+
+    /* safe defaults */
+    if (isUnsignedShift)
+        newType = kRegTypeInteger;
+    else
+        newType = srcType;
+
+    if (shiftCount >= 32) {
+        LOG_VFY("Got unexpectedly large shift count %u\n", shiftCount);
+        /* fail? */
+        return newType;
+    }
+
+    switch (srcType) {
+    case kRegTypeInteger:               /* 32-bit signed value */
+    case kRegTypeFloat:                 /* (allowed; treat same as int) */
+        if (isUnsignedShift) {
+            if (shiftCount > 24)
+                newType = kRegTypePosByte;
+            else if (shiftCount >= 16)
+                newType = kRegTypeChar;
+        } else {
+            if (shiftCount >= 24)
+                newType = kRegTypeByte;
+            else if (shiftCount >= 16)
+                newType = kRegTypeShort;
+        }
+        break;
+    case kRegTypeShort:                 /* 16-bit signed value */
+        if (isUnsignedShift) {
+            /* default (kRegTypeInteger) is correct */
+        } else {
+            if (shiftCount >= 8)
+                newType = kRegTypeByte;
+        }
+        break;
+    case kRegTypePosShort:              /* 15-bit unsigned value */
+        if (shiftCount >= 8)
+            newType = kRegTypePosByte;
+        break;
+    case kRegTypeChar:                  /* 16-bit unsigned value */
+        if (shiftCount > 8)
+            newType = kRegTypePosByte;
+        break;
+    case kRegTypeByte:                  /* 8-bit signed value */
+        /* defaults (u=kRegTypeInteger / s=srcType) are correct */
+        break;
+    case kRegTypePosByte:               /* 7-bit unsigned value */
+        /* always use newType=srcType */
+        newType = srcType;
+        break;
+    case kRegTypeZero:                  /* 1-bit unsigned value */
+    case kRegTypeOne:
+    case kRegTypeBoolean:
+        /* unnecessary? */
+        newType = kRegTypeZero;
+        break;
+    default:
+        /* long, double, references; shouldn't be here! */
+        assert(false);
+        break;
+    }
+
+    if (newType != srcType) {
+        LOGVV("narrowing: %d(%d) --> %d to %d\n",
+            shiftCount, isUnsignedShift, srcType, newType);
+    } else {
+        LOGVV("not narrowed: %d(%d) --> %d\n",
+            shiftCount, isUnsignedShift, srcType);
+    }
+    return newType;
+}
+
 
 /*
  * ===========================================================================
@@ -5219,10 +5336,20 @@ sput_1nr_common:
     case OP_DIV_INT_LIT8:
     case OP_REM_INT_LIT8:
     case OP_SHL_INT_LIT8:
-    case OP_SHR_INT_LIT8:
-    case OP_USHR_INT_LIT8:
         checkLitop(workRegs, insnRegCount, &decInsn,
             kRegTypeInteger, kRegTypeInteger, false, &failure);
+        break;
+    case OP_SHR_INT_LIT8:
+        tmpType = adjustForRightShift(workRegs, insnRegCount,
+            decInsn.vB, decInsn.vC, false, &failure);
+        checkLitop(workRegs, insnRegCount, &decInsn,
+            tmpType, kRegTypeInteger, false, &failure);
+        break;
+    case OP_USHR_INT_LIT8:
+        tmpType = adjustForRightShift(workRegs, insnRegCount,
+            decInsn.vB, decInsn.vC, true, &failure);
+        checkLitop(workRegs, insnRegCount, &decInsn,
+            tmpType, kRegTypeInteger, false, &failure);
         break;
     case OP_AND_INT_LIT8:
     case OP_OR_INT_LIT8:
