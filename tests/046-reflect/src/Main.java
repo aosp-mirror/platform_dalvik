@@ -332,11 +332,23 @@ public class Main {
         }
     }
 
+    public static void checkInit() {
+        Class niuClass = NoisyInitUser.class;
+        Method[] methods;
+
+        methods = niuClass.getDeclaredMethods();
+        System.out.println("got methods");
+        /* neither NoisyInit nor NoisyInitUser should be initialized yet */
+        NoisyInitUser niu = new NoisyInitUser();
+        NoisyInit ni = new NoisyInit();
+    }
+
     public static void main(String[] args) {
         Main test = new Main();
         test.run();
 
         checkType();
+        checkInit();
     }
 }
 
@@ -405,5 +417,20 @@ class Target extends SuperTarget {
     public long pubLong = 0x1122334455667788L;
 
     public static double staticDouble = 3.3;
+}
+
+class NoisyInit {
+    static {
+        System.out.println("NoisyInit is initializing");
+        //Throwable th = new Throwable();
+        //th.printStackTrace();
+    }
+}
+
+class NoisyInitUser {
+    static {
+        System.out.println("NoisyInitUser is initializing");
+    }
+    public void createNoisyInit(NoisyInit ni) {}
 }
 
