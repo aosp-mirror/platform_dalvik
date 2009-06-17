@@ -325,7 +325,7 @@ struct DvmGlobals {
 
     /*
      * The thread code grabs this before suspending all threads.  There
-     * are four things that can cause a "suspend all":
+     * are a few things that can cause a "suspend all":
      *  (1) the GC is starting;
      *  (2) the debugger has sent a "suspend all" request;
      *  (3) a thread has hit a breakpoint or exception that the debugger
@@ -338,9 +338,6 @@ struct DvmGlobals {
      * do a blocking "lock" call on this mutex -- if it has been acquired,
      * somebody is probably trying to put you to sleep.  The leading '_' is
      * intended as a reminder that this lock is special.
-     *
-     * This lock is also held while attaching an externally-created thread
-     * through JNI.  That way we can correctly set the initial suspend state.
      */
     pthread_mutex_t _threadSuspendLock;
 
