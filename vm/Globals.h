@@ -713,6 +713,9 @@ struct DvmJitGlobals {
 
     /* Flag to dump all compiled code */
     bool printMe;
+
+    /* Flag to count trace execution */
+    bool profile;
 };
 
 extern struct DvmJitGlobals gDvmJit;

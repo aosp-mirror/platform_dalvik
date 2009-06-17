@@ -206,6 +206,9 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
     /* Initialize the printMe flag */
     cUnit.printMe = gDvmJit.printMe;
 
+    /* Initialize the profile flag */
+    cUnit.executionCount = gDvmJit.profile;
+
     /* Identify traces that we don't want to compile */
     if (gDvmJit.methodTable) {
         int len = strlen(desc->method->clazz->descriptor) +

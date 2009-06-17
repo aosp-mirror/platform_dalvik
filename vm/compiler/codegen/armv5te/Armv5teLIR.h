@@ -36,7 +36,18 @@ typedef enum NativeRegisterPool {
     rFP = 5,
     rGLUE = 6,
     r7 = 7,
+    r8 = 8,
+    r9 = 9,
+    r10 = 10,
+    r11 = 11,
+    r12 = 12,
+    r13 = 13,
+    rlr = 14,
+    rpc = 15
 } NativeRegisterPool;
+
+/* Mask to convert high reg to low for Thumb */
+#define THUMB_REG_MASK 0x7
 
 /* Thumb condition encodings */
 typedef enum Armv5teConditionCode {

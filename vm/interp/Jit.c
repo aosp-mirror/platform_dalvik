@@ -29,6 +29,8 @@
 #include <sys/time.h>
 #include <signal.h>
 #include "compiler/Compiler.h"
+#include "compiler/CompilerUtility.h"
+#include "compiler/CompilerIR.h"
 #include <errno.h>
 
 /*
@@ -148,6 +150,40 @@ void dvmBumpPunt(int from)
 }
 #endif
 
+/* Dumps profile info for a single trace */
+void dvmCompilerDumpTraceProfile(struct JitEntry *p)
+{
+    ChainCellCounts* pCellCounts;
+    char* traceBase;
+    u4* pExecutionCount;
+    u2* pCellOffset;
+    JitTraceDescription *desc;
+    const Method* method;
+
+    /*
+     * The codeAddress field has the low bit set to mark thumb
+     * mode.  We need to strip that off before reconstructing the
+     * trace data.  See the diagram in Assemble.c for more info
+     * on the trace layout in memory.
+     */
+    traceBase = (char*)p->codeAddress - 7;
+
+    if (p->codeAddress == NULL) {
+        LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
+        return;
+    }
+
+    pExecutionCount = (u4*) (traceBase);
+    pCellOffset = (u2*) (traceBase + 4);
+    pCellCounts = (ChainCellCounts*) (traceBase + *pCellOffset);
+    desc = (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
+    method = desc->method;
+    LOGD("TRACEPROFILE 0x%08x % 10d %s%s [0x%x,%d]", (int)traceBase,
+          *pExecutionCount, method->clazz->descriptor, method->name,
+          desc->trace[0].frag.startOffset,
+          desc->trace[0].frag.numInsts);
+}
+
 /* Dumps debugging & tuning stats to the log */
 void dvmJitStats()
 {
@@ -181,6 +217,13 @@ void dvmJitStats()
         LOGD("JIT: Invoke: %d noOpt, %d chainable, %d return",
           gDvmJit.invokeNoOpt, gDvmJit.invokeChain, gDvmJit.returnOp);
 #endif
+       if (gDvmJit.profile) {
+           for (i=0; i < (int) gDvmJit.jitTableSize; i++) {
+              if (gDvmJit.pJitEntryTable[i].dPC != 0) {
+                  dvmCompilerDumpTraceProfile( &gDvmJit.pJitEntryTable[i] );
+              }
+           }
+        }
     }
 }
 
@@ -463,7 +506,7 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC) {
  * requested
  */
 
-#define PROFILE_STALENESS_THRESHOLD 250000LL
+#define PROFILE_STALENESS_THRESHOLD 100000LL
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 {
     bool res = false;    /* Assume success */

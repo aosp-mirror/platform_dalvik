@@ -436,7 +436,6 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
  * before sending them off to the assembler. If out-of-range branch distance is
  * seen rearrange the instructions a bit to correct it.
  */
-#define CHAIN_CELL_OFFSET_SIZE 2
 void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
 {
     LIR *lir;
@@ -469,7 +468,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
 
     /* Add space for chain cell counts & trace description */
     u4 chainCellOffset = offset;
-    Armv5teLIR *chainCellOffsetLIR = (Armv5teLIR *) (cUnit->firstLIRInsn);
+    Armv5teLIR *chainCellOffsetLIR = cUnit->chainCellOffsetLIR;
+    assert(chainCellOffsetLIR);
     assert(chainCellOffset < 0x10000);
     assert(chainCellOffsetLIR->opCode == ARMV5TE_16BIT_DATA &&
            chainCellOffsetLIR->operands[0] == CHAIN_CELL_OFFSET_TAG);
@@ -517,8 +517,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
         return;
     }
 
+
     cUnit->baseAddr = (char *) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed;
-    cUnit->headerSize = CHAIN_CELL_OFFSET_SIZE;
     gDvmJit.codeCacheByteUsed += offset;
 
     /* Install the code block */

@@ -2842,11 +2842,36 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 
     BasicBlock **blockList = cUnit->blockList;
 
-    /*
-     * Reserve space at the beginning of each translation with fillers
-     * + Chain cell count (2 bytes)
-     */
-    newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
+    if (cUnit->executionCount) {
+        /*
+         * Reserve 6 bytes at the beginning of the trace
+         *        +----------------------------+
+         *        | execution count (4 bytes)  |
+         *        +----------------------------+
+         *        | chain cell offset (2 bytes)|
+         *        +----------------------------+
+         * ...and then code to increment the execution
+         * count:
+         *       mov   r0, pc       @ move adr of "mov r0,pc" + 4 to r0
+         *       sub   r0, #10      @ back up to addr of executionCount
+         *       ldr   r1, [r0]
+         *       add   r1, #1
+         *       str   r1, [r0]
+         */
+        newLIR1(cUnit, ARMV5TE_16BIT_DATA, 0);
+        newLIR1(cUnit, ARMV5TE_16BIT_DATA, 0);
+        cUnit->chainCellOffsetLIR = newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
+        cUnit->headerSize = 6;
+        newLIR2(cUnit, ARMV5TE_MOV_RR_HL, r0, rpc & THUMB_REG_MASK);
+        newLIR2(cUnit, ARMV5TE_SUB_RI8, r0, 10);
+        newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, r0, 0);
+        newLIR2(cUnit, ARMV5TE_ADD_RI8, r1, 1);
+        newLIR3(cUnit, ARMV5TE_STR_RRI5, r1, r0, 0);
+    } else {
+         /* Just reserve 2 bytes for the chain cell offset */
+        cUnit->chainCellOffsetLIR = newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
+        cUnit->headerSize = 2;
+    }
 
     /* Handle the content in each basic block */
     for (i = 0; i < cUnit->numBlocks; i++) {

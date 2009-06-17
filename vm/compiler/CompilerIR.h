@@ -75,6 +75,7 @@ typedef struct CompilationUnit {
     LIR *firstLIRInsn;
     LIR *lastLIRInsn;
     LIR *wordList;
+    LIR *chainCellOffsetLIR;
     GrowableList pcReconstructionList;
     int headerSize;                     // bytes before the first code ptr
     int dataOffset;                     // starting offset of literal pool
@@ -84,6 +85,7 @@ typedef struct CompilationUnit {
     bool printMe;
     bool allSingleStep;
     bool halveInstCount;
+    bool executionCount;                // Add code to count trace executions
     int numChainingCells[CHAINING_CELL_LAST];
     LIR *firstChainingLIR[CHAINING_CELL_LAST];
     RegisterScoreboard registerScoreboard;      // Track register dependency

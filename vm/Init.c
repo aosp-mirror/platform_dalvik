@@ -119,6 +119,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xjitmethod:signture[,signature]* "
                        "(eg Ljava/lang/String\\;replace)\n");
     dvmFprintf(stderr, "  -Xjitverbose\n");
+    dvmFprintf(stderr, "  -Xjitprofile\n");
 #endif
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
@@ -904,6 +905,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
           gDvmJit.includeSelectedMethod = true;
         } else if (strncmp(argv[i], "-Xjitverbose", 12) == 0) {
           gDvmJit.printMe = true;
+        } else if (strncmp(argv[i], "-Xjitprofile", 12) == 0) {
+          gDvmJit.profile = true;
 #endif
 
         } else if (strncmp(argv[i], "-Xdeadlockpredict:", 18) == 0) {
