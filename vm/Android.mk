@@ -248,17 +248,19 @@ else
   LOCAL_SHARED_LIBRARIES += libdl
 endif
 
+MTERP_ARCH_KNOWN := false
+
 ifeq ($(TARGET_ARCH),arm)
   #TARGET_ARCH_VARIANT := armv5te-vfp
+  MTERP_ARCH_KNOWN := true
+  # Select architecture-specific sources (armv4t, armv5te etc.)
   LOCAL_SRC_FILES += \
 		arch/arm/CallOldABI.S \
 		arch/arm/CallEABI.S \
-		arch/arm/HintsEABI.c
-  # Select architecture specific sources (armv4t,armv5te etc)
-  LOCAL_SRC_FILES += \
+		arch/arm/HintsEABI.c \
 		mterp/out/InterpC-$(TARGET_ARCH_VARIANT).c.arm \
 		mterp/out/InterpAsm-$(TARGET_ARCH_VARIANT).S
-  LOCAL_SHARED_LIBRARIES += libdl
+
   ifeq ($(WITH_JIT),true)
     LOCAL_SRC_FILES += \
 		compiler/codegen/armv5te/Codegen.c \
@@ -269,26 +271,27 @@ ifeq ($(TARGET_ARCH),arm)
 		compiler/codegen/armv5te/GlobalOptimizations.c \
 		compiler/template/out/CompilerTemplateAsm-armv5te.S
   endif
-else
-  ifeq ($(TARGET_ARCH),x86)
-    LOCAL_SRC_FILES += \
+endif
+
+ifeq ($(TARGET_ARCH),x86)
+  MTERP_ARCH_KNOWN := true
+  LOCAL_SRC_FILES += \
 		arch/x86/Call386ABI.S \
-		arch/x86/Hints386ABI.c
-    LOCAL_SRC_FILES += \
+		arch/x86/Hints386ABI.c \
 		mterp/out/InterpC-x86.c \
 		mterp/out/InterpAsm-x86.S
-  else
-	# unknown architecture, try to use FFI
-    LOCAL_C_INCLUDES += external/libffi/$(TARGET_OS)-$(TARGET_ARCH)
-    LOCAL_SRC_FILES += \
+endif
+
+ifeq ($(MTERP_ARCH_KNOWN),false)
+  # unknown architecture, try to use FFI
+  LOCAL_C_INCLUDES += external/libffi/$(TARGET_OS)-$(TARGET_ARCH)
+  LOCAL_SHARED_LIBRARIES += libffi
+
+  LOCAL_SRC_FILES += \
 		arch/generic/Call.c \
-		arch/generic/Hints.c
-    LOCAL_SHARED_LIBRARIES += libffi
-	
-    LOCAL_SRC_FILES += \
+		arch/generic/Hints.c \
 		mterp/out/InterpC-allstubs.c \
 		mterp/out/InterpAsm-allstubs.S
-  endif
 endif
 
 
