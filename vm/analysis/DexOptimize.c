@@ -915,7 +915,8 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
     }
     val = read4LE(&ptr);
     if (val != DALVIK_VM_BUILD) {
-        LOGI("DexOpt: VM build mismatch (%d vs %d)\n", val, DALVIK_VM_BUILD);
+        LOGD("DexOpt: VM build version mismatch (%d vs %d)\n",
+            val, DALVIK_VM_BUILD);
         goto bail;
     }
 
