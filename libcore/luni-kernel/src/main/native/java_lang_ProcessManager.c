@@ -16,6 +16,7 @@
 
 #define LOG_TAG "ProcessManager"
 
+#include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -24,7 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <dirent.h>
 
 #include "jni.h"
 #include "JNIHelp.h"
@@ -155,31 +155,21 @@ static void java_lang_ProcessManager_watchChildren(JNIEnv* env, jobject o) {
     }
 }
 
-/** Close all open fds > 2 (i.e. everything but stdin/out/err). */
+/** Close all open fds > 2 (i.e. everything but stdin/out/err), != skipFd. */
 static void closeNonStandardFds(int skipFd) {
-    DIR* dir = opendir("/proc/self/fd");
+    struct rlimit rlimit;
+    getrlimit(RLIMIT_NOFILE, &rlimit);
 
-    if (dir == NULL) {
-        // Print message to standard err. The parent process can read this
-        // from Process.getErrorStream().
-        perror("opendir");
-        return;
-    }
-
-    struct dirent* entry;
-    int dirFd = dirfd(dir);
-    while ((entry = readdir(dir)) != NULL) {
-        int fd = atoi(entry->d_name);
-        if (fd > 2 && fd != dirFd && fd != skipFd
+    int fd;
+    for (fd = 3; fd < rlimit.rlim_max; fd++) {
+        if (fd != skipFd
 #ifdef ANDROID
                 && fd != androidSystemPropertiesFd
 #endif
                 ) {
             close(fd);
-        }        
+        }
     }
-
-    closedir(dir);
 }
 
 #define PIPE_COUNT (4) // number of pipes used to communicate with child proc
@@ -233,6 +223,12 @@ static pid_t executeProcess(JNIEnv* env, char** commands, char** environment,
 
     // If this is the child process...
     if (childPid == 0) {
+        /*
+         * Note: We cannot malloc() or free() after this point!
+         * A no-longer-running thread may be holding on to the heap lock, and
+         * an attempt to malloc() or free() would result in deadlock.
+         */
+
         // Replace stdin, out, and err with pipes.
         dup2(stdinIn, 0);
         dup2(stdoutOut, 1);
