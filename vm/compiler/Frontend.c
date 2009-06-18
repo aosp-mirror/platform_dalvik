@@ -198,6 +198,11 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
     CompilationUnit cUnit;
     memset(&cUnit, 0, sizeof(CompilationUnit));
 
+    compilationId++;
+
+    cUnit.registerScoreboard.nullCheckedRegs =
+        dvmAllocBitVector(desc->method->registersSize, false);
+
     /* Initialize the printMe flag */
     cUnit.printMe = gDvmJit.printMe;
 
@@ -410,7 +415,7 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
 
     if (cUnit.printMe) {
         LOGD("TRACEINFO (%d): 0x%08x %s%s 0x%x %d of %d, %d blocks",
-            compilationId++,
+            compilationId,
             (intptr_t) desc->method->insns,
             desc->method->clazz->descriptor,
             desc->method->name,
@@ -461,6 +466,9 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
 
     /* Reset the compiler resource pool */
     dvmCompilerArenaReset();
+
+    /* Free the bit vector tracking null-checked registers */
+    dvmFreeBitVector(cUnit.registerScoreboard.nullCheckedRegs);
 
     /*
      * Things have gone smoothly - publish the starting address of

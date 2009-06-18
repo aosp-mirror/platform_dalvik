@@ -38,6 +38,10 @@ bool dvmCompilerGenArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
 bool dvmCompilerGenCmpX(CompilationUnit *cUnit, MIR *mir, int vDest,
                                 int vSrc1, int vSrc2)
 {
+    /*
+     * Don't attempt to optimize register usage since these opcodes call out to
+     * the handlers.
+     */
     switch (mir->dalvikInsn.opCode) {
         case OP_CMPL_FLOAT:
             dvmCompilerLoadValue(cUnit, vSrc1, r0);

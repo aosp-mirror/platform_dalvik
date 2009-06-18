@@ -79,6 +79,7 @@ retry:
         currentArena->next = newArena;
         currentArena = newArena;
         numArenaBlocks++;
+        LOGD("Total arena pages for JIT: %d", numArenaBlocks);
         goto retry;
     }
     return NULL;

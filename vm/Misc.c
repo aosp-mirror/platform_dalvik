@@ -297,6 +297,15 @@ void dvmClearBit(BitVector* pBits, int num)
 }
 
 /*
+ * Mark all bits bit as "clear".
+ */
+void dvmClearAllBits(BitVector* pBits)
+{
+    int count = pBits->storageSize;
+    memset(pBits->storage, 0, count * sizeof(u4));
+}
+
+/*
  * Determine whether or not the specified bit is set.
  */
 bool dvmIsBitSet(const BitVector* pBits, int num)
@@ -333,7 +342,6 @@ int dvmCountSetBits(const BitVector* pBits)
 
     return count;
 }
-
 
 /*
  * Return a newly-allocated string in which all occurrences of '.' have
