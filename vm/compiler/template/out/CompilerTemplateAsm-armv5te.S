@@ -895,7 +895,7 @@ dvmCompiler_TEMPLATE_FLOAT_TO_INT_VFP:
      * Generic 32bit-to-32bit floating point unary operation.  Provide an
      * "instr" line that specifies an instruction that performs "s1 = op s0".
      *
-     * For: flot-to-int, int-to-float
+     * For: float-to-int, int-to-float
      *
      * On entry:
      *     r0 = target dalvik register address
@@ -941,7 +941,7 @@ dvmCompiler_TEMPLATE_INT_TO_FLOAT_VFP:
      * Generic 32bit-to-32bit floating point unary operation.  Provide an
      * "instr" line that specifies an instruction that performs "s1 = op s0".
      *
-     * For: flot-to-int, int-to-float
+     * For: float-to-int, int-to-float
      *
      * On entry:
      *     r0 = target dalvik register address

@@ -201,12 +201,6 @@ unspecified registers or condition codes.
  */
 #include "../common/asm-constants.h"
 
-/*
- * Power of 2 width in bits of the hash table size.
- *   for ex: 9 -> 512, 10-> 1024, etc.
-#define JIT_PROF_TAB_WIDTH    12
-#define JIT_PROF_TAB_LSHIFT   (32 - JIT_PROF_TAB_WIDTH)
-#defnie JIT_PROF_TAB_THRESH_RESET 255
 
 /* File: armv5te/platform.S */
 /*
