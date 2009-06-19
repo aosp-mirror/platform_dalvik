@@ -1317,13 +1317,13 @@ dalvik_inst:
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
-    and     r2, r0, #255                @ r2<- BB
-    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
-    flds    s0, [r2]                    @ s0<- vBB
-    mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    flds    s1, [r3]                    @ s1<- vCC
     mov     r9, rINST, lsr #8           @ r9<- AA
+    and     r2, r0, #255                @ r2<- BB
+    mov     r3, r0, lsr #8              @ r3<- CC
+    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
+    flds    s0, [r2]                    @ s0<- vBB
+    flds    s1, [r3]                    @ s1<- vCC
     fcmpes  s0, s1                      @ compare (vBB, vCC)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     mvn     r0, #0                      @ r0<- -1 (default)
@@ -1331,7 +1331,7 @@ dalvik_inst:
     fmstat                              @ export status flags
     movgt   r0, #1                      @ (greater than) r1<- 1
     moveq   r0, #0                      @ (equal) r1<- 0
-    bl      .LOP_CMPL_FLOAT_finish          @ argh
+    b       .LOP_CMPL_FLOAT_finish          @ argh
 
 
 /* ------------------------------ */
@@ -1356,13 +1356,13 @@ dalvik_inst:
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
-    and     r2, r0, #255                @ r2<- BB
-    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
-    flds    s0, [r2]                    @ s0<- vBB
-    mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    flds    s1, [r3]                    @ s1<- vCC
     mov     r9, rINST, lsr #8           @ r9<- AA
+    and     r2, r0, #255                @ r2<- BB
+    mov     r3, r0, lsr #8              @ r3<- CC
+    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
+    flds    s0, [r2]                    @ s0<- vBB
+    flds    s1, [r3]                    @ s1<- vCC
     fcmpes  s0, s1                      @ compare (vBB, vCC)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     mov     r0, #1                      @ r0<- 1 (default)
@@ -1370,7 +1370,7 @@ dalvik_inst:
     fmstat                              @ export status flags
     mvnmi   r0, #0                      @ (less than) r1<- -1
     moveq   r0, #0                      @ (equal) r1<- 0
-    bl      .LOP_CMPG_FLOAT_finish          @ argh
+    b       .LOP_CMPG_FLOAT_finish          @ argh
 
 
 /* ------------------------------ */
@@ -1395,13 +1395,13 @@ dalvik_inst:
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
-    and     r2, r0, #255                @ r2<- BB
-    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
-    fldd    d0, [r2]                    @ d0<- vBB
-    mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    fldd    d1, [r3]                    @ d1<- vCC
     mov     r9, rINST, lsr #8           @ r9<- AA
+    and     r2, r0, #255                @ r2<- BB
+    mov     r3, r0, lsr #8              @ r3<- CC
+    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
+    fldd    d0, [r2]                    @ d0<- vBB
+    fldd    d1, [r3]                    @ d1<- vCC
     fcmped  d0, d1                      @ compare (vBB, vCC)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     mvn     r0, #0                      @ r0<- -1 (default)
@@ -1409,7 +1409,7 @@ dalvik_inst:
     fmstat                              @ export status flags
     movgt   r0, #1                      @ (greater than) r1<- 1
     moveq   r0, #0                      @ (equal) r1<- 0
-    bl      .LOP_CMPL_DOUBLE_finish          @ argh
+    b       .LOP_CMPL_DOUBLE_finish          @ argh
 
 
 /* ------------------------------ */
@@ -1434,13 +1434,13 @@ dalvik_inst:
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
-    and     r2, r0, #255                @ r2<- BB
-    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
-    fldd    d0, [r2]                    @ d0<- vBB
-    mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    fldd    d1, [r3]                    @ d1<- vCC
     mov     r9, rINST, lsr #8           @ r9<- AA
+    and     r2, r0, #255                @ r2<- BB
+    mov     r3, r0, lsr #8              @ r3<- CC
+    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
+    fldd    d0, [r2]                    @ d0<- vBB
+    fldd    d1, [r3]                    @ d1<- vCC
     fcmped  d0, d1                      @ compare (vBB, vCC)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     mov     r0, #1                      @ r0<- 1 (default)
@@ -1448,7 +1448,7 @@ dalvik_inst:
     fmstat                              @ export status flags
     mvnmi   r0, #0                      @ (less than) r1<- -1
     moveq   r0, #0                      @ (equal) r1<- 0
-    bl      .LOP_CMPG_DOUBLE_finish          @ argh
+    b       .LOP_CMPG_DOUBLE_finish          @ argh
 
 
 /* ------------------------------ */
@@ -8783,10 +8783,11 @@ f2l_doconv:
  */
 d2l_doconv:
     stmfd   sp!, {r4, r5, lr}           @ save regs
-    ldr     r3, .LOP_DOUBLE_TO_LONG_max         @ (double)maxlong, hi
+    mov     r3, #0x43000000             @ maxlong, as a double (high word)
+    add     r3, #0x00e00000             @  0x43e00000
+    mov     r2, #0                      @ maxlong, as a double (low word)
     sub     sp, sp, #4                  @ align for EABI
-    mov     r2, #0                      @ (double)maxlong, lo
-    mov     r4, r0                      @ save r0
+    mov     r4, r0                      @ save a copy of r0
     mov     r5, r1                      @  and r1
     bl      __aeabi_dcmpge              @ is arg >= maxlong?
     cmp     r0, #0                      @ nonzero == yes
@@ -8796,8 +8797,9 @@ d2l_doconv:
 
     mov     r0, r4                      @ recover arg
     mov     r1, r5
-    ldr     r3, .LOP_DOUBLE_TO_LONG_min         @ (double)minlong, hi
-    mov     r2, #0                      @ (double)minlong, lo
+    mov     r3, #0xc3000000             @ minlong, as a double (high word)
+    add     r3, #0x00e00000             @  0xc3e00000
+    mov     r2, #0                      @ minlong, as a double (low word)
     bl      __aeabi_dcmple              @ is arg <= minlong?
     cmp     r0, #0                      @ nonzero == yes
     movne   r0, #0                      @ return minlong (8000000000000000)
@@ -8820,11 +8822,6 @@ d2l_doconv:
 1:
     add     sp, sp, #4
     ldmfd   sp!, {r4, r5, pc}
-
-.LOP_DOUBLE_TO_LONG_max:
-    .word   0x43e00000                  @ maxlong, as a double (high word)
-.LOP_DOUBLE_TO_LONG_min:
-    .word   0xc3e00000                  @ minlong, as a double (high word)
 
 
 /* continuation for OP_MUL_LONG */

@@ -3,7 +3,7 @@
 %include "armv6t2/unopNarrower.S" {"instr":"bl      __aeabi_d2iz"}
 
 #if 0
-@include "armv6t2/unopNarrower.S" {"instr":"bl      d2i_doconv"}
+@include "armv5te/unopNarrower.S" {"instr":"bl      d2i_doconv"}
 @break
 /*
  * Convert the double in r0/r1 to an int in r0.
@@ -14,20 +14,23 @@
  */
 d2i_doconv:
     stmfd   sp!, {r4, r5, lr}           @ save regs
-    ldr     r2, .L${opcode}_maxlo       @ (double)maxint, lo
-    ldr     r3, .L${opcode}_maxhi       @ (double)maxint, hi
+    mov     r2, #0x80000000             @ maxint, as a double (low word)
+    mov     r2, r2, asr #9              @  0xffc00000
     sub     sp, sp, #4                  @ align for EABI
-    mov     r4, r0                      @ save r0
+    mvn     r3, #0xbe000000             @ maxint, as a double (high word)
+    sub     r3, r3, #0x00200000         @  0x41dfffff
+    mov     r4, r0                      @ save a copy of r0
     mov     r5, r1                      @  and r1
     bl      __aeabi_dcmpge              @ is arg >= maxint?
     cmp     r0, #0                      @ nonzero == yes
-    mvnne   r0, #0x80000000             @ return maxint (7fffffff)
+    mvnne   r0, #0x80000000             @ return maxint (0x7fffffff)
     bne     1f
 
     mov     r0, r4                      @ recover arg
     mov     r1, r5
-    ldr     r3, .L${opcode}_min         @ (double)minint, hi
-    mov     r2, #0                      @ (double)minint, lo
+    mov     r3, #0xc1000000             @ minint, as a double (high word)
+    add     r3, r3, #0x00e00000         @  0xc1e00000
+    mov     r2, #0                      @ minint, as a double (low word)
     bl      __aeabi_dcmple              @ is arg <= minint?
     cmp     r0, #0                      @ nonzero == yes
     movne   r0, #0x80000000             @ return minint (80000000)
@@ -48,12 +51,5 @@ d2i_doconv:
 1:
     add     sp, sp, #4
     ldmfd   sp!, {r4, r5, pc}
-
-.L${opcode}_maxlo:
-    .word   0xffc00000                  @ maxint, as a double (low word)
-.L${opcode}_maxhi:
-    .word   0x41dfffff                  @ maxint, as a double (high word)
-.L${opcode}_min:
-    .word   0xc1e00000                  @ minint, as a double (high word)
 #endif
 

@@ -12,10 +12,11 @@
  */
 d2l_doconv:
     stmfd   sp!, {r4, r5, lr}           @ save regs
-    ldr     r3, .L${opcode}_max         @ (double)maxlong, hi
+    mov     r3, #0x43000000             @ maxlong, as a double (high word)
+    add     r3, #0x00e00000             @  0x43e00000
+    mov     r2, #0                      @ maxlong, as a double (low word)
     sub     sp, sp, #4                  @ align for EABI
-    mov     r2, #0                      @ (double)maxlong, lo
-    mov     r4, r0                      @ save r0
+    mov     r4, r0                      @ save a copy of r0
     mov     r5, r1                      @  and r1
     bl      __aeabi_dcmpge              @ is arg >= maxlong?
     cmp     r0, #0                      @ nonzero == yes
@@ -25,8 +26,9 @@ d2l_doconv:
 
     mov     r0, r4                      @ recover arg
     mov     r1, r5
-    ldr     r3, .L${opcode}_min         @ (double)minlong, hi
-    mov     r2, #0                      @ (double)minlong, lo
+    mov     r3, #0xc3000000             @ minlong, as a double (high word)
+    add     r3, #0x00e00000             @  0xc3e00000
+    mov     r2, #0                      @ minlong, as a double (low word)
     bl      __aeabi_dcmple              @ is arg <= minlong?
     cmp     r0, #0                      @ nonzero == yes
     movne   r0, #0                      @ return minlong (8000000000000000)
@@ -49,9 +51,4 @@ d2l_doconv:
 1:
     add     sp, sp, #4
     ldmfd   sp!, {r4, r5, pc}
-
-.L${opcode}_max:
-    .word   0x43e00000                  @ maxlong, as a double (high word)
-.L${opcode}_min:
-    .word   0xc3e00000                  @ minlong, as a double (high word)
 
