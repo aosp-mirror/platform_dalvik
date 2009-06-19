@@ -14,9 +14,8 @@
      *      sub-float/2addr, mul-float/2addr, div-float/2addr, rem-float/2addr
      */
     /* binop/2addr vA, vB */
-    mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
-    and     r9, r9, #15
+    ubfx    r9, rINST, #8, #4           @ r9<- A
     GET_VREG(r1, r3)                    @ r1<- vB
     GET_VREG(r0, r9)                    @ r0<- vA
     .if $chkzero

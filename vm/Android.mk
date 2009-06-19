@@ -251,8 +251,8 @@ endif
 MTERP_ARCH_KNOWN := false
 
 ifeq ($(TARGET_ARCH),arm)
-  #TARGET_ARCH_VARIANT := armv5te-vfp
-  #LOCAL_CFLAGS += -march=armv6
+  #TARGET_ARCH_VARIANT := armv7-a
+  #LOCAL_CFLAGS += -march=armv7-a
   MTERP_ARCH_KNOWN := true
   # Select architecture-specific sources (armv4t, armv5te etc.)
   LOCAL_SRC_FILES += \

@@ -5329,8 +5329,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5369,8 +5369,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5410,8 +5410,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5450,8 +5450,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5491,8 +5491,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5531,8 +5531,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5571,8 +5571,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5611,8 +5611,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5651,8 +5651,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5691,8 +5691,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5731,8 +5731,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -6288,8 +6288,8 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
