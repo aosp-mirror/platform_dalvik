@@ -33,29 +33,6 @@
 #include "compiler/CompilerIR.h"
 #include <errno.h>
 
-/*
- * Reset profile counts.  Note that we could easily lose
- * one or more of these write because of threading.  Because these
- * counts are considered hints, absolute correctness is not a
- * problem and the cost of synchronizing would be prohibitive.
- * NOTE: Experimental - 5/21/09.  Keep rough track of the last
- * time the counts were reset to allow trace builder to ignore
- * stale thresholds.  This is just a hint, and the only penalty
- * for getting it wrong is a slight performance hit (far less than
- * the cost of synchronization).
- */
-static u8 lastProfileResetTimeUsec;
-static void resetProfileCounts() {
-    int i;
-    unsigned char *pJitProfTable = gDvmJit.pProfTable;
-    lastProfileResetTimeUsec = dvmGetRelativeTimeUsec();
-    if (pJitProfTable != NULL) {
-        for (i=0; i < JIT_PROF_SIZE; i++) {
-           pJitProfTable[i] = gDvmJit.threshold;
-        }
-    }
-}
-
 int dvmJitStartup(void)
 {
     unsigned int i;
@@ -98,7 +75,6 @@ int dvmJitStartup(void)
         }
         /* Is chain field wide enough for termination pattern? */
         assert(pJitTable[0].chain == gDvm.maxJitTableEntries);
-        resetProfileCounts();
 
 done:
         gDvmJit.pJitEntryTable = pJitTable;
@@ -151,7 +127,7 @@ void dvmBumpPunt(int from)
 #endif
 
 /* Dumps profile info for a single trace */
-void dvmCompilerDumpTraceProfile(struct JitEntry *p)
+int dvmCompilerDumpTraceProfile(struct JitEntry *p)
 {
     ChainCellCounts* pCellCounts;
     char* traceBase;
@@ -170,7 +146,7 @@ void dvmCompilerDumpTraceProfile(struct JitEntry *p)
 
     if (p->codeAddress == NULL) {
         LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
-        return;
+        return 0;
     }
 
     pExecutionCount = (u4*) (traceBase);
@@ -182,6 +158,7 @@ void dvmCompilerDumpTraceProfile(struct JitEntry *p)
           *pExecutionCount, method->clazz->descriptor, method->name,
           desc->trace[0].frag.startOffset,
           desc->trace[0].frag.numInsts);
+    return *pExecutionCount;
 }
 
 /* Dumps debugging & tuning stats to the log */
@@ -218,11 +195,17 @@ void dvmJitStats()
           gDvmJit.invokeNoOpt, gDvmJit.invokeChain, gDvmJit.returnOp);
 #endif
        if (gDvmJit.profile) {
+           int numTraces = 0;
+           long counts = 0;
            for (i=0; i < (int) gDvmJit.jitTableSize; i++) {
               if (gDvmJit.pJitEntryTable[i].dPC != 0) {
-                  dvmCompilerDumpTraceProfile( &gDvmJit.pJitEntryTable[i] );
+                  counts += dvmCompilerDumpTraceProfile( &gDvmJit.pJitEntryTable[i] );
+                  numTraces++;
               }
            }
+        if (numTraces == 0)
+              numTraces = 1;
+        LOGD("JIT: Average execution count -> %d",(int)(counts / numTraces));
         }
     }
 }
@@ -509,14 +492,29 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC) {
 #define PROFILE_STALENESS_THRESHOLD 100000LL
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 {
-    bool res = false;    /* Assume success */
+    bool res = false;         /* Assume success */
+    int i;
     if (gDvmJit.pJitEntryTable != NULL) {
-        u8 delta = dvmGetRelativeTimeUsec() - lastProfileResetTimeUsec;
+        /* Two-level filtering scheme */
+        for (i=0; i< JIT_TRACE_THRESH_FILTER_SIZE; i++) {
+            if (interpState->pc == interpState->threshFilter[i]) {
+                break;
+            }
+        }
+        if (i == JIT_TRACE_THRESH_FILTER_SIZE) {
+            /*
+             * Use random replacement policy - otherwise we could miss a large
+             * loop that contains more traces than the size of our filter array.
+             */
+            i = rand() % JIT_TRACE_THRESH_FILTER_SIZE;
+            interpState->threshFilter[i] = interpState->pc;
+            res = true;
+        }
         /*
          * If the compiler is backlogged, or if a debugger or profiler is
          * active, cancel any JIT actions
          */
-        if ( (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater) ||
+        if ( res || (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater) ||
               gDvm.debuggerActive || self->suspendCount
 #if defined(WITH_PROFILER)
                  || gDvm.activeProfilers
@@ -525,9 +523,6 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
             if (interpState->jitState != kJitOff) {
                 interpState->jitState = kJitNormal;
             }
-        } else if (delta > PROFILE_STALENESS_THRESHOLD) {
-            resetProfileCounts();
-            res = true;   /* Stale profile - abort */
         } else if (interpState->jitState == kJitTSelectRequest) {
             u4 chainEndMarker = gDvmJit.jitTableSize;
             u4 idx = dvmJitHash(interpState->pc);

@@ -47,7 +47,7 @@ typedef enum InterpEntry {
  *    for handling 1-to-many mappings like virtual method call and
  *    packed switch.
  * 3) dvmJitToInterpPunt: use the fast interpreter to execute the next
- *    instruction(s) and stay there as long as it is appropriate to return 
+ *    instruction(s) and stay there as long as it is appropriate to return
  *    to the compiled land. This is used when the jit'ed code is about to
  *    throw an exception.
  * 4) dvmJitToInterpSingleStep: use the portable interpreter to execute the
@@ -70,6 +70,8 @@ struct JitToInterpEntries {
     void *dvmJitToInterpSingleStep;
     void *dvmJitToTraceSelect;
 };
+
+#define JIT_TRACE_THRESH_FILTER_SIZE  16
 #endif
 
 /*
@@ -143,6 +145,8 @@ typedef struct InterpState {
     const u2* currTraceHead;        // Start of the trace we're building
     const u2* currRunHead;          // Start of run we're building
     int currRunLen;           // Length of run in 16-bit words
+    int lastThreshFilter;
+    u2* threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
     JitTraceRun trace[MAX_JIT_RUN_LEN];
 #endif
 

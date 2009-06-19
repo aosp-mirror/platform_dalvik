@@ -838,6 +838,13 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 
     /* Setup the Jit-to-interpreter entry points */
     interpState.jitToInterpEntries = jitToInterpEntries;
+
+    /*
+     * Initialize the threshold filter [don't bother to zero out the
+     * actual table.  We're looking for matches, and an occasional
+     * false positive is acceptible.
+     */
+    interpState.lastThreshFilter = 0;
 #endif
 
     /*
