@@ -85,6 +85,11 @@ op-start armv5te
     #op OP_REM_DOUBLE_2ADDR armv5te
     #op OP_REM_FLOAT armv5te
     #op OP_REM_FLOAT_2ADDR armv5te
+
+    # experiment, unrelated to vfp
+    #op OP_INT_TO_BYTE armv6
+    #op OP_INT_TO_CHAR armv6
+    #op OP_INT_TO_SHORT armv6
 op-end
 
 # "helper" code for C; include if you use any of the C stubs (this generates
