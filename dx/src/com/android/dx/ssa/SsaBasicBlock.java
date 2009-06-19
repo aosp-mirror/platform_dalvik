@@ -950,8 +950,11 @@ public final class SsaBasicBlock {
      * @param visitor {@code non-null;} callback interface
      */
     public void forEachInsn(SsaInsn.Visitor visitor) {
-        for (SsaInsn insn : insns) {
-            insn.accept(visitor);
+        // This gets called a LOT, and not using an iterator
+        // saves a lot of allocations and reduces memory usage
+        int len = insns.size();
+        for (int i = 0; i < len; i++) {
+            insns.get(i).accept(visitor);
         }
     }
 
