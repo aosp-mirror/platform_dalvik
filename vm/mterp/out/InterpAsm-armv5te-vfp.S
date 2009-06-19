@@ -1321,13 +1321,13 @@ dalvik_inst:
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
-    and     r2, r0, #255                @ r2<- BB
-    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
-    flds    s0, [r2]                    @ s0<- vBB
-    mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    flds    s1, [r3]                    @ s1<- vCC
     mov     r9, rINST, lsr #8           @ r9<- AA
+    and     r2, r0, #255                @ r2<- BB
+    mov     r3, r0, lsr #8              @ r3<- CC
+    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
+    flds    s0, [r2]                    @ s0<- vBB
+    flds    s1, [r3]                    @ s1<- vCC
     fcmpes  s0, s1                      @ compare (vBB, vCC)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     mvn     r0, #0                      @ r0<- -1 (default)
@@ -1335,7 +1335,7 @@ dalvik_inst:
     fmstat                              @ export status flags
     movgt   r0, #1                      @ (greater than) r1<- 1
     moveq   r0, #0                      @ (equal) r1<- 0
-    bl      .LOP_CMPL_FLOAT_finish          @ argh
+    b       .LOP_CMPL_FLOAT_finish          @ argh
 
 
 /* ------------------------------ */
@@ -1360,13 +1360,13 @@ dalvik_inst:
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
-    and     r2, r0, #255                @ r2<- BB
-    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
-    flds    s0, [r2]                    @ s0<- vBB
-    mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    flds    s1, [r3]                    @ s1<- vCC
     mov     r9, rINST, lsr #8           @ r9<- AA
+    and     r2, r0, #255                @ r2<- BB
+    mov     r3, r0, lsr #8              @ r3<- CC
+    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
+    flds    s0, [r2]                    @ s0<- vBB
+    flds    s1, [r3]                    @ s1<- vCC
     fcmpes  s0, s1                      @ compare (vBB, vCC)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     mov     r0, #1                      @ r0<- 1 (default)
@@ -1374,7 +1374,7 @@ dalvik_inst:
     fmstat                              @ export status flags
     mvnmi   r0, #0                      @ (less than) r1<- -1
     moveq   r0, #0                      @ (equal) r1<- 0
-    bl      .LOP_CMPG_FLOAT_finish          @ argh
+    b       .LOP_CMPG_FLOAT_finish          @ argh
 
 
 /* ------------------------------ */
@@ -1399,13 +1399,13 @@ dalvik_inst:
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
-    and     r2, r0, #255                @ r2<- BB
-    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
-    fldd    d0, [r2]                    @ d0<- vBB
-    mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    fldd    d1, [r3]                    @ d1<- vCC
     mov     r9, rINST, lsr #8           @ r9<- AA
+    and     r2, r0, #255                @ r2<- BB
+    mov     r3, r0, lsr #8              @ r3<- CC
+    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
+    fldd    d0, [r2]                    @ d0<- vBB
+    fldd    d1, [r3]                    @ d1<- vCC
     fcmped  d0, d1                      @ compare (vBB, vCC)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     mvn     r0, #0                      @ r0<- -1 (default)
@@ -1413,7 +1413,7 @@ dalvik_inst:
     fmstat                              @ export status flags
     movgt   r0, #1                      @ (greater than) r1<- 1
     moveq   r0, #0                      @ (equal) r1<- 0
-    bl      .LOP_CMPL_DOUBLE_finish          @ argh
+    b       .LOP_CMPL_DOUBLE_finish          @ argh
 
 
 /* ------------------------------ */
@@ -1438,13 +1438,13 @@ dalvik_inst:
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
-    and     r2, r0, #255                @ r2<- BB
-    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
-    fldd    d0, [r2]                    @ d0<- vBB
-    mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    fldd    d1, [r3]                    @ d1<- vCC
     mov     r9, rINST, lsr #8           @ r9<- AA
+    and     r2, r0, #255                @ r2<- BB
+    mov     r3, r0, lsr #8              @ r3<- CC
+    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
+    fldd    d0, [r2]                    @ d0<- vBB
+    fldd    d1, [r3]                    @ d1<- vCC
     fcmped  d0, d1                      @ compare (vBB, vCC)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     mov     r0, #1                      @ r0<- 1 (default)
@@ -1452,7 +1452,7 @@ dalvik_inst:
     fmstat                              @ export status flags
     mvnmi   r0, #0                      @ (less than) r1<- -1
     moveq   r0, #0                      @ (equal) r1<- 0
-    bl      .LOP_CMPG_DOUBLE_finish          @ argh
+    b       .LOP_CMPG_DOUBLE_finish          @ argh
 
 
 /* ------------------------------ */

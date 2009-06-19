@@ -20,13 +20,13 @@
      */
     /* op vAA, vBB, vCC */
     FETCH(r0, 1)                        @ r0<- CCBB
-    and     r2, r0, #255                @ r2<- BB
-    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
-    fldd    d0, [r2]                    @ d0<- vBB
-    mov     r3, r0, lsr #8              @ r3<- CC
-    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
-    fldd    d1, [r3]                    @ d1<- vCC
     mov     r9, rINST, lsr #8           @ r9<- AA
+    and     r2, r0, #255                @ r2<- BB
+    mov     r3, r0, lsr #8              @ r3<- CC
+    VREG_INDEX_TO_ADDR(r2, r2)          @ r2<- &vBB
+    VREG_INDEX_TO_ADDR(r3, r3)          @ r3<- &vCC
+    fldd    d0, [r2]                    @ d0<- vBB
+    fldd    d1, [r3]                    @ d1<- vCC
     fcmped  d0, d1                      @ compare (vBB, vCC)
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     mov     r0, #1                      @ r0<- 1 (default)
@@ -34,7 +34,7 @@
     fmstat                              @ export status flags
     mvnmi   r0, #0                      @ (less than) r1<- -1
     moveq   r0, #0                      @ (equal) r1<- 0
-    bl      .L${opcode}_finish          @ argh
+    b       .L${opcode}_finish          @ argh
 
 %break
 .L${opcode}_finish:
