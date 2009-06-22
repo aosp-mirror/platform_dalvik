@@ -34,11 +34,12 @@
     bne     .LhandleException             @ no, handle exception
     bx      r2
 
-/* FIXME - untested */
+/* NOTE - this path can be exercised if the JIT threshold is set to 5 */
 .LhandleException:
-    ldr     rIBASE, .LdvmAsmInstructionStart
+    ldr     r0, .LdvmMterpCommonExceptionThrown @ PIC way of getting &func
+    ldr     rIBASE, .LdvmAsmInstructionStart    @ same as above
     ldr     rPC, [r10, #offStackSaveArea_savedPc] @ reload rPC
-    b       dvmMterpCommonExceptionThrown
+    mov     pc, r0                  @ branch to dvmMterpCommonExceptionThrown
 
     .align  2
 .LdvmAsmInstructionStart:
@@ -47,6 +48,8 @@
     .word   dvmJitToInterpNoChain
 .LdvmMterpStdBail:
     .word   dvmMterpStdBail
+.LdvmMterpCommonExceptionThrown:
+    .word   dvmMterpCommonExceptionThrown
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple
 .L__aeabi_cfcmple:

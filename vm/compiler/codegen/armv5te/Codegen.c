@@ -2861,7 +2861,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
          */
         newLIR1(cUnit, ARMV5TE_16BIT_DATA, 0);
         newLIR1(cUnit, ARMV5TE_16BIT_DATA, 0);
-        cUnit->chainCellOffsetLIR = newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
+        cUnit->chainCellOffsetLIR =
+            (LIR *) newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
         cUnit->headerSize = 6;
         newLIR2(cUnit, ARMV5TE_MOV_RR_HL, r0, rpc & THUMB_REG_MASK);
         newLIR2(cUnit, ARMV5TE_SUB_RI8, r0, 10);
@@ -2870,7 +2871,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         newLIR3(cUnit, ARMV5TE_STR_RRI5, r1, r0, 0);
     } else {
          /* Just reserve 2 bytes for the chain cell offset */
-        cUnit->chainCellOffsetLIR = newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
+        cUnit->chainCellOffsetLIR =
+            (LIR *) newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
         cUnit->headerSize = 2;
     }
 
