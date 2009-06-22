@@ -2148,16 +2148,17 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             ClassObject *classPtr =
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vC]);
             assert(classPtr != NULL);
-            loadValue(cUnit, mir->dalvikInsn.vB, r1);  /* Ref */
+            loadValue(cUnit, mir->dalvikInsn.vB, r0);  /* Ref */
             loadConstant(cUnit, r2, (int) classPtr );
-            loadConstant(cUnit, r0, 1);                /* Assume true */
-            newLIR2(cUnit, ARMV5TE_CMP_RI8, r1, 0);    /* Null? */
+            newLIR2(cUnit, ARMV5TE_CMP_RI8, r0, 0);    /* Null? */
+            /* When taken r0 has NULL which can be used for store directly */
             Armv5teLIR *branch1 = newLIR2(cUnit, ARMV5TE_B_COND, 4,
                                           ARM_COND_EQ);
             /* r1 now contains object->clazz */
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, r1,
+            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, r0,
                     offsetof(Object, clazz) >> 2);
             loadConstant(cUnit, r4PC, (int)dvmInstanceofNonTrivial);
+            loadConstant(cUnit, r0, 1);                /* Assume true */
             newLIR2(cUnit, ARMV5TE_CMP_RR, r1, r2);
             Armv5teLIR *branch2 = newLIR2(cUnit, ARMV5TE_B_COND, 2,
                                           ARM_COND_EQ);
