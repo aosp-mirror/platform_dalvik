@@ -254,16 +254,25 @@ else
 		mterp/out/InterpC-x86.c \
 		mterp/out/InterpAsm-x86.S
   else
+    ifeq ($(TARGET_ARCH),sh)
+      LOCAL_SRC_FILES += \
+			arch/sh/CallSH4ABI.S \
+			arch/generic/Hints.c
+      LOCAL_SRC_FILES += \
+			mterp/out/InterpC-allstubs.c \
+			mterp/out/InterpAsm-allstubs.S
+    else
 	# unknown architecture, try to use FFI
-    LOCAL_C_INCLUDES += external/libffi/$(TARGET_OS)-$(TARGET_ARCH)
-    LOCAL_SRC_FILES += \
-		arch/generic/Call.c \
-		arch/generic/Hints.c
-    LOCAL_SHARED_LIBRARIES += libffi
-	
-    LOCAL_SRC_FILES += \
-		mterp/out/InterpC-allstubs.c \
-		mterp/out/InterpAsm-allstubs.S
+      LOCAL_C_INCLUDES += external/libffi/$(TARGET_OS)-$(TARGET_ARCH)
+      LOCAL_SRC_FILES += \
+			arch/generic/Call.c \
+			arch/generic/Hints.c
+      LOCAL_SHARED_LIBRARIES += libffi
+			
+      LOCAL_SRC_FILES += \
+			mterp/out/InterpC-allstubs.c \
+			mterp/out/InterpAsm-allstubs.S
+    endif
   endif
 endif
 
