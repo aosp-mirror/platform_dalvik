@@ -144,6 +144,8 @@ static void *compilerThreadStart(void *arg)
     }
     pthread_cond_signal(&gDvmJit.compilerQueueEmpty);
     dvmUnlockMutex(&gDvmJit.compilerLock);
+
+    LOGD("Compiler thread shutting down\n");
     return NULL;
 }
 
@@ -242,6 +244,9 @@ void dvmCompilerShutdown(void)
         pthread_cond_signal(&gDvmJit.compilerQueueActivity);
         dvmUnlockMutex(&gDvmJit.compilerLock);
 
-        pthread_join(gDvmJit.compilerHandle, &threadReturn);
+        if (pthread_join(gDvmJit.compilerHandle, &threadReturn) != 0)
+            LOGW("Compiler thread join failed\n");
+        else
+            LOGD("Compiler thread has shut down\n");
     }
 }

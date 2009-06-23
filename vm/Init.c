@@ -1540,6 +1540,11 @@ void dvmShutdown(void)
     /* shut down stdout/stderr conversion */
     dvmStdioConverterShutdown();
 
+#ifdef WITH_JIT
+    /* tell the compiler to shut down if it was started */
+    dvmJitShutdown();
+#endif
+
     /*
      * Kill any daemon threads that still exist.  Actively-running threads
      * are likely to crash the process if they continue to execute while
@@ -1549,9 +1554,6 @@ void dvmShutdown(void)
 
     LOGD("VM cleaning up\n");
 
-#ifdef WITH_JIT
-    dvmJitShutdown();
-#endif
     dvmDebuggerShutdown();
     dvmReflectShutdown();
 #ifdef WITH_PROFILER
