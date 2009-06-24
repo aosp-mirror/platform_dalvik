@@ -209,7 +209,7 @@ static void Dalvik_dalvik_system_VMDebug_resetAllocCount(const u4* args,
 }
 
 /*
- * static void startMethodTracing(String traceFileName,
+ * static void startMethodTracing(String traceFileName, java.io.FileDescriptor,
  *     int bufferSize, int flags)
  *
  * Start method trace profiling.
@@ -219,8 +219,9 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracing(const u4* args,
 {
 #ifdef WITH_PROFILER
     StringObject* traceFileStr = (StringObject*) args[0];
-    int bufferSize = args[1];
-    int flags = args[2];
+    DataObject* traceFd = (DataObject*) args[1];
+    int bufferSize = args[2];
+    int flags = args[3];
     char* traceFileName;
 
     if (bufferSize == 0) {
@@ -229,13 +230,24 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracing(const u4* args,
     }
 
     if (traceFileStr == NULL || bufferSize < 1024) {
-        dvmThrowException("Ljava/lang/InvalidArgument;", NULL);
+        dvmThrowException("Ljava/lang/IllegalArgumentException;", NULL);
         RETURN_VOID();
     }
 
     traceFileName = dvmCreateCstrFromString(traceFileStr);
 
-    dvmMethodTraceStart(traceFileName, bufferSize, flags);
+    int fd = -1;
+    if (traceFd != NULL) {
+        InstField* field = dvmFindInstanceField(traceFd->obj.clazz, "descriptor", "I");
+        if (field == NULL) {
+            dvmThrowException("Ljava/lang/NoSuchFieldException;",
+                "No FileDescriptor.descriptor field");
+            RETURN_VOID();
+        }
+        fd = dup(dvmGetFieldInt(&traceFd->obj, field->byteOffset));
+    }
+    
+    dvmMethodTraceStart(traceFileName, fd, bufferSize, flags);
     free(traceFileName);
 #else
     // throw exception?
@@ -697,7 +709,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_startAllocCounting },
     { "stopAllocCounting",          "()V",
         Dalvik_dalvik_system_VMDebug_stopAllocCounting },
-    { "startMethodTracing",         "(Ljava/lang/String;II)V",
+    { "startMethodTracing",         "(Ljava/lang/String;Ljava/io/FileDescriptor;II)V",
         Dalvik_dalvik_system_VMDebug_startMethodTracing },
     { "isMethodTracingActive",      "()Z",
         Dalvik_dalvik_system_VMDebug_isMethodTracingActive },
