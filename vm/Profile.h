@@ -96,7 +96,8 @@ typedef struct AllocProfState {
 /*
  * Start/stop method tracing.
  */
-void dvmMethodTraceStart(const char* traceFileName, int bufferSize, int flags);
+void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
+        int flags);
 bool dvmIsMethodTraceActive(void);
 void dvmMethodTraceStop(void);
 

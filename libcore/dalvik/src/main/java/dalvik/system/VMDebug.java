@@ -16,6 +16,7 @@
 
 package dalvik.system;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
 
 /**
@@ -149,8 +150,22 @@ public final class VMDebug {
      * @param flags flags to control method tracing. The only one that
      * is currently defined is {@link #TRACE_COUNT_ALLOCS}.
      */
+    public static void startMethodTracing(String traceFileName,
+        int bufferSize, int flags) {
+        startMethodTracing(traceFileName, null, bufferSize, flags);
+    }
+
+    /**
+     * Like startMethodTracing(String, int, int), but taking an already-opened
+     * FileDescriptor in which the trace is written.  The file name is also
+     * supplied simply for logging.  Makes a dup of the file descriptor.
+     * 
+     * Not exposed in the SDK unless we are really comfortable with supporting
+     * this and find it would be useful.
+     * @hide
+     */
     public static native void startMethodTracing(String traceFileName,
-        int bufferSize, int flags);
+        FileDescriptor fd, int bufferSize, int flags);
 
     /**
      * Determine whether method tracing is currently active.

@@ -320,12 +320,14 @@ static void dumpMethodList(FILE* fp)
 }
 
 /*
- * Start method tracing.  This opens the file and allocates the buffer.
+ * Start method tracing.  This opens the file (if an already open fd has not
+ * been supplied) and allocates the buffer.
  * If any of these fail, we throw an exception and return.
  *
  * Method tracing is global to the VM.
  */
-void dvmMethodTraceStart(const char* traceFileName, int bufferSize, int flags)
+void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
+        int flags)
 {
     MethodTraceState* state = &gDvm.methodTrace;
 
@@ -351,7 +353,11 @@ void dvmMethodTraceStart(const char* traceFileName, int bufferSize, int flags)
         dvmThrowException("Ljava/lang/InternalError;", "buffer alloc failed");
         goto fail;
     }
-    state->traceFile = fopen(traceFileName, "w");
+    if (traceFd < 0) {
+        state->traceFile = fopen(traceFileName, "w");
+    } else {
+        state->traceFile = fdopen(traceFd, "w");
+    }
     if (state->traceFile == NULL) {
         LOGE("Unable to open trace file '%s': %s\n",
             traceFileName, strerror(errno));
