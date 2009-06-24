@@ -2746,6 +2746,10 @@ static void* GetDirectBufferAddress(JNIEnv * env, jobject buf)
     jmethodID toLongMethod;
     void* result = NULL;
 
+    /*
+     * Start by determining if the object supports the DirectBuffer
+     * interfaces.  Note this does not guarantee that it's a direct buffer.
+     */
     tempClass = (*env)->FindClass(env, 
             "org/apache/harmony/nio/internal/DirectBuffer");
     if(!tempClass)
@@ -2764,6 +2768,20 @@ static void* GetDirectBufferAddress(JNIEnv * env, jobject buf)
         goto bail;
     }
     platformAddr = (*env)->CallObjectMethod(env, buf, tempMethod);
+
+    /*
+     * If this isn't a direct buffer, platformAddr will be NULL and/or an
+     * exception will have been thrown.
+     */
+    if ((*env)->ExceptionCheck(env)) {
+        (*env)->ExceptionClear(env);
+        platformAddr = NULL;
+    }
+    if (platformAddr == NULL) {
+        LOGV("Got request for address of non-direct buffer\n");
+        goto bail;
+    }
+
     platformAddrClass = (*env)->FindClass (env, 
             "org/apache/harmony/luni/platform/PlatformAddress");
     if(!platformAddrClass)
