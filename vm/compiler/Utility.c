@@ -154,17 +154,56 @@ void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit)
 }
 
 /*
+ * dvmHashForeach callback.
+ */
+static int dumpMethodStats(void *compilerMethodStats, void *totalMethodStats)
+{
+    CompilerMethodStats *methodStats =
+        (CompilerMethodStats *) compilerMethodStats;
+    CompilerMethodStats *totalStats =
+        (CompilerMethodStats *) totalMethodStats;
+    const Method *method = methodStats->method;
+
+    totalStats->dalvikSize += methodStats->dalvikSize;
+    totalStats->compiledDalvikSize += methodStats->compiledDalvikSize;
+    totalStats->nativeSize += methodStats->nativeSize;
+
+    int limit = (methodStats->dalvikSize >> 2) * 3;
+
+    /* If over 3/4 of the Dalvik code is compiled, print something */
+    if (methodStats->compiledDalvikSize >= limit) {
+        LOGD("Method stats: %s%s, %d/%d (compiled/total Dalvik), %d (native)",
+             method->clazz->descriptor, method->name,
+             methodStats->compiledDalvikSize,
+             methodStats->dalvikSize,
+             methodStats->nativeSize);
+    }
+    return 0;
+}
+
+/*
  * Dump the current stats of the compiler, including number of bytes used in
  * the code cache, arena size, and work queue length, and various JIT stats.
  */
 void dvmCompilerDumpStats(void)
 {
-    LOGD("%d compilations using %d bytes",
-         gDvmJit.numCompilations, gDvmJit.codeCacheByteUsed);
+    CompilerMethodStats totalMethodStats;
+
+    memset(&totalMethodStats, 0, sizeof(CompilerMethodStats));
+    LOGD("%d compilations using %d + %d bytes",
+         gDvmJit.numCompilations,
+         gDvmJit.templateSize,
+         gDvmJit.codeCacheByteUsed - gDvmJit.templateSize);
     LOGD("Compiler arena uses %d blocks (%d bytes each)",
          numArenaBlocks, ARENA_DEFAULT_SIZE);
     LOGD("Compiler work queue length is %d/%d", gDvmJit.compilerQueueLength,
          gDvmJit.compilerMaxQueued);
     dvmJitStats();
     dvmCompilerArchDump();
+    dvmHashForeach(gDvmJit.methodStatsTable, dumpMethodStats,
+                   &totalMethodStats);
+    LOGD("Code size stats: %d/%d (compiled/total Dalvik), %d (native)",
+         totalMethodStats.compiledDalvikSize,
+         totalMethodStats.dalvikSize,
+         totalMethodStats.nativeSize);
 }

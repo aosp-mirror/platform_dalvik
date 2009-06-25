@@ -169,6 +169,8 @@ bool dvmCompilerSetupCodeCache(void)
     memcpy((void *) gDvmJit.codeCache,
            (void *) dvmCompilerTemplateStart,
            templateSize);
+
+    gDvmJit.templateSize = templateSize;
     gDvmJit.codeCacheByteUsed = templateSize;
 
     /* Flush dcache and invalidate the icache to maintain coherence */
@@ -223,6 +225,9 @@ bool dvmCompilerStartup(void)
         dvmUnlockMutex(&gDvmJit.compilerLock);
         goto fail;
     }
+
+    /* Track method-level compilation statistics */
+    gDvmJit.methodStatsTable =  dvmHashTableCreate(32, NULL);
 
     dvmUnlockMutex(&gDvmJit.compilerLock);
 

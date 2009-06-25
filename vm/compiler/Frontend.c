@@ -30,19 +30,9 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
     OpCode opcode = instr & 0xff;
     int insnWidth;
 
-    // Need to check if this is a real NOP or a pseudo opcode
+    // Don't parse instruction data
     if (opcode == OP_NOP && instr != 0) {
-        if (instr == kPackedSwitchSignature) {
-            insnWidth = 4 + codePtr[1] * 2;
-        } else if (instr == kSparseSwitchSignature) {
-            insnWidth = 2 + codePtr[1] * 4;
-        } else if (instr == kArrayDataSignature) {
-            int width = codePtr[1];
-            int size = codePtr[2] | (codePtr[3] << 16);
-            // The plus 1 is to round up for odd size and width
-            insnWidth = 4 + ((size * width) + 1) / 2;
-        }
-        insnWidth = 0;
+        return 0;
     } else {
         insnWidth = gDvm.instrWidth[opcode];
         if (insnWidth < 0) {
@@ -88,7 +78,7 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
             const Method *calleeMethod =
                 caller->clazz->super->vtable[mIndex];
 
-            if (!dvmIsNativeMethod(calleeMethod)) {
+            if (calleeMethod && !dvmIsNativeMethod(calleeMethod)) {
                 *target = (unsigned int) calleeMethod->insns;
             }
             *isInvoke = true;
@@ -100,7 +90,7 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
             const Method *calleeMethod =
                 caller->clazz->pDvmDex->pResMethods[insn->dalvikInsn.vB];
 
-            if (!dvmIsNativeMethod(calleeMethod)) {
+            if (calleeMethod && !dvmIsNativeMethod(calleeMethod)) {
                 *target = (unsigned int) calleeMethod->insns;
             }
             *isInvoke = true;
@@ -112,7 +102,7 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
             const Method *calleeMethod =
                 caller->clazz->super->vtable[insn->dalvikInsn.vB];
 
-            if (!dvmIsNativeMethod(calleeMethod)) {
+            if (calleeMethod && !dvmIsNativeMethod(calleeMethod)) {
                 *target = (unsigned int) calleeMethod->insns;
             }
             *isInvoke = true;
@@ -123,7 +113,7 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
         case OP_INVOKE_DIRECT_RANGE: {
             const Method *calleeMethod =
                 caller->clazz->pDvmDex->pResMethods[insn->dalvikInsn.vB];
-            if (!dvmIsNativeMethod(calleeMethod)) {
+            if (calleeMethod && !dvmIsNativeMethod(calleeMethod)) {
                 *target = (unsigned int) calleeMethod->insns;
             }
             *isInvoke = true;
@@ -179,6 +169,72 @@ static inline bool isUnconditionalBranch(MIR *insn)
 }
 
 /*
+ * dvmHashTableLookup() callback
+ */
+static int compareMethod(const CompilerMethodStats *m1,
+                         const CompilerMethodStats *m2)
+{
+    return (int) m1->method - (int) m2->method;
+}
+
+/*
+ * Analyze each method whose traces are ever compiled. Collect a variety of
+ * statistics like the ratio of exercised vs overall code and code bloat
+ * ratios.
+ */
+static CompilerMethodStats *analyzeMethodBody(const Method *method)
+{
+    const DexCode *dexCode = dvmGetMethodCode(method);
+    const u2 *codePtr = dexCode->insns;
+    const u2 *codeEnd = dexCode->insns + dexCode->insnsSize;
+    int insnSize = 0;
+    int hashValue = dvmComputeUtf8Hash(method->name);
+
+    CompilerMethodStats dummyMethodEntry; // For hash table lookup
+    CompilerMethodStats *realMethodEntry; // For hash table storage
+
+    /* For lookup only */
+    dummyMethodEntry.method = method;
+    realMethodEntry = dvmHashTableLookup(gDvmJit.methodStatsTable, hashValue,
+                                         &dummyMethodEntry,
+                                         (HashCompareFunc) compareMethod,
+                                         false);
+
+    /* Part of this method has been compiled before - just return the entry */
+    if (realMethodEntry != NULL) {
+        return realMethodEntry;
+    }
+
+    /*
+     * First time to compile this method - set up a new entry in the hash table
+     */
+    realMethodEntry =
+        (CompilerMethodStats *) calloc(1, sizeof(CompilerMethodStats));
+    realMethodEntry->method = method;
+
+    dvmHashTableLookup(gDvmJit.methodStatsTable, hashValue,
+                       realMethodEntry,
+                       (HashCompareFunc) compareMethod,
+                       true);
+
+    /* Count the number of instructions */
+    while (codePtr < codeEnd) {
+        DecodedInstruction dalvikInsn;
+        int width = parseInsn(codePtr, &dalvikInsn, false);
+
+        /* Terminate when the data section is seen */
+        if (width == 0)
+            break;
+
+        insnSize += width;
+        codePtr += width;
+    }
+
+    realMethodEntry->dalvikSize = insnSize * 2;
+    return realMethodEntry;
+}
+
+/*
  * Main entry point to start trace compilation. Basic blocks are constructed
  * first and they will be passed to the codegen routines to convert Dalvik
  * bytecode into machine code.
@@ -190,15 +246,19 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
     unsigned int curOffset = currRun->frag.startOffset;
     unsigned int numInsts = currRun->frag.numInsts;
     const u2 *codePtr = dexCode->insns + curOffset;
-    int traceSize = 0;
+    int traceSize = 0;  // # of half-words
     const u2 *startCodePtr = codePtr;
     BasicBlock *startBB, *curBB, *lastBB;
     int numBlocks = 0;
     static int compilationId;
     CompilationUnit cUnit;
-    memset(&cUnit, 0, sizeof(CompilationUnit));
+    CompilerMethodStats *methodStats;
 
     compilationId++;
+    memset(&cUnit, 0, sizeof(CompilationUnit));
+
+    /* Locate the entry to store compilation statistics for this method */
+    methodStats = analyzeMethodBody(desc->method);
 
     cUnit.registerScoreboard.nullCheckedRegs =
         dvmAllocBitVector(desc->method->registersSize, false);
@@ -292,6 +352,9 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
         insn = dvmCompilerNew(sizeof(MIR),false);
         insn->offset = curOffset;
         width = parseInsn(codePtr, &insn->dalvikInsn, cUnit.printMe);
+
+        /* The trace should never incude instruction data */
+        assert(width);
         insn->width = width;
         traceSize += width;
         dvmCompilerAppendMIR(curBB, insn);
@@ -319,6 +382,9 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
             codePtr += width;
         }
     }
+
+    /* Convert # of half-word to bytes */
+    methodStats->compiledDalvikSize += traceSize * 2;
 
     /*
      * Now scan basic blocks containing real code to connect the
@@ -478,6 +544,7 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
      * translation's entry point.
      */
     if (!cUnit.halveInstCount) {
+        methodStats->nativeSize += cUnit.totalSize;
         return cUnit.baseAddr + cUnit.headerSize;
 
     /* Halve the instruction count and retry again */
@@ -493,7 +560,7 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
  * TODO: implementation will be revisited when the trace builder can provide
  * whole-method traces.
  */
-void *dvmCompileMethod(Method *method)
+void *dvmCompileMethod(const Method *method)
 {
     const DexCode *dexCode = dvmGetMethodCode(method);
     const u2 *codePtr = dexCode->insns;
@@ -520,6 +587,9 @@ void *dvmCompileMethod(Method *method)
         const Method *callee;
         insn->width = width;
 
+        /* Terminate when the data section is seen */
+        if (width == 0)
+            break;
         dvmCompilerAppendMIR(firstBlock, insn);
         /*
          * Check whether this is a block ending instruction and whether it
@@ -590,6 +660,7 @@ void *dvmCompileMethod(Method *method)
                     BasicBlock *newBB = dvmCompilerNewBB(DALVIK_BYTECODE);
                     newBB->id = blockID++;
                     newBB->firstMIRInsn = insn;
+                    newBB->startOffset = insn->offset;
                     newBB->lastMIRInsn = curBB->lastMIRInsn;
                     curBB->lastMIRInsn = insn->prev;
                     insn->prev->next = NULL;
@@ -645,7 +716,8 @@ void *dvmCompileMethod(Method *method)
                 }
             }
 
-            if (j == numBlocks) {
+            /* Don't create dummy block for the callee yet */
+            if (j == numBlocks && !isInvoke) {
                 LOGE("Target not found for insn %x: expect target %x\n",
                      curBB->lastMIRInsn->offset, target);
                 dvmAbort();

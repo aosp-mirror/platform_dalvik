@@ -84,6 +84,13 @@ typedef struct {
     JitTraceRun trace[];
 } JitTraceDescription;
 
+typedef struct CompilerMethodStats {
+    const Method *method;       // Used as hash entry signature
+    int dalvikSize;             // # of bytes for dalvik bytecodes
+    int compiledDalvikSize;     // # of compiled dalvik bytecodes
+    int nativeSize;             // # of bytes for produced native code
+} CompilerMethodStats;
+
 bool dvmCompilerSetupCodeCache(void);
 bool dvmCompilerArchInit(void);
 void dvmCompilerArchDump(void);
@@ -91,7 +98,7 @@ bool dvmCompilerStartup(void);
 void dvmCompilerShutdown(void);
 bool dvmCompilerWorkEnqueue(const u2* pc, WorkOrderKind kind, void* info);
 void *dvmCheckCodeCache(void *method);
-void *dvmCompileMethod(Method *method);
+void *dvmCompileMethod(const Method *method);
 void *dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts);
 void dvmCompilerDumpStats(void);
 void dvmCompilerDrainQueue(void);

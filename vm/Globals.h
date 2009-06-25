@@ -690,6 +690,9 @@ struct DvmJitGlobals {
     /* Compiled code cache */
     void* codeCache;
 
+    /* Bytes used by the code templates */
+    unsigned int templateSize;
+
     /* Bytes already used in the code cache */
     unsigned int codeCacheByteUsed;
 
@@ -716,6 +719,9 @@ struct DvmJitGlobals {
 
     /* Flag to count trace execution */
     bool profile;
+
+    /* Table to track the overall and trace statistics of hot methods */
+    HashTable*  methodStatsTable;
 };
 
 extern struct DvmJitGlobals gDvmJit;
