@@ -3228,7 +3228,7 @@ void dvmCompilerArchDump(void)
         }
     }
     if (strlen(buf)) {
-        LOGD("dalvik.vm.jitop = %s", buf);
+        LOGD("dalvik.vm.jit.op = %s", buf);
     }
 }
 
