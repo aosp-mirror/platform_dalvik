@@ -530,8 +530,8 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
                  * Could be that a resume-all is in progress, and something
                  * grabbed the CPU when the wakeup was broadcast.  The thread
                  * performing the resume hasn't had a chance to release the
-                 * thread suspend lock.  (Should no longer be an issue --
-                 * we now release before broadcast.)
+                 * thread suspend lock.  (We release before the broadcast,
+                 * so this should be a narrow window.)
                  *
                  * Could be we hit the window as a suspend was started,
                  * and the lock has been grabbed but the suspend counts
@@ -622,6 +622,7 @@ void dvmSlayDaemons(void)
 
         LOGI("threadid=%d: killing leftover daemon threadid=%d [TODO]\n",
             self->threadId, target->threadId);
+        LOGI("             name='%s'\n", dvmGetThreadName(target));
         // TODO: suspend and/or kill the thread
         // (at the very least, we can "rescind their JNI privileges")
 
