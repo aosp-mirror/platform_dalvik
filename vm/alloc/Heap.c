@@ -776,7 +776,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
          * in backward UNIX terms means lower priority.
          */
 
-        if (priorityResult == ANDROID_PRIORITY_BACKGROUND) {
+        if (priorityResult >= ANDROID_PRIORITY_BACKGROUND) {
             dvmChangeThreadSchedulerGroup(NULL);
         }
 
@@ -1029,7 +1029,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
             LOGD_HEAP("Reset priority to %d\n", oldThreadPriority);
         }
 
-        if (oldThreadPriority == ANDROID_PRIORITY_BACKGROUND) {
+        if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
             dvmChangeThreadSchedulerGroup("bg_non_interactive");
         }
     }

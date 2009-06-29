@@ -2940,9 +2940,9 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
     }
     newNice = kNiceValues[newPriority-1];
 
-    if (newPriority == ANDROID_PRIORITY_BACKGROUND) {
+    if (newPriority >= ANDROID_PRIORITY_BACKGROUND) {
         dvmChangeThreadSchedulerGroup("bg_non_interactive");
-    } else if (getpriority(PRIO_PROCESS, pid) == ANDROID_PRIORITY_BACKGROUND) {
+    } else if (getpriority(PRIO_PROCESS, pid) >= ANDROID_PRIORITY_BACKGROUND) {
         dvmChangeThreadSchedulerGroup(NULL);
     }
 
