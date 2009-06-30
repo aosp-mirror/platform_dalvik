@@ -515,6 +515,62 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
 }
 
 /*
+ * Copy data for a fill-array-data instruction.  On a little-endian machine
+ * we can just do a memcpy(), on a big-endian system we have work to do.
+ *
+ * The trick here is that dexopt has byte-swapped each code unit, which is
+ * exactly what we want for short/char data.  For byte data we need to undo
+ * the swap, and for 4- or 8-byte values we need to swap pieces within
+ * each word.
+ */
+static void copySwappedArrayData(void* dest, const u2* src, u4 size, u2 width)
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    memcpy(dest, src, size*width);
+#else
+    int i;
+
+    switch (width) {
+    case 1:
+        /* un-swap pairs of bytes as we go */
+        for (i = (size-1) & ~1; i >= 0; i -= 2) {
+            ((u1*)dest)[i] = ((u1*)src)[i+1];
+            ((u1*)dest)[i+1] = ((u1*)src)[i];
+        }
+        /*
+         * "src" is padded to end on a two-byte boundary, but we don't want to
+         * assume "dest" is, so we handle odd length specially.
+         */
+        if ((size & 1) != 0) {
+            ((u1*)dest)[size-1] = ((u1*)src)[size];
+        }
+        break;
+    case 2:
+        /* already swapped correctly */
+        memcpy(dest, src, size*width);
+        break;
+    case 4:
+        /* swap word halves */
+        for (i = 0; i < (int) size; i++) {
+            ((u4*)dest)[i] = (src[(i << 1) + 1] << 16) | src[i << 1];
+        }
+        break;
+    case 8:
+        /* swap word halves and words */
+        for (i = 0; i < (int) (size << 1); i += 2) {
+            ((int*)dest)[i] = (src[(i << 1) + 3] << 16) | src[(i << 1) + 2];
+            ((int*)dest)[i+1] = (src[(i << 1) + 1] << 16) | src[i << 1];
+        }
+        break;
+    default:
+        LOGE("Unexpected width %d in copySwappedArrayData\n", width);
+        dvmAbort();
+        break;
+    }
+#endif
+}
+
+/*
  * Fill the array with predefined constant values.
  *
  * Returns true if job is completed, otherwise false to indicate that
@@ -552,7 +608,7 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
         dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", NULL);
         return false;
     }
-    memcpy(arrayObj->contents, &arrayData[4], size*width);
+    copySwappedArrayData(arrayObj->contents, &arrayData[4], size, width);
     return true;
 }
 
