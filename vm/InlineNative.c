@@ -20,6 +20,8 @@
  */
 #include "Dalvik.h"
 
+#include <math.h>
+
 #ifdef HAVE__MEMCMP16
 /* hand-coded assembly implementation, available on some platforms */
 //#warning "trying memcmp16"
@@ -388,6 +390,154 @@ static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 
 /*
  * ===========================================================================
+ *      java.lang.Math
+ * ===========================================================================
+ */
+
+/*
+ * public static int abs(int)
+ */
+static bool javaLangMath_abs_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    s4 val = (s4) arg0;
+    pResult->i = (val >= 0) ? val : -val;
+    return true;
+}
+
+/*
+ * public static long abs(long)
+ */
+static bool javaLangMath_abs_long(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    union {
+        u4 arg[2];
+        s8 ll;
+    } convert;
+
+    convert.arg[0] = arg0;
+    convert.arg[1] = arg1;
+    s8 val = convert.ll;
+    pResult->j = (val >= 0) ? val : -val;
+    return true;
+}
+
+/*
+ * public static float abs(float)
+ */
+static bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    union {
+        u4 arg;
+        float ff;
+    } convert;
+
+    /* clear the sign bit; assumes a fairly common fp representation */
+    convert.arg = arg0 & 0x7fffffff;
+    pResult->f = convert.ff;
+    return true;
+}
+
+/*
+ * public static float abs(float)
+ */
+static bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    union {
+        u4 arg[2];
+        s8 ll;
+        double dd;
+    } convert;
+
+    /* clear the sign bit in the (endian-dependent) high word */
+    convert.arg[0] = arg0;
+    convert.arg[1] = arg1;
+    convert.ll &= 0x7fffffffffffffffULL;
+    pResult->d = convert.dd;
+    return true;
+}
+
+/*
+ * public static int min(int)
+ */
+static bool javaLangMath_min_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    pResult->i = ((s4) arg0 < (s4) arg1) ? arg0 : arg1;
+    return true;
+}
+
+/*
+ * public static int max(int)
+ */
+static bool javaLangMath_max_int(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    pResult->i = ((s4) arg0 > (s4) arg1) ? arg0 : arg1;
+    return true;
+}
+
+/*
+ * public static double sqrt(double)
+ *
+ * With ARM VFP enabled, gcc turns this into an fsqrtd instruction, followed
+ * by an fcmpd of the result against itself.  If it doesn't match (i.e.
+ * it's NaN), the libm sqrt() is invoked.
+ */
+static bool javaLangMath_sqrt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    union {
+        u4 arg[2];
+        double dd;
+    } convert;
+
+    convert.arg[0] = arg0;
+    convert.arg[1] = arg1;
+    pResult->d = sqrt(convert.dd);
+    return true;
+}
+
+/*
+ * public static double cos(double)
+ */
+static bool javaLangMath_cos(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    union {
+        u4 arg[2];
+        double dd;
+    } convert;
+
+    convert.arg[0] = arg0;
+    convert.arg[1] = arg1;
+    pResult->d = cos(convert.dd);
+    return true;
+}
+
+/*
+ * public static double sin(double)
+ */
+static bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    union {
+        u4 arg[2];
+        double dd;
+    } convert;
+
+    convert.arg[0] = arg0;
+    convert.arg[1] = arg1;
+    pResult->d = sin(convert.dd);
+    return true;
+}
+
+
+/*
+ * ===========================================================================
  *      Infrastructure
  * ===========================================================================
  */
@@ -406,6 +556,7 @@ const InlineOperation gDvmInlineOpsTable[] = {
     { org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod,
         "Lorg/apache/harmony/dalvik/NativeTestTarget;",
         "emptyInlineMethod", "()V" },
+
     { javaLangString_charAt,
         "Ljava/lang/String;", "charAt", "(I)C" },
     { javaLangString_compareTo,
@@ -414,6 +565,25 @@ const InlineOperation gDvmInlineOpsTable[] = {
         "Ljava/lang/String;", "equals", "(Ljava/lang/Object;)Z" },
     { javaLangString_length,
         "Ljava/lang/String;", "length", "()I" },
+
+    { javaLangMath_abs_int,
+        "Ljava/lang/Math;", "abs", "(I)I" },
+    { javaLangMath_abs_long,
+        "Ljava/lang/Math;", "abs", "(J)J" },
+    { javaLangMath_abs_float,
+        "Ljava/lang/Math;", "abs", "(F)F" },
+    { javaLangMath_abs_double,
+        "Ljava/lang/Math;", "abs", "(D)D" },
+    { javaLangMath_min_int,
+        "Ljava/lang/Math;", "min", "(II)I" },
+    { javaLangMath_max_int,
+        "Ljava/lang/Math;", "max", "(II)I" },
+    { javaLangMath_sqrt,
+        "Ljava/lang/Math;", "sqrt", "(D)D" },
+    { javaLangMath_cos,
+        "Ljava/lang/Math;", "cos", "(D)D" },
+    { javaLangMath_sin,
+        "Ljava/lang/Math;", "sin", "(D)D" },
 };
 
 

@@ -432,6 +432,25 @@ public class IntMath {
         assert(huge == 0x9922334455667788L);    // const-wide
     }
 
+    /*
+     * Test some java.lang.Math functions.
+     *
+     * The method arguments are positive values.
+     */
+    static void jlmTests(int ii, long ll) {
+        System.out.println("IntMath.jlmTests");
+
+        assert(Math.abs(ii) == ii);
+        assert(Math.abs(-ii) == ii);
+        assert(Math.min(ii, -5) == -5);
+        assert(Math.max(ii, -5) == ii);
+
+        assert(Math.abs(ll) == ll);
+        assert(Math.abs(-ll) == ll);
+        assert(Math.min(ll, -5L) == -5L);
+        assert(Math.max(ll, -5L) == ll);
+    }
+
     public static void run() {
         shiftTest1();
         shiftTest2();
@@ -467,6 +486,8 @@ public class IntMath {
         checkConsts((byte) 1, (short) -256, -88888, 0x9922334455667788L);
 
         unopCheck(unopTest(38));
+
+        jlmTests(12345, 0x1122334455667788L);
     }
 }
 

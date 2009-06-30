@@ -52,28 +52,6 @@ INLINE u4 dvmFloatToU4(float val) {
     conv.in = val;
     return conv.out;
 }
-#if 0
-INLINE float dvmU8ToFloat(u8 val) {
-    union { u8 in; float out; } conv;
-    conv.in = val;
-    return conv.out;
-}
-INLINE u8 dvmFloatToU8(float val) {
-    union { float in; u8 out; } conv;
-    conv.in = val;
-    return conv.out;
-}
-INLINE double dvmU8ToDouble(u8 val) {
-    union { u8 in; double out; } conv;
-    conv.in = val;
-    return conv.out;
-}
-INLINE u8 dvmDoubleToU8(double val) {
-    union { double in; u8 out; } conv;
-    conv.in = val;
-    return conv.out;
-}
-#endif
 
 /*
  * Print a hex dump to the log file.
