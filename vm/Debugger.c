@@ -2697,10 +2697,10 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
     dvmUnlockThreadList();
 
     /*
-     * We change our thread status (which should be THREAD_RUNNING) so the
-     * VM can suspend for a GC if the invoke request causes us to run out
-     * of memory.  It's also a good idea to change it before locking the
-     * invokeReq mutex, although that should never be held for long.
+     * We change our (JDWP thread) status, which should be THREAD_RUNNING,
+     * so the VM can suspend for a GC if the invoke request causes us to
+     * run out of memory.  It's also a good idea to change it before locking
+     * the invokeReq mutex, although that should never be held for long.
      */
     Thread* self = dvmThreadSelf();
     int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
@@ -2774,18 +2774,25 @@ static u1 resultTagFromSignature(const Method* method)
 
 /*
  * Execute the method described by "*pReq".
+ *
+ * We're currently in VMWAIT, because we're stopped on a breakpoint.  We
+ * want to switch to RUNNING while we execute.
  */
 void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
 {
     Thread* self = dvmThreadSelf();
     const Method* meth;
     Object* oldExcept;
+    int oldStatus;
 
     /*
      * We can be called while an exception is pending in the VM.  We need
      * to preserve that across the method invocation.
      */
     oldExcept = dvmGetException(self);
+    dvmClearException(self);
+
+    oldStatus = dvmChangeStatus(self, THREAD_RUNNING);
 
     /*
      * Translate the method through the vtable, unless we're calling a
@@ -2832,6 +2839,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
 
     if (oldExcept != NULL)
         dvmSetException(self, oldExcept);
+    dvmChangeStatus(self, oldStatus);
 }
 
 // for dvmAddressSetForLine
