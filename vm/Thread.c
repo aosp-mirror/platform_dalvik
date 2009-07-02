@@ -481,6 +481,20 @@ void dvmUnlockThreadList(void)
     assert(cc == 0);
 }
 
+/*
+ * Convert SuspendCause to a string.
+ */
+static const char* getSuspendCauseStr(SuspendCause why)
+{
+    switch (why) {
+    case SUSPEND_NOT:               return "NOT?";
+    case SUSPEND_FOR_GC:            return "gc";
+    case SUSPEND_FOR_DEBUG:         return "debug";
+    case SUSPEND_FOR_DEBUG_EVENT:   return "debug-event";
+    case SUSPEND_FOR_STACK_DUMP:    return "stack-dump";
+    default:                        return "UNKNOWN";
+    }
+}
 
 /*
  * Grab the "thread suspend" lock.  This is required to prevent the
@@ -492,7 +506,6 @@ void dvmUnlockThreadList(void)
  */
 static void lockThreadSuspend(const char* who, SuspendCause why)
 {
-    const int kMaxRetries = 10;
     const int kSpinSleepTime = 3*1000*1000;        /* 3s */
     u8 startWhen = 0;       // init req'd to placate gcc
     int sleepIter = 0;
@@ -503,23 +516,30 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
         if (cc != 0) {
             if (!dvmCheckSuspendPending(NULL)) {
                 /*
-                 * Could be unusual JNI-attach thing, could be we hit
-                 * the window as the suspend or resume was started.  Could
-                 * also be the debugger telling us to resume at roughly
+                 * Could be we hit the window as the suspend or resume
+                 * was started (i.e. the lock has been grabbed but the
+                 * other thread hasn't yet set our "please suspend" flag).
+                 *
+                 * Could be an unusual JNI thread-attach thing.
+                 *
+                 * Could be the debugger telling us to resume at roughly
                  * the same time we're posting an event.
                  */
-                LOGI("threadid=%d ODD: thread-suspend lock held (%s:%d)"
-                     " but suspend not pending\n",
-                    dvmThreadSelf()->threadId, who, why);
+                LOGI("threadid=%d ODD: want thread-suspend lock (%s:%s),"
+                     " it's held, no suspend pending\n",
+                    dvmThreadSelf()->threadId, who, getSuspendCauseStr(why));
+            } else {
+                /* we suspended; reset timeout */
+                sleepIter = 0;
             }
 
             /* give the lock-holder a chance to do some work */
             if (sleepIter == 0)
                 startWhen = dvmGetRelativeTimeUsec();
             if (!dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
-                LOGE("threadid=%d: couldn't get thread-suspend lock (%s:%d),"
+                LOGE("threadid=%d: couldn't get thread-suspend lock (%s:%s),"
                      " bailing\n",
-                    dvmThreadSelf()->threadId, who, why);
+                    dvmThreadSelf()->threadId, who, getSuspendCauseStr(why));
                 dvmDumpAllThreads(false);
                 dvmAbort();
             }
@@ -2202,8 +2222,15 @@ void dvmSuspendSelf(bool jdwpActivity)
                 &gDvm.threadSuspendCountLock);
         assert(cc == 0);
         if (self->suspendCount != 0) {
-            LOGD("threadid=%d: still suspended after undo (s=%d d=%d)\n",
-                self->threadId, self->suspendCount, self->dbgSuspendCount);
+            /*
+             * The condition was signaled but we're still suspended.  This
+             * can happen if the debugger lets go while a SIGQUIT thread
+             * dump event is pending (assuming SignalCatcher was resumed for
+             * just long enough to try to grab the thread-suspend lock).
+             */
+            LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d s=%c)\n",
+                self->threadId, self->suspendCount, self->dbgSuspendCount,
+                self->isSuspended ? 'Y' : 'N');
         }
     }
     assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
@@ -2962,9 +2989,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         threadName, isDaemon ? " daemon" : "",
         priority, thread->threadId, kStatusNames[thread->status]);
     dvmPrintDebugMessage(target,
-        "  | group=\"%s\" sCount=%d dsCount=%d s=%d obj=%p\n",
+        "  | group=\"%s\" sCount=%d dsCount=%d s=%c obj=%p\n",
         groupName, thread->suspendCount, thread->dbgSuspendCount,
-        thread->isSuspended, thread->threadObj);
+        thread->isSuspended ? 'Y' : 'N', thread->threadObj);
     dvmPrintDebugMessage(target,
         "  | sysTid=%d nice=%d sched=%d/%d handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),

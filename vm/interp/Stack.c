@@ -351,7 +351,8 @@ static ClassObject* callPrep(Thread* self, const Method* method, Object* obj,
 
 #ifndef NDEBUG
     if (self->status != THREAD_RUNNING) {
-        LOGW("Status=%d on call to %s.%s -\n", self->status,
+        LOGW("threadid=%d: status=%d on call to %s.%s -\n",
+            self->threadId, self->status,
             method->clazz->descriptor, method->name);
     }
 #endif
