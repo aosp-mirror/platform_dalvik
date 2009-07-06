@@ -50,3 +50,11 @@ Here is the combined header comment:
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+Native SH call bridge
+---------------------
+
+Native SH call bridge is written by
+Shin-ichiro KAWASAKI <shinichiro.kawasaki.mg@hitachi.com>
+and Contributed to Android by Hitachi, Ltd. and Renesas Solutions Corp.

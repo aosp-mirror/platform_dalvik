@@ -283,6 +283,15 @@ ifeq ($(TARGET_ARCH),x86)
 		mterp/out/InterpAsm-x86.S
 endif
 
+ifeq ($(TARGET_ARCH),sh)
+  MTERP_ARCH_KNOWN := true
+  LOCAL_SRC_FILES += \
+		arch/sh/CallSH4ABI.S \
+		arch/generic/Hints.c \
+		mterp/out/InterpC-allstubs.c \
+		mterp/out/InterpAsm-allstubs.S
+endif
+
 ifeq ($(MTERP_ARCH_KNOWN),false)
   # unknown architecture, try to use FFI
   LOCAL_C_INCLUDES += external/libffi/$(TARGET_OS)-$(TARGET_ARCH)
