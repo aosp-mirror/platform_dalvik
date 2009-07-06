@@ -41,11 +41,11 @@ only responsible for handling requests from the debugger; VM-initated
 communication, such as notifying the debugger when the VM has stopped at
 a breakpoint, are sent from the affected thread.
 </p><p>
-When the VM is embedded in the Android framework,
-debugging is enabled in the VM unless the system property
-<code>ro.secure</code> is set to </code>1</code>.  On these
-"secure" devices, debugging is only enabled in app processes whose
-manifest contains <code>android:debuggable="true"</code> in the
+When the VM is started from the Android app framework, debugging is enabled
+for all applications when the system property <code>ro.debuggable</code>
+is set to </code>1</code> (use <code>adb shell getprop ro.debuggable</code>
+to check it).  If it's zero, debugging can be enabled via the application's
+manifest, which must include <code>android:debuggable="true"</code> in the
 <code>&lt;application&gt;</code> element.
 
 </p><p>
@@ -194,13 +194,18 @@ The debugger and garbage collector are somewhat loosely
 integrated at present.  The VM currently guarantees that any object the
 debugger is aware of will not be garbage collected until after the
 debugger disconnects.  This can result in a build-up over time while the
-debugger is connected.
+debugger is connected.  For example, if the debugger sees a running
+thread, the associated Thread object will not be collected, even after
+the thread terminates.
 </p><p>
 The situation is exacerbated by a flaw in the exception processing code,
 which results in nearly all exceptions being added to the "do not discard"
 list, even if the debugger never sees them.  Having a debugger attached
 to a program that throws lots of exceptions can result in out-of-memory
 errors.  This will be fixed in a future release.
+</p><p>
+The only way to "unlock" the references is to detach and reattach the
+debugger.
 </p><p>
 &nbsp;
 </p><p>
