@@ -91,7 +91,7 @@ Armv5teEncodingMap EncodingMap[ARMV5TE_LAST] = {
                  IS_BINARY_OP | CLOBBER_DEST,
                  "add", "r!0d, r!1d"),
     ENCODING_MAP(ARMV5TE_ADD_PC_REL,    0xa000, 10, 8, 7, 0, -1, -1,
-                 IS_BINARY_OP | CLOBBER_DEST,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "add", "r!0d, pc, #!1E"),
     ENCODING_MAP(ARMV5TE_ADD_SP_REL,    0xa800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
@@ -169,7 +169,7 @@ Armv5teEncodingMap EncodingMap[ARMV5TE_LAST] = {
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldr", "r!0d, [r!1d, r!2d]"),
     ENCODING_MAP(ARMV5TE_LDR_PC_REL,    0x4800, 10, 8, 7, 0, -1, -1,
-                 IS_BINARY_OP | CLOBBER_DEST,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldr", "r!0d, [pc, #!1E]"),
     ENCODING_MAP(ARMV5TE_LDR_SP_REL,    0x9800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
@@ -210,15 +210,15 @@ Armv5teEncodingMap EncodingMap[ARMV5TE_LAST] = {
     ENCODING_MAP(ARMV5TE_MOV_RR,        0x1c00, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mov", "r!0d, r!1d"),
-    ENCODING_MAP(ARMV5TE_MOV_RR_LH,     0x4640, 2, 0, 5, 3, -1, -1,
-                 IS_BINARY_OP | CLOBBER_DEST,
-                 "mov", "r!0D, r!1d"),
-    ENCODING_MAP(ARMV5TE_MOV_RR_HL,     0x4680, 2, 0, 5, 3, -1, -1,
-                 IS_BINARY_OP | CLOBBER_DEST,
-                 "mov", "r!0d, r!1D"),
-    ENCODING_MAP(ARMV5TE_MOV_RR_HH,     0x46c0, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(ARMV5TE_MOV_RR_H2H,    0x46c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mov", "r!0D, r!1D"),
+    ENCODING_MAP(ARMV5TE_MOV_RR_H2L,    0x4640, 2, 0, 5, 3, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "mov", "r!0d, r!1D"),
+    ENCODING_MAP(ARMV5TE_MOV_RR_L2H,    0x4680, 2, 0, 5, 3, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "mov", "r!0D, r!1d"),
     ENCODING_MAP(ARMV5TE_MUL,           0x4340, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mul", "r!0d, r!1d"),
@@ -335,7 +335,12 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             lir->opCode == ARMV5TE_ADD_PC_REL) {
             Armv5teLIR *lirTarget = (Armv5teLIR *) lir->generic.target;
             intptr_t pc = (lir->generic.offset + 4) & ~3;
-            intptr_t target = lirTarget->generic.offset;
+            /*
+             * Allow an offset (stored in operands[2] to be added to the
+             * PC-relative target. Useful to get to a fixed field inside a
+             * chaining cell.
+             */
+            intptr_t target = lirTarget->generic.offset + lir->operands[2];
             int delta = target - pc;
             if (delta & 0x3) {
                 LOGE("PC-rel distance is not multiples of 4: %d\n", delta);
@@ -468,7 +473,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
 
     /* Add space for chain cell counts & trace description */
     u4 chainCellOffset = offset;
-    Armv5teLIR *chainCellOffsetLIR = cUnit->chainCellOffsetLIR;
+    Armv5teLIR *chainCellOffsetLIR = (Armv5teLIR *) cUnit->chainCellOffsetLIR;
     assert(chainCellOffsetLIR);
     assert(chainCellOffset < 0x10000);
     assert(chainCellOffsetLIR->opCode == ARMV5TE_16BIT_DATA &&
@@ -544,6 +549,21 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
                (long)(cUnit->baseAddr + offset), 0);
 }
 
+static u4 assembleBXPair(int branchOffset)
+{
+    u4 thumb1, thumb2;
+
+    if ((branchOffset < -2048) | (branchOffset > 2046)) {
+        thumb1 =  (0xf000 | ((branchOffset>>12) & 0x7ff));
+        thumb2 =  (0xf800 | ((branchOffset>> 1) & 0x7ff));
+    } else {
+        thumb1 =  (0xe000 | ((branchOffset>> 1) & 0x7ff));
+        thumb2 =  0x4300;  /* nop -> or r0, r0 */
+    }
+
+    return thumb2<<16 | thumb1;
+}
+
 /*
  * Perform translation chain operation.
  * For ARM, we'll use a pair of thumb instructions to generate
@@ -560,8 +580,6 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
 {
     int baseAddr = (u4) branchAddr + 4;
     int branchOffset = (int) tgtAddr - baseAddr;
-    u4 thumb1;
-    u4 thumb2;
     u4 newInst;
 
     if (gDvm.sumThreadSuspendCount == 0) {
@@ -572,20 +590,91 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
         COMPILER_TRACE_CHAINING(
             LOGD("Jit Runtime: chaining 0x%x to 0x%x\n",
                  (int) branchAddr, (int) tgtAddr & -2));
-        if ((branchOffset < -2048) | (branchOffset > 2046)) {
-            thumb1 =  (0xf000 | ((branchOffset>>12) & 0x7ff));
-            thumb2 =  (0xf800 | ((branchOffset>> 1) & 0x7ff));
-        } else {
-            thumb1 =  (0xe000 | ((branchOffset>> 1) & 0x7ff));
-            thumb2 =  0x4300;  /* nop -> or r0, r0 */
-        }
 
-        newInst = thumb2<<16 | thumb1;
+        newInst = assembleBXPair(branchOffset);
+
         *branchAddr = newInst;
         cacheflush((long)branchAddr, (long)branchAddr + 4, 0);
     }
 
     return tgtAddr;
+}
+
+/*
+ * This method is called from the invoke templates for virtual and interface
+ * methods to speculatively setup a chain to the callee. The templates are
+ * written in assembly and have setup method, cell, and clazz at r0, r2, and
+ * r3 respectively, so there is a unused argument in the list. Upon return one
+ * of the following three results may happen:
+ *   1) Chain is not setup because the callee is native. Reset the rechain
+ *      count to a big number so that it will take a long time before the next
+ *      rechain attempt to happen.
+ *   2) Chain is not setup because the callee has not been created yet. Reset
+ *      the rechain count to a small number and retry in the near future.
+ *   3) Ask all other threads to stop before patching this chaining cell.
+ *      This is required because another thread may have passed the class check
+ *      but hasn't reached the chaining cell yet to follow the chain. If we
+ *      patch the content before halting the other thread, there could be a
+ *      small window for race conditions to happen that it may follow the new
+ *      but wrong chain to invoke a different method.
+ */
+const Method *dvmJitToPatchPredictedChain(const Method *method,
+                                          void *unused,
+                                          PredictedChainingCell *cell,
+                                          const ClassObject *clazz)
+{
+    /* Don't come back here for a long time if the method is native */
+    if (dvmIsNativeMethod(method)) {
+        cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
+        cacheflush((long) cell, (long) (cell+1), 0);
+        COMPILER_TRACE_CHAINING(
+            LOGD("Jit Runtime: predicted chain %p to native method %s ignored",
+                 cell, method->name));
+        goto done;
+    }
+    int tgtAddr = (int) dvmJitGetCodeAddr(method->insns);
+
+    /*
+     * Compilation not made yet for the callee. Reset the counter to a small
+     * value and come back to check soon.
+     */
+    if (tgtAddr == 0) {
+        /*
+         * Wait for a few invocations (currently set to be 16) before trying
+         * to setup the chain again.
+         */
+        cell->counter = PREDICTED_CHAIN_COUNTER_DELAY;
+        cacheflush((long) cell, (long) (cell+1), 0);
+        COMPILER_TRACE_CHAINING(
+            LOGD("Jit Runtime: predicted chain %p to method %s delayed",
+                 cell, method->name));
+        goto done;
+    }
+
+    /* Stop the world */
+    dvmSuspendAllThreads(SUSPEND_FOR_JIT);
+
+    int baseAddr = (int) cell + 4;   // PC is cur_addr + 4
+    int branchOffset = tgtAddr - baseAddr;
+
+    COMPILER_TRACE_CHAINING(
+        LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) patched",
+             cell, cell->clazz ? cell->clazz->descriptor : "NULL",
+             clazz->descriptor,
+             method->name));
+
+    cell->branch = assembleBXPair(branchOffset);
+    cell->clazz = clazz;
+    cell->method = method;
+    cell->counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
+
+    cacheflush((long) cell, (long) (cell+1), 0);
+
+    /* All done - resume all other threads */
+    dvmResumeAllThreads(SUSPEND_FOR_JIT);
+
+done:
+    return method;
 }
 
 /*
@@ -601,24 +690,34 @@ u4* dvmJitUnchain(void* codeAddr)
     u2 chainCellOffset = *pChainCellOffset;
     ChainCellCounts *pChainCellCounts =
           (ChainCellCounts*)((char*)codeAddr + chainCellOffset -3);
-    int cellCount;
+    int cellSize;
     u4* pChainCells;
     u4* pStart;
     u4 thumb1;
     u4 thumb2;
     u4 newInst;
     int i,j;
+    PredictedChainingCell *predChainCell;
 
     /* Get total count of chain cells */
-    for (i = 0, cellCount = 0; i < CHAINING_CELL_LAST; i++) {
-        cellCount += pChainCellCounts->u.count[i];
+    for (i = 0, cellSize = 0; i < CHAINING_CELL_LAST; i++) {
+        if (i != CHAINING_CELL_INVOKE_PREDICTED) {
+            cellSize += pChainCellCounts->u.count[i] * 2;
+        } else {
+            cellSize += pChainCellCounts->u.count[i] * 4;
+        }
     }
 
     /* Locate the beginning of the chain cell region */
-    pStart = pChainCells = (u4*)((char*)pChainCellCounts - (cellCount * 8));
+    pStart = pChainCells = ((u4 *) pChainCellCounts) - cellSize;
 
     /* The cells are sorted in order - walk through them and reset */
     for (i = 0; i < CHAINING_CELL_LAST; i++) {
+        int elemSize = 2; /* Most chaining cell has two words */
+        if (i == CHAINING_CELL_INVOKE_PREDICTED) {
+            elemSize = 4;
+        }
+
         for (j = 0; j < pChainCellCounts->u.count[i]; j++) {
             int targetOffset;
             switch(i) {
@@ -627,26 +726,38 @@ u4* dvmJitUnchain(void* codeAddr)
                           jitToInterpEntries.dvmJitToInterpNormal);
                     break;
                 case CHAINING_CELL_HOT:
-                case CHAINING_CELL_INVOKE:
+                case CHAINING_CELL_INVOKE_SINGLETON:
                     targetOffset = offsetof(InterpState,
                           jitToInterpEntries.dvmJitToTraceSelect);
+                    break;
+                case CHAINING_CELL_INVOKE_PREDICTED:
+                    targetOffset = 0;
+                    predChainCell = (PredictedChainingCell *) pChainCells;
+                    /* Reset the cell to the init state */
+                    predChainCell->branch = PREDICTED_CHAIN_BX_PAIR_INIT;
+                    predChainCell->clazz = PREDICTED_CHAIN_CLAZZ_INIT;
+                    predChainCell->method = PREDICTED_CHAIN_METHOD_INIT;
+                    predChainCell->counter = PREDICTED_CHAIN_COUNTER_INIT;
                     break;
                 default:
                     dvmAbort();
             }
+            COMPILER_TRACE_CHAINING(
+                LOGD("Jit Runtime: unchaining 0x%x", (int)pChainCells));
             /*
-             * Arm code sequence for a chaining cell is:
+             * Thumb code sequence for a chaining cell is:
              *     ldr  r0, rGLUE, #<word offset>
              *     blx  r0
              */
-            COMPILER_TRACE_CHAINING(
-                LOGD("Jit Runtime: unchaining 0x%x", (int)pChainCells));
-            targetOffset = targetOffset >> 2;  /* convert to word offset */
-            thumb1 = 0x6800 | (targetOffset << 6) | (rGLUE << 3) | (r0 << 0);
-            thumb2 = 0x4780 | (r0 << 3);
-            newInst = thumb2<<16 | thumb1;
-            *pChainCells = newInst;
-            pChainCells += 2;  /* Advance by 2 words */
+            if (i != CHAINING_CELL_INVOKE_PREDICTED) {
+                targetOffset = targetOffset >> 2;  /* convert to word offset */
+                thumb1 = 0x6800 | (targetOffset << 6) |
+                         (rGLUE << 3) | (r0 << 0);
+                thumb2 = 0x4780 | (r0 << 3);
+                newInst = thumb2<<16 | thumb1;
+                *pChainCells = newInst;
+            }
+            pChainCells += elemSize;  /* Advance by a fixed number of words */
         }
     }
     return pChainCells;

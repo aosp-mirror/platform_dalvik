@@ -6,6 +6,7 @@
 # Options:
 #   --quiet       -- don't chatter
 #   --fast        -- use the fast interpreter (the default)
+#   --jit         -- use the jit
 #   --portable    -- use the portable interpreter
 #   --debug       -- wait for debugger to attach
 #   --zygote      -- use the zygote (if so, all other options are ignored)
@@ -35,6 +36,10 @@ while true; do
     elif [ "x$1" = "x--fast" ]; then
         INTERP="fast"
         msg "Using fast interpreter"
+        shift
+    elif [ "x$1" = "x--jit" ]; then
+        INTERP="jit"
+        msg "Using jit"
         shift
     elif [ "x$1" = "x--portable" ]; then
         INTERP="portable"

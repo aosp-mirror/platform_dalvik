@@ -39,7 +39,7 @@ typedef enum InterpEntry {
 
 #if defined(WITH_JIT)
 /*
- * There are five entry points from the compiled code to the interpreter:
+ * There are six entry points from the compiled code to the interpreter:
  * 1) dvmJitToInterpNormal: find if there is a corresponding compilation for
  *    the new dalvik PC. If so, chain the originating compilation with the
  *    target then jump to it.
@@ -62,6 +62,8 @@ typedef enum InterpEntry {
  *    opportunity, and if none is available will switch to the debug
  *    interpreter immediately for trace selection (as if threshold had
  *    just been reached).
+ * 6) dvmJitToPredictedChain: patch the chaining cell for a virtual call site
+ *    to a predicted callee.
  */
 struct JitToInterpEntries {
     void *dvmJitToInterpNormal;
@@ -69,6 +71,7 @@ struct JitToInterpEntries {
     void *dvmJitToInterpPunt;
     void *dvmJitToInterpSingleStep;
     void *dvmJitToTraceSelect;
+    void *dvmJitToPatchPredictedChain;
 };
 
 #define JIT_TRACE_THRESH_FILTER_SIZE  16
@@ -146,7 +149,7 @@ typedef struct InterpState {
     const u2* currRunHead;          // Start of run we're building
     int currRunLen;           // Length of run in 16-bit words
     int lastThreshFilter;
-    u2* threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
+    const u2* threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
     JitTraceRun trace[MAX_JIT_RUN_LEN];
 #endif
 

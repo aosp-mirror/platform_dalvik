@@ -264,6 +264,8 @@ loop:
         } else if (rcvd == SIGUSR2) {
             gDvmJit.printMe ^= true;
             dvmCompilerDumpStats();
+            /* Stress-test unchain all */
+            dvmJitUnchainAll();
 #endif
         } else {
             LOGE("unexpected signal %d\n", rcvd);

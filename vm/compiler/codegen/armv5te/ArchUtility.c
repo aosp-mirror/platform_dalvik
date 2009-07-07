@@ -167,8 +167,11 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
         case ARMV5TE_PSEUDO_CHAINING_CELL_HOT:
             LOGD("-------- chaining cell (hot): 0x%04x\n", dest);
             break;
-        case ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE:
-            LOGD("-------- chaining cell (invoke): %s/%p\n",
+        case ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_PREDICTED:
+            LOGD("-------- chaining cell (predicted)\n");
+            break;
+        case ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_SINGLETON:
+            LOGD("-------- chaining cell (invoke singleton): %s/%p\n",
                  ((Method *)dest)->name,
                  ((Method *)dest)->insns);
             break;

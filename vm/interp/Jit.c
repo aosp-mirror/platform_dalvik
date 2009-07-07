@@ -191,8 +191,10 @@ void dvmJitStats()
 #endif
         LOGD("JIT: %d Translation chains", gDvmJit.translationChains);
 #if defined(INVOKE_STATS)
-        LOGD("JIT: Invoke: %d noOpt, %d chainable, %d return",
-          gDvmJit.invokeNoOpt, gDvmJit.invokeChain, gDvmJit.returnOp);
+        LOGD("JIT: Invoke: %d chainable, %d pred. chain, %d native, "
+             "%d return",
+             gDvmJit.invokeChain, gDvmJit.invokePredictedChain,
+             gDvmJit.invokeNative, gDvmJit.returnOp);
 #endif
        if (gDvmJit.profile) {
            int numTraces = 0;
@@ -367,6 +369,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             switchInterp = !debugOrProfile;
             break;
         case kJitNormal:
+            switchInterp = !debugOrProfile;
             break;
         default:
             dvmAbort();

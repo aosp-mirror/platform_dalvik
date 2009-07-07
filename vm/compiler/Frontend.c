@@ -433,24 +433,31 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
                       kInstrInvoke)) == 0;
 
         /* Target block not included in the trace */
-        if (targetOffset != curOffset && curBB->taken == NULL) {
+        if (curBB->taken == NULL &&
+            (isInvoke || (targetOffset != curOffset))) {
+            BasicBlock *newBB;
             if (isInvoke) {
-                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_INVOKE);
+                /* Monomorphic callee */
+                if (callee) {
+                    newBB = dvmCompilerNewBB(CHAINING_CELL_INVOKE_SINGLETON);
+                    newBB->startOffset = 0;
+                    newBB->containingMethod = callee;
+                /* Will resolve at runtime */
+                } else {
+                    newBB = dvmCompilerNewBB(CHAINING_CELL_INVOKE_PREDICTED);
+                    newBB->startOffset = 0;
+                }
             /* For unconditional branches, request a hot chaining cell */
             } else {
-                lastBB->next = dvmCompilerNewBB(flags & kInstrUnconditional ?
+                newBB = dvmCompilerNewBB(flags & kInstrUnconditional ?
                                                   CHAINING_CELL_HOT :
                                                   CHAINING_CELL_NORMAL);
+                newBB->startOffset = targetOffset;
             }
-            lastBB = lastBB->next;
-            lastBB->id = numBlocks++;
-            if (isInvoke) {
-                lastBB->startOffset = 0;
-                lastBB->containingMethod = callee;
-            } else {
-                lastBB->startOffset = targetOffset;
-            }
-            curBB->taken = lastBB;
+            newBB->id = numBlocks++;
+            curBB->taken = newBB;
+            lastBB->next = newBB;
+            lastBB = newBB;
         }
 
         /* Fallthrough block not included in the trace */

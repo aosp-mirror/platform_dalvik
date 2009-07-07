@@ -325,7 +325,7 @@ static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
 {
     genDispatchToHandler(cUnit, TEMPLATE_RETURN);
 #if defined(INVOKE_STATS)
-    gDvmJit.jitReturn++;
+    gDvmJit.returnOp++;
 #endif
     int dPC = (int) (cUnit->method->insns + mir->offset);
     Armv5teLIR *branch = newLIR0(cUnit, ARMV5TE_B_UNCOND);
@@ -355,7 +355,7 @@ static void loadValuePair(CompilationUnit *cUnit, int vSrc, int rDestLo,
         if (vSrc <= 64) {
             /* Sneak 4 into the base address first */
             newLIR3(cUnit, ARMV5TE_ADD_RRI3, rDestLo, rFP, 4);
-            newLIR2(cUnit, ARMV5TE_ADD_RI8, rDestHi, (vSrc-1)*4);
+            newLIR2(cUnit, ARMV5TE_ADD_RI8, rDestLo, (vSrc-1)*4);
         } else {
             /* Offset too far from rFP */
             loadConstant(cUnit, rDestLo, vSrc*4);
@@ -988,7 +988,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
             loadConstant(cUnit, reg3, 0);
             newLIR3(cUnit, ARMV5TE_SUB_RRR, reg2, reg3, reg0);
             newLIR2(cUnit, ARMV5TE_SBC, reg3, reg1);
-            storeValuePair(cUnit, r0, reg3, vDest, reg0);
+            storeValuePair(cUnit, reg2, reg3, vDest, reg0);
             return false;
         }
         default:
@@ -1323,38 +1323,223 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
     }
 }
 
-static void genInvokeCommon(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
-                            Armv5teLIR *labelList, Armv5teLIR *pcrLabel,
-                            const Method *calleeMethod)
+/*
+ * Generate code to setup the call stack then jump to the chaining cell if it
+ * is not a native method.
+ */
+static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
+                                     BasicBlock *bb, Armv5teLIR *labelList,
+                                     Armv5teLIR *pcrLabel,
+                                     const Method *calleeMethod)
 {
     Armv5teLIR *retChainingCell = &labelList[bb->fallThrough->id];
 
     /* r1 = &retChainingCell */
-    Armv5teLIR *addrRetChain = newLIR2(cUnit, ARMV5TE_ADD_PC_REL,
-                                           r1, 0);
+    Armv5teLIR *addrRetChain = newLIR3(cUnit, ARMV5TE_ADD_PC_REL,
+                                           r1, 0, 0);
     /* r4PC = dalvikCallsite */
     loadConstant(cUnit, r4PC,
                  (int) (cUnit->method->insns + mir->offset));
     addrRetChain->generic.target = (LIR *) retChainingCell;
     /*
-     * r0 = calleeMethod (loaded upon calling genInvokeCommon)
+     * r0 = calleeMethod (loaded upon calling genInvokeSingletonCommon)
      * r1 = &ChainingCell
      * r4PC = callsiteDPC
      */
     if (dvmIsNativeMethod(calleeMethod)) {
-        genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
+        genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NATIVE);
 #if defined(INVOKE_STATS)
-        gDvmJit.invokeNoOpt++;
+        gDvmJit.invokeNative++;
 #endif
     } else {
         genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_CHAIN);
 #if defined(INVOKE_STATS)
         gDvmJit.invokeChain++;
 #endif
+        /* Branch to the chaining cell */
         genUnconditionalBranch(cUnit, &labelList[bb->taken->id]);
     }
     /* Handle exceptions using the interpreter */
     genTrap(cUnit, mir->offset, pcrLabel);
+}
+
+/*
+ * Generate code to check the validity of a predicted chain and take actions
+ * based on the result.
+ *
+ * 0x426a99aa : ldr     r4, [pc, #72] --> r4 <- dalvikPC of this invoke
+ * 0x426a99ac : add     r1, pc, #32   --> r1 <- &retChainingCell
+ * 0x426a99ae : add     r2, pc, #40   --> r2 <- &predictedChainingCell
+ * 0x426a99b0 : blx_1   0x426a918c    --+ TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN
+ * 0x426a99b2 : blx_2   see above     --+
+ * 0x426a99b4 : b       0x426a99d8    --> off to the predicted chain
+ * 0x426a99b6 : b       0x426a99c8    --> punt to the interpreter
+ * 0x426a99b8 : ldr     r0, [r7, #44] --> r0 <- this->class->vtable[methodIdx]
+ * 0x426a99ba : cmp     r1, #0        --> compare r1 (rechain count) against 0
+ * 0x426a99bc : bgt     0x426a99c2    --> >=0? don't rechain
+ * 0x426a99be : ldr     r7, [r6, #96] --+ dvmJitToPatchPredictedChain
+ * 0x426a99c0 : blx     r7            --+
+ * 0x426a99c2 : add     r1, pc, #12   --> r1 <- &retChainingCell
+ * 0x426a99c4 : blx_1   0x426a9098    --+ TEMPLATE_INVOKE_METHOD_NO_OPT
+ * 0x426a99c6 : blx_2   see above     --+
+ */
+static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
+                                   int methodIndex,
+                                   Armv5teLIR *retChainingCell,
+                                   Armv5teLIR *predChainingCell,
+                                   Armv5teLIR *pcrLabel)
+{
+    /* "this" is already left in r0 by genProcessArgs* */
+
+    /* r4PC = dalvikCallsite */
+    loadConstant(cUnit, r4PC,
+                 (int) (cUnit->method->insns + mir->offset));
+
+    /* r1 = &retChainingCell */
+    Armv5teLIR *addrRetChain = newLIR2(cUnit, ARMV5TE_ADD_PC_REL,
+                                       r1, 0);
+    addrRetChain->generic.target = (LIR *) retChainingCell;
+
+    /* r2 = &predictedChainingCell */
+    Armv5teLIR *predictedChainingCell =
+        newLIR2(cUnit, ARMV5TE_ADD_PC_REL, r2, 0);
+    predictedChainingCell->generic.target = (LIR *) predChainingCell;
+
+    genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
+
+    /* return through lr - jump to the chaining cell */
+    genUnconditionalBranch(cUnit, predChainingCell);
+
+    /*
+     * null-check on "this" may have been eliminated, but we still need a PC-
+     * reconstruction label for stack overflow bailout.
+     */
+    if (pcrLabel == NULL) {
+        int dPC = (int) (cUnit->method->insns + mir->offset);
+        pcrLabel = dvmCompilerNew(sizeof(Armv5teLIR), true);
+        pcrLabel->opCode = ARMV5TE_PSEUDO_PC_RECONSTRUCTION_CELL;
+        pcrLabel->operands[0] = dPC;
+        pcrLabel->operands[1] = mir->offset;
+        /* Insert the place holder to the growable list */
+        dvmInsertGrowableList(&cUnit->pcReconstructionList, pcrLabel);
+    }
+
+    /* return through lr+2 - punt to the interpreter */
+    genUnconditionalBranch(cUnit, pcrLabel);
+
+    /*
+     * return through lr+4 - fully resolve the callee method.
+     * r1 <- count
+     * r2 <- &predictedChainCell
+     * r3 <- this->class
+     * r4 <- dPC
+     * r7 <- this->class->vtable
+     */
+
+    /* r0 <- calleeMethod */
+    if (methodIndex < 32) {
+        newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r7, methodIndex);
+    } else {
+        loadConstant(cUnit, r0, methodIndex<<2);
+        newLIR3(cUnit, ARMV5TE_LDR_RRR, r0, r7, r0);
+    }
+
+    /* Check if rechain limit is reached */
+    newLIR2(cUnit, ARMV5TE_CMP_RI8, r1, 0);
+
+    Armv5teLIR *bypassRechaining =
+        newLIR2(cUnit, ARMV5TE_B_COND, 0, ARM_COND_GT);
+
+    newLIR3(cUnit, ARMV5TE_LDR_RRI5, r7, rGLUE,
+            offsetof(InterpState,
+                     jitToInterpEntries.dvmJitToPatchPredictedChain)
+            >> 2);
+
+    /*
+     * r0 = calleeMethod
+     * r2 = &predictedChainingCell
+     * r3 = class
+     *
+     * &returnChainingCell has been loaded into r1 but is not needed
+     * when patching the chaining cell and will be clobbered upon
+     * returning so it will be reconstructed again.
+     */
+    newLIR1(cUnit, ARMV5TE_BLX_R, r7);
+
+    /* r1 = &retChainingCell */
+    addrRetChain = newLIR3(cUnit, ARMV5TE_ADD_PC_REL, r1, 0, 0);
+    addrRetChain->generic.target = (LIR *) retChainingCell;
+
+    bypassRechaining->generic.target = (LIR *) addrRetChain;
+    /*
+     * r0 = calleeMethod,
+     * r1 = &ChainingCell,
+     * r4PC = callsiteDPC,
+     */
+    genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
+#if defined(INVOKE_STATS)
+    gDvmJit.invokePredictedChain++;
+#endif
+    /* Handle exceptions using the interpreter */
+    genTrap(cUnit, mir->offset, pcrLabel);
+}
+
+/*
+ * Up calling this function, "this" is stored in r0. The actual class will be
+ * chased down off r0 and the predicted one will be retrieved through
+ * predictedChainingCell then a comparison is performed to see whether the
+ * previously established chaining is still valid.
+ *
+ * The return LIR is a branch based on the comparison result. The actual branch
+ * target will be setup in the caller.
+ */
+static Armv5teLIR *genCheckPredictedChain(CompilationUnit *cUnit,
+                                          Armv5teLIR *predChainingCell,
+                                          Armv5teLIR *retChainingCell,
+                                          MIR *mir)
+{
+    /* r3 now contains this->clazz */
+    newLIR3(cUnit, ARMV5TE_LDR_RRI5, r3, r0,
+            offsetof(Object, clazz) >> 2);
+
+    /*
+     * r2 now contains predicted class. The starting offset of the
+     * cached value is 4 bytes into the chaining cell.
+     */
+    Armv5teLIR *getPredictedClass =
+        newLIR3(cUnit, ARMV5TE_LDR_PC_REL, r2, 0,
+                offsetof(PredictedChainingCell, clazz));
+    getPredictedClass->generic.target = (LIR *) predChainingCell;
+
+    /*
+     * r0 now contains predicted method. The starting offset of the
+     * cached value is 8 bytes into the chaining cell.
+     */
+    Armv5teLIR *getPredictedMethod =
+        newLIR3(cUnit, ARMV5TE_LDR_PC_REL, r0, 0,
+                offsetof(PredictedChainingCell, method));
+    getPredictedMethod->generic.target = (LIR *) predChainingCell;
+
+    /* Load the stats counter to see if it is time to unchain and refresh */
+    Armv5teLIR *getRechainingRequestCount =
+        newLIR3(cUnit, ARMV5TE_LDR_PC_REL, r7, 0,
+                offsetof(PredictedChainingCell, counter));
+    getRechainingRequestCount->generic.target =
+        (LIR *) predChainingCell;
+
+    /* r4PC = dalvikCallsite */
+    loadConstant(cUnit, r4PC,
+                 (int) (cUnit->method->insns + mir->offset));
+
+    /* r1 = &retChainingCell */
+    Armv5teLIR *addrRetChain = newLIR3(cUnit, ARMV5TE_ADD_PC_REL,
+                                       r1, 0, 0);
+    addrRetChain->generic.target = (LIR *) retChainingCell;
+
+    /* Check if r2 (predicted class) == r3 (actual class) */
+    newLIR2(cUnit, ARMV5TE_CMP_RR, r2, r3);
+
+    return newLIR2(cUnit, ARMV5TE_B_COND, 0, ARM_COND_EQ);
 }
 
 /* Geneate a branch to go back to the interpreter */
@@ -2449,6 +2634,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
          */
         case OP_INVOKE_VIRTUAL:
         case OP_INVOKE_VIRTUAL_RANGE: {
+            Armv5teLIR *predChainingCell = &labelList[bb->taken->id];
             int methodIndex =
                 cUnit->method->clazz->pDvmDex->pResMethods[dInsn->vB]->
                 methodIndex;
@@ -2458,39 +2644,10 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             else
                 genProcessArgsRange(cUnit, mir, dInsn, &pcrLabel);
 
-            /* r0 now contains this->clazz */
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r0,
-                    offsetof(Object, clazz) >> 2);
-            /* r1 = &retChainingCell */
-            Armv5teLIR *addrRetChain = newLIR2(cUnit, ARMV5TE_ADD_PC_REL,
-                                                   r1, 0);
-            /* r4PC = dalvikCallsite */
-            loadConstant(cUnit, r4PC,
-                         (int) (cUnit->method->insns + mir->offset));
-
-            /* r0 now contains this->clazz->vtable */
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r0,
-                    offsetof(ClassObject, vtable) >> 2);
-            addrRetChain->generic.target = (LIR *) retChainingCell;
-
-            if (methodIndex < 32) {
-                newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r0, methodIndex);
-            } else {
-                loadConstant(cUnit, r7, methodIndex<<2);
-                newLIR3(cUnit, ARMV5TE_LDR_RRR, r0, r0, r7);
-            }
-
-            /*
-             * r0 = calleeMethod,
-             * r1 = &ChainingCell,
-             * r4PC = callsiteDPC,
-             */
-            genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
-#if defined(INVOKE_STATS)
-            gDvmJit.invokeNoOpt++;
-#endif
-            /* Handle exceptions using the interpreter */
-            genTrap(cUnit, mir->offset, pcrLabel);
+            genInvokeVirtualCommon(cUnit, mir, methodIndex,
+                                   retChainingCell,
+                                   predChainingCell,
+                                   pcrLabel);
             break;
         }
         /*
@@ -2513,8 +2670,8 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             /* r0 = calleeMethod */
             loadConstant(cUnit, r0, (int) calleeMethod);
 
-            genInvokeCommon(cUnit, mir, bb, labelList, pcrLabel,
-                            calleeMethod);
+            genInvokeSingletonCommon(cUnit, mir, bb, labelList, pcrLabel,
+                                     calleeMethod);
             break;
         }
         /* calleeMethod = method->clazz->pDvmDex->pResMethods[BBBB] */
@@ -2531,8 +2688,8 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             /* r0 = calleeMethod */
             loadConstant(cUnit, r0, (int) calleeMethod);
 
-            genInvokeCommon(cUnit, mir, bb, labelList, pcrLabel,
-                            calleeMethod);
+            genInvokeSingletonCommon(cUnit, mir, bb, labelList, pcrLabel,
+                                     calleeMethod);
             break;
         }
         /* calleeMethod = method->clazz->pDvmDex->pResMethods[BBBB] */
@@ -2551,16 +2708,77 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             /* r0 = calleeMethod */
             loadConstant(cUnit, r0, (int) calleeMethod);
 
-            genInvokeCommon(cUnit, mir, bb, labelList, pcrLabel,
-                            calleeMethod);
+            genInvokeSingletonCommon(cUnit, mir, bb, labelList, pcrLabel,
+                                     calleeMethod);
             break;
         }
         /*
          * calleeMethod = dvmFindInterfaceMethodInCache(this->clazz,
          *                    BBBB, method, method->clazz->pDvmDex)
+         *
+         *  Given "invoke-interface {v0}", the following is the generated code:
+         *
+         * 0x426a9abe : ldr     r0, [r5, #0]   --+
+         * 0x426a9ac0 : mov     r7, r5           |
+         * 0x426a9ac2 : sub     r7, #24          |
+         * 0x426a9ac4 : cmp     r0, #0           | genProcessArgsNoRange
+         * 0x426a9ac6 : beq     0x426a9afe       |
+         * 0x426a9ac8 : stmia   r7, <r0>       --+
+         * 0x426a9aca : ldr     r4, [pc, #104] --> r4 <- dalvikPC of this invoke
+         * 0x426a9acc : add     r1, pc, #52    --> r1 <- &retChainingCell
+         * 0x426a9ace : add     r2, pc, #60    --> r2 <- &predictedChainingCell
+         * 0x426a9ad0 : blx_1   0x426a918c     --+ TEMPLATE_INVOKE_METHOD_
+         * 0x426a9ad2 : blx_2   see above      --+     PREDICTED_CHAIN
+         * 0x426a9ad4 : b       0x426a9b0c     --> off to the predicted chain
+         * 0x426a9ad6 : b       0x426a9afe     --> punt to the interpreter
+         * 0x426a9ad8 : mov     r9, r1         --+
+         * 0x426a9ada : mov     r10, r2          |
+         * 0x426a9adc : mov     r12, r3          |
+         * 0x426a9ade : mov     r0, r3           |
+         * 0x426a9ae0 : mov     r1, #74          | dvmFindInterfaceMethodInCache
+         * 0x426a9ae2 : ldr     r2, [pc, #76]    |
+         * 0x426a9ae4 : ldr     r3, [pc, #68]    |
+         * 0x426a9ae6 : ldr     r7, [pc, #64]    |
+         * 0x426a9ae8 : blx     r7             --+
+         * 0x426a9aea : mov     r1, r9         --> r1 <- rechain count
+         * 0x426a9aec : cmp     r1, #0         --> compare against 0
+         * 0x426a9aee : bgt     0x426a9af8     --> >=0? don't rechain
+         * 0x426a9af0 : ldr     r7, [r6, #96]  --+
+         * 0x426a9af2 : mov     r2, r10          | dvmJitToPatchPredictedChain
+         * 0x426a9af4 : mov     r3, r12          |
+         * 0x426a9af6 : blx     r7             --+
+         * 0x426a9af8 : add     r1, pc, #8     --> r1 <- &retChainingCell
+         * 0x426a9afa : blx_1   0x426a9098     --+ TEMPLATE_INVOKE_METHOD_NO_OPT
+         * 0x426a9afc : blx_2   see above      --+
+         * -------- reconstruct dalvik PC : 0x428b786c @ +0x001e
+         * 0x426a9afe (0042): ldr     r0, [pc, #52]
+         * Exception_Handling:
+         * 0x426a9b00 (0044): ldr     r1, [r6, #84]
+         * 0x426a9b02 (0046): blx     r1
+         * 0x426a9b04 (0048): .align4
+         * -------- chaining cell (hot): 0x0021
+         * 0x426a9b04 (0048): ldr     r0, [r6, #92]
+         * 0x426a9b06 (004a): blx     r0
+         * 0x426a9b08 (004c): data    0x7872(30834)
+         * 0x426a9b0a (004e): data    0x428b(17035)
+         * 0x426a9b0c (0050): .align4
+         * -------- chaining cell (predicted)
+         * 0x426a9b0c (0050): data    0x0000(0) --> will be patched into bx
+         * 0x426a9b0e (0052): data    0x0000(0)
+         * 0x426a9b10 (0054): data    0x0000(0) --> class
+         * 0x426a9b12 (0056): data    0x0000(0)
+         * 0x426a9b14 (0058): data    0x0000(0) --> method
+         * 0x426a9b16 (005a): data    0x0000(0)
+         * 0x426a9b18 (005c): data    0x0000(0) --> reset count
+         * 0x426a9b1a (005e): data    0x0000(0)
+         * 0x426a9b28 (006c): .word (0xad0392a5)
+         * 0x426a9b2c (0070): .word (0x6e750)
+         * 0x426a9b30 (0074): .word (0x4109a618)
+         * 0x426a9b34 (0078): .word (0x428b786c)
          */
         case OP_INVOKE_INTERFACE:
         case OP_INVOKE_INTERFACE_RANGE: {
+            Armv5teLIR *predChainingCell = &labelList[bb->taken->id];
             int methodIndex = dInsn->vB;
 
             if (mir->dalvikInsn.opCode == OP_INVOKE_INTERFACE)
@@ -2568,9 +2786,60 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             else
                 genProcessArgsRange(cUnit, mir, dInsn, &pcrLabel);
 
+            /* "this" is already left in r0 by genProcessArgs* */
+
+            /* r4PC = dalvikCallsite */
+            loadConstant(cUnit, r4PC,
+                         (int) (cUnit->method->insns + mir->offset));
+
+            /* r1 = &retChainingCell */
+            Armv5teLIR *addrRetChain = newLIR2(cUnit, ARMV5TE_ADD_PC_REL,
+                                               r1, 0);
+            addrRetChain->generic.target = (LIR *) retChainingCell;
+
+            /* r2 = &predictedChainingCell */
+            Armv5teLIR *predictedChainingCell =
+                newLIR2(cUnit, ARMV5TE_ADD_PC_REL, r2, 0);
+            predictedChainingCell->generic.target = (LIR *) predChainingCell;
+
+            genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
+
+            /* return through lr - jump to the chaining cell */
+            genUnconditionalBranch(cUnit, predChainingCell);
+
+            /*
+             * null-check on "this" may have been eliminated, but we still need
+             * a PC-reconstruction label for stack overflow bailout.
+             */
+            if (pcrLabel == NULL) {
+                int dPC = (int) (cUnit->method->insns + mir->offset);
+                pcrLabel = dvmCompilerNew(sizeof(Armv5teLIR), true);
+                pcrLabel->opCode = ARMV5TE_PSEUDO_PC_RECONSTRUCTION_CELL;
+                pcrLabel->operands[0] = dPC;
+                pcrLabel->operands[1] = mir->offset;
+                /* Insert the place holder to the growable list */
+                dvmInsertGrowableList(&cUnit->pcReconstructionList, pcrLabel);
+            }
+
+            /* return through lr+2 - punt to the interpreter */
+            genUnconditionalBranch(cUnit, pcrLabel);
+
+            /*
+             * return through lr+4 - fully resolve the callee method.
+             * r1 <- count
+             * r2 <- &predictedChainCell
+             * r3 <- this->class
+             * r4 <- dPC
+             * r7 <- this->class->vtable
+             */
+
+            /* Save count, &predictedChainCell, and class to high regs first */
+            newLIR2(cUnit, ARMV5TE_MOV_RR_L2H, r9 & THUMB_REG_MASK, r1);
+            newLIR2(cUnit, ARMV5TE_MOV_RR_L2H, r10 & THUMB_REG_MASK, r2);
+            newLIR2(cUnit, ARMV5TE_MOV_RR_L2H, r12 & THUMB_REG_MASK, r3);
+
             /* r0 now contains this->clazz */
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r0,
-                    offsetof(Object, clazz) >> 2);
+            newLIR2(cUnit, ARMV5TE_MOV_RR, r0, r3);
 
             /* r1 = BBBB */
             loadConstant(cUnit, r1, dInsn->vB);
@@ -2587,14 +2856,40 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 
             /* r0 = calleeMethod (returned from dvmFindInterfaceMethodInCache */
 
-            /* r1 = &retChainingCell */
-            Armv5teLIR *addrRetChain = newLIR2(cUnit, ARMV5TE_ADD_PC_REL,
-                                               r1, 0);
-            /* r4PC = dalvikCallsite */
-            loadConstant(cUnit, r4PC,
-                         (int) (cUnit->method->insns + mir->offset));
+            newLIR2(cUnit, ARMV5TE_MOV_RR_H2L, r1, r9 & THUMB_REG_MASK);
 
+            /* Check if rechain limit is reached */
+            newLIR2(cUnit, ARMV5TE_CMP_RI8, r1, 0);
+
+            Armv5teLIR *bypassRechaining =
+                newLIR2(cUnit, ARMV5TE_B_COND, 0, ARM_COND_GT);
+
+            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r7, rGLUE,
+                    offsetof(InterpState,
+                             jitToInterpEntries.dvmJitToPatchPredictedChain)
+                    >> 2);
+
+            newLIR2(cUnit, ARMV5TE_MOV_RR_H2L, r2, r10 & THUMB_REG_MASK);
+            newLIR2(cUnit, ARMV5TE_MOV_RR_H2L, r3, r12 & THUMB_REG_MASK);
+
+            /*
+             * r0 = calleeMethod
+             * r2 = &predictedChainingCell
+             * r3 = class
+             *
+             * &returnChainingCell has been loaded into r1 but is not needed
+             * when patching the chaining cell and will be clobbered upon
+             * returning so it will be reconstructed again.
+             */
+            newLIR1(cUnit, ARMV5TE_BLX_R, r7);
+
+            /* r1 = &retChainingCell */
+            addrRetChain = newLIR3(cUnit, ARMV5TE_ADD_PC_REL,
+                                               r1, 0, 0);
             addrRetChain->generic.target = (LIR *) retChainingCell;
+
+            bypassRechaining->generic.target = (LIR *) addrRetChain;
+
             /*
              * r0 = this, r1 = calleeMethod,
              * r1 = &ChainingCell,
@@ -2602,7 +2897,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              */
             genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
 #if defined(INVOKE_STATS)
-            gDvmJit.invokeNoOpt++;
+            gDvmJit.invokePredictedChain++;
 #endif
             /* Handle exceptions using the interpreter */
             genTrap(cUnit, mir->offset, pcrLabel);
@@ -2628,6 +2923,7 @@ static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
                                BasicBlock *bb, Armv5teLIR *labelList)
 {
     Armv5teLIR *retChainingCell = &labelList[bb->fallThrough->id];
+    Armv5teLIR *predChainingCell = &labelList[bb->taken->id];
     Armv5teLIR *pcrLabel = NULL;
 
     DecodedInstruction *dInsn = &mir->dalvikInsn;
@@ -2641,37 +2937,10 @@ static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
             else
                 genProcessArgsRange(cUnit, mir, dInsn, &pcrLabel);
 
-            /* r0 now contains this->clazz */
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r0,
-                    offsetof(Object, clazz) >> 2);
-            /* r1 = &retChainingCell */
-            Armv5teLIR *addrRetChain = newLIR2(cUnit, ARMV5TE_ADD_PC_REL,
-                                               r1, 0);
-            /* r4PC = dalvikCallsite */
-            loadConstant(cUnit, r4PC,
-                         (int) (cUnit->method->insns + mir->offset));
-
-            /* r0 now contains this->clazz->vtable */
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r0,
-                    offsetof(ClassObject, vtable) >> 2);
-            addrRetChain->generic.target = (LIR *) retChainingCell;
-
-            if (methodIndex < 32) {
-                newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r0, methodIndex);
-            } else {
-                loadConstant(cUnit, r7, methodIndex<<2);
-                newLIR3(cUnit, ARMV5TE_LDR_RRR, r0, r0, r7);
-            }
-
-            /*
-             * r0 = calleeMethod,
-             * r1 = &ChainingCell,
-             * r4PC = callsiteDPC,
-             */
-            genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
-#if defined(INVOKE_STATS)
-            gDvmJit.invokeNoOpt++;
-#endif
+            genInvokeVirtualCommon(cUnit, mir, methodIndex,
+                                   retChainingCell,
+                                   predChainingCell,
+                                   pcrLabel);
             break;
         }
         /* calleeMethod = method->clazz->super->vtable[BBBB] */
@@ -2688,16 +2957,15 @@ static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
             /* r0 = calleeMethod */
             loadConstant(cUnit, r0, (int) calleeMethod);
 
-            genInvokeCommon(cUnit, mir, bb, labelList, pcrLabel,
-                            calleeMethod);
+            genInvokeSingletonCommon(cUnit, mir, bb, labelList, pcrLabel,
+                                     calleeMethod);
+            /* Handle exceptions using the interpreter */
+            genTrap(cUnit, mir->offset, pcrLabel);
             break;
         }
-        /* calleeMethod = method->clazz->super->vtable[BBBB] */
         default:
             return true;
     }
-    /* Handle exceptions using the interpreter */
-    genTrap(cUnit, mir->offset, pcrLabel);
     return false;
 }
 
@@ -2799,13 +3067,30 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
 }
 
 /* Chaining cell for monomorphic method invocations. */
-static void handleInvokeChainingCell(CompilationUnit *cUnit,
-                                     const Method *callee)
+static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
+                                              const Method *callee)
 {
     newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, rGLUE,
         offsetof(InterpState, jitToInterpEntries.dvmJitToTraceSelect) >> 2);
     newLIR1(cUnit, ARMV5TE_BLX_R, r0);
     addWordData(cUnit, (int) (callee->insns), true);
+}
+
+/* Chaining cell for monomorphic method invocations. */
+static void handleInvokePredictedChainingCell(CompilationUnit *cUnit)
+{
+
+    /* Should not be executed in the initial state */
+    addWordData(cUnit, PREDICTED_CHAIN_BX_PAIR_INIT, true);
+    /* To be filled: class */
+    addWordData(cUnit, PREDICTED_CHAIN_CLAZZ_INIT, true);
+    /* To be filled: method */
+    addWordData(cUnit, PREDICTED_CHAIN_METHOD_INIT, true);
+    /*
+     * Rechain count. The initial value of 0 here will trigger chaining upon
+     * the first invocation of this callsite.
+     */
+    addWordData(cUnit, PREDICTED_CHAIN_COUNTER_INIT, true);
 }
 
 /* Load the Dalvik PC into r0 and jump to the specified target */
@@ -2834,8 +3119,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
     int i;
 
     /*
-     * Initialize the three chaining lists for generic, post-invoke, and invoke
-     * chains.
+     * Initialize various types chaining lists.
      */
     for (i = 0; i < CHAINING_CELL_LAST; i++) {
         dvmInitGrowableList(&chainingListByType[i], 2);
@@ -2864,7 +3148,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         cUnit->chainCellOffsetLIR =
             (LIR *) newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
         cUnit->headerSize = 6;
-        newLIR2(cUnit, ARMV5TE_MOV_RR_HL, r0, rpc & THUMB_REG_MASK);
+        newLIR2(cUnit, ARMV5TE_MOV_RR_H2L, r0, rpc & THUMB_REG_MASK);
         newLIR2(cUnit, ARMV5TE_SUB_RI8, r0, 10);
         newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, r0, 0);
         newLIR2(cUnit, ARMV5TE_ADD_RI8, r1, 1);
@@ -2903,13 +3187,23 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     dvmInsertGrowableList(
                         &chainingListByType[CHAINING_CELL_NORMAL], (void *) i);
                     break;
-                case CHAINING_CELL_INVOKE:
-                    labelList[i].opCode = ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE;
+                case CHAINING_CELL_INVOKE_SINGLETON:
+                    labelList[i].opCode =
+                        ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_SINGLETON;
                     labelList[i].operands[0] =
                         (int) blockList[i]->containingMethod;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
-                        &chainingListByType[CHAINING_CELL_INVOKE], (void *) i);
+                        &chainingListByType[CHAINING_CELL_INVOKE_SINGLETON],
+                        (void *) i);
+                    break;
+                case CHAINING_CELL_INVOKE_PREDICTED:
+                    labelList[i].opCode =
+                        ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_PREDICTED;
+                    /* handle the codegen later */
+                    dvmInsertGrowableList(
+                        &chainingListByType[CHAINING_CELL_INVOKE_PREDICTED],
+                        (void *) i);
                     break;
                 case CHAINING_CELL_HOT:
                     labelList[i].opCode =
@@ -3105,9 +3399,12 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     handleNormalChainingCell(cUnit,
                       blockList[blockId]->startOffset);
                     break;
-                case CHAINING_CELL_INVOKE:
-                    handleInvokeChainingCell(cUnit,
+                case CHAINING_CELL_INVOKE_SINGLETON:
+                    handleInvokeSingletonChainingCell(cUnit,
                         blockList[blockId]->containingMethod);
+                    break;
+                case CHAINING_CELL_INVOKE_PREDICTED:
+                    handleInvokePredictedChainingCell(cUnit);
                     break;
                 case CHAINING_CELL_HOT:
                     handleHotChainingCell(cUnit,

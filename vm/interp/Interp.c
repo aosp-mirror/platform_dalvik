@@ -180,7 +180,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
     const StackSaveArea* saveArea;
     void* fp;
     void* prevFp = NULL;
-    
+
     for (fp = thread->curFrame; fp != NULL; fp = saveArea->prevFrame) {
         const Method* method;
 
@@ -225,7 +225,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
     } else {
         pCtrl->line = dvmLineNumFromPC(saveArea->method,
                         saveArea->xtra.currentPc - saveArea->method->insns);
-        pCtrl->pAddressSet 
+        pCtrl->pAddressSet
                 = dvmAddressSetForLine(saveArea->method, pCtrl->line);
     }
     pCtrl->frameDepth = dvmComputeVagueFrameDepth(thread, thread->curFrame);
@@ -374,7 +374,7 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
  * ===========================================================================
  */
 
-/* 
+/*
  * Construct an s4 from two consecutive half-words of switch data.
  * This needs to check endianness because the DEX optimizer only swaps
  * half-words in instruction stream.
@@ -479,7 +479,7 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
 
     size = *switchData++;
     assert(size > 0);
-    
+
     /* The keys are guaranteed to be aligned on a 32-bit boundary;
      * we can treat them as a native int array.
      */
@@ -867,8 +867,9 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     extern void dvmJitToInterpPunt();
     extern void dvmJitToInterpSingleStep();
     extern void dvmJitToTraceSelect();
+    extern void dvmJitToPatchPredictedChain();
 
-    /* 
+    /*
      * Reserve a static entity here to quickly setup runtime contents as
      * gcc will issue block copy instructions.
      */
@@ -878,6 +879,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
         dvmJitToInterpPunt,
         dvmJitToInterpSingleStep,
         dvmJitToTraceSelect,
+        dvmJitToPatchPredictedChain,
     };
 #endif
 

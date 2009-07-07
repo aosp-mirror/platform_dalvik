@@ -621,6 +621,7 @@ struct DvmGlobals {
 extern struct DvmGlobals gDvm;
 
 #if defined(WITH_JIT)
+
 /*
  * JIT-specific global state
  */
@@ -683,8 +684,9 @@ struct DvmJitGlobals {
     int                normalExit;
     int                puntExit;
     int                translationChains;
-    int                invokeNoOpt;
-    int                InvokeChain;
+    int                invokeChain;
+    int                invokePredictedChain;
+    int                invokeNative;
     int                returnOp;
 
     /* Compiled code cache */

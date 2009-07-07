@@ -4,6 +4,8 @@
      * method through a dedicated chaining cell.
      */
     @ r0 = methodToCall, r1 = returnCell, rPC = dalvikCallsite
+    @ methodToCall is guaranteed to be non-native
+.LinvokeChain:
     ldrh    r7, [r0, #offMethod_registersSize]  @ r7<- methodToCall->regsSize
     ldrh    r2, [r0, #offMethod_outsSize]  @ r2<- methodToCall->outsSize
     ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
@@ -19,7 +21,6 @@
     bxlt    r12                         @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
     ldr     r9, [r0, #offMethod_clazz]      @ r9<- method->clazz
-    ldr     r10, [r0, #offMethod_accessFlags] @ r10<- methodToCall->accessFlags
     str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
     str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
     ldr     rPC, [r0, #offMethod_insns]     @ rPC<- methodToCall->insns
@@ -31,14 +32,6 @@
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
     cmp     r8, #0                      @ suspendCount != 0
     bxne    r12                         @ bail to the interpreter
-    tst     r10, #ACC_NATIVE
-    bne     .LinvokeNative
-    /*
-     * If we want to punt to the interpreter for native call, swap the bne with
-     * the following
-     * bxne    r12
-     */
-
 
     ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
     ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self

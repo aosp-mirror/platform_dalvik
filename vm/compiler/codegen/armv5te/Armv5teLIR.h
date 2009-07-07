@@ -69,9 +69,10 @@ typedef enum Armv5teConditionCode {
  * Assemble.c.
  */
 typedef enum Armv5teOpCode {
-    ARMV5TE_PSEUDO_TARGET_LABEL = -10,
-    ARMV5TE_PSEUDO_CHAINING_CELL_HOT = -9,
-    ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE = -8,
+    ARMV5TE_PSEUDO_TARGET_LABEL = -11,
+    ARMV5TE_PSEUDO_CHAINING_CELL_HOT = -10,
+    ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_PREDICTED = -9,
+    ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_SINGLETON = -8,
     ARMV5TE_PSEUDO_CHAINING_CELL_NORMAL = -7,
     ARMV5TE_PSEUDO_DALVIK_BYTECODE_BOUNDARY = -6,
     ARMV5TE_PSEUDO_ALIGN4 = -5,
@@ -128,9 +129,9 @@ typedef enum Armv5teOpCode {
     ARMV5TE_LSRV,           /* lsr(2)  [0100000011] rs[5..3] rd[2..0] */
     ARMV5TE_MOV_IMM,        /* mov(1)  [00100] rd[10..8] imm_8[7..0] */
     ARMV5TE_MOV_RR,         /* mov(2)  [0001110000] rn[5..3] rd[2..0] */
-    ARMV5TE_MOV_RR_HL,      /* mov(3)  [01000110] H12[10] rm[5..3] rd[2..0] */
-    ARMV5TE_MOV_RR_LH,      /* mov(3)  [01000101] H12[01] rm[5..3] rd[2..0] */
-    ARMV5TE_MOV_RR_HH,      /* mov(3)  [01000111] H12[11] rm[5..3] rd[2..0] */
+    ARMV5TE_MOV_RR_H2H,     /* mov(3)  [01000111] H12[11] rm[5..3] rd[2..0] */
+    ARMV5TE_MOV_RR_H2L,     /* mov(3)  [01000110] H12[01] rm[5..3] rd[2..0] */
+    ARMV5TE_MOV_RR_L2H,     /* mov(3)  [01000101] H12[10] rm[5..3] rd[2..0] */
     ARMV5TE_MUL,            /* mul     [0100001101] rm[5..3] rd[2..0] */
     ARMV5TE_MVN,            /* mvn     [0100001111] rm[5..3] rd[2..0] */
     ARMV5TE_NEG,            /* neg     [0100001001] rm[5..3] rd[2..0] */
@@ -194,6 +195,29 @@ typedef struct Armv5teLIR {
     bool isNop;         // LIR is optimized away
     int age;            // default is 0, set lazily by the optimizer
 } Armv5teLIR;
+
+/* Chain cell for predicted method invocation */
+typedef struct PredictedChainingCell {
+    u4 branch;                  /* Branch to chained destination */
+    const ClassObject *clazz;   /* key #1 for prediction */
+    const Method *method;       /* key #2 to lookup native PC from dalvik PC */
+    u4 counter;                 /* counter to patch the chaining cell */
+} PredictedChainingCell;
+
+/* Init values when a predicted chain is initially assembled */
+#define PREDICTED_CHAIN_BX_PAIR_INIT     0
+#define PREDICTED_CHAIN_CLAZZ_INIT       0
+#define PREDICTED_CHAIN_METHOD_INIT      0
+#define PREDICTED_CHAIN_COUNTER_INIT     0
+
+/* Used when the callee is not compiled yet */
+#define PREDICTED_CHAIN_COUNTER_DELAY    16
+
+/* Rechain after this many mis-predictions have happened */
+#define PREDICTED_CHAIN_COUNTER_RECHAIN  1024
+
+/* Used if the resolved callee is a native method */
+#define PREDICTED_CHAIN_COUNTER_AVOID    0x7fffffff
 
 /* Utility macros to traverse the LIR/Armv5teLIR list */
 #define NEXT_LIR(lir) ((Armv5teLIR *) lir->generic.next)

@@ -23,7 +23,8 @@ typedef enum BBType {
     /* For coding convenience reasons chaining cell types should appear first */
     CHAINING_CELL_NORMAL = 0,
     CHAINING_CELL_HOT,
-    CHAINING_CELL_INVOKE,
+    CHAINING_CELL_INVOKE_SINGLETON,
+    CHAINING_CELL_INVOKE_PREDICTED,
     CHAINING_CELL_LAST,
     DALVIK_BYTECODE,
     PC_RECONSTRUCTION,
