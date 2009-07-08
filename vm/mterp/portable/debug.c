@@ -223,7 +223,7 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
         if (/*gDvm.debuggerActive &&*/
             strcmp(method->clazz->descriptor, cd) == 0 &&
             strcmp(method->name, mn) == 0 &&
-            strcmp(method->signature, sg) == 0)
+            strcmp(method->shorty, sg) == 0)
         {
             LOGW("Reached %s.%s, enabling verbose mode\n",
                 method->clazz->descriptor, method->name);

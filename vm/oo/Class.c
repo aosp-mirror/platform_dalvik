@@ -4264,7 +4264,7 @@ noverify:
              * obj, not the offset into obj->instanceData.
              */
             assert(f->byteOffset >= CLASS_SMALLEST_OFFSET);
-            assert((f->btyeOffset & (CLASS_OFFSET_ALIGNMENT - 1)) == 0);
+            assert((f->byteOffset & (CLASS_OFFSET_ALIGNMENT - 1)) == 0);
             u4 newBit = CLASS_BIT_FROM_OFFSET(f->byteOffset);
             if (newBit != 0) {
                 clazz->refOffsets |= newBit;
