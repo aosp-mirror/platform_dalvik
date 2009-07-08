@@ -15,18 +15,14 @@
  */
 
 #include "Dalvik.h"
-#include "compiler/CompilerInternals.h"
+#include "interp/InterpDefs.h"
+#include "libdex/OpCode.h"
+#include "dexdump/OpCodeNames.h"
+#include "vm/compiler/CompilerInternals.h"
+#include "Armv5teLIR.h"
+#include "vm/mterp/common/FindInterface.h"
 
-#ifndef _DALVIK_VM_COMPILER_CODEGEN_FPCODEGEN_H
-#define _DALVIK_VM_COMPILER_CODEGEN_FPCODEGEN_H
+#include "armv5te/ArchVariant.h"
 
-bool dvmCompilerGenConversion(CompilationUnit *cUnit, MIR *mir);
-bool dvmCompilerGenArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
-                                int vSrc1, int vSrc2);
-bool dvmCompilerGenArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
-                                 int vSrc1, int vSrc2);
-bool dvmCompilerGenCmpX(CompilationUnit *cUnit, MIR *mir, int vDest,
-                        int vSrc1, int vSrc2);
-
-
-#endif /* _DALVIK_VM_COMPILER_CODEGEN_FPCODEGEN_H */
+#include "Codegen.c"
+#include "armv5te/ArchVariant.c"

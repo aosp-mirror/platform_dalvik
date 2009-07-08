@@ -14,24 +14,15 @@
  * limitations under the License.
  */
 
-/*
- * Dalvik opcode list that uses additional templates to complete JIT execution.
- */
-#ifndef JIT_TEMPLATE
-#define JIT_TEMPLATE(X)
-#endif
+#include "Dalvik.h"
+#include "interp/InterpDefs.h"
+#include "libdex/OpCode.h"
+#include "dexdump/OpCodeNames.h"
+#include "vm/compiler/CompilerInternals.h"
+#include "Armv5teLIR.h"
+#include "vm/mterp/common/FindInterface.h"
 
-JIT_TEMPLATE(CMP_LONG)
-JIT_TEMPLATE(RETURN)
-JIT_TEMPLATE(INVOKE_METHOD_NO_OPT)
-JIT_TEMPLATE(INVOKE_METHOD_CHAIN)
-JIT_TEMPLATE(INVOKE_METHOD_PREDICTED_CHAIN)
-JIT_TEMPLATE(INVOKE_METHOD_NATIVE)
-JIT_TEMPLATE(CMPG_DOUBLE)
-JIT_TEMPLATE(CMPL_DOUBLE)
-JIT_TEMPLATE(CMPG_FLOAT)
-JIT_TEMPLATE(CMPL_FLOAT)
-JIT_TEMPLATE(MUL_LONG)
-JIT_TEMPLATE(SHL_LONG)
-JIT_TEMPLATE(SHR_LONG)
-JIT_TEMPLATE(USHR_LONG)
+#include "armv5te-vfp/ArchVariant.h"
+
+#include "Codegen.c"
+#include "armv5te-vfp/ArchVariant.c"

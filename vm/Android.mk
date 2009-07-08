@@ -264,13 +264,12 @@ ifeq ($(TARGET_ARCH),arm)
 
   ifeq ($(WITH_JIT),true)
     LOCAL_SRC_FILES += \
-		compiler/codegen/armv5te/Codegen.c \
+		compiler/codegen/armv5te/Codegen-$(TARGET_ARCH_VARIANT).c \
 		compiler/codegen/armv5te/Assemble.c \
 		compiler/codegen/armv5te/ArchUtility.c \
-		compiler/codegen/armv5te/FpCodegen-$(TARGET_ARCH_VARIANT).c \
 		compiler/codegen/armv5te/LocalOptimizations.c \
 		compiler/codegen/armv5te/GlobalOptimizations.c \
-		compiler/template/out/CompilerTemplateAsm-armv5te.S
+		compiler/template/out/CompilerTemplateAsm-$(TARGET_ARCH_VARIANT).S
   endif
 endif
 

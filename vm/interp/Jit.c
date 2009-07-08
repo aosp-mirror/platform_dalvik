@@ -275,49 +275,44 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             flags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
             len = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, pc);
             offset = pc - interpState->method->insns;
-            if ((flags & kInstrNoJit) == kInstrNoJit) {
-                interpState->jitState = kJitTSelectEnd;
-                break;
-            } else {
-                if (pc != interpState->currRunHead + interpState->currRunLen) {
-                    int currTraceRun;
-                    /* We need to start a new trace run */
-                    currTraceRun = ++interpState->currTraceRun;
-                    interpState->currRunLen = 0;
-                    interpState->currRunHead = (u2*)pc;
-                    interpState->trace[currTraceRun].frag.startOffset = offset;
-                    interpState->trace[currTraceRun].frag.numInsts = 0;
-                    interpState->trace[currTraceRun].frag.runEnd = false;
-                    interpState->trace[currTraceRun].frag.hint = kJitHintNone;
-                }
-                interpState->trace[interpState->currTraceRun].frag.numInsts++;
-                interpState->totalTraceLen++;
-                interpState->currRunLen += len;
-                if (  ((flags & kInstrUnconditional) == 0) &&
-                      ((flags & (kInstrCanBranch |
-                                 kInstrCanSwitch |
-                                 kInstrCanReturn |
-                                 kInstrInvoke)) != 0)) {
-                        interpState->jitState = kJitTSelectEnd;
+            if (pc != interpState->currRunHead + interpState->currRunLen) {
+                int currTraceRun;
+                /* We need to start a new trace run */
+                currTraceRun = ++interpState->currTraceRun;
+                interpState->currRunLen = 0;
+                interpState->currRunHead = (u2*)pc;
+                interpState->trace[currTraceRun].frag.startOffset = offset;
+                interpState->trace[currTraceRun].frag.numInsts = 0;
+                interpState->trace[currTraceRun].frag.runEnd = false;
+                interpState->trace[currTraceRun].frag.hint = kJitHintNone;
+            }
+            interpState->trace[interpState->currTraceRun].frag.numInsts++;
+            interpState->totalTraceLen++;
+            interpState->currRunLen += len;
+            if (  ((flags & kInstrUnconditional) == 0) &&
+                  ((flags & (kInstrCanBranch |
+                             kInstrCanSwitch |
+                             kInstrCanReturn |
+                             kInstrInvoke)) != 0)) {
+                    interpState->jitState = kJitTSelectEnd;
 #if defined(SHOW_TRACE)
-                LOGD("TraceGen: ending on %s, basic block end",
-                     getOpcodeName(decInsn.opCode));
+            LOGD("TraceGen: ending on %s, basic block end",
+                 getOpcodeName(decInsn.opCode));
 #endif
-                }
-                if (decInsn.opCode == OP_THROW) {
-                    interpState->jitState = kJitTSelectEnd;
-                }
-                if (interpState->totalTraceLen >= JIT_MAX_TRACE_LEN) {
-                    interpState->jitState = kJitTSelectEnd;
-                }
-                if (debugOrProfile) {
-                    interpState->jitState = kJitTSelectAbort;
-                    switchInterp = !debugOrProfile;
-                    break;
-                }
-                if ((flags & kInstrCanReturn) != kInstrCanReturn) {
-                    break;
-                }
+            }
+            if (decInsn.opCode == OP_THROW) {
+                interpState->jitState = kJitTSelectEnd;
+            }
+            if (interpState->totalTraceLen >= JIT_MAX_TRACE_LEN) {
+                interpState->jitState = kJitTSelectEnd;
+            }
+            if (debugOrProfile) {
+                interpState->jitState = kJitTSelectAbort;
+                switchInterp = !debugOrProfile;
+                break;
+            }
+            if ((flags & kInstrCanReturn) != kInstrCanReturn) {
+                break;
             }
             /* NOTE: intentional fallthrough for returns */
         case kJitTSelectEnd:
@@ -691,6 +686,38 @@ bool dvmJitResizeJitTable( unsigned int size )
     dvmResumeAllThreads(SUSPEND_FOR_JIT);
 
     return false;
+}
+
+/*
+ * Float/double conversion requires clamping to min and max of integer form.  If
+ * target doesn't support this normally, use these.
+ */
+s8 dvmJitd2l(double d)
+{
+    static const double kMaxLong = (double)0x7fffffffffffffffULL;
+    static const double kMinLong = (double)0x8000000000000000ULL;
+    if (d >= kMaxLong)
+        return 0x7fffffffffffffffULL;
+    else if (d <= kMinLong)
+        return 0x8000000000000000ULL;
+    else if (d != d) // NaN case
+        return 0;
+    else
+        return (s8)d;
+}
+
+s8 dvmJitf2l(float f)
+{
+    static const float kMaxLong = (float)0x7fffffffffffffffULL;
+    static const float kMinLong = (float)0x8000000000000000ULL;
+    if (f >= kMaxLong)
+        return 0x7fffffffffffffffULL;
+    else if (f <= kMinLong)
+        return 0x8000000000000000ULL;
+    else if (f != f) // NaN case
+        return 0;
+    else
+        return (s8)f;
 }
 
 

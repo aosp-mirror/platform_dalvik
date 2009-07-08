@@ -63,6 +63,8 @@ void dvmJitStopTranslationRequests(void);
 void dvmJitStats(void);
 bool dvmJitResizeJitTable(unsigned int size);
 struct JitEntry *dvmFindJitEntry(const u2* pc);
+s8 dvmJitd2l(double d);
+s8 dvmJitf2l(float f);
 
 
 #endif /*_DALVIK_INTERP_JIT*/

@@ -19,5 +19,5 @@
 # generated as part of the build.
 #
 set -e
-for arch in armv5te; do TARGET_ARCH_EXT=$arch make -f Makefile-template; done
+for arch in armv5te armv5te-vfp; do TARGET_ARCH_EXT=$arch make -f Makefile-template; done
 

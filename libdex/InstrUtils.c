@@ -657,7 +657,6 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_UNUSED_FD:
         case OP_UNUSED_FE:
         case OP_UNUSED_FF:
-            flags = kInstrNoJit;
             break;
 
         /*

@@ -228,18 +228,4 @@ typedef struct PredictedChainingCell {
 
 #define CHAIN_CELL_OFFSET_TAG   0xcdab
 
-/* Create the TemplateOpcode enum */
-#define JIT_TEMPLATE(X) TEMPLATE_##X,
-typedef enum {
-#include "../../template/armv5te/TemplateOpList.h"
-/*
- * For example,
- *     TEMPLATE_CMP_LONG,
- *     TEMPLATE_RETURN,
- *     ...
- */
-    TEMPLATE_LAST_MARK,
-} TemplateOpCode;
-#undef JIT_TEMPLATE
-
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_ARMV5TE_H */

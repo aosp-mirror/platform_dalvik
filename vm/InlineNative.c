@@ -441,7 +441,7 @@ static bool javaLangMath_abs_float(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 }
 
 /*
- * public static float abs(float)
+ * public static double abs(double)
  */
 static bool javaLangMath_abs_double(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
@@ -550,7 +550,8 @@ static bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * pointer field.
  *
  * IMPORTANT: you must update DALVIK_VM_BUILD in DalvikVersion.h if you make
- * changes to this table.
+ * changes to this table.  Must also be kept in sync with NativeInlineOps
+ * enum in InlineNative.h.
  */
 const InlineOperation gDvmInlineOpsTable[] = {
     { org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod,
@@ -695,4 +696,3 @@ skip_prof:
 #endif
     return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3, pResult);
 }
-

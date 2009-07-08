@@ -14,14 +14,29 @@
  * limitations under the License.
  */
 
-#include "Dalvik.h"
-#include "interp/InterpDefs.h"
-#include "libdex/OpCode.h"
-#include "dexdump/OpCodeNames.h"
-#include "vm/compiler/CompilerInternals.h"
-#include "FpCodegen.h"
-#include "Armv5teLIR.h"
-#include "vm/mterp/common/FindInterface.h"
+/*
+ * This file contains codegen and support common to all supported
+ * ARM variants.  It is included by:
+ *
+ *        Codegen-$(TARGET_ARCH_VARIANT).c
+ *
+ * which combines this common code with specific support found in the
+ * applicable directory below this one.
+ */
+
+/* Routines which must be supplied by the variant-specific code */
+static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode);
+bool dvmCompilerArchInit(void);
+static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir);
+static bool genInlineCos(CompilationUnit *cUnit, MIR *mir);
+static bool genInlineSin(CompilationUnit *cUnit, MIR *mir);
+static bool genConversion(CompilationUnit *cUnit, MIR *mir);
+static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
+                            int vSrc1, int vSrc2);
+static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
+                             int vSrc1, int vSrc2);
+static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
+                    int vSrc2);
 
 /* Array holding the entry offset of each template relative to the first one */
 static intptr_t templateEntryOffsets[TEMPLATE_LAST_MARK];
@@ -275,51 +290,6 @@ static void genUnconditionalBranch(CompilationUnit *cUnit, Armv5teLIR *target)
     branch->generic.target = (LIR *) target;
 }
 
-#define USE_IN_CACHE_HANDLER 1
-
-/*
- * Jump to the out-of-line handler in ARM mode to finish executing the
- * remaining of more complex instructions.
- */
-static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
-{
-#if USE_IN_CACHE_HANDLER
-    /*
-     * NOTE - In practice BLX only needs one operand, but since the assembler
-     * may abort itself and retry due to other out-of-range conditions we
-     * cannot really use operand[0] to store the absolute target address since
-     * it may get clobbered by the final relative offset. Therefore,
-     * we fake BLX_1 is a two operand instruction and the absolute target
-     * address is stored in operand[1].
-     */
-    newLIR2(cUnit, ARMV5TE_BLX_1,
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-    newLIR2(cUnit, ARMV5TE_BLX_2,
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-#else
-    /*
-     * In case we want to access the statically compiled handlers for
-     * debugging purposes, define USE_IN_CACHE_HANDLER to 0
-     */
-    void *templatePtr;
-
-#define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();
-#include "../../template/armv5te/TemplateOpList.h"
-#undef JIT_TEMPLATE
-    switch (opCode) {
-#define JIT_TEMPLATE(X) \
-        case TEMPLATE_##X: { templatePtr = dvmCompiler_TEMPLATE_##X; break; }
-#include "../../template/armv5te/TemplateOpList.h"
-#undef JIT_TEMPLATE
-        default: templatePtr = NULL;
-    }
-    loadConstant(cUnit, r7, (int) templatePtr);
-    newLIR1(cUnit, ARMV5TE_BLX_R, r7);
-#endif
-}
-
 /* Perform the actual operation for OP_RETURN_* */
 static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
 {
@@ -421,6 +391,20 @@ static void loadValue(CompilationUnit *cUnit, int vSrc, int rDest)
     } else {
         loadConstant(cUnit, rDest, vSrc*4);
         newLIR3(cUnit, ARMV5TE_LDR_RRR, rDest, rFP, rDest);
+    }
+}
+
+/* Load a word at base + displacement.  Displacement must be word multiple */
+static void loadWordDisp(CompilationUnit *cUnit, int rBase, int displacement,
+                         int rDest)
+{
+    assert((displacement & 0x3) == 0);
+    /* Can it fit in a RRI5? */
+    if (displacement < 128) {
+        newLIR3(cUnit, ARMV5TE_LDR_RRI5, rDest, rBase, displacement >> 2);
+    } else {
+        loadConstant(cUnit, rDest, displacement);
+        newLIR3(cUnit, ARMV5TE_LDR_RRR, rDest, rBase, rDest);
     }
 }
 
@@ -796,8 +780,8 @@ static bool genShiftOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
     storeValuePair(cUnit, r0, r1, vDest, r2);
     return false;
 }
-bool dvmCompilerGenArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
-                                        int vDest, int vSrc1, int vSrc2)
+bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
+                             int vDest, int vSrc1, int vSrc2)
 {
     /*
      * Don't optimize the regsiter usage here as they are governed by the EABI
@@ -855,8 +839,8 @@ bool dvmCompilerGenArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
     return false;
 }
 
-bool dvmCompilerGenArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
-                                         int vDest, int vSrc1, int vSrc2)
+bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
+                              int vDest, int vSrc1, int vSrc2)
 {
     void* funct;
     int reg0, reg1, reg2;
@@ -1169,16 +1153,16 @@ static bool genArithOp(CompilationUnit *cUnit, MIR *mir)
         return genArithOpInt(cUnit,mir, vA, vB, vC);
     }
     if ((opCode >= OP_ADD_FLOAT_2ADDR) && (opCode <= OP_REM_FLOAT_2ADDR)) {
-        return dvmCompilerGenArithOpFloat(cUnit,mir, vA, vA, vB);
+        return genArithOpFloat(cUnit,mir, vA, vA, vB);
     }
     if ((opCode >= OP_ADD_FLOAT) && (opCode <= OP_REM_FLOAT)) {
-        return dvmCompilerGenArithOpFloat(cUnit, mir, vA, vB, vC);
+        return genArithOpFloat(cUnit, mir, vA, vB, vC);
     }
     if ((opCode >= OP_ADD_DOUBLE_2ADDR) && (opCode <= OP_REM_DOUBLE_2ADDR)) {
-        return dvmCompilerGenArithOpDouble(cUnit,mir, vA, vA, vB);
+        return genArithOpDouble(cUnit,mir, vA, vA, vB);
     }
     if ((opCode >= OP_ADD_DOUBLE) && (opCode <= OP_REM_DOUBLE)) {
-        return dvmCompilerGenArithOpDouble(cUnit,mir, vA, vB, vC);
+        return genArithOpDouble(cUnit,mir, vA, vB, vC);
     }
     return true;
 }
@@ -1205,18 +1189,133 @@ static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
     return false;
 }
 
-/* Experimental example of completely inlining a native replacement */
 static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
 {
-    /* Don't optimize the register usage */
-    int offset = (int) &((InterpState *) NULL)->retval;
     DecodedInstruction *dInsn = &mir->dalvikInsn;
-    assert(dInsn->vA == 1);
-    loadValue(cUnit, dInsn->arg[0], r0);
-    loadConstant(cUnit, r1, gDvm.offJavaLangString_count);
-    genNullCheck(cUnit, dInsn->arg[0], r0, mir->offset, NULL);
-    newLIR3(cUnit, ARMV5TE_LDR_RRR, r0, r0, r1);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, r0, rGLUE, offset >> 2);
+    int offset = offsetof(InterpState, retval);
+    int regObj = selectFirstRegister(cUnit, dInsn->arg[0], false);
+    int reg1 = NEXT_REG(regObj);
+    loadValue(cUnit, dInsn->arg[0], regObj);
+    genNullCheck(cUnit, dInsn->arg[0], regObj, mir->offset, NULL);
+    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, reg1);
+    newLIR3(cUnit, ARMV5TE_STR_RRI5, reg1, rGLUE, offset >> 2);
+    return false;
+}
+
+/*
+ * NOTE: The amount of code for this body suggests it ought to
+ * be handled in a template (and could also be coded quite a bit
+ * more efficiently in ARM).  However, the code is dependent on the
+ * internal structure layout of string objects which are most safely
+ * known at run time.
+ * TUNING:  One possibility (which could also be used for StringCompareTo
+ * and StringEquals) is to generate string access helper subroutines on
+ * Jit startup, and then call them from the translated inline-executes.
+ */
+static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
+{
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    int offset = offsetof(InterpState, retval);
+    int contents = offsetof(ArrayObject, contents);
+    int regObj = selectFirstRegister(cUnit, dInsn->arg[0], false);
+    int regIdx = NEXT_REG(regObj);
+    int regMax = NEXT_REG(regIdx);
+    int regOff = NEXT_REG(regMax);
+    loadValue(cUnit, dInsn->arg[0], regObj);
+    loadValue(cUnit, dInsn->arg[1], regIdx);
+    Armv5teLIR * pcrLabel = genNullCheck(cUnit, dInsn->arg[0], regObj,
+                                         mir->offset, NULL);
+    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, regMax);
+    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_offset, regOff);
+    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_value, regObj);
+    genBoundsCheck(cUnit, regIdx, regMax, mir->offset, pcrLabel);
+
+    newLIR2(cUnit, ARMV5TE_ADD_RI8, regObj, contents);
+    newLIR3(cUnit, ARMV5TE_ADD_RRR, regIdx, regIdx, regOff);
+    newLIR3(cUnit, ARMV5TE_ADD_RRR, regIdx, regIdx, regIdx);
+    newLIR3(cUnit, ARMV5TE_LDRH_RRR, regMax, regObj, regIdx);
+    newLIR3(cUnit, ARMV5TE_STR_RRI5, regMax, rGLUE, offset >> 2);
+    return false;
+}
+
+static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
+{
+    int offset = offsetof(InterpState, retval);
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
+    int sign = NEXT_REG(reg0);
+    /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
+    loadValue(cUnit, dInsn->arg[0], reg0);
+    newLIR3(cUnit, ARMV5TE_ASR, sign, reg0, 31);
+    newLIR3(cUnit, ARMV5TE_ADD_RRR, reg0, reg0, sign);
+    newLIR2(cUnit, ARMV5TE_EOR, reg0, sign);
+    newLIR3(cUnit, ARMV5TE_STR_RRI5, reg0, rGLUE, offset >> 2);
+    return false;
+}
+
+static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
+{
+    int offset = offsetof(InterpState, retval);
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
+    int signMask = NEXT_REG(reg0);
+    loadValue(cUnit, dInsn->arg[0], reg0);
+    loadConstant(cUnit, signMask, 0x7fffffff);
+    newLIR2(cUnit, ARMV5TE_AND_RR, reg0, signMask);
+    newLIR3(cUnit, ARMV5TE_STR_RRI5, reg0, rGLUE, offset >> 2);
+    return false;
+}
+
+static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
+{
+    int offset = offsetof(InterpState, retval);
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    int oplo = selectFirstRegister(cUnit, dInsn->arg[0], true);
+    int ophi = NEXT_REG(oplo);
+    int signMask = NEXT_REG(ophi);
+    loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
+    loadConstant(cUnit, signMask, 0x7fffffff);
+    newLIR3(cUnit, ARMV5TE_STR_RRI5, oplo, rGLUE, offset >> 2);
+    newLIR2(cUnit, ARMV5TE_AND_RR, ophi, signMask);
+    newLIR3(cUnit, ARMV5TE_STR_RRI5, ophi, rGLUE, (offset >> 2)+1);
+    return false;
+}
+
+ /* No select in thumb, so we need to branch.  Thumb2 will do better */
+static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
+{
+    int offset = offsetof(InterpState, retval);
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
+    int reg1 = NEXT_REG(reg0);
+    loadValue(cUnit, dInsn->arg[0], reg0);
+    loadValue(cUnit, dInsn->arg[1], reg1);
+    newLIR2(cUnit, ARMV5TE_CMP_RR, reg0, reg1);
+    Armv5teLIR *branch1 = newLIR2(cUnit, ARMV5TE_B_COND, 2,
+           isMin ? ARM_COND_LT : ARM_COND_GT);
+    newLIR2(cUnit, ARMV5TE_MOV_RR, reg0, reg1);
+    Armv5teLIR *target =
+        newLIR3(cUnit, ARMV5TE_STR_RRI5, reg0, rGLUE, offset >> 2);
+    branch1->generic.target = (LIR *)target;
+    return false;
+}
+
+static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
+{
+    int offset = offsetof(InterpState, retval);
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    int oplo = selectFirstRegister(cUnit, dInsn->arg[0], true);
+    int ophi = NEXT_REG(oplo);
+    int sign = NEXT_REG(ophi);
+    /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
+    loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
+    newLIR3(cUnit, ARMV5TE_ASR, sign, ophi, 31);
+    newLIR3(cUnit, ARMV5TE_ADD_RRR, oplo, oplo, sign);
+    newLIR2(cUnit, ARMV5TE_ADC, ophi, sign);
+    newLIR2(cUnit, ARMV5TE_EOR, oplo, sign);
+    newLIR2(cUnit, ARMV5TE_EOR, ophi, sign);
+    newLIR3(cUnit, ARMV5TE_STR_RRI5, oplo, rGLUE, offset >> 2);
+    newLIR3(cUnit, ARMV5TE_STR_RRI5, ophi, rGLUE, (offset >> 2)+1);
     return false;
 }
 
@@ -1724,7 +1823,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         case OP_SGET_BYTE:
         case OP_SGET_SHORT:
         case OP_SGET: {
-            int valOffset = (int)&((struct StaticField*)NULL)->value;
+            int valOffset = offsetof(StaticField, value);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
             assert(fieldPtr != NULL);
@@ -1734,7 +1833,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             break;
         }
         case OP_SGET_WIDE: {
-            int valOffset = (int)&((struct StaticField*)NULL)->value;
+            int valOffset = offsetof(StaticField, value);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
             int reg0, reg1, reg2;
@@ -1754,7 +1853,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         case OP_SPUT_BYTE:
         case OP_SPUT_SHORT:
         case OP_SPUT: {
-            int valOffset = (int)&((struct StaticField*)NULL)->value;
+            int valOffset = offsetof(StaticField, value);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
 
@@ -1767,7 +1866,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_SPUT_WIDE: {
             int reg0, reg1, reg2;
-            int valOffset = (int)&((struct StaticField*)NULL)->value;
+            int valOffset = offsetof(StaticField, value);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
 
@@ -1926,7 +2025,7 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
     return false;
 }
 
-bool dvmCompilerGenConversionPortable(CompilationUnit *cUnit, MIR *mir)
+static bool genConversionPortable(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode opCode = mir->dalvikInsn.opCode;
 
@@ -1936,9 +2035,7 @@ bool dvmCompilerGenConversionPortable(CompilationUnit *cUnit, MIR *mir)
     double __aeabi_f2d(  float op1 );
     double __aeabi_i2d(  int op1 );
     int    __aeabi_d2iz( double op1 );
-    long   __aeabi_f2lz( float op1 );
     float  __aeabi_l2f(  long op1 );
-    long   __aeabi_d2lz( double op1 );
     double __aeabi_l2d(  long op1 );
 
     switch (opCode) {
@@ -1955,11 +2052,11 @@ bool dvmCompilerGenConversionPortable(CompilationUnit *cUnit, MIR *mir)
         case OP_DOUBLE_TO_INT:
             return genConversionCall(cUnit, mir, (void*)__aeabi_d2iz, 2, 1);
         case OP_FLOAT_TO_LONG:
-            return genConversionCall(cUnit, mir, (void*)__aeabi_f2lz, 1, 2);
+            return genConversionCall(cUnit, mir, (void*)dvmJitf2l, 1, 2);
         case OP_LONG_TO_FLOAT:
             return genConversionCall(cUnit, mir, (void*)__aeabi_l2f, 2, 1);
         case OP_DOUBLE_TO_LONG:
-            return genConversionCall(cUnit, mir, (void*)__aeabi_d2lz, 2, 2);
+            return genConversionCall(cUnit, mir, (void*)dvmJitd2l, 2, 2);
         case OP_LONG_TO_DOUBLE:
             return genConversionCall(cUnit, mir, (void*)__aeabi_l2d, 2, 2);
         default:
@@ -2000,7 +2097,7 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
         case OP_LONG_TO_FLOAT:
         case OP_DOUBLE_TO_LONG:
         case OP_LONG_TO_DOUBLE:
-            return dvmCompilerGenConversion(cUnit, mir);
+            return genConversion(cUnit, mir);
         case OP_NEG_INT:
         case OP_NOT_INT:
             return genArithOpInt(cUnit, mir, vSrc1Dest, vSrc1Dest, vSrc2);
@@ -2008,11 +2105,9 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
         case OP_NOT_LONG:
             return genArithOpLong(cUnit,mir, vSrc1Dest, vSrc1Dest, vSrc2);
         case OP_NEG_FLOAT:
-            return dvmCompilerGenArithOpFloat(cUnit, mir, vSrc1Dest,
-                                              vSrc1Dest, vSrc2);
+            return genArithOpFloat(cUnit, mir, vSrc1Dest, vSrc1Dest, vSrc2);
         case OP_NEG_DOUBLE:
-            return dvmCompilerGenArithOpDouble(cUnit, mir, vSrc1Dest,
-                                               vSrc1Dest, vSrc2);
+            return genArithOpDouble(cUnit, mir, vSrc1Dest, vSrc1Dest, vSrc2);
         case OP_MOVE_WIDE: {
             reg0 = selectFirstRegister(cUnit, vSrc2, true);
             reg1 = NEXT_REG(reg0);
@@ -2027,7 +2122,7 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             reg1 = NEXT_REG(reg0);
             reg2 = NEXT_REG(reg1);
 
-            loadValue(cUnit, mir->dalvikInsn.vB, reg0);
+            loadValue(cUnit, vSrc2, reg0);
             newLIR3(cUnit, ARMV5TE_ASR, reg1, reg0, 31);
             storeValuePair(cUnit, reg0, reg1, vSrc1Dest, reg2);
             break;
@@ -2085,10 +2180,7 @@ static bool handleFmt21s(CompilationUnit *cUnit, MIR *mir)
         reg2 = NEXT_REG(reg1);
 
         loadConstant(cUnit, reg0, BBBB);
-        loadConstant(cUnit, reg1, 0);
-        if (BBBB < 0) {
-            newLIR2(cUnit, ARMV5TE_SUB_RI8, reg1, -1);
-        }
+        newLIR3(cUnit, ARMV5TE_ASR, reg1, reg0, 31);
 
         /* Save the long values to the specified Dalvik register pair */
         storeValuePair(cUnit, reg0, reg1, vDest, reg2);
@@ -2526,7 +2618,7 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
         case OP_CMPG_FLOAT:
         case OP_CMPL_DOUBLE:
         case OP_CMPG_DOUBLE:
-            return dvmCompilerGenCmpX(cUnit, mir, vA, vB, vC);
+            return genCmpX(cUnit, mir, vA, vB, vC);
         case OP_CMP_LONG:
             loadValuePair(cUnit,vB, r0, r1);
             loadValuePair(cUnit, vC, r2, r3);
@@ -2982,16 +3074,48 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
         case OP_EXECUTE_INLINE: {
             unsigned int i;
             const InlineOperation* inLineTable = dvmGetInlineOpsTable();
-            int offset = (int) &((InterpState *) NULL)->retval;
+            int offset = offsetof(InterpState, retval);
             int operation = dInsn->vB;
 
-            if (!strcmp(inLineTable[operation].classDescriptor,
-                        "Ljava/lang/String;") &&
-                !strcmp(inLineTable[operation].methodName,
-                        "length") &&
-                !strcmp(inLineTable[operation].methodSignature,
-                        "()I")) {
-                return genInlinedStringLength(cUnit,mir);
+            switch (operation) {
+                case INLINE_EMPTYINLINEMETHOD:
+                    return false;  /* Nop */
+                case INLINE_STRING_LENGTH:
+                    return genInlinedStringLength(cUnit, mir);
+                case INLINE_MATH_ABS_INT:
+                    return genInlinedAbsInt(cUnit, mir);
+                case INLINE_MATH_ABS_LONG:
+                    return genInlinedAbsLong(cUnit, mir);
+                case INLINE_MATH_MIN_INT:
+                    return genInlinedMinMaxInt(cUnit, mir, true);
+                case INLINE_MATH_MAX_INT:
+                    return genInlinedMinMaxInt(cUnit, mir, false);
+                case INLINE_STRING_CHARAT:
+                    return genInlinedStringCharAt(cUnit, mir);
+                case INLINE_MATH_SQRT:
+                    if (genInlineSqrt(cUnit, mir))
+                        return true;
+                    else
+                        break;   /* Handle with C routine */
+                case INLINE_MATH_COS:
+                    if (genInlineCos(cUnit, mir))
+                        return true;
+                    else
+                        break;   /* Handle with C routine */
+                case INLINE_MATH_SIN:
+                    if (genInlineSin(cUnit, mir))
+                        return true;
+                    else
+                        break;   /* Handle with C routine */
+                case INLINE_MATH_ABS_FLOAT:
+                    return genInlinedAbsFloat(cUnit, mir);
+                case INLINE_MATH_ABS_DOUBLE:
+                    return genInlinedAbsDouble(cUnit, mir);
+                case INLINE_STRING_COMPARETO:
+                case INLINE_STRING_EQUALS:
+                    break;
+                default:
+                    dvmAbort();
             }
 
             /* Materialize pointer to retval & push */
@@ -3355,7 +3479,6 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 break;
             }
         }
-
         /* Eliminate redundant loads/stores and delay stores into later slots */
         dvmCompilerApplyLocalOptimizations(cUnit, (LIR *) headLIR,
                                            cUnit->lastLIRInsn);
@@ -3444,45 +3567,6 @@ void *dvmCompilerDoWork(CompilerWorkOrder *work)
    return res;
 }
 
-/* Architecture-specific initializations and checks go here */
-bool dvmCompilerArchInit(void)
-{
-    /* First, declare dvmCompiler_TEMPLATE_XXX for each template */
-#define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();
-#include "../../template/armv5te/TemplateOpList.h"
-#undef JIT_TEMPLATE
-
-    int i = 0;
-    extern void dvmCompilerTemplateStart(void);
-
-    /*
-     * Then, populate the templateEntryOffsets array with the offsets from the
-     * the dvmCompilerTemplateStart symbol for each template.
-     */
-#define JIT_TEMPLATE(X) templateEntryOffsets[i++] = \
-    (intptr_t) dvmCompiler_TEMPLATE_##X - (intptr_t) dvmCompilerTemplateStart;
-#include "../../template/armv5te/TemplateOpList.h"
-#undef JIT_TEMPLATE
-
-    /* Codegen-specific assumptions */
-    assert(offsetof(ClassObject, vtable) < 128 &&
-           (offsetof(ClassObject, vtable) & 0x3) == 0);
-    assert(offsetof(ArrayObject, length) < 128 &&
-           (offsetof(ArrayObject, length) & 0x3) == 0);
-    assert(offsetof(ArrayObject, contents) < 256);
-
-    /* Up to 5 args are pushed on top of FP - sizeofStackSaveArea */
-    assert(sizeof(StackSaveArea) < 236);
-
-    /*
-     * EA is calculated by doing "Rn + imm5 << 2", and there are 5 entry points
-     * that codegen may access, make sure that the offset from the top of the
-     * struct is less than 108.
-     */
-    assert(offsetof(InterpState, jitToInterpEntries) < 108);
-    return true;
-}
-
 /* Architectural-specific debugging helpers go here */
 void dvmCompilerArchDump(void)
 {
@@ -3527,42 +3611,4 @@ void dvmCompilerArchDump(void)
     if (strlen(buf)) {
         LOGD("dalvik.vm.jit.op = %s", buf);
     }
-}
-
-/*
- * Exported version of loadValueAddress
- * TODO: revisit source file structure
- */
-void dvmCompilerLoadValueAddress(CompilationUnit *cUnit, int vSrc, int rDest)
-{
-    loadValueAddress(cUnit, vSrc, rDest);
-}
-
-/*
- * Exported version of genDispatchToHandler
- * TODO: revisit source file structure
- */
-void dvmCompilerGenDispatchToHandler(CompilationUnit *cUnit,
-                                     TemplateOpCode opCode)
-{
-    genDispatchToHandler(cUnit, opCode);
-}
-
-/*
- * Exported version of loadValue
- * TODO: revisit source file structure
- */
-void dvmCompilerLoadValue(CompilationUnit *cUnit, int vSrc, int rDest)
-{
-    loadValue(cUnit, vSrc, rDest);
-}
-
-/*
- * Exported version of storeValue
- * TODO: revisit source file structure
- */
-void dvmCompilerStoreValue(CompilationUnit *cUnit, int rSrc, int vDest,
-                       int rScratch)
-{
-    storeValue(cUnit, rSrc, vDest, rScratch);
 }
