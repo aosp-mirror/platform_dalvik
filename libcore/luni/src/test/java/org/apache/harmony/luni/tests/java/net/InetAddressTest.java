@@ -17,8 +17,8 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
-import dalvik.annotation.BrokenTest; 
-import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -355,7 +355,6 @@ public class InetAddressTest extends junit.framework.TestCase {
         method = "getHostName",
         args = {}
     )
-    @BrokenTest("Crashes VM in CTS due to a JNI error in networking code")
     public void test_getHostName() throws Exception {
         // Test for method java.lang.String java.net.InetAddress.getHostName()
         InetAddress ia = InetAddress
