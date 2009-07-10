@@ -668,8 +668,11 @@ static int sslRead(SSL* ssl, char* buf, jint len, int* sslReturnCode,
         
         // LOGD("Doing SSL_Read()");
         int result = SSL_read(ssl, buf, len);
-        int error = SSL_get_error(ssl, result);
-        freeSslErrorState();
+        int error = SSL_ERROR_NONE;
+        if (result <= 0) {
+            error = SSL_get_error(ssl, result);
+            freeSslErrorState();
+        }
         // LOGD("Returned from SSL_Read() with result %d, error code %d", result, error);
 
         // If we have been successful in moving data around, check whether it
@@ -783,8 +786,11 @@ static int sslWrite(SSL* ssl, const char* buf, jint len, int* sslReturnCode,
         
         // LOGD("Doing SSL_write() with %d bytes to go", len);
         int result = SSL_write(ssl, buf, len);
-        int error = SSL_get_error(ssl, result);
-        freeSslErrorState();
+        int error = SSL_ERROR_NONE;
+        if (result <= 0) {
+            error = SSL_get_error(ssl, result);
+            freeSslErrorState();
+        }
         // LOGD("Returned from SSL_write() with result %d, error code %d", result, error);
 
         // If we have been successful in moving data around, check whether it
