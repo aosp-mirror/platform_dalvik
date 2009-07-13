@@ -87,11 +87,47 @@ s4 inot32(s4 x) { return x ^ -1; }
 s8 inot64(s8 x) { return x ^ -1LL; }
 
 s4 float2int(float x) { return (s4) x; }
-s8 float2long(float x) { return (s8) x; }
 double float2double(float x) { return (double) x; }
 s4 double2int(double x) { return (s4) x; }
-s8 double2long(double x) { return (s8) x; }
 float double2float(double x) { return (float) x; }
+
+/*
+ * ARM lib doesn't clamp large values or NaN the way we want on these two.
+ * If the simple version isn't correct, use the long version.  (You can use
+ * dalvik/tests/041-narrowing to verify.)
+ */
+s8 float2long(float x) { return (s8) x; }
+s8 float2long_clamp(float x)
+{
+    static const float kMaxLong = (float)0x7fffffffffffffffULL;
+    static const float kMinLong = (float)0x8000000000000000ULL;
+
+    if (x >= kMaxLong) {
+        return 0x7fffffffffffffffULL;
+    } else if (x <= kMinLong) {
+        return 0x8000000000000000ULL;
+    } else if (x != x) {
+        return 0;
+    } else {
+        return (s8) x;
+    }
+}
+s8 double2long(double x) { return (s8) x; }
+s8 double2long_clamp(double x)
+{
+    static const double kMaxLong = (double)0x7fffffffffffffffULL;
+    static const double kMinLong = (double)0x8000000000000000ULL;
+
+    if (x >= kMaxLong) {
+        return 0x7fffffffffffffffULL;
+    } else if (x <= kMinLong) {
+        return 0x8000000000000000ULL;
+    } else if (x != x) {
+        return 0;
+    } else {
+        return (s8) x;
+    }
+}
 
 s1 int2byte(s4 x) { return (s1) x; }
 s2 int2short(s4 x) { return (s2) x; }
