@@ -139,14 +139,25 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
 // are associated with it.  (Or not -- can't determine if native code
 // is still using parts of it.)
 
+typedef enum OnLoadState {
+    kOnLoadPending = 0,     /* initial state, must be zero */
+    kOnLoadFailed,
+    kOnLoadOkay,
+} OnLoadState;
+
 /*
  * We add one of these to the hash table for every library we load.  The
  * hash is on the "pathName" field.
  */
 typedef struct SharedLib {
-    char*       pathName;       /* absolute path to library */
-    void*       handle;         /* from dlopen */
-    Object*     classLoader;    /* ClassLoader we are associated with */
+    char*       pathName;           /* absolute path to library */
+    void*       handle;             /* from dlopen */
+    Object*     classLoader;        /* ClassLoader we are associated with */
+
+    pthread_mutex_t onLoadLock;     /* guards remaining items */
+    pthread_cond_t  onLoadCond;     /* wait for JNI_OnLoad in other thread */
+    u4              onLoadThreadId; /* recursive invocation guard */
+    OnLoadState     onLoadResult;   /* result of earlier JNI_OnLoad */
 } SharedLib;
 
 /*
@@ -166,6 +177,9 @@ static int hashcmpNameStr(const void* ventry, const void* vname)
  * (This is a dvmHashTableLookup callback.)
  *
  * Find an entry that matches the new entry.
+ *
+ * We don't compare the class loader here, because you're not allowed to
+ * have the same shared library associated with more than one CL.
  */
 static int hashcmpSharedLib(const void* ventry, const void* vnewEntry)
 {
@@ -180,7 +194,7 @@ static int hashcmpSharedLib(const void* ventry, const void* vnewEntry)
 /*
  * Check to see if an entry with the same pathname already exists.
  */
-static const SharedLib* findSharedLibEntry(const char* pathName)
+static SharedLib* findSharedLibEntry(const char* pathName)
 {
     u4 hash = dvmComputeUtf8Hash(pathName);
     void* ent;
@@ -193,9 +207,10 @@ static const SharedLib* findSharedLibEntry(const char* pathName)
 /*
  * Add the new entry to the table.
  *
- * Returns "true" on success, "false" if the entry already exists.
+ * Returns the table entry, which will not be the same as "pLib" if the
+ * entry already exists.
  */
-static bool addSharedLibEntry(SharedLib* pLib)
+static SharedLib* addSharedLibEntry(SharedLib* pLib)
 {
     u4 hash = dvmComputeUtf8Hash(pLib->pathName);
     void* ent;
@@ -205,9 +220,8 @@ static bool addSharedLibEntry(SharedLib* pLib)
      * our own pointer back.  If somebody beat us to the punch, we'll get
      * their pointer back instead.
      */
-    ent = dvmHashTableLookup(gDvm.nativeLibs, hash, pLib, hashcmpSharedLib,
+    return dvmHashTableLookup(gDvm.nativeLibs, hash, pLib, hashcmpSharedLib,
                 true);
-    return (ent == pLib);
 }
 
 /*
@@ -369,6 +383,46 @@ bail:
 }
 #endif
 
+
+/*
+ * Check the result of an earlier call to JNI_OnLoad on this library.  If
+ * the call has not yet finished in another thread, wait for it.
+ */
+static bool checkOnLoadResult(SharedLib* pEntry)
+{
+    Thread* self = dvmThreadSelf();
+    if (pEntry->onLoadThreadId == self->threadId) {
+        /*
+         * Check this so we don't end up waiting for ourselves.  We need
+         * to return "true" so the caller can continue.
+         */
+        LOGI("threadid=%d: recursive native library load attempt (%s)\n",
+            self->threadId, pEntry->pathName);
+        return true;
+    }
+
+    LOGV("+++ retrieving %s OnLoad status\n", pEntry->pathName);
+    bool result;
+
+    dvmLockMutex(&pEntry->onLoadLock);
+    while (pEntry->onLoadResult == kOnLoadPending) {
+        LOGD("threadid=%d: waiting for %s OnLoad status\n",
+            self->threadId, pEntry->pathName);
+        int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+        pthread_cond_wait(&pEntry->onLoadCond, &pEntry->onLoadLock);
+        dvmChangeStatus(self, oldStatus);
+    }
+    if (pEntry->onLoadResult == kOnLoadOkay) {
+        LOGV("+++ earlier OnLoad(%s) okay\n", pEntry->pathName);
+        result = true;
+    } else {
+        LOGV("+++ earlier OnLoad(%s) failed\n", pEntry->pathName);
+        result = false;
+    }
+    dvmUnlockMutex(&pEntry->onLoadLock);
+    return result;
+}
+
 typedef int (*OnLoadFunc)(JavaVM*, void*);
 
 /*
@@ -388,7 +442,7 @@ typedef int (*OnLoadFunc)(JavaVM*, void*);
  */
 bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
 {
-    const SharedLib* pEntry;
+    SharedLib* pEntry;
     void* handle;
 
     LOGD("Trying to load lib %s %p\n", pathName, classLoader);
@@ -406,6 +460,8 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
         }
         LOGD("Shared lib '%s' already loaded in same CL %p\n",
             pathName, classLoader);
+        if (!checkOnLoadResult(pEntry))
+            return false;
         return true;
     }
 
@@ -448,19 +504,28 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
         return false;
     }
 
+    /* create a new entry */
     SharedLib* pNewEntry;
-    pNewEntry = (SharedLib*) malloc(sizeof(SharedLib));
+    pNewEntry = (SharedLib*) calloc(1, sizeof(SharedLib));
     pNewEntry->pathName = strdup(pathName);
     pNewEntry->handle = handle;
     pNewEntry->classLoader = classLoader;
-    if (!addSharedLibEntry(pNewEntry)) {
-        LOGI("WOW: we lost a race to add a shared lib (%s %p)\n",
+    dvmInitMutex(&pNewEntry->onLoadLock);
+    pthread_cond_init(&pNewEntry->onLoadCond, NULL);
+    pNewEntry->onLoadThreadId = self->threadId;
+
+    /* try to add it to the list */
+    SharedLib* pActualEntry = addSharedLibEntry(pNewEntry);
+
+    if (pNewEntry != pActualEntry) {
+        LOGI("WOW: we lost a race to add a shared lib (%s CL=%p)\n",
             pathName, classLoader);
-        /* free up our entry, and just return happy that one exists */
         freeSharedLibEntry(pNewEntry);
+        return checkOnLoadResult(pActualEntry);
     } else {
         LOGD("Added shared lib %s %p\n", pathName, classLoader);
 
+        bool result = true;
         void* vonLoad;
         int version;
 
@@ -471,14 +536,15 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
             /*
              * Call JNI_OnLoad.  We have to override the current class
              * loader, which will always be "null" since the stuff at the
-             * top of the stack is around Runtime.loadLibrary().
+             * top of the stack is around Runtime.loadLibrary().  (See
+             * the comments in the JNI FindClass function.)
              */
             OnLoadFunc func = vonLoad;
-            Thread* self = dvmThreadSelf();
             Object* prevOverride = self->classLoaderOverride;
 
             self->classLoaderOverride = classLoader;
             oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
+            LOGV("+++ calling JNI_OnLoad(%s)\n", pathName);
             version = (*func)(gDvm.vmList, NULL);
             dvmChangeStatus(self, oldStatus);
             self->classLoaderOverride = prevOverride;
@@ -488,13 +554,36 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
             {
                 LOGW("JNI_OnLoad returned bad version (%d) in %s %p\n",
                     version, pathName, classLoader);
-                // TODO: dlclose, remove hash table entry
-                return false;
+                /*
+                 * It's unwise to call dlclose() here, but we can mark it
+                 * as bad and ensure that future load attempts will fail.
+                 *
+                 * We don't know how far JNI_OnLoad got, so there could
+                 * be some partially-initialized stuff accessible through
+                 * newly-registered native method calls.  We could try to
+                 * unregister them, but that doesn't seem worthwhile.
+                 */
+                result = false;
+            } else {
+                LOGV("+++ finished JNI_OnLoad %s\n", pathName);
             }
         }
-    }
 
-    return true;
+        if (result)
+            pNewEntry->onLoadResult = kOnLoadOkay;
+        else
+            pNewEntry->onLoadResult = kOnLoadFailed;
+
+        pNewEntry->onLoadThreadId = 0;
+
+        /*
+         * Broadcast a wakeup to anybody sleeping on the condition variable.
+         */
+        dvmLockMutex(&pNewEntry->onLoadLock);
+        pthread_cond_broadcast(&pNewEntry->onLoadCond);
+        dvmUnlockMutex(&pNewEntry->onLoadLock);
+        return result;
+    }
 }
 
 
@@ -642,6 +731,8 @@ static char* createMangledSignature(const DexProto* proto)
  * (This is a dvmHashForeach callback.)
  *
  * Search for a matching method in this shared library.
+ *
+ * TODO: we may want to skip libraries for which JNI_OnLoad failed.
  */
 static int findMethodInLib(void* vlib, void* vmethod)
 {
