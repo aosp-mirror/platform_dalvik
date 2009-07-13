@@ -179,8 +179,9 @@ public class PathClassLoader extends ClassLoader {
      * parent ClassLoader has failed to find a loaded class of the same name.
      * 
      * @param name
-     *            The name of the class to search for, in a human-readable form
-     *            like "java.lang.String" or "java.net.URLClassLoader$3$1".
+     *            The "binary name" of the class to search for, in a
+     *            human-readable form like "java.lang.String" or
+     *            "java.net.URLClassLoader$3$1".
      * @return the {@link Class} object representing the class
      * @throws ClassNotFoundException
      *             if the class cannot be found
@@ -199,8 +200,7 @@ public class PathClassLoader extends ClassLoader {
             //System.out.println("My path is: " + mPaths[i]);
 
             if (mDexs[i] != null) {
-                String slashName = name.replace('.', '/');
-                Class clazz = mDexs[i].loadClass(slashName, this);
+                Class clazz = mDexs[i].loadClassBinaryName(name, this);
                 if (clazz != null)
                     return clazz;
             } else if (mZips[i] != null) {

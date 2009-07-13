@@ -249,6 +249,8 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
  * creation of a specific class.  The difference is that the search for and
  * reading of the bytes is done within the VM.
  *
+ * The class name is a "binary name", e.g. "java.lang.String".
+ *
  * Returns a null pointer with no exception if the class was not found.
  * Throws an exception on other failures.
  */
@@ -266,8 +268,8 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
     char* descriptor;
 
     name = dvmCreateCstrFromString(nameObj);
-    descriptor = dvmNameToDescriptor(name);
-    LOGV("--- Explicit class load '%s' 0x%08x\n", name, cookie);
+    descriptor = dvmDotToDescriptor(name);
+    LOGV("--- Explicit class load '%s' 0x%08x\n", descriptor, cookie);
     free(name);
 
     if (!validateCookie(cookie))
