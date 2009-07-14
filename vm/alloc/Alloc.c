@@ -68,25 +68,27 @@ bool dvmGcPreZygoteFork(void)
 }
 
 /*
- * Create a "stock instance" of an exception class.  These won't have
- * useful stack traces in them, but they can be thrown when everything
- * else is not working in a container class.
+ * Create a "stock instance" of an exception class.
  */
-static Object* createStockException(const char* descriptor)
+static Object* createStockException(const char* descriptor, const char* msg)
 {
+    Thread* self = dvmThreadSelf();
+    StringObject* msgStr = NULL;
     ClassObject* clazz;
     Method* init;
     Object* obj;
 
+    /* find class, initialize if necessary */
     clazz = dvmFindSystemClass(descriptor);
     if (clazz == NULL) {
         LOGE("Unable to find %s\n", descriptor);
         return NULL;
     }
 
-    init = dvmFindDirectMethodByDescriptor(clazz, "<init>", "()V");
+    init = dvmFindDirectMethodByDescriptor(clazz, "<init>",
+            "(Ljava/lang/String;)V");
     if (init == NULL) {
-        LOGE("Unable to find nullary constructor for %s\n", descriptor);
+        LOGE("Unable to find String-arg constructor for %s\n", descriptor);
         return NULL;
     }
 
@@ -94,30 +96,56 @@ static Object* createStockException(const char* descriptor)
     if (obj == NULL)
         return NULL;
 
-    Thread* self = dvmThreadSelf();
-    JValue unused;
-    dvmCallMethod(self, init, obj, &unused);
-    if (dvmCheckException(self))
-        return NULL;
+    if (msg == NULL) {
+        msgStr = NULL;
+    } else {
+        msgStr = dvmCreateStringFromCstr(msg, ALLOC_DEFAULT);
+        if (msgStr == NULL) {
+            LOGW("Could not allocate message string \"%s\"\n", msg);
+            dvmReleaseTrackedAlloc(obj, self);
+            return NULL;
+        }
+    }
 
+    JValue unused;
+    dvmCallMethod(self, init, obj, &unused, msgStr);
+    if (dvmCheckException(self)) {
+        dvmReleaseTrackedAlloc((Object*) msgStr, self);
+        dvmReleaseTrackedAlloc(obj, self);
+        return NULL;
+    }
+
+    dvmReleaseTrackedAlloc((Object*) msgStr, self);     // okay if msgStr NULL
     return obj;
 }
 
 /*
- * "Late" initialization.  We had to defer this until we were able to
- * interpret code.
+ * Create some "stock" exceptions.  These can be thrown when the system is
+ * too screwed up to allocate and initialize anything, or when we don't
+ * need a meaningful stack trace.
+ *
+ * We can't do this during the initial startup because we need to execute
+ * the constructors.
  */
-bool dvmGcLateInit(void)
+bool dvmCreateStockExceptions(void)
 {
     /*
      * Pre-allocate some throwables.  These need to be explicitly added
-     * to the root set by the GC.
+     * to the GC's root set (see dvmHeapMarkRootSet()).
      */
-    gDvm.outOfMemoryObj = createStockException("Ljava/lang/OutOfMemoryError;");
+    gDvm.outOfMemoryObj = createStockException("Ljava/lang/OutOfMemoryError;",
+        "[memory exhausted]");
     dvmReleaseTrackedAlloc(gDvm.outOfMemoryObj, NULL);
-    gDvm.internalErrorObj = createStockException("Ljava/lang/InternalError;");
+    gDvm.internalErrorObj = createStockException("Ljava/lang/InternalError;",
+        "[pre-allocated]");
     dvmReleaseTrackedAlloc(gDvm.internalErrorObj, NULL);
-    if (gDvm.outOfMemoryObj == NULL || gDvm.internalErrorObj == NULL) {
+    gDvm.noClassDefFoundErrorObj =
+        createStockException("Ljava/lang/NoClassDefFoundError;", NULL);
+    dvmReleaseTrackedAlloc(gDvm.noClassDefFoundErrorObj, NULL);
+
+    if (gDvm.outOfMemoryObj == NULL || gDvm.internalErrorObj == NULL ||
+        gDvm.noClassDefFoundErrorObj == NULL)
+    {
         LOGW("Unable to create stock exceptions\n");
         return false;
     }

@@ -1211,7 +1211,7 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * Do some "late" initialization for the memory allocator.  This may
      * allocate storage and initialize classes.
      */
-    if (!dvmGcLateInit())
+    if (!dvmCreateStockExceptions())
         goto fail;
 
     /*

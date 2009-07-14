@@ -1414,8 +1414,14 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
         }
 
         if (pDvmDex == NULL || pClassDef == NULL) {
-            dvmThrowExceptionWithClassMessage(
-                "Ljava/lang/NoClassDefFoundError;", descriptor);
+            if (gDvm.noClassDefFoundErrorObj != NULL) {
+                /* usual case -- use prefabricated object */
+                dvmSetException(self, gDvm.noClassDefFoundErrorObj);
+            } else {
+                /* dexopt case -- can't guarantee prefab (core.jar) */
+                dvmThrowExceptionWithClassMessage(
+                    "Ljava/lang/NoClassDefFoundError;", descriptor);
+            }
             goto bail;
         }
 
