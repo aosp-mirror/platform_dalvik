@@ -468,6 +468,39 @@ public class ArraysTest extends TestCase {
             fail("No NPE");
         } catch (NullPointerException e) {}
     }
+
+    /**
+     * @tests java.util.Arrays#deepToString(Object[])
+     * @bug 1452542
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Tests fix for Android bug 1452542",
+        method = "deepToString",
+        args = {java.lang.Object[].class}
+    )
+    public void test_deepToStringNestedEmptyArray() {
+        Object[][] foo = new Object[1][];
+        foo[0] = new Object[0];
+        assertEquals("[[]]", Arrays.deepToString(foo));
+    }
+
+    /**
+     * @tests java.util.Arrays#deepToString(Object[])
+     * @bug 1452542
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Tests fix for Android bug 1452542",
+        method = "deepToString",
+        args = {java.lang.Object[].class}
+    )
+    public void test_deepToStringNestedNullArray() {
+        Object[][] foo = new Object[1][];
+        assertEquals("[null]", Arrays.deepToString(foo));
+    }
+
+
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
