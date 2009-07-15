@@ -418,12 +418,11 @@ struct DvmGlobals {
     GcHeap*     gcHeap;
 
     /*
-     * Pre-allocated object for out-of-memory errors.
+     * Pre-allocated throwables.
      */
     Object*     outOfMemoryObj;
-
-    /* pre-allocated general failure exception */
     Object*     internalErrorObj;
+    Object*     noClassDefFoundErrorObj;
 
     /* Monitor list, so we can free them */
     /*volatile*/ Monitor* monitorList;

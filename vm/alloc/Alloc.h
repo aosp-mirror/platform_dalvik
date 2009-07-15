@@ -25,9 +25,9 @@
  * Initialization.
  */
 bool dvmGcStartup(void);
+bool dvmCreateStockExceptions(void);
 bool dvmGcStartupAfterZygote(void);
 void dvmGcShutdown(void);
-bool dvmGcLateInit(void);
 
 /*
  * Do any last-minute preparation before we call fork() for the first time.

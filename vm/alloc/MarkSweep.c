@@ -378,6 +378,7 @@ void dvmHeapMarkRootSet()
     LOG_SCAN("special objects\n");
     dvmMarkObjectNonNull(gDvm.outOfMemoryObj);
     dvmMarkObjectNonNull(gDvm.internalErrorObj);
+    dvmMarkObjectNonNull(gDvm.noClassDefFoundErrorObj);
 //TODO: scan object references sitting in gDvm;  use pointer begin & end
 
     HPROF_CLEAR_GC_SCAN_STATE();
