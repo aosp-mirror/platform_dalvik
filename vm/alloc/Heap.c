@@ -148,15 +148,21 @@ void dvmHeapShutdown()
 
 /*
  * We've been asked to allocate something we can't, e.g. an array so
- * large that (length * elementWidth) is larger than 2^31.  We want to
- * throw an OutOfMemoryError, but doing so implies that certain other
- * actions have taken place (like clearing soft references).
+ * large that (length * elementWidth) is larger than 2^31.
  *
- * TODO: for now we just throw an InternalError.
+ * _The Java Programming Language_, 4th edition, says, "you can be sure
+ * that all SoftReferences to softly reachable objects will be cleared
+ * before an OutOfMemoryError is thrown."
+ *
+ * It's unclear whether that holds for all situations where an OOM can
+ * be thrown, or just in the context of an allocation that fails due
+ * to lack of heap space.  For simplicity we just throw the exception.
+ *
+ * (OOM due to actually running out of space is handled elsewhere.)
  */
 void dvmThrowBadAllocException(const char* msg)
 {
-    dvmThrowException("Ljava/lang/InternalError;", msg);
+    dvmThrowException("Ljava/lang/OutOfMemoryError;", msg);
 }
 
 /*
