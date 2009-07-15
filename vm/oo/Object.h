@@ -582,6 +582,8 @@ Method* dvmFindDirectMethodHier(const ClassObject* clazz,
     const char* methodName, const DexProto* proto);
 Method* dvmFindVirtualMethodHier(const ClassObject* clazz,
     const char* methodName, const DexProto* proto);
+Method* dvmFindMethodHier(const ClassObject* clazz, const char* methodName,
+    const DexProto* proto);
 
 /*
  * Find the implementation of "meth" in "clazz".
@@ -611,6 +613,8 @@ InstField* dvmFindInstanceFieldHier(const ClassObject* clazz,
     const char* fieldName, const char* signature);
 StaticField* dvmFindStaticFieldHier(const ClassObject* clazz,
     const char* fieldName, const char* signature);
+Field* dvmFindFieldHier(const ClassObject* clazz, const char* fieldName,
+    const char* signature);
 
 /*
  * Find a field and return the byte offset from the object pointer.  Only
