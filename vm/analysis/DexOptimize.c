@@ -1765,7 +1765,7 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
             return NULL;
         }
 
-        resField = dvmFindInstanceFieldHier(resClass,
+        resField = (InstField*)dvmFindFieldHier(resClass,
             dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx),
             dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
         if (resField == NULL) {
@@ -1774,6 +1774,14 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
                 dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
             if (pFailure != NULL)
                 *pFailure = VERIFY_ERROR_NO_FIELD;
+            return NULL;
+        }
+        if (dvmIsStaticField(&resField->field)) {
+            LOGD("DexOpt: wanted instance, got static for field %s.%s\n",
+                resClass->descriptor,
+                dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_CLASS_CHANGE;
             return NULL;
         }
 
@@ -1830,13 +1838,21 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
             return NULL;
         }
 
-        resField = dvmFindStaticFieldHier(resClass,
+        resField = (StaticField*)dvmFindFieldHier(resClass,
                     dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx),
                     dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
         if (resField == NULL) {
             LOGD("DexOpt: couldn't find static field\n");
             if (pFailure != NULL)
                 *pFailure = VERIFY_ERROR_NO_FIELD;
+            return NULL;
+        }
+        if (!dvmIsStaticField(&resField->field)) {
+            LOGD("DexOpt: wanted static, got instance for field %s.%s\n",
+                resClass->descriptor,
+                dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_CLASS_CHANGE;
             return NULL;
         }
 
@@ -1919,7 +1935,9 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
     DvmDex* pDvmDex = referrer->pDvmDex;
     Method* resMethod;
 
-    assert(methodType != METHOD_INTERFACE);
+    assert(methodType == METHOD_DIRECT ||
+           methodType == METHOD_VIRTUAL ||
+           methodType == METHOD_STATIC);
 
     LOGVV("--- resolving method %u (referrer=%s)\n", methodIdx,
         referrer->descriptor);
@@ -1961,11 +1979,9 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
         if (methodType == METHOD_DIRECT) {
             resMethod = dvmFindDirectMethod(resClass,
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx), &proto);
-        } else if (methodType == METHOD_STATIC) {
-            resMethod = dvmFindDirectMethodHier(resClass,
-                dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx), &proto);
         } else {
-            resMethod = dvmFindVirtualMethodHier(resClass,
+            /* METHOD_STATIC or METHOD_VIRTUAL */
+            resMethod = dvmFindMethodHier(resClass,
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx), &proto);
         }
 
@@ -1975,6 +1991,23 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
             if (pFailure != NULL)
                 *pFailure = VERIFY_ERROR_NO_METHOD;
             return NULL;
+        }
+        if (methodType == METHOD_STATIC) {
+            if (!dvmIsStaticMethod(resMethod)) {
+                LOGD("DexOpt: wanted static, got instance for method %s.%s\n",
+                    resClass->descriptor, resMethod->name);
+                if (pFailure != NULL)
+                    *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                return NULL;
+            }
+        } else if (methodType == METHOD_VIRTUAL) {
+            if (dvmIsStaticMethod(resMethod)) {
+                LOGD("DexOpt: wanted instance, got static for method %s.%s\n",
+                    resClass->descriptor, resMethod->name);
+                if (pFailure != NULL)
+                    *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                return NULL;
+            }
         }
 
         /* see if this is a pure-abstract method */

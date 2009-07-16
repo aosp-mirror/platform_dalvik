@@ -330,11 +330,12 @@ static Method* resolveAmbiguousMethod(const ClassObject* referrer, u4 methodIdx)
         resMethod = dvmFindDirectMethod(resClass, name, &proto);
     } else {
         /*
-         * Try both lists, and scan up the tree.
+         * Do a hierarchical scan for direct and virtual methods.
+         *
+         * This uses the search order from the VM spec (v2 5.4.3.3), which
+         * seems appropriate here.
          */
-        resMethod = dvmFindVirtualMethodHier(resClass, name, &proto);
-        if (resMethod == NULL)
-            resMethod = dvmFindDirectMethodHier(resClass, name, &proto);
+        resMethod = dvmFindMethodHier(resClass, name, &proto);
     }
 
     return resMethod;
