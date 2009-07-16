@@ -73,6 +73,8 @@ import org.apache.harmony.security.fortress.SecurityUtils;
  */
 public class Thread implements Runnable {
 
+    private static final int NANOS_PER_MILLI = 1000000;
+
     /** Park states */
     private static class ParkState {
         /** park state indicating unparked */
@@ -973,7 +975,16 @@ public class Thread implements Runnable {
      * @since Android 1.0
      */
     public final void join() throws InterruptedException {
-        join(0, 0);
+        VMThread t = vmThread;
+        if (t == null) {
+            return;
+        }
+
+        synchronized (t) {
+            while (isAlive()) {
+                t.wait();
+            }
+        }
     }
 
     /**
@@ -1008,18 +1019,45 @@ public class Thread implements Runnable {
      * @since Android 1.0
      */
     public final void join(long millis, int nanos) throws InterruptedException {
-        if (millis < 0 || nanos < 0 || nanos > 999999) {
+        if (millis < 0 || nanos < 0 || nanos >= NANOS_PER_MILLI) {
             throw new IllegalArgumentException();
         }
 
-        VMThread t;
+        // avoid overflow: if total > 292,277 years, just wait forever
+        boolean overflow = millis >= (Long.MAX_VALUE - nanos) / NANOS_PER_MILLI;
+        boolean forever = (millis | nanos) == 0;
+        if (forever | overflow) {
+            join();
+            return;
+        }
 
-        t = this.vmThread;
+        VMThread t = vmThread;
+        if (t == null) {
+            return;
+        }
 
-        if (t != null) {
-            synchronized (t) {
-                if (isAlive())
-                    t.wait(millis, nanos);
+        synchronized (t) {
+            if (!isAlive()) {
+                return;
+            }
+
+            // guaranteed not to overflow
+            long nanosToWait = millis * NANOS_PER_MILLI + nanos;
+
+            // wait until this thread completes or the timeout has elapsed
+            long start = System.nanoTime();
+            while (true) {
+                t.wait(millis, nanos);
+                if (!isAlive()) {
+                    break;
+                }
+                long nanosElapsed = System.nanoTime() - start;
+                long nanosRemaining = nanosToWait - nanosElapsed;
+                if (nanosRemaining <= 0) {
+                    break;
+                }
+                millis = nanosRemaining / NANOS_PER_MILLI;
+                nanos = (int) (nanosRemaining - millis * NANOS_PER_MILLI);
             }
         }
     }
@@ -1491,8 +1529,8 @@ public class Thread implements Runnable {
                     break;
                 }
                 case ParkState.UNPARKED: {
-                    long millis = nanos / 1000000;
-                    nanos %= 1000000;
+                    long millis = nanos / NANOS_PER_MILLI;
+                    nanos %= NANOS_PER_MILLI;
 
                     parkState = ParkState.PARKED;
                     try {
@@ -1554,7 +1592,7 @@ public class Thread implements Runnable {
             if (delayMillis <= 0) {
                 parkState = ParkState.UNPARKED;
             } else {
-                parkFor(delayMillis * 1000000);
+                parkFor(delayMillis * NANOS_PER_MILLI);
             }
         }
     }
