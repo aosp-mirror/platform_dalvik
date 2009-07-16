@@ -23,9 +23,10 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.security.Permission;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.atomic.AtomicReference;
 
 import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -913,7 +914,7 @@ public class ThreadTest extends junit.framework.TestCase {
         } catch (InterruptedException e) {
             fail("Join failed ");
         }
-        assertTrue("Joined thread is still alive", !st.isAlive());
+        assertFalse("Joined thread is still alive", st.isAlive());
         boolean result = true;
         Thread th = new Thread("test");
         try {
@@ -936,6 +937,44 @@ public class ThreadTest extends junit.framework.TestCase {
         };
 
         st.start();        
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Regression test for when join() failed due to spurious wakeups",
+            method = "join",
+            args = {long.class, int.class}
+    )
+    public void test_joinWithSpuriousInterruption() throws InterruptedException {
+        final Thread parker = new Thread() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 10; i++) {
+                    // we used to get spurious wakeups upon unparking
+                    LockSupport.park();
+                }
+            }
+        };
+        Thread unparker = new Thread() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 10; i++) {
+                    try {
+                        Thread.sleep(100);
+                        LockSupport.unpark(parker);
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            }
+        };
+
+        long startNanos = System.nanoTime();
+        parker.start();
+        unparker.start();
+        parker.join(500, 500000);
+        long netWaitTime = System.nanoTime() - startNanos;
+        assertTrue("Expected to wait at least 500000000ns, but was " + netWaitTime + "ns",
+                netWaitTime > 500000000);
     }
 
     /**
@@ -1919,23 +1958,33 @@ public class ThreadTest extends junit.framework.TestCase {
             public void run() {
                   while (!sem.hasQueuedThreads()) {}
                   sem.release();
+
+                  // RUNNABLE
                   while (run) {}
+
                   try {
+                      // WAITING
                       sem.acquire();
                   } catch (InterruptedException e) {
                       fail("InterruptedException was thrown.");
                   }
+
+                  // BLOCKED
                   synchronized (lock) {
                       lock.equals(new Object());
                   }
                   synchronized (lock) {
                       try {
                         sem.release();
+
+                        // TIMED_WAITING
                         lock.wait(Long.MAX_VALUE);
                       } catch (InterruptedException e) {
                           // expected
                       }
                   }
+
+                  // TERMINATED upon return
             }
         };
         assertEquals(Thread.State.NEW, th.getState());
@@ -1976,7 +2025,7 @@ public class ThreadTest extends junit.framework.TestCase {
         }
         assertEquals(Thread.State.TERMINATED, th.getState());
     }
-    boolean run = true;
+    volatile boolean run = true;
     
     /**
      * @tests java.lang.Thread#getUncaughtExceptionHandler
