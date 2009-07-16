@@ -2912,8 +2912,14 @@ public class Arrays {
      * @since Android 1.0
      */
     public static String deepToString(Object[] array) {
+        // Special case null to prevent NPE
+        if (array == null) {
+            return "null"; //$NON-NLS-1$
+        }
         // delegate this to the recursive method
-        return deepToStringImpl(array, new Object[] { array }, null);
+        StringBuilder buf = new StringBuilder(2 + array.length * 5);
+        deepToStringImpl(array, new Object[] { array }, buf);
+        return buf.toString();
     }
 
     /**
@@ -2932,18 +2938,13 @@ public class Arrays {
      * @return the result.
      * @see #deepToString(Object[])
      */
-    private static String deepToStringImpl(Object[] array, Object[] origArrays,
+    private static void deepToStringImpl(Object[] array, Object[] origArrays,
             StringBuilder sb) {
         if (array == null) {
-            return "null"; //$NON-NLS-1$
-        }
-        if (array.length == 0) {
-            return "[]"; //$NON-NLS-1$
+            sb.append("null"); //$NON-NLS-1$
+            return;
         }
 
-        if (sb == null) {
-            sb = new StringBuilder(2 + array.length * 5);
-        }
         sb.append('[');
 
         for (int i = 0; i < array.length; i++) {
@@ -3006,7 +3007,6 @@ public class Arrays {
             }
         }
         sb.append(']');
-        return sb.toString();
     }
 
     /**
