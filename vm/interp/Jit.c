@@ -151,14 +151,81 @@ int dvmCompilerDumpTraceProfile(struct JitEntry *p)
 
     pExecutionCount = (u4*) (traceBase);
     pCellOffset = (u2*) (traceBase + 4);
-    pCellCounts = (ChainCellCounts*) (traceBase + *pCellOffset);
+    pCellCounts = (ChainCellCounts*) ((char *)pCellOffset + *pCellOffset);
     desc = (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
     method = desc->method;
-    LOGD("TRACEPROFILE 0x%08x % 10d %s%s [0x%x,%d]", (int)traceBase,
-          *pExecutionCount, method->clazz->descriptor, method->name,
+    char *methodDesc = dexProtoCopyMethodDescriptor(&method->prototype);
+    LOGD("TRACEPROFILE 0x%08x % 10d %s%s;%s [0x%x,%d]", (int)traceBase,
+          *pExecutionCount,
+          method->clazz->descriptor, method->name, methodDesc,
           desc->trace[0].frag.startOffset,
           desc->trace[0].frag.numInsts);
+    free(methodDesc);
     return *pExecutionCount;
+}
+
+/* Handy function to retrieve the profile count */
+static inline int getProfileCount(const JitEntry *entry)
+{
+    if (entry->dPC == 0 || entry->codeAddress == 0)
+        return 0;
+    /*
+     * The codeAddress field has the low bit set to mark thumb
+     * mode.  We need to strip that off before reconstructing the
+     * trace data.  See the diagram in Assemble.c for more info
+     * on the trace layout in memory.
+     */
+    u4 *pExecutionCount = (u4 *) ((char*)entry->codeAddress - 7);
+
+    return *pExecutionCount;
+}
+
+/* qsort callback function */
+static int sortTraceProfileCount(const void *entry1, const void *entry2)
+{
+    const JitEntry *jitEntry1 = entry1;
+    const JitEntry *jitEntry2 = entry2;
+
+    int count1 = getProfileCount(jitEntry1);
+    int count2 = getProfileCount(jitEntry2);
+    return (count1 == count2) ? 0 : ((count1 > count2) ? -1 : 1);
+}
+
+/* Sort the trace profile counts and dump them */
+static void sortAndPrintTraceProfiles()
+{
+    JitEntry *sortedEntries;
+    int numTraces = 0;
+    unsigned long counts = 0;
+    unsigned int i;
+
+    /* Make sure that the table is not changing */
+    dvmLockMutex(&gDvmJit.tableLock);
+
+    /* Sort the entries by descending order */
+    sortedEntries = malloc(sizeof(JitEntry) * gDvmJit.jitTableSize);
+    if (sortedEntries == NULL)
+        goto done;
+    memcpy(sortedEntries, gDvmJit.pJitEntryTable,
+           sizeof(JitEntry) * gDvmJit.jitTableSize);
+    qsort(sortedEntries, gDvmJit.jitTableSize, sizeof(JitEntry),
+          sortTraceProfileCount);
+
+    /* Dump the sorted entries */
+    for (i=0; i < gDvmJit.jitTableSize; i++) {
+        if (sortedEntries[i].dPC != 0) {
+            counts += dvmCompilerDumpTraceProfile(&sortedEntries[i]);
+            numTraces++;
+        }
+    }
+    if (numTraces == 0)
+        numTraces = 1;
+    LOGD("JIT: Average execution count -> %d",(int)(counts / numTraces));
+
+    free(sortedEntries);
+done:
+    dvmUnlockMutex(&gDvmJit.tableLock);
+    return;
 }
 
 /* Dumps debugging & tuning stats to the log */
@@ -196,18 +263,8 @@ void dvmJitStats()
              gDvmJit.invokeChain, gDvmJit.invokePredictedChain,
              gDvmJit.invokeNative, gDvmJit.returnOp);
 #endif
-       if (gDvmJit.profile) {
-           int numTraces = 0;
-           long counts = 0;
-           for (i=0; i < (int) gDvmJit.jitTableSize; i++) {
-              if (gDvmJit.pJitEntryTable[i].dPC != 0) {
-                  counts += dvmCompilerDumpTraceProfile( &gDvmJit.pJitEntryTable[i] );
-                  numTraces++;
-              }
-           }
-        if (numTraces == 0)
-              numTraces = 1;
-        LOGD("JIT: Average execution count -> %d",(int)(counts / numTraces));
+        if (gDvmJit.profile) {
+            sortAndPrintTraceProfiles();
         }
     }
 }
