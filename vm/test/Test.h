@@ -22,5 +22,6 @@
 
 bool dvmTestHash(void);
 bool dvmTestAtomicSpeed(void);
+bool dvmTestIndirectRefTable(void);
 
 #endif /*_DALVIK_TEST_TEST*/

@@ -57,7 +57,7 @@ ifeq ($(strip $(DEBUG_DALVIK_VM)),true)
   # - allocation limits enabled
   # - GDB helpers enabled
   # - LOGV
-  # - assert()  (NDEBUG is handled in the build system)
+  # - assert()
   #
   LOCAL_CFLAGS += -DWITH_INSTR_CHECKS
   LOCAL_CFLAGS += -DWITH_EXTRA_OBJECT_VALIDATION
@@ -69,6 +69,8 @@ ifeq ($(strip $(DEBUG_DALVIK_VM)),true)
   LOCAL_CFLAGS += -DDVM_SHOW_EXCEPTION=3
   # add some extra stuff to make it easier to examine with GDB
   LOCAL_CFLAGS += -DEASY_GDB
+  # overall config may be for a "release" build, so reconfigure these
+  LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT
 else  # !DALVIK_VM_DEBUG
   #
   # "Performance" profile:
@@ -98,6 +100,7 @@ LOCAL_SRC_FILES := \
 	DvmDex.c \
 	Exception.c \
 	Hash.c \
+	IndirectRefTable.c.arm \
 	Init.c \
 	InlineNative.c.arm \
 	Inlines.c \
@@ -182,7 +185,8 @@ LOCAL_SRC_FILES := \
 	reflect/Proxy.c \
 	reflect/Reflect.c \
 	test/AtomicSpeed.c \
-	test/TestHash.c
+	test/TestHash.c \
+	test/TestIndirectRefTable.c
 
 ifeq ($(WITH_JIT_TUNING),true)
   LOCAL_CFLAGS += -DWITH_JIT_TUNING

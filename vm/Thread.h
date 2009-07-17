@@ -151,6 +151,7 @@ typedef struct Thread {
     ReferenceTable  internalLocalRefTable;
 
     /* JNI local reference tracking */
+    // TODO: move this to JNIEnvExt to avoid an indirection?
     ReferenceTable  jniLocalRefTable;
 
     /* JNI native monitor reference tracking (initialized on first use) */

@@ -1241,7 +1241,10 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 
 
 #ifndef NDEBUG
-    dvmTestHash();
+    if (!dvmTestHash())
+        LOGE("dmvTestHash FAILED\n");
+    if (false /*noisy!*/ && !dvmTestIndirectRefTable())
+        LOGE("dvmTestIndirectRefTable FAILED\n");
 #endif
 
     assert(!dvmCheckException(dvmThreadSelf()));

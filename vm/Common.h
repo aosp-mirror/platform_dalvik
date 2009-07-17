@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Common defines for all Dalvik code.
  */
@@ -29,8 +30,8 @@
 #if !defined(NDEBUG) && defined(WITH_DALVIK_ASSERT)
 # undef assert
 # define assert(x) \
-    ((x) ? ((void)0) : (LOGE("ASSERT FAILED (%s:%d): " #x "\n", \
-        __FILE__, __LINE__), *(int*)39=39, 0) )
+    ((x) ? ((void)0) : (LOGE("ASSERT FAILED (%s:%d): %s\n", \
+        __FILE__, __LINE__, #x), *(int*)39=39, 0) )
 #endif
 
 

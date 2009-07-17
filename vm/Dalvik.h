@@ -44,6 +44,7 @@
 #include "UtfString.h"
 #include "Intern.h"
 #include "ReferenceTable.h"
+#include "IndirectRefTable.h"
 #include "AtomicCache.h"
 #include "Thread.h"
 #include "Ddm.h"

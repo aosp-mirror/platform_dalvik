@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Test the hash table functions.
  */
 #include "Dalvik.h"
 
 #include <stdlib.h>
+
+#ifndef NDEBUG
 
 #define kNumTestEntries 14
 
@@ -185,3 +188,4 @@ bool dvmTestHash(void)
     return true;
 }
 
+#endif /*NDEBUG*/

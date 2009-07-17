@@ -923,7 +923,7 @@ const u1* dvmRegisterMapGetLine(const RegisterMap* pMap, int addr)
      * large.
      */
     static const int kSearchThreshold = 8;
-    const u1* data;
+    const u1* data = NULL;
     int lineAddr;
 
     if (numEntries < kSearchThreshold) {

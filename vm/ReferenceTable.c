@@ -58,11 +58,15 @@ bool dvmAddToReferenceTable(ReferenceTable* pRef, Object* obj)
     assert(dvmIsValidObject(obj));
     assert(obj != NULL);
     assert(pRef->table != NULL);
+    assert(pRef->allocEntries <= pRef->maxEntries);
 
-    if (pRef->nextEntry == pRef->table + pRef->maxEntries) {
-        LOGW("ReferenceTable overflow (max=%d)\n", pRef->maxEntries);
-        return false;
-    } else if (pRef->nextEntry == pRef->table + pRef->allocEntries) {
+    if (pRef->nextEntry == pRef->table + pRef->allocEntries) {
+        /* reached end of allocated space; did we hit buffer max? */
+        if (pRef->nextEntry == pRef->table + pRef->maxEntries) {
+            LOGW("ReferenceTable overflow (max=%d)\n", pRef->maxEntries);
+            return false;
+        }
+
         Object** newTable;
         int newSize;
 
