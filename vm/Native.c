@@ -545,7 +545,7 @@ static char* mangleString(const char* str, int len)
     for (i = 0; i < charLen; i++) {
         u2 ch = utf16[i];
 
-        if (ch > 127) {
+        if (ch == '$' || ch > 127) {
             mangleLen += 6;
         } else {
             switch (ch) {
@@ -570,7 +570,7 @@ static char* mangleString(const char* str, int len)
     for (i = 0, cp = mangle; i < charLen; i++) {
         u2 ch = utf16[i];
 
-        if (ch > 127) {
+        if (ch == '$' || ch > 127) {
             sprintf(cp, "_0%04x", ch);
             cp += 6;
         } else {
