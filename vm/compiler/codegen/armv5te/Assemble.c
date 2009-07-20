@@ -292,7 +292,7 @@ Armv5teEncodingMap EncodingMap[ARMV5TE_LAST] = {
 /* Write the numbers in the literal pool to the codegen stream */
 static void installDataContent(CompilationUnit *cUnit)
 {
-    int *dataPtr = (int *) (cUnit->baseAddr + cUnit->dataOffset);
+    int *dataPtr = (int *) ((char *) cUnit->baseAddr + cUnit->dataOffset);
     Armv5teLIR *dataLIR = (Armv5teLIR *) cUnit->wordList;
     while (dataLIR) {
         *dataPtr++ = dataLIR->operands[0];
@@ -479,8 +479,14 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
     assert(chainCellOffsetLIR->opCode == ARMV5TE_16BIT_DATA &&
            chainCellOffsetLIR->operands[0] == CHAIN_CELL_OFFSET_TAG);
 
-    /* Replace the CHAIN_CELL_OFFSET_TAG with the real value */
-    chainCellOffsetLIR->operands[0] = chainCellOffset;
+    /*
+     * Replace the CHAIN_CELL_OFFSET_TAG with the real value. If trace
+     * profiling is enabled, subtract 4 (occupied by the counter word) from
+     * the absolute offset as the value stored in chainCellOffsetLIR is the
+     * delta from &chainCellOffsetLIR to &ChainCellCounts.
+     */
+    chainCellOffsetLIR->operands[0] =
+        gDvmJit.profile ? (chainCellOffset - 4) : chainCellOffset;
 
     offset += sizeof(chainCellCounts) + descSize;
 
@@ -546,7 +552,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
 
     /* Flush dcache and invalidate the icache to maintain coherence */
     cacheflush((long)cUnit->baseAddr,
-               (long)(cUnit->baseAddr + offset), 0);
+               (long)((char *) cUnit->baseAddr + offset), 0);
 }
 
 static u4 assembleBXPair(int branchOffset)
@@ -689,7 +695,7 @@ u4* dvmJitUnchain(void* codeAddr)
     u2* pChainCellOffset = (u2*)((char*)codeAddr - 3);
     u2 chainCellOffset = *pChainCellOffset;
     ChainCellCounts *pChainCellCounts =
-          (ChainCellCounts*)((char*)codeAddr + chainCellOffset -3);
+          (ChainCellCounts*)((char*)codeAddr + chainCellOffset - 3);
     int cellSize;
     u4* pChainCells;
     u4* pStart;
