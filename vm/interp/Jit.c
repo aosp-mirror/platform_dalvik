@@ -126,6 +126,25 @@ void dvmBumpPunt(int from)
 }
 #endif
 
+typedef struct jitProfileAddrToLine {
+    u4 lineNum;
+    u4 bytecodeOffset;
+} jitProfileAddrToLine;
+
+
+/* Callback function to track the bytecode offset/line number relationiship */
+static int addrToLineCb (void *cnxt, u4 bytecodeOffset, u4 lineNum)
+{
+    jitProfileAddrToLine *addrToLine = (jitProfileAddrToLine *) cnxt;
+
+    /* Best match so far for this offset */
+    if (addrToLine->bytecodeOffset >= bytecodeOffset) {
+        addrToLine->lineNum = lineNum;
+    }
+done:
+    return 0;
+}
+
 /* Dumps profile info for a single trace */
 int dvmCompilerDumpTraceProfile(struct JitEntry *p)
 {
@@ -155,12 +174,31 @@ int dvmCompilerDumpTraceProfile(struct JitEntry *p)
     desc = (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
     method = desc->method;
     char *methodDesc = dexProtoCopyMethodDescriptor(&method->prototype);
-    LOGD("TRACEPROFILE 0x%08x % 10d %s%s;%s [0x%x,%d]", (int)traceBase,
-          *pExecutionCount,
-          method->clazz->descriptor, method->name, methodDesc,
-          desc->trace[0].frag.startOffset,
-          desc->trace[0].frag.numInsts);
+    jitProfileAddrToLine addrToLine = {0, desc->trace[0].frag.startOffset};
+
+    /*
+     * We may end up decoding the debug information for the same method
+     * multiple times, but the tradeoff is we don't need to allocate extra
+     * space to store the addr/line mapping. Since this is a debugging feature
+     * and done infrequently so the slower but simpler mechanism should work
+     * just fine.
+     */
+    dexDecodeDebugInfo(method->clazz->pDvmDex->pDexFile,
+                       dvmGetMethodCode(method),
+                       method->clazz->descriptor,
+                       method->prototype.protoIdx,
+                       method->accessFlags,
+                       addrToLineCb, NULL, &addrToLine);
+
+    LOGD("TRACEPROFILE 0x%08x % 10d [%#x(+%d), %d] %s%s;%s",
+         (int)traceBase,
+         *pExecutionCount,
+         desc->trace[0].frag.startOffset,
+         desc->trace[0].frag.numInsts,
+         addrToLine.lineNum,
+         method->clazz->descriptor, method->name, methodDesc);
     free(methodDesc);
+
     return *pExecutionCount;
 }
 
