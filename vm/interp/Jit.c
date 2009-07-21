@@ -141,7 +141,6 @@ static int addrToLineCb (void *cnxt, u4 bytecodeOffset, u4 lineNum)
     if (addrToLine->bytecodeOffset >= bytecodeOffset) {
         addrToLine->lineNum = lineNum;
     }
-done:
     return 0;
 }
 
