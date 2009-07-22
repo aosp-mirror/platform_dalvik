@@ -217,7 +217,9 @@ Compared to #1, approach #2:
 
 */
 
-static const struct JNINativeInterface gNativeInterface;        // fwd
+/* fwd */
+static const struct JNINativeInterface gNativeInterface;
+static jobject addGlobalReference(jobject obj);
 
 
 #ifdef WITH_JNI_STACK_CHECK
@@ -350,7 +352,8 @@ DalvikJniReturnType dvmGetArgInfoReturnType(int jniArgInfo)
 #define kTrackGrefUsage             true
 
 /*
- * Allocate the global references table.
+ * Allocate the global references table, and look up some classes for
+ * the benefit of direct buffer access.
  */
 bool dvmJniStartup(void)
 {
@@ -362,6 +365,37 @@ bool dvmJniStartup(void)
 
     gDvm.jniGlobalRefLoMark = 0;
     gDvm.jniGlobalRefHiMark = kGrefWaterInterval * 2;
+
+    ClassObject* platformAddressClass =
+        dvmFindSystemClassNoInit("Lorg/apache/harmony/luni/platform/PlatformAddress;");
+    ClassObject* directBufferClass =
+        dvmFindSystemClassNoInit("Lorg/apache/harmony/nio/internal/DirectBuffer;");
+    if (platformAddressClass == NULL || directBufferClass == NULL) {
+        LOGE("Unable to find internal direct buffer classes\n");
+        return false;
+    }
+    /* needs to be a global ref so CheckJNI thinks we're allowed to see it */
+    gDvm.classOrgApacheHarmonyNioInternalDirectBuffer =
+        addGlobalReference((Object*) directBufferClass);
+
+    Method* meth;
+    meth = dvmFindVirtualMethodByDescriptor(
+                gDvm.classOrgApacheHarmonyNioInternalDirectBuffer,
+                "getEffectiveAddress",
+                "()Lorg/apache/harmony/luni/platform/PlatformAddress;");
+    if (meth == NULL) {
+        LOGE("Unable to find PlatformAddress.getEffectiveAddress\n");
+        return false;
+    }
+    gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress = meth;
+
+    meth = dvmFindVirtualMethodByDescriptor(platformAddressClass,
+                "toLong", "()J");
+    if (meth == NULL) {
+        LOGE("Unable to find PlatformAddress.toLong\n");
+        return false;
+    }
+    gDvm.methOrgApacheHarmonyLuniPlatformPlatformAddress_toLong = meth;
 
     return true;
 }
@@ -2737,42 +2771,30 @@ bail:
  *
  * copied from harmony: DirectBufferUtil.c
  */
-static void* GetDirectBufferAddress(JNIEnv * env, jobject buf)
+static void* GetDirectBufferAddress(JNIEnv* env, jobject buf)
 {
-    jmethodID tempMethod;
-    jclass tempClass = NULL;
     jobject platformAddr = NULL;
-    jclass platformAddrClass = NULL;
-    jmethodID toLongMethod;
     void* result = NULL;
 
     /*
      * Start by determining if the object supports the DirectBuffer
      * interfaces.  Note this does not guarantee that it's a direct buffer.
      */
-    tempClass = (*env)->FindClass(env, 
-            "org/apache/harmony/nio/internal/DirectBuffer");
-    if(!tempClass)
+    if (JNI_FALSE == (*env)->IsInstanceOf(env, buf,
+            (jclass) gDvm.classOrgApacheHarmonyNioInternalDirectBuffer))
     {
         goto bail;
     }
-
-    if(JNI_FALSE == (*env)->IsInstanceOf(env, buf, tempClass))
-    {
-        goto bail;
-    }
-
-    tempMethod = (*env)->GetMethodID(env, tempClass, "getEffectiveAddress",
-             "()Lorg/apache/harmony/luni/platform/PlatformAddress;");        
-    if(!tempMethod){
-        goto bail;
-    }
-    platformAddr = (*env)->CallObjectMethod(env, buf, tempMethod);
 
     /*
+     * Get the PlatformAddress object.
+     *
      * If this isn't a direct buffer, platformAddr will be NULL and/or an
      * exception will have been thrown.
      */
+    platformAddr = (*env)->CallObjectMethod(env, buf,
+        (jmethodID) gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress);
+
     if ((*env)->ExceptionCheck(env)) {
         (*env)->ExceptionClear(env);
         platformAddr = NULL;
@@ -2782,28 +2804,12 @@ static void* GetDirectBufferAddress(JNIEnv * env, jobject buf)
         goto bail;
     }
 
-    platformAddrClass = (*env)->FindClass (env, 
-            "org/apache/harmony/luni/platform/PlatformAddress");
-    if(!platformAddrClass)
-    {
-        goto bail;
-
-    }
-    toLongMethod = (*env)->GetMethodID(env, platformAddrClass, "toLong", "()J");
-    if (!toLongMethod)
-    {
-        goto bail;
-    }
-
-    result = (void*)(u4)(*env)->CallLongMethod(env, platformAddr, toLongMethod);
+    result = (void*)(u4)(*env)->CallLongMethod(env, platformAddr,
+        (jmethodID) gDvm.methOrgApacheHarmonyLuniPlatformPlatformAddress_toLong);
 
 bail:
-    if (tempClass != NULL)
-        (*env)->DeleteLocalRef(env, tempClass);
     if (platformAddr != NULL)
         (*env)->DeleteLocalRef(env, platformAddr);
-    if (platformAddrClass != NULL)
-        (*env)->DeleteLocalRef(env, platformAddrClass);
     return result;
 }
 
