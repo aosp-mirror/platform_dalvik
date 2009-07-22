@@ -787,7 +787,10 @@ public final class BouncyCastleProvider extends Provider
     //
     private void addSignatureAlgorithms()
     {
-        put("Signature.MD2WithRSAEncryption", "org.bouncycastle.jce.provider.JDKDigestSignature$MD2WithRSAEncryption");
+        // BEGIN android-removed
+        // Dropping MD2
+        // put("Signature.MD2WithRSAEncryption", "org.bouncycastle.jce.provider.JDKDigestSignature$MD2WithRSAEncryption");
+        // END android-removed
         put("Signature.MD4WithRSAEncryption", "org.bouncycastle.jce.provider.JDKDigestSignature$MD4WithRSAEncryption");
         put("Signature.MD5WithRSAEncryption", "org.bouncycastle.jce.provider.JDKDigestSignature$MD5WithRSAEncryption");
         put("Signature.SHA1WithRSAEncryption", "org.bouncycastle.jce.provider.JDKDigestSignature$SHA1WithRSAEncryption");
@@ -832,7 +835,10 @@ public final class BouncyCastleProvider extends Provider
         put("Alg.Alias.Signature.SHA384withRSAandMGF1", "SHA384withRSA/PSS");
         put("Alg.Alias.Signature.SHA512withRSAandMGF1", "SHA512withRSA/PSS");
         
-        put("Alg.Alias.Signature.MD2withRSAEncryption", "MD2WithRSAEncryption");
+        // BEGIN android-removed
+        // Dropping MD2
+        // put("Alg.Alias.Signature.MD2withRSAEncryption", "MD2WithRSAEncryption");
+        // END android-removed
         put("Alg.Alias.Signature.MD4withRSAEncryption", "MD4WithRSAEncryption");
         put("Alg.Alias.Signature.MD5withRSAEncryption", "MD5WithRSAEncryption");
         put("Alg.Alias.Signature.SHA1withRSAEncryption", "SHA1WithRSAEncryption");
@@ -851,12 +857,13 @@ public final class BouncyCastleProvider extends Provider
         put("Alg.Alias.Signature.SHA512WITHRSAENCRYPTION", "SHA512WithRSAEncryption");
 
         // BEGIN android-removed
+        // Dropping MD2
         // put("Alg.Alias.Signature.RIPEMD160withRSAEncryption", "RIPEMD160WithRSAEncryption");
+        // put("Alg.Alias.Signature." + PKCSObjectIdentifiers.md2WithRSAEncryption, "MD2WithRSAEncryption");
+        // put("Alg.Alias.Signature.MD2WithRSA", "MD2WithRSAEncryption");
+        // put("Alg.Alias.Signature.MD2withRSA", "MD2WithRSAEncryption");
+        // put("Alg.Alias.Signature.MD2/RSA", "MD2WithRSAEncryption");
         // END android-removed
-        put("Alg.Alias.Signature." + PKCSObjectIdentifiers.md2WithRSAEncryption, "MD2WithRSAEncryption");
-        put("Alg.Alias.Signature.MD2WithRSA", "MD2WithRSAEncryption");
-        put("Alg.Alias.Signature.MD2withRSA", "MD2WithRSAEncryption");
-        put("Alg.Alias.Signature.MD2/RSA", "MD2WithRSAEncryption");
         put("Alg.Alias.Signature.MD5WithRSA", "MD5WithRSAEncryption");
         put("Alg.Alias.Signature.MD5withRSA", "MD5WithRSAEncryption");
         put("Alg.Alias.Signature.MD5/RSA", "MD5WithRSAEncryption");
@@ -901,7 +908,10 @@ public final class BouncyCastleProvider extends Provider
         // END android-removed
         put("Alg.Alias.Signature." + OIWObjectIdentifiers.sha1WithRSA, "SHA1WithRSAEncryption");
         
-        put("Alg.Alias.Signature.MD2WITHRSAENCRYPTION", "MD2WithRSAEncryption");
+        // BEGIN android-removed
+        // Dropping MD2
+        // put("Alg.Alias.Signature.MD2WITHRSAENCRYPTION", "MD2WithRSAEncryption");
+        // END android-removed
         put("Alg.Alias.Signature.MD5WITHRSAENCRYPTION", "MD5WithRSAEncryption");
         put("Alg.Alias.Signature.SHA1WITHRSAENCRYPTION", "SHA1WithRSAEncryption");
         // BEGIN android-removed

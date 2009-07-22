@@ -17,6 +17,7 @@ import java.security.cert.X509CRLSelector;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
@@ -115,19 +116,40 @@ public class CertPathValidatorUtilities
             throw new CertPathValidatorException(ex);
         }
 
+        // BEGIN android-changed
+        byte[] certBytes = null;
+        try {
+            certBytes = cert.getEncoded();
+        } catch (Exception e) {
+            // ignore, just continue
+        }
         while (iter.hasNext() && trust == null)
         {
             trust = (TrustAnchor) iter.next();
-            if (trust.getTrustedCert() != null)
+            X509Certificate trustCert = trust.getTrustedCert();
+            if (trustCert != null)
             {
-                if (certSelectX509.match(trust.getTrustedCert()))
+                // If the trust anchor is identical to the certificate we're
+                // done. Just return the anchor.
+                // There is similar code in PKIXCertPathValidatorSpi.
+                try {
+                    byte[] trustBytes = trustCert.getEncoded();
+                    if (certBytes != null && Arrays.equals(trustBytes,
+                            certBytes)) {
+                        return trust;
+                    }
+                } catch (Exception e) {
+                    // ignore, continue and verify the certificate
+                }
+                if (certSelectX509.match(trustCert))
                 {
-                    trustPublicKey = trust.getTrustedCert().getPublicKey();
+                    trustPublicKey = trustCert.getPublicKey();
                 }
                 else
                 {
                     trust = null;
                 }
+        // END android-changed
             }
             else if (trust.getCAName() != null
                     && trust.getCAPublicKey() != null)

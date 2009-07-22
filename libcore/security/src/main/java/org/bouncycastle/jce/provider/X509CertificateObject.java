@@ -720,7 +720,7 @@ public class X509CertificateObject
     {
         Signature   signature = null;
         String      sigName = X509SignatureUtil.getSignatureName(c.getSignatureAlgorithm());
-        
+
         try
         {
             signature = Signature.getInstance(sigName, "BC");

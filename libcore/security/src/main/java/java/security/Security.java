@@ -343,7 +343,7 @@ public final class Security {
      * <li> CRYPTO_SERVICE_NAME.ALGORITHM_OR_TYPE
      * ATTR_NAME:ATTR_VALUE
      * <p>
-     * (for example: "Signature.MD2withRSA KeySize:512")
+     * (for example: "Signature.MD5withRSA KeySize:512")
      * </nl>
      * 
      * @param filter
@@ -389,7 +389,7 @@ public final class Security {
      * be an empty string. <li> CRYPTO_SERVICE_NAME.ALGORITHM_OR_TYPE
      * ATTR_NAME:ATTR_VALUE
      * <p>
-     * for example: "Signature.MD2withRSA KeySize:512" where "KeySize:512" is
+     * for example: "Signature.MD5withRSA KeySize:512" where "KeySize:512" is
      * the value of the filter map entry.
      * </nl>
      * 

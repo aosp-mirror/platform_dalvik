@@ -21,12 +21,9 @@ import dalvik.annotation.TestTargets;
 
 import junit.framework.TestCase;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathParameters;
 import java.security.cert.CertPathValidator;
-import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertPathValidatorResult;
 
 public abstract class CertPathValidatorTest extends TestCase {
@@ -59,23 +56,12 @@ public abstract class CertPathValidatorTest extends TestCase {
                 args={}
         )
     })
-    public void testCertPathValidator() {
-        CertPathValidator certPathValidator = null;
-        try {
-            certPathValidator = CertPathValidator.getInstance(algorithmName);
-        } catch (NoSuchAlgorithmException e) {
-            fail(e.getMessage());
-        }
+    public void testCertPathValidator() throws Exception {
+        CertPathValidator certPathValidator = CertPathValidator.getInstance(
+                algorithmName);
 
-        CertPathValidatorResult validatorResult = null;
-        try {
-            validatorResult = certPathValidator.validate(getCertPath(),
-                    getParams());
-        } catch (CertPathValidatorException e) {
-            fail(e.getMessage());
-        } catch (InvalidAlgorithmParameterException e) {
-            fail(e.getMessage());
-        }
+        CertPathValidatorResult validatorResult = certPathValidator.validate(
+                getCertPath(), getParams());
 
         validateResult(validatorResult);
     }
