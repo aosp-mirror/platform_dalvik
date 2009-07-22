@@ -192,6 +192,7 @@ struct DvmGlobals {
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
+    ClassObject* classOrgApacheHarmonyNioInternalDirectBuffer;
 
     /* synthetic classes for arrays of primitives */
     ClassObject* classArrayBoolean;
@@ -293,6 +294,10 @@ struct DvmGlobals {
 
     /* fake native entry point method */
     Method*     methFakeNativeEntry;
+
+    /* direct buffer helpers */
+    Method*     methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress;
+    Method*     methOrgApacheHarmonyLuniPlatformPlatformAddress_toLong;
 
     /*
      * VM-synthesized primitive classes, for arrays.
