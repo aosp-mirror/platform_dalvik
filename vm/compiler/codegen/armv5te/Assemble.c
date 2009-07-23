@@ -36,9 +36,9 @@
  * fmt: for pretty-prining
  */
 #define ENCODING_MAP(opcode, skeleton, ds, de, s1s, s1e, s2s, s2e, operands, \
-                     name, fmt) \
+                     name, fmt, size) \
         {skeleton, {{ds, de}, {s1s, s1e}, {s2s, s2e}}, opcode, operands, name, \
-         fmt}
+         fmt, size}
 
 /* Instruction dump string format keys: !pf, where "!" is the start
  * of the key, "p" is which numeric operand to use and "f" is the
@@ -67,224 +67,224 @@
 Armv5teEncodingMap EncodingMap[ARMV5TE_LAST] = {
     ENCODING_MAP(ARMV5TE_16BIT_DATA,    0x0000, 15, 0, -1, -1, -1, -1,
                  IS_UNARY_OP,
-                 "data", "0x!0h(!0d)"),
+                 "data", "0x!0h(!0d)", 1),
     ENCODING_MAP(ARMV5TE_ADC,           0x4140, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "adc", "r!0d, r!1d"),
+                 "adc", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_ADD_RRI3,      0x1c00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "add", "r!0d, r!1d, #!2d"),
+                 "add", "r!0d, r!1d, #!2d", 1),
     ENCODING_MAP(ARMV5TE_ADD_RI8,       0x3000, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "add", "r!0d, r!0d, #!1d"),
+                 "add", "r!0d, r!0d, #!1d", 1),
     ENCODING_MAP(ARMV5TE_ADD_RRR,       0x1800, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "add", "r!0d, r!1d, r!2d"),
+                 "add", "r!0d, r!1d, r!2d", 1),
     ENCODING_MAP(ARMV5TE_ADD_RR_LH,     0x4440, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "add",
-                 "r!0d, r!1d"),
+                 "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_ADD_RR_HL,     0x4480, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "add", "r!0d, r!1d"),
+                 "add", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_ADD_RR_HH,     0x44c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "add", "r!0d, r!1d"),
+                 "add", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_ADD_PC_REL,    0xa000, 10, 8, 7, 0, -1, -1,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "add", "r!0d, pc, #!1E"),
+                 "add", "r!0d, pc, #!1E", 1),
     ENCODING_MAP(ARMV5TE_ADD_SP_REL,    0xa800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "add", "r!0d, sp, #!1E"),
+                 "add", "r!0d, sp, #!1E", 1),
     ENCODING_MAP(ARMV5TE_ADD_SPI7,      0xb000, 6, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | CLOBBER_DEST,
-                 "add", "sp, #!0d*4"),
+                 "add", "sp, #!0d*4", 1),
     ENCODING_MAP(ARMV5TE_AND_RR,        0x4000, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "and", "r!0d, r!1d"),
+                 "and", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_ASR,           0x1000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "asr", "r!0d, r!1d, #!2d"),
+                 "asr", "r!0d, r!1d, #!2d", 1),
     ENCODING_MAP(ARMV5TE_ASRV,          0x4100, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "asr", "r!0d, r!1d"),
+                 "asr", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_B_COND,        0xd000, 7, 0, 11, 8, -1, -1,
                  IS_BINARY_OP | IS_BRANCH,
-                 "!1c", "!0t"),
+                 "!1c", "!0t", 1),
     ENCODING_MAP(ARMV5TE_B_UNCOND,      0xe000, 10, 0, -1, -1, -1, -1,
                  NO_OPERAND | IS_BRANCH,
-                 "b", "!0t"),
+                 "b", "!0t", 1),
     ENCODING_MAP(ARMV5TE_BIC,           0x4380, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "bic", "r!0d, r!1d"),
+                 "bic", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_BKPT,          0xbe00, 7, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
-                 "bkpt", "!0d"),
+                 "bkpt", "!0d", 1),
     ENCODING_MAP(ARMV5TE_BLX_1,         0xf000, 10, 0, -1, -1, -1, -1,
                  IS_BINARY_OP | IS_BRANCH,
-                 "blx_1", "!0u"),
+                 "blx_1", "!0u", 1),
     ENCODING_MAP(ARMV5TE_BLX_2,         0xe800, 10, 0, -1, -1, -1, -1,
                  IS_BINARY_OP | IS_BRANCH,
-                 "blx_2", "!0v"),
+                 "blx_2", "!0v", 1),
     ENCODING_MAP(ARMV5TE_BL_1,          0xf000, 10, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
-                 "bl_1", "!0u"),
+                 "bl_1", "!0u", 1),
     ENCODING_MAP(ARMV5TE_BL_2,          0xf800, 10, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
-                 "bl_2", "!0v"),
+                 "bl_2", "!0v", 1),
     ENCODING_MAP(ARMV5TE_BLX_R,         0x4780, 6, 3, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
-                 "blx", "r!0d"),
+                 "blx", "r!0d", 1),
     ENCODING_MAP(ARMV5TE_BX,            0x4700, 6, 3, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
-                 "bx", "r!0d"),
+                 "bx", "r!0d", 1),
     ENCODING_MAP(ARMV5TE_CMN,           0x42c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
-                 "cmn", "r!0d, r!1d"),
+                 "cmn", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_CMP_RI8,       0x2800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP,
-                 "cmp", "r!0d, #!1d"),
+                 "cmp", "r!0d, #!1d", 1),
     ENCODING_MAP(ARMV5TE_CMP_RR,        0x4280, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
-                 "cmp", "r!0d, r!1d"),
+                 "cmp", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_CMP_LH,        0x4540, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
-                 "cmp", "r!0d, r!1D"),
+                 "cmp", "r!0d, r!1D", 1),
     ENCODING_MAP(ARMV5TE_CMP_HL,        0x4580, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
-                 "cmp", "r!0D, r!1d"),
+                 "cmp", "r!0D, r!1d", 1),
     ENCODING_MAP(ARMV5TE_CMP_HH,        0x45c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
-                 "cmp", "r!0D, r!1D"),
+                 "cmp", "r!0D, r!1D", 1),
     ENCODING_MAP(ARMV5TE_EOR,           0x4040, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "eor", "r!0d, r!1d"),
+                 "eor", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_LDMIA,         0xc800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST | CLOBBER_SRC1,
-                 "ldmia", "r!0d!!, <!1R>"),
+                 "ldmia", "r!0d!!, <!1R>", 1),
     ENCODING_MAP(ARMV5TE_LDR_RRI5,      0x6800, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldr", "r!0d, [r!1d, #!2E]"),
+                 "ldr", "r!0d, [r!1d, #!2E]", 1),
     ENCODING_MAP(ARMV5TE_LDR_RRR,       0x5800, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldr", "r!0d, [r!1d, r!2d]"),
+                 "ldr", "r!0d, [r!1d, r!2d]", 1),
     ENCODING_MAP(ARMV5TE_LDR_PC_REL,    0x4800, 10, 8, 7, 0, -1, -1,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldr", "r!0d, [pc, #!1E]"),
+                 "ldr", "r!0d, [pc, #!1E]", 1),
     ENCODING_MAP(ARMV5TE_LDR_SP_REL,    0x9800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "ldr", "r!0d, [sp, #!1E]"),
+                 "ldr", "r!0d, [sp, #!1E]", 1),
     ENCODING_MAP(ARMV5TE_LDRB_RRI5,     0x7800, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldrb", "r!0d, [r!1d, #2d]"),
+                 "ldrb", "r!0d, [r!1d, #2d]", 1),
     ENCODING_MAP(ARMV5TE_LDRB_RRR,      0x5c00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldrb", "r!0d, [r!1d, r!2d]"),
+                 "ldrb", "r!0d, [r!1d, r!2d]", 1),
     ENCODING_MAP(ARMV5TE_LDRH_RRI5,     0x8800, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldrh", "r!0d, [r!1d, #!2F]"),
+                 "ldrh", "r!0d, [r!1d, #!2F]", 1),
     ENCODING_MAP(ARMV5TE_LDRH_RRR,      0x5a00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldrh", "r!0d, [r!1d, r!2d]"),
+                 "ldrh", "r!0d, [r!1d, r!2d]", 1),
     ENCODING_MAP(ARMV5TE_LDRSB_RRR,     0x5600, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldrsb", "r!0d, [r!1d, r!2d]"),
+                 "ldrsb", "r!0d, [r!1d, r!2d]", 1),
     ENCODING_MAP(ARMV5TE_LDRSH_RRR,     0x5e00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldrsh", "r!0d, [r!1d, r!2d]"),
+                 "ldrsh", "r!0d, [r!1d, r!2d]", 1),
     ENCODING_MAP(ARMV5TE_LSL,           0x0000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "lsl", "r!0d, r!1d, #!2d"),
+                 "lsl", "r!0d, r!1d, #!2d", 1),
     ENCODING_MAP(ARMV5TE_LSLV,          0x4080, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "lsl", "r!0d, r!1d"),
+                 "lsl", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_LSR,           0x0800, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "lsr", "r!0d, r!1d, #!2d"),
+                 "lsr", "r!0d, r!1d, #!2d", 1),
     ENCODING_MAP(ARMV5TE_LSRV,          0x40c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "lsr", "r!0d, r!1d"),
+                 "lsr", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_MOV_IMM,       0x2000, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "mov", "r!0d, #!1d"),
+                 "mov", "r!0d, #!1d", 1),
     ENCODING_MAP(ARMV5TE_MOV_RR,        0x1c00, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "mov", "r!0d, r!1d"),
+                 "mov", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_MOV_RR_H2H,    0x46c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "mov", "r!0D, r!1D"),
+                 "mov", "r!0D, r!1D", 1),
     ENCODING_MAP(ARMV5TE_MOV_RR_H2L,    0x4640, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "mov", "r!0d, r!1D"),
+                 "mov", "r!0d, r!1D", 1),
     ENCODING_MAP(ARMV5TE_MOV_RR_L2H,    0x4680, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "mov", "r!0D, r!1d"),
+                 "mov", "r!0D, r!1d", 1),
     ENCODING_MAP(ARMV5TE_MUL,           0x4340, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "mul", "r!0d, r!1d"),
+                 "mul", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_MVN,           0x43c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "mvn", "r!0d, r!1d"),
+                 "mvn", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_NEG,           0x4240, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "neg", "r!0d, r!1d"),
+                 "neg", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_ORR,           0x4300, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "orr", "r!0d, r!1d"),
+                 "orr", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_POP,           0xbc00, 8, 0, -1, -1, -1, -1,
                  IS_UNARY_OP,
-                 "pop", "<!0R>"),
+                 "pop", "<!0R>", 1),
     ENCODING_MAP(ARMV5TE_PUSH,          0xb400, 8, 0, -1, -1, -1, -1,
                  IS_UNARY_OP,
-                 "push", "<!0R>"),
+                 "push", "<!0R>", 1),
     ENCODING_MAP(ARMV5TE_ROR,           0x41c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "ror", "r!0d, r!1d"),
+                 "ror", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_SBC,           0x4180, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "sbc", "r!0d, r!1d"),
+                 "sbc", "r!0d, r!1d", 1),
     ENCODING_MAP(ARMV5TE_STMIA,         0xc000, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_SRC1,
-                 "stmia", "r!0d!!, <!1R>"),
+                 "stmia", "r!0d!!, <!1R>", 1),
     ENCODING_MAP(ARMV5TE_STR_RRI5,      0x6000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP,
-                 "str", "r!0d, [r!1d, #!2E]"),
+                 "str", "r!0d, [r!1d, #!2E]", 1),
     ENCODING_MAP(ARMV5TE_STR_RRR,       0x5000, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP,
-                 "str", "r!0d, [r!1d, r!2d]"),
+                 "str", "r!0d, [r!1d, r!2d]", 1),
     ENCODING_MAP(ARMV5TE_STR_SP_REL,    0x9000, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP,
-                 "str", "r!0d, [sp, #!1E]"),
+                 "str", "r!0d, [sp, #!1E]", 1),
     ENCODING_MAP(ARMV5TE_STRB_RRI5,     0x7000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP,
-                 "strb", "r!0d, [r!1d, #!2d]"),
+                 "strb", "r!0d, [r!1d, #!2d]", 1),
     ENCODING_MAP(ARMV5TE_STRB_RRR,      0x5400, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP,
-                 "strb", "r!0d, [r!1d, r!2d]"),
+                 "strb", "r!0d, [r!1d, r!2d]", 1),
     ENCODING_MAP(ARMV5TE_STRH_RRI5,     0x8000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP,
-                 "strh", "r!0d, [r!1d, #!2F]"),
+                 "strh", "r!0d, [r!1d, #!2F]", 1),
     ENCODING_MAP(ARMV5TE_STRH_RRR,      0x5200, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP,
-                 "strh", "r!0d, [r!1d, r!2d]"),
+                 "strh", "r!0d, [r!1d, r!2d]", 1),
     ENCODING_MAP(ARMV5TE_SUB_RRI3,      0x1e00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "sub", "r!0d, r!1d, #!2d]"),
+                 "sub", "r!0d, r!1d, #!2d]", 1),
     ENCODING_MAP(ARMV5TE_SUB_RI8,       0x3800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "sub", "r!0d, #!1d"),
+                 "sub", "r!0d, #!1d", 1),
     ENCODING_MAP(ARMV5TE_SUB_RRR,       0x1a00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "sub", "r!0d, r!1d, r!2d"),
+                 "sub", "r!0d, r!1d, r!2d", 1),
     ENCODING_MAP(ARMV5TE_SUB_SPI7,      0xb080, 6, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | CLOBBER_DEST,
-                 "sub", "sp, #!0d"),
+                 "sub", "sp, #!0d", 1),
     ENCODING_MAP(ARMV5TE_SWI,           0xdf00, 7, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
-                 "swi", "!0d"),
+                 "swi", "!0d", 1),
     ENCODING_MAP(ARMV5TE_TST,           0x4200, 2, 0, 5, 3, -1, -1,
                  IS_UNARY_OP,
-                 "tst", "r!0d, r!1d"),
+                 "tst", "r!0d, r!1d", 1),
 };
 
 #define PADDING_MOV_R0_R0               0x1C00
@@ -441,7 +441,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
  * before sending them off to the assembler. If out-of-range branch distance is
  * seen rearrange the instructions a bit to correct it.
  */
-void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
+void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 {
     LIR *lir;
     Armv5teLIR *armLIR;
@@ -449,6 +449,9 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
     int i;
     ChainCellCounts chainCellCounts;
     int descSize = jitTraceDescriptionSize(cUnit->traceDesc);
+
+    info->codeAddress = NULL;
+    info->instructionSet = cUnit->instructionSet;
 
     /* Beginning offset needs to allow space for chain cell offset */
     for (armLIR = (Armv5teLIR *) cUnit->firstLIRInsn;
@@ -553,6 +556,13 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit)
     /* Flush dcache and invalidate the icache to maintain coherence */
     cacheflush((long)cUnit->baseAddr,
                (long)((char *) cUnit->baseAddr + offset), 0);
+
+    /* Record code entry point and instruction set */
+    info->codeAddress = (char*)cUnit->baseAddr + cUnit->headerSize;
+    info->instructionSet = cUnit->instructionSet;
+    /* If applicable, mark low bit to denote thumb */
+    if (info->instructionSet != DALVIK_JIT_ARM)
+        info->codeAddress = (char*)info->codeAddress + 1;
 }
 
 static u4 assembleBXPair(int branchOffset)
@@ -794,4 +804,138 @@ void dvmJitUnchainAll()
         cacheflush((long)lowAddress, (long)highAddress, 0);
         dvmUnlockMutex(&gDvmJit.tableLock);
     }
+}
+
+typedef struct jitProfileAddrToLine {
+    u4 lineNum;
+    u4 bytecodeOffset;
+} jitProfileAddrToLine;
+
+
+/* Callback function to track the bytecode offset/line number relationiship */
+static int addrToLineCb (void *cnxt, u4 bytecodeOffset, u4 lineNum)
+{
+    jitProfileAddrToLine *addrToLine = (jitProfileAddrToLine *) cnxt;
+
+    /* Best match so far for this offset */
+    if (addrToLine->bytecodeOffset >= bytecodeOffset) {
+        addrToLine->lineNum = lineNum;
+    }
+    return 0;
+}
+
+char *getTraceBase(const JitEntry *p)
+{
+    return (char*)p->codeAddress -
+        (6 + (p->u.info.instructionSet == DALVIK_JIT_ARM ? 0 : 1));
+}
+
+/* Dumps profile info for a single trace */
+static int dumpTraceProfile(JitEntry *p)
+{
+    ChainCellCounts* pCellCounts;
+    char* traceBase;
+    u4* pExecutionCount;
+    u2* pCellOffset;
+    JitTraceDescription *desc;
+    const Method* method;
+
+    traceBase = getTraceBase(p);
+
+    if (p->codeAddress == NULL) {
+        LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
+        return 0;
+    }
+
+    pExecutionCount = (u4*) (traceBase);
+    pCellOffset = (u2*) (traceBase + 4);
+    pCellCounts = (ChainCellCounts*) ((char *)pCellOffset + *pCellOffset);
+    desc = (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
+    method = desc->method;
+    char *methodDesc = dexProtoCopyMethodDescriptor(&method->prototype);
+    jitProfileAddrToLine addrToLine = {0, desc->trace[0].frag.startOffset};
+
+    /*
+     * We may end up decoding the debug information for the same method
+     * multiple times, but the tradeoff is we don't need to allocate extra
+     * space to store the addr/line mapping. Since this is a debugging feature
+     * and done infrequently so the slower but simpler mechanism should work
+     * just fine.
+     */
+    dexDecodeDebugInfo(method->clazz->pDvmDex->pDexFile,
+                       dvmGetMethodCode(method),
+                       method->clazz->descriptor,
+                       method->prototype.protoIdx,
+                       method->accessFlags,
+                       addrToLineCb, NULL, &addrToLine);
+
+    LOGD("TRACEPROFILE 0x%08x % 10d [%#x(+%d), %d] %s%s;%s",
+         (int)traceBase,
+         *pExecutionCount,
+         desc->trace[0].frag.startOffset,
+         desc->trace[0].frag.numInsts,
+         addrToLine.lineNum,
+         method->clazz->descriptor, method->name, methodDesc);
+    free(methodDesc);
+
+    return *pExecutionCount;
+}
+
+/* Handy function to retrieve the profile count */
+static inline int getProfileCount(const JitEntry *entry)
+{
+    if (entry->dPC == 0 || entry->codeAddress == 0)
+        return 0;
+    u4 *pExecutionCount = (u4 *) getTraceBase(entry);
+
+    return *pExecutionCount;
+}
+
+
+/* qsort callback function */
+static int sortTraceProfileCount(const void *entry1, const void *entry2)
+{
+    const JitEntry *jitEntry1 = entry1;
+    const JitEntry *jitEntry2 = entry2;
+
+    int count1 = getProfileCount(jitEntry1);
+    int count2 = getProfileCount(jitEntry2);
+    return (count1 == count2) ? 0 : ((count1 > count2) ? -1 : 1);
+}
+
+/* Sort the trace profile counts and dump them */
+void dvmCompilerSortAndPrintTraceProfiles()
+{
+    JitEntry *sortedEntries;
+    int numTraces = 0;
+    unsigned long counts = 0;
+    unsigned int i;
+
+    /* Make sure that the table is not changing */
+    dvmLockMutex(&gDvmJit.tableLock);
+
+    /* Sort the entries by descending order */
+    sortedEntries = malloc(sizeof(JitEntry) * gDvmJit.jitTableSize);
+    if (sortedEntries == NULL)
+        goto done;
+    memcpy(sortedEntries, gDvmJit.pJitEntryTable,
+           sizeof(JitEntry) * gDvmJit.jitTableSize);
+    qsort(sortedEntries, gDvmJit.jitTableSize, sizeof(JitEntry),
+          sortTraceProfileCount);
+
+    /* Dump the sorted entries */
+    for (i=0; i < gDvmJit.jitTableSize; i++) {
+        if (sortedEntries[i].dPC != 0) {
+            counts += dumpTraceProfile(&sortedEntries[i]);
+            numTraces++;
+        }
+    }
+    if (numTraces == 0)
+        numTraces = 1;
+    LOGD("JIT: Average execution count -> %d",(int)(counts / numTraces));
+
+    free(sortedEntries);
+done:
+    dvmUnlockMutex(&gDvmJit.tableLock);
+    return;
 }

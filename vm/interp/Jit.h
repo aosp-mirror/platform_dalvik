@@ -37,16 +37,29 @@ static inline u4 dvmJitHash( const u2* p ) {
     return dvmJitHashMask( p, gDvmJit.jitTableMask );
 }
 
-
-
 /*
  * Entries in the JIT's address lookup hash table.
- * with assembly hash function in mterp.
- * TODO: rework this structure now that the profile counts have
- * moved into their own table.
+ * Fields which may be updated by multiple threads packed into a
+ * single 32-bit word to allow use of atomic update.
  */
+
+typedef struct JitEntryInfo {
+    unsigned int           traceRequested:1;   /* already requested a translation */
+    unsigned int           isMethodEntry:1;
+    unsigned int           inlineCandidate:1;
+    unsigned int           profileEnabled:1;
+    JitInstructionSetType  instructionSet:4;
+    unsigned int           unused:8;
+    u2                     chain;              /* Index of next in chain */
+} JitEntryInfo;
+
+typedef union JitEntryInfoUnion {
+    JitEntryInfo info;
+    volatile int infoWord;
+} JitEntryInfoUnion;
+
 typedef struct JitEntry {
-    u2                unused;             /* was execution count */
+    JitEntryInfoUnion u;
     u2                chain;              /* Index of next in chain */
     const u2*         dPC;                /* Dalvik code address */
     void*             codeAddress;        /* Code address of native translation */
@@ -56,15 +69,14 @@ int dvmJitStartup(void);
 void dvmJitShutdown(void);
 int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState);
 void* dvmJitGetCodeAddr(const u2* dPC);
-void dvmJitSetCodeAddr(const u2* dPC, void *nPC);
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState);
-void* dvmJitChain(void* tgtAddr, u4* branchAddr);
 void dvmJitStopTranslationRequests(void);
 void dvmJitStats(void);
 bool dvmJitResizeJitTable(unsigned int size);
 struct JitEntry *dvmFindJitEntry(const u2* pc);
 s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);
+void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set);
 
 
 #endif /*_DALVIK_INTERP_JIT*/

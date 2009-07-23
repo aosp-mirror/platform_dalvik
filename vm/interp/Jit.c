@@ -43,12 +43,12 @@ int dvmJitStartup(void)
 
     dvmInitMutex(&gDvmJit.tableLock);
     if (res && gDvm.executionMode == kExecutionModeJit) {
-        struct JitEntry *pJitTable = NULL;
+        JitEntry *pJitTable = NULL;
         unsigned char *pJitProfTable = NULL;
         assert(gDvm.jitTableSize &&
             !(gDvm.jitTableSize & (gDvmJit.jitTableSize - 1))); // Power of 2?
         dvmLockMutex(&gDvmJit.tableLock);
-        pJitTable = (struct JitEntry*)
+        pJitTable = (JitEntry*)
                     calloc(gDvmJit.jitTableSize, sizeof(*pJitTable));
         if (!pJitTable) {
             LOGE("jit table allocation failed\n");
@@ -71,10 +71,10 @@ int dvmJitStartup(void)
         }
         memset(pJitProfTable,0,JIT_PROF_SIZE);
         for (i=0; i < gDvmJit.jitTableSize; i++) {
-           pJitTable[i].chain = gDvmJit.jitTableSize;
+           pJitTable[i].u.info.chain = gDvmJit.jitTableSize;
         }
         /* Is chain field wide enough for termination pattern? */
-        assert(pJitTable[0].chain == gDvm.maxJitTableEntries);
+        assert(pJitTable[0].u.info.chain == gDvm.maxJitTableEntries);
 
 done:
         gDvmJit.pJitEntryTable = pJitTable;
@@ -126,145 +126,6 @@ void dvmBumpPunt(int from)
 }
 #endif
 
-typedef struct jitProfileAddrToLine {
-    u4 lineNum;
-    u4 bytecodeOffset;
-} jitProfileAddrToLine;
-
-
-/* Callback function to track the bytecode offset/line number relationiship */
-static int addrToLineCb (void *cnxt, u4 bytecodeOffset, u4 lineNum)
-{
-    jitProfileAddrToLine *addrToLine = (jitProfileAddrToLine *) cnxt;
-
-    /* Best match so far for this offset */
-    if (addrToLine->bytecodeOffset >= bytecodeOffset) {
-        addrToLine->lineNum = lineNum;
-    }
-    return 0;
-}
-
-/* Dumps profile info for a single trace */
-int dvmCompilerDumpTraceProfile(struct JitEntry *p)
-{
-    ChainCellCounts* pCellCounts;
-    char* traceBase;
-    u4* pExecutionCount;
-    u2* pCellOffset;
-    JitTraceDescription *desc;
-    const Method* method;
-
-    /*
-     * The codeAddress field has the low bit set to mark thumb
-     * mode.  We need to strip that off before reconstructing the
-     * trace data.  See the diagram in Assemble.c for more info
-     * on the trace layout in memory.
-     */
-    traceBase = (char*)p->codeAddress - 7;
-
-    if (p->codeAddress == NULL) {
-        LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
-        return 0;
-    }
-
-    pExecutionCount = (u4*) (traceBase);
-    pCellOffset = (u2*) (traceBase + 4);
-    pCellCounts = (ChainCellCounts*) ((char *)pCellOffset + *pCellOffset);
-    desc = (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
-    method = desc->method;
-    char *methodDesc = dexProtoCopyMethodDescriptor(&method->prototype);
-    jitProfileAddrToLine addrToLine = {0, desc->trace[0].frag.startOffset};
-
-    /*
-     * We may end up decoding the debug information for the same method
-     * multiple times, but the tradeoff is we don't need to allocate extra
-     * space to store the addr/line mapping. Since this is a debugging feature
-     * and done infrequently so the slower but simpler mechanism should work
-     * just fine.
-     */
-    dexDecodeDebugInfo(method->clazz->pDvmDex->pDexFile,
-                       dvmGetMethodCode(method),
-                       method->clazz->descriptor,
-                       method->prototype.protoIdx,
-                       method->accessFlags,
-                       addrToLineCb, NULL, &addrToLine);
-
-    LOGD("TRACEPROFILE 0x%08x % 10d [%#x(+%d), %d] %s%s;%s",
-         (int)traceBase,
-         *pExecutionCount,
-         desc->trace[0].frag.startOffset,
-         desc->trace[0].frag.numInsts,
-         addrToLine.lineNum,
-         method->clazz->descriptor, method->name, methodDesc);
-    free(methodDesc);
-
-    return *pExecutionCount;
-}
-
-/* Handy function to retrieve the profile count */
-static inline int getProfileCount(const JitEntry *entry)
-{
-    if (entry->dPC == 0 || entry->codeAddress == 0)
-        return 0;
-    /*
-     * The codeAddress field has the low bit set to mark thumb
-     * mode.  We need to strip that off before reconstructing the
-     * trace data.  See the diagram in Assemble.c for more info
-     * on the trace layout in memory.
-     */
-    u4 *pExecutionCount = (u4 *) ((char*)entry->codeAddress - 7);
-
-    return *pExecutionCount;
-}
-
-/* qsort callback function */
-static int sortTraceProfileCount(const void *entry1, const void *entry2)
-{
-    const JitEntry *jitEntry1 = entry1;
-    const JitEntry *jitEntry2 = entry2;
-
-    int count1 = getProfileCount(jitEntry1);
-    int count2 = getProfileCount(jitEntry2);
-    return (count1 == count2) ? 0 : ((count1 > count2) ? -1 : 1);
-}
-
-/* Sort the trace profile counts and dump them */
-static void sortAndPrintTraceProfiles()
-{
-    JitEntry *sortedEntries;
-    int numTraces = 0;
-    unsigned long counts = 0;
-    unsigned int i;
-
-    /* Make sure that the table is not changing */
-    dvmLockMutex(&gDvmJit.tableLock);
-
-    /* Sort the entries by descending order */
-    sortedEntries = malloc(sizeof(JitEntry) * gDvmJit.jitTableSize);
-    if (sortedEntries == NULL)
-        goto done;
-    memcpy(sortedEntries, gDvmJit.pJitEntryTable,
-           sizeof(JitEntry) * gDvmJit.jitTableSize);
-    qsort(sortedEntries, gDvmJit.jitTableSize, sizeof(JitEntry),
-          sortTraceProfileCount);
-
-    /* Dump the sorted entries */
-    for (i=0; i < gDvmJit.jitTableSize; i++) {
-        if (sortedEntries[i].dPC != 0) {
-            counts += dvmCompilerDumpTraceProfile(&sortedEntries[i]);
-            numTraces++;
-        }
-    }
-    if (numTraces == 0)
-        numTraces = 1;
-    LOGD("JIT: Average execution count -> %d",(int)(counts / numTraces));
-
-    free(sortedEntries);
-done:
-    dvmUnlockMutex(&gDvmJit.tableLock);
-    return;
-}
-
 /* Dumps debugging & tuning stats to the log */
 void dvmJitStats()
 {
@@ -280,7 +141,7 @@ void dvmJitStats()
                 hit++;
             else
                 not_hit++;
-            if (gDvmJit.pJitEntryTable[i].chain != gDvmJit.jitTableSize)
+            if (gDvmJit.pJitEntryTable[i].u.info.chain != gDvmJit.jitTableSize)
                 chains++;
         }
         LOGD(
@@ -301,10 +162,11 @@ void dvmJitStats()
              gDvmJit.invokeNative, gDvmJit.returnOp);
 #endif
         if (gDvmJit.profile) {
-            sortAndPrintTraceProfiles();
+            dvmCompilerSortAndPrintTraceProfiles();
         }
     }
 }
+
 
 /*
  * Final JIT shutdown.  Only do this once, and do not attempt to restart
@@ -466,7 +328,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
     return switchInterp;
 }
 
-static inline struct JitEntry *findJitEntry(const u2* pc)
+static inline JitEntry *findJitEntry(const u2* pc)
 {
     int idx = dvmJitHash(pc);
 
@@ -475,8 +337,8 @@ static inline struct JitEntry *findJitEntry(const u2* pc)
         return &gDvmJit.pJitEntryTable[idx];
     else {
         int chainEndMarker = gDvmJit.jitTableSize;
-        while (gDvmJit.pJitEntryTable[idx].chain != chainEndMarker) {
-            idx = gDvmJit.pJitEntryTable[idx].chain;
+        while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
+            idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
             if (gDvmJit.pJitEntryTable[idx].dPC == pc)
                 return &gDvmJit.pJitEntryTable[idx];
         }
@@ -484,44 +346,9 @@ static inline struct JitEntry *findJitEntry(const u2* pc)
     return NULL;
 }
 
-struct JitEntry *dvmFindJitEntry(const u2* pc)
+JitEntry *dvmFindJitEntry(const u2* pc)
 {
     return findJitEntry(pc);
-}
-
-/*
- * Allocate an entry in a JitTable.  Assumes caller holds lock, if
- * applicable.  Normally used for table resizing.  Will complain (die)
- * if entry already exists in the table or if table is full.
- */
-static struct JitEntry *allocateJitEntry(const u2* pc, struct JitEntry *table,
-                                  u4 size)
-{
-    struct JitEntry *p;
-    unsigned int idx;
-    unsigned int prev;
-    idx = dvmJitHashMask(pc, size-1);
-    while ((table[idx].chain != size) && (table[idx].dPC != pc)) {
-        idx = table[idx].chain;
-    }
-    assert(table[idx].dPC != pc);  /* Already there */
-    if (table[idx].dPC == NULL) {
-        /* use this slot */
-        return &table[idx];
-    }
-    /* Find a free entry and chain it in */
-    prev = idx;
-    while (true) {
-        idx++;
-        if (idx == size)
-            idx = 0;  /* Wraparound */
-        if ((table[idx].dPC == NULL) || (idx == prev))
-            break;
-    }
-    assert(idx != prev);
-    table[prev].chain = idx;
-    assert(table[idx].dPC == NULL);
-    return &table[idx];
 }
 
 /*
@@ -545,8 +372,8 @@ void* dvmJitGetCodeAddr(const u2* dPC)
         return gDvmJit.pJitEntryTable[idx].codeAddress;
     } else {
         int chainEndMarker = gDvmJit.jitTableSize;
-        while (gDvmJit.pJitEntryTable[idx].chain != chainEndMarker) {
-            idx = gDvmJit.pJitEntryTable[idx].chain;
+        while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
+            idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
             if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
 #if defined(EXIT_STATS)
                 gDvmJit.addrLookupsFound++;
@@ -562,16 +389,108 @@ void* dvmJitGetCodeAddr(const u2* dPC)
 }
 
 /*
+ * Find an entry in the JitTable, creating if necessary.
+ * Returns null if table is full.
+ */
+JitEntry *dvmJitLookupAndAdd(const u2* dPC)
+{
+    u4 chainEndMarker = gDvmJit.jitTableSize;
+    u4 idx = dvmJitHash(dPC);
+
+    /* Walk the bucket chain to find an exact match for our PC */
+    while ((gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) &&
+           (gDvmJit.pJitEntryTable[idx].dPC != dPC)) {
+        idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
+    }
+
+    if (gDvmJit.pJitEntryTable[idx].dPC != dPC) {
+        /*
+         * No match.  Aquire jitTableLock and find the last
+         * slot in the chain. Possibly continue the chain walk in case
+         * some other thread allocated the slot we were looking
+         * at previuosly (perhaps even the dPC we're trying to enter).
+         */
+        dvmLockMutex(&gDvmJit.tableLock);
+        /*
+         * At this point, if .dPC is NULL, then the slot we're
+         * looking at is the target slot from the primary hash
+         * (the simple, and common case).  Otherwise we're going
+         * to have to find a free slot and chain it.
+         */
+        MEM_BARRIER(); /* Make sure we reload [].dPC after lock */
+        if (gDvmJit.pJitEntryTable[idx].dPC != NULL) {
+            u4 prev;
+            while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
+                if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
+                    /* Another thread got there first for this dPC */
+                    dvmUnlockMutex(&gDvmJit.tableLock);
+                    return &gDvmJit.pJitEntryTable[idx];
+                }
+                idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
+            }
+            /* Here, idx should be pointing to the last cell of an
+             * active chain whose last member contains a valid dPC */
+            assert(gDvmJit.pJitEntryTable[idx].dPC != NULL);
+            /* Linear walk to find a free cell and add it to the end */
+            prev = idx;
+            while (true) {
+                idx++;
+                if (idx == chainEndMarker)
+                    idx = 0;  /* Wraparound */
+                if ((gDvmJit.pJitEntryTable[idx].dPC == NULL) ||
+                    (idx == prev))
+                    break;
+            }
+            if (idx != prev) {
+                JitEntryInfoUnion oldValue;
+                JitEntryInfoUnion newValue;
+                /*
+                 * Although we hold the lock so that noone else will
+                 * be trying to update a chain field, the other fields
+                 * packed into the word may be in use by other threads.
+                 */
+                do {
+                    oldValue = gDvmJit.pJitEntryTable[prev].u;
+                    newValue = oldValue;
+                    newValue.info.chain = idx;
+                } while (!ATOMIC_CMP_SWAP(
+                         &gDvmJit.pJitEntryTable[prev].u.infoWord,
+                         oldValue.infoWord, newValue.infoWord));
+            }
+        }
+        if (gDvmJit.pJitEntryTable[idx].dPC == NULL) {
+           /* Allocate the slot */
+            gDvmJit.pJitEntryTable[idx].dPC = dPC;
+            gDvmJit.jitTableEntriesUsed++;
+        } else {
+            /* Table is full */
+            idx = chainEndMarker;
+        }
+        dvmUnlockMutex(&gDvmJit.tableLock);
+    }
+    return (idx == chainEndMarker) ? NULL : &gDvmJit.pJitEntryTable[idx];
+}
+/*
  * Register the translated code pointer into the JitTable.
  * NOTE: Once a codeAddress field transitions from NULL to
  * JIT'd code, it must not be altered without first halting all
- * threads.
+ * threads.  This routine should only be called by the compiler
+ * thread.
  */
-void dvmJitSetCodeAddr(const u2* dPC, void *nPC) {
-    struct JitEntry *jitEntry = findJitEntry(dPC);
+void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set) {
+    JitEntryInfoUnion oldValue;
+    JitEntryInfoUnion newValue;
+    JitEntry *jitEntry = dvmJitLookupAndAdd(dPC);
     assert(jitEntry);
-    /* Thumb code has odd PC */
-    jitEntry->codeAddress = (void *) ((intptr_t) nPC |1);
+    /* Note: order of update is important */
+    do {
+        oldValue = jitEntry->u;
+        newValue = oldValue;
+        newValue.info.instructionSet = set;
+    } while (!ATOMIC_CMP_SWAP(
+             &jitEntry->u.infoWord,
+             oldValue.infoWord, newValue.infoWord));
+    jitEntry->codeAddress = nPC;
 }
 
 /*
@@ -581,7 +500,6 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC) {
  * requested
  */
 
-#define PROFILE_STALENESS_THRESHOLD 100000LL
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 {
     bool res = false;         /* Assume success */
@@ -616,78 +534,30 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                 interpState->jitState = kJitNormal;
             }
         } else if (interpState->jitState == kJitTSelectRequest) {
-            u4 chainEndMarker = gDvmJit.jitTableSize;
-            u4 idx = dvmJitHash(interpState->pc);
-
-            /* Walk the bucket chain to find an exact match for our PC */
-            while ((gDvmJit.pJitEntryTable[idx].chain != chainEndMarker) &&
-                   (gDvmJit.pJitEntryTable[idx].dPC != interpState->pc)) {
-                idx = gDvmJit.pJitEntryTable[idx].chain;
-            }
-
-            if (gDvmJit.pJitEntryTable[idx].dPC == interpState->pc) {
+            JitEntry *slot = dvmJitLookupAndAdd(interpState->pc);
+            if (slot == NULL) {
                 /*
-                 * Got a match.  This means a trace has already
-                 * been requested for this address.  Bail back to
-                 * mterp, which will check if the translation is ready
-                 * for execution
+                 * Table is full.  This should have been
+                 * detected by the compiler thread and the table
+                 * resized before we run into it here.  Assume bad things
+                 * are afoot and disable profiling.
                  */
                 interpState->jitState = kJitTSelectAbort;
+                LOGD("JIT: JitTable full, disabling profiling");
+                dvmJitStopTranslationRequests();
+            } else if (slot->u.info.traceRequested) {
+                /* Trace already requested - revert to interpreter */
+                interpState->jitState = kJitTSelectAbort;
             } else {
-               /*
-                * No match.  Aquire jitTableLock and find the last
-                * slot in the chain. Possibly continue the chain walk in case
-                * some other thread allocated the slot we were looking
-                * at previuosly
-                */
-                dvmLockMutex(&gDvmJit.tableLock);
-                /*
-                 * At this point, if .dPC is NULL, then the slot we're
-                 * looking at is the target slot from the primary hash
-                 * (the simple, and expected case).  Otherwise we're going
-                 * to have to find a free slot and chain it.
-                 */
-                MEM_BARRIER();
-                if (gDvmJit.pJitEntryTable[idx].dPC != NULL) {
-                    u4 prev;
-                    while (gDvmJit.pJitEntryTable[idx].chain != chainEndMarker) {
-                        idx = gDvmJit.pJitEntryTable[idx].chain;
-                    }
-                    /* Here, idx should be pointing to the last cell of an
-                     * active chain whose last member contains a valid dPC */
-                    assert(gDvmJit.pJitEntryTable[idx].dPC != NULL);
-                    /* Now, do a linear walk to find a free cell and add it to
-                     * end of this chain */
-                    prev = idx;
-                    while (true) {
-                        idx++;
-                        if (idx == chainEndMarker)
-                            idx = 0;  /* Wraparound */
-                        if ((gDvmJit.pJitEntryTable[idx].dPC == NULL) ||
-                            (idx == prev))
-                            break;
-                    }
-                    if (idx != prev) {
-                        /* Got it - chain */
-                        gDvmJit.pJitEntryTable[prev].chain = idx;
-                    }
-                }
-                if (gDvmJit.pJitEntryTable[idx].dPC == NULL) {
-                   /* Allocate the slot */
-                    gDvmJit.pJitEntryTable[idx].dPC = interpState->pc;
-                    gDvmJit.jitTableEntriesUsed++;
-                } else {
-                   /*
-                    * Table is full.  We could resize it, but that would
-                    * be better handled by the translator thread.  It
-                    * will be aware of how full the table is getting.
-                    * Disable further profiling and continue.
-                    */
-                   interpState->jitState = kJitTSelectAbort;
-                   LOGD("JIT: JitTable full, disabling profiling");
-                   dvmJitStopTranslationRequests();
-                }
-                dvmUnlockMutex(&gDvmJit.tableLock);
+                /* Mark request */
+                JitEntryInfoUnion oldValue;
+                JitEntryInfoUnion newValue;
+                do {
+                    oldValue = slot->u;
+                    newValue = oldValue;
+                    newValue.info.traceRequested = true;
+                } while (!ATOMIC_CMP_SWAP( &slot->u.infoWord,
+                         oldValue.infoWord, newValue.infoWord));
             }
         }
         switch (interpState->jitState) {
@@ -725,8 +595,10 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
  */
 bool dvmJitResizeJitTable( unsigned int size )
 {
-    struct JitEntry *pNewTable;
+    JitEntry *pNewTable;
+    JitEntry *pOldTable;
     u4 newMask;
+    unsigned int oldSize;
     unsigned int i;
 
     assert(gDvm.pJitEntryTable != NULL);
@@ -740,41 +612,50 @@ bool dvmJitResizeJitTable( unsigned int size )
         return true;
     }
 
-    pNewTable = (struct JitEntry*)calloc(size, sizeof(*pNewTable));
+    pNewTable = (JitEntry*)calloc(size, sizeof(*pNewTable));
     if (pNewTable == NULL) {
         return true;
     }
     for (i=0; i< size; i++) {
-        pNewTable[i].chain = size;  /* Initialize chain termination */
+        pNewTable[i].u.info.chain = size;  /* Initialize chain termination */
     }
 
     /* Stop all other interpreting/jit'ng threads */
     dvmSuspendAllThreads(SUSPEND_FOR_JIT);
 
-    /*
-     * At this point, only the compiler thread may be in contention
-     * for the jitEntryTable (it is not affected by the thread suspension).
-     * Aquire the lock.
-     */
+    pOldTable = gDvmJit.pJitEntryTable;
+    oldSize = gDvmJit.jitTableSize;
 
     dvmLockMutex(&gDvmJit.tableLock);
-
-    for (i=0; i < gDvmJit.jitTableSize; i++) {
-        if (gDvmJit.pJitEntryTable[i].dPC) {
-            struct JitEntry *p;
-            p = allocateJitEntry(gDvmJit.pJitEntryTable[i].dPC,
-                 pNewTable, size);
-            p->dPC = gDvmJit.pJitEntryTable[i].dPC;
-            p->codeAddress = gDvmJit.pJitEntryTable[i].codeAddress;
-        }
-    }
-
-    free(gDvmJit.pJitEntryTable);
     gDvmJit.pJitEntryTable = pNewTable;
     gDvmJit.jitTableSize = size;
     gDvmJit.jitTableMask = size - 1;
-
+    gDvmJit.jitTableEntriesUsed = 0;
     dvmUnlockMutex(&gDvmJit.tableLock);
+
+    for (i=0; i < oldSize; i++) {
+        if (pOldTable[i].dPC) {
+            JitEntry *p;
+            u2 chain;
+            p = dvmJitLookupAndAdd(pOldTable[i].dPC);
+            p->dPC = pOldTable[i].dPC;
+            /*
+             * Compiler thread may have just updated the new entry's
+             * code address field, so don't blindly copy null.
+             */
+            if (pOldTable[i].codeAddress != NULL) {
+                p->codeAddress = pOldTable[i].codeAddress;
+            }
+            /* We need to preserve the new chain field, but copy the rest */
+            dvmLockMutex(&gDvmJit.tableLock);
+            chain = p->u.info.chain;
+            p->u = pOldTable[i].u;
+            p->u.info.chain = chain;
+            dvmUnlockMutex(&gDvmJit.tableLock);
+        }
+    }
+
+    free(pOldTable);
 
     /* Restart the world */
     dvmResumeAllThreads(SUSPEND_FOR_JIT);

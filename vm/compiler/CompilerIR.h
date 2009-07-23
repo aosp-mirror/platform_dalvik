@@ -91,6 +91,7 @@ typedef struct CompilationUnit {
     LIR *firstChainingLIR[CHAINING_CELL_LAST];
     RegisterScoreboard registerScoreboard;      // Track register dependency
     int optRound;                       // round number to tell an LIR's age
+    JitInstructionSetType instructionSet;
 } CompilationUnit;
 
 BasicBlock *dvmCompilerNewBB(BBType blockType);

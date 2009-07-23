@@ -239,7 +239,8 @@ static CompilerMethodStats *analyzeMethodBody(const Method *method)
  * first and they will be passed to the codegen routines to convert Dalvik
  * bytecode into machine code.
  */
-void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
+bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
+                     JitTranslationInfo *info)
 {
     const DexCode *dexCode = dvmGetMethodCode(desc->method);
     const JitTraceRun* currRun = &desc->trace[0];
@@ -523,11 +524,14 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
         dvmCompilerDumpCompilationUnit(&cUnit);
     }
 
+    /* Set the instruction set to use (NOTE: later components may change it) */
+    cUnit.instructionSet = dvmCompilerInstructionSet(&cUnit);
+
     /* Convert MIR to LIR, etc. */
     dvmCompilerMIR2LIR(&cUnit);
 
     /* Convert LIR into machine code. */
-    dvmCompilerAssembleLIR(&cUnit);
+    dvmCompilerAssembleLIR(&cUnit, info);
 
     if (cUnit.printMe) {
         if (cUnit.halveInstCount) {
@@ -546,17 +550,14 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
     /* Free the bit vector tracking null-checked registers */
     dvmFreeBitVector(cUnit.registerScoreboard.nullCheckedRegs);
 
-    /*
-     * Things have gone smoothly - publish the starting address of
-     * translation's entry point.
-     */
     if (!cUnit.halveInstCount) {
+    /* Success */
         methodStats->nativeSize += cUnit.totalSize;
-        return cUnit.baseAddr + cUnit.headerSize;
+        return info->codeAddress != NULL;
 
     /* Halve the instruction count and retry again */
     } else {
-        return dvmCompileTrace(desc, cUnit.numInsts / 2);
+        return dvmCompileTrace(desc, cUnit.numInsts / 2, info);
     }
 }
 
@@ -567,7 +568,7 @@ void *dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts)
  * TODO: implementation will be revisited when the trace builder can provide
  * whole-method traces.
  */
-void *dvmCompileMethod(const Method *method)
+bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
 {
     const DexCode *dexCode = dvmGetMethodCode(method);
     const u2 *codePtr = dexCode->insns;
@@ -732,13 +733,16 @@ void *dvmCompileMethod(const Method *method)
         }
     }
 
+    /* Set the instruction set to use (NOTE: later components may change it) */
+    cUnit.instructionSet = dvmCompilerInstructionSet(&cUnit);
+
     dvmCompilerMIR2LIR(&cUnit);
 
-    dvmCompilerAssembleLIR(&cUnit);
+    dvmCompilerAssembleLIR(&cUnit, info);
 
     dvmCompilerDumpCompilationUnit(&cUnit);
 
     dvmCompilerArenaReset();
 
-    return cUnit.baseAddr + cUnit.headerSize;
+    return info->codeAddress != NULL;
 }

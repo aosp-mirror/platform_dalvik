@@ -22,6 +22,15 @@
 #define USE_IN_CACHE_HANDLER 1
 
 /*
+ * Determine the initial instruction set to be used for this trace.
+ * Later components may decide to change this.
+ */
+JitInstructionSetType dvmCompilerInstructionSet(CompilationUnit *cUnit)
+{
+    return DALVIK_JIT_THUMB;
+}
+
+/*
  * Jump to the out-of-line handler in ARM mode to finish executing the
  * remaining of more complex instructions.
  */
