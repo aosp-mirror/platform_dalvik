@@ -148,7 +148,11 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
     }
 
     public PlatformAddress getEffectiveAddress() {
-        return ((DirectBuffer) this.wrapped).getEffectiveAddress();
+        // BEGIN android-changed
+        PlatformAddress addr = ((DirectBuffer) this.wrapped).getEffectiveAddress();
+        effectiveDirectAddress = addr.toInt();
+        return addr;
+        // END android-changed
     }
 
     public float getFloat() {
