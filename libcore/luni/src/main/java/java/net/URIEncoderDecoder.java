@@ -27,8 +27,6 @@ import org.apache.harmony.luni.util.Msg;
  * application/x-www-form-urlencoded} MIME content type. It contains helper
  * methods used by the URI class, and performs encoding and decoding in a
  * slightly different way than {@code URLEncoder} and {@code URLDecoder}.
- * 
- * @since Android 1.0
  */
 class URIEncoderDecoder {
 
@@ -43,8 +41,7 @@ class URIEncoderDecoder {
      * US-ASCII set, and are not ISO Control or are not ISO Space characters)
      * <p>
      * called from {@code URI.Helper.parseURI()} to validate each component
-     * </p>
-     * 
+     *
      * @param s
      *            {@code java.lang.String} the string to be validated
      * @param legal
@@ -100,14 +97,12 @@ class URIEncoderDecoder {
      * by '%'.
      * <p>
      * For example: '#' -> %23
-     * </p>
      * Other characters, which are unicode chars that are not US-ASCII, and are
      * not ISO Control or are not ISO Space chars, are preserved.
      * <p>
      * Called from {@code URI.quoteComponent()} (for multiple argument
      * constructors)
-     * </p>
-     * 
+     *
      * @param s
      *            java.lang.String the string to be converted
      * @param legal
@@ -145,10 +140,9 @@ class URIEncoderDecoder {
      * converted into their hexidecimal value prepended by '%'.
      * <p>
      * For example: Euro currency symbol -> "%E2%82%AC".
-     * </p>
+     * <p>
      * Called from URI.toASCIIString()
-     * </p>
-     * 
+     *
      * @param s
      *            java.lang.String the string to be converted
      * @return java.lang.String the converted string
@@ -178,11 +172,10 @@ class URIEncoderDecoder {
      *'%' and two following hex digit characters are converted to the
      * equivalent byte value. All other characters are passed through
      * unmodified.
-     * </p>
+     * <p>
      * e.g. "A%20B%20C %24%25" -> "A B C $%"
      * <p>
      * Called from URI.getXYZ() methods
-     * </p>
      * 
      * @param s
      *            java.lang.String The encoded string.

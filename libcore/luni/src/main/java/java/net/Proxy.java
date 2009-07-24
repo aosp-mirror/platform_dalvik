@@ -25,8 +25,6 @@ import org.apache.harmony.luni.util.Msg;
  * <li>DIRECT</li>
  * <li>HTTP</li>
  * <li>SOCKS</li></ul
- * 
- * @since Android 1.0
  */
 public class Proxy {
 
@@ -34,8 +32,6 @@ public class Proxy {
      * Represents the proxy type setting {@code Proxy.Type.DIRECT}. It tells
      * protocol handlers that there is no proxy to be used. The address is set
      * to {@code null}.
-     * 
-     * @since Android 1.0
      */
     public static final Proxy NO_PROXY = new Proxy();
 
@@ -58,7 +54,6 @@ public class Proxy {
      *             if the parameter {@code type} is set to {@code
      *             Proxy.Type.DIRECT} or the value for {@code SocketAddress} is
      *             {@code null}.
-     * @since Android 1.0
      */
     public Proxy(Proxy.Type type, SocketAddress sa) {
         /*
@@ -86,7 +81,6 @@ public class Proxy {
      * Gets the type of this {@code Proxy} instance.
      * 
      * @return the stored proxy type.
-     * @since Android 1.0
      */
     public Proxy.Type type() {
         return type;
@@ -97,7 +91,6 @@ public class Proxy {
      * 
      * @return the stored proxy address or {@code null} if the proxy type is
      *         {@code DIRECT}.
-     * @since Android 1.0
      */
     public SocketAddress address() {
         return address;
@@ -107,9 +100,8 @@ public class Proxy {
      * Gets a textual representation of this {@code Proxy} instance. The string
      * includes the two parts {@code type.toString()} and {@code
      * address.toString()} if {@code address} is not {@code null}.
-     * 
+     *
      * @return the representing string of this proxy.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -131,7 +123,6 @@ public class Proxy {
      * @return {@code true} if the given object represents the same {@code
      *         Proxy} as this instance, {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public final boolean equals(Object obj) {
@@ -150,7 +141,6 @@ public class Proxy {
      * Gets the hashcode for this {@code Proxy} instance.
      * 
      * @return the hashcode value for this Proxy instance.
-     * @since Android 1.0
      */
     @Override
     public final int hashCode() {
@@ -165,8 +155,6 @@ public class Proxy {
     /**
      * {@code Enum} class for the proxy type. Possible options are {@code
      * DIRECT}, {@code HTTP} and {@code SOCKS}.
-     * 
-     * @since Android 1.0
      */
     public enum Type {
         /**

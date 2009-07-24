@@ -1069,8 +1069,6 @@ public class URLConnectionTest extends TestCase {
         method = "getHeaderFieldDate",
         args = {java.lang.String.class, long.class}
     )
-    @KnownFailure("getHeaderFieldDate on Content-Length throws an exception."
-            + " The RI just returns the default value")
     public void test_getHeaderFieldDateLjava_lang_StringJ() {
         Support_TestWebData params = Support_TestWebData.testParams[0];
 
@@ -1612,7 +1610,6 @@ public class URLConnectionTest extends TestCase {
         method = "guessContentTypeFromStream",
         args = {java.io.InputStream.class}
     )
-    @KnownFailure("'<?xml' recognised as text/html instead of application/xml")
     public void test_guessContentTypeFromStreamLjava_io_InputStream()
             throws IOException {
         assertContentTypeEquals("ASCII", "text/html", "<html>");

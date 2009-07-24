@@ -27,8 +27,6 @@ package java.io;
  * 
  * @see BufferedReader
  * @see FileWriter
- *
- * @since Android 1.0
  */
 public class FileReader extends InputStreamReader {
 
@@ -39,7 +37,6 @@ public class FileReader extends InputStreamReader {
      *            a File to be opened for reading characters from.
      * @throws FileNotFoundException
      *             if {@code file} does not exist.
-     * @since Android 1.0             
      */
     public FileReader(File file) throws FileNotFoundException {
         super(new FileInputStream(file));
@@ -52,7 +49,6 @@ public class FileReader extends InputStreamReader {
      * 
      * @param fd
      *            the previously opened file descriptor.
-     * @since Android 1.0
      */
     public FileReader(FileDescriptor fd) {
         super(new FileInputStream(fd));
@@ -65,7 +61,6 @@ public class FileReader extends InputStreamReader {
      *            an absolute or relative path specifying the file to open.
      * @throws FileNotFoundException
      *             if there is no file named {@code filename}.
-     * @since Android 1.0
      */
     public FileReader(String filename) throws FileNotFoundException {
         super(new FileInputStream(filename));

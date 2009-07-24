@@ -20,19 +20,17 @@ package java.net;
 import java.io.IOException;
 import java.nio.channels.DatagramChannel;
 
-import org.apache.harmony.luni.net.SocketImplProvider;
+import org.apache.harmony.luni.net.PlainDatagramSocketImpl;
 import org.apache.harmony.luni.platform.Platform;
-
 import org.apache.harmony.luni.util.Msg;
 
 /**
  * This class implements a UDP socket for sending and receiving {@code
  * DatagramPacket}. A {@code DatagramSocket} object can be used for both
  * endpoints of a connection for a packet delivery service.
- * 
+ *
  * @see DatagramPacket
  * @see DatagramSocketImplFactory
- * @since Android 1.0
  */
 public class DatagramSocket {
 
@@ -56,16 +54,15 @@ public class DatagramSocket {
     static {
         Platform.getNetworkSystem().oneTimeInitialization(true);
     }
-    
+
     private Object lock = new Lock();
 
     /**
      * Constructs a UDP datagram socket which is bound to any available port on
      * the localhost.
-     * 
+     *
      * @throws SocketException
      *             if an error occurs while creating or binding the socket.
-     * @since Android 1.0
      */
     public DatagramSocket() throws SocketException {
         this(0);
@@ -75,12 +72,11 @@ public class DatagramSocket {
      * Constructs a UDP datagram socket which is bound to the specific port
      * {@code aPort} on the localhost. Valid values for {@code aPort} are
      * between 0 and 65535 inclusive.
-     * 
+     *
      * @param aPort
      *            the port to bind on the localhost.
      * @throws SocketException
      *             if an error occurs while creating or binding the socket.
-     * @since Android 1.0
      */
     public DatagramSocket(int aPort) throws SocketException {
         super();
@@ -92,14 +88,13 @@ public class DatagramSocket {
      * Constructs a UDP datagram socket which is bound to the specific local
      * address {@code addr} on port {@code aPort}. Valid values for {@code
      * aPort} are between 0 and 65535 inclusive.
-     * 
+     *
      * @param aPort
      *            the port to bind on the localhost.
      * @param addr
      *            the address to bind on the localhost.
      * @throws SocketException
      *             if an error occurs while creating or binding the socket.
-     * @since Android 1.0
      */
     public DatagramSocket(int aPort, InetAddress addr) throws SocketException {
         super();
@@ -111,10 +106,9 @@ public class DatagramSocket {
      * Sends prior to attempting to bind the socket, checks whether the port is
      * within the valid port range and verifies with the security manager that
      * the port may be bound by the current context.
-     * 
+     *
      * @param aPort
      *            the port on the localhost that is to be bound.
-     * @since Android 1.0
      */
     void checkListen(int aPort) {
         if (aPort < 0 || aPort > 65535) {
@@ -128,8 +122,6 @@ public class DatagramSocket {
 
     /**
      * Closes this UDP datagram socket and all possibly associated channels.
-     * 
-     * @since Android 1.0
      */
     // In the documentation jdk1.1.7a/guide/net/miscNet.html, this method is
     // noted as not being synchronized.
@@ -144,12 +136,11 @@ public class DatagramSocket {
      * validated, thereafter the only validation on {@code send()} and {@code
      * receive()} is to check whether the packet address/port matches the
      * connected target.
-     * 
+     *
      * @param anAddress
      *            the target address of this socket.
      * @param aPort
      *            the target port of this socket.
-     * @since Android 1.0
      */
     public void connect(InetAddress anAddress, int aPort) {
         if (anAddress == null || aPort < 0 || aPort > 65535) {
@@ -189,8 +180,6 @@ public class DatagramSocket {
     /**
      * Disconnects this UDP datagram socket from the remote host. This method
      * called on an unconnected socket does nothing.
-     * 
-     * @since Android 1.0
      */
     public void disconnect() {
         if (isClosed() || !isConnected()) {
@@ -205,7 +194,7 @@ public class DatagramSocket {
     synchronized void createSocket(int aPort, InetAddress addr)
             throws SocketException {
         impl = factory != null ? factory.createDatagramSocketImpl()
-                : SocketImplProvider.getDatagramSocketImpl();
+                : new PlainDatagramSocketImpl();
         impl.create();
         try {
             impl.bind(aPort, addr);
@@ -219,10 +208,9 @@ public class DatagramSocket {
     /**
      * Gets the {@code InetAddress} instance representing the remote address to
      * which this UDP datagram socket is connected.
-     * 
+     *
      * @return the remote address this socket is connected to or {@code null} if
      *         this socket is not connected.
-     * @since Android 1.0
      */
     public InetAddress getInetAddress() {
         return address;
@@ -231,10 +219,9 @@ public class DatagramSocket {
     /**
      * Gets the {@code InetAddress} instance representing the bound local
      * address of this UDP datagram socket.
-     * 
+     *
      * @return the local address to which this socket is bound to or {@code
      *         null} if this socket is closed.
-     * @since Android 1.0
      */
     public InetAddress getLocalAddress() {
         if (isClosed()) {
@@ -257,10 +244,9 @@ public class DatagramSocket {
 
     /**
      * Gets the local port which this socket is bound to.
-     * 
+     *
      * @return the local port of this socket or {@code -1} if this socket is
      *         closed and {@code 0} if it is unbound.
-     * @since Android 1.0
      */
     public int getLocalPort() {
         if (isClosed()) {
@@ -274,10 +260,9 @@ public class DatagramSocket {
 
     /**
      * Gets the remote port which this socket is connected to.
-     * 
+     *
      * @return the remote port of this socket. The return value {@code -1}
      *         indicates that this socket is not connected.
-     * @since Android 1.0
      */
     public int getPort() {
         return port;
@@ -285,9 +270,8 @@ public class DatagramSocket {
 
     /**
      * Indicates whether this socket is multicast or not.
-     * 
+     *
      * @return the return value is always {@code false}.
-     * @since Android 1.0
      */
     boolean isMulticastSocket() {
         return false;
@@ -295,11 +279,10 @@ public class DatagramSocket {
 
     /**
      * Gets the socket receive buffer size. ( {@code SocketOptions.SO_RCVBUF} )
-     * 
+     *
      * @return the input buffer size.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while getting the option value.
-     * @since Android 1.0
      */
     public synchronized int getReceiveBufferSize() throws SocketException {
         checkClosedAndBind(false);
@@ -308,11 +291,10 @@ public class DatagramSocket {
 
     /**
      * Gets the socket send buffer size. ( {@code SocketOptions.SO_SNDBUF} )
-     * 
+     *
      * @return the output buffer size.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while getting the option value.
-     * @since Android 1.0
      */
     public synchronized int getSendBufferSize() throws SocketException {
         checkClosedAndBind(false);
@@ -323,11 +305,10 @@ public class DatagramSocket {
      * Gets the socket receive timeout in milliseconds. The return value {@code
      * 0} implies the timeout is disabled/infinitive. ( {@code
      * SocketOptions.SO_TIMEOUT} )
-     * 
+     *
      * @return the socket receive timeout.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while getting the option value.
-     * @since Android 1.0
      */
     public synchronized int getSoTimeout() throws SocketException {
         checkClosedAndBind(false);
@@ -342,42 +323,49 @@ public class DatagramSocket {
      * has expired. If a security manager exists, its {@code checkAccept} method
      * determines whether or not a packet is discarded. Any packets from
      * unacceptable origins are silently discarded.
-     * 
+     *
      * @param pack
      *            the {@code DatagramPacket} to store the received data.
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs while receiving the packet.
-     * @since Android 1.0
      */
     public synchronized void receive(DatagramPacket pack) throws IOException {
         checkClosedAndBind(true);
 
-        boolean secure = true;
-
-        InetAddress senderAddr = null;
-
-        int senderPort = 0;
+        InetAddress senderAddr;
+        int senderPort;
         DatagramPacket tempPack = new DatagramPacket(new byte[1], 1);
+
+        // means that we have received the packet into the temporary buffer
         boolean copy = false;
 
         SecurityManager security = System.getSecurityManager();
-        if (address != null || security != null) { // The socket is connected
+
+        if (address != null || security != null) {
+            // The socket is connected or we need to check security permissions
+
             // Check pack before peeking
             if (pack == null) {
                 throw new NullPointerException();
             }
-            secure = false;
-            while (!secure) {
+
+            // iterate over incoming packets
+            while (true) {
                 copy = false;
+
+                // let's get sender's address and port
                 try {
                     senderPort = impl.peekData(tempPack);
                     senderAddr = tempPack.getAddress();
                 } catch (SocketException e) {
                     if (e.getMessage().equals(
                             "The socket does not support the operation")) { //$NON-NLS-1$
-                        tempPack = new DatagramPacket(new byte[pack.length],
-                                pack.getLength());
+                        // receive packet to temporary buffer
+                        tempPack = new DatagramPacket(new byte[pack.capacity],
+                                pack.capacity);
                         impl.receive(tempPack);
+                        // tempPack's length field is now updated, capacity is unchanged
+                        // let's extract address & port
                         senderAddr = tempPack.getAddress();
                         senderPort = tempPack.getPort();
                         copy = true;
@@ -385,46 +373,45 @@ public class DatagramSocket {
                         throw e;
                     }
                 }
+
                 if (address == null) {
+                    // if we are not connected let's check if we are allowed to
+                    // receive packets from sender's address and port
                     try {
                         security.checkAccept(senderAddr.getHostName(),
                                 senderPort);
-                        if (!copy) {
-                            secure = true;
-                        }
+                        // address & port are valid
                         break;
                     } catch (SecurityException e) {
                         if (!copy) {
-                            if (tempPack == null) {
-                                tempPack = new DatagramPacket(
-                                        new byte[pack.length], pack.length);
-                            }
+                            // drop this packet and continue
                             impl.receive(tempPack);
                         }
                     }
                 } else if (port == senderPort && address.equals(senderAddr)) {
-                    if (!copy) {
-                        secure = true;
-                    }
+                    // we are connected and the packet came
+                    // from the address & port we are connected to
                     break;
                 } else if (!copy) {
-                    if (tempPack == null) {
-                        tempPack = new DatagramPacket(new byte[pack.length],
-                                pack.length);
-                    }
+                    // drop packet and continue
                     impl.receive(tempPack);
                 }
             }
         }
+
         if (copy) {
             System.arraycopy(tempPack.getData(), 0, pack.getData(), pack
                     .getOffset(), tempPack.getLength());
-            pack.setLength(tempPack.getLength());
+            // we shouldn't update the pack's capacity field in order to be
+            // compatible with RI
+            pack.length = tempPack.length;
             pack.setAddress(tempPack.getAddress());
             pack.setPort(tempPack.getPort());
-        }
-        if (secure) {
+        } else {
+            pack.setLength(pack.capacity);
             impl.receive(pack);
+            // pack's length field is now updated by native code call;
+            // pack's capacity field is unchanged
         }
     }
 
@@ -433,12 +420,11 @@ public class DatagramSocket {
      * policy before it may be sent. If a security manager is installed, this
      * method checks whether it is allowed to send this packet to the specified
      * address.
-     * 
+     *
      * @param pack
      *            the {@code DatagramPacket} which has to be sent.
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs while sending the packet.
-     * @since Android 1.0
      */
     public void send(DatagramPacket pack) throws IOException {
         checkClosedAndBind(true);
@@ -480,12 +466,11 @@ public class DatagramSocket {
      * maximum packet size is that can be sent over this socket. It depends on
      * the network implementation what will happen if the packet is bigger than
      * the buffer size. ( {@code SocketOptions.SO_SNDBUF} )
-     * 
+     *
      * @param size
      *            the buffer size in bytes. The size must be at least one byte.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while setting the option.
-     * @since Android 1.0
      */
     public synchronized void setSendBufferSize(int size) throws SocketException {
         if (size < 1) {
@@ -500,12 +485,11 @@ public class DatagramSocket {
      * the maximum packet size is that can be received over this socket. It
      * depends on the network implementation what will happen if the packet is
      * bigger than the buffer size. ( {@code SocketOptions.SO_RCVBUF} )
-     * 
+     *
      * @param size
      *            the buffer size in bytes. The size must be at least one byte.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while setting the option.
-     * @since Android 1.0
      */
     public synchronized void setReceiveBufferSize(int size)
             throws SocketException {
@@ -523,12 +507,11 @@ public class DatagramSocket {
      * {@code 0} (default) is used to set an infinite timeout. To have effect
      * this option must be set before the blocking method was called. ( {@code
      * SocketOptions.SO_TIMEOUT} )
-     * 
+     *
      * @param timeout
      *            the timeout period in milliseconds or {@code 0} for infinite.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while setting the option.
-     * @since Android 1.0
      */
     public synchronized void setSoTimeout(int timeout) throws SocketException {
         if (timeout < 0) {
@@ -545,13 +528,12 @@ public class DatagramSocket {
      * method {@code checkSetFactory()} is called to check if the operation is
      * allowed. A {@code SecurityException} is thrown if the operation is not
      * allowed.
-     * 
+     *
      * @param fac
      *            the socket factory to use.
-     * @exception IOException
+     * @throws IOException
      *                if the factory has already been set.
      * @see DatagramSocketImplFactory
-     * @since Android 1.0
      */
     public static synchronized void setDatagramSocketImplFactory(
             DatagramSocketImplFactory fac) throws IOException {
@@ -569,10 +551,9 @@ public class DatagramSocket {
      * Constructs a new {@code DatagramSocket} using the specific datagram
      * socket implementation {@code socketImpl}. The created {@code
      * DatagramSocket} will not be bound.
-     * 
+     *
      * @param socketImpl
      *            the DatagramSocketImpl to use.
-     * @since Android 1.0
      */
     protected DatagramSocket(DatagramSocketImpl socketImpl) {
         if (socketImpl == null) {
@@ -585,12 +566,13 @@ public class DatagramSocket {
      * Constructs a new {@code DatagramSocket} bound to the host/port specified
      * by the {@code SocketAddress} {@code localAddr} or an unbound {@code
      * DatagramSocket} if the {@code SocketAddress} is {@code null}.
-     * 
+     *
      * @param localAddr
      *            the local machine address and port to bind to.
+     * @throws IllegalArgumentException
+     *             if the SocketAddress is not supported
      * @throws SocketException
      *             if a problem occurs creating or binding the socket.
-     * @since Android 1.0
      */
     public DatagramSocket(SocketAddress localAddr) throws SocketException {
         if (localAddr != null) {
@@ -601,7 +583,7 @@ public class DatagramSocket {
             checkListen(((InetSocketAddress) localAddr).getPort());
         }
         impl = factory != null ? factory.createDatagramSocketImpl()
-                : SocketImplProvider.getDatagramSocketImpl();
+                : new PlainDatagramSocketImpl();
         impl.create();
         if (localAddr != null) {
             try {
@@ -630,13 +612,14 @@ public class DatagramSocket {
      * Binds this socket to the local address and port specified by {@code
      * localAddr}. If this value is {@code null} any free port on a valid local
      * address is used.
-     * 
+     *
      * @param localAddr
      *            the local machine address and port to bind on.
+     * @throws IllegalArgumentException
+     *             if the SocketAddress is not supported
      * @throws SocketException
      *             if the socket is already bound or a problem occurs during
      *             binding.
-     * @since Android 1.0
      */
     public void bind(SocketAddress localAddr) throws SocketException {
         checkClosedAndBind(false);
@@ -665,12 +648,11 @@ public class DatagramSocket {
      * {@code remoteAddr}. The host and port are validated, thereafter the only
      * validation on {@code send()} and {@code receive()} is that the packet
      * address/port matches the connected target.
-     * 
+     *
      * @param remoteAddr
      *            the address and port of the target host.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs during connecting.
-     * @since Android 1.0
      */
     public void connect(SocketAddress remoteAddr) throws SocketException {
         if (remoteAddr == null) {
@@ -720,9 +702,8 @@ public class DatagramSocket {
 
     /**
      * Determines whether the socket is bound to an address or not.
-     * 
+     *
      * @return {@code true} if the socket is bound, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isBound() {
         return isBound;
@@ -730,9 +711,8 @@ public class DatagramSocket {
 
     /**
      * Determines whether the socket is connected to a target host.
-     * 
+     *
      * @return {@code true} if the socket is connected, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isConnected() {
         return isConnected;
@@ -741,9 +721,8 @@ public class DatagramSocket {
     /**
      * Gets the address and port of the connected remote host. If this socket is
      * not connected yet, {@code null} is returned.
-     * 
+     *
      * @return the remote socket address.
-     * @since Android 1.0
      */
     public SocketAddress getRemoteSocketAddress() {
         if (!isConnected()) {
@@ -755,9 +734,8 @@ public class DatagramSocket {
     /**
      * Gets the bound local address and port of this socket. If the socket is
      * unbound, {@code null} is returned.
-     * 
+     *
      * @return the local socket address.
-     * @since Android 1.0
      */
     public SocketAddress getLocalSocketAddress() {
         if (!isBound()) {
@@ -773,13 +751,11 @@ public class DatagramSocket {
      * <p>
      * There is an undefined behavior if this option is set after the socket is
      * already bound.
-     * </p>
-     * 
+     *
      * @param reuse
      *            the socket option value to enable or disable this option.
      * @throws SocketException
      *             if the socket is closed or the option could not be set.
-     * @since Android 1.0
      */
     public void setReuseAddress(boolean reuse) throws SocketException {
         checkClosedAndBind(false);
@@ -789,11 +765,10 @@ public class DatagramSocket {
 
     /**
      * Gets the state of the socket option {@code SocketOptions.SO_REUSEADDR}.
-     * 
+     *
      * @return {@code true} if the option is enabled, {@code false} otherwise.
      * @throws SocketException
      *             if the socket is closed or the option is invalid.
-     * @since Android 1.0
      */
     public boolean getReuseAddress() throws SocketException {
         checkClosedAndBind(false);
@@ -804,12 +779,11 @@ public class DatagramSocket {
     /**
      * Sets the socket option {@code SocketOptions.SO_BROADCAST}. This option
      * must be enabled to send broadcast messages.
-     * 
+     *
      * @param broadcast
      *            the socket option value to enable or disable this option.
      * @throws SocketException
      *             if the socket is closed or the option could not be set.
-     * @since Android 1.0
      */
     public void setBroadcast(boolean broadcast) throws SocketException {
         checkClosedAndBind(false);
@@ -819,11 +793,10 @@ public class DatagramSocket {
 
     /**
      * Gets the state of the socket option {@code SocketOptions.SO_BROADCAST}.
-     * 
+     *
      * @return {@code true} if the option is enabled, {@code false} otherwise.
      * @throws SocketException
      *             if the socket is closed or the option is invalid.
-     * @since Android 1.0
      */
     public boolean getBroadcast() throws SocketException {
         checkClosedAndBind(false);
@@ -839,13 +812,11 @@ public class DatagramSocket {
      * <p>
      * Values between {@code 0} and {@code 255} inclusive are valid for this
      * option.
-     * </p>
-     * 
+     *
      * @param value
      *            the socket option value to be set as type-of-service.
      * @throws SocketException
      *             if the socket is closed or the option could not be set.
-     * @since Android 1.0
      */
     public void setTrafficClass(int value) throws SocketException {
         checkClosedAndBind(false);
@@ -858,11 +829,10 @@ public class DatagramSocket {
     /**
      * Gets the value of the type-of-service socket option {@code
      * SocketOptions.IP_TOS}.
-     * 
+     *
      * @return the type-of-service socket option value.
      * @throws SocketException
      *             if the socket is closed or the option is invalid.
-     * @since Android 1.0
      */
     public int getTrafficClass() throws SocketException {
         checkClosedAndBind(false);
@@ -871,9 +841,8 @@ public class DatagramSocket {
 
     /**
      * Gets the state of this socket.
-     * 
+     *
      * @return {@code true} if the socket is closed, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isClosed() {
         return isClosed;
@@ -882,10 +851,9 @@ public class DatagramSocket {
     /**
      * Gets the related DatagramChannel of this socket. This implementation
      * returns always {@code null}.
-     * 
+     *
      * @return the related DatagramChannel or {@code null} if this socket was
      *         not created by a {@code DatagramChannel} object.
-     * @since Android 1.0
      */
     public DatagramChannel getChannel() {
         return null;

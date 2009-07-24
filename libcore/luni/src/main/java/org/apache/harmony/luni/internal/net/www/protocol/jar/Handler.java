@@ -36,8 +36,9 @@ public class Handler extends URLStreamHandler {
      * @param u
      *            java.net.URL The URL to which the connection is pointing to
      * 
-     * @thows IOException thrown if an IO error occurs when this method tries to
-     *        establish connection.
+     * @throws IOException
+     *             thrown if an IO error occurs when this method tries to
+     *             establish connection.
      */
     @Override
     protected URLConnection openConnection(URL u) throws IOException {
@@ -75,7 +76,8 @@ public class Handler extends URLStreamHandler {
             file = file.substring(0, file.indexOf('!') + 1) + spec;
         } else {
             int idx = file.indexOf('!');
-            String tmpFile = file.substring(idx + 1, file.lastIndexOf('/') + 1) + spec;
+            String tmpFile = file.substring(idx + 1, file.lastIndexOf('/') + 1)
+                    + spec;
             tmpFile = URLUtil.canonicalizePath(tmpFile);
             file = file.substring(0, idx + 1) + tmpFile;
         }

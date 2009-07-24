@@ -22,8 +22,6 @@ import java.io.IOException;
 /**
  * This {@code SocketException} may be thrown during socket creation or setting
  * options, and is the superclass of all other socket related exceptions.
- * 
- * @since Android 1.0
  */
 public class SocketException extends IOException {
 
@@ -32,8 +30,6 @@ public class SocketException extends IOException {
     /**
      * Constructs a new {@code SocketException} instance with its walkback
      * filled in.
-     * 
-     * @since Android 1.0
      */
     public SocketException() {
         super();
@@ -45,7 +41,6 @@ public class SocketException extends IOException {
      * 
      * @param detailMessage
      *            the detail message of this exception.
-     * @since Android 1.0
      */
     public SocketException(String detailMessage) {
         super(detailMessage);

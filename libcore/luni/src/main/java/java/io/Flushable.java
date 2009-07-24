@@ -20,17 +20,14 @@ package java.io;
  * Defines an interface for classes that can (or need to) be flushed, typically
  * before some output processing is considered to be finished and the object
  * gets closed.
- * 
- * @since Android 1.0
  */
 public interface Flushable {
     /**
      * Flushes the object by writing out any buffered data to the underlying
      * output.
-     * 
+     *
      * @throws IOException
      *             if there are any issues writing the data.
-     * @since Android 1.0
      */
     void flush() throws IOException;
 }

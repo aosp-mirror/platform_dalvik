@@ -14,12 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
-// BEGIN android-note
-// This class was copied from a newer version of harmony
-// to improve reusability of URLConnections
-// END android-note
-
 package org.apache.harmony.luni.internal.net.www.protocol.http;
 
 import java.io.IOException;
@@ -42,6 +36,7 @@ import org.apache.harmony.luni.internal.nls.Messages;
  * various utility methods to access that connection.
  */
 public class HttpConnection {
+
     private boolean usingSecureSocket = false;
 
     private Socket socket;
@@ -233,7 +228,7 @@ public class HttpConnection {
      * Returns whether this connection is eligible to be recycled. This
      * is like {@link #isStale} except that it doesn't try to actually
      * perform any I/O.
-     * 
+     *
      * @return <code>true</code> if the connection is eligible to be
      * recycled
      */
@@ -272,4 +267,5 @@ public class HttpConnection {
             return null;
         }
     }
+
 }

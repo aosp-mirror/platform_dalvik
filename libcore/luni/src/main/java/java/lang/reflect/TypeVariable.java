@@ -17,15 +17,14 @@
 package java.lang.reflect;
 
 /**
- * This interface represents a type variables such as {@code 'T'} in {@code 
- * 'public interface Comparable&lt;T&gt;'}, the bounded {@code 'T'} in {@code 
+ * This interface represents a type variables such as {@code 'T'} in {@code
+ * 'public interface Comparable&lt;T&gt;'}, the bounded {@code 'T'} in {@code
  * 'public interface A&lt;T extends Number&gt;'} or the multiple bounded {@code
  * 'T'} in {@code 'public interface B&lt;T extends Number & Cloneable&gt;'}.
- * 
+ *
  * @param <D>
  *            the generic declaration that declares this type variable
- * 
- * @since Android 1.0
+ * @since 1.5
  */
 public interface TypeVariable<D extends GenericDeclaration> extends Type {
 
@@ -33,15 +32,13 @@ public interface TypeVariable<D extends GenericDeclaration> extends Type {
      * Returns the upper bounds of this type variable. {@code Object} is the
      * implicit upper bound if no other bounds are declared.
      *
-     * @return the upper bounds of this type variable 
-     * 
+     * @return the upper bounds of this type variable
+     *
      * @throws TypeNotPresentException
      *             if any of the bounds points to a missing type
      * @throws MalformedParameterizedTypeException
      *             if any of the bounds points to a type that cannot be
      *             instantiated for some reason
-     * 
-     * @since Android 1.0
      */
     Type[] getBounds();
 
@@ -49,8 +46,6 @@ public interface TypeVariable<D extends GenericDeclaration> extends Type {
      * Returns the language construct that declares this type variable.
      *
      * @return the generic declaration
-     * 
-     * @since Android 1.0
      */
     D getGenericDeclaration();
 
@@ -59,8 +54,6 @@ public interface TypeVariable<D extends GenericDeclaration> extends Type {
      * code.
      *
      * @return the name of this type variable
-     * 
-     * @since Android 1.0
      */
     String getName();
 }

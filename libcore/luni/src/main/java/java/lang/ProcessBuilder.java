@@ -24,8 +24,8 @@ import java.util.Map;
 
 /**
  * Creates operating system processes.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public final class ProcessBuilder {
 
@@ -40,10 +40,9 @@ public final class ProcessBuilder {
     /**
      * Constructs a new {@code ProcessBuilder} instance with the specified
      * operating system program and its arguments.
-     * 
+     *
      * @param command
      *            the requested operating system program and its arguments.
-     * @since Android 1.0
      */
     public ProcessBuilder(String... command) {
         this(toList(command));
@@ -54,12 +53,11 @@ public final class ProcessBuilder {
      * operating system program and its arguments. Note that the list passed to
      * this constructor is not copied, so any subsequent updates to it are
      * reflected in this instance's state.
-     * 
+     *
      * @param command
      *            the requested operating system program and its arguments.
      * @throws NullPointerException
      *             if {@code command} is {@code null}.
-     * @since Android 1.0
      */
     public ProcessBuilder(List<String> command) {
         super();
@@ -76,9 +74,8 @@ public final class ProcessBuilder {
      * Returns this process builder's current program and arguments. Note that
      * the returned list is not a copy and modifications to it will change the
      * state of this instance.
-     * 
+     *
      * @return this process builder's program and arguments.
-     * @since Android 1.0
      */
     public List<String> command() {
         return command;
@@ -86,11 +83,10 @@ public final class ProcessBuilder {
 
     /**
      * Changes the program and arguments of this process builder.
-     * 
+     *
      * @param command
      *            the new operating system program and its arguments.
      * @return this process builder instance.
-     * @since Android 1.0
      */
     public ProcessBuilder command(String... command) {
         return command(toList(command));
@@ -100,13 +96,12 @@ public final class ProcessBuilder {
      * Changes the program and arguments of this process builder. Note that the
      * list passed to this method is not copied, so any subsequent updates to it
      * are reflected in this instance's state.
-     * 
+     *
      * @param command
      *            the new operating system program and its arguments.
      * @return this process builder instance.
      * @throws NullPointerException
      *             if {@code command} is {@code null}.
-     * @since Android 1.0
      */
     public ProcessBuilder command(List<String> command) {
         if (command == null) {
@@ -120,9 +115,8 @@ public final class ProcessBuilder {
      * Returns the working directory of this process builder. If {@code null} is
      * returned, then the working directory of the Java process is used when a
      * process is started.
-     * 
+     *
      * @return the current working directory, may be {@code null}.
-     * @since Android 1.0
      */
     public File directory() {
         return directory;
@@ -132,11 +126,10 @@ public final class ProcessBuilder {
      * Changes the working directory of this process builder. If the specified
      * directory is {@code null}, then the working directory of the Java
      * process is used when a process is started.
-     * 
+     *
      * @param directory
      *            the new working directory for this process builder.
      * @return this process builder instance.
-     * @since Android 1.0
      */
     public ProcessBuilder directory(File directory) {
         this.directory = directory;
@@ -149,9 +142,8 @@ public final class ProcessBuilder {
      * the environment, as returned by {@link System#getenv()}. Note that the
      * map returned by this method is not a copy and any changes made to it are
      * reflected in this instance's state.
-     * 
+     *
      * @return the map containing this process builder's environment variables.
-     * @since Android 1.0
      */
     public Map<String, String> environment() {
         return environment;
@@ -162,10 +154,9 @@ public final class ProcessBuilder {
      * output. If redirected, the {@link Process#getErrorStream()} will always
      * return end of stream and standard error is written to
      * {@link Process#getInputStream()}.
-     * 
+     *
      * @return {@code true} if the standard error is redirected; {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean redirectErrorStream() {
         return redirectErrorStream;
@@ -174,12 +165,11 @@ public final class ProcessBuilder {
     /**
      * Changes the state of whether or not standard error is redirected to
      * standard output.
-     * 
+     *
      * @param redirectErrorStream
      *            {@code true} to redirect standard error, {@code false}
      *            otherwise.
      * @return this process builder instance.
-     * @since Android 1.0
      */
     public ProcessBuilder redirectErrorStream(boolean redirectErrorStream) {
         this.redirectErrorStream = redirectErrorStream;
@@ -188,7 +178,7 @@ public final class ProcessBuilder {
 
     /**
      * Starts a new process based on the current state of this process builder.
-     * 
+     *
      * @return the new {@code Process} instance.
      * @throws NullPointerException
      *             if any of the elements of {@link #command()} is {@code null}.
@@ -199,7 +189,6 @@ public final class ProcessBuilder {
      *             process creation.
      * @throws IOException
      *             if an I/O error happens.
-     * @since Android 1.0
      */
     public Process start() throws IOException {
         if (command.isEmpty()) {

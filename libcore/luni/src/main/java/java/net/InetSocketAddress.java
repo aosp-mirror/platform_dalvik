@@ -23,8 +23,6 @@ import java.io.ObjectInputStream;
 /**
  * This class represents a socket endpoint described by a IP address and a port
  * number. It is a concrete implementation of {@code SocketAddress} for IP.
- * 
- * @since Android 1.0
  */
 public class InetSocketAddress extends SocketAddress {
 
@@ -40,10 +38,9 @@ public class InetSocketAddress extends SocketAddress {
      * Creates a socket endpoint with the given port number {@code port} and the
      * wildcard address {@code InetAddress.ANY}. The range for valid port numbers
      * is between 0 and 65535 inclusive.
-     * 
+     *
      * @param port
      *            the specified port number to which this socket is bound.
-     * @since Android 1.0
      */
     public InetSocketAddress(int port) {
         this((InetAddress) null, port);
@@ -54,12 +51,11 @@ public class InetSocketAddress extends SocketAddress {
      * {@code address}. The range for valid port numbers is between 0 and 65535
      * inclusive. If {@code address} is {@code null} this socket is bound to the
      * wildcard address {@code InetAddress.ANY}.
-     * 
+     *
      * @param port
      *            the specified port number to which this socket is bound.
      * @param address
      *            the specified address to which this socket is bound.
-     * @since Android 1.0
      */
     public InetSocketAddress(InetAddress address, int port) {
         if (port < 0 || port > 65535) {
@@ -79,7 +75,7 @@ public class InetSocketAddress extends SocketAddress {
      * hostname {@code host}. The hostname is tried to be resolved and cannot be
      * {@code null}. The range for valid port numbers is between 0 and 65535
      * inclusive.
-     * 
+     *
      * @param port
      *            the specified port number to which this socket is bound.
      * @param host
@@ -88,14 +84,13 @@ public class InetSocketAddress extends SocketAddress {
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkConnect()} method does not allow the resolving of the
      *             host name.
-     * @since Android 1.0
      */
     public InetSocketAddress(String host, int port) {
         this(host, port, true);
     }
 
     /*
-     * Internal contructor for InetSocketAddress(String, int) and
+     * Internal constructor for InetSocketAddress(String, int) and
      * createUnresolved(String, int);
      */
     InetSocketAddress(String host, int port, boolean needResolved) {
@@ -126,7 +121,7 @@ public class InetSocketAddress extends SocketAddress {
      * Creates an {@code InetSocketAddress} without trying to resolve the
      * hostname into an {@code InetAddress}. The address field is marked as
      * unresolved.
-     * 
+     *
      * @param host
      *            the specified hostname to which this socket is bound.
      * @param port
@@ -135,7 +130,6 @@ public class InetSocketAddress extends SocketAddress {
      * @throws IllegalArgumentException
      *             if the hostname {@code host} is {@code null} or the port is
      *             not in the range between 0 and 65535.
-     * @since Android 1.0
      */
     public static InetSocketAddress createUnresolved(String host, int port) {
         return new InetSocketAddress(host, port, false);
@@ -143,9 +137,8 @@ public class InetSocketAddress extends SocketAddress {
 
     /**
      * Gets the port number of this socket.
-     * 
+     *
      * @return the socket endpoint port number.
-     * @since Android 1.0
      */
     public final int getPort() {
         return port;
@@ -153,9 +146,8 @@ public class InetSocketAddress extends SocketAddress {
 
     /**
      * Gets the address of this socket.
-     * 
+     *
      * @return the socket endpoint address.
-     * @since Android 1.0
      */
     public final InetAddress getAddress() {
         return addr;
@@ -163,9 +155,8 @@ public class InetSocketAddress extends SocketAddress {
 
     /**
      * Gets the hostname of this socket.
-     * 
+     *
      * @return the socket endpoint hostname.
-     * @since Android 1.0
      */
     public final String getHostName() {
         return (null != addr) ? addr.getHostName() : hostname;
@@ -173,10 +164,9 @@ public class InetSocketAddress extends SocketAddress {
 
     /**
      * Returns whether this socket address is unresolved or not.
-     * 
+     *
      * @return {@code true} if this socket address is unresolved, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public final boolean isUnresolved() {
         return addr == null;
@@ -185,9 +175,8 @@ public class InetSocketAddress extends SocketAddress {
     /**
      * Gets a string representation of this socket included the address and the
      * port number.
-     * 
+     *
      * @return the address and port number as a textual representation.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -204,12 +193,11 @@ public class InetSocketAddress extends SocketAddress {
      * Compares two socket endpoints and returns true if they are equal. Two
      * socket endpoints are equal if the IP address or the hostname of both are
      * equal and they are bound to the same port.
-     * 
+     *
      * @param socketAddr
      *            the object to be tested for equality.
      * @return {@code true} if this socket and the given socket object {@code
      *         socketAddr} are equal, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public final boolean equals(Object socketAddr) {
@@ -243,9 +231,8 @@ public class InetSocketAddress extends SocketAddress {
 
     /**
      * Gets the hashcode of this socket.
-     * 
+     *
      * @return the appropriate hashcode.
-     * @since Android 1.0
      */
     @Override
     public final int hashCode() {

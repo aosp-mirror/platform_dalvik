@@ -26,11 +26,8 @@ import org.apache.harmony.luni.util.URLUtil;
  * The abstract class {@code URLStreamHandler} is the base for all classes which
  * can handle the communication with a URL object over a particular protocol
  * type.
- * 
- * @since Android 1.0
  */
 public abstract class URLStreamHandler {
-
     /**
      * Establishes a new connection to the resource specified by the URL {@code
      * u}. Since different protocols also have unique ways of connecting, it
@@ -41,7 +38,6 @@ public abstract class URLStreamHandler {
      * @return the opened URLConnection to the specified resource.
      * @throws IOException
      *             if an I/O error occurs during opening the connection.
-     * @since Android 1.0
      */
     protected abstract URLConnection openConnection(URL u) throws IOException;
 
@@ -62,7 +58,6 @@ public abstract class URLStreamHandler {
      *             wrong.
      * @throws UnsupportedOperationException
      *             if the protocol handler doesn't support this method.
-     * @since Android 1.0
      */
     protected URLConnection openConnection(URL u, Proxy proxy)
             throws IOException {
@@ -74,7 +69,7 @@ public abstract class URLStreamHandler {
      * generally have the following format:
      * <p>
      * http://www.company.com/java/file1.java#reference
-     * </p>
+     * <p>
      * The string is parsed in HTTP format. If the protocol has a different URL
      * format this method must be overridden.
      * 
@@ -88,7 +83,6 @@ public abstract class URLStreamHandler {
      *            the string position to stop parsing.
      * @see #toExternalForm
      * @see URL
-     * @since Android 1.0
      */
     protected void parseURL(URL u, String str, int start, int end) {
         // For compatibility, refer to Harmony-2941
@@ -259,7 +253,6 @@ public abstract class URLStreamHandler {
      *            the reference.
      * @deprecated use setURL(URL, String String, int, String, String, String,
      *             String, String) instead.
-     * @since Android 1.0
      */
     @Deprecated
     protected void setURL(URL u, String protocol, String host, int port,
@@ -292,7 +285,6 @@ public abstract class URLStreamHandler {
      *            the query.
      * @param ref
      *            the reference.
-     * @since Android 1.0
      */
     protected void setURL(URL u, String protocol, String host, int port,
             String authority, String userInfo, String file, String query,
@@ -311,7 +303,6 @@ public abstract class URLStreamHandler {
      * @return the clear text representation of the specified URL.
      * @see #parseURL
      * @see URL#toExternalForm()
-     * @since Android 1.0
      */
     protected String toExternalForm(URL url) {
         StringBuffer answer = new StringBuffer(url.getProtocol().length()
@@ -346,7 +337,6 @@ public abstract class URLStreamHandler {
      *            the second URL to compare.
      * @return {@code true} if the URLs are the same, {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     protected boolean equals(URL url1, URL url2) {
         if (!sameFile(url1, url2)) {
@@ -364,9 +354,8 @@ public abstract class URLStreamHandler {
     /**
      * Returns the default port of the protocol used by the handled URL. The
      * current implementation returns always {@code -1}.
-     * 
+     *
      * @return the appropriate default port number of the protocol.
-     * @since Android 1.0
      */
     protected int getDefaultPort() {
         return -1;
@@ -374,11 +363,10 @@ public abstract class URLStreamHandler {
 
     /**
      * Returns the host address of the given URL.
-     * 
+     *
      * @param url
      *            the URL object where to read the host address from.
      * @return the host address of the specified URL.
-     * @since Android 1.0
      */
     protected InetAddress getHostAddress(URL url) {
         try {
@@ -398,7 +386,6 @@ public abstract class URLStreamHandler {
      * @param url
      *            the URL to determine the hashcode.
      * @return the hashcode of the given URL.
-     * @since Android 1.0
      */
     protected int hashCode(URL url) {
         return toExternalForm(url).hashCode();
@@ -406,14 +393,13 @@ public abstract class URLStreamHandler {
 
     /**
      * Compares two URL objects whether they refer to the same host.
-     * 
+     *
      * @param url1
      *            the first URL to be compared.
      * @param url2
      *            the second URL to be compared.
      * @return {@code true} if both URLs refer to the same host, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     protected boolean hostsEqual(URL url1, URL url2) {
         String host1 = getHost(url1), host2 = getHost(url2);
@@ -439,7 +425,6 @@ public abstract class URLStreamHandler {
      *            the second URL to be compared.
      * @return {@code true} if both URLs refer to the same file, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     protected boolean sameFile(URL url1, URL url2) {
         String s1 = url1.getProtocol();

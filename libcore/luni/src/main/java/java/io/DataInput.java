@@ -23,13 +23,12 @@ package java.io;
  * {@link DataOutput}. Types that can be read include byte, 16-bit short, 32-bit
  * int, 32-bit float, 64-bit long, 64-bit double, byte strings, and MUTF-8
  * strings.
- *  
+ *
  * <h3>MUTF-8 (Modified UTF-8) Encoding</h3>
  * <p>
  * When encoding strings as UTF, implementations of {@code DataInput} and
  * {@code DataOutput} use a slightly modified form of UTF-8, hereafter referred
  * to as MUTF-8. This form is identical to standard UTF-8, except:
- * </p>
  * <ul>
  * <li>Only the one-, two-, and three-byte encodings are used.</li>
  * <li>Code points in the range <code>U+10000</code> &hellip;
@@ -42,12 +41,9 @@ package java.io;
  * further information about character encoding. MUTF-8 is actually closer to
  * the (relatively less well-known) encoding <a
  * href="http://www.unicode.org/reports/tr26/">CESU-8</a> than to UTF-8 per se.
- * </p>
- * 
+ *
  * @see DataInputStream
  * @see RandomAccessFile
- * 
- * @since Android 1.0
  */
 public interface DataInput {
     /**
@@ -59,7 +55,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeBoolean(boolean)
-     * @since Android 1.0
      */
     public abstract boolean readBoolean() throws IOException;
 
@@ -72,7 +67,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeByte(int)
-     * @since Android 1.0
      */
     public abstract byte readByte() throws IOException;
 
@@ -85,7 +79,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeChar(int)
-     * @since Android 1.0
      */
     public abstract char readChar() throws IOException;
 
@@ -98,7 +91,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeDouble(double)
-     * @since Android 1.0
      */
     public abstract double readDouble() throws IOException;
 
@@ -111,7 +103,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeFloat(float)
-     * @since Android 1.0
      */
     public abstract float readFloat() throws IOException;
 
@@ -127,7 +118,6 @@ public interface DataInput {
      *             if an I/O error occurs while reading.
      * @see DataOutput#write(byte[])
      * @see DataOutput#write(byte[], int, int)
-     * @since Android 1.0
      */
     public abstract void readFully(byte[] buffer) throws IOException;
 
@@ -149,7 +139,6 @@ public interface DataInput {
      *             if an I/O error occurs while reading.
      * @see DataOutput#write(byte[])
      * @see DataOutput#write(byte[], int, int)
-     * @since Android 1.0
      */
     public abstract void readFully(byte[] buffer, int offset, int count)
             throws IOException;
@@ -163,7 +152,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeInt(int)
-     * @since Android 1.0
      */
     public abstract int readInt() throws IOException;
 
@@ -179,7 +167,6 @@ public interface DataInput {
      *         request can be satisfied.
      * @throws IOException
      *             if an I/O error occurs while reading.
-     * @since Android 1.0
      */
     public abstract String readLine() throws IOException;
 
@@ -192,7 +179,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeLong(long)
-     * @since Android 1.0
      */
     public abstract long readLong() throws IOException;
 
@@ -205,7 +191,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeShort(int)
-     * @since Android 1.0
      */
     public abstract short readShort() throws IOException;
 
@@ -218,7 +203,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeByte(int)
-     * @since Android 1.0
      */
     public abstract int readUnsignedByte() throws IOException;
 
@@ -231,7 +215,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeShort(int)
-     * @since Android 1.0
      */
     public abstract int readUnsignedShort() throws IOException;
 
@@ -244,7 +227,6 @@ public interface DataInput {
      * @throws IOException
      *             if an I/O error occurs while reading.
      * @see DataOutput#writeUTF(java.lang.String)
-     * @since Android 1.0
      */
     public abstract String readUTF() throws IOException;
 
@@ -258,7 +240,6 @@ public interface DataInput {
      * @return the number of bytes actually skipped.
      * @throws IOException
      *             if a problem occurs during skipping.
-     * @since Android 1.0
      */
     public abstract int skipBytes(int count) throws IOException;
 }

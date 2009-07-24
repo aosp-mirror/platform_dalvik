@@ -23,51 +23,37 @@ package java.io;
  * and different comment styles. The class can be used for limited processing
  * of source code of programming languages like Java, although it is nowhere
  * near a full parser.
- * 
- * @since Android 1.0
  */
 public class StreamTokenizer {
     /**
      * Contains a number if the current token is a number ({@code ttype} ==
      * {@code TT_NUMBER}).
-     * 
-     * @since Android 1.0
      */
     public double nval;
 
     /**
      * Contains a string if the current token is a word ({@code ttype} ==
      * {@code TT_WORD}).
-     * 
-     * @since Android 1.0
      */
     public String sval;
 
     /**
      * The constant representing the end of the stream.
-     * 
-     * @since Android 1.0
      */
     public static final int TT_EOF = -1;
 
     /**
      * The constant representing the end of the line.
-     * 
-     * @since Android 1.0
      */
     public static final int TT_EOL = '\n';
 
     /**
      * The constant representing a number token.
-     * 
-     * @since Android 1.0
      */
     public static final int TT_NUMBER = -2;
 
     /**
      * The constant representing a word token.
-     * 
-     * @since Android 1.0
      */
     public static final int TT_WORD = -3;
 
@@ -89,8 +75,6 @@ public class StreamTokenizer {
      * whether {@code eolIsSignificant} is {@code true}.</li>
      * <li> {@code TT_EOF} - the end of the stream has been reached.</li>
      * </ul>
-     * 
-     * @since Android 1.0
      */
     public int ttype = TT_UNKNOWN;
 
@@ -135,7 +119,7 @@ public class StreamTokenizer {
      * specification.
      */
     private StreamTokenizer() {
-        /**
+        /*
          * Initialize the default state per specification. All byte values 'A'
          * through 'Z', 'a' through 'z', and '\u00A0' through '\u00FF' are
          * considered to be alphabetic.
@@ -176,7 +160,6 @@ public class StreamTokenizer {
      * @throws NullPointerException
      *             if {@code is} is {@code null}.
      * @deprecated Use {@link #StreamTokenizer(Reader)}
-     * @since Android 1.0
      */
     @Deprecated
     public StreamTokenizer(InputStream is) {
@@ -205,7 +188,6 @@ public class StreamTokenizer {
      * 
      * @param r
      *            the source reader from which to parse tokens.
-     * @since Android 1.0
      */
     public StreamTokenizer(Reader r) {
         this();
@@ -221,7 +203,6 @@ public class StreamTokenizer {
      * 
      * @param ch
      *            the character to be considered a comment character.
-     * @since Android 1.0
      */
     public void commentChar(int ch) {
         if (0 <= ch && ch < tokenTypes.length) {
@@ -235,7 +216,6 @@ public class StreamTokenizer {
      * 
      * @param flag
      *            {@code true} if EOL is significant, {@code false} otherwise.
-     * @since Android 1.0
      */
     public void eolIsSignificant(boolean flag) {
         isEOLSignificant = flag;
@@ -245,7 +225,6 @@ public class StreamTokenizer {
      * Returns the current line number.
      * 
      * @return this tokenizer's current line number.
-     * @since Android 1.0
      */
     public int lineno() {
         return lineNumber;
@@ -258,7 +237,6 @@ public class StreamTokenizer {
      * @param flag
      *            {@code true} if {@code sval} should be converted to lower
      *            case, {@code false} otherwise.
-     * @since Android 1.0
      */
     public void lowerCaseMode(boolean flag) {
         forceLowercase = flag;
@@ -272,7 +250,6 @@ public class StreamTokenizer {
      * @return the value of {@code ttype}.
      * @throws IOException
      *             if an I/O error occurs while parsing the next token.
-     * @since Android 1.0             
      */
     public int nextToken() throws IOException {
         if (pushBackToken) {
@@ -507,7 +484,6 @@ public class StreamTokenizer {
      * 
      * @param ch
      *            the character to be considered an ordinary character.
-     * @since Android 1.0
      */
     public void ordinaryChar(int ch) {
         if (0 <= ch && ch < tokenTypes.length) {
@@ -525,7 +501,6 @@ public class StreamTokenizer {
      *            the first character in the range of ordinary characters.
      * @param hi
      *            the last character in the range of ordinary characters.
-     * @since Android 1.0
      */
     public void ordinaryChars(int low, int hi) {
         if (low < 0) {
@@ -541,8 +516,6 @@ public class StreamTokenizer {
 
     /**
      * Specifies that this tokenizer shall parse numbers.
-     * 
-     * @since Android 1.0
      */
     public void parseNumbers() {
         for (int i = '0'; i <= '9'; i++) {
@@ -555,8 +528,6 @@ public class StreamTokenizer {
     /**
      * Indicates that the current token should be pushed back and returned again
      * the next time {@code nextToken()} is called.
-     * 
-     * @since Android 1.0
      */
     public void pushBack() {
         pushBackToken = true;
@@ -568,7 +539,6 @@ public class StreamTokenizer {
      * 
      * @param ch
      *            the character to be considered a quote character.
-     * @since Android 1.0
      */
     public void quoteChar(int ch) {
         if (0 <= ch && ch < tokenTypes.length) {
@@ -586,8 +556,6 @@ public class StreamTokenizer {
 
     /**
      * Specifies that all characters shall be treated as ordinary characters.
-     * 
-     * @since Android 1.0
      */
     public void resetSyntax() {
         for (int i = 0; i < 256; i++) {
@@ -602,7 +570,6 @@ public class StreamTokenizer {
      * @param flag
      *            {@code true} if {@code //} should be recognized as the start
      *            of a comment, {@code false} otherwise.
-     * @since Android 1.0
      */
     public void slashSlashComments(boolean flag) {
         slashSlashComments = flag;
@@ -616,7 +583,6 @@ public class StreamTokenizer {
      * @param flag
      *            {@code true} if {@code /*} should be recognized as the start
      *            of a comment, {@code false} otherwise.
-     * @since Android 1.0
      */
     public void slashStarComments(boolean flag) {
         slashStarComments = flag;
@@ -626,7 +592,6 @@ public class StreamTokenizer {
      * Returns the state of this tokenizer in a readable format.
      * 
      * @return the current state of this tokenizer.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -648,8 +613,6 @@ public class StreamTokenizer {
                 result.append(sval);
                 break;
             default:
-                // BEGIN android-changed
-                // copied from a newer version of harmony
                 if (ttype == TT_UNKNOWN || tokenTypes[ttype] == TOKEN_QUOTE) {
                     result.append(sval);
                 } else {
@@ -657,7 +620,6 @@ public class StreamTokenizer {
                     result.append((char) ttype);
                     result.append('\'');
                 }
-                // END android-changed
         }
         result.append("], line "); //$NON-NLS-1$
         result.append(lineNumber);
@@ -672,7 +634,6 @@ public class StreamTokenizer {
      *            the first character in the range of whitespace characters.
      * @param hi
      *            the last character in the range of whitespace characters.
-     * @since Android 1.0
      */
     public void whitespaceChars(int low, int hi) {
         if (low < 0) {
@@ -695,7 +656,6 @@ public class StreamTokenizer {
      *            the first character in the range of word characters.
      * @param hi
      *            the last character in the range of word characters.
-     * @since Android 1.0
      */
     public void wordChars(int low, int hi) {
         if (low < 0) {

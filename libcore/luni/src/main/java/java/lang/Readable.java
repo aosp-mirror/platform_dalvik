@@ -22,8 +22,6 @@ import java.nio.CharBuffer;
 /**
  * Represents a sequence of characters that can be incrementally read (copied)
  * into a {@link CharBuffer}.
- * 
- * @since Android 1.0
  */
 public interface Readable {
 
@@ -37,7 +35,6 @@ public interface Readable {
      *         {@code Readable} reaches its end
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     int read(CharBuffer cb) throws IOException;
 }

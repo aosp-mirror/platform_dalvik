@@ -1654,7 +1654,7 @@ static int createSocketFileDescriptor(JNIEnv* env, jobject fileDescriptor,
 }
 
 
-static void osNetworkSystem_createSocketImpl(JNIEnv* env, jclass clazz,
+static void osNetworkSystem_createStreamSocketImpl(JNIEnv* env, jclass clazz,
         jobject fileDescriptor, jboolean preferIPv4Stack) {
     // LOGD("ENTER createSocketImpl");
     createSocketFileDescriptor(env, fileDescriptor, SOCK_STREAM);
@@ -2340,35 +2340,6 @@ static void osNetworkSystem_disconnectDatagramImpl(JNIEnv* env, jclass clazz,
     }
 }
 
-static jboolean osNetworkSystem_socketBindImpl2(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor, jint port, jboolean bindToDevice,
-        jobject inetAddress) {
-    // LOGD("ENTER socketBindImpl2");
-
-    struct sockaddr_storage sockaddress;
-    int ret;
-    int handle;
-
-    ret = inetAddressToSocketAddress(env, inetAddress, port, &sockaddress);
-    if (ret < 0)  // Exception has already been thrown.
-        return 0;
-
-    handle = jniGetFDFromFileDescriptor(env, fileDescriptor);
-    if (handle == 0 || handle == -1) {
-        throwSocketException(env, SOCKERR_BADDESC);
-        return 0;
-    }
-
-    ret = doBind(handle, &sockaddress);
-    if (ret < 0) {
-        int err = convertError(errno);
-        jniThrowException(env, "java/net/BindException", netLookupErrorString(err));
-        return 0;
-    }
-
-    return 0;
-}
-
 static jint osNetworkSystem_peekDatagramImpl(JNIEnv* env, jclass clazz,
         jobject fd, jobject sender, jint receiveTimeout) {
     // LOGD("ENTER peekDatagramImpl");
@@ -2636,19 +2607,6 @@ static void osNetworkSystem_createServerStreamSocketImpl(JNIEnv* env,
         return;
 
     int value = 1;
-    setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int));
-}
-
-static void osNetworkSystem_createMulticastSocketImpl(JNIEnv* env,
-        jclass clazz, jobject fileDescriptor, jboolean preferIPv4Stack) {
-    // LOGD("ENTER createMulticastSocketImpl");
-
-    int handle = createSocketFileDescriptor(env, fileDescriptor, SOCK_DGRAM);
-    if (handle < 0)
-        return;
-
-    int value = 1;
-    // setsockopt(handle, SOL_SOCKET, SO_REUSEPORT, &value, sizeof(jbyte));
     setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int));
 }
 
@@ -3847,7 +3805,7 @@ clean:
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
     { "oneTimeInitializationImpl",         "(Z)V",                                                                     (void*) osNetworkSystem_oneTimeInitializationImpl          },
-    { "createSocketImpl",                  "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createSocketImpl                   },
+    { "createStreamSocketImpl",            "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createStreamSocketImpl             },
     { "createDatagramSocketImpl",          "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createDatagramSocketImpl           },
     { "readSocketImpl",                    "(Ljava/io/FileDescriptor;[BIII)I",                                         (void*) osNetworkSystem_readSocketImpl                     },
     { "readSocketDirectImpl",              "(Ljava/io/FileDescriptor;IIII)I",                                          (void*) osNetworkSystem_readSocketDirectImpl               },
@@ -3865,7 +3823,6 @@ static JNINativeMethod gMethods[] = {
     { "sendUrgentDataImpl",                "(Ljava/io/FileDescriptor;B)V",                                             (void*) osNetworkSystem_sendUrgentDataImpl                 },
     { "connectDatagramImpl2",              "(Ljava/io/FileDescriptor;IILjava/net/InetAddress;)V",                      (void*) osNetworkSystem_connectDatagramImpl2               },
     { "disconnectDatagramImpl",            "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_disconnectDatagramImpl             },
-    { "socketBindImpl2",                   "(Ljava/io/FileDescriptor;IZLjava/net/InetAddress;)Z",                      (void*) osNetworkSystem_socketBindImpl2                    },
     { "peekDatagramImpl",                  "(Ljava/io/FileDescriptor;Ljava/net/InetAddress;I)I",                       (void*) osNetworkSystem_peekDatagramImpl                   },
     { "receiveDatagramImpl",               "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;[BIIIZ)I",               (void*) osNetworkSystem_receiveDatagramImpl                },
     { "receiveDatagramDirectImpl",         "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;IIIIZ)I",                (void*) osNetworkSystem_receiveDatagramDirectImpl          },
@@ -3876,7 +3833,6 @@ static JNINativeMethod gMethods[] = {
     { "sendConnectedDatagramImpl",         "(Ljava/io/FileDescriptor;[BIIZ)I",                                         (void*) osNetworkSystem_sendConnectedDatagramImpl          },
     { "sendConnectedDatagramDirectImpl",   "(Ljava/io/FileDescriptor;IIIZ)I",                                          (void*) osNetworkSystem_sendConnectedDatagramDirectImpl    },
     { "createServerStreamSocketImpl",      "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createServerStreamSocketImpl       },
-    { "createMulticastSocketImpl",         "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createMulticastSocketImpl          },
     { "receiveStreamImpl",                 "(Ljava/io/FileDescriptor;[BIII)I",                                         (void*) osNetworkSystem_receiveStreamImpl                  },
     { "sendStreamImpl",                    "(Ljava/io/FileDescriptor;[BII)I",                                          (void*) osNetworkSystem_sendStreamImpl                     },
     { "shutdownInputImpl",                 "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownInputImpl                  },

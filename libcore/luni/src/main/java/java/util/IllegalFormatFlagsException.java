@@ -23,7 +23,6 @@ import java.io.Serializable;
  * the format flags is illegal.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class IllegalFormatFlagsException extends IllegalFormatException
         implements Serializable {

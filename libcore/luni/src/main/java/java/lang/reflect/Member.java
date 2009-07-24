@@ -8,11 +8,11 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 
 package java.lang.reflect;
@@ -23,28 +23,22 @@ package java.lang.reflect;
  * @see Field
  * @see Constructor
  * @see Method
- * 
- * @since Android 1.0
  */
 public interface Member {
 
     /**
      * Designates all public members of a class or interface (including
      * inherited members).
-     * 
+     *
      * @see java.lang.SecurityManager#checkMemberAccess
-     * 
-     * @since Android 1.0
      */
     public static final int PUBLIC = 0;
 
     /**
      * Designates all declared members of a class or interface (without
      * inherited members).
-     * 
+     *
      * @see java.lang.SecurityManager#checkMemberAccess
-     * 
-     * @since Android 1.0
      */
     public static final int DECLARED = 1;
 
@@ -52,8 +46,6 @@ public interface Member {
      * Returns the class that declares this member.
      *
      * @return the declaring class
-     * 
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     Class getDeclaringClass();
@@ -63,10 +55,8 @@ public interface Member {
      * be used to decode the result.
      *
      * @return the modifiers for this member
-     * 
+     *
      * @see Modifier
-     * 
-     * @since Android 1.0
      */
     int getModifiers();
 
@@ -74,8 +64,6 @@ public interface Member {
      * Returns the name of this member.
      *
      * @return the name of this member
-     * 
-     * @since Android 1.0
      */
     String getName();
 
@@ -84,8 +72,6 @@ public interface Member {
      * introduced by the compiler).
      * 
      * @return {@code true} if this member is synthetic, {@code false} otherwise
-     * 
-     * @since Android 1.0
      */
     boolean isSynthetic();
 }

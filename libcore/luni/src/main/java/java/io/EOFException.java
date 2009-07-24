@@ -20,8 +20,6 @@ package java.io;
 /**
  * Thrown when a program encounters the end of a file or stream during an input
  * operation.
- * 
- * @since Android 1.0
  */
 public class EOFException extends IOException {
 
@@ -29,8 +27,6 @@ public class EOFException extends IOException {
 
     /**
      * Constructs a new {@code EOFException} with its stack trace filled in.
-     * 
-     * @since Android 1.0
      */
     public EOFException() {
         super();
@@ -42,7 +38,6 @@ public class EOFException extends IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public EOFException(String detailMessage) {
         super(detailMessage);

@@ -40,7 +40,7 @@ public class UnknownServiceExceptionTest extends junit.framework.TestCase {
     public void test_Constructor() {
         // Test for method java.net.UnknownServiceException()
         try {
-            new URL("file://moo.txt").openConnection().getOutputStream();
+            new URL("file:///moo.txt").openConnection().getOutputStream();
         } catch (UnknownServiceException e) {
             // correct
             return;

@@ -27,10 +27,8 @@ import org.apache.harmony.luni.util.Msg;
  * line terminator sequences are {@code '\r'}, {@code '\n'} and {@code "\r\n"}.
  * When using {@code read}, line terminator sequences are always translated into
  * {@code '\n'}.
- * 
+ *
  * @deprecated Use {@link LineNumberReader}
- * 
- * @since Android 1.0
  */
 @Deprecated
 public class LineNumberInputStream extends FilterInputStream {
@@ -46,10 +44,9 @@ public class LineNumberInputStream extends FilterInputStream {
     /**
      * Constructs a new {@code LineNumberInputStream} on the {@link InputStream}
      * {@code in}. Line numbers are counted for all data read from this stream.
-     * 
+     *
      * @param in
      *            The non-null input stream to count line numbers.
-     * @since Android 1.0
      */
     public LineNumberInputStream(InputStream in) {
         super(in);
@@ -63,12 +60,10 @@ public class LineNumberInputStream extends FilterInputStream {
      * which are converted into {@code '\n'} by this stream. Therefore,
      * {@code available} returns only {@code in.available() / 2} bytes as
      * result.
-     * </p>
-     * 
+     *
      * @return the guaranteed number of bytes available before blocking.
      * @throws IOException
      *             if an error occurs in this stream.
-     * @since Android 1.0
      */
     @Override
     public int available() throws IOException {
@@ -77,9 +72,8 @@ public class LineNumberInputStream extends FilterInputStream {
 
     /**
      * Returns the current line number for this stream. Numbering starts at 0.
-     * 
+     *
      * @return the current line number.
-     * @since Android 1.0
      */
     public int getLineNumber() {
         return lineNumber;
@@ -94,14 +88,12 @@ public class LineNumberInputStream extends FilterInputStream {
      * line number count.
      * <p>
      * This implementation sets a mark in the filtered stream.
-     * </p>
-     * 
+     *
      * @param readlimit
      *            the number of bytes that can be read from this stream before
      *            the mark is invalidated.
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public void mark(int readlimit) {
@@ -119,14 +111,13 @@ public class LineNumberInputStream extends FilterInputStream {
      * Recognized line terminator sequences are {@code '\r'}, {@code '\n'} and
      * {@code "\r\n"}. Line terminator sequences are always translated into
      * {@code '\n'}.
-     * </p>
-     * 
+     *
      * @return the byte read or -1 if the end of the filtered stream has been
      *         reached.
      * @throws IOException
      *             if the stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
+    @SuppressWarnings("fallthrough")
     @Override
     public int read() throws IOException {
         int currentChar = lastChar;
@@ -159,8 +150,7 @@ public class LineNumberInputStream extends FilterInputStream {
      * Recognized line terminator sequences are {@code '\r'}, {@code '\n'} and
      * {@code "\r\n"}. Line terminator sequences are always translated into
      * {@code '\n'}.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the array in which to store the bytes read.
      * @param offset
@@ -178,7 +168,6 @@ public class LineNumberInputStream extends FilterInputStream {
      *             if this stream is closed or another IOException occurs.
      * @throws NullPointerException
      *             if {@code buffer} is {@code null}.
-     * @since Android 1.0
      */
     @Override
     public int read(byte[] buffer, int offset, int length) throws IOException {
@@ -217,14 +206,13 @@ public class LineNumberInputStream extends FilterInputStream {
     /**
      * Resets this stream to the last marked location. It also resets the line
      * count to what is was when this stream was marked.
-     * 
+     *
      * @throws IOException
      *             if this stream is already closed, no mark has been set or the
      *             mark is no longer valid because more than {@code readlimit}
      *             bytes have been read since setting the mark.
      * @see #mark(int)
      * @see #markSupported()
-     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {
@@ -237,12 +225,11 @@ public class LineNumberInputStream extends FilterInputStream {
      * Sets the line number of this stream to the specified
      * {@code lineNumber}. Note that this may have side effects on the
      * line number associated with the last marked position.
-     * 
+     *
      * @param lineNumber
      *            the new lineNumber value.
      * @see #mark(int)
      * @see #reset()
-     * @since Android 1.0
      */
     public void setLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
@@ -254,7 +241,7 @@ public class LineNumberInputStream extends FilterInputStream {
      * used. This implementation skips {@code count} number of bytes in the
      * filtered stream and increments the line number count whenever line
      * terminator sequences are skipped.
-     * 
+     *
      * @param count
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
@@ -263,7 +250,6 @@ public class LineNumberInputStream extends FilterInputStream {
      * @see #mark(int)
      * @see #read()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public long skip(long count) throws IOException {

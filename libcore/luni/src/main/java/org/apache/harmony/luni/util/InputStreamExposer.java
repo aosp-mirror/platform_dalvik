@@ -106,6 +106,7 @@ public class InputStreamExposer {
         // if (is instanceof ExposedByteArrayInputStream) {
         //     return ((ExposedByteArrayInputStream) is).expose();
         // }
+        // END android-changed
 
         if (is.getClass().equals(ByteArrayInputStream.class)) {
             return expose((ByteArrayInputStream) is);

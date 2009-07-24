@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when the virtual machine notices that a program tries to reference,
  * on a class or object, a method that does not exist.
- * 
- * @since Android 1.0
  */
 public class NoSuchMethodException extends java.lang.Exception {
 
@@ -30,8 +28,6 @@ public class NoSuchMethodException extends java.lang.Exception {
     /**
      * Constructs a new {@code NoSuchMethodException} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
    public NoSuchMethodException() {
         super();
@@ -43,7 +39,6 @@ public class NoSuchMethodException extends java.lang.Exception {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public NoSuchMethodException(String detailMessage) {
         super(detailMessage);

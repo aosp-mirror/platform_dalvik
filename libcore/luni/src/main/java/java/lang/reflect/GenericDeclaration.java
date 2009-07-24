@@ -18,8 +18,8 @@ package java.lang.reflect;
 
 /**
  * Common interface for language constructs that declare type parameters.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public interface GenericDeclaration {
 
@@ -28,11 +28,8 @@ public interface GenericDeclaration {
      * no type parameters, this method returns a zero length array.
      * 
      * @return the declared type parameters in declaration order
-     * 
      * @throws GenericSignatureFormatError
      *             if the signature is malformed
-     * 
-     * @since Android 1.0
      */
     TypeVariable<?>[] getTypeParameters();
 }

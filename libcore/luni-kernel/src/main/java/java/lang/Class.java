@@ -440,7 +440,8 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @see ClassLoader#isSystemClassLoader()
      */
     ClassLoader getClassLoaderImpl() {
-        return getClassLoader(this);
+        ClassLoader loader = getClassLoader(this);
+        return loader == null ? BootClassLoader.getInstance() : loader;
     }
 
     /*

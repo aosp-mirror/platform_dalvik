@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when an attempt is made to load a class with a format version that is
  * not supported by the virtual machine.
- * 
- * @since Android 1.0
  */
 public class UnsupportedClassVersionError extends ClassFormatError {
 
@@ -30,8 +28,6 @@ public class UnsupportedClassVersionError extends ClassFormatError {
     /**
      * Constructs a new {@code UnsupportedClassVersionError} that includes the
      * current stack trace.
-     * 
-     * @since Android 1.0
      */
     public UnsupportedClassVersionError() {
         super();
@@ -43,7 +39,6 @@ public class UnsupportedClassVersionError extends ClassFormatError {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public UnsupportedClassVersionError(String detailMessage) {
         super(detailMessage);

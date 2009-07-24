@@ -18,8 +18,8 @@ package java.lang.reflect;
 
 /**
  * Common interface implemented by all Java types.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public interface Type {
     // Empty

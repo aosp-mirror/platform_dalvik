@@ -22,8 +22,6 @@ package java.lang;
  * The abstract superclass of the classes which represent numeric base types
  * (that is {@link Byte}, {@link Short}, {@link Integer}, {@link Long},
  * {@link Float}, and {@link Double}. 
- * 
- * @since Android 1.0
  */
 public abstract class Number implements java.io.Serializable {
 
@@ -31,8 +29,6 @@ public abstract class Number implements java.io.Serializable {
 
     /**
      * Empty default constructor.
-     * 
-     * @since Android 1.0
      */
     public Number() {
     }
@@ -42,7 +38,6 @@ public abstract class Number implements java.io.Serializable {
      * truncating the value, so it fits into a byte.  
      * 
      * @return the primitive byte value of this object.
-     * @since Android 1.0
      */
     public byte byteValue() {
         return (byte) intValue();
@@ -52,7 +47,6 @@ public abstract class Number implements java.io.Serializable {
      * Returns this object's value as a double. Might involve rounding.
      * 
      * @return the primitive double value of this object.
-     * @since Android 1.0
      */
     public abstract double doubleValue();
 
@@ -60,7 +54,6 @@ public abstract class Number implements java.io.Serializable {
      * Returns this object's value as a float. Might involve rounding.
      * 
      * @return the primitive float value of this object.
-     * @since Android 1.0
      */
     public abstract float floatValue();
 
@@ -69,7 +62,6 @@ public abstract class Number implements java.io.Serializable {
      * truncating the value, so it fits into an int.
      * 
      * @return the primitive int value of this object.
-     * @since Android 1.0
      */
     public abstract int intValue();
 
@@ -78,7 +70,6 @@ public abstract class Number implements java.io.Serializable {
      * truncating the value, so it fits into a long.
      * 
      * @return the primitive long value of this object.
-     * @since Android 1.0
      */
     public abstract long longValue();
 
@@ -87,7 +78,6 @@ public abstract class Number implements java.io.Serializable {
      * truncating the value, so it fits into a short.
      * 
      * @return the primitive short value of this object.
-     * @since Android 1.0
      */
     public short shortValue() {
         return (short) intValue();

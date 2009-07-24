@@ -23,8 +23,6 @@ package java.lang;
  * the virtual machine. Unlike checked exceptions (exceptions where the type
  * doesn't extend {@code RuntimeException} or {@link Error}), the compiler does
  * not require code to handle runtime exceptions.
- * 
- * @since Android 1.0
  */
 public class RuntimeException extends Exception {
     
@@ -33,8 +31,6 @@ public class RuntimeException extends Exception {
     /**
      * Constructs a new {@code RuntimeException} that includes the current stack
      * trace.
-     * 
-     * @since Android 1.0
      */
     public RuntimeException() {
         super();
@@ -46,7 +42,6 @@ public class RuntimeException extends Exception {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public RuntimeException(String detailMessage) {
         super(detailMessage);
@@ -60,7 +55,6 @@ public class RuntimeException extends Exception {
      *            the detail message for this exception.
      * @param throwable
      *            the cause of this exception.
-     * @since Android 1.0
      */
     public RuntimeException(String detailMessage, Throwable throwable) {
         super(detailMessage, throwable);
@@ -72,7 +66,6 @@ public class RuntimeException extends Exception {
      * 
      * @param throwable
      *            the cause of this exception.
-     * @since Android 1.0
      */
     public RuntimeException(Throwable throwable) {
         super(throwable);

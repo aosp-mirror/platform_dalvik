@@ -28,8 +28,6 @@ import org.apache.harmony.luni.util.Msg;
  * interface is defined by its address and a platform dependent name. The class
  * provides methods to get all information about the available interfaces of the
  * system or to identify the local interface of a joined multicast group.
- * 
- * @since Android 1.0
  */
 public final class NetworkInterface extends Object {
 
@@ -115,7 +113,6 @@ public final class NetworkInterface extends Object {
      * Gets the name associated with this network interface.
      * 
      * @return the name of this {@code NetworkInterface} instance.
-     * @since Android 1.0
      */
     public String getName() {
         return name;
@@ -125,7 +122,6 @@ public final class NetworkInterface extends Object {
      * Gets a list of addresses bound to this network interface.
      * 
      * @return the address list of the represented network interface.
-     * @since Android 1.0
      */
     public Enumeration<InetAddress> getInetAddresses() {
         /*
@@ -192,7 +188,6 @@ public final class NetworkInterface extends Object {
      * 
      * @return the display name of this network interface or the name if the
      *         display name is not available.
-     * @since Android 1.0
      */
     public String getDisplayName() {
         /*
@@ -217,7 +212,6 @@ public final class NetworkInterface extends Object {
      *             information.
      * @throws NullPointerException
      *             if the given interface's name is {@code null}.
-     * @since Android 1.0
      */
     public static NetworkInterface getByName(String interfaceName)
             throws SocketException {
@@ -244,7 +238,7 @@ public final class NetworkInterface extends Object {
 
     /**
      * Gets the specific network interface according to the given address.
-     * 
+     *
      * @param address
      *            the address to identify the searched network interface.
      * @return the network interface with the specified address if one exists or
@@ -254,7 +248,6 @@ public final class NetworkInterface extends Object {
      *             information.
      * @throws NullPointerException
      *             if the given interface address is invalid.
-     * @since Android 1.0
      */
     public static NetworkInterface getByInetAddress(InetAddress address)
             throws SocketException {
@@ -302,7 +295,6 @@ public final class NetworkInterface extends Object {
      * @throws SocketException
      *             if an error occurs while getting the network interface
      *             information.
-     * @since Android 1.0
      */
     public static Enumeration<NetworkInterface> getNetworkInterfaces()
             throws SocketException {
@@ -343,7 +335,6 @@ public final class NetworkInterface extends Object {
      * @return {@code true} if the specified object is equal to this {@code
      *         NetworkInterface}, {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -412,7 +403,6 @@ public final class NetworkInterface extends Object {
      * generated using this name.
      * 
      * @return the hashcode value for this {@code NetworkInterface} instance.
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -427,7 +417,6 @@ public final class NetworkInterface extends Object {
      * network interface.
      * 
      * @return the textual representation for this network interface.
-     * @since Android 1.0
      */
     @Override
     public String toString() {

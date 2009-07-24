@@ -39,8 +39,6 @@ import org.apache.harmony.luni.util.Util;
  * <p>
  * There are two possible permission action types: read and write. Possible
  * actions are "read", "write", or "read,write"/"write,read".
- *  
- * @since Android 1.0
  */
 public final class PropertyPermission extends BasicPermission {
     private static final long serialVersionUID = 885438825399942851L;
@@ -56,7 +54,6 @@ public final class PropertyPermission extends BasicPermission {
      *            the actions which are applicable to it. Possible actions are
      *            "read", "write", or "read,write"/"write,read". Anything else
      *            will result in an {@code IllegalArgumentException}.
-     * @since Android 1.0
      */
     public PropertyPermission(String name, String actions) {
         super(name);
@@ -84,17 +81,16 @@ public final class PropertyPermission extends BasicPermission {
     /**
      * Compares the argument to the receiver, and returns true if they represent
      * the <em>same</em> object using a class specific comparison. In this
-     * case, the receiver must be a {@code PropertyPermission} for the same 
+     * case, the receiver must be a {@code PropertyPermission} for the same
      * property as the argument, and must have the same actions.
      * If {@code o} is a permission that is not a {@code PropertyPermission},
-     * this method may throw a {@code ClassCastException}.     
-     * 
+     * this method may throw a {@code ClassCastException}.
+     *
      * @param o
      *            the {@code Object} to compare with this {@code Object}.
      * @return {@code true} if the {@code Object} is the same as this {@code Object},
      *         {@code false} if it is different from this {@code Object}.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -110,7 +106,6 @@ public final class PropertyPermission extends BasicPermission {
      * either "read", "write", or "read,write".
      * 
      * @return the actions associated with the receiver.
-     * @since Android 1.0
      */
     @Override
     public String getActions() {
@@ -124,7 +119,6 @@ public final class PropertyPermission extends BasicPermission {
      * 
      * @return the receiver's hash.
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -138,7 +132,6 @@ public final class PropertyPermission extends BasicPermission {
      *         receiver, and {@code false} if it is not.
      * @param permission
      *            the permission to check.
-     * @since Android 1.0
      */
     @Override
     public boolean implies(Permission permission) {
@@ -155,7 +148,6 @@ public final class PropertyPermission extends BasicPermission {
      * 
      * @return a new {@code PermissionCollection} or {@code null}.
      * @see java.security.PermissionCollection
-     * @since Android 1.0
      */
     @Override
     public PermissionCollection newPermissionCollection() {

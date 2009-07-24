@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.security.AccessController;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -33,18 +34,17 @@ import java.util.WeakHashMap;
 
 import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.PriviAction;
+import org.apache.harmony.luni.util.ThreadLocalCache;
 
 /**
  * Represents a descriptor for identifying a class during serialization and
  * deserialization. Information contained in the descriptor includes the name
  * and SUID of the class as well as field names and types. Information inherited
  * from the superclasses is also taken into account.
- * 
+ *
  * @see ObjectOutputStream
  * @see ObjectInputStream
  * @see java.lang.Class
- * 
- * @since Android 1.0
  */
 public class ObjectStreamClass implements Serializable {
 
@@ -54,6 +54,8 @@ public class ObjectStreamClass implements Serializable {
 
     // Name of the field that contains the SUID value (if present)
     private static final String UID_FIELD_NAME = "serialVersionUID"; //$NON-NLS-1$
+
+    static final long CONSTRUCTOR_IS_NOT_RESOLVED = -1;
 
     private static final int CLASS_MODIFIERS_MASK;
 
@@ -98,8 +100,6 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Constant indicating that the class has no Serializable fields.
-     * 
-     * @since Android 1.0
      */
     public static final ObjectStreamField[] NO_FIELDS = new ObjectStreamField[0];
 
@@ -135,9 +135,36 @@ public class ObjectStreamClass implements Serializable {
 
     static final Class<ObjectStreamClass> OBJECTSTREAMCLASSCLASS = ObjectStreamClass.class;
 
-    // Table mapping instances of java.lang.Class to to corresponding instances
-    // of ObjectStreamClass
-    private static final WeakHashMap<Class<?>, ObjectStreamClass> classesAndDescriptors = new WeakHashMap<Class<?>, ObjectStreamClass>();
+    private transient Method methodWriteReplace;
+
+    private transient Method methodReadResolve;
+
+    private transient Method methodWriteObject;
+
+    private transient Method methodReadObject;
+
+    private transient Method methodReadObjectNoData;
+
+    /**
+     * Indicates whether the class properties resolved
+     *
+     * @see #resolveProperties()
+     */
+    private transient boolean arePropertiesResolved;
+
+    /**
+     * Cached class properties
+     *
+     * @see #resolveProperties()
+     * @see #isSerializable()
+     * @see #isExternalizable()
+     * @see #isProxy()
+     * @see #isEnum()
+     */
+    private transient boolean isSerializable;
+    private transient boolean isExternalizable;
+    private transient boolean isProxy;
+    private transient boolean isEnum;
 
     // ClassDesc //
 
@@ -167,6 +194,17 @@ public class ObjectStreamClass implements Serializable {
     // Array of ObjectStreamField describing the serialized fields of this class
     private transient ObjectStreamField[] loadFields;
 
+    // MethodID for deserialization constructor
+    private transient long constructor = CONSTRUCTOR_IS_NOT_RESOLVED;
+
+    void setConstructor(long newConstructor) {
+        constructor = newConstructor;
+    }
+
+    long getConstructor() {
+        return constructor;
+    }
+
     /*
      * If an ObjectStreamClass describes an Externalizable class, it (the
      * descriptor) should not have field descriptors (ObjectStreamField) at all.
@@ -183,21 +221,23 @@ public class ObjectStreamClass implements Serializable {
     }
 
     /**
-     * Adds an extra entry mapping a given class {@code cl} to its class
-     * descriptor, which will be computed (an ObjectStreamClass). If
-     * {@code computeSUID} is true, this method will compute the SUID for
-     * this class.
-     * 
+     * Compute class descriptor for a given class <code>cl</code>.
+     *
      * @param cl
      *            a java.langClass for which to compute the corresponding
      *            descriptor
-     * @param computeSUID
-     *            a boolean indicating if SUID should be computed or not.
      * @return the computer class descriptor
      */
-    private static ObjectStreamClass addToCache(Class<?> cl, boolean computeSUID) {
+    private static ObjectStreamClass createClassDesc(Class<?> cl) {
 
         ObjectStreamClass result = new ObjectStreamClass();
+
+        boolean isArray = cl.isArray();
+        boolean serializable = isSerializable(cl);
+        boolean externalizable = isExternalizable(cl);
+
+        result.isSerializable = serializable;
+        result.isExternalizable = externalizable;
 
         // Now we fill in the values
         result.setName(cl.getName());
@@ -208,45 +248,73 @@ public class ObjectStreamClass implements Serializable {
         }
 
         Field[] declaredFields = null;
-        if (computeSUID) {
-            // Lazy computation, to save speed & space
-            declaredFields = cl.getDeclaredFields();
-            result.setSerialVersionUID((cl.isEnum() || (cl == Enum.class)) ? 0
-                    : computeSerialVersionUID(cl, declaredFields));
+
+        // Compute the SUID
+        if(serializable || externalizable) {
+            if (result.isEnum() || result.isProxy()) {
+                result.setSerialVersionUID(0L);
+            } else {
+                declaredFields = cl.getDeclaredFields();
+                result.setSerialVersionUID(computeSerialVersionUID(cl,
+                        declaredFields));
+            }
         }
 
-        boolean serializable = isSerializable(cl);
         // Serializables need field descriptors
-        if (serializable && !cl.isArray()) {
+        if (serializable && !isArray) {
             if (declaredFields == null) {
-
                 declaredFields = cl.getDeclaredFields();
             }
             result.buildFieldDescriptors(declaredFields);
         } else {
             // Externalizables or arrays do not need FieldDesc info
-            result.setFields(new ObjectStreamField[0]);
+            result.setFields(NO_FIELDS);
+        }
+
+        // Copy all fields to loadFields - they should be read by default in
+        // ObjectInputStream.defaultReadObject() method
+        ObjectStreamField[] fields = result.getFields();
+
+        if (fields != null) {
+            ObjectStreamField[] loadFields = new ObjectStreamField[fields.length];
+
+            for (int i = 0; i < fields.length; ++i) {
+                loadFields[i] = new ObjectStreamField(fields[i].getName(),
+                        fields[i].getType(), fields[i].isUnshared());
+
+                // resolve type string to init typeString field in
+                // ObjectStreamField
+                loadFields[i].getTypeString();
+            }
+            result.setLoadFields(loadFields);
         }
 
         byte flags = 0;
-        boolean externalizable = isExternalizable(cl);
         if (externalizable) {
             flags |= ObjectStreamConstants.SC_EXTERNALIZABLE;
+            flags |= ObjectStreamConstants.SC_BLOCK_DATA; // use protocol version 2 by default
         } else if (serializable) {
             flags |= ObjectStreamConstants.SC_SERIALIZABLE;
         }
-        if (getPrivateWriteObjectMethod(cl) != null) {
+        result.methodWriteReplace = findMethod(cl, "writeReplace"); //$NON-NLS-1$
+        result.methodReadResolve = findMethod(cl, "readResolve"); //$NON-NLS-1$
+        result.methodWriteObject = findPrivateMethod(cl, "writeObject", //$NON-NLS-1$
+                WRITE_PARAM_TYPES);
+        result.methodReadObject = findPrivateMethod(cl, "readObject", //$NON-NLS-1$
+                READ_PARAM_TYPES);
+        result.methodReadObjectNoData = findPrivateMethod(cl,
+                "readObjectNoData", EMPTY_CONSTRUCTOR_PARAM_TYPES); //$NON-NLS-1$
+        if (result.hasMethodWriteObject()) {
             flags |= ObjectStreamConstants.SC_WRITE_METHOD;
         }
         result.setFlags(flags);
-        classesAndDescriptors.put(cl, result);
 
         return result;
     }
 
     /**
      * Builds the collection of field descriptors for the receiver
-     * 
+     *
      * @param declaredFields
      *            collection of java.lang.reflect.Field for which to compute
      *            field descriptors
@@ -315,12 +383,12 @@ public class ObjectStreamClass implements Serializable {
         }
         fields = _fields;
     }
-    
+
     /**
      * Compute and return the Serial Version UID of the class {@code cl}.
      * The value is computed based on the class name, superclass chain, field
      * names, method names, modifiers, etc.
-     * 
+     *
      * @param cl
      *            a java.lang.Class for which to compute the SUID
      * @param fields
@@ -477,7 +545,7 @@ public class ObjectStreamClass implements Serializable {
                     /*
                      * write name, modifier & "descriptor" of all but private
                      * ones
-                     * 
+                     *
                      * constructor.getName() returns the constructor name as
                      * typed, not the VM name
                      */
@@ -534,7 +602,7 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Returns what the serializaton specification calls "descriptor" given a
      * field signature.
-     * 
+     *
      * @param signature
      *            a field signature
      * @return containing the descriptor
@@ -546,7 +614,7 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Return what the serializaton specification calls "descriptor" given a
      * method/constructor signature.
-     * 
+     *
      * @param signature
      *            a method or constructor signature
      * @return containing the descriptor
@@ -558,7 +626,7 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Return the java.lang.reflect.Field {@code serialPersistentFields}
      * if class {@code cl} implements it. Return null otherwise.
-     * 
+     *
      * @param cl
      *            a java.lang.Class which to test
      * @return {@code java.lang.reflect.Field} if the class has
@@ -583,10 +651,9 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Returns the class (java.lang.Class) for this descriptor.
-     * 
+     *
      * @return the class in the local VM that this descriptor represents;
      *         {@code null} if there is no corresponding class.
-     * @since Android 1.0
      */
     public Class<?> forClass() {
         if (resolvedClass != null) {
@@ -597,7 +664,7 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Return a String representing the signature for a Constructor {@code c}.
-     * 
+     *
      * @param c
      *            a java.lang.reflect.Constructor for which to compute the
      *            signature
@@ -608,12 +675,11 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Gets a field descriptor of the class represented by this class
      * descriptor.
-     * 
+     *
      * @param name
      *            the name of the desired field.
      * @return the field identified by {@code name} or {@code null} if there is
      *         no such field.
-     * @since Android 1.0
      */
     public ObjectStreamField getField(String name) {
         ObjectStreamField[] allFields = getFields();
@@ -629,20 +695,18 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Returns the collection of field descriptors for the fields of the
      * corresponding class
-     * 
+     *
      * @return the receiver's collection of declared fields for the class it
      *         represents
      */
     ObjectStreamField[] fields() {
         if (fields == null) {
-            synchronized(this){ 
-                Class<?> forCl = forClass();
-                if (forCl != null && isSerializable(forCl) && !forCl.isArray()) {
-                    buildFieldDescriptors(forCl.getDeclaredFields());
-                } else {
-                    // Externalizables or arrays do not need FieldDesc info
-                    setFields(new ObjectStreamField[0]);
-                }
+            Class<?> forCl = forClass();
+            if (forCl != null && isSerializable() && !forCl.isArray()) {
+                buildFieldDescriptors(forCl.getDeclaredFields());
+            } else {
+                // Externalizables or arrays do not need FieldDesc info
+                setFields(NO_FIELDS);
             }
         }
         return fields;
@@ -651,10 +715,9 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Returns a collection of field descriptors for the serialized fields of
      * the class represented by this class descriptor.
-     * 
+     *
      * @return an array of field descriptors or an array of length zero if there
      *         are no fields in this descriptor's class.
-     * @since Android 1.0
      */
     public ObjectStreamField[] getFields() {
         copyFieldAttributes();
@@ -662,9 +725,9 @@ public class ObjectStreamClass implements Serializable {
     }
 
     /**
-     * If a Class uses "serialPersistentFields" to define the serialized fields, 
+     * If a Class uses "serialPersistentFields" to define the serialized fields,
      * this.loadFields cannot get the "unshared" information when deserializing
-     * fields using current implementation of ObjectInputStream. This method 
+     * fields using current implementation of ObjectInputStream. This method
      * provides a way to copy the "unshared" attribute from this.fields.
      *
      */
@@ -672,7 +735,7 @@ public class ObjectStreamClass implements Serializable {
         if ((loadFields == null) || fields == null) {
             return;
         }
-        
+
         for (int i = 0; i < loadFields.length; i++) {
             ObjectStreamField loadField = loadFields[i];
             String name = loadField.getName();
@@ -690,7 +753,7 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Returns the collection of field descriptors for the input fields of the
      * corresponding class
-     * 
+     *
      * @return the receiver's collection of input fields for the class it
      *         represents
      */
@@ -700,7 +763,7 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Return a String representing the signature for a field {@code f}.
-     * 
+     *
      * @param f
      *            a java.lang.reflect.Field for which to compute the signature
      * @return the field's signature
@@ -709,11 +772,11 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Returns the flags for this descriptor, where possible combined values are
-     * 
+     *
      * ObjectStreamConstants.SC_WRITE_METHOD
      * ObjectStreamConstants.SC_SERIALIZABLE
      * ObjectStreamConstants.SC_EXTERNALIZABLE
-     * 
+     *
      * @return byte the receiver's flags for the class it represents
      */
     byte getFlags() {
@@ -722,7 +785,7 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Return a String representing the signature for a method {@code m}.
-     * 
+     *
      * @param m
      *            a java.lang.reflect.Method for which to compute the signature
      * @return the method's signature
@@ -731,9 +794,8 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Returns the name of the class represented by this descriptor.
-     * 
+     *
      * @return the fully qualified name of the class this descriptor represents.
-     * @since Android 1.0
      */
     public String getName() {
         return className;
@@ -742,9 +804,8 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Returns the Serial Version User ID of the class represented by this
      * descriptor.
-     * 
+     *
      * @return the SUID for the class represented by this descriptor.
-     * @since Android 1.0
      */
     public long getSerialVersionUID() {
         return svUID;
@@ -753,7 +814,7 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Returns the descriptor (ObjectStreamClass) of the superclass of the class
      * represented by the receiver.
-     * 
+     *
      * @return an ObjectStreamClass representing the superclass of the class
      *         represented by the receiver.
      */
@@ -767,7 +828,7 @@ public class ObjectStreamClass implements Serializable {
      * compiler-generated, it is used by the serialization code to compute SUID.
      * This is unfortunate, since it may depend on compiler optimizations in
      * some cases.
-     * 
+     *
      * @param cl
      *            a java.lang.Class which to test
      * @return {@code true} if the class has <clinit> {@code false}
@@ -776,84 +837,15 @@ public class ObjectStreamClass implements Serializable {
     private static native boolean hasClinit(Class<?> cl);
 
     /**
-     * Return true if the given class {@code cl} implements private
-     * method {@code readObject()}.
-     * 
-     * @param cl
-     *            a java.lang.Class which to test
-     * @return {@code true} if the class implements readObject
-     *         {@code false} if the class does not implement readObject
-     */
-    static Method getPrivateReadObjectMethod(Class<?> cl) {
-        try {
-            Method method = cl
-                    .getDeclaredMethod("readObject", READ_PARAM_TYPES); //$NON-NLS-1$
-            if (Modifier.isPrivate(method.getModifiers())
-                    && method.getReturnType() == VOID_CLASS) {
-                return method;
-            }
-        } catch (NoSuchMethodException nsm) {
-            // Ignored
-        }
-        return null;
-    }
-
-    /**
-     * Return true if the given class {@code cl} implements private
-     * method {@code readObject()}.
-     * 
-     * @param cl
-     *            a java.lang.Class which to test
-     * @return {@code true} if the class implements readObject
-     *         {@code false} if the class does not implement readObject
-     */
-    static Method getPrivateReadObjectNoDataMethod(Class<?> cl) {
-        try {
-            Method method = cl.getDeclaredMethod("readObjectNoData", //$NON-NLS-1$
-                    EMPTY_CONSTRUCTOR_PARAM_TYPES);
-            if (Modifier.isPrivate(method.getModifiers())
-                    && method.getReturnType() == VOID_CLASS) {
-                return method;
-            }
-        } catch (NoSuchMethodException nsm) {
-            // Ignored
-        }
-        return null;
-    }
-
-    /**
-     * Return true if the given class {@code cl} implements private
-     * method {@code writeObject()}.
-     * 
-     * @param cl
-     *            a java.lang.Class which to test
-     * @return {@code true} if the class implements writeObject
-     *         {@code false} if the class does not implement writeObject
-     */
-    static Method getPrivateWriteObjectMethod(Class<?> cl) {
-        try {
-            Method method = cl.getDeclaredMethod("writeObject", //$NON-NLS-1$
-                    WRITE_PARAM_TYPES);
-            if (Modifier.isPrivate(method.getModifiers())
-                    && method.getReturnType() == VOID_CLASS) {
-                return method;
-            }
-        } catch (NoSuchMethodException nsm) {
-            // Ignored
-        }
-        return null;
-    }
-
-    /**
      * Return true if instances of class {@code cl} are Externalizable,
      * false otherwise.
-     * 
+     *
      * @param cl
      *            a java.lang.Class which to test
      * @return {@code true} if instances of the class are Externalizable
      *         {@code false} if instances of the class are not
      *         Externalizable
-     * 
+     *
      * @see Object#hashCode
      */
     static boolean isExternalizable(Class<?> cl) {
@@ -865,7 +857,7 @@ public class ObjectStreamClass implements Serializable {
      * <code>typecode<code> describes a primitive type
      *
      * @param typecode a char describing the typecode
-     * @return {@code true} if the typecode represents a primitive type 
+     * @return {@code true} if the typecode represents a primitive type
      * {@code false} if the typecode represents an Object type (including arrays)
      *
      * @see Object#hashCode
@@ -877,13 +869,13 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Return true if instances of class {@code cl} are Serializable,
      * false otherwise.
-     * 
+     *
      * @param cl
      *            a java.lang.Class which to test
      * @return {@code true} if instances of the class are Serializable
      *         {@code false} if instances of the class are not
      *         Serializable
-     * 
+     *
      * @see Object#hashCode
      */
     static boolean isSerializable(Class<?> cl) {
@@ -891,8 +883,65 @@ public class ObjectStreamClass implements Serializable {
     }
 
     /**
+     * Resolves the class properties, if they weren't already
+     */
+    private void resolveProperties() {
+        if (arePropertiesResolved) {
+            return;
+        }
+
+        Class<?> cl = forClass();
+        isProxy = Proxy.isProxyClass(cl);
+        isEnum = Enum.class.isAssignableFrom(cl);
+        isSerializable = isSerializable(cl);
+        isExternalizable = isExternalizable(cl);
+
+        arePropertiesResolved = true;
+    }
+
+    /**
+     * Answers whether the class for this descriptor is serializable
+     *
+     * @return true if class implements Serializable
+     */
+    boolean isSerializable() {
+        resolveProperties();
+        return isSerializable;
+    }
+
+    /**
+     * Answers whether the class for this descriptor is serializable
+     *
+     * @return true if class implements Serializable
+     */
+    boolean isExternalizable() {
+        resolveProperties();
+        return isExternalizable;
+    }
+
+    /**
+     * Answers whether the class for this descriptor is proxied class
+     *
+     * @return true if class is proxied
+     */
+    boolean isProxy() {
+        resolveProperties();
+        return isProxy;
+    }
+
+    /**
+     * Answers whether the class for this descriptor is subclass of Enum
+     *
+     * @return true if class is subclass of Enum
+     */
+    boolean isEnum() {
+        resolveProperties();
+        return isEnum;
+    }
+
+    /**
      * Return a little endian long stored in a given position of the buffer
-     * 
+     *
      * @param buffer
      *            a byte array with the byte representation of the number
      * @param position
@@ -911,83 +960,67 @@ public class ObjectStreamClass implements Serializable {
      * Returns the descriptor corresponding to the class {@code cl}. If the
      * class is not serializable or externalizable then {@code null} is
      * returned.
-     * 
+     *
      * @param cl
      *            a java.langClass for which to obtain the corresponding
      *            descriptor
      * @return the corresponding descriptor if the {@code cl} is serializable or
      *         externalizable; {@code null} otherwise.
-     * @since Android 1.0
      */
     public static ObjectStreamClass lookup(Class<?> cl) {
-        boolean serializable = isSerializable(cl);
-        boolean externalizable = isExternalizable(cl);
+        ObjectStreamClass osc = lookupStreamClass(cl);
 
-        // Has to be either Serializable or Externalizable
-        if (!serializable && !externalizable) {
-            return null;
+        if (osc.isSerializable() || osc.isExternalizable()) {
+            return osc;
         }
 
-        return lookupStreamClass(cl, true);
+        return null;
     }
 
     /**
      * Return the descriptor (ObjectStreamClass) corresponding to the class
      * {@code cl}. Returns an ObjectStreamClass even if instances of the
      * class cannot be serialized
-     * 
+     *
      * @param cl
      *            a java.langClass for which to obtain the corresponding
      *            descriptor
      * @return the corresponding descriptor
      */
     static ObjectStreamClass lookupStreamClass(Class<?> cl) {
-        return lookupStreamClass(cl, isSerializable(cl) || isExternalizable(cl));
-    }
 
-    /**
-     * Return the descriptor (ObjectStreamClass) corresponding to the class
-     * {@code cl}. Returns an ObjectStreamClass even if instances of the
-     * class cannot be serialized
-     * 
-     * @param cl
-     *            a {@code java.langClass} for which to obtain the
-     *            corresponding descriptor
-     * @param computeSUID
-     *            a boolean indicating if SUID should be computed or not.
-     * @return the corresponding descriptor
-     */
-    private static synchronized ObjectStreamClass lookupStreamClass(
-            Class<?> cl, boolean computeSUID) {
-        // Synchronized because of the lookup table 'classesAndDescriptors'
-        ObjectStreamClass cachedValue = classesAndDescriptors.get(cl);
-        if (cachedValue != null) {
-            return cachedValue;
+        WeakHashMap<Class<?>,ObjectStreamClass> tlc = OSCThreadLocalCache.oscWeakHashMap.get();
+
+        ObjectStreamClass cachedValue = tlc.get(cl);
+        if (cachedValue == null) {
+            cachedValue = createClassDesc(cl);
+            tlc.put(cl, cachedValue);
         }
-        return addToCache(cl, computeSUID);
+        return cachedValue;
+
     }
 
     /**
-     * Return the java.lang.reflect.Method {@code readResolve} if class
-     * {@code cl} implements it. Return null otherwise.
-     * 
+     * Return the java.lang.reflect.Method if class <code>cl</code> implements
+     * <code>methodName</code> . Return null otherwise.
+     *
      * @param cl
      *            a java.lang.Class which to test
-     * @return {@code java.lang.reflect.Method} if the class implements
-     *         readResolve {@code null} if the class does not implement
-     *         readResolve
+     * @return <code>java.lang.reflect.Method</code> if the class implements
+     *         writeReplace <code>null</code> if the class does not implement
+     *         writeReplace
      */
-    static Method methodReadResolve(Class<?> cl) {
+    static Method findMethod(Class<?> cl, String methodName) {
         Class<?> search = cl;
+        Method method = null;
         while (search != null) {
             try {
-                Method method = search.getDeclaredMethod(
-                        "readResolve", (Class[]) null); //$NON-NLS-1$
+                method = search.getDeclaredMethod(methodName, (Class[]) null);
                 if (search == cl
                         || (method.getModifiers() & Modifier.PRIVATE) == 0) {
+                    method.setAccessible(true);
                     return method;
                 }
-                return null;
             } catch (NoSuchMethodException nsm) {
             }
             search = search.getSuperclass();
@@ -996,37 +1029,81 @@ public class ObjectStreamClass implements Serializable {
     }
 
     /**
-     * Return the java.lang.reflect.Method {@code writeReplace} if class
-     * {@code cl} implements it. Return null otherwise.
-     * 
+     * Return the java.lang.reflect.Method if class <code>cl</code> implements
+     * private <code>methodName</code> . Return null otherwise.
+     *
      * @param cl
      *            a java.lang.Class which to test
      * @return {@code java.lang.reflect.Method} if the class implements
      *         writeReplace {@code null} if the class does not implement
      *         writeReplace
      */
-    static Method methodWriteReplace(Class<?> cl) {
-        Class<?> search = cl;
-        while (search != null) {
-            try {
-                Method method = search.getDeclaredMethod(
-                        "writeReplace", (Class[]) null); //$NON-NLS-1$
-                if (search == cl
-                        || (method.getModifiers() & Modifier.PRIVATE) == 0) {
-                    return method;
-                }
-                return null;
-            } catch (NoSuchMethodException nsm) {
-                // Ignored
+    static Method findPrivateMethod(Class<?> cl, String methodName,
+            Class<?>[] param) {
+        try {
+            Method method = cl.getDeclaredMethod(methodName, param);
+            if (Modifier.isPrivate(method.getModifiers())
+                    && method.getReturnType() == VOID_CLASS) {
+                method.setAccessible(true);
+                return method;
             }
-            search = search.getSuperclass();
+        } catch (NoSuchMethodException nsm) {
+            // Ignored
         }
         return null;
     }
 
+    boolean hasMethodWriteReplace() {
+        return (methodWriteReplace != null);
+    }
+
+    Method getMethodWriteReplace() {
+        return methodWriteReplace;
+    }
+
+    boolean hasMethodReadResolve() {
+        return (methodReadResolve != null);
+    }
+
+    Method getMethodReadResolve() {
+        return methodReadResolve;
+    }
+
+    boolean hasMethodWriteObject() {
+        return (methodWriteObject != null);
+    }
+
+    Method getMethodWriteObject() {
+        return methodWriteObject;
+    }
+
+    boolean hasMethodReadObject() {
+        return (methodReadObject != null);
+    }
+
+    Method getMethodReadObject() {
+        return methodReadObject;
+    }
+
+    boolean hasMethodReadObjectNoData() {
+        return (methodReadObjectNoData != null);
+    }
+
+    Method getMethodReadObjectNoData() {
+        return methodReadObjectNoData;
+    }
+
+    void initPrivateFields(ObjectStreamClass desc) {
+        methodWriteReplace = desc.methodWriteReplace;
+        methodReadResolve = desc.methodReadResolve;
+        methodWriteObject = desc.methodWriteObject;
+        methodReadObject = desc.methodReadObject;
+        methodReadObjectNoData = desc.methodReadObjectNoData;
+    }
+
     /**
      * Set the class (java.lang.Class) that the receiver represents
-     * 
+     *
      * @param c
      *            aClass, the new class that the receiver describes
      */
@@ -1037,7 +1114,7 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Set the collection of field descriptors for the fields of the
      * corresponding class
-     * 
+     *
      * @param f
      *            ObjectStreamField[], the receiver's new collection of declared
      *            fields for the class it represents
@@ -1049,7 +1126,7 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Set the collection of field descriptors for the input fields of the
      * corresponding class
-     * 
+     *
      * @param f
      *            ObjectStreamField[], the receiver's new collection of input
      *            fields for the class it represents
@@ -1060,11 +1137,11 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Set the flags for this descriptor, where possible combined values are
-     * 
+     *
      * ObjectStreamConstants.SC_WRITE_METHOD
      * ObjectStreamConstants.SC_SERIALIZABLE
      * ObjectStreamConstants.SC_EXTERNALIZABLE
-     * 
+     *
      * @param b
      *            byte, the receiver's new flags for the class it represents
      */
@@ -1074,7 +1151,7 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Set the name of the class represented by the receiver
-     * 
+     *
      * @param newName
      *            a String, the new fully qualified name of the class the
      *            receiver represents
@@ -1085,7 +1162,7 @@ public class ObjectStreamClass implements Serializable {
 
     /**
      * Set the Serial Version User ID of the class represented by the receiver
-     * 
+     *
      * @param l
      *            a long, the new SUID for the class represented by the receiver
      */
@@ -1096,7 +1173,7 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Set the descriptor for the superclass of the class described by the
      * receiver
-     * 
+     *
      * @param c
      *            an ObjectStreamClass, the new ObjectStreamClass for the
      *            superclass of the class represented by the receiver
@@ -1124,13 +1201,24 @@ public class ObjectStreamClass implements Serializable {
     /**
      * Returns a string containing a concise, human-readable description of this
      * descriptor.
-     * 
+     *
      * @return a printable representation of this descriptor.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
         return getName() + ": static final long serialVersionUID =" //$NON-NLS-1$
                 + getSerialVersionUID() + "L;"; //$NON-NLS-1$
     }
+
+    static class OSCThreadLocalCache extends ThreadLocalCache {
+
+        // thread-local cache for ObjectStreamClass.lookup
+        public static ThreadLocalCache<WeakHashMap<Class<?>,ObjectStreamClass>> oscWeakHashMap = new ThreadLocalCache<WeakHashMap<Class<?>,ObjectStreamClass>>() {
+            protected WeakHashMap<Class<?>,ObjectStreamClass> initialValue() {
+                return new WeakHashMap<Class<?>,ObjectStreamClass>();
+            }
+        };
+
+    }
+
 }

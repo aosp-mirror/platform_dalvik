@@ -59,15 +59,8 @@ public class FileURLConnection extends URLConnection {
     public FileURLConnection(URL url) {
         super(url);
         fileName = url.getFile();
-        if (url.getRef() != null) {
-            fileName += "#" + url.getRef(); //$NON-NLS-1$
-        }
         if (fileName == null) {
             fileName = ""; //$NON-NLS-1$
-        }
-        String host = url.getHost();
-        if (host != null && host.length() > 0) {
-            fileName = "//" + host + fileName; //$NON-NLS-1$
         }
         fileName = Util.decode(fileName, false);
     }
@@ -131,13 +124,23 @@ public class FileURLConnection extends URLConnection {
             return MimeTable.UNKNOWN;
         }
         if (isDir) {
-            return "text/html"; //$NON-NLS-1$
+            return "text/plain"; //$NON-NLS-1$
         }
         String result = guessContentTypeFromName(url.getFile());
-        if (result == null) {
-            return MimeTable.UNKNOWN;
+        if (result != null) {
+            return result;
         }
-        return result;
+
+        try {
+            result = guessContentTypeFromStream(is);
+        } catch (IOException e) {
+            // Ignore
+        }
+        if (result != null) {
+            return result;
+        }
+
+        return MimeTable.UNKNOWN;
     }
 
     /**

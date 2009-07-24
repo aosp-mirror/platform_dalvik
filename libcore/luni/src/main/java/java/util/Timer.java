@@ -29,145 +29,143 @@ import org.apache.harmony.luni.util.Msg;
  * excessive amount of time to run it may impact the time at which subsequent
  * tasks may run.
  * <p>
- * 
+ *
  * The {@code TimerTask} does not offer any guarantees about the real-time nature of
  * scheduling tasks as its underlying implementation relies on the
  * {@code Object.wait(long)} method.
- * </p>
  * <p>
  * Multiple threads can share a single {@code Timer} without the need for their own
- * synchronization.</p>
+ * synchronization.
  * <p>
- * A {@code Timer} can be set to schedule tasks either at a fixed rate or 
- * with a fixed period. Fixed-period execution is the default.</p>
+ * A {@code Timer} can be set to schedule tasks either at a fixed rate or
+ * with a fixed period. Fixed-period execution is the default.
  * <p>
- * The difference between fixed-rate and fixed-period execution 
- * is the following:  With fixed-rate execution, the start time of each 
+ * The difference between fixed-rate and fixed-period execution
+ * is the following:  With fixed-rate execution, the start time of each
  * successive run of the task is scheduled in absolute terms without regard for when the previous
- * task run actually took place. This can result in a series of bunched-up runs 
- * (one launched immediately after another) if busy resources or other 
+ * task run actually took place. This can result in a series of bunched-up runs
+ * (one launched immediately after another) if busy resources or other
  * system delays prevent the {@code Timer} from firing for an extended time.
- * With fixed-period execution, each successive run of the 
- * task is scheduled relative to the start time of the previous run of the 
- * task, so two runs of the task are never fired closer together in time than 
- * the specified {@code period}.</p>
- * </p>
- * 
+ * With fixed-period execution, each successive run of the
+ * task is scheduled relative to the start time of the previous run of the
+ * task, so two runs of the task are never fired closer together in time than
+ * the specified {@code period}.
+ *
  * @see TimerTask
  * @see java.lang.Object#wait(long)
- * @since Android 1.0
  */
 public class Timer {
 
     private static final class TimerImpl extends Thread {
 
-        private static final class TimerNode {
-            TimerNode parent, left, right;
+        private static final class TimerHeap {
+            private int DEFAULT_HEAP_SIZE = 256;
 
-            TimerTask task;
+            private TimerTask[] timers = new TimerTask[DEFAULT_HEAP_SIZE];
 
-            public TimerNode(TimerTask value) {
-                this.task = value;
+            private int size = 0;
+
+            private int deletedCancelledNumber = 0;
+
+            public TimerTask minimum() {
+                return timers[0];
             }
 
-            public void deleteIfCancelled(TimerTree tasks) {
-                /*
-                 * All changes in the tree structure during deleting this node
-                 * affect only the structure of the subtree having this node as
-                 * its root
-                 */
-                if (left != null) {
-                    left.deleteIfCancelled(tasks);
-                }
-                if (right != null) {
-                    right.deleteIfCancelled(tasks);
-                }
-                if (task.cancelled) {
-                    tasks.delete(this);
-                    tasks.deletedCancelledNumber++;
-                }
-            }
-        }
-
-        private static final class TimerTree {
-
-            int deletedCancelledNumber;
-
-            TimerNode root;
-
-            boolean isEmpty() {
-                return root == null;
+            public boolean isEmpty() {
+                return size == 0;
             }
 
-            void insert(TimerNode z) {
-                TimerNode y = null, x = root;
-                while (x != null) {
-                    y = x;
-                    if (z.task.getWhen() < x.task.getWhen()) {
-                        x = x.left;
-                    } else {
-                        x = x.right;
+            public void insert(TimerTask task) {
+                if (timers.length == size) {
+                    TimerTask[] appendedTimers = new TimerTask[size * 2];
+                    System.arraycopy(timers, 0, appendedTimers, 0, size);
+                    timers = appendedTimers;
+                }
+                timers[size++] = task;
+                upHeap();
+            }
+
+            public void delete(int pos) {
+                // posible to delete any position of the heap
+                if (pos >= 0 && pos < size) {
+                    timers[pos] = timers[--size];
+                    timers[size] = null;
+                    downHeap(pos);
+                }
+            }
+
+            private void upHeap() {
+                int current = size - 1;
+                int parent = (current - 1) / 2;
+
+                while (timers[current].when < timers[parent].when) {
+                    // swap the two
+                    TimerTask tmp = timers[current];
+                    timers[current] = timers[parent];
+                    timers[parent] = tmp;
+
+                    // update pos and current
+                    current = parent;
+                    parent = (current - 1) / 2;
+                }
+            }
+
+            private void downHeap(int pos) {
+                int current = pos;
+                int child = 2 * current + 1;
+
+                while (child < size && size > 0) {
+                    // compare the children if they exist
+                    if (child + 1 < size
+                            && timers[child + 1].when < timers[child].when) {
+                        child++;
+                    }
+
+                    // compare selected child with parent
+                    if (timers[current].when < timers[child].when) {
+                        break;
+                    }
+
+                    // swap the two
+                    TimerTask tmp = timers[current];
+                    timers[current] = timers[child];
+                    timers[child] = tmp;
+
+                    // update pos and current
+                    current = child;
+                    child = 2 * current + 1;
+                }
+            }
+
+            public void reset() {
+                timers = new TimerTask[DEFAULT_HEAP_SIZE];
+                size = 0;
+            }
+
+            public void adjustMinimum() {
+                downHeap(0);
+            }
+
+            public void deleteIfCancelled() {
+                for (int i = 0; i < size; i++) {
+                    if (timers[i].cancelled) {
+                        deletedCancelledNumber++;
+                        delete(i);
+                        // re-try this point
+                        i--;
                     }
                 }
-                z.parent = y;
-                if (y == null) {
-                    root = z;
-                } else if (z.task.getWhen() < y.task.getWhen()) {
-                    y.left = z;
-                } else {
-                    y.right = z;
-                }
             }
 
-            void delete(TimerNode z) {
-                TimerNode y = null, x = null;
-                if (z.left == null || z.right == null) {
-                    y = z;
-                } else {
-                    y = successor(z);
+            private int getTask(TimerTask task) {
+                for (int i = 0; i < timers.length; i++) {
+                    if (timers[i] == task) {
+                        return i;
+                    }
                 }
-                if (y.left != null) {
-                    x = y.left;
-                } else {
-                    x = y.right;
-                }
-                if (x != null) {
-                    x.parent = y.parent;
-                }
-                if (y.parent == null) {
-                    root = x;
-                } else if (y == y.parent.left) {
-                    y.parent.left = x;
-                } else {
-                    y.parent.right = x;
-                }
-                if (y != z) {
-                    z.task = y.task;
-                }
+                return -1;
             }
 
-            private TimerNode successor(TimerNode x) {
-                if (x.right != null) {
-                    return minimum(x.right);
-                }
-                TimerNode y = x.parent;
-                while (y != null && x == y.right) {
-                    x = y;
-                    y = y.parent;
-                }
-                return y;
-            }
-
-            private TimerNode minimum(TimerNode x) {
-                while (x.left != null) {
-                    x = x.left;
-                }
-                return x;
-            }
-
-            TimerNode minimum() {
-                return minimum(root);
-            }
         }
 
         /**
@@ -185,11 +183,11 @@ public class Timer {
          * Vector consists of scheduled events, sorted according to
          * {@code when} field of TaskScheduled object.
          */
-        private TimerTree tasks = new TimerTree();
+        private TimerHeap tasks = new TimerHeap();
 
         /**
          * Starts a new timer.
-         * 
+         *
          * @param isDaemon
          */
         TimerImpl(boolean isDaemon) {
@@ -230,13 +228,12 @@ public class Timer {
 
                     long currentTime = System.currentTimeMillis();
 
-                    TimerNode taskNode = tasks.minimum();
-                    task = taskNode.task;
+                    task = tasks.minimum();
                     long timeToSleep;
 
                     synchronized (task.lock) {
                         if (task.cancelled) {
-                            tasks.delete(taskNode);
+                            tasks.delete(0);
                             continue;
                         }
 
@@ -257,8 +254,12 @@ public class Timer {
                     // no sleep is necessary before launching the task
 
                     synchronized (task.lock) {
+                        int pos = 0;
+                        if (tasks.minimum().when != task.when) {
+                            pos = tasks.getTask(task);
+                        }
                         if (task.cancelled) {
-                            tasks.delete(taskNode);
+                            tasks.delete(tasks.getTask(task));
                             continue;
                         }
 
@@ -266,7 +267,7 @@ public class Timer {
                         task.setScheduledTime(task.when);
 
                         // remove task from queue
-                        tasks.delete(taskNode);
+                        tasks.delete(pos);
 
                         // set when the next task should be launched
                         if (task.period >= 0) {
@@ -299,7 +300,7 @@ public class Timer {
 
         private void insertTask(TimerTask newTask) {
             // callers are synchronized
-            tasks.insert(new TimerNode(newTask));
+            tasks.insert(newTask);
             this.notify();
         }
 
@@ -308,7 +309,7 @@ public class Timer {
          */
         public synchronized void cancel() {
             cancelled = true;
-            tasks = new TimerTree();
+            tasks.reset();
             this.notify();
         }
 
@@ -318,7 +319,7 @@ public class Timer {
             }
             // callers are synchronized
             tasks.deletedCancelledNumber = 0;
-            tasks.root.deleteIfCancelled(tasks);
+            tasks.deleteIfCancelled();
             return tasks.deletedCancelledNumber;
         }
 
@@ -329,71 +330,72 @@ public class Timer {
 
     // Used to finalize thread
     @SuppressWarnings("unused")
-    private Object finalizer = new Object() { // $NON-LOCK-1$
-        @Override
-        protected void finalize() {
-            synchronized (impl) {
-                impl.finished = true;
-                impl.notify();
-            }
-        }
-    };
+    private final Object finalizer;
 
     /**
      * Creates a new {@code Timer} which may be specified to be run as a daemon thread.
-     * 
+     *
      * @param isDaemon
      *            {@code true} if the {@code Timer}'s thread should be a daemon thread.
-     * @since Android 1.0
      */
     public Timer(boolean isDaemon) {
         // BEGIN android-changed
         impl = new TimerImpl("java.util.Timer", isDaemon);
         // END android-changed
+        finalizer = newFinalizer();
     }
 
     /**
      * Creates a new non-daemon {@code Timer}.
-     * 
-     * @since Android 1.0
      */
     public Timer() {
         // BEGIN android-changed
         impl = new TimerImpl("java.util.Timer", false);
         // END android-changed
+        finalizer = newFinalizer();
     }
 
     /**
      * Creates a new named {@code Timer} which may be specified to be run as a
      * daemon thread.
-     * 
+     *
      * @param name
      *            the name of the {@code Timer}.
      * @param isDaemon
      *            true if {@code Timer}'s thread should be a daemon thread.
-     * @since Android 1.0
      */
     public Timer(String name, boolean isDaemon) {
         impl = new TimerImpl(name, isDaemon);
+        finalizer = newFinalizer();
     }
 
     /**
      * Creates a new named {@code Timer} which does not run as a daemon thread.
-     * 
+     *
      * @param name
      *            the name of the Timer.
-     * @since Android 1.0
      */
     public Timer(String name) {
         impl = new TimerImpl(name, false);
+        finalizer = newFinalizer();
+    }
+
+    private Object newFinalizer() {
+        return new Object() { // $NON-LOCK-1$
+            @Override
+            protected void finalize() {
+                synchronized (impl) {
+                    impl.finished = true;
+                    impl.notify();
+                }
+            }
+        };
     }
 
     /**
      * Cancels the {@code Timer} and removes any scheduled tasks. If there is a
      * currently running task it is not affected. No more tasks may be scheduled
      * on this {@code Timer}. Subsequent calls do nothing.
-     * 
-     * @since Android 1.0
      */
     public void cancel() {
         impl.cancel();
@@ -401,12 +403,11 @@ public class Timer {
 
     /**
      * Removes all canceled tasks from the task queue. If there are no
-     * other references on the tasks, then after this call they are free 
+     * other references on the tasks, then after this call they are free
      * to be garbage collected.
-     * 
+     *
      * @return the number of canceled tasks that were removed from the task
      *         queue.
-     * @since Android 1.0
      */
     public int purge() {
         synchronized (impl) {
@@ -417,17 +418,16 @@ public class Timer {
     /**
      * Schedule a task for single execution. If {@code when} is less than the
      * current time, it will be scheduled to be executed as soon as possible.
-     * 
+     *
      * @param task
      *            the task to schedule.
      * @param when
      *            time of execution.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code when.getTime() < 0}.
-     * @exception IllegalStateException
+     * @throws IllegalStateException
      *                if the {@code Timer} has been canceled, or if the task has been
      *                scheduled or canceled.
-     * @since Android 1.0
      */
     public void schedule(TimerTask task, Date when) {
         if (when.getTime() < 0) {
@@ -439,17 +439,16 @@ public class Timer {
 
     /**
      * Schedule a task for single execution after a specified delay.
-     * 
+     *
      * @param task
      *            the task to schedule.
      * @param delay
      *            amount of time before execution.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code delay < 0}.
-     * @exception IllegalStateException
+     * @throws IllegalStateException
      *                if the {@code Timer} has been canceled, or if the task has been
      *                scheduled or canceled.
-     * @since Android 1.0
      */
     public void schedule(TimerTask task, long delay) {
         if (delay < 0) {
@@ -460,19 +459,18 @@ public class Timer {
 
     /**
      * Schedule a task for repeated fixed-delay execution after a specific delay.
-     * 
+     *
      * @param task
      *            the task to schedule.
      * @param delay
      *            amount of time before first execution.
      * @param period
      *            amount of time between subsequent executions.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code delay < 0} or {@code period < 0}.
-     * @exception IllegalStateException
+     * @throws IllegalStateException
      *                if the {@code Timer} has been canceled, or if the task has been
      *                scheduled or canceled.
-     * @since Android 1.0
      */
     public void schedule(TimerTask task, long delay, long period) {
         if (delay < 0 || period <= 0) {
@@ -484,19 +482,18 @@ public class Timer {
     /**
      * Schedule a task for repeated fixed-delay execution after a specific time
      * has been reached.
-     * 
+     *
      * @param task
      *            the task to schedule.
      * @param when
      *            time of first execution.
      * @param period
      *            amount of time between subsequent executions.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code when.getTime() < 0} or {@code period < 0}.
-     * @exception IllegalStateException
+     * @throws IllegalStateException
      *                if the {@code Timer} has been canceled, or if the task has been
      *                scheduled or canceled.
-     * @since Android 1.0
      */
     public void schedule(TimerTask task, Date when, long period) {
         if (period <= 0 || when.getTime() < 0) {
@@ -509,19 +506,18 @@ public class Timer {
     /**
      * Schedule a task for repeated fixed-rate execution after a specific delay
      * has passed.
-     * 
+     *
      * @param task
      *            the task to schedule.
      * @param delay
      *            amount of time before first execution.
      * @param period
      *            amount of time between subsequent executions.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code delay < 0} or {@code period < 0}.
-     * @exception IllegalStateException
+     * @throws IllegalStateException
      *                if the {@code Timer} has been canceled, or if the task has been
      *                scheduled or canceled.
-     * @since Android 1.0
      */
     public void scheduleAtFixedRate(TimerTask task, long delay, long period) {
         if (delay < 0 || period <= 0) {
@@ -533,19 +529,18 @@ public class Timer {
     /**
      * Schedule a task for repeated fixed-rate execution after a specific time
      * has been reached.
-     * 
+     *
      * @param task
      *            the task to schedule.
      * @param when
      *            time of first execution.
      * @param period
      *            amount of time between subsequent executions.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code when.getTime() < 0} or {@code period < 0}.
-     * @exception IllegalStateException
+     * @throws IllegalStateException
      *                if the {@code Timer} has been canceled, or if the task has been
      *                scheduled or canceled.
-     * @since Android 1.0
      */
     public void scheduleAtFixedRate(TimerTask task, Date when, long period) {
         if (period <= 0 || when.getTime() < 0) {
@@ -555,13 +550,8 @@ public class Timer {
         scheduleImpl(task, delay < 0 ? 0 : delay, period, true);
     }
 
-    /**
+    /*
      * Schedule a task.
-     * 
-     * @param task
-     * @param delay
-     * @param period
-     * @param fixed
      */
     private void scheduleImpl(TimerTask task, long delay, long period,
             boolean fixed) {

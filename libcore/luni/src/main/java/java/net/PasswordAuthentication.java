@@ -20,9 +20,8 @@ package java.net;
 /**
  * This immutable class is a data structure that encapsulates username and
  * password which is used by the {@code Authenticator} class.
- * 
+ *
  * @see Authenticator
- * @since Android 1.0
  */
 public final class PasswordAuthentication {
 
@@ -38,7 +37,6 @@ public final class PasswordAuthentication {
      *            the username to store.
      * @param password
      *            the associated password to store.
-     * @since Android 1.0
      */
     public PasswordAuthentication(String userName, char[] password) {
         this.userName = userName;
@@ -51,7 +49,6 @@ public final class PasswordAuthentication {
      * longer needed.
      * 
      * @return the copied password.
-     * @since Android 1.0
      */
     public char[] getPassword() {
         return password.clone();
@@ -61,7 +58,6 @@ public final class PasswordAuthentication {
      * Gets the username stored by this instance.
      * 
      * @return the stored username.
-     * @since Android 1.0
      */
     public String getUserName() {
         return userName;

@@ -26,7 +26,6 @@ package java.net;
  * @see URLConnection#getFileNameMap()
  * @see URLConnection#guessContentTypeFromName(String)
  * @see URLStreamHandler
- * @since Android 1.0
  */
 public interface FileNameMap {
 
@@ -36,7 +35,6 @@ public interface FileNameMap {
      * @param fileName
      *            the name of the file to consider.
      * @return the appropriate MIME type of the given file.
-     * @since Android 1.0
      */
     public String getContentTypeFor(String fileName);
 }

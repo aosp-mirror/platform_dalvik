@@ -17,15 +17,15 @@
 
 package java.util;
 
-import java.io.Serializable;
-
+// BEGIN android-added
 import org.apache.harmony.luni.util.Msg;
+// END android-added
+
+import java.io.Serializable;
 
 /**
  * This class represents a currency as identified in the ISO 4217 currency
  * codes.
- * 
- * @since Android 1.0
  */
 public final class Currency implements Serializable {
 
@@ -35,9 +35,11 @@ public final class Currency implements Serializable {
 
     private String currencyCode;
 
+    // BEGIN android-added
     private static String currencyVars = "EURO, HK, PREEURO"; //$NON-NLS-1$
 
     private transient int defaultFractionDigits;
+    // END android-added
 
     /**
      * @param currencyCode
@@ -49,20 +51,20 @@ public final class Currency implements Serializable {
     /**
      * Returns the {@code Currency} instance for this currency code.
      * <p>
-     * 
+     *
      * @param currencyCode
      *            the currency code.
      * @return the {@code Currency} instance for this currency code.
-     * 
+     *
      * @throws IllegalArgumentException
      *             if the currency code is not a supported ISO 4217 currency
      *             code.
-     * @since Android 1.0
      */
     public static Currency getInstance(String currencyCode) {
         Currency currency = codesToCurrencies.get(currencyCode);
 
         if (currency == null) {
+            // BEGIN android-added
             ResourceBundle bundle = Locale.getBundle(
                     "ISO4CurrenciesToDigits", Locale.getDefault()); //$NON-NLS-1$
             currency = new Currency(currencyCode);
@@ -77,6 +79,7 @@ public final class Currency implements Serializable {
             }
             currency.defaultFractionDigits = Integer
                     .parseInt(defaultFractionDigits);
+            // END android-added
             codesToCurrencies.put(currencyCode, currency);
         }
 
@@ -85,16 +88,26 @@ public final class Currency implements Serializable {
 
     /**
      * Returns the {@code Currency} instance for this {@code Locale}'s country.
-     * 
+     *
      * @param locale
      *            the {@code Locale} of a country.
      * @return the {@code Currency} used in the country defined by the locale parameter.
-     * 
+     *
      * @throws IllegalArgumentException
      *             if the locale's country is not a supported ISO 3166 Country.
-     * @since Android 1.0
      */
     public static Currency getInstance(Locale locale) {
+        // BEGIN android-changed
+        // com.ibm.icu.util.Currency currency = null;
+        // try {
+        //     currency = com.ibm.icu.util.Currency.getInstance(locale);
+        // } catch (IllegalArgumentException e) {
+        //     return null;
+        // }
+        // if (currency == null) {
+        //     throw new IllegalArgumentException(locale.getCountry());
+        // }
+        // String currencyCode = currency.getCurrencyCode();
         String country = locale.getCountry();
         String variant = locale.getVariant();
         if (!variant.equals("") && currencyVars.indexOf(variant) > -1) { //$NON-NLS-1$
@@ -110,6 +123,7 @@ public final class Currency implements Serializable {
             throw new IllegalArgumentException(Msg.getString(
                     "K0323", locale.toString())); //$NON-NLS-1$
         }
+        // END android-changed
 
         if (currencyCode.equals("None")) { //$NON-NLS-1$
             return null;
@@ -120,9 +134,8 @@ public final class Currency implements Serializable {
 
     /**
      * Returns this {@code Currency}'s ISO 4217 currency code.
-     * 
+     *
      * @return this {@code Currency}'s ISO 4217 currency code.
-     * @since Android 1.0
      */
     public String getCurrencyCode() {
         return currencyCode;
@@ -133,9 +146,8 @@ public final class Currency implements Serializable {
      * if the default locale is the US, the symbol of the US dollar is "$". For
      * other locales it may be "US$". If no symbol can be determined, the ISO
      * 4217 currency code of the US dollar is returned.
-     * 
+     *
      * @return the symbol for this {@code Currency} in the default {@code Locale}.
-     * @since Android 1.0
      */
     public String getSymbol() {
         return getSymbol(Locale.getDefault());
@@ -157,18 +169,19 @@ public final class Currency implements Serializable {
      * symbol for this currency in this bundle, then the
      * ISO 4217 currency code is returned.
      * <p>
-     * 
+     *
      * @param locale
      *            the locale for which the currency symbol should be returned.
      * @return the representation of this {@code Currency}'s symbol in the specified
      *         locale.
-     * @since Android 1.0
      */
     public String getSymbol(Locale locale) {
         if (locale.getCountry().equals("")) { //$NON-NLS-1$
             return currencyCode;
         }
 
+        // BEGIN android-changed
+        // return com.ibm.icu.util.Currency.getInstance(currencyCode).getSymbol(locale);
         // check in the Locale bundle first, if the local has the same currency
         ResourceBundle bundle = Locale.getBundle("Locale", locale); //$NON-NLS-1$
         if (((String) bundle.getObject("IntCurrencySymbol")) //$NON-NLS-1$
@@ -197,6 +210,7 @@ public final class Currency implements Serializable {
             return result;
         }
         return currencyCode;
+        // END android-changed
     }
 
     /**
@@ -204,19 +218,20 @@ public final class Currency implements Serializable {
      * instance, the default number of fraction digits for the US dollar is 2.
      * For the Japanese Yen the number is 0. In the case of pseudo-currencies,
      * such as IMF Special Drawing Rights, -1 is returned.
-     * 
+     *
      * @return the default number of fraction digits for this currency.
-     * @since Android 1.0
      */
     public int getDefaultFractionDigits() {
+        // BEGIN android-changed
+        // return com.ibm.icu.util.Currency.getInstance(currencyCode).getDefaultFractionDigits();
         return defaultFractionDigits;
+        // END android-changed
     }
 
     /**
      * Returns this currency's ISO 4217 currency code.
-     * 
+     *
      * @return this currency's ISO 4217 currency code.
-     * @since Android 1.0
      */
     @Override
     public String toString() {

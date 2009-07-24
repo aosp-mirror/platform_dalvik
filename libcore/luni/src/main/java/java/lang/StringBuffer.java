@@ -39,7 +39,7 @@ import java.io.Serializable;
  * 
  * @see String
  * @see StringBuilder
- * @since Android 1.0
+ * @since 1.0
  */
 public final class StringBuffer extends AbstractStringBuilder implements
         Appendable, Serializable, CharSequence {
@@ -53,8 +53,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
 
     /**
      * Constructs a new StringBuffer using the default capacity which is 16.
-     * 
-     * @since Android 1.0
      */
     public StringBuffer() {
         super();
@@ -65,7 +63,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * 
      * @param capacity
      *            the initial capacity.
-     * @since Android 1.0
      */
     public StringBuffer(int capacity) {
         super(capacity);
@@ -73,12 +70,13 @@ public final class StringBuffer extends AbstractStringBuilder implements
 
     /**
      * Constructs a new StringBuffer containing the characters in the specified
-     * stringy. The capacity of the new buffer will be the length of the
+     * string. The capacity of the new buffer will be the length of the
      * {@code String} plus the default capacity.
      * 
      * @param string
      *            the string content with which to initialize the new instance.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *            if {@code string} is {@code null}.
      */
     public StringBuffer(String string) {
         super(string);
@@ -91,7 +89,9 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * 
      * @param cs
      *            the content to initialize the instance.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *            if {@code cs} is {@code null}.
+     * @since 1.5
      */
     public StringBuffer(CharSequence cs) {
         super(cs.toString());
@@ -103,13 +103,11 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * <p>
      * If the argument is {@code true} the string {@code "true"} is appended,
      * otherwise the string {@code "false"} is appended.
-     * </p>
-     * 
+     *
      * @param b
      *            the boolean to append.
      * @return this StringBuffer.
      * @see String#valueOf(boolean)
-     * @since Android 1.0
      */
     public StringBuffer append(boolean b) {
         return append(b ? "true" : "false"); //$NON-NLS-1$//$NON-NLS-2$
@@ -122,7 +120,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      *            the character to append.
      * @return this StringBuffer.
      * @see String#valueOf(char)
-     * @since Android 1.0
      */
     public synchronized StringBuffer append(char ch) {
         append0(ch);
@@ -137,7 +134,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      *            the double to append.
      * @return this StringBuffer.
      * @see String#valueOf(double)
-     * @since Android 1.0
      */
     public StringBuffer append(double d) {
         return append(Double.toString(d));
@@ -151,7 +147,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      *            the float to append.
      * @return this StringBuffer.
      * @see String#valueOf(float)
-     * @since Android 1.0
      */
     public StringBuffer append(float f) {
         return append(Float.toString(f));
@@ -165,7 +160,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      *            the integer to append.
      * @return this StringBuffer.
      * @see String#valueOf(int)
-     * @since Android 1.0
      */
     public StringBuffer append(int i) {
         return append(Integer.toString(i));
@@ -179,7 +173,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      *            the long to append.
      * @return this StringBuffer.
      * @see String#valueOf(long)
-     * @since Android 1.0
      */
     public StringBuffer append(long l) {
         return append(Long.toString(l));
@@ -192,13 +185,11 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * If the specified object is {@code null} the string {@code "null"} is
      * appended, otherwise the objects {@code toString} is used to get its
      * string representation.
-     * </p>
-     * 
+     *
      * @param obj
      *            the object to append (may be null).
      * @return this StringBuffer.
      * @see String#valueOf(Object)
-     * @since Android 1.0
      */
     public synchronized StringBuffer append(Object obj) {
         if (obj == null) {
@@ -214,12 +205,10 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * <p>
      * If the specified string is {@code null} the string {@code "null"} is
      * appended, otherwise the contents of the specified string is appended.
-     * </p>
-     * 
+     *
      * @param string
      *            the string to append (may be null).
      * @return this StringBuffer.
-     * @since Android 1.0
      */
     public synchronized StringBuffer append(String string) {
         append0(string);
@@ -232,12 +221,12 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * If the specified StringBuffer is {@code null} the string {@code "null"}
      * is appended, otherwise the contents of the specified StringBuffer is
      * appended.
-     * </p>
-     * 
+     *
      * @param sb
      *            the StringBuffer to append (may be null).
      * @return this StringBuffer.
-     * @since Android 1.0
+     * 
+     * @since 1.4
      */
     public synchronized StringBuffer append(StringBuffer sb) {
         if (sb == null) {
@@ -256,7 +245,8 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @param chars
      *            the character array to append.
      * @return this StringBuffer.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *            if {@code chars} is {@code null}.
      */
     public synchronized StringBuffer append(char chars[]) {
         append0(chars);
@@ -276,7 +266,8 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code length < 0} , {@code start < 0} or {@code start +
      *             length > chars.length}.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *            if {@code chars} is {@code null}.
      */
     public synchronized StringBuffer append(char chars[], int start, int length) {
         append0(chars, start, length);
@@ -289,12 +280,11 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * If the specified CharSequence is {@code null} the string {@code "null"}
      * is appended, otherwise the contents of the specified CharSequence is
      * appended.
-     * </p>
-     * 
+     *
      * @param s
      *            the CharSequence to append.
      * @return this StringBuffer.
-     * @since Android 1.0
+     * @since 1.5
      */
     public synchronized StringBuffer append(CharSequence s) {
         if (s == null) {
@@ -310,8 +300,7 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * <p>
      * If the specified CharSequence is {@code null}, then the string {@code
      * "null"} is used to extract a subsequence.
-     * </p>
-     * 
+     *
      * @param s
      *            the CharSequence to append.
      * @param start
@@ -323,7 +312,7 @@ public final class StringBuffer extends AbstractStringBuilder implements
      *             if {@code start} or {@code end} are negative, {@code start}
      *             is greater than {@code end} or {@code end} is greater than
      *             the length of {@code s}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public synchronized StringBuffer append(CharSequence s, int start, int end) {
         append0(s, start, end);
@@ -336,13 +325,12 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * <p>
      * The code point is converted to a {@code char[]} as defined by
      * {@link Character#toChars(int)}.
-     * </p>
-     * 
+     *
      * @param codePoint
      *            the Unicode code point to encode and append.
      * @return this StringBuffer.
      * @see Character#toChars(int)
-     * @since Android 1.0
+     * @since 1.5
      */
     public StringBuffer appendCodePoint(int codePoint) {
         return append(Character.toChars(codePoint));
@@ -379,7 +367,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @throws StringIndexOutOfBoundsException
      *             if {@code start < 0}, {@code start > end} or {@code end >
      *             length()}.
-     * @since Android 1.0
      */
     public synchronized StringBuffer delete(int start, int end) {
         delete0(start, end);
@@ -394,7 +381,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this StringBuffer.
      * @throws StringIndexOutOfBoundsException
      *             if {@code location < 0} or {@code location >= length()}
-     * @since Android 1.0
      */
     public synchronized StringBuffer deleteCharAt(int location) {
         deleteCharAt0(location);
@@ -405,6 +391,7 @@ public final class StringBuffer extends AbstractStringBuilder implements
     public synchronized void ensureCapacity(int min) {
         super.ensureCapacity(min);
     }
+
     /**
      * Copies the requested sequence of characters to the {@code char[]} passed
      * starting at {@code idx}.
@@ -421,7 +408,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      *             if {@code start < 0}, {@code end > length()}, {@code start >
      *             end}, {@code index < 0}, {@code end - start > buffer.length -
      *             index}
-     * @since Android 1.0
      */
     @Override
     public synchronized void getChars(int start, int end, char[] buffer, int idx) {
@@ -443,7 +429,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
      */
     public synchronized StringBuffer insert(int index, char ch) {
         insert0(index, ch);
@@ -461,7 +446,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws StringIndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
      */
     public StringBuffer insert(int index, boolean b) {
         return insert(index, b ? "true" : "false"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -478,7 +462,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws StringIndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
      */
     public StringBuffer insert(int index, int i) {
         return insert(index, Integer.toString(i));
@@ -495,7 +478,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws StringIndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
      */
     public StringBuffer insert(int index, long l) {
         return insert(index, Long.toString(l));
@@ -512,7 +494,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws StringIndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
      */
     public StringBuffer insert(int index, double d) {
         return insert(index, Double.toString(d));
@@ -529,7 +510,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws StringIndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
      */
     public StringBuffer insert(int index, float f) {
         return insert(index, Float.toString(f));
@@ -542,8 +522,7 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * If the specified object is {@code null}, the string {@code "null"} is
      * inserted, otherwise the objects {@code toString} method is used to get
      * its string representation.
-     * </p>
-     * 
+     *
      * @param index
      *            the index at which to insert.
      * @param obj
@@ -551,7 +530,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws StringIndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
      */
     public StringBuffer insert(int index, Object obj) {
         return insert(index, obj == null ? "null" : obj.toString()); //$NON-NLS-1$
@@ -562,8 +540,7 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * <p>
      * If the specified string is {@code null}, the string {@code "null"} is
      * inserted, otherwise the contents of the string is inserted.
-     * </p>
-     * 
+     *
      * @param index
      *            the index at which to insert.
      * @param string
@@ -571,7 +548,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws StringIndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
      */
     public synchronized StringBuffer insert(int index, String string) {
         insert0(index, string);
@@ -588,7 +564,8 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws StringIndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *            if {@code chars} is {@code null}.
      */
     public synchronized StringBuffer insert(int index, char[] chars) {
         insert0(index, chars);
@@ -608,11 +585,12 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @param length
      *            the number of characters.
      * @return this buffer.
+     * @throws NullPointerException
+     *             if {@code chars} is {@code null}.
      * @throws StringIndexOutOfBoundsException
      *             if {@code length < 0}, {@code start < 0}, {@code start +
      *             length > chars.length}, {@code index < 0} or {@code index >
      *             length()}
-     * @since Android 1.0
      */
     public synchronized StringBuffer insert(int index, char chars[], int start,
             int length) {
@@ -626,8 +604,7 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * <p>
      * If the specified CharSequence is {@code null}, the string {@code "null"}
      * is inserted, otherwise the contents of the CharSequence.
-     * </p>
-     * 
+     *
      * @param index
      *            The index at which to insert.
      * @param s
@@ -635,7 +612,7 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * @return this buffer.
      * @throws IndexOutOfBoundsException
      *             if {@code index < 0} or {@code index > length()}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public synchronized StringBuffer insert(int index, CharSequence s) {
         insert0(index, s == null ? "null" : s.toString()); //$NON-NLS-1$
@@ -648,7 +625,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * <p>
      * If the specified CharSequence is {@code null}, the string {@code "null"}
      * is inserted, otherwise the contents of the CharSequence.
-     * </p>
      * 
      * @param index
      *            The index at which to insert.
@@ -664,7 +640,7 @@ public final class StringBuffer extends AbstractStringBuilder implements
      *             length, {@code start} or {@code end} are negative, {@code
      *             start} is greater than {@code end} or {@code end} is greater
      *             than the length of {@code s}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public synchronized StringBuffer insert(int index, CharSequence s,
             int start, int end) {
@@ -697,7 +673,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      *             if {@code start} or {@code end} are negative, {@code start}
      *             is greater than {@code end} or {@code end} is greater than
      *             the length of {@code s}.
-     * @since Android 1.0
      */
     public synchronized StringBuffer replace(int start, int end, String string) {
         replace0(start, end, string);
@@ -708,7 +683,6 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * Reverses the order of characters in this buffer.
      * 
      * @return this buffer.
-     * @since Android 1.0
      */
     public synchronized StringBuffer reverse() {
         reverse0();

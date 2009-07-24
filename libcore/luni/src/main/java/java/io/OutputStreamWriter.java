@@ -25,6 +25,7 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 import java.security.AccessController;
 
+import org.apache.harmony.luni.util.HistoricalNamesUtil;
 import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.PriviAction;
 
@@ -35,10 +36,8 @@ import org.apache.harmony.luni.util.PriviAction;
  * "file.encoding" system property. {@code OutputStreamWriter} contains a buffer
  * of bytes to be written to target stream and converts these into characters as
  * needed. The buffer size is 8K.
- * 
+ *
  * @see InputStreamReader
- * 
- * @since Android 1.0
  */
 public class OutputStreamWriter extends Writer {
 
@@ -52,10 +51,9 @@ public class OutputStreamWriter extends Writer {
      * Constructs a new OutputStreamWriter using {@code out} as the target
      * stream to write converted characters to. The default character encoding
      * is used.
-     * 
+     *
      * @param out
      *            the non-null target stream to write converted bytes to.
-     * @since Android 1.0
      */
     public OutputStreamWriter(OutputStream out) {
         super(out);
@@ -73,7 +71,7 @@ public class OutputStreamWriter extends Writer {
      * stream to write converted characters to and {@code enc} as the character
      * encoding. If the encoding cannot be found, an
      * UnsupportedEncodingException error is thrown.
-     * 
+     *
      * @param out
      *            the target stream to write converted bytes to.
      * @param enc
@@ -82,7 +80,6 @@ public class OutputStreamWriter extends Writer {
      *             if {@code enc} is {@code null}.
      * @throws UnsupportedEncodingException
      *             if the encoding specified by {@code enc} cannot be found.
-     * @since Android 1.0
      */
     public OutputStreamWriter(OutputStream out, final String enc)
             throws UnsupportedEncodingException {
@@ -104,12 +101,11 @@ public class OutputStreamWriter extends Writer {
      * Constructs a new OutputStreamWriter using {@code out} as the target
      * stream to write converted characters to and {@code cs} as the character
      * encoding.
-     * 
+     *
      * @param out
      *            the target stream to write converted bytes to.
      * @param cs
      *            the {@code Charset} that specifies the character encoding.
-     * @since Android 1.0
      */
     public OutputStreamWriter(OutputStream out, Charset cs) {
         super(out);
@@ -123,12 +119,11 @@ public class OutputStreamWriter extends Writer {
      * Constructs a new OutputStreamWriter using {@code out} as the target
      * stream to write converted characters to and {@code enc} as the character
      * encoder.
-     * 
+     *
      * @param out
      *            the target stream to write converted bytes to.
      * @param enc
      *            the character encoder used for character conversion.
-     * @since Android 1.0
      */
     public OutputStreamWriter(OutputStream out, CharsetEncoder enc) {
         super(out);
@@ -144,11 +139,9 @@ public class OutputStreamWriter extends Writer {
      * <p>
      * Only the first invocation of this method has any effect. Subsequent calls
      * do nothing.
-     * </p>
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this writer.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -168,10 +161,9 @@ public class OutputStreamWriter extends Writer {
      * Flushes this writer. This implementation ensures that all buffered bytes
      * are written to the target stream. After writing the bytes, the target
      * stream is flushed as well.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while flushing this writer.
-     * @since Android 1.0
      */
     @Override
     public void flush() throws IOException {
@@ -197,17 +189,15 @@ public class OutputStreamWriter extends Writer {
     /**
      * Gets the name of the encoding that is used to convert characters to
      * bytes.
-     * 
+     *
      * @return the string describing the converter or {@code null} if this
      *         writer is closed.
-     * @since Android 1.0
      */
     public String getEncoding() {
         if (encoder == null) {
             return null;
         }
-        return InputStreamReader.HistoricalNamesUtil.getHistoricalName(encoder
-                .charset().name());
+        return HistoricalNamesUtil.getHistoricalName(encoder.charset().name());
     }
 
     /**
@@ -215,7 +205,7 @@ public class OutputStreamWriter extends Writer {
      * to this writer. The characters are immediately converted to bytes by the
      * character converter and stored in a local buffer. If the buffer gets full
      * as a result of the conversion, this writer is flushed.
-     * 
+     *
      * @param buf
      *            the array containing characters to write.
      * @param offset
@@ -229,7 +219,6 @@ public class OutputStreamWriter extends Writer {
      * @throws IOException
      *             if this writer has already been closed or another I/O error
      *             occurs.
-     * @since Android 1.0
      */
     @Override
     public void write(char[] buf, int offset, int count) throws IOException {
@@ -273,12 +262,11 @@ public class OutputStreamWriter extends Writer {
      * of the integer {@code oneChar} are immediately converted to bytes by the
      * character converter and stored in a local buffer. If the buffer gets full
      * by converting this character, this writer is flushed.
-     * 
+     *
      * @param oneChar
      *            the character to write.
      * @throws IOException
      *             if this writer is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public void write(int oneChar) throws IOException {
@@ -294,7 +282,7 @@ public class OutputStreamWriter extends Writer {
      * to this writer. The characters are immediately converted to bytes by the
      * character converter and stored in a local buffer. If the buffer gets full
      * as a result of the conversion, this writer is flushed.
-     * 
+     *
      * @param str
      *            the string containing characters to write.
      * @param offset
@@ -308,7 +296,6 @@ public class OutputStreamWriter extends Writer {
      *             if {@code offset < 0} or {@code count < 0}, or if
      *             {@code offset + count} is bigger than the length of
      *             {@code str}.
-     * @since Android 1.0
      */
     @Override
     public void write(String str, int offset, int count) throws IOException {

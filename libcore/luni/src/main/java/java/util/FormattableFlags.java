@@ -22,7 +22,6 @@ package java.util;
  * flags must be done by the implementations.
  *  
  * @see Formattable
- * @since Android 1.0
  */
 public class FormattableFlags {
     
@@ -37,8 +36,6 @@ public class FormattableFlags {
      * right-justified.
      * 
      * The flag corresponds to '-' ('\u002d') in the format specifier.
-     * 
-     * @since Android 1.0
      */
     public static final int LEFT_JUSTIFY = 1;
 
@@ -48,8 +45,6 @@ public class FormattableFlags {
      * effect as {@code String.toUpperCase(java.util.Locale)}.
      * 
      * This flag corresponds to {@code '^' ('\u005e')} in the format specifier.
-     * 
-     * @since Android 1.0
      */
     public static final int UPPERCASE = 2;
 
@@ -58,8 +53,6 @@ public class FormattableFlags {
      * of the alternate form is determined by the {@code Formattable}.
      * 
      * This flag corresponds to {@code '#' ('\u0023')} in the format specifier.
-     * 
-     * @since Android 1.0
      */
     public static final int ALTERNATE = 4;
 }

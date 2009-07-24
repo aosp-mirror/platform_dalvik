@@ -17,20 +17,17 @@
 
 package java.util;
 
-
 /**
  * AbstractSequentialList is an abstract implementation of the List interface.
  * This implementation does not support adding. A subclass must implement the
  * abstract method listIterator().
- * 
- * @since Android 1.0
+ *
+ * @since 1.2
  */
 public abstract class AbstractSequentialList<E> extends AbstractList<E> {
 
     /**
      * Constructs a new instance of this AbstractSequentialList.
-     * 
-     * @since Android 1.0
      */
     protected AbstractSequentialList() {
         super();
@@ -45,24 +42,11 @@ public abstract class AbstractSequentialList<E> extends AbstractList<E> {
     public boolean addAll(int location, Collection<? extends E> collection) {
         ListIterator<E> it = listIterator(location);
         Iterator<? extends E> colIt = collection.iterator();
-        // BEGIN android-removed
-        // int next = it.nextIndex();
-        // while (colIt.hasNext()) {
-        //     it.add(colIt.next());
-        //     it.previous();
-        // }
-        // return next != it.nextIndex();
-        // END android-removed
-
-        // BEGIN android-added
-        // BUG: previous/next inconsistant.  We care for list
-        // modification NOT iterator modification.
-        int size = this.size();
+        int next = it.nextIndex();
         while (colIt.hasNext()) {
             it.add(colIt.next());
         }
-        return size != this.size();
-        // END android-added
+        return next != it.nextIndex();
     }
 
     @Override
@@ -97,6 +81,9 @@ public abstract class AbstractSequentialList<E> extends AbstractList<E> {
     @Override
     public E set(int location, E object) {
         ListIterator<E> it = listIterator(location);
+        if (!it.hasNext()) {
+            throw new IndexOutOfBoundsException();
+        }
         E result = it.next();
         it.set(object);
         return result;

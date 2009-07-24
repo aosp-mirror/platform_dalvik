@@ -228,6 +228,16 @@ public class ProcessBuilderTest extends TestCase {
         Process process = pb.start();
         InputStream in = process.getInputStream();
         InputStream err = process.getErrorStream();
+
+        while (true) {
+            try {
+                process.waitFor();
+                break;
+            } catch (InterruptedException e) {
+                // Ignored
+            }
+        }
+
         byte[] buf = new byte[1024];
         if (in.available() > 0) {
             assertTrue(in.read(buf) > 0);

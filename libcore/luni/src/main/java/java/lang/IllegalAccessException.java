@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when a program attempts to access a field or method which is not
  * accessible from the location where the reference is made.
- * 
- * @since Android 1.0
  */
 public class IllegalAccessException extends Exception {
 
@@ -30,8 +28,6 @@ public class IllegalAccessException extends Exception {
     /**
      * Constructs a new {@code IllegalAccessException} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public IllegalAccessException() {
         super();
@@ -43,7 +39,6 @@ public class IllegalAccessException extends Exception {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public IllegalAccessException(String detailMessage) {
         super(detailMessage);

@@ -21,18 +21,15 @@ package java.io;
  * are not used any longer. This usually includes all sorts of
  * {@link InputStream}s and {@link OutputStream}s. Calling the {@code close}
  * method releases resources that the object holds.
- * 
- * @since Android 1.0
  */
 public interface Closeable {
 
     /**
      * Closes the object and release any system resources it holds. If the
      * object has already been closed, then invoking this method has no effect.
-     * 
+     *
      * @throws IOException
      *             if any error occurs when closing the object.
-     * @since Android 1.0
      */
     public void close() throws IOException;
 }

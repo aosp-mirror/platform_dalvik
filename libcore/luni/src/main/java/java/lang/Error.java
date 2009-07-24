@@ -26,7 +26,6 @@ package java.lang;
  * @see Throwable
  * @see Exception
  * @see RuntimeException
- * @since Android 1.0
  */
 public class Error extends Throwable {
 
@@ -34,8 +33,6 @@ public class Error extends Throwable {
 
     /**
      * Constructs a new {@code Error} that includes the current stack trace.
-     * 
-     * @since Android 1.0
      */
     public Error() {
         super();
@@ -47,7 +44,6 @@ public class Error extends Throwable {
      * 
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public Error(String detailMessage) {
         super(detailMessage);
@@ -61,7 +57,6 @@ public class Error extends Throwable {
      *            the detail message for this error.
      * @param throwable
      *            the cause of this error.
-     * @since Android 1.0
      */
     public Error(String detailMessage, Throwable throwable) {
         super(detailMessage, throwable);
@@ -73,7 +68,6 @@ public class Error extends Throwable {
      * 
      * @param throwable
      *            the cause of this error.
-     * @since Android 1.0
      */
     public Error(Throwable throwable) {
         super(throwable);

@@ -25,8 +25,6 @@ package java.io;
  * @see ObjectInputStream#available()
  * @see ObjectInputStream#readObject()
  * @see ObjectInputStream#skipBytes(int)
- * 
- * @since Android 1.0
  */
 public class OptionalDataException extends ObjectStreamException {
 
@@ -34,24 +32,18 @@ public class OptionalDataException extends ObjectStreamException {
 
     /**
      * {@code true} indicates that there is no more primitive data available.
-     * 
-     * @since Android 1.0
      */
     public boolean eof;
 
     /**
      * The number of bytes of primitive data (int, char, long etc.) that are
      * available.
-     * 
-     * @since Android 1.0
      */
     public int length;
 
     /**
      * Constructs a new {@code OptionalDataException} with its stack trace
      * filled in.
-     * 
-     * @since Android 1.0
      */
     OptionalDataException() {
         super();
@@ -63,7 +55,6 @@ public class OptionalDataException extends ObjectStreamException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     OptionalDataException(String detailMessage) {
         super(detailMessage);

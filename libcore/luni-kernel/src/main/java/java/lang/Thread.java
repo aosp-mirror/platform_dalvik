@@ -79,10 +79,10 @@ public class Thread implements Runnable {
     private static class ParkState {
         /** park state indicating unparked */
         private static final int UNPARKED = 1;
-    
+
         /** park state indicating preemptively unparked */
         private static final int PREEMPTIVELY_UNPARKED = 2;
-    
+
         /** park state indicating parked */
         private static final int PARKED = 3;
     }
@@ -122,21 +122,21 @@ public class Thread implements Runnable {
 
     /**
      * The maximum priority value allowed for a thread.
-     * 
+     *
      * @since Android 1.0
      */
     public final static int MAX_PRIORITY = 10;
 
     /**
      * The minimum priority value allowed for a thread.
-     * 
+     *
      * @since Android 1.0
      */
     public final static int MIN_PRIORITY = 1;
 
     /**
      * The normal (default) priority value assigned to threads.
-     * 
+     *
      * @since Android 1.0
      */
     public final static int NORM_PRIORITY = 5;
@@ -200,7 +200,7 @@ public class Thread implements Runnable {
 
     /** the park state of the thread */
     private int parkState = ParkState.UNPARKED;
-        
+
     /**
      * Constructs a new {@code Thread} with no {@code Runnable} object and a
      * newly generated name. The new {@code Thread} will belong to the same
@@ -208,7 +208,7 @@ public class Thread implements Runnable {
      *
      * @see java.lang.ThreadGroup
      * @see java.lang.Runnable
-     * 
+     *
      * @since Android 1.0
      */
     public Thread() {
@@ -219,14 +219,14 @@ public class Thread implements Runnable {
      * Constructs a new {@code Thread} with a {@code Runnable} object and a
      * newly generated name. The new {@code Thread} will belong to the same
      * {@code ThreadGroup} as the {@code Thread} calling this constructor.
-     * 
+     *
      * @param runnable
      *            a {@code Runnable} whose method <code>run</code> will be
      *            executed by the new {@code Thread}
      *
      * @see java.lang.ThreadGroup
      * @see java.lang.Runnable
-     * 
+     *
      * @since Android 1.0
      */
     public Thread(Runnable runnable) {
@@ -237,13 +237,13 @@ public class Thread implements Runnable {
      * Constructs a new {@code Thread} with a {@code Runnable} object and name
      * provided. The new {@code Thread} will belong to the same {@code
      * ThreadGroup} as the {@code Thread} calling this constructor.
-     * 
+     *
      * @param runnable
      *            a {@code Runnable} whose method <code>run</code> will be
      *            executed by the new {@code Thread}
      * @param threadName
      *            the name for the {@code Thread} being created
-     * 
+     *
      * @see java.lang.ThreadGroup
      * @see java.lang.Runnable
      *
@@ -261,10 +261,10 @@ public class Thread implements Runnable {
      * Constructs a new {@code Thread} with no {@code Runnable} object and the
      * name provided. The new {@code Thread} will belong to the same {@code
      * ThreadGroup} as the {@code Thread} calling this constructor.
-     * 
+     *
      * @param threadName
      *            the name for the {@code Thread} being created
-     * 
+     *
      * @see java.lang.ThreadGroup
      * @see java.lang.Runnable
      *
@@ -282,7 +282,7 @@ public class Thread implements Runnable {
      * Constructs a new {@code Thread} with a {@code Runnable} object and a
      * newly generated name. The new {@code Thread} will belong to the {@code
      * ThreadGroup} passed as parameter.
-     * 
+     *
      * @param group
      *            {@code ThreadGroup} to which the new {@code Thread} will
      *            belong
@@ -298,7 +298,7 @@ public class Thread implements Runnable {
      * @see java.lang.Runnable
      * @see java.lang.SecurityException
      * @see java.lang.SecurityManager
-     * 
+     *
      * @since Android 1.0
      */
     public Thread(ThreadGroup group, Runnable runnable) {
@@ -308,7 +308,7 @@ public class Thread implements Runnable {
     /**
      * Constructs a new {@code Thread} with a {@code Runnable} object, the given
      * name and belonging to the {@code ThreadGroup} passed as parameter.
-     * 
+     *
      * @param group
      *            ThreadGroup to which the new {@code Thread} will belong
      * @param runnable
@@ -325,7 +325,7 @@ public class Thread implements Runnable {
      * @see java.lang.Runnable
      * @see java.lang.SecurityException
      * @see java.lang.SecurityManager
-     * 
+     *
      * @since Android 1.0
      */
     public Thread(ThreadGroup group, Runnable runnable, String threadName) {
@@ -339,7 +339,7 @@ public class Thread implements Runnable {
     /**
      * Constructs a new {@code Thread} with no {@code Runnable} object, the
      * given name and belonging to the {@code ThreadGroup} passed as parameter.
-     * 
+     *
      * @param group
      *            {@code ThreadGroup} to which the new {@code Thread} will belong
      * @param threadName
@@ -353,7 +353,7 @@ public class Thread implements Runnable {
      * @see java.lang.Runnable
      * @see java.lang.SecurityException
      * @see java.lang.SecurityManager
-     * 
+     *
      * @since Android 1.0
      */
     public Thread(ThreadGroup group, String threadName) {
@@ -367,7 +367,7 @@ public class Thread implements Runnable {
     /**
      * Constructs a new {@code Thread} with a {@code Runnable} object, the given
      * name and belonging to the {@code ThreadGroup} passed as parameter.
-     * 
+     *
      * @param group
      *            {@code ThreadGroup} to which the new {@code Thread} will
      *            belong
@@ -389,7 +389,7 @@ public class Thread implements Runnable {
      * @see java.lang.Runnable
      * @see java.lang.SecurityException
      * @see java.lang.SecurityManager
-     * 
+     *
      * @since Android 1.0
      */
     public Thread(ThreadGroup group, Runnable runnable, String threadName, long stackSize) {
@@ -528,9 +528,9 @@ public class Thread implements Runnable {
     /**
      * Returns the number of active {@code Thread}s in the running {@code
      * Thread}'s group and its subgroups.
-     * 
+     *
      * @return the number of {@code Thread}s
-     * 
+     *
      * @since Android 1.0
      */
     public static int activeCount() {
@@ -542,14 +542,14 @@ public class Thread implements Runnable {
      * there's none installed, this method is a no-op. If there's a
      * SecurityManager installed, {@link SecurityManager#checkAccess(Thread)} is
      * called for that SecurityManager.
-     * 
+     *
      * @throws SecurityException
      *             if a SecurityManager is installed and it does not allow
      *             access to the Thread.
-     * 
+     *
      * @see java.lang.SecurityException
      * @see java.lang.SecurityManager
-     * 
+     *
      * @since Android 1.0
      */
     public final void checkAccess() {
@@ -564,12 +564,12 @@ public class Thread implements Runnable {
 
     /**
      * Returns the number of stack frames in this thread.
-     * 
+     *
      * @return Number of stack frames
      * @deprecated The results of this call were never well defined. To make
      *             things worse, it would depend on whether the Thread was
      *             suspended or not, and suspend was deprecated too.
-     * 
+     *
      * @since Android 1.0
      */
     @Deprecated
@@ -581,7 +581,7 @@ public class Thread implements Runnable {
      * Returns the Thread of the caller, that is, the current Thread.
      *
      * @return the current Thread.
-     * 
+     *
      * @since Android 1.0
      */
     public static Thread currentThread() {
@@ -592,7 +592,7 @@ public class Thread implements Runnable {
      * Destroys the receiver without any monitor cleanup.
      *
      * @deprecated Not implemented.
-     * 
+     *
      * @since Android 1.0
      */
     @Deprecated
@@ -603,9 +603,9 @@ public class Thread implements Runnable {
     /**
      * Prints to the standard error stream a text representation of the current
      * stack for this Thread.
-     * 
+     *
      * @see Throwable#printStackTrace()
-     * 
+     *
      * @since Android 1.0
      */
     public static void dumpStack() {
@@ -617,7 +617,7 @@ public class Thread implements Runnable {
      * receiver - and subgroups - into the array <code>threads</code> passed as
      * parameter. If the array passed as parameter is too small no exception is
      * thrown - the extra elements are simply not copied.
-     * 
+     *
      * @param threads
      *            array into which the Threads will be copied
      * @return How many Threads were copied over
@@ -626,7 +626,7 @@ public class Thread implements Runnable {
      *             {@link SecurityManager#checkAccess(Thread)}
      * @see java.lang.SecurityException
      * @see java.lang.SecurityManager
-     * 
+     *
      * @since Android 1.0
      */
     public static int enumerate(Thread[] threads) {
@@ -640,13 +640,13 @@ public class Thread implements Runnable {
      * Returns the stack traces of all the currently live threads and puts them
      * into the given map.
      * </p>
-     * 
+     *
      * @return A Map of current Threads to StackTraceElement arrays.
      * @throws SecurityException
      *             if the current SecurityManager fails the
      *             {@link SecurityManager#checkPermission(java.security.Permission)}
      *             call.
-     * 
+     *
      * @since Android 1.0
      */
     public static Map<Thread, StackTraceElement[]> getAllStackTraces() {
@@ -684,14 +684,14 @@ public class Thread implements Runnable {
      * </ol>
      * are satisfied, a security check for
      * <code>RuntimePermission("getClassLoader")</code> is performed first.
-     * 
+     *
      * @return ClassLoader The context ClassLoader
      * @see java.lang.ClassLoader
      * @see #getContextClassLoader()
-     * 
+     *
      * @throws SecurityException
      *             if the aforementioned security check fails.
-     *             
+     *
      * @since Android 1.0
      */
     public ClassLoader getContextClassLoader() {
@@ -719,7 +719,7 @@ public class Thread implements Runnable {
      *
      * @return an {@link UncaughtExceptionHandler} or <code>null</code> if
      *         none exists.
-     * 
+     *
      * @since Android 1.0
      */
     public static UncaughtExceptionHandler getDefaultUncaughtExceptionHandler() {
@@ -731,9 +731,9 @@ public class Thread implements Runnable {
      * generated on thread creation, is unique to the thread, and doesn't change
      * during the lifetime of the thread; the ID may be reused after the thread
      * has been terminated.
-     * 
+     *
      * @return the thread's ID.
-     * 
+     *
      * @since Android 1.0
      */
     public long getId() {
@@ -744,7 +744,7 @@ public class Thread implements Runnable {
      * Returns the name of the Thread.
      *
      * @return the Thread's name
-     * 
+     *
      * @since Android 1.0
      */
     public final String getName() {
@@ -756,7 +756,7 @@ public class Thread implements Runnable {
      *
      * @return the Thread's priority
      * @see Thread#setPriority
-     * 
+     *
      * @since Android 1.0
      */
     public final int getPriority() {
@@ -770,13 +770,13 @@ public class Thread implements Runnable {
      * The <code>RuntimePermission("getStackTrace")</code> is checked before
      * returning a result.
      * </p>
-     * 
+     *
      * @return an array of StackTraceElements.
      * @throws SecurityException
      *             if the current SecurityManager fails the
      *             {@link SecurityManager#checkPermission(java.security.Permission)}
      *             call.
-     * 
+     *
      * @since Android 1.0
      */
     public StackTraceElement[] getStackTrace() {
@@ -792,9 +792,9 @@ public class Thread implements Runnable {
     /**
      * Returns the current state of the Thread. This method is useful for
      * monitoring purposes.
-     * 
+     *
      * @return a {@link State} value.
-     * 
+     *
      * @since Android 1.0
      */
     public State getState() {
@@ -805,7 +805,7 @@ public class Thread implements Runnable {
         // deletes the reference we won't run into a null reference later.
         VMThread thread = vmThread;
         if (thread != null) {
-            // If the Thread Object became invalid or was not yet started,  
+            // If the Thread Object became invalid or was not yet started,
             // getStatus() will return -1.
             int state = thread.getStatus();
             if(state != -1) {
@@ -814,12 +814,12 @@ public class Thread implements Runnable {
         }
         return hasBeenStarted ? Thread.State.TERMINATED : Thread.State.NEW;
     }
-    
+
     /**
      * Returns the ThreadGroup to which this Thread belongs.
-     * 
+     *
      * @return the Thread's ThreadGroup
-     * 
+     *
      * @since Android 1.0
      */
     public final ThreadGroup getThreadGroup() {
@@ -835,9 +835,9 @@ public class Thread implements Runnable {
      * Returns the thread's uncaught exception handler. If not explicitly set,
      * then the ThreadGroup's handler is returned. If the thread is terminated,
      * then <code>null</code> is returned.
-     * 
+     *
      * @return an {@link UncaughtExceptionHandler} instance or {@code null}.
-     * 
+     *
      * @since Android 1.0
      */
     public UncaughtExceptionHandler getUncaughtExceptionHandler() {
@@ -870,14 +870,14 @@ public class Thread implements Runnable {
      * their interrupt status set and return immediately. They don't receive an
      * exception in this case.
      * <ul>
-     * 
+     *
      * @throws SecurityException
      *             if <code>checkAccess()</code> fails with a SecurityException
      * @see java.lang.SecurityException
      * @see java.lang.SecurityManager
      * @see Thread#interrupted
      * @see Thread#isInterrupted
-     * 
+     *
      * @since Android 1.0
      */
     public void interrupt() {
@@ -898,12 +898,12 @@ public class Thread implements Runnable {
      * <code>currentThread()</code>) has a pending interrupt request (<code>
      * true</code>) or not (<code>false</code>). It also has the side-effect of
      * clearing the flag.
-     * 
+     *
      * @return a <code>boolean</code> indicating the interrupt status
      * @see Thread#currentThread
      * @see Thread#interrupt
      * @see Thread#isInterrupted
-     * 
+     *
      * @since Android 1.0
      */
     public static boolean interrupted() {
@@ -915,10 +915,10 @@ public class Thread implements Runnable {
      * still runs code (hasn't died yet). Returns <code>false</code> either if
      * the receiver hasn't been started yet or if it has already started and run
      * to completion and died.
-     * 
+     *
      * @return a <code>boolean</code> indicating the lifeness of the Thread
      * @see Thread#start
-     * 
+     *
      * @since Android 1.0
      */
     public final boolean isAlive() {
@@ -936,7 +936,7 @@ public class Thread implements Runnable {
      *
      * @return a <code>boolean</code> indicating whether the Thread is a daemon
      * @see Thread#setDaemon
-     * 
+     *
      * @since Android 1.0
      */
     public final boolean isDaemon() {
@@ -951,7 +951,7 @@ public class Thread implements Runnable {
      * @return a <code>boolean</code> indicating the interrupt status
      * @see Thread#interrupt
      * @see Thread#interrupted
-     * 
+     *
      * @since Android 1.0
      */
     public boolean isInterrupted() {
@@ -971,7 +971,7 @@ public class Thread implements Runnable {
      *         the receiver while it was in the <code>join()</code> call
      * @see Object#notifyAll
      * @see java.lang.ThreadDeath
-     * 
+     *
      * @since Android 1.0
      */
     public final void join() throws InterruptedException {
@@ -997,7 +997,7 @@ public class Thread implements Runnable {
      *         the receiver while it was in the <code>join()</code> call
      * @see Object#notifyAll
      * @see java.lang.ThreadDeath
-     * 
+     *
      * @since Android 1.0
      */
     public final void join(long millis) throws InterruptedException {
@@ -1015,7 +1015,7 @@ public class Thread implements Runnable {
      *         the receiver while it was in the <code>join()</code> call
      * @see Object#notifyAll
      * @see java.lang.ThreadDeath
-     * 
+     *
      * @since Android 1.0
      */
     public final void join(long millis, int nanos) throws InterruptedException {
@@ -1067,12 +1067,12 @@ public class Thread implements Runnable {
      * suspended, or suspended and already resumed. If the receiver is
      * suspended, however, makes it resume to the point where it was when it was
      * suspended.
-     * 
+     *
      * @throws SecurityException
      *             if <code>checkAccess()</code> fails with a SecurityException
      * @see Thread#suspend()
      * @deprecated Used with deprecated method {@link Thread#suspend}
-     * 
+     *
      * @since Android 1.0
      */
     @Deprecated
@@ -1090,7 +1090,7 @@ public class Thread implements Runnable {
      * holds. If no Runnable is set, does nothing.
      *
      * @see Thread#start
-     * 
+     *
      * @since Android 1.0
      */
     public void run() {
@@ -1111,7 +1111,7 @@ public class Thread implements Runnable {
      *         checkPermission call.
      * @see java.lang.ClassLoader
      * @see #getContextClassLoader()
-     * 
+     *
      * @since Android 1.0
      */
     public void setContextClassLoader(ClassLoader cl) {
@@ -1126,13 +1126,13 @@ public class Thread implements Runnable {
     /**
      * Set if the receiver is a daemon Thread or not. This can only be done
      * before the Thread starts running.
-     * 
+     *
      * @param isDaemon
      *            indicates whether the Thread should be daemon or not
      * @throws SecurityException
      *             if <code>checkAccess()</code> fails with a SecurityException
      * @see Thread#isDaemon
-     * 
+     *
      * @since Android 1.0
      */
     public final void setDaemon(boolean isDaemon) {
@@ -1156,13 +1156,13 @@ public class Thread implements Runnable {
      * The <code>RuntimePermission("setDefaultUncaughtExceptionHandler")</code>
      * is checked prior to setting the handler.
      * </p>
-     * 
+     *
      * @param handler
      *            The handler to set or <code>null</code>.
      * @throws SecurityException
      *             if the current SecurityManager fails the checkPermission
      *             call.
-     * 
+     *
      * @since Android 1.0
      */
     public static void setDefaultUncaughtExceptionHandler(UncaughtExceptionHandler handler) {
@@ -1197,7 +1197,7 @@ public class Thread implements Runnable {
      * @throws SecurityException if <code>checkAccess()</code> fails with a
      *         SecurityException
      * @see Thread#getName
-     * 
+     *
      * @since Android 1.0
      */
     public final void setName(String threadName) {
@@ -1220,7 +1220,7 @@ public class Thread implements Runnable {
      * be the parameter that was passed - it will depend on the receiver's
      * ThreadGroup. The priority cannot be set to be higher than the receiver's
      * ThreadGroup's maxPriority().
-     * 
+     *
      * @param priority
      *            new priority for the Thread
      * @throws SecurityException
@@ -1229,7 +1229,7 @@ public class Thread implements Runnable {
      *             if the new priority is greater than Thread.MAX_PRIORITY or
      *             less than Thread.MIN_PRIORITY
      * @see Thread#getPriority
-     * 
+     *
      * @since Android 1.0
      */
     public final void setPriority(int priority) {
@@ -1256,12 +1256,12 @@ public class Thread implements Runnable {
      * Sets the uncaught exception handler. This handler is invoked in case this
      * Thread dies due to an unhandled exception.
      * </p>
-     * 
+     *
      * @param handler
      *            The handler to set or <code>null</code>.
      * @throws SecurityException
      *             if the current SecurityManager fails the checkAccess call.
-     * 
+     *
      * @since Android 1.0
      */
     public void setUncaughtExceptionHandler(UncaughtExceptionHandler handler) {
@@ -1274,14 +1274,14 @@ public class Thread implements Runnable {
      * Causes the thread which sent this message to sleep for the given interval
      * of time (given in milliseconds). The precision is not guaranteed - the
      * Thread may sleep more or less than requested.
-     * 
+     *
      * @param time
      *            The time to sleep in milliseconds.
      * @throws InterruptedException
      *             if <code>interrupt()</code> was called for this Thread while
      *             it was sleeping
      * @see Thread#interrupt()
-     * 
+     *
      * @since Android 1.0
      */
     public static void sleep(long time) throws InterruptedException {
@@ -1292,7 +1292,7 @@ public class Thread implements Runnable {
      * Causes the thread which sent this message to sleep for the given interval
      * of time (given in milliseconds and nanoseconds). The precision is not
      * guaranteed - the Thread may sleep more or less than requested.
-     * 
+     *
      * @param millis
      *            The time to sleep in milliseconds.
      * @param nanos
@@ -1301,7 +1301,7 @@ public class Thread implements Runnable {
      *             if <code>interrupt()</code> was called for this Thread while
      *             it was sleeping
      * @see Thread#interrupt()
-     * 
+     *
      * @since Android 1.0
      */
     public static void sleep(long millis, int nanos) throws InterruptedException {
@@ -1314,9 +1314,9 @@ public class Thread implements Runnable {
      * Thread calling <code>start()</code>).
      *
      * @throws IllegalThreadStateException if the Thread has been started before
-     * 
+     *
      * @see Thread#run
-     * 
+     *
      * @since Android 1.0
      */
     public synchronized void start() {
@@ -1338,7 +1338,7 @@ public class Thread implements Runnable {
      *         SecurityException
      * @deprecated because stopping a thread in this manner is unsafe and can
      * leave your application and the VM in an unpredictable state.
-     * 
+     *
      * @since Android 1.0
      */
     @Deprecated
@@ -1359,7 +1359,7 @@ public class Thread implements Runnable {
      *         <code>null</code>
      * @deprecated because stopping a thread in this manner is unsafe and can
      * leave your application and the VM in an unpredictable state.
-     * 
+     *
      * @since Android 1.0
      */
     @Deprecated
@@ -1388,12 +1388,12 @@ public class Thread implements Runnable {
      * resume()</code> is sent to it. Suspend requests are not queued, which
      * means that N requests are equivalent to just one - only one resume
      * request is needed in this case.
-     * 
+     *
      * @throws SecurityException
      *             if <code>checkAccess()</code> fails with a SecurityException
      * @see Thread#resume()
      * @deprecated May cause deadlocks.
-     * 
+     *
      * @since Android 1.0
      */
     @Deprecated
@@ -1409,9 +1409,9 @@ public class Thread implements Runnable {
     /**
      * Returns a string containing a concise, human-readable description of the
      * Thread. It includes the Thread's name, priority, and group name.
-     * 
+     *
      * @return a printable representation for the receiver.
-     * 
+     *
      * @since Android 1.0
      */
     @Override
@@ -1422,7 +1422,7 @@ public class Thread implements Runnable {
     /**
      * Causes the calling Thread to yield execution time to another Thread that
      * is ready to run. The actual scheduling is implementation-dependent.
-     * 
+     *
      * @since Android 1.0
      */
     public static void yield() {
@@ -1436,7 +1436,7 @@ public class Thread implements Runnable {
      * @param object the object to test for the monitor lock
      * @return true if the current thread has a monitor lock on the specified
      *         object; false otherwise
-     *         
+     *
      * @since Android 1.0
      */
     public static boolean holdsLock(Object object) {
@@ -1448,7 +1448,7 @@ public class Thread implements Runnable {
      * terminated by an uncaught exception. Upon such termination, the handler
      * is notified of the terminating thread and causal exception. If there is
      * no explicit handler set then the thread's group is the default handler.
-     * 
+     *
      * @since Android 1.0
      */
     public static interface UncaughtExceptionHandler {
@@ -1459,7 +1459,7 @@ public class Thread implements Runnable {
          *
          * @param thread the thread that has an uncaught exception
          * @param ex the exception that was thrown
-         * 
+         *
          * @since Android 1.0
          */
         void uncaughtException(Thread thread, Throwable ex);
@@ -1482,7 +1482,7 @@ public class Thread implements Runnable {
             parkState = ParkState.PREEMPTIVELY_UNPARKED;
             return;
         }
-        
+
         synchronized (vmt) {
             switch (parkState) {
                 case ParkState.PREEMPTIVELY_UNPARKED: {
@@ -1506,12 +1506,12 @@ public class Thread implements Runnable {
             }
         }
     }
-    
+
     /**
      * Implementation of <code>parkFor()</code>. See {@link LangAccessImpl}.
      * This method must only be called when <code>this</code> is the current
      * thread.
-     * 
+     *
      * @param nanos number of nanoseconds to park for
      */
     /*package*/ void parkFor(long nanos) {
@@ -1521,7 +1521,7 @@ public class Thread implements Runnable {
             // Running threads should always have an associated vmThread.
             throw new AssertionError();
         }
-        
+
         synchronized (vmt) {
             switch (parkState) {
                 case ParkState.PREEMPTIVELY_UNPARKED: {
@@ -1545,7 +1545,7 @@ public class Thread implements Runnable {
                          */
                         if (parkState == ParkState.PARKED) {
                             parkState = ParkState.UNPARKED;
-                        }                            
+                        }
                     }
                     break;
                 }
@@ -1553,7 +1553,7 @@ public class Thread implements Runnable {
                     throw new AssertionError(
                             "shouldn't happen: attempt to repark");
                 }
-            }       
+            }
         }
     }
 
@@ -1561,7 +1561,7 @@ public class Thread implements Runnable {
      * Implementation of <code>parkUntil()</code>. See {@link LangAccessImpl}.
      * This method must only be called when <code>this</code> is the current
      * thread.
-     * 
+     *
      * @param time absolute milliseconds since the epoch to park until
      */
     /*package*/ void parkUntil(long time) {
@@ -1571,7 +1571,7 @@ public class Thread implements Runnable {
             // Running threads should always have an associated vmThread.
             throw new AssertionError();
         }
-        
+
         synchronized (vmt) {
             /*
              * Note: This conflates the two time bases of "wall clock"

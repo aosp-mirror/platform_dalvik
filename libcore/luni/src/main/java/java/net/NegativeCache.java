@@ -25,16 +25,13 @@ import org.apache.harmony.luni.util.PriviAction;
 /**
  * This class is used to maintain the negative name lookup cache, which caches
  * host names which could not be resolved, as a security feature.
- * 
+ *
  * @see NegCacheElement
- * @since Android 1.0
  */
 class NegativeCache<K, V> extends LinkedHashMap<K, V> {
 
     private static final long serialVersionUID = 1L;
 
-    // BEGIN android-changed
-    // Copied from a newer version of harmony
     private static NegativeCache<String, NegCacheElement> negCache;
 
     // maximum number of entries in the cache
@@ -42,13 +39,17 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
 
     // the loading for the cache
     private static final float LOADING = 0.75F;
-    // END android-changed
 
     /**
-     * Returns the hostname for the cache element.
-     * 
-     * @return hostName name of the host for which the lookup failed.
-     * @since Android 1.0
+     * Constructs a negative cache for name lookups.
+     *
+     * @param initialCapacity
+     *            the initial size of the cache.
+     * @param loadFactor
+     *            the load factor of the backing map.
+     * @param accessOrder
+     *            if {@code true} indicates that traversal order should begin
+     *            with most recently accessed element.
      */
     NegativeCache(int initialCapacity, float loadFactor, boolean accessOrder) {
         super(initialCapacity, loadFactor, accessOrder);
@@ -59,10 +60,9 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
      * size has grown beyond the maximum size allowed for the cache. A {@code
      * LinkedHashMap} is created such that the least recently used entry is
      * deleted.
-     * 
+     *
      * @param eldest
      *            the map entry which will be deleted if we return {@code true}.
-     * @since Android 1.0
      */
     @Override
     protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
@@ -72,17 +72,13 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
     /**
      * Adds the host name and the corresponding name lookup fail message to the
      * cache.
-     * 
+     *
      * @param hostName
      *            the name of the host for which the lookup failed.
      * @param failedMessage
      *            the message returned when the lookup fails.
-     * @since Android 1.0
      */
     static synchronized void put(String hostName, String failedMessage) {
-        // BEGIN android-note
-        // Made synchronized. copied from a newer version of harmony
-        // END android-note
         checkCacheExists();
         negCache.put(hostName, new NegCacheElement(failedMessage));
     }
@@ -90,17 +86,13 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
     /**
      * Returns the message of the negative cache if the entry has not yet
      * expired.
-     * 
+     *
      * @param hostName
      *            the name of the host for which we look up the entry.
      * @return the message which was returned when the host lookup failed if the
      *         entry has not yet expired.
-     * @since Android 1.0
      */
     static synchronized String getFailedMessage(String hostName) {
-        // BEGIN android-note
-        // Made synchronized. copied from a newer version of harmony
-        // END android-note
         checkCacheExists();
         NegCacheElement element = negCache.get(hostName);
         if (element != null) {
@@ -130,10 +122,7 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
             }
         }
         if (element != null) {
-            // BEGIN android-changed
-            // Copied from a newer version of harmony
             return element.hostName;
-            // END android-changed
         }
         return null;
     }
@@ -148,13 +137,9 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
     // END android-added
 
     /**
-     * This method checks whether the cache was already created and if not
-     * creates it.
+     * This method checks if we have created the cache and if not creates it
      */
     static synchronized void checkCacheExists() {
-        // BEGIN android-note
-        // Made synchronized. copied from a newer version of harmony
-        // END android-note
         if (negCache == null) {
             /*
              * Create with the access order set so ordering is based on when the

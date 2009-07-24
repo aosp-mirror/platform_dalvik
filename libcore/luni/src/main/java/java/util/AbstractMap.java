@@ -17,17 +17,12 @@
 
 package java.util;
 
-// BEGIN android-added
-// copied from newer harmony
-import java.util.Map.Entry;
-// END android-added
-
 /**
  * This class is an abstract implementation of the {@code Map} interface. This
  * implementation does not support adding. A subclass must implement the
  * abstract method entrySet().
- * 
- * @since Android 1.0
+ *
+ * @since 1.2
  */
 public abstract class AbstractMap<K, V> implements Map<K, V> {
 
@@ -38,8 +33,6 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Constructs a new instance of this {@code AbstractMap}.
-     * 
-     * @since Android 1.0
      */
     protected AbstractMap() {
         super();
@@ -47,12 +40,11 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Removes all elements from this map, leaving it empty.
-     * 
+     *
      * @throws UnsupportedOperationException
      *                if removing from this map is not supported.
      * @see #isEmpty()
      * @see #size()
-     * @since Android 1.0
      */
     public void clear() {
         entrySet().clear();
@@ -60,12 +52,11 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns whether this map contains the specified key.
-     * 
+     *
      * @param key
      *            the key to search for.
      * @return {@code true} if this map contains the specified key,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean containsKey(Object key) {
         Iterator<Map.Entry<K, V>> it = entrySet().iterator();
@@ -87,12 +78,11 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns whether this map contains the specified value.
-     * 
+     *
      * @param value
      *            the value to search for.
      * @return {@code true} if this map contains the specified value,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean containsValue(Object value) {
         Iterator<Map.Entry<K, V>> it = entrySet().iterator();
@@ -116,23 +106,21 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
      * Returns a set containing all of the mappings in this map. Each mapping is
      * an instance of {@link Map.Entry}. As the set is backed by this map,
      * changes in one will be reflected in the other.
-     * 
+     *
      * @return a set of the mappings.
-     * @since Android 1.0
      */
     public abstract Set<Map.Entry<K, V>> entrySet();
 
     /**
      * Compares the specified object to this instance, and returns {@code true}
      * if the specified object is a map and both maps contain the same mappings.
-     * 
+     *
      * @param object
      *            the object to compare with this object.
      * @return boolean {@code true} if the object is the same as this object,
      *         and {@code false} if it is different from this object.
      * @see #hashCode()
      * @see #entrySet()
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -145,19 +133,21 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
                 return false;
             }
 
-            // BEGIN android-changed
-            // copied from newer version of harmony
             Iterator<Map.Entry<K, V>> it = entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<K, V> entry = it.next();
-                K key = entry.getKey();
-                V value = entry.getValue();
-                Object obj = map.get(key);
-                if( null != obj && (!obj.equals(value)) || null == obj && obj != value) {
-                    return false;
+
+            try {
+                while (it.hasNext()) {
+                    Entry<K, V> entry = it.next();
+                    K key = entry.getKey();
+                    V value = entry.getValue();
+                    Object obj = map.get(key);
+                    if( null != obj && (!obj.equals(value)) || null == obj && obj != value) {
+                        return false;
+                    }
                 }
+            } catch (ClassCastException cce) {
+                return false;
             }
-            // END android-changed
             return true;
         }
         return false;
@@ -165,12 +155,11 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns the value of the mapping with the specified key.
-     * 
+     *
      * @param key
      *            the key.
      * @return the value of the mapping with the specified key, or {@code null}
      *         if no mapping for the specified key is found.
-     * @since Android 1.0
      */
     public V get(Object key) {
         Iterator<Map.Entry<K, V>> it = entrySet().iterator();
@@ -195,10 +184,9 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
     /**
      * Returns the hash code for this object. Objects which are equal must
      * return the same value for this method.
-     * 
+     *
      * @return the hash code of this object.
      * @see #equals(Object)
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -212,11 +200,10 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns whether this map is empty.
-     * 
+     *
      * @return {@code true} if this map has no elements, {@code false}
      *         otherwise.
      * @see #size()
-     * @since Android 1.0
      */
     public boolean isEmpty() {
         return size() == 0;
@@ -226,9 +213,8 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
      * Returns a set of the keys contained in this map. The set is backed by
      * this map so changes to one are reflected by the other. The returned set
      * does not support adding.
-     * 
+     *
      * @return a set of the keys.
-     * @since Android 1.0
      */
     public Set<K> keySet() {
         if (keySet == null) {
@@ -269,7 +255,7 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Maps the specified key to the specified value.
-     * 
+     *
      * @param key
      *            the key.
      * @param value
@@ -286,7 +272,6 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
      * @throws NullPointerException
      *                if the key or value is {@code null} and this Map does not
      *                support {@code null} keys or values.
-     * @since Android 1.0
      */
     public V put(K key, V value) {
         throw new UnsupportedOperationException();
@@ -294,7 +279,7 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Copies every mapping in the specified map to this map.
-     * 
+     *
      * @param map
      *            the map to copy mappings from.
      * @throws UnsupportedOperationException
@@ -307,7 +292,6 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
      * @throws NullPointerException
      *                if a key or value is {@code null} and this map does not
      *                support {@code null} keys or values.
-     * @since Android 1.0
      */
     public void putAll(Map<? extends K, ? extends V> map) {
         for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
@@ -317,14 +301,13 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Removes a mapping with the specified key from this Map.
-     * 
+     *
      * @param key
      *            the key of the mapping to remove.
      * @return the value of the removed mapping or {@code null} if no mapping
      *         for the specified key was found.
      * @throws UnsupportedOperationException
      *                if removing from this map is not supported.
-     * @since Android 1.0
      */
     public V remove(Object key) {
         Iterator<Map.Entry<K, V>> it = entrySet().iterator();
@@ -350,9 +333,8 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns the number of elements in this map.
-     * 
+     *
      * @return the number of elements in this map.
-     * @since Android 1.0
      */
     public int size() {
         return entrySet().size();
@@ -360,9 +342,8 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns the string representation of this map.
-     * 
+     *
      * @return the string representation of this map.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -407,16 +388,13 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
      * "wrapper object" over the iterator of map's entrySet(). The {@code size}
      * method wraps the map's size method and the {@code contains} method wraps
      * the map's containsValue method.
-     * </p>
      * <p>
      * The collection is created when this method is called for the first time
      * and returned in response to all subsequent calls. This method may return
      * different collections when multiple concurrent calls occur to this
      * method, since no synchronization is performed.
-     * </p>
-     * 
+     *
      * @return a collection of the values contained in this map.
-     * @since Android 1.0
      */
     public Collection<V> values() {
         if (valuesCollection == null) {
@@ -458,12 +436,11 @@ public abstract class AbstractMap<K, V> implements Map<K, V> {
     /**
      * Returns a new instance of the same class as this instance, whose slots
      * have been filled in with the values of the slots of this instance.
-     * 
+     *
      * @return a shallow copy of this object.
      * @throws CloneNotSupportedException
      *                if the receiver's class does not implement the interface
      *                {@code Cloneable}.
-     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")

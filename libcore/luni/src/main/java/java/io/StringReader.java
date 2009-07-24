@@ -22,10 +22,8 @@ import org.apache.harmony.luni.util.Msg;
 /**
  * A specialized {@link Reader} that reads characters from a {@code String} in
  * a sequential manner.
- * 
+ *
  * @see StringWriter
- * 
- * @since Android 1.0
  */
 public class StringReader extends Reader {
     private String str;
@@ -40,13 +38,12 @@ public class StringReader extends Reader {
      * Construct a new {@code StringReader} with {@code str} as source. The size
      * of the reader is set to the {@code length()} of the string and the Object
      * to synchronize access through is set to {@code str}.
-     * 
+     *
      * @param str
      *            the source string for this reader.
-     * @since Android 1.0
      */
     public StringReader(String str) {
-        super(str);
+        super();
         this.str = str;
         this.count = str.length();
     }
@@ -55,22 +52,15 @@ public class StringReader extends Reader {
      * Closes this reader. Once it is closed, read operations on this reader
      * will throw an {@code IOException}. Only the first invocation of this
      * method has any effect.
-     * 
-     * @since Android 1.0
      */
     @Override
     public void close() {
-        synchronized (lock) {
-            if (isClosed()) {
-                return;
-            }
-            str = null;
-        }
+        str = null;
     }
 
     /**
      * Returns a boolean indicating whether this reader is closed.
-     * 
+     *
      * @return {@code true} if closed, otherwise {@code false}.
      */
     private boolean isClosed() {
@@ -81,7 +71,7 @@ public class StringReader extends Reader {
      * Sets a mark position in this reader. The parameter {@code readLimit} is
      * ignored for this class. Calling {@code reset()} will reposition the
      * reader back to the marked position.
-     * 
+     *
      * @param readLimit
      *            ignored for {@code StringReader} instances.
      * @throws IllegalArgumentException
@@ -90,7 +80,6 @@ public class StringReader extends Reader {
      *             if this reader is closed.
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public void mark(int readLimit) throws IOException {
@@ -109,9 +98,8 @@ public class StringReader extends Reader {
     /**
      * Indicates whether this reader supports the {@code mark()} and {@code
      * reset()} methods. This implementation returns {@code true}.
-     * 
+     *
      * @return always {@code true}.
-     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -122,12 +110,11 @@ public class StringReader extends Reader {
      * Reads a single character from the source string and returns it as an
      * integer with the two higher-order bytes set to 0. Returns -1 if the end
      * of the source string has been reached.
-     * 
+     *
      * @return the character read or -1 if the end of the source string has been
      *         reached.
      * @throws IOException
      *             if this reader is closed.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -147,7 +134,7 @@ public class StringReader extends Reader {
      * them at {@code offset} in the character array {@code buf}. Returns the
      * number of characters actually read or -1 if the end of the source string
      * has been reached.
-     * 
+     *
      * @param buf
      *            the character array to store the characters read.
      * @param offset
@@ -162,14 +149,12 @@ public class StringReader extends Reader {
      *             {@code offset + len} is greater than the size of {@code buf}.
      * @throws IOException
      *             if this reader is closed.
-     * @since Android 1.0
      */
     @Override
     public int read(char[] buf, int offset, int len) throws IOException {
         // BEGIN android-note
         // changed array notation to be consistent with the rest of harmony
         // END android-note
-        // avoid int overflow
         // BEGIN android-changed
         // Exception priorities (in case of multiple errors) differ from
         // RI, but are spec-compliant.
@@ -178,13 +163,17 @@ public class StringReader extends Reader {
         if (buf == null) {
             throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
-        if ((offset | len) < 0 || len > buf.length - offset) {
-            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
-        }
-        // END android-changed
         synchronized (lock) {
+            // avoid int overflow
+            if ((offset | len) < 0 || len > buf.length - offset) {
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+            }
+            // END android-changed
             if (isClosed()) {
                 throw new IOException(Msg.getString("K0083")); //$NON-NLS-1$
+            }
+            if (len == 0) {
+                return 0;
             }
             if (pos == this.count) {
                 return -1;
@@ -200,13 +189,12 @@ public class StringReader extends Reader {
     /**
      * Indicates whether this reader is ready to be read without blocking. This
      * implementation always returns {@code true}.
-     * 
+     *
      * @return always {@code true}.
      * @throws IOException
      *             if this reader is closed.
      * @see #read()
      * @see #read(char[], int, int)
-     * @since Android 1.0
      */
     @Override
     public boolean ready() throws IOException {
@@ -223,12 +211,11 @@ public class StringReader extends Reader {
      * Invocations of {@code read()} and {@code skip()} will occur from this new
      * location. If this reader has not been marked, it is reset to the
      * beginning of the source string.
-     * 
+     *
      * @throws IOException
      *             if this reader is closed.
      * @see #mark(int)
      * @see #markSupported()
-     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {
@@ -244,7 +231,7 @@ public class StringReader extends Reader {
      * Skips {@code amount} characters in the source string. Subsequent calls of
      * {@code read} methods will not return these characters unless {@code
      * reset()} is used.
-     * 
+     *
      * @param ns
      *            the maximum number of characters to skip.
      * @return the number of characters actually skipped or 0 if {@code ns < 0}.
@@ -253,7 +240,6 @@ public class StringReader extends Reader {
      * @see #mark(int)
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public long skip(long ns) throws IOException {

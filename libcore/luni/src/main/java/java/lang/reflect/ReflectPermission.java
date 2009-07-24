@@ -22,8 +22,6 @@ import java.security.BasicPermission;
 /**
  * A {@code ReflectPermission} object represents a permission to access
  * operations in the reflection layer.
- * 
- * @since Android 1.0
  */
 public final class ReflectPermission extends BasicPermission {
 
@@ -35,13 +33,10 @@ public final class ReflectPermission extends BasicPermission {
      * 
      * @param permissionName
      *            the name of the new permission
-     *            
      * @throws IllegalArgumentException
      *             if {@code name} is empty
      * @throws NullPointerException
      *             if {@code name} is {@code null}
-     * 
-     * @since Android 1.0
      */
     public ReflectPermission(String permissionName) {
         super(permissionName);
@@ -55,13 +50,10 @@ public final class ReflectPermission extends BasicPermission {
      *            the name of the new permission
      * @param actions
      *            this parameter will be ignored
-     * 
      * @throws IllegalArgumentException
      *             if {@code name} is empty
      * @throws NullPointerException
      *             if {@code name} is {@code null}
-     * 
-     * @since Android 1.0
      */
     public ReflectPermission(String name, String actions) {
         super(name, actions);

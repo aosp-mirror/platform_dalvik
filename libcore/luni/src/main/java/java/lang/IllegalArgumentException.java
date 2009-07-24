@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when a method is invoked with an argument which it can not reasonably
  * deal with.
- * 
- * @since Android 1.0
  */
 public class IllegalArgumentException extends RuntimeException {
 
@@ -30,8 +28,6 @@ public class IllegalArgumentException extends RuntimeException {
     /**
      * Constructs a new {@code IllegalArgumentException} that includes the
      * current stack trace.
-     * 
-     * @since Android 1.0
      */
     public IllegalArgumentException() {
         super();
@@ -43,7 +39,6 @@ public class IllegalArgumentException extends RuntimeException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public IllegalArgumentException(String detailMessage) {
         super(detailMessage);
@@ -57,7 +52,7 @@ public class IllegalArgumentException extends RuntimeException {
      *            the detail message for this exception.
      * @param cause
      *            the cause of this exception, may be {@code null}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public IllegalArgumentException(String message, Throwable cause) {
         super(message, cause);
@@ -69,8 +64,8 @@ public class IllegalArgumentException extends RuntimeException {
      * 
      * @param cause
      *            the cause of this exception, may be {@code null}.
-     * @since Android 1.0
-     */    
+     * @since 1.5
+     */
     public IllegalArgumentException(Throwable cause) {
         super((cause == null ? null : cause.toString()), cause);
     }

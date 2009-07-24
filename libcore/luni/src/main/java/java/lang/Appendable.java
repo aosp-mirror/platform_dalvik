@@ -27,16 +27,13 @@ import java.io.IOException;
  * <p>
  * {@code Appendable} itself does not guarantee thread safety. This
  * responsibility is up to the implementing class.
- * </p>
  * <p>
  * Implementing classes can choose different exception handling mechanism. They
  * can choose to throw exceptions other than {@code IOException} or they do not
  * throw any exceptions at all and use error codes instead.
- * </p>
- * @since Android 1.0
  */
 public interface Appendable {
-    
+
     /**
      * Appends the specified character.
      * 
@@ -45,7 +42,6 @@ public interface Appendable {
      * @return this {@code Appendable}.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     Appendable append(char c) throws IOException;
 
@@ -55,14 +51,12 @@ public interface Appendable {
      * limited size.
      * <p>
      * If {@code csq} is {@code null}, the characters "null" are appended.
-     * </p>
-     * 
+     *
      * @param csq
      *            the character sequence to append.
      * @return this {@code Appendable}.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     Appendable append(CharSequence csq) throws IOException;
 
@@ -73,7 +67,6 @@ public interface Appendable {
      * to calling {@code append(csq.subSequence(start, end))}.
      * <p>
      * If {@code csq} is {@code null}, the characters "null" are appended.
-     * </p>
      * 
      * @param csq
      *            the character sequence to append.
@@ -89,7 +82,6 @@ public interface Appendable {
      *             or {@code end} is greater than the length of {@code csq}.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     Appendable append(CharSequence csq, int start, int end) throws IOException;
 }

@@ -24,8 +24,6 @@ import java.util.List;
  * can be set as default by calling the {@code setDefault()} method. If a
  * connection can't be established, the caller should notify the proxy selector
  * by invoking the {@code connectFailed()} method.
- * 
- * @since Android 1.0
  */
 public abstract class ProxySelector {
 
@@ -47,8 +45,6 @@ public abstract class ProxySelector {
 
     /**
      * Creates a new {@code ProxySelector} instance.
-     * 
-     * @since Android 1.0
      */
     public ProxySelector() {
         super();
@@ -61,7 +57,6 @@ public abstract class ProxySelector {
      * @throws SecurityException
      *             if a security manager is installed but it doesn't have the
      *             NetPermission("getProxySelector").
-     * @since Android 1.0
      */
     public static ProxySelector getDefault() {
         SecurityManager sm = System.getSecurityManager();
@@ -83,7 +78,6 @@ public abstract class ProxySelector {
      * @throws SecurityException
      *             if a security manager is installed but it doesn't have the
      *             NetPermission("setProxySelector").
-     * @since Android 1.0
      */
     public static void setDefault(ProxySelector selector) {
         SecurityManager sm = System.getSecurityManager();
@@ -101,14 +95,14 @@ public abstract class ProxySelector {
      * <li>https URI stands for https connection.</li>
      * <li>ftp URI stands for ftp connection.</li>
      * <li>socket:://ip:port URI stands for tcp client sockets connection.</li>
-     * </p>
-     * 
+     *
      * @param uri
      *            the target URI object.
      * @return a list containing all applicable proxies. If no proxy is
      *         available, the list contains only the {@code Proxy.NO_PROXY}
      *         element.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *             if {@code uri} is {@code null}.
      */
     public abstract List<Proxy> select(URI uri);
 
@@ -125,8 +119,9 @@ public abstract class ProxySelector {
      * @param ioe
      *            the exception which was thrown during connection
      *            establishment.
+     * @throws IllegalArgumentException
+     *             if any argument is {@code null}.
      * @see #select(URI)
-     * @since Android 1.0
      */
     public abstract void connectFailed(URI uri, SocketAddress sa,
             IOException ioe);

@@ -20,25 +20,38 @@ package java.io;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.security.AccessController;
 import java.util.IdentityHashMap;
 
-import org.apache.harmony.luni.util.PriviAction;
+
+// BEGIN android-note
+// Harmony uses ObjectAccessors to access fields through JNI. Android has not
+// yet migrated that API. As a consequence, there's a lot of changes here...
+// END android-note
+
+// BEGIN android-removed
+// import org.apache.harmony.misc.accessors.ObjectAccessor;
+// import org.apache.harmony.misc.accessors.AccessorFactory;
+// END android-removed
+
+import org.apache.harmony.luni.util.Msg;
 
 /**
  * A specialized {@link OutputStream} that is able to write (serialize) Java
  * objects as well as primitive data types (int, byte, char etc.). The data can
  * later be loaded using an ObjectInputStream.
- * 
+ *
  * @see ObjectInputStream
  * @see ObjectOutput
  * @see Serializable
  * @see Externalizable
- * 
- * @since Android 1.0
  */
 public class ObjectOutputStream extends OutputStream implements ObjectOutput,
         ObjectStreamConstants {
+
+    /*
+     * Mask to zero SC_BLOC_DATA bit.
+     */
+    private static final byte NOT_SC_BLOCK_DATA = (byte) (SC_BLOCK_DATA ^ 0xFF);
 
     /*
      * How many nested levels to writeObject. We may not need this.
@@ -107,136 +120,129 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      */
     private boolean subclassOverridingImplementation;
 
+
+    // BEGIN android-removed
+    // private ObjectAccessor accessor = AccessorFactory.getObjectAccessor();
+    // END android-removed
+
     /*
-     * cache for writeReplace methods
+     * Descriptor for java.lang.reflect.Proxy
      */
-    private IdentityHashMap<Class<?>, Object> writeReplaceCache;
+    private final ObjectStreamClass proxyClassDesc = ObjectStreamClass.lookup(Proxy.class);
 
     /**
      * PutField is an inner class to provide access to the persistent fields
      * that are written to the target stream.
-     * 
-     * @since Android 1.0
      */
     public static abstract class PutField {
         /**
          * Puts the value of the boolean field identified by {@code name} to the
          * persistent field.
-         * 
+         *
          * @param name
          *            the name of the field to serialize.
          * @param value
          *            the value that is put to the persistent field.
-         * @since Android 1.0
          */
         public abstract void put(String name, boolean value);
 
         /**
          * Puts the value of the character field identified by {@code name} to
          * the persistent field.
-         * 
+         *
          * @param name
          *            the name of the field to serialize.
          * @param value
          *            the value that is put to the persistent field.
-         * @since Android 1.0
          */
         public abstract void put(String name, char value);
 
         /**
          * Puts the value of the byte field identified by {@code name} to the
          * persistent field.
-         * 
+         *
          * @param name
          *            the name of the field to serialize.
          * @param value
          *            the value that is put to the persistent field.
-         * @since Android 1.0
          */
         public abstract void put(String name, byte value);
 
         /**
          * Puts the value of the short field identified by {@code name} to the
          * persistent field.
-         * 
+         *
          * @param name
          *            the name of the field to serialize.
          * @param value
          *            the value that is put to the persistent field.
-         * @since Android 1.0
          */
         public abstract void put(String name, short value);
 
         /**
          * Puts the value of the integer field identified by {@code name} to the
          * persistent field.
-         * 
+         *
          * @param name
          *            the name of the field to serialize.
          * @param value
          *            the value that is put to the persistent field.
-         * @since Android 1.0
          */
         public abstract void put(String name, int value);
 
         /**
          * Puts the value of the long field identified by {@code name} to the
          * persistent field.
-         * 
+         *
          * @param name
          *            the name of the field to serialize.
          * @param value
          *            the value that is put to the persistent field.
-         * @since Android 1.0
          */
         public abstract void put(String name, long value);
 
         /**
          * Puts the value of the float field identified by {@code name} to the
          * persistent field.
-         * 
+         *
          * @param name
          *            the name of the field to serialize.
          * @param value
          *            the value that is put to the persistent field.
-         * @since Android 1.0
          */
         public abstract void put(String name, float value);
 
         /**
          * Puts the value of the double field identified by {@code name} to the
          * persistent field.
-         * 
+         *
          * @param name
          *            the name of the field to serialize.
          * @param value
          *            the value that is put to the persistent field.
-         * @since Android 1.0
          */
         public abstract void put(String name, double value);
 
         /**
          * Puts the value of the Object field identified by {@code name} to the
          * persistent field.
-         * 
+         *
          * @param name
          *            the name of the field to serialize.
          * @param value
          *            the value that is put to the persistent field.
-         * @since Android 1.0
          */
         public abstract void put(String name, Object value);
 
         /**
          * Writes the fields to the target stream {@code out}.
-         * 
+         *
          * @param out
          *            the target stream
          * @throws IOException
          *             if an error occurs while writing to the target stream.
          * @deprecated This method is unsafe and may corrupt the target stream.
          *             Use ObjectOutputStream#writeFields() instead.
-         * @since Android 1.0
          */
         @Deprecated
         public abstract void write(ObjectOutput out) throws IOException;
@@ -246,14 +252,13 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Constructs a new {@code ObjectOutputStream}. This default constructor can
      * be used by subclasses that do not want to use the public constructor if
      * it allocates unneeded data.
-     * 
+     *
      * @throws IOException
      *             if an error occurs when creating this stream.
      * @throws SecurityException
      *             if a security manager is installed and it denies subclassing
      *             this class.
      * @see SecurityManager#checkPermission(java.security.Permission)
-     * @since Android 1.0
      */
     protected ObjectOutputStream() throws IOException, SecurityException {
         super();
@@ -271,17 +276,16 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Constructs a new ObjectOutputStream that writes to the OutputStream
      * {@code output}.
-     * 
+     *
      * @param output
      *            the non-null OutputStream to filter writes on.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while writing the object stream
      *             header
      * @throws SecurityException
      *             if a security manager is installed and it denies subclassing
      *             this class.
-     * @since Android 1.0
      */
     public ObjectOutputStream(OutputStream output) throws IOException {
         Class<?> implementationClass = getClass();
@@ -316,7 +320,6 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
         this.enableReplace = false;
         this.protocolVersion = PROTOCOL_VERSION_2;
         this.subclassOverridingImplementation = false;
-        this.writeReplaceCache = new IdentityHashMap<Class<?>, Object>();
 
         resetState();
         this.nestedException = new StreamCorruptedException();
@@ -333,13 +336,12 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * stream. This optional data can be read when deserializing the class
      * descriptor (ObjectStreamClass) for this class from an input stream. By
      * default, no extra data is saved.
-     * 
+     *
      * @param aClass
      *            the class to annotate.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
      * @see ObjectInputStream#resolveClass(ObjectStreamClass)
-     * @since Android 1.0
      */
     protected void annotateClass(Class<?> aClass) throws IOException {
         // By default no extra info is saved. Subclasses can override
@@ -349,13 +351,12 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Writes optional information for a proxy class to the target stream. This
      * optional data can be read when deserializing the proxy class from an
      * input stream. By default, no extra data is saved.
-     * 
+     *
      * @param aClass
      *            the proxy class to annotate.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
      * @see ObjectInputStream#resolveProxyClass(String[])
-     * @since Android 1.0
      */
     protected void annotateProxyClass(Class<?> aClass) throws IOException {
         // By default no extra info is saved. Subclasses can override
@@ -377,10 +378,9 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Closes this stream. Any buffered data is flushed. This implementation
      * closes the target stream.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this stream.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -393,7 +393,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Computes the collection of emulated fields that users can manipulate to
      * store a representation different than the one declared by the class of
      * the object being dumped.
-     * 
+     *
      * @see #writeFields
      * @see #writeFieldValues(EmulatedFieldsForDumping)
      */
@@ -405,13 +405,12 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Default method to write objects to this stream. Serializable fields
      * defined in the object's class and superclasses are written to the output
      * stream.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while writing to the target stream.
      * @throws NotActiveException
      *             if this method is not called from {@code writeObject()}.
      * @see ObjectInputStream#defaultReadObject
-     * @since Android 1.0
      */
     public void defaultWriteObject() throws IOException {
         // We can't be called from just anywhere. There are rules.
@@ -424,13 +423,12 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Writes buffered data to the target stream. This is similar to {@code
      * flush} but the flush is not propagated to the target stream.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     protected void drain() throws IOException {
-        if (primitiveTypes == null) {
+        if (primitiveTypes == null || primitiveTypesBuffer == null) {
             return;
         }
 
@@ -462,7 +460,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Dumps the parameter {@code obj} only if it is {@code null}
      * or an object that has already been dumped previously.
-     * 
+     *
      * @param obj
      *            Object to check if an instance previously dumped by this
      *            stream.
@@ -470,14 +468,14 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      *         method does nothing). Integer, if {@code obj} is an
      *         instance which has been dumped already. In this case this method
      *         saves the cyclic reference.
-     * 
+     *
      * @throws IOException
      *             If an error occurs attempting to save {@code null} or
      *             a cyclic reference.
      */
     private Integer dumpCycle(Object obj) throws IOException {
         // If the object has been saved already, save its handle only
-        Integer handle = registeredObjectHandleFor(obj);
+        Integer handle = objectsWritten.get(obj);
         if (handle != null) {
             writeCyclicReference(handle);
             return handle;
@@ -489,7 +487,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Enables object replacement for this stream. By default this is not
      * enabled. Only trusted subclasses (loaded with system class loader) are
      * allowed to change this status.
-     * 
+     *
      * @param enable
      *            {@code true} to enable object replacement; {@code false} to
      *            disable it.
@@ -499,7 +497,6 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      *             object replacement for this stream.
      * @see #replaceObject
      * @see ObjectInputStream#enableResolveObject
-     * @since Android 1.0
      */
     protected boolean enableReplaceObject(boolean enable)
             throws SecurityException {
@@ -519,11 +516,10 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Writes buffered data to the target stream and calls the {@code flush}
      * method of the target stream.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while writing to or flushing the output
      *             stream.
-     * @since Android 1.0
      */
     @Override
     public void flush() throws IOException {
@@ -531,212 +527,64 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
         output.flush();
     }
 
-    /**
-     * Get the value of field named
-     * {@code fieldName<code> of object <code>instance}. The
-     * field is declared by class {@code declaringClass}. The field is supposed to be
-     * a boolean.
+    // BEGIN android-added
+    /*
+     * These methods get the value of a field named fieldName of object
+     * instance. The field is declared by declaringClass. The field is the same
+     * type as the method return value.
      *
-     * This method could be implemented non-natively on top of java.lang.reflect implementations
-     * that support the {@code setAccessible} API, at the expense of extra object creation
-     * (java.lang.reflect.Field). Otherwise Serialization could not fetch private fields, except
-     * by the use of a native method like this one.
-     *
-     * @param instance Object whose field value we want to fetch
-     * @param declaringClass The class that declares the field
-     * @param fieldName Name of the field we want to fetch
-     * @return the value of the field
+     * these methods could be implemented non-natively on top of
+     * java.lang.reflect at the expense of extra object creation
+     * (java.lang.reflect.Field). Otherwise Serialization could not fetch
+     * private fields, except by the use of a native method like this one.
      *
      * @throws NoSuchFieldError If the field does not exist.
      */
+
     private static native boolean getFieldBool(Object instance,
             Class<?> declaringClass, String fieldName);
 
-    /**
-     * Get the value of field named
-     * {@code fieldName<code> of object <code>instance}. The
-     * field is declared by class {@code declaringClass}. The field is supposed to be
-     * a byte
-     *
-     * This method could be implemented non-natively on top of java.lang.reflect implementations
-     * that support the {@code setAccessible} API, at the expense of extra object creation
-     * (java.lang.reflect.Field). Otherwise Serialization could not fetch private fields, except
-     * by the use of a native method like this one.
-     *
-     * @param instance Object whose field value we want to fetch
-     * @param declaringClass The class that declares the field
-     * @param fieldName Name of the field we want to fetch
-     * @return the value of the field
-     *
-     * @throws NoSuchFieldError If the field does not exist.
-     */
     private static native byte getFieldByte(Object instance,
             Class<?> declaringClass, String fieldName);
 
-    /**
-     * Get the value of field named
-     * {@code fieldName<code> of object <code>instance}. The
-     * field is declared by class {@code declaringClass}. The field is supposed to be
-     * a char.
-     *
-     * This method could be implemented non-natively on top of java.lang.reflect implementations
-     * that support the {@code setAccessible} API, at the expense of extra object creation
-     * (java.lang.reflect.Field). Otherwise Serialization could not fetch private fields, except
-     * by the use of a native method like this one.
-     *
-     * @param instance Object whose field value we want to fetch
-     * @param declaringClass The class that declares the field
-     * @param fieldName Name of the field we want to fetch
-     * @return the value of the field
-     *
-     * @throws NoSuchFieldError If the field does not exist.
-     */
     private static native char getFieldChar(Object instance,
             Class<?> declaringClass, String fieldName);
 
-    /**
-     * Get the value of field named
-     * {@code fieldName<code> of object <code>instance}. The
-     * field is declared by class {@code declaringClass}. The field is supposed to be
-     * a double.
-     *
-     * This method could be implemented non-natively on top of java.lang.reflect implementations
-     * that support the {@code setAccessible} API, at the expense of extra object creation
-     * (java.lang.reflect.Field). Otherwise Serialization could not fetch private fields, except
-     * by the use of a native method like this one.
-     *
-     * @param instance Object whose field value we want to fetch
-     * @param declaringClass The class that declares the field
-     * @param fieldName Name of the field we want to fetch
-     * @return the value of the field
-     *
-     * @throws NoSuchFieldError If the field does not exist.
-     */
     private static native double getFieldDouble(Object instance,
             Class<?> declaringClass, String fieldName);
 
-    /**
-     * Get the value of field named
-     * {@code fieldName<code> of object <code>instance}. The
-     * field is declared by class {@code declaringClass}. The field is supposed to be
-     * a float.
-     *
-     * This method could be implemented non-natively on top of java.lang.reflect implementations
-     * that support the {@code setAccessible} API, at the expense of extra object creation
-     * (java.lang.reflect.Field). Otherwise Serialization could not fetch private fields, except
-     * by the use of a native method like this one.
-     *
-     * @param instance Object whose field value we want to fetch
-     * @param declaringClass The class that declares the field
-     * @param fieldName Name of the field we want to fetch
-     * @return the value of the field
-     *
-     * @throws NoSuchFieldError If the field does not exist.
-     */
     private static native float getFieldFloat(Object instance,
             Class<?> declaringClass, String fieldName);
 
-    /**
-     * Get the value of field named
-     * {@code fieldName<code> of object <code>instance}. The
-     * field is declared by class {@code declaringClass}. The field is supposed to be
-     * an int.
-     *
-     * This method could be implemented non-natively on top of java.lang.reflect implementations
-     * that support the {@code setAccessible} API, at the expense of extra object creation
-     * (java.lang.reflect.Field). Otherwise Serialization could not fetch private fields, except
-     * by the use of a native method like this one.
-     *
-     * @param instance Object whose field value we want to fetch
-     * @param declaringClass The class that declares the field
-     * @param fieldName Name of the field we want to fetch
-     * @return the value of the field
-     *
-     * @throws NoSuchFieldError If the field does not exist.
-     */
     private static native int getFieldInt(Object instance,
             Class<?> declaringClass, String fieldName);
 
-    /**
-     * Get the value of field named
-     * {@code fieldName<code> of object <code>instance}. The
-     * field is declared by class {@code declaringClass}. The field is supposed to be
-     * a long.
-     *
-     * This method could be implemented non-natively on top of java.lang.reflect implementations
-     * that support the {@code setAccessible} API, at the expense of extra object creation
-     * (java.lang.reflect.Field). Otherwise Serialization could not fetch private fields, except
-     * by the use of a native method like this one.
-     *
-     * @param instance Object whose field value we want to fetch
-     * @param declaringClass The class that declares the field
-     * @param fieldName Name of the field we want to fetch
-     * @return the value of the field
-     *
-     * @throws NoSuchFieldError If the field does not exist.
-     */
     private static native long getFieldLong(Object instance,
             Class<?> declaringClass, String fieldName);
 
-    /**
-     * Get the value of field named
-     * {@code fieldName<code> of object <code>instance}. The
-     * field is declared by class {@code declaringClass}. The field is supposed to be
-     * an Object type whose name is {@code fieldTypeName}.
-     *
-     * This method could be implemented non-natively on top of java.lang.reflect implementations
-     * that support the {@code setAccessible} API, at the expense of extra object creation
-     * (java.lang.reflect.Field). Otherwise Serialization could not fetch private fields, except
-     * by the use of a native method like this one.
-     *
-     * @param instance Object whose field value we want to fetch
-     * @param declaringClass The class that declares the field
-     * @param fieldName Name of the field we want to fetch
-     * @param fieldTypeName Name of the class that defines the type of this field
-     * @return the value of the field
-     *
-     * @throws NoSuchFieldError If the field does not exist.
-     */
     private static native Object getFieldObj(Object instance,
             Class<?> declaringClass, String fieldName, String fieldTypeName);
 
-    /**
-     * Get the value of field named
-     * {@code fieldName<code> of object <code>instance}. The
-     * field is declared by class {@code declaringClass}. The field is supposed to be
-     * a short.
-     *
-     * This method could be implemented non-natively on top of java.lang.reflect implementations
-     * that support the {@code setAccessible} API, at the expense of extra object creation
-     * (java.lang.reflect.Field). Otherwise Serialization could not fetch private fields, except
-     * by the use of a native method like this one.
-     *
-     * @param instance Object whose field value we want to fetch
-     * @param declaringClass The class that declares the field
-     * @param fieldName Name of the field we want to fetch
-     * @return the value of the field
-     *
-     * @throws NoSuchFieldError If the field does not exist.
-     */
     private static native short getFieldShort(Object instance,
             Class<?> declaringClass, String fieldName);
+    // END android-added
 
     /**
-     * Return the next {@code int} handle to be used to indicate cyclic
+     * Return the next <code>Integer</code> handle to be used to indicate cyclic
      * references being saved to the stream.
-     * 
-     * @return int, the next handle to represent the next cyclic reference
+     *
+     * @return the next handle to represent the next cyclic reference
      */
-    private int nextHandle() {
-        return this.currentHandle++;
+    private Integer nextHandle() {
+        return Integer.valueOf(this.currentHandle++);
     }
 
     /**
      * Gets this stream's {@code PutField} object. This object provides access
      * to the persistent fields that are eventually written to the output
      * stream. It is used to transfer the values from the fields of the object
-     * that is currently being written to the persistent fields. 
-     * 
+     * that is currently being written to the persistent fields.
+     *
      * @return the PutField object from which persistent fields can be accessed
      *         by name.
      * @throws IOException
@@ -744,7 +592,6 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * @throws NotActiveException
      *             if this method is not called from {@code writeObject()}.
      * @see ObjectInputStream#defaultReadObject
-     * @since Android 1.0
      */
     public PutField putFields() throws IOException {
         // We can't be called from just anywhere. There are rules.
@@ -758,39 +605,25 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     }
 
     /**
-     * Return the {@code Integer} handle used to tag object
-     * {@code obj} as an instance that has been dumped already. Return
-     * {@code null} if object {@code obj} has not been saved yet.
-     * 
-     * @param obj
-     *            the object
-     * @return null if object {@code obj} has not been saved yet. Integer
-     *         The handle that this object was assigned when it was saved.
-     */
-    private Integer registeredObjectHandleFor(Object obj) {
-        return objectsWritten.get(obj);
-    }
-
-    /**
      * Assume object {@code obj} has not been dumped yet, and assign a
      * handle to it
-     * 
+     *
      * @param obj
      *            Non-null object being dumped.
      * @return the handle that this object is being assigned.
-     * 
+     *
      * @see #nextHandle
      */
     private Integer registerObjectWritten(Object obj) {
-        Integer handle = Integer.valueOf(nextHandle());
-        registerObjectWritten(obj, handle);
+        Integer handle = nextHandle();
+        objectsWritten.put(obj, handle);
         return handle;
     }
 
     /**
      * Remove the unshared object from the table, and restore any previous
      * handle.
-     * 
+     *
      * @param obj
      *            Non-null object being dumped.
      * @param previousHandle
@@ -798,25 +631,10 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      */
     private void removeUnsharedReference(Object obj, Integer previousHandle) {
         if (previousHandle != null) {
-            registerObjectWritten(obj, previousHandle);
+            objectsWritten.put(obj, previousHandle);
         } else {
             objectsWritten.remove(obj);
         }
-    }
-
-    /**
-     * Assume object {@code obj} has not been dumped yet, and assign a
-     * handle to it, {@code handle}.
-     * 
-     * @param obj
-     *            Non-null object being dumped.
-     * @param handle
-     *            An Integer, the handle to this object
-     * 
-     * @see #nextHandle
-     */
-    private void registerObjectWritten(Object obj, Integer handle) {
-        objectsWritten.put(obj, handle);
     }
 
     /**
@@ -824,7 +642,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * object} with a new object. Object substitution has to be activated first
      * with calling {@code enableReplaceObject(true)}. This implementation just
      * returns {@code object}.
-     * 
+     *
      * @param object
      *            the original object for which a replacement may be defined.
      * @return the replacement object for {@code object}.
@@ -834,7 +652,6 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * @see #enableReplaceObject
      * @see ObjectInputStream#enableResolveObject
      * @see ObjectInputStream#resolveObject
-     * @since Android 1.0
      */
     protected Object replaceObject(Object object) throws IOException {
         // By default no object replacement. Subclasses can override
@@ -847,11 +664,10 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * point. Objects previously written are no longer remembered, so they will
      * be written again (instead of a cyclical reference) if found in the object
      * graph.
-     * 
+     *
      * @throws IOException
      *             if {@code reset()} is called during the serialization of an
      *             object.
-     * @since Android 1.0
      */
     public void reset() throws IOException {
         // First we flush what we have
@@ -869,7 +685,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Reset the collection of objects already dumped by the receiver. If the
      * objects are found again in the object graph, the receiver will dump them
      * again, instead of a handle (cyclic reference).
-     * 
+     *
      */
     private void resetSeenObjects() {
         objectsWritten = new IdentityHashMap<Object, Integer>();
@@ -880,7 +696,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Reset the receiver. The collection of objects already dumped by the
      * receiver is reset, and internal structures are also reset so that the
      * receiver knows it is in a fresh clean state.
-     * 
+     *
      */
     private void resetState() {
         resetSeenObjects();
@@ -889,7 +705,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Sets the specified protocol version to be used by this stream.
-     * 
+     *
      * @param version
      *            the protocol version to be used. Use a {@code
      *            PROTOCOL_VERSION_x} constant from {@code
@@ -900,13 +716,16 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      *             if an I/O error occurs.
      * @see ObjectStreamConstants#PROTOCOL_VERSION_1
      * @see ObjectStreamConstants#PROTOCOL_VERSION_2
-     * @since Android 1.0
      */
     public void useProtocolVersion(int version) throws IOException {
+        if (!objectsWritten.isEmpty()) {
+            // KA028=Cannot set protocol version when stream in use
+            throw new IllegalStateException(Msg.getString("KA028")); //$NON-NLS-1$
+        }
         if (version != ObjectStreamConstants.PROTOCOL_VERSION_1
                 && version != ObjectStreamConstants.PROTOCOL_VERSION_2) {
-            throw new IllegalArgumentException(org.apache.harmony.luni.util.Msg
-                    .getString("K00b3", version)); //$NON-NLS-1$
+            // K00b3=Unknown protocol\: {0}
+            throw new IllegalArgumentException(Msg.getString("K00b3", version)); //$NON-NLS-1$
         }
         protocolVersion = version;
     }
@@ -914,12 +733,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Writes the entire contents of the byte array {@code buffer} to the output
      * stream. Blocks until all bytes are written.
-     * 
+     *
      * @param buffer
      *            the buffer to write.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     @Override
     public void write(byte[] buffer) throws IOException {
@@ -931,7 +749,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Writes {@code count} bytes from the byte array {@code buffer} starting at
      * offset {@code index} to the target stream. Blocks until all bytes are
      * written.
-     * 
+     *
      * @param buffer
      *            the buffer to write.
      * @param offset
@@ -941,7 +759,6 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      *            stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     @Override
     public void write(byte[] buffer, int offset, int length) throws IOException {
@@ -953,12 +770,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Writes a single byte to the target stream. Only the least significant
      * byte of the integer {@code value} is written to the stream. Blocks until
      * the byte is actually written.
-     * 
+     *
      * @param value
      *            the byte to write.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     @Override
     public void write(int value) throws IOException {
@@ -968,12 +784,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes a boolean to the target stream.
-     * 
+     *
      * @param value
      *            the boolean value to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeBoolean(boolean value) throws IOException {
         checkWritePrimitiveTypes();
@@ -982,12 +797,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes a byte (8 bit) to the target stream.
-     * 
+     *
      * @param value
      *            the byte to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeByte(int value) throws IOException {
         checkWritePrimitiveTypes();
@@ -998,12 +812,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Writes the string {@code value} as a sequence of bytes to the target
      * stream. Only the least significant byte of each character in the string
      * is written.
-     * 
+     *
      * @param value
      *            the string to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeBytes(String value) throws IOException {
         checkWritePrimitiveTypes();
@@ -1012,12 +825,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes a character (16 bit) to the target stream.
-     * 
+     *
      * @param value
      *            the character to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeChar(int value) throws IOException {
         checkWritePrimitiveTypes();
@@ -1027,12 +839,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Writes the string {@code value} as a sequence of characters to the target
      * stream.
-     * 
+     *
      * @param value
      *            the string to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeChars(String value) throws IOException {
         checkWritePrimitiveTypes();
@@ -1042,14 +853,14 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Write a class descriptor {@code classDesc} (an
      * {@code ObjectStreamClass}) to the stream.
-     * 
+     *
      * @param classDesc
      *            The class descriptor (an {@code ObjectStreamClass}) to
      *            be dumped
      * @param unshared
      *            Write the object unshared
      * @return the handle assigned to the class descriptor
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the class
      *             descriptor.
@@ -1066,12 +877,16 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
         }
         if (handle == null) {
             Class<?> classToWrite = classDesc.forClass();
-            Integer previousHandle = objectsWritten.get(classDesc);
+            Integer previousHandle = null;
+            if (unshared) {
+                previousHandle = objectsWritten.get(classDesc);
+            }
             // If we got here, it is a new (non-null) classDesc that will have
             // to be registered as well
-            handle = registerObjectWritten(classDesc);
+            handle = nextHandle();
+            objectsWritten.put(classDesc, handle);
 
-            if (Proxy.isProxyClass(classToWrite)) {
+            if (classDesc.isProxy()) {
                 output.writeByte(TC_PROXYCLASSDESC);
                 Class<?>[] interfaces = classToWrite.getInterfaces();
                 output.writeInt(interfaces.length);
@@ -1080,7 +895,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
                 }
                 annotateProxyClass(classToWrite);
                 output.writeByte(TC_ENDBLOCKDATA);
-                writeClassDescForClass(Proxy.class);
+                writeClassDesc(proxyClassDesc, false);
                 if (unshared) {
                     // remove reference to unshared object
                     removeUnsharedReference(classDesc, previousHandle);
@@ -1112,31 +927,12 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     }
 
     /**
-     * Writes a class descriptor (an {@code ObjectStreamClass}) that
-     * corresponds to the {@code java.lang.Class objClass} to the stream.
-     * 
-     * @param objClass
-     *            The class for which a class descriptor (an
-     *            {@code ObjectStreamClass}) will be dumped.
-     * @return the handle assigned to the class descriptor
-     * 
-     * @throws IOException
-     *             If an IO exception happened when writing the class
-     *             descriptor.
-     * 
-     */
-    private Integer writeClassDescForClass(Class<?> objClass)
-            throws IOException {
-        return writeClassDesc(ObjectStreamClass.lookup(objClass), false);
-    }
-
-    /**
      * Writes a handle representing a cyclic reference (object previously
      * dumped).
-     * 
+     *
      * @param handle
      *            The Integer handle that represents an object previously seen
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the cyclic
      *             reference.
@@ -1148,12 +944,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes a double (64 bit) to the target stream.
-     * 
+     *
      * @param value
      *            the double to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeDouble(double value) throws IOException {
         checkWritePrimitiveTypes();
@@ -1164,17 +959,17 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Writes a collection of field descriptors (name, type name, etc) for the
      * class descriptor {@code classDesc} (an
      * {@code ObjectStreamClass})
-     * 
+     *
      * @param classDesc
      *            The class descriptor (an {@code ObjectStreamClass})
      *            for which to write field information
      * @param externalizable
      *            true if the descriptors are externalizable
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the field
      *             descriptors.
-     * 
+     *
      * @see #writeObject(Object)
      */
     private void writeFieldDescriptors(ObjectStreamClass classDesc,
@@ -1207,13 +1002,12 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * Writes the fields of the object currently being written to the target
      * stream. The field values are buffered in the currently active {@code
      * PutField} object, which can be accessed by calling {@code putFields()}.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while writing to the target stream.
      * @throws NotActiveException
      *             if there are no fields to write to the target stream.
      * @see #putFields
-     * @since Android 1.0
      */
     public void writeFields() throws IOException {
         // Has to have fields to write
@@ -1226,14 +1020,14 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Writes a collection of field values for the emulated fields
      * {@code emulatedFields}
-     * 
+     *
      * @param emulatedFields
      *            an {@code EmulatedFieldsForDumping}, concrete subclass
      *            of {@code PutField}
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the field values.
-     * 
+     *
      * @see #writeFields
      * @see #writeObject(Object)
      */
@@ -1279,32 +1073,37 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
         }
     }
 
+
     /**
      * Writes a collection of field values for the fields described by class
      * descriptor {@code classDesc} (an {@code ObjectStreamClass}).
      * This is the default mechanism, when emulated fields (an
      * {@code PutField}) are not used. Actual values to dump are fetched
      * directly from object {@code obj}.
-     * 
+     *
      * @param obj
      *            Instance from which to fetch field values to dump.
      * @param classDesc
      *            A class descriptor (an {@code ObjectStreamClass})
      *            defining which fields should be dumped.
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the field values.
-     * 
+     *
      * @see #writeObject(Object)
      */
     private void writeFieldValues(Object obj, ObjectStreamClass classDesc)
             throws IOException {
         ObjectStreamField[] fields = classDesc.fields();
         Class<?> declaringClass = classDesc.forClass();
-        for (int i = 0; i < fields.length; i++) {
+        for(ObjectStreamField fieldDesc : fields) {
             try {
+
+                // BEGIN android-changed
+                // // get associated Field
+                // long fieldID = fieldDesc.getFieldID(accessor, declaringClass);
+
                 // Code duplication starts, just because Java is typed
-                ObjectStreamField fieldDesc = fields[i];
                 if (fieldDesc.isPrimitive()) {
                     switch (fieldDesc.getTypeCode()) {
                         case 'B':
@@ -1346,14 +1145,15 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
                     }
                 } else {
                     // Object type (array included).
-                    Object field = getFieldObj(obj, declaringClass, fieldDesc
+                    Object objField = getFieldObj(obj, declaringClass, fieldDesc
                             .getName(), fieldDesc.getTypeString());
                     if (fieldDesc.isUnshared()) {
-                        writeUnshared(field);
+                        writeUnshared(objField);
                     } else {
-                        writeObject(field);
+                        writeObject(objField);
                     }
                 }
+                // END android-changed
             } catch (NoSuchFieldError nsf) {
                 // The user defined serialPersistentFields but did not provide
                 // the glue to transfer values,
@@ -1366,12 +1166,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes a float (32 bit) to the target stream.
-     * 
+     *
      * @param value
      *            the float to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeFloat(float value) throws IOException {
         checkWritePrimitiveTypes();
@@ -1386,19 +1185,19 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * (corresponding to class descriptor {@code classDesc}) defines
      * private instance method {@code writeObject} it will be used to
      * dump field values.
-     * 
+     *
      * @param object
      *            Instance from which to fetch field values to dump.
      * @param classDesc
      *            A class descriptor (an {@code ObjectStreamClass})
      *            defining which fields should be dumped.
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the field values in
      *             the hierarchy.
      * @throws NotActiveException
      *             If the given object is not active
-     * 
+     *
      * @see #defaultWriteObject
      * @see #writeObject(Object)
      */
@@ -1423,14 +1222,9 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
         // See if the object has a writeObject method. If so, run it
         boolean executed = false;
-        Class<?> targetClass = classDesc.forClass();
         try {
-            final Method method = ObjectStreamClass
-                    .getPrivateWriteObjectMethod(targetClass);
-            if (method != null) {
-                // We have to be able to fetch its value, even if it is
-                // private
-                AccessController.doPrivileged(new PriviAction<Object>(method));
+            if (classDesc.hasMethodWriteObject()){
+                final Method method = classDesc.getMethodWriteObject();
                 try {
                     method.invoke(object, new Object[] { this });
                     executed = true;
@@ -1446,6 +1240,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
                     throw new RuntimeException(e.toString());
                 }
             }
+
 
             if (executed) {
                 drain();
@@ -1466,12 +1261,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes an integer (32 bit) to the target stream.
-     * 
+     *
      * @param value
      *            the integer to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeInt(int value) throws IOException {
         checkWritePrimitiveTypes();
@@ -1480,12 +1274,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes a long (64 bit) to the target stream.
-     * 
+     *
      * @param value
      *            the long to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeLong(long value) throws IOException {
         checkWritePrimitiveTypes();
@@ -1497,7 +1290,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * component type {@code componentType} into the receiver. It is
      * assumed the array has not been dumped yet. Return an {@code Integer}
      * that represents the handle for this object (array) which is dumped here.
-     * 
+     *
      * @param array
      *            The array object to dump
      * @param arrayClass
@@ -1507,20 +1300,19 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      *            A {@code java.lang.Class} representing the array
      *            component type
      * @return the handle assigned to the array
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the array.
      */
-    private Integer writeNewArray(Object array, Class<?> arrayClass,
+    private Integer writeNewArray(Object array, Class<?> arrayClass, ObjectStreamClass arrayClDesc,
             Class<?> componentType, boolean unshared) throws IOException {
         output.writeByte(TC_ARRAY);
-        writeClassDescForClass(arrayClass);
+        writeClassDesc(arrayClDesc, false);
 
-        Integer previousHandle = objectsWritten.get(array);
-        Integer handle = registerObjectWritten(array);
-        if (unshared) {
-            // remove reference to unshared object
-            removeUnsharedReference(array, previousHandle);
+        Integer handle = nextHandle();
+
+        if (!unshared) {
+            objectsWritten.put(array, handle);
         }
 
         // Now we have code duplication just because Java is typed. We have to
@@ -1585,6 +1377,10 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
             Object[] objectArray = (Object[]) array;
             output.writeInt(objectArray.length);
             for (int i = 0; i < objectArray.length; i++) {
+                // TODO: This place is the opportunity for enhancement
+                //      We can implement writing elements through fast-path,
+                //      without setting up the context (see writeObject()) for
+                //      each element with public API
                 writeObject(objectArray[i]);
             }
         }
@@ -1597,11 +1393,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * descriptor ({@code ObjectStreamClass}) that corresponds to them.
      * Return an {@code Integer} that represents the handle for this
      * object (class) which is dumped here.
-     * 
+     *
      * @param object
      *            The {@code java.lang.Class} object to dump
      * @return the handle assigned to the class being dumped
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the class.
      */
@@ -1614,21 +1410,20 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
         // We cannot call lookup because it returns null if the parameter
         // represents instances that cannot be serialized, and that is not what
         // we want.
+        ObjectStreamClass clDesc = ObjectStreamClass.lookupStreamClass(object);
 
         // The handle for the classDesc is NOT the handle for the class object
         // being dumped. We must allocate a new handle and return it.
-        if (object.isEnum()) {
-            writeEnumDesc(object, unshared);
+        if (clDesc.isEnum()) {
+            writeEnumDesc(object, clDesc, unshared);
         } else {
-            writeClassDesc(ObjectStreamClass.lookupStreamClass(object),
-                    unshared);
+            writeClassDesc(clDesc, unshared);
         }
 
-        Integer previousHandle = objectsWritten.get(object);
-        Integer handle = registerObjectWritten(object);
-        if (unshared) {
-            // remove reference to unshared object
-            removeUnsharedReference(object, previousHandle);
+        Integer handle = nextHandle();
+
+        if (!unshared) {
+            objectsWritten.put(object, handle);
         }
 
         return handle;
@@ -1640,10 +1435,10 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * descriptors for the superclass chain will be dumped as well. Return an
      * {@code Integer} that represents the handle for this object (class
      * descriptor) which is dumped here.
-     * 
+     *
      * @param classDesc
      *            The {@code ObjectStreamClass} object to dump
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the class
      *             descriptor.
@@ -1653,15 +1448,15 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
         output.writeUTF(classDesc.getName());
         output.writeLong(classDesc.getSerialVersionUID());
         byte flags = classDesc.getFlags();
-        boolean externalizable = false;
-        externalizable = ObjectStreamClass.isExternalizable(classDesc
-                .forClass());
-        if (protocolVersion != PROTOCOL_VERSION_1) {
-            // Change for 1.2. Objects can be saved in old format
-            // (PROTOCOL_VERSION_1) or in the 1.2 format (PROTOCOL_VERSION_2).
-            // Nested "if" check to optimize checking. Second check is more
-            // expensive.
-            if (externalizable) {
+
+        boolean externalizable = classDesc.isExternalizable();
+
+        if (externalizable) {
+            if (protocolVersion == PROTOCOL_VERSION_1) {
+                flags &= NOT_SC_BLOCK_DATA;
+            } else {
+                // Change for 1.2. Objects can be saved in old format
+                // (PROTOCOL_VERSION_1) or in the 1.2 format (PROTOCOL_VERSION_2).
                 flags |= SC_BLOCK_DATA;
             }
         }
@@ -1676,12 +1471,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes a class descriptor to the target stream.
-     * 
+     *
      * @param classDesc
      *            the class descriptor to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     protected void writeClassDescriptor(ObjectStreamClass classDesc)
             throws IOException {
@@ -1695,14 +1489,14 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * This is used to dump the exception instance that happened (if any) when
      * dumping the original object graph. The set of seen objects will be reset
      * just before and just after dumping this exception object.
-     * 
+     *
      * When exceptions are found normally in the object graph, they are dumped
      * as a regular object, and not by this method. In that case, the set of
      * "known objects" is not reset.
-     * 
+     *
      * @param ex
      *            Exception object to dump
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the exception
      *             object.
@@ -1719,13 +1513,13 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * the receiver. It is assumed the object has not been dumped yet. Return an
      * {@code Integer} that represents the handle for this object which
      * is dumped here.
-     * 
+     *
      * If the object implements {@code Externalizable} its
      * {@code writeExternal} is called. Otherwise, all fields described
      * by the class hierarchy is dumped. Each class can define how its declared
      * instance fields are dumped by defining a private method
      * {@code writeObject}
-     * 
+     *
      * @param object
      *            The object to dump
      * @param theClass
@@ -1734,11 +1528,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * @param unshared
      *            Write the object unshared
      * @return the handle assigned to the object
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the object.
      */
-    private Integer writeNewObject(Object object, Class<?> theClass,
+    private Integer writeNewObject(Object object, Class<?> theClass, ObjectStreamClass clDesc,
             boolean unshared) throws IOException {
         // Not String, not null, not array, not cyclic reference
 
@@ -1746,8 +1540,8 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
         currentPutField = null; // null it, to make sure one will be computed if
         // needed
 
-        boolean externalizable = ObjectStreamClass.isExternalizable(theClass);
-        boolean serializable = ObjectStreamClass.isSerializable(theClass);
+        boolean externalizable = clDesc.isExternalizable();
+        boolean serializable = clDesc.isSerializable();
         if (!externalizable && !serializable) {
             // Object is neither externalizable nor serializable. Error
             throw new NotSerializableException(theClass.getName());
@@ -1755,16 +1549,20 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
         // Either serializable or externalizable, now we can save info
         output.writeByte(TC_OBJECT);
-        writeClassDescForClass(theClass);
-        Integer previousHandle = objectsWritten.get(object);
-        Integer handle = registerObjectWritten(object);
+        writeClassDesc(clDesc, false);
+        Integer previousHandle = null;
+        if (unshared) {
+            previousHandle = objectsWritten.get(object);
+        }
+        Integer handle = nextHandle();
+        objectsWritten.put(object, handle);
 
         // This is how we know what to do in defaultWriteObject. And it is also
         // used by defaultWriteObject to check if it was called from an invalid
         // place.
         // It allows writeExternal to call defaultWriteObject and have it work.
         currentObject = object;
-        currentClass = ObjectStreamClass.lookup(theClass);
+        currentClass = clDesc;
         try {
             if (externalizable) {
                 boolean noBlockData = protocolVersion == PROTOCOL_VERSION_1;
@@ -1808,11 +1606,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * String has not been dumped yet. Return an {@code Integer} that
      * represents the handle for this object (String) which is dumped here.
      * Strings are saved encoded with {@link DataInput modified UTF-8}.
-     * 
+     *
      * @param object
      *            the string to dump.
      * @return the handle assigned to the String being dumped
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the String.
      */
@@ -1828,19 +1626,19 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
         }
         output.writeUTFBytes(object, count);
 
-        Integer previousHandle = objectsWritten.get(object);
-        Integer handle = registerObjectWritten(object);
-        if (unshared) {
-            // remove reference to unshared object
-            removeUnsharedReference(object, previousHandle);
+        Integer handle = nextHandle();
+
+        if (!unshared) {
+            objectsWritten.put(object, handle);
         }
+
         return handle;
     }
 
     /**
      * Write a special tag that indicates the value {@code null} into the
      * receiver.
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the tag for
      *             {@code null}.
@@ -1851,13 +1649,12 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes an object to the target stream.
-     * 
+     *
      * @param object
      *            the object to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
      * @see ObjectInputStream#readObject()
-     * @since Android 1.0
      */
     public final void writeObject(Object object) throws IOException {
         writeObject(object, false);
@@ -1868,13 +1665,12 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      * to {@code writeObject}, except that it always writes a new object to the
      * stream versus the use of back-referencing for identical objects by
      * {@code writeObject}.
-     * 
+     *
      * @param object
      *            the object to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
      * @see ObjectInputStream#readUnshared()
-     * @since Android 1.0
      */
     public void writeUnshared(Object object) throws IOException {
         writeObject(object, true);
@@ -1919,7 +1715,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Write object {@code object} into the receiver's underlying stream.
-     * 
+     *
      * @param object
      *            The object to write
      * @param unshared
@@ -1931,10 +1727,10 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
      *            A boolean indicating if stream-based replacement should be
      *            computed (if supported) for the object.
      * @return the handle assigned to the final object being dumped
-     * 
+     *
      * @throws IOException
      *             If an IO exception happened when writing the object
-     * 
+     *
      * @see ObjectInputStream#readObject()
      */
     private Integer writeObjectInternal(Object object, boolean unshared,
@@ -1955,6 +1751,8 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
         // Non-null object, first time seen...
         Class<?> objClass = object.getClass();
+        ObjectStreamClass clDesc = ObjectStreamClass.lookupStreamClass(objClass);
+
         nestedLevels++;
         try {
 
@@ -1969,58 +1767,41 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
                 }
             }
 
-            if (ObjectStreamClass.isSerializable(object.getClass())
+            if (clDesc.isSerializable()
                     && computeClassBasedReplacement) {
-                Object writeReplaceMethod = writeReplaceCache.get(objClass);
-                if (writeReplaceMethod != this) {
-                    if (writeReplaceMethod == null) {
-                        final Method writeReplace = ObjectStreamClass
-                                .methodWriteReplace(objClass);
-                        if (writeReplace == null) {
-                            writeReplaceCache.put(objClass, this);
-                            writeReplaceMethod = null;
+                if(clDesc.hasMethodWriteReplace()){
+                    Method methodWriteReplace = clDesc.getMethodWriteReplace();
+                    Object replObj = null;
+                    try {
+                        replObj = methodWriteReplace.invoke(object, (Object[]) null);
+                    } catch (IllegalAccessException iae) {
+                        replObj = object;
+                    } catch (InvocationTargetException ite) {
+                        // WARNING - Not sure this is the right thing to do
+                        // if we can't run the method
+                        Throwable target = ite.getTargetException();
+                        if (target instanceof ObjectStreamException) {
+                            throw (ObjectStreamException) target;
+                        } else if (target instanceof Error) {
+                            throw (Error) target;
                         } else {
-                            // Has replacement method
-                            AccessController
-                                    .doPrivileged(new PriviAction<Object>(
-                                            writeReplace));
-                            writeReplaceCache.put(objClass, writeReplace);
-                            writeReplaceMethod = writeReplace;
+                            throw (RuntimeException) target;
                         }
                     }
-                    if (writeReplaceMethod != null) {
-                        Object classBasedReplacement;
-                        try {
-                            classBasedReplacement = ((Method) writeReplaceMethod)
-                                    .invoke(object, (Object[]) null);
-                        } catch (IllegalAccessException iae) {
-                            classBasedReplacement = object;
-                        } catch (InvocationTargetException ite) {
-                            // WARNING - Not sure this is the right thing to do
-                            // if we can't run the method
-                            Throwable target = ite.getTargetException();
-                            if (target instanceof ObjectStreamException) {
-                                throw (ObjectStreamException) target;
-                            } else if (target instanceof Error) {
-                                throw (Error) target;
-                            } else {
-                                throw (RuntimeException) target;
-                            }
+                    if (replObj != object) {
+                        // All over, class-based replacement off this time.
+                        Integer replacementHandle = writeObjectInternal(
+                                replObj, false, false,
+                                computeStreamReplacement);
+                        // Make the original object also map to the same
+                        // handle.
+                        if (replacementHandle != null) {
+                            objectsWritten.put(object, replacementHandle);
                         }
-                        if (classBasedReplacement != object) {
-                            // All over, class-based replacement off this time.
-                            Integer replacementHandle = writeObjectInternal(
-                                    classBasedReplacement, false, false,
-                                    computeStreamReplacement);
-                            // Make the original object also map to the same
-                            // handle.
-                            if (replacementHandle != null) {
-                                registerObjectWritten(object, replacementHandle);
-                            }
-                            return replacementHandle;
-                        }
+                        return replacementHandle;
                     }
                 }
+
             }
 
             // We get here either if class-based replacement was not needed or
@@ -2036,7 +1817,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
                             computeClassBasedReplacement, false);
                     // Make the original object also map to the same handle.
                     if (replacementHandle != null) {
-                        registerObjectWritten(object, replacementHandle);
+                        objectsWritten.put(object, replacementHandle);
                     }
                     return replacementHandle;
                 }
@@ -2061,7 +1842,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
             // Is it an Array ?
             if (objClass.isArray()) {
-                return writeNewArray(object, objClass, objClass
+                return writeNewArray(object, objClass, clDesc, objClass
                         .getComponentType(), unshared);
             }
 
@@ -2070,20 +1851,23 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
             }
 
             // Not a String or Class or Array. Default procedure.
-            return writeNewObject(object, objClass, unshared);
+            return writeNewObject(object, objClass, clDesc, unshared);
         } finally {
             nestedLevels--;
         }
     }
 
     // write for Enum Class Desc only, which is different from other classes
-    private ObjectStreamClass writeEnumDesc(Class<?> theClass, boolean unshared)
+    private ObjectStreamClass writeEnumDesc(Class<?> theClass, ObjectStreamClass classDesc, boolean unshared)
             throws IOException {
         // write classDesc, classDesc for enum is different
-        ObjectStreamClass classDesc = ObjectStreamClass.lookup(theClass);
+
         // set flag for enum, the flag is (SC_SERIALIZABLE | SC_ENUM)
         classDesc.setFlags((byte) (SC_SERIALIZABLE | SC_ENUM));
-        Integer previousHandle = objectsWritten.get(classDesc);
+        Integer previousHandle = null;
+        if (unshared) {
+            previousHandle = objectsWritten.get(classDesc);
+        }
         Integer handle = null;
         if (!unshared) {
             handle = dumpCycle(classDesc);
@@ -2092,7 +1876,7 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
             Class<?> classToWrite = classDesc.forClass();
             // If we got here, it is a new (non-null) classDesc that will have
             // to be registered as well
-            registerObjectWritten(classDesc);
+            objectsWritten.put(classDesc, nextHandle());
 
             output.writeByte(TC_CLASSDESC);
             if (protocolVersion == PROTOCOL_VERSION_1) {
@@ -2109,11 +1893,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
             drain(); // flush primitive types in the annotation
             output.writeByte(TC_ENDBLOCKDATA);
             // write super class
-            ObjectStreamClass superClass = classDesc.getSuperclass();
-            if (null != superClass) {
+            ObjectStreamClass superClassDesc = classDesc.getSuperclass();
+            if (null != superClassDesc) {
                 // super class is also enum
-                superClass.setFlags((byte) (SC_SERIALIZABLE | SC_ENUM));
-                writeEnumDesc(superClass.forClass(), unshared);
+                superClassDesc.setFlags((byte) (SC_SERIALIZABLE | SC_ENUM));
+                writeEnumDesc(superClassDesc.forClass(), superClassDesc, unshared);
             } else {
                 output.writeByte(TC_NULL);
             }
@@ -2137,18 +1921,26 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
             // write enum only
             theClass = theClass.getSuperclass();
         }
-        ObjectStreamClass classDesc = writeEnumDesc(theClass, unshared);
+        ObjectStreamClass classDesc = ObjectStreamClass.lookup(theClass);
+        writeEnumDesc(theClass, classDesc, unshared);
 
-        Integer previousHandle = objectsWritten.get(object);
-        Integer handle = registerObjectWritten(object);
+        Integer previousHandle = null;
+        if (unshared) {
+            previousHandle = objectsWritten.get(object);
+        }
+        Integer handle = nextHandle();
+        objectsWritten.put(object, handle);
 
         ObjectStreamField[] fields = classDesc.getSuperclass().fields();
         Class<?> declaringClass = classDesc.getSuperclass().forClass();
         // Only write field "name" for enum class, which is the second field of
         // enum, that is fields[1]. Ignore all non-fields and fields.length < 2
         if (null != fields && fields.length > 1) {
+            // BEGIN android-changed
             String str = (String) getFieldObj(object, declaringClass, fields[1]
                     .getName(), fields[1].getTypeString());
+            // END android-changed
+
             Integer strhandle = null;
             if (!unshared) {
                 strhandle = dumpCycle(str);
@@ -2169,31 +1961,26 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Method to be overridden by subclasses to write {@code object} to the
      * target stream.
-     * 
+     *
      * @param object
      *            the object to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     protected void writeObjectOverride(Object object) throws IOException {
-        // BEGIN android-changed
-        // copied from newer version of harmony
         if (!subclassOverridingImplementation) {
             // Subclasses must override.
             throw new IOException();
         }
-        // END android-changed
     }
 
     /**
      * Writes a short (16 bit) to the target stream.
-     * 
+     *
      * @param value
      *            the short to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeShort(int value) throws IOException {
         checkWritePrimitiveTypes();
@@ -2202,10 +1989,9 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
 
     /**
      * Writes the {@link ObjectOutputStream} header to the target stream.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     protected void writeStreamHeader() throws IOException {
         output.writeShort(STREAM_MAGIC);
@@ -2215,12 +2001,11 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     /**
      * Writes a string encoded with {@link DataInput modified UTF-8} to the
      * target stream.
-     * 
+     *
      * @param value
      *            the string to write to the target stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeUTF(String value) throws IOException {
         checkWritePrimitiveTypes();

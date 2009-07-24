@@ -41,15 +41,15 @@ public class Handler extends URLStreamHandler {
      * 
      */
     @Override
-    public URLConnection openConnection(URL url) {
-        return new FileURLConnection(url);
+    public URLConnection openConnection(URL url) throws IOException {
+        return openConnection(url, null);
     }
 
     /**
      * The behaviour of this method is the same as openConnection(URL).
      * <code>proxy</code> is not used in FileURLConnection.
      * 
-     * @param u
+     * @param url
      *            the URL which the connection is pointing to
      * @param proxy
      *            Proxy
@@ -58,18 +58,28 @@ public class Handler extends URLStreamHandler {
      * @throws IOException
      *             if this handler fails to establish a connection.
      * @throws IllegalArgumentException
-     *             if any argument is null or of an invalid type.
+     *             if the url argument is null.
      * @throws UnsupportedOperationException
      *             if the protocol handler doesn't support this method.
      */
     @Override
     public URLConnection openConnection(URL url, Proxy proxy)
             throws IOException {
-        if (null == url || null == proxy) {
+        if (null == url) {
             // K034b=url and proxy can not be null
             throw new IllegalArgumentException(Msg.getString("K034b")); //$NON-NLS-1$
         }
-        return new FileURLConnection(url);
+
+        String host = url.getHost();
+        if (host == null || host.length() == 0
+                || host.equalsIgnoreCase("localhost")) { //$NON-NLS-1$
+            return new FileURLConnection(url);
+        }
+
+        // If a hostname is specified try to get the resource using FTP
+        URL ftpURL = new URL("ftp", host, url.getFile()); //$NON-NLS-1$
+        return (proxy == null) ? ftpURL.openConnection() : ftpURL
+                .openConnection(proxy);
     }
 
     /**

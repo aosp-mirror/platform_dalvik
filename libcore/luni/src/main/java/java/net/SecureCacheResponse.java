@@ -27,14 +27,11 @@ import javax.net.ssl.SSLPeerUnverifiedException;
  * protocol like TLS or SSL.
  * 
  * @see ResponseCache
- * @since Android 1.0
  */
 public abstract class SecureCacheResponse extends CacheResponse {
 
     /**
      * Creates a new instance of this class.
-     * 
-     * @since Android 1.0
      */
     public SecureCacheResponse() {
         super();
@@ -45,7 +42,6 @@ public abstract class SecureCacheResponse extends CacheResponse {
      * to retrieve the network resource.
      * 
      * @return the cipher suite string.
-     * @since Android 1.0
      */
     public abstract String getCipherSuite();
 
@@ -57,7 +53,6 @@ public abstract class SecureCacheResponse extends CacheResponse {
      * 
      * @return the certificate chain that was sent to the server. If no
      *         certificate chain was sent, the method returns {@code null}.
-     * @since Android 1.0
      */
     public abstract List<Certificate> getLocalCertificateChain();
 
@@ -71,7 +66,6 @@ public abstract class SecureCacheResponse extends CacheResponse {
      * @return the server's certificate chain.
      * @throws SSLPeerUnverifiedException
      *             if the peer is unverified.
-     * @since Android 1.0
      */
     public abstract List<Certificate> getServerCertificateChain()
             throws SSLPeerUnverifiedException;
@@ -84,7 +78,6 @@ public abstract class SecureCacheResponse extends CacheResponse {
      * @return a principal object representing the server's principal.
      * @throws SSLPeerUnverifiedException
      *             if the peer is unverified.
-     * @since Android 1.0
      */
     public abstract Principal getPeerPrincipal()
             throws SSLPeerUnverifiedException;
@@ -97,7 +90,6 @@ public abstract class SecureCacheResponse extends CacheResponse {
      * @return the local principal object being sent to the server. Returns an
      *         {@code X500Principal} object for X509-based cipher suites. If no
      *         principal was sent, it returns {@code null}.
-     * @since Android 1.0
      */
     public abstract Principal getLocalPrincipal();
 }

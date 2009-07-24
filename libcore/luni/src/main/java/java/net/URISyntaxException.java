@@ -22,8 +22,6 @@ import org.apache.harmony.luni.util.Msg;
 /**
  * A {@code URISyntaxException} will be thrown if some information could not be parsed
  * while creating a URI.
- * 
- * @since Android 1.0
  */
 public class URISyntaxException extends Exception {
 
@@ -49,7 +47,6 @@ public class URISyntaxException extends Exception {
      *             {@code null}.
      * @throws IllegalArgumentException
      *             if the value for {@code index} is lesser than {@code -1}.
-     * @since Android 1.0
      */
     public URISyntaxException(String input, String reason, int index) {
         super(reason);
@@ -77,7 +74,6 @@ public class URISyntaxException extends Exception {
      * @throws NullPointerException
      *             if one of the arguments {@code input} or {@code reason} is
      *             {@code null}.
-     * @since Android 1.0
      */
     public URISyntaxException(String input, String reason) {
         super(reason);
@@ -95,7 +91,6 @@ public class URISyntaxException extends Exception {
      * index is unknown/unavailable.
      * 
      * @return the index of the syntax error.
-     * @since Android 1.0
      */
     public int getIndex() {
         return index;
@@ -105,7 +100,6 @@ public class URISyntaxException extends Exception {
      * Gets a description of the syntax error.
      * 
      * @return the string describing the syntax error.
-     * @since Android 1.0
      */
     public String getReason() {
         return super.getMessage();
@@ -115,7 +109,6 @@ public class URISyntaxException extends Exception {
      * Gets the initial string that contains an invalid syntax.
      * 
      * @return the string that caused the exception.
-     * @since Android 1.0
      */
     public String getInput() {
         return input;
@@ -128,7 +121,6 @@ public class URISyntaxException extends Exception {
      * 
      * @return a sting containing information about the exception.
      * @see java.lang.Throwable#getMessage()
-     * @since Android 1.0
      */
     @Override
     public String getMessage() {

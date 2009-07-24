@@ -22,8 +22,6 @@ package java.io;
  * 
  * @see ObjectInputStream#registerValidation(ObjectInputValidation, int)
  * @see ObjectInputValidation#validateObject()
- * 
- * @since Android 1.0
  */
 public class InvalidObjectException extends ObjectStreamException {
 
@@ -35,7 +33,6 @@ public class InvalidObjectException extends ObjectStreamException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public InvalidObjectException(String detailMessage) {
         super(detailMessage);

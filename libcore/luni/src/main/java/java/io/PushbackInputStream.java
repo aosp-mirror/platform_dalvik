@@ -25,14 +25,10 @@ import org.apache.harmony.luni.util.Msg;
  * this useful. The number of bytes which may be pushed back can be specified
  * during construction. If the buffer of pushed back bytes is empty, bytes are
  * read from the underlying input stream.
- * 
- * @since Android 1.0
  */
 public class PushbackInputStream extends FilterInputStream {
     /**
      * The buffer that contains pushed-back bytes.
-     * 
-     * @since Android 1.0
      */
     protected byte[] buf;
 
@@ -40,8 +36,6 @@ public class PushbackInputStream extends FilterInputStream {
      * The current position within {@code buf}. A value equal to
      * {@code buf.length} indicates that no bytes are available. A value of 0
      * indicates that the buffer is full.
-     * 
-     * @since Android 1.0
      */
     protected int pos;
 
@@ -49,10 +43,9 @@ public class PushbackInputStream extends FilterInputStream {
      * Constructs a new {@code PushbackInputStream} with the specified input
      * stream as source. The size of the pushback buffer is set to the default
      * value of 1 byte.
-     * 
+     *
      * @param in
      *            the source input stream.
-     * @since Android 1.0
      */
     public PushbackInputStream(InputStream in) {
         super(in);
@@ -63,14 +56,13 @@ public class PushbackInputStream extends FilterInputStream {
     /**
      * Constructs a new {@code PushbackInputStream} with {@code in} as source
      * input stream. The size of the pushback buffer is set to {@code size}.
-     * 
+     *
      * @param in
      *            the source input stream.
      * @param size
      *            the size of the pushback buffer.
      * @throws IllegalArgumentException
      *             if {@code size} is negative.
-     * @since Android 1.0
      */
     public PushbackInputStream(InputStream in, int size) {
         super(in);
@@ -85,12 +77,11 @@ public class PushbackInputStream extends FilterInputStream {
      * Returns the number of bytes that are available before this stream will
      * block. This is the sum of the bytes available in the pushback buffer and
      * those available from the source stream.
-     * 
+     *
      * @return the number of bytes available before blocking.
      * @throws IOException
      *             if this stream is closed or an I/O error occurs in the source
      *             stream.
-     * @since Android 1.0
      */
     @Override
     public int available() throws IOException {
@@ -103,10 +94,9 @@ public class PushbackInputStream extends FilterInputStream {
     /**
      * Closes this stream. This implementation closes the source stream
      * and releases the pushback buffer.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this stream.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -121,11 +111,10 @@ public class PushbackInputStream extends FilterInputStream {
      * Indicates whether this stream supports the {@code mark(int)} and
      * {@code reset()} methods. {@code PushbackInputStream} does not support
      * them, so it returns {@code false}.
-     * 
+     *
      * @return always {@code false}.
      * @see #mark(int)
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -138,13 +127,12 @@ public class PushbackInputStream extends FilterInputStream {
      * available bytes then a byte from the source input stream is returned.
      * Blocks until one byte has been read, the end of the source stream is
      * detected or an exception is thrown.
-     * 
+     *
      * @return the byte read or -1 if the end of the source stream has been
      *         reached.
      * @throws IOException
      *             if this stream is closed or an I/O error occurs while reading
      *             from this stream.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -166,7 +154,7 @@ public class PushbackInputStream extends FilterInputStream {
      * from the pushback buffer first, then from the source stream if more bytes
      * are required. Blocks until {@code count} bytes have been read, the end of
      * the source stream is detected or an exception is thrown.
-     * 
+     *
      * @param buffer
      *            the array in which to store the bytes read from this stream.
      * @param offset
@@ -185,7 +173,6 @@ public class PushbackInputStream extends FilterInputStream {
      *             reading from this stream.
      * @throws NullPointerException
      *             if {@code buffer} is {@code null}.
-     * @since Android 1.0
      */
     @Override
     public int read(byte[] buffer, int offset, int length) throws IOException {
@@ -234,13 +221,12 @@ public class PushbackInputStream extends FilterInputStream {
     /**
      * Skips {@code count} bytes in this stream. This implementation skips bytes
      * in the pushback buffer first and then in the source stream if necessary.
-     * 
+     *
      * @param count
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public long skip(long count) throws IOException {
@@ -270,14 +256,12 @@ public class PushbackInputStream extends FilterInputStream {
      * contents of {@code buffer}, an {@code IOException} is thrown. Parts of
      * {@code buffer} may have already been copied to the pushback buffer when
      * the exception is thrown.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the buffer containing the bytes to push back to this stream.
      * @throws IOException
      *             if the free space in the internal pushback buffer is not
      *             sufficient to store the contents of {@code buffer}.
-     * @since Android 1.0
      */
     public void unread(byte[] buffer) throws IOException {
         unread(buffer, 0, buffer.length);
@@ -294,8 +278,7 @@ public class PushbackInputStream extends FilterInputStream {
      * subset of {@code buffer}, an {@code IOException} is thrown. Parts of
      * {@code buffer} may have already been copied to the pushback buffer when
      * the exception is thrown.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the buffer containing the bytes to push back to this stream.
      * @param offset
@@ -309,7 +292,6 @@ public class PushbackInputStream extends FilterInputStream {
      * @throws IOException
      *             if the free space in the internal pushback buffer is not
      *             sufficient to store the selected contents of {@code buffer}.
-     * @since Android 1.0
      */
     public void unread(byte[] buffer, int offset, int length)
             throws IOException {
@@ -345,14 +327,12 @@ public class PushbackInputStream extends FilterInputStream {
      * <p>
      * If this stream's internal pushback buffer cannot store the byte, an
      * {@code IOException} is thrown.
-     * </p>
-     * 
+     *
      * @param oneByte
      *            the byte to push back to this stream.
      * @throws IOException
      *             if this stream is closed or the internal pushback buffer is
      *             full.
-     * @since Android 1.0
      */
     public void unread(int oneByte) throws IOException {
         if (buf == null) {
@@ -367,11 +347,10 @@ public class PushbackInputStream extends FilterInputStream {
     /**
      * Marks the current position in this stream. Setting a mark is not
      * supported in this class; this implementation does nothing.
-     * 
+     *
      * @param readlimit
      *            the number of bytes that can be read from this stream before
      *            the mark is invalidated; this parameter is ignored.
-     * @since Android 1.0
      */
     @Override
     public void mark(int readlimit) {
@@ -382,10 +361,9 @@ public class PushbackInputStream extends FilterInputStream {
      * Resets this stream to the last marked position. Resetting the stream is
      * not supported in this class; this implementation always throws an
      * {@code IOException}.
-     * 
+     *
      * @throws IOException
      *             if this method is called.
-     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {

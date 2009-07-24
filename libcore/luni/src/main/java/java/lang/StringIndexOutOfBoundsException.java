@@ -23,8 +23,6 @@ import org.apache.harmony.luni.util.Msg;
 /**
  * Thrown when the a string is indexed with a value less than zero, or greater
  * than or equal to the size of the array.
- * 
- * @since Android 1.0
  */
 public class StringIndexOutOfBoundsException extends IndexOutOfBoundsException {
 
@@ -33,8 +31,6 @@ public class StringIndexOutOfBoundsException extends IndexOutOfBoundsException {
     /**
      * Constructs a new {@code StringIndexOutOfBoundsException} that includes
      * the current stack trace.
-     * 
-     * @since Android 1.0
      */
     public StringIndexOutOfBoundsException() {
         super();
@@ -47,7 +43,6 @@ public class StringIndexOutOfBoundsException extends IndexOutOfBoundsException {
      * 
      * @param index
      *            the index which is out of bounds.
-     * @since Android 1.0
      */    
     public StringIndexOutOfBoundsException(int index) {
         super(Msg.getString("K0055", index)); //$NON-NLS-1$
@@ -59,7 +54,6 @@ public class StringIndexOutOfBoundsException extends IndexOutOfBoundsException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public StringIndexOutOfBoundsException(String detailMessage) {
         super(detailMessage);

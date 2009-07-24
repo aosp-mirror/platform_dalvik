@@ -18,7 +18,7 @@
 #include <string.h>
 #include "cbigint.h"
 
-#if defined(LINUX) || defined(FREEBSD)
+#if defined(LINUX) || defined(FREEBSD) || defined(ZOS)
 #define USE_LL
 #endif
 
@@ -691,7 +691,7 @@ timesTenToTheEHighPrecision (U_64 * result, IDATA length, jint e)
    */
   /* Replace the current implementaion which performs a
    * "multiplication" by 10 e number of times with an actual
-   * mulitplication. 10e19 is the largest exponent to the power of ten
+   * multiplication. 10e19 is the largest exponent to the power of ten
    * that will fit in a 64-bit integer, and 10e9 is the largest exponent to
    * the power of ten that will fit in a 64-bit integer. Not sure where the
    * break-even point is between an actual multiplication and a

@@ -27,7 +27,6 @@ package java.net;
  * 
  * @see #setDefault
  * @see #getPasswordAuthentication
- * @since Android 1.0
  */
 public abstract class Authenticator {
 
@@ -63,10 +62,8 @@ public abstract class Authenticator {
      * default which is {@code null}.
      * <p>
      * Returns {@code null} by default.
-     * </p>
-     * 
+     *
      * @return collected password authentication data.
-     * @since Android 1.0
      */
     protected PasswordAuthentication getPasswordAuthentication() {
         return null;
@@ -76,7 +73,6 @@ public abstract class Authenticator {
      * Returns the port of the connection that requests authorization.
      * 
      * @return port of the connection.
-     * @since Android 1.0
      */
     protected final int getRequestingPort() {
         return this.port;
@@ -87,7 +83,6 @@ public abstract class Authenticator {
      * {@code null} if unknown.
      * 
      * @return address of the connection.
-     * @since Android 1.0
      */
     protected final InetAddress getRequestingSite() {
         return this.addr;
@@ -98,7 +93,6 @@ public abstract class Authenticator {
      * authorization.
      * 
      * @return prompt string of the connection.
-     * @since Android 1.0
      */
     protected final String getRequestingPrompt() {
         return this.prompt;
@@ -108,7 +102,6 @@ public abstract class Authenticator {
      * Returns the protocol of the connection that requests authorization.
      * 
      * @return protocol of the connection.
-     * @since Android 1.0
      */
     protected final String getRequestingProtocol() {
         return this.protocol;
@@ -119,7 +112,6 @@ public abstract class Authenticator {
      * example HTTP Basic Authentication.
      * 
      * @return scheme of the connection.
-     * @since Android 1.0
      */
     protected final String getRequestingScheme() {
         return this.scheme;
@@ -145,7 +137,6 @@ public abstract class Authenticator {
      * @throws SecurityException
      *             if a security manager denies the password authentication
      *             permission.
-     * @since Android 1.0
      */
     public static synchronized PasswordAuthentication requestPasswordAuthentication(
             InetAddress rAddr, int rPort, String rProtocol, String rPrompt,
@@ -182,7 +173,6 @@ public abstract class Authenticator {
      * @throws SecurityException
      *             if a security manager denies the password authentication
      *             permission.
-     * @since Android 1.0
      */
     public static void setDefault(Authenticator a) {
         SecurityManager sm = System.getSecurityManager();
@@ -214,7 +204,6 @@ public abstract class Authenticator {
      * @throws SecurityException
      *             if a security manager denies the password authentication
      *             permission.
-     * @since Android 1.0
      */
     public static synchronized PasswordAuthentication requestPasswordAuthentication(
             String rHost, InetAddress rAddr, int rPort, String rProtocol,
@@ -244,9 +233,8 @@ public abstract class Authenticator {
     /**
      * Returns the host name of the connection that requests authentication or
      * {@code null} if unknown.
-     * 
+     *
      * @return name of the requesting host or {@code null}.
-     * @since Android 1.0
      */
     protected final String getRequestingHost() {
         return host;
@@ -278,7 +266,6 @@ public abstract class Authenticator {
      * @throws SecurityException
      *             if a security manager denies the password authentication
      *             permission.
-     * @since Android 1.0
      */
     public static PasswordAuthentication requestPasswordAuthentication(
             String rHost, InetAddress rAddr, int rPort, String rProtocol,
@@ -312,7 +299,6 @@ public abstract class Authenticator {
      * Returns the URL of the authentication request.
      * 
      * @return authentication request url.
-     * @since Android 1.0
      */
     protected URL getRequestingURL() {
         return url;
@@ -322,7 +308,6 @@ public abstract class Authenticator {
      * Returns the type of this request, it can be {@code PROXY} or {@code SERVER}.
      * 
      * @return RequestorType of the authentication request.
-     * @since Android 1.0
      */
     protected Authenticator.RequestorType getRequestorType() {
         return rt;
@@ -330,8 +315,6 @@ public abstract class Authenticator {
 
     /**
      * Enumeration class for the origin of the authentication request.
-     * 
-     * @since Android 1.0
      */
     public enum RequestorType {
 

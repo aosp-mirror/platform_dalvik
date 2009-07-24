@@ -16,6 +16,12 @@
 
 package java.lang;
 
+/*
+ * Android's thread local is not derived from Harmony's classlib. It is used in
+ * Harmony's DRLVM, however, whose source is here:
+ * http://svn.apache.org/viewvc/harmony/enhanced/drlvm/trunk/vm/vmcore/src/kernel_classes/
+ */
+
 import java.lang.ref.WeakReference;
 import java.lang.ref.Reference;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 
  * @see java.lang.Thread
  * @author Bob Lee
- * @since Android 1.0
  */
 public class ThreadLocal<T> {
 
@@ -97,6 +102,8 @@ public class ThreadLocal<T> {
      * is followed by a {@link #get()} before a {@link #set},
      * {@code #get()} will call {@link #initialValue()} and create a new
      * entry with the resulting value.
+     *
+     * @since 1.5
      */
     public void remove() {
         Thread currentThread = Thread.currentThread();

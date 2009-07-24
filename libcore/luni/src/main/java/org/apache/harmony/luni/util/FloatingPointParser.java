@@ -17,8 +17,6 @@
 
 package org.apache.harmony.luni.util;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Used to parse a string and return either a single or double precision

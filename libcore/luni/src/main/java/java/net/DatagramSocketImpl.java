@@ -25,29 +25,21 @@ import org.apache.harmony.luni.platform.Platform;
 
 /**
  * The abstract superclass for datagram and multicast socket implementations.
- * 
- * @since Android 1.0
  */
 public abstract class DatagramSocketImpl implements SocketOptions {
 
     /**
      * File descriptor that is used to address this socket.
-     * 
-     * @since Android 1.0
      */
     protected FileDescriptor fd;
 
     /**
      * The number of the local port to which this socket is bound.
-     * 
-     * @since Android 1.0
      */
     protected int localPort;
 
     /**
      * Constructs an unbound datagram socket implementation.
-     * 
-     * @since Android 1.0
      */
     public DatagramSocketImpl() {
         localPort = -1;
@@ -61,28 +53,24 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      *            the port on the localhost to bind.
      * @param addr
      *            the address on the multihomed localhost to bind.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while binding, for example, if the port
      *                has been already bound.
-     * @since Android 1.0
      */
     protected abstract void bind(int port, InetAddress addr)
             throws SocketException;
 
     /**
      * Closes this socket.
-     * 
-     * @since Android 1.0
      */
     protected abstract void close();
 
     /**
      * This method allocates the socket descriptor in the underlying operating
      * system.
-     * 
+     *
      * @throws SocketException
      *             if an error occurs while creating the socket.
-     * @since Android 1.0
      */
     protected abstract void create() throws SocketException;
 
@@ -91,7 +79,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * if the socket is closed or not bound.
      * 
      * @return the current file descriptor of this socket.
-     * @since Android 1.0
      */
     protected FileDescriptor getFileDescriptor() {
         return fd;
@@ -101,7 +88,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * Gets the local address to which the socket is bound.
      * 
      * @return the local address to which the socket is bound.
-     * @since Android 1.0
      */
     InetAddress getLocalAddress() {
         return Platform.getNetworkSystem().getSocketLocalAddress(fd,
@@ -112,7 +98,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * Gets the local port of this socket.
      * 
      * @return the local port to which this socket is bound.
-     * @since Android 1.0
      */
     protected int getLocalPort() {
         return localPort;
@@ -124,9 +109,8 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * @param optID
      *            the ID of the socket option to be retrieved.
      * @return the requested option value.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while accessing the option.
-     * @since Android 1.0
      */
     public abstract Object getOption(int optID) throws SocketException;
 
@@ -139,7 +123,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      *             value.
      * @deprecated Replaced by {@link #getTimeToLive}
      * @see #getTimeToLive()
-     * @since Android 1.0
      */
     @Deprecated
     protected abstract byte getTTL() throws IOException;
@@ -148,12 +131,11 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * Gets the time-to-live (TTL) for multicast packets sent on this socket.
      * The TTL option defines how many routers a packet may be pass before it is
      * discarded.
-     * 
+     *
      * @return the time-to-live option as an integer value.
      * @throws IOException
      *             if an error occurs while getting the time-to-live option
      *             value.
-     * @since Android 1.0
      */
     protected abstract int getTimeToLive() throws IOException;
 
@@ -167,7 +149,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * @throws IOException
      *             if an error occurs while joining the specified multicast
      *             group.
-     * @since Android 1.0
      */
     protected abstract void join(InetAddress addr) throws IOException;
 
@@ -184,7 +165,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * @throws IOException
      *             if an error occurs while joining the specified multicast
      *             group.
-     * @since Android 1.0
      */
     protected abstract void joinGroup(SocketAddress addr,
             NetworkInterface netInterface) throws IOException;
@@ -197,7 +177,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * @throws IOException
      *             if an error occurs while leaving the group or no multicast
      *             address was assigned.
-     * @since Android 1.0
      */
     protected abstract void leave(InetAddress addr) throws IOException;
 
@@ -211,7 +190,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      *            removed.
      * @throws IOException
      *             if an error occurs while leaving the group.
-     * @since Android 1.0
      */
     protected abstract void leaveGroup(SocketAddress addr,
             NetworkInterface netInterface) throws IOException;
@@ -224,9 +202,8 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * @param sender
      *            the origin address of a packet.
      * @return the address of {@code sender} as an integer value.
-     * @exception IOException
+     * @throws IOException
      *                if an error or a timeout occurs while reading the address.
-     * @since Android 1.0
      */
     protected abstract int peek(InetAddress sender) throws IOException;
 
@@ -238,9 +215,8 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * 
      * @param pack
      *            the datagram packet container to fill in the received data.
-     * @exception IOException
+     * @throws IOException
      *                if an error or timeout occurs while receiving data.
-     * @since Android 1.0
      */
     protected abstract void receive(DatagramPacket pack) throws IOException;
 
@@ -250,9 +226,8 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * 
      * @param pack
      *            the datagram packet to be sent.
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs while sending the packet.
-     * @since Android 1.0
      */
     protected abstract void send(DatagramPacket pack) throws IOException;
 
@@ -263,9 +238,8 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      *            the ID of the socket option to be set.
      * @param val
      *            the value of the option.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while setting the option.
-     * @since Android 1.0
      */
     public abstract void setOption(int optID, Object val)
             throws SocketException;
@@ -279,7 +253,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      *            &lt;= 255.
      * @throws IOException
      *             if an error occurs while setting the option.
-     * @since Android 1.0
      */
     protected abstract void setTimeToLive(int ttl) throws IOException;
 
@@ -294,7 +267,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      *             if an error occurs while setting the option.
      * @deprecated Replaced by {@link #setTimeToLive}
      * @see #setTimeToLive(int)
-     * @since Android 1.0
      */
     @Deprecated
     protected abstract void setTTL(byte ttl) throws IOException;
@@ -306,10 +278,9 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      *            the address of the target host which has to be connected.
      * @param port
      *            the port on the target host which has to be connected.
-     * @exception SocketException
+     * @throws SocketException
      *                if the datagram socket cannot be connected to the
      *                specified remote address and port.
-     * @since Android 1.0
      */
     protected void connect(InetAddress inetAddr, int port)
             throws SocketException {
@@ -318,8 +289,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
 
     /**
      * Disconnects this socket from the remote host.
-     * 
-     * @since Android 1.0
      */
     protected void disconnect() {
         // do nothing
@@ -335,9 +304,8 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      * @param pack
      *            the datagram packet used to store the data.
      * @return the port the packet was received from.
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs while peeking at the data.
-     * @since Android 1.0
      */
     protected abstract int peekData(DatagramPacket pack) throws IOException;
 }

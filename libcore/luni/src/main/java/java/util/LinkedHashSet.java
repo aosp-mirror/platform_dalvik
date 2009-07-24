@@ -17,7 +17,6 @@
 
 package java.util;
 
-
 import java.io.Serializable;
 
 /**
@@ -30,18 +29,16 @@ import java.io.Serializable;
  * Like HashSet, LinkedHashSet is not thread safe, so access by multiple threads
  * must be synchronized by an external mechanism such as
  * {@link Collections#synchronizedSet(Set)}.
- * 
- * @since Android 1.0
+ *
+ * @since 1.4
  */
 public class LinkedHashSet<E> extends HashSet<E> implements Set<E>, Cloneable,
         Serializable {
-    
+
     private static final long serialVersionUID = -2851667679971038690L;
 
     /**
      * Constructs a new empty instance of {@code LinkedHashSet}.
-     * 
-     * @since Android 1.0
      */
     public LinkedHashSet() {
         super(new LinkedHashMap<E, HashSet<E>>());
@@ -53,7 +50,6 @@ public class LinkedHashSet<E> extends HashSet<E> implements Set<E>, Cloneable,
      * 
      * @param capacity
      *            the initial capacity of this {@code LinkedHashSet}.
-     * @since Android 1.0
      */
     public LinkedHashSet(int capacity) {
         super(new LinkedHashMap<E, HashSet<E>>(capacity));
@@ -67,7 +63,6 @@ public class LinkedHashSet<E> extends HashSet<E> implements Set<E>, Cloneable,
      *            the initial capacity.
      * @param loadFactor
      *            the initial load factor.
-     * @since Android 1.0
      */
     public LinkedHashSet(int capacity, float loadFactor) {
         super(new LinkedHashMap<E, HashSet<E>>(capacity, loadFactor));
@@ -79,7 +74,6 @@ public class LinkedHashSet<E> extends HashSet<E> implements Set<E>, Cloneable,
      * 
      * @param collection
      *            the collection of elements to add.
-     * @since Android 1.0
      */
     public LinkedHashSet(Collection<? extends E> collection) {
         super(new LinkedHashMap<E, HashSet<E>>(collection.size() < 6 ? 11

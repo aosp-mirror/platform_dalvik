@@ -25,8 +25,6 @@ import org.apache.harmony.luni.util.Msg;
  * find this useful. The number of characters which may be pushed back can be
  * specified during construction. If the buffer of pushed back bytes is empty,
  * characters are read from the underlying reader.
- * 
- * @since Android 1.0
  */
 public class PushbackReader extends FilterReader {
     /**
@@ -45,10 +43,9 @@ public class PushbackReader extends FilterReader {
      * Constructs a new {@code PushbackReader} with the specified reader as
      * source. The size of the pushback buffer is set to the default value of 1
      * character.
-     * 
+     *
      * @param in
      *            the source reader.
-     * @since Android 1.0
      */
     public PushbackReader(Reader in) {
         super(in);
@@ -59,14 +56,13 @@ public class PushbackReader extends FilterReader {
     /**
      * Constructs a new {@code PushbackReader} with {@code in} as source reader.
      * The size of the pushback buffer is set to {@code size}.
-     * 
+     *
      * @param in
      *            the source reader.
      * @param size
      *            the size of the pushback buffer.
      * @throws IllegalArgumentException
      *             if {@code size} is negative.
-     * @since Android 1.0
      */
     public PushbackReader(Reader in, int size) {
         super(in);
@@ -80,10 +76,9 @@ public class PushbackReader extends FilterReader {
     /**
      * Closes this reader. This implementation closes the source reader
      * and releases the pushback buffer.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this reader.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -97,13 +92,12 @@ public class PushbackReader extends FilterReader {
      * Marks the current position in this stream. Setting a mark is not
      * supported in this class; this implementation always throws an
      * {@code IOException}.
-     * 
+     *
      * @param readAheadLimit
      *            the number of character that can be read from this reader
      *            before the mark is invalidated; this parameter is ignored.
      * @throws IOException
      *             if this method is called.
-     * @since Android 1.0
      */
     @Override
     public void mark(int readAheadLimit) throws IOException {
@@ -114,11 +108,10 @@ public class PushbackReader extends FilterReader {
      * Indicates whether this reader supports the {@code mark(int)} and
      * {@code reset()} methods. {@code PushbackReader} does not support them, so
      * it returns {@code false}.
-     * 
+     *
      * @return always {@code false}.
      * @see #mark(int)
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -132,13 +125,12 @@ public class PushbackReader extends FilterReader {
      * available characters then a character from the source reader is returned.
      * Blocks until one character has been read, the end of the source reader is
      * detected or an exception is thrown.
-     * 
+     *
      * @return the character read or -1 if the end of the source reader has been
      *         reached.
      * @throws IOException
      *             if this reader is closed or an I/O error occurs while reading
      *             from this reader.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -164,7 +156,7 @@ public class PushbackReader extends FilterReader {
      * read from the pushback buffer first, then from the source reader if more
      * bytes are required. Blocks until {@code count} characters have been read,
      * the end of the source reader is detected or an exception is thrown.
-     * 
+     *
      * @param buffer
      *            the array in which to store the characters read from this
      *            reader.
@@ -182,7 +174,6 @@ public class PushbackReader extends FilterReader {
      * @throws IOException
      *             if this reader is closed or another I/O error occurs while
      *             reading from this reader.
-     * @since Android 1.0
      */
     @Override
     public int read(char[] buffer, int offset, int count) throws IOException {
@@ -236,7 +227,7 @@ public class PushbackReader extends FilterReader {
      * Indicates whether this reader is ready to be read without blocking.
      * Returns {@code true} if this reader will not block when {@code read} is
      * called, {@code false} if unknown or blocking will occur.
-     * 
+     *
      * @return {@code true} if the receiver will not block when
      *         {@code read()} is called, {@code false} if unknown
      *         or blocking will occur.
@@ -244,7 +235,6 @@ public class PushbackReader extends FilterReader {
      *             if this reader is closed or some other I/O error occurs.
      * @see #read()
      * @see #read(char[], int, int)
-     * @since Android 1.0
      */
     @Override
     public boolean ready() throws IOException {
@@ -260,10 +250,9 @@ public class PushbackReader extends FilterReader {
      * Resets this reader to the last marked position. Resetting the reader is
      * not supported in this class; this implementation always throws an
      * {@code IOException}.
-     * 
+     *
      * @throws IOException
      *             if this method is called.
-     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {
@@ -279,8 +268,7 @@ public class PushbackReader extends FilterReader {
      * contents of {@code buffer}, an {@code IOException} is thrown. Parts of
      * {@code buffer} may have already been copied to the pushback buffer when
      * the exception is thrown.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the buffer containing the characters to push back to this
      *            reader.
@@ -288,7 +276,6 @@ public class PushbackReader extends FilterReader {
      *             if this reader is closed or the free space in the internal
      *             pushback buffer is not sufficient to store the contents of
      *             {@code buffer}.
-     * @since Android 1.0
      */
     public void unread(char[] buffer) throws IOException {
         unread(buffer, 0, buffer.length);
@@ -305,8 +292,7 @@ public class PushbackReader extends FilterReader {
      * subset of {@code buffer}, an {@code IOException} is thrown. Parts of
      * {@code buffer} may have already been copied to the pushback buffer when
      * the exception is thrown.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the buffer containing the characters to push back to this
      *            reader.
@@ -324,7 +310,6 @@ public class PushbackReader extends FilterReader {
      *             contents of {@code buffer}.
      * @throws NullPointerException
      *             if {@code buffer} is {@code null}.
-     * @since Android 1.0
      */
     public void unread(char[] buffer, int offset, int count) throws IOException {
         synchronized (lock) {
@@ -361,14 +346,12 @@ public class PushbackReader extends FilterReader {
      * <p>
      * If this reader's internal pushback buffer cannot store the character, an
      * {@code IOException} is thrown.
-     * </p>
-     * 
+     *
      * @param oneChar
      *            the character to push back to this stream.
      * @throws IOException
      *             if this reader is closed or the internal pushback buffer is
      *             full.
-     * @since Android 1.0
      */
     public void unread(int oneChar) throws IOException {
         synchronized (lock) {
@@ -386,14 +369,13 @@ public class PushbackReader extends FilterReader {
      * Skips {@code count} characters in this reader. This implementation skips
      * characters in the pushback buffer first and then in the source reader if
      * necessary.
-     * 
+     *
      * @param count
      *            the number of characters to skip.
      * @return the number of characters actually skipped.
      * @throws IllegalArgumentException if {@code count < 0}.
      * @throws IOException
      *             if this reader is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public long skip(long count) throws IOException {
