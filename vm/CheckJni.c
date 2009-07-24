@@ -151,6 +151,8 @@ void dvmCheckCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
 #define BASE_ENV(_env)  (((JNIEnvExt*)_env)->baseFuncTable)
 #define BASE_VM(_vm)    (((JavaVMExt*)_vm)->baseFuncTable)
 
+#define kRedundantDirectBufferTest true
+
 /*
  * Flags passed into checkThread().
  */
@@ -2097,12 +2099,59 @@ static void* Check_GetDirectBufferAddress(JNIEnv* env, jobject buf)
 {
     CHECK_ENTER(env, kFlag_Default);
     CHECK_OBJECT(env, buf);
-    void* result;
-    //if (buf == NULL)
-    //    result = NULL;
-    //else
-        result = BASE_ENV(env)->GetDirectBufferAddress(env, buf);
+    void* result = BASE_ENV(env)->GetDirectBufferAddress(env, buf);
     CHECK_EXIT(env);
+
+    /* optional - check result vs. "safe" implementation */
+    if (kRedundantDirectBufferTest) {
+        jobject platformAddr = NULL;
+        void* checkResult = NULL;
+
+        /*
+         * Start by determining if the object supports the DirectBuffer
+         * interfaces.  Note this does not guarantee that it's a direct buffer.
+         */
+        if (JNI_FALSE == (*env)->IsInstanceOf(env, buf,
+                (jclass) gDvm.classOrgApacheHarmonyNioInternalDirectBuffer))
+        {
+            goto bail;
+        }
+
+        /*
+         * Get the PlatformAddress object.
+         *
+         * If this isn't a direct buffer, platformAddr will be NULL and/or an
+         * exception will have been thrown.
+         */
+        platformAddr = (*env)->CallObjectMethod(env, buf,
+            (jmethodID) gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress);
+
+        if ((*env)->ExceptionCheck(env)) {
+            (*env)->ExceptionClear(env);
+            platformAddr = NULL;
+        }
+        if (platformAddr == NULL) {
+            LOGV("Got request for address of non-direct buffer\n");
+            goto bail;
+        }
+
+        Method* toLong = ((Object*)platformAddr)->clazz->vtable[
+                gDvm.voffOrgApacheHarmonyLuniPlatformPlatformAddress_toLong];
+        checkResult = (void*)(u4)(*env)->CallLongMethod(env, platformAddr,
+                (jmethodID)toLong);
+
+    bail:
+        if (platformAddr != NULL)
+            (*env)->DeleteLocalRef(env, platformAddr);
+
+        if (result != checkResult) {
+            LOGW("JNI WARNING: direct buffer result mismatch (%p vs %p)\n",
+                result, checkResult);
+            abortMaybe();
+            /* keep going */
+        }
+    }
+
     return result;
 }
 
@@ -2110,11 +2159,8 @@ static jlong Check_GetDirectBufferCapacity(JNIEnv* env, jobject buf)
 {
     CHECK_ENTER(env, kFlag_Default);
     CHECK_OBJECT(env, buf);
-    jlong result;
-    //if (buf == NULL)
-    //    result = -1;
-    //else
-        result = BASE_ENV(env)->GetDirectBufferCapacity(env, buf);
+    /* TODO: verify "buf" is an instance of java.nio.Buffer */
+    jlong result = BASE_ENV(env)->GetDirectBufferCapacity(env, buf);
     CHECK_EXIT(env);
     return result;
 }

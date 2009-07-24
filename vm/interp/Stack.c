@@ -537,6 +537,8 @@ bail:
  * from the varargs invocation where the C compiler does a widening
  * conversion when calling a function.  As a result, we have to be a
  * little more precise when pulling stuff out.
+ *
+ * "args" may be NULL if the method has no arguments.
  */
 void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
     JValue* pResult, const jvalue* args)
