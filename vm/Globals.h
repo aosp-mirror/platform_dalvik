@@ -301,6 +301,7 @@ struct DvmGlobals {
     Method*     methOrgApacheHarmonyLuniPlatformPlatformAddress_on;
     Method*     methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress;
     int         offJavaNioBuffer_capacity;
+    int         offJavaNioBuffer_effectiveDirectAddress;
     int         offOrgApacheHarmonyLuniPlatformPlatformAddress_osaddr;
     int         voffOrgApacheHarmonyLuniPlatformPlatformAddress_toLong;
 

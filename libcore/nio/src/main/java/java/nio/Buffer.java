@@ -111,6 +111,16 @@ public abstract class Buffer {
     int _arrayOffset() {
         return 0;
     }
+
+    /**
+     * For direct buffers, the effective address of the data.  This is set
+     * on first use.  If the field is zero, this is either not a direct
+     * buffer or the field has not been initialized, and you need to issue
+     * the getEffectiveAddress() call and use the result of that.
+     *
+     * This is strictly an optimization.
+     */
+    int effectiveDirectAddress = 0;
     // END android-added
 
     /**

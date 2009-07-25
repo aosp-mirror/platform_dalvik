@@ -451,6 +451,13 @@ bool dvmJniStartup(void)
         return false;
     }
 
+    gDvm.offJavaNioBuffer_effectiveDirectAddress =
+        dvmFindFieldOffset(bufferClass, "effectiveDirectAddress", "I");
+    if (gDvm.offJavaNioBuffer_effectiveDirectAddress < 0) {
+        LOGE("Unable to find Buffer.effectiveDirectAddress\n");
+        return false;
+    }
+
     return true;
 }
 
@@ -2832,9 +2839,21 @@ static void* GetDirectBufferAddress(JNIEnv* env, jobject buf)
 
     Object* bufObj = (Object*) buf;
     Thread* self = _self /*dvmThreadSelf()*/;
-    Object* platformAddr;
-    JValue callResult;
-    void* result = NULL;
+    void* result;
+
+    /*
+     * All Buffer objects have an effectiveDirectAddress field.  If it's
+     * nonzero, we can just return that value.  If not, we have to call
+     * through DirectBuffer.getEffectiveAddress(), which as a side-effect
+     * will set the effectiveDirectAddress field for direct buffers (and
+     * things that wrap direct buffers).
+     */
+    result = (void*) dvmGetFieldInt(bufObj,
+            gDvm.offJavaNioBuffer_effectiveDirectAddress);
+    if (result != NULL) {
+        //LOGI("fast path for %p\n", buf);
+        goto bail;
+    }
 
     /*
      * Start by determining if the object supports the DirectBuffer
@@ -2851,9 +2870,8 @@ static void* GetDirectBufferAddress(JNIEnv* env, jobject buf)
      *
      * If this isn't a direct buffer, the result will be NULL and/or an
      * exception will have been thrown.
-     *
-     * TODO: eliminate the getEffectiveAddress() method call.
      */
+    JValue callResult;
     const Method* meth = dvmGetVirtualizedMethod(bufObj->clazz,
         gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress);
     dvmCallMethodA(self, meth, bufObj, &callResult, NULL);
@@ -2862,9 +2880,9 @@ static void* GetDirectBufferAddress(JNIEnv* env, jobject buf)
         callResult.l = NULL;
     }
 
-    platformAddr = callResult.l;
+    Object* platformAddr = callResult.l;
     if (platformAddr == NULL) {
-        LOGD("Got request for address of non-direct buffer\n");
+        LOGV("Got request for address of non-direct buffer\n");
         goto bail;
     }
 
@@ -2875,6 +2893,8 @@ static void* GetDirectBufferAddress(JNIEnv* env, jobject buf)
      */
     result = (void*) dvmGetFieldInt(platformAddr,
                 gDvm.offOrgApacheHarmonyLuniPlatformPlatformAddress_osaddr);
+
+    //LOGI("slow path for %p --> %p\n", buf, result);
 
 bail:
     JNI_EXIT();
