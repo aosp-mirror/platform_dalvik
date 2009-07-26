@@ -15,10 +15,11 @@
  */
 package tests.support;
 
+import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import dalvik.system.PathClassLoader;
+import dalvik.system.DexClassLoader;
 
 /**
  * Support class for creating a file-based ClassLoader. Delegates to either
@@ -46,14 +47,36 @@ public abstract class Support_ClassLoader {
             throw new RuntimeException("Unable to create ClassLoader", ex);
         }
     }
-    
+
+    /**
+     * Implementation for Dalvik. Uses the DexClassLoader, so we can write
+     * temporary DEX files to a special directory. We don't want to spoil the
+     * system's DEX cache with our files. Also, we might not have write access
+     * to the system's DEX cache at all (which is the case when we're running
+     * CTS).
+     */
     static class Dalvik extends Support_ClassLoader {
+
+        private static File tmp;
+
+        static {
+            tmp = new File(System.getProperty("java.io.tmpdir"), "dex-cache");
+            tmp.mkdirs();
+        }
+
+        @Override
         public ClassLoader getClassLoader(URL url, ClassLoader parent) {
-            return new PathClassLoader(url.getPath(), parent);
+            return new DexClassLoader(url.getPath(), tmp.getAbsolutePath(),
+                    null, parent);
         }
     }
     
+    /**
+     * Implementation for the reference implementation. Nothing interesting to
+     * see here. Please get along.
+     */
     static class RefImpl extends Support_ClassLoader {
+        @Override
         public ClassLoader getClassLoader(URL url, ClassLoader parent) {
             return new URLClassLoader(new URL[] { url }, parent);
         }

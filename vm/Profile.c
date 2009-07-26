@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Android's method call profiling goodies.
  */
@@ -28,10 +29,10 @@
 #include <sys/mman.h>
 #include <sched.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #ifdef HAVE_ANDROID_OS
 # define UPDATE_MAGIC_PAGE      1
-# define MAGIC_PAGE_BASE_ADDR   0x08000000
 # ifndef PAGESIZE
 #  define PAGESIZE              4096
 # endif
@@ -176,13 +177,20 @@ bool dvmProfilingStartup(void)
      * We could key this off of the "ro.kernel.qemu" property, but there's
      * no real harm in doing this on a real device.
      */
-    gDvm.emulatorTracePage = mmap((void*) MAGIC_PAGE_BASE_ADDR,
-        PAGESIZE, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_SHARED|MAP_ANON, -1, 0);
-    if (gDvm.emulatorTracePage == MAP_FAILED) {
-        LOGE("Unable to mmap magic page (0x%08x)\n", MAGIC_PAGE_BASE_ADDR);
-        return false;
+    int fd = open("/dev/qemu_trace", O_RDWR);
+    if (fd < 0) {
+        LOGV("Unable to open /dev/qemu_trace\n");
+    } else {
+        gDvm.emulatorTracePage = mmap(0, PAGESIZE, PROT_READ|PROT_WRITE,
+                                      MAP_SHARED, fd, 0);
+        close(fd);
+        if (gDvm.emulatorTracePage == MAP_FAILED) {
+            LOGE("Unable to mmap /dev/qemu_trace\n");
+            gDvm.emulatorTracePage = NULL;
+        } else {
+            *(u4*) gDvm.emulatorTracePage = 0;
+        }
     }
-    *(u4*) gDvm.emulatorTracePage = 0;
 #else
     assert(gDvm.emulatorTracePage == NULL);
 #endif
@@ -312,12 +320,14 @@ static void dumpMethodList(FILE* fp)
 }
 
 /*
- * Start method tracing.  This opens the file and allocates the buffer.
+ * Start method tracing.  This opens the file (if an already open fd has not
+ * been supplied) and allocates the buffer.
  * If any of these fail, we throw an exception and return.
  *
  * Method tracing is global to the VM.
  */
-void dvmMethodTraceStart(const char* traceFileName, int bufferSize, int flags)
+void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
+        int flags)
 {
     MethodTraceState* state = &gDvm.methodTrace;
 
@@ -343,7 +353,11 @@ void dvmMethodTraceStart(const char* traceFileName, int bufferSize, int flags)
         dvmThrowException("Ljava/lang/InternalError;", "buffer alloc failed");
         goto fail;
     }
-    state->traceFile = fopen(traceFileName, "w");
+    if (traceFd < 0) {
+        state->traceFile = fopen(traceFileName, "w");
+    } else {
+        state->traceFile = fdopen(traceFd, "w");
+    }
     if (state->traceFile == NULL) {
         LOGE("Unable to open trace file '%s': %s\n",
             traceFileName, strerror(errno));
@@ -388,6 +402,7 @@ void dvmMethodTraceStart(const char* traceFileName, int bufferSize, int flags)
     return;
 
 fail:
+    updateActiveProfilers(-1);
     if (state->traceFile != NULL) {
         fclose(state->traceFile);
         state->traceFile = NULL;
@@ -448,6 +463,15 @@ static u4 getClockOverhead(void)
 }
 
 /*
+ * Returns "true" if method tracing is currently active.
+ */
+bool dvmIsMethodTraceActive(void)
+{
+    const MethodTraceState* state = &gDvm.methodTrace;
+    return state->traceEnabled;
+}
+
+/*
  * Stop method tracing.  We write the buffer to disk and generate a key
  * file so we can interpret it.
  */
@@ -464,6 +488,7 @@ void dvmMethodTraceStop(void)
 
     if (!state->traceEnabled) {
         /* somebody already stopped it, or it was never started */
+        LOGD("TRACE stop requested, but not running\n");
         dvmUnlockMutex(&state->startStopLock);
         return;
     } else {
@@ -616,43 +641,58 @@ void dvmEmitEmulatorTrace(const Method* method, int action)
 {
 #ifdef UPDATE_MAGIC_PAGE
     /*
-     * We want to store the address of the Dalvik bytecodes.  Native and
-     * abstract methods don't have any, so we don't do this for those.
+     * We store the address of the Dalvik bytecodes to the memory-mapped
+     * trace page for normal Java methods.  We also trace calls to native
+     * functions by storing the address of the native function to the
+     * trace page.
+     * Abstract methods don't have any bytecodes, so we don't trace them.
      * (Abstract methods are never called, but in Dalvik they can be
-     * because we do a "late trap" to generate the abstract method
-     * exception.  However, we trap to a native method, so we don't need
-     * an explicit check for abstract here.)
+     * because we do a "late trap" to a native method to generate the
+     * abstract method exception.)
      */
-    if (dvmIsNativeMethod(method))
+    if (dvmIsAbstractMethod(method))
         return;
-    assert(method->insns != NULL);
 
-    u4* pMagic = ((u4*) MAGIC_PAGE_BASE_ADDR) +1;
-
-    /*
-     * The dexlist output shows the &DexCode.insns offset value, which
-     * is offset from the start of the base DEX header. Method.insns
-     * is the absolute address, effectively offset from the start of
-     * the optimized DEX header. We either need to return the
-     * optimized DEX base file address offset by the right amount, or
-     * take the "real" address and subtract off the size of the
-     * optimized DEX header.
-     *
-     * Would be nice to factor this out at dexlist time, but we can't count
-     * on having access to the correct optimized DEX file.
-     */
+    u4* pMagic = (u4*) gDvm.emulatorTracePage;
     u4 addr;
-#if 0
-    DexFile* pDexFile = method->clazz->pDvmDex->pDexFile;
-    addr = (u4)pDexFile->pOptHeader; /* file starts at "opt" header */
-    addr += dvmGetMethodCode(method)->insnsOff;
-#else
-    const DexOptHeader* pOptHdr = method->clazz->pDvmDex->pDexFile->pOptHeader;
-    addr = (u4) method->insns - pOptHdr->dexOffset;
-#endif
-    assert(METHOD_TRACE_ENTER == 0);
-    assert(METHOD_TRACE_EXIT == 1);
-    assert(METHOD_TRACE_UNROLL == 2);
+
+    if (dvmIsNativeMethod(method)) {
+        /*
+         * The "action" parameter is one of:
+         *   0 = ENTER
+         *   1 = EXIT
+         *   2 = UNROLL
+         * To help the trace tools reconstruct the runtime stack containing
+         * a mix of Java plus native methods, we add 4 to the action if this
+         * is a native method.
+         */
+        action += 4;
+
+        /*
+         * Get the address of the native function.
+         * This isn't the right address -- how do I get it?
+         * Fortunately, the trace tools can get by without the address, but
+         * it would be nice to fix this.
+         */
+         addr = method->nativeFunc;
+    } else {
+        /*
+         * The dexlist output shows the &DexCode.insns offset value, which
+         * is offset from the start of the base DEX header. Method.insns
+         * is the absolute address, effectively offset from the start of
+         * the optimized DEX header. We either need to return the
+         * optimized DEX base file address offset by the right amount, or
+         * take the "real" address and subtract off the size of the
+         * optimized DEX header.
+         *
+         * Would be nice to factor this out at dexlist time, but we can't count
+         * on having access to the correct optimized DEX file.
+         */
+        assert(method->insns != NULL);
+        const DexOptHeader* pOptHdr = method->clazz->pDvmDex->pDexFile->pOptHeader;
+        addr = (u4) method->insns - pOptHdr->dexOffset;
+    }
+
     *(pMagic+action) = addr;
     LOGVV("Set %p = 0x%08x (%s.%s)\n",
         pMagic+action, addr, method->clazz->descriptor, method->name);
@@ -690,6 +730,10 @@ void dvmMethodTraceClassPrepEnd(void)
  */
 void dvmEmulatorTraceStart(void)
 {
+    /* If we could not map the emulator trace page, then do not enable tracing */
+    if (gDvm.emulatorTracePage == NULL)
+        return;
+
     updateActiveProfilers(1);
 
     /* in theory we should make this an atomic inc; in practice not important */
@@ -705,7 +749,7 @@ void dvmEmulatorTraceStop(void)
 {
     if (gDvm.emulatorTraceEnableCount == 0) {
         LOGE("ERROR: emulator tracing not enabled\n");
-        dvmAbort();
+        return;
     }
     updateActiveProfilers(-1);
     /* in theory we should make this an atomic inc; in practice not important */

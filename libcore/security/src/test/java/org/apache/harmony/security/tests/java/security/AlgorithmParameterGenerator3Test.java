@@ -17,10 +17,6 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
 import java.math.BigInteger;
 import java.security.AlgorithmParameterGenerator;
 import java.security.AlgorithmParameters;
@@ -30,6 +26,11 @@ import java.security.Provider;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.spec.DSAParameterSpec;
+
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(AlgorithmParameterGenerator.class)
 public class AlgorithmParameterGenerator3Test extends junit.framework.TestCase {
@@ -43,10 +44,8 @@ public class AlgorithmParameterGenerator3Test extends junit.framework.TestCase {
         method = "generateParameters",
         args = {}
     )
+    @BrokenTest("Takes too long due to math implementation, disabling for now")
     public void test_generateParameters() throws Exception {
-
-        //fail("Takes ages. Problem with SecureRandom and stub math ?");
-        
         // Test for method java.security.AlgorithmParameters
         // java.security.AlgorithmParameterGenerator.generateParameters()
         AlgorithmParameterGenerator gen = AlgorithmParameterGenerator

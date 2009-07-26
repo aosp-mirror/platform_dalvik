@@ -43,6 +43,9 @@ pid_t gettid() { return syscall(__NR_gettid);}
 #undef __KERNEL__
 #endif
 
+// Change this to enable logging on cgroup errors
+#define ENABLE_CGROUP_ERR_LOGGING 0
+
 // change this to LOGV/LOGD to debug thread activity
 #define LOG_THREAD  LOGVV
 
@@ -478,6 +481,20 @@ void dvmUnlockThreadList(void)
     assert(cc == 0);
 }
 
+/*
+ * Convert SuspendCause to a string.
+ */
+static const char* getSuspendCauseStr(SuspendCause why)
+{
+    switch (why) {
+    case SUSPEND_NOT:               return "NOT?";
+    case SUSPEND_FOR_GC:            return "gc";
+    case SUSPEND_FOR_DEBUG:         return "debug";
+    case SUSPEND_FOR_DEBUG_EVENT:   return "debug-event";
+    case SUSPEND_FOR_STACK_DUMP:    return "stack-dump";
+    default:                        return "UNKNOWN";
+    }
+}
 
 /*
  * Grab the "thread suspend" lock.  This is required to prevent the
@@ -489,7 +506,6 @@ void dvmUnlockThreadList(void)
  */
 static void lockThreadSuspend(const char* who, SuspendCause why)
 {
-    const int kMaxRetries = 10;
     const int kSpinSleepTime = 3*1000*1000;        /* 3s */
     u8 startWhen = 0;       // init req'd to placate gcc
     int sleepIter = 0;
@@ -500,23 +516,37 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
         if (cc != 0) {
             if (!dvmCheckSuspendPending(NULL)) {
                 /*
-                 * Could be unusual JNI-attach thing, could be we hit
-                 * the window as the suspend or resume was started.  Could
-                 * also be the debugger telling us to resume at roughly
+                 * Could be that a resume-all is in progress, and something
+                 * grabbed the CPU when the wakeup was broadcast.  The thread
+                 * performing the resume hasn't had a chance to release the
+                 * thread suspend lock.  (Should no longer be an issue --
+                 * we now release before broadcast.)
+                 *
+                 * Could be we hit the window as a suspend was started,
+                 * and the lock has been grabbed but the suspend counts
+                 * haven't been incremented yet.
+                 *
+                 * Could be an unusual JNI thread-attach thing.
+                 *
+                 * Could be the debugger telling us to resume at roughly
                  * the same time we're posting an event.
                  */
-                LOGI("threadid=%d ODD: thread-suspend lock held (%s:%d)"
-                     " but suspend not pending\n",
-                    dvmThreadSelf()->threadId, who, why);
+                LOGI("threadid=%d ODD: want thread-suspend lock (%s:%s),"
+                     " it's held, no suspend pending\n",
+                    dvmThreadSelf()->threadId, who, getSuspendCauseStr(why));
+            } else {
+                /* we suspended; reset timeout */
+                sleepIter = 0;
             }
 
             /* give the lock-holder a chance to do some work */
             if (sleepIter == 0)
                 startWhen = dvmGetRelativeTimeUsec();
             if (!dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
-                LOGE("threadid=%d: couldn't get thread-suspend lock (%s:%d),"
+                LOGE("threadid=%d: couldn't get thread-suspend lock (%s:%s),"
                      " bailing\n",
-                    dvmThreadSelf()->threadId, who, why);
+                    dvmThreadSelf()->threadId, who, getSuspendCauseStr(why));
+                /* threads are not suspended, thread dump could crash */
                 dvmDumpAllThreads(false);
                 dvmAbort();
             }
@@ -624,6 +654,7 @@ bool dvmPrepMainForJni(JNIEnv* pEnv)
 /*
  * Finish preparing the main thread, allocating some objects to represent
  * it.  As part of doing so, we finish initializing Thread and ThreadGroup.
+ * This will execute some interpreted code (e.g. class initializers).
  */
 bool dvmPrepMainThread(void)
 {
@@ -711,12 +742,31 @@ bool dvmPrepMainThread(void)
 
     /*
      * Stuff the VMThread back into the Thread.  From this point on, other
-     * Threads will see that this Thread is running.
+     * Threads will see that this Thread is running (at least, they would,
+     * if there were any).
      */
     dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread,
         vmThreadObj);
 
     thread->threadObj = threadObj;
+
+    /*
+     * Set the context class loader.  This invokes a ClassLoader method,
+     * which could conceivably call Thread.currentThread(), so we want the
+     * Thread to be fully configured before we do this.
+     */
+    Object* systemLoader = dvmGetSystemClassLoader();
+    if (systemLoader == NULL) {
+        LOGW("WARNING: system class loader is NULL (setting main ctxt)\n");
+        /* keep going */
+    }
+    int ctxtClassLoaderOffset = dvmFindFieldOffset(gDvm.classJavaLangThread,
+        "contextClassLoader", "Ljava/lang/ClassLoader;");
+    if (ctxtClassLoaderOffset < 0) {
+        LOGE("Unable to find contextClassLoader field in Thread\n");
+        return false;
+    }
+    dvmSetFieldObject(threadObj, ctxtClassLoaderOffset, systemLoader);
 
     /*
      * Finish our thread prep.
@@ -1201,9 +1251,13 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
      */
     dvmUnlockThreadList();
 
-    if (pthread_create(&threadHandle, &threadAttr, interpThreadStart,
-            newThread) != 0)
-    {
+    int cc, oldStatus;
+    oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+    cc = pthread_create(&threadHandle, &threadAttr, interpThreadStart,
+            newThread);
+    oldStatus = dvmChangeStatus(self, oldStatus);
+
+    if (cc != 0) {
         /*
          * Failure generally indicates that we have exceeded system
          * resource limits.  VirtualMachineError is probably too severe,
@@ -1248,7 +1302,8 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
      *
      * The easiest way to deal with this is to prevent the new thread from
      * running until the parent says it's okay.  This results in the
-     * following sequence of events for a "badly timed" GC:
+     * following (correct) sequence of events for a "badly timed" GC
+     * (where '-' is us, 'o' is the child, and '+' is some other thread):
      *
      *  - call pthread_create()
      *  - lock thread list
@@ -2179,8 +2234,15 @@ void dvmSuspendSelf(bool jdwpActivity)
                 &gDvm.threadSuspendCountLock);
         assert(cc == 0);
         if (self->suspendCount != 0) {
-            LOGD("threadid=%d: still suspended after undo (s=%d d=%d)\n",
-                self->threadId, self->suspendCount, self->dbgSuspendCount);
+            /*
+             * The condition was signaled but we're still suspended.  This
+             * can happen if the debugger lets go while a SIGQUIT thread
+             * dump event is pending (assuming SignalCatcher was resumed for
+             * just long enough to try to grab the thread-suspend lock).
+             */
+            LOGD("threadid=%d: still suspended after undo (sc=%d dc=%d s=%c)\n",
+                self->threadId, self->suspendCount, self->dbgSuspendCount,
+                self->isSuspended ? 'Y' : 'N');
         }
     }
     assert(self->suspendCount == 0 && self->dbgSuspendCount == 0);
@@ -2285,6 +2347,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
 {
     const int kMaxRetries = 10;
     const int kSpinSleepTime = 750*1000;        /* 0.75s */
+    bool complained = false;
 
     int sleepIter = 0;
     int retryCount = 0;
@@ -2299,6 +2362,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
                 self->threadId, (int)self->handle,
                 thread->threadId, (int)thread->handle);
             dumpWedgedThread(thread);
+            complained = true;
 
             // keep going; could be slow due to valgrind
             sleepIter = 0;
@@ -2310,6 +2374,11 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
                 dvmAbort();
             }
         }
+    }
+
+    if (complained) {
+        LOGW("threadid=%d: spin on suspend resolved\n", self->threadId);
+        //dvmDumpThread(thread, false);   /* suspended, so dump is safe */
     }
 }
 
@@ -2447,7 +2516,9 @@ void dvmResumeAllThreads(SuspendCause why)
         /* debugger events don't suspend JDWP thread */
         if ((why == SUSPEND_FOR_DEBUG || why == SUSPEND_FOR_DEBUG_EVENT) &&
             thread->handle == dvmJdwpGetDebugThread(gDvm.jdwpState))
+        {
             continue;
+        }
 
         if (thread->suspendCount > 0) {
             thread->suspendCount--;
@@ -2462,6 +2533,43 @@ void dvmResumeAllThreads(SuspendCause why)
     dvmUnlockThreadList();
 
     /*
+     * In some ways it makes sense to continue to hold the thread-suspend
+     * lock while we issue the wakeup broadcast.  It allows us to complete
+     * one operation before moving on to the next, which simplifies the
+     * thread activity debug traces.
+     *
+     * This approach caused us some difficulty under Linux, because the
+     * condition variable broadcast not only made the threads runnable,
+     * but actually caused them to execute, and it was a while before
+     * the thread performing the wakeup had an opportunity to release the
+     * thread-suspend lock.
+     *
+     * This is a problem because, when a thread tries to acquire that
+     * lock, it times out after 3 seconds.  If at some point the thread
+     * is told to suspend, the clock resets; but since the VM is still
+     * theoretically mid-resume, there's no suspend pending.  If, for
+     * example, the GC was waking threads up while the SIGQUIT handler
+     * was trying to acquire the lock, we would occasionally time out on
+     * a busy system and SignalCatcher would abort.
+     *
+     * We now perform the unlock before the wakeup broadcast.  The next
+     * suspend can't actually start until the broadcast completes and
+     * returns, because we're holding the thread-suspend-count lock, but the
+     * suspending thread is now able to make progress and we avoid the abort.
+     *
+     * (Technically there is a narrow window between when we release
+     * the thread-suspend lock and grab the thread-suspend-count lock.
+     * This could cause us to send a broadcast to threads with nonzero
+     * suspend counts, but this is expected and they'll all just fall
+     * right back to sleep.  It's probably safe to grab the suspend-count
+     * lock before releasing thread-suspend, since we're still following
+     * the correct order of acquisition, but it feels weird.)
+     */
+
+    LOG_THREAD("threadid=%d: ResumeAll waking others\n", self->threadId);
+    unlockThreadSuspend();
+
+    /*
      * Broadcast a notification to all suspended threads, some or all of
      * which may choose to wake up.  No need to wait for them.
      */
@@ -2469,8 +2577,6 @@ void dvmResumeAllThreads(SuspendCause why)
     cc = pthread_cond_broadcast(&gDvm.threadSuspendCountCond);
     assert(cc == 0);
     unlockThreadSuspendCount();
-
-    unlockThreadSuspend();
 
     LOG_THREAD("threadid=%d: ResumeAll complete\n", self->threadId);
 }
@@ -2745,6 +2851,41 @@ static const int kNiceValues[10] = {
 };
 
 /*
+ * Change the scheduler cgroup of a pid
+ */
+int dvmChangeThreadSchedulerGroup(const char *cgroup)
+{
+#ifdef HAVE_ANDROID_OS
+    FILE *fp;
+    char path[255];
+    int rc;
+
+    sprintf(path, "/dev/cpuctl/%s/tasks", (cgroup ? cgroup : ""));
+
+    if (!(fp = fopen(path, "w"))) {
+#if ENABLE_CGROUP_ERR_LOGGING
+        LOGW("Unable to open %s (%s)\n", path, strerror(errno));
+#endif
+        return -errno;
+    }
+
+    rc = fprintf(fp, "0");
+    fclose(fp);
+
+    if (rc < 0) {
+#if ENABLE_CGROUP_ERR_LOGGING
+        LOGW("Unable to move pid %d to cgroup %s (%s)\n", getpid(),
+             (cgroup ? cgroup : "<default>"), strerror(errno));
+#endif
+    }
+
+    return (rc < 0) ? errno : 0;
+#else // HAVE_ANDROID_OS
+    return 0;
+#endif
+}
+
+/*
  * Change the priority of a system thread to match that of the Thread object.
  *
  * We map a priority value from 1-10 to Linux "nice" values, where lower
@@ -2760,6 +2901,12 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
         newPriority = 5;
     }
     newNice = kNiceValues[newPriority-1];
+
+    if (newPriority >= ANDROID_PRIORITY_BACKGROUND) {
+        dvmChangeThreadSchedulerGroup("bg_non_interactive");
+    } else if (getpriority(PRIO_PROCESS, pid) >= ANDROID_PRIORITY_BACKGROUND) {
+        dvmChangeThreadSchedulerGroup(NULL);
+    }
 
     if (setpriority(PRIO_PROCESS, pid, newNice) != 0) {
         char* str = dvmGetThreadName(thread);
@@ -2898,9 +3045,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         threadName, isDaemon ? " daemon" : "",
         priority, thread->threadId, kStatusNames[thread->status]);
     dvmPrintDebugMessage(target,
-        "  | group=\"%s\" sCount=%d dsCount=%d s=%d obj=%p\n",
+        "  | group=\"%s\" sCount=%d dsCount=%d s=%c obj=%p self=%p\n",
         groupName, thread->suspendCount, thread->dbgSuspendCount,
-        thread->isSuspended, thread->threadObj);
+        thread->isSuspended ? 'Y' : 'N', thread->threadObj, thread);
     dvmPrintDebugMessage(target,
         "  | sysTid=%d nice=%d sched=%d/%d handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),

@@ -16,6 +16,8 @@
 
 package tests.dom;
 
+import org.w3c.domts.JunitTestCases;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -23,8 +25,7 @@ public class AllTests {
 
     public static Test suite() {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite();
-        suite.addTest(tests.api.org.w3c.dom.AllTests_Level1.suite());
-        suite.addTest(tests.api.org.w3c.dom.AllTests_Level2.suite());
+        suite.addTestSuite(JunitTestCases.class);
         return suite;
     }
 

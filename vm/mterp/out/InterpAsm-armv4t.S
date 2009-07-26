@@ -1,5 +1,5 @@
 /*
- * This file was generated automatically by gen-mterp.py for 'armv4'.
+ * This file was generated automatically by gen-mterp.py for 'armv4t'.
  *
  * --> DO NOT EDIT <--
  */
@@ -1855,7 +1855,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_AGET_WIDE: /* 0x45 */
-/* File: armv4/OP_AGET_WIDE.S */
+/* File: armv4t/OP_AGET_WIDE.S */
     /*
      * Array get, 64 bits.  vAA <- vBB[vCC].
      *
@@ -2078,7 +2078,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_APUT_WIDE: /* 0x4c */
-/* File: armv4/OP_APUT_WIDE.S */
+/* File: armv4t/OP_APUT_WIDE.S */
     /*
      * Array put, 64 bits.  vBB[vCC] <- vAA.
      */
@@ -2289,7 +2289,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_WIDE: /* 0x53 */
-/* File: armv4/OP_IGET_WIDE.S */
+/* File: armv4t/OP_IGET_WIDE.S */
     /*
      * Wide 32-bit instance field get.
      */
@@ -2483,7 +2483,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_WIDE: /* 0x5a */
-/* File: armv4/OP_IPUT_WIDE.S */
+/* File: armv4t/OP_IPUT_WIDE.S */
     /* iput-wide vA, vB, field@CCCC */
     mov     r0, rINST, lsr #12          @ r0<- B
     ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
@@ -2672,7 +2672,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_SGET_WIDE: /* 0x61 */
-/* File: armv4/OP_SGET_WIDE.S */
+/* File: armv4t/OP_SGET_WIDE.S */
     /*
      * 64-bit SGET handler.
      */
@@ -2850,7 +2850,7 @@ dalvik_inst:
 /* ------------------------------ */
     .balign 64
 .L_OP_SPUT_WIDE: /* 0x68 */
-/* File: armv4/OP_SPUT_WIDE.S */
+/* File: armv4t/OP_SPUT_WIDE.S */
     /*
      * 64-bit SPUT handler.
      */
@@ -7522,7 +7522,7 @@ d2i_doconv:
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_WIDE_QUICK: /* 0xf3 */
-/* File: armv4/OP_IGET_WIDE_QUICK.S */
+/* File: armv4t/OP_IGET_WIDE_QUICK.S */
     /* iget-wide-quick vA, vB, offset@CCCC */
     mov     r2, rINST, lsr #12          @ r2<- B
     GET_VREG(r3, r2)                    @ r3<- object we're operating on
@@ -7585,7 +7585,7 @@ d2i_doconv:
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_WIDE_QUICK: /* 0xf6 */
-/* File: armv4/OP_IPUT_WIDE_QUICK.S */
+/* File: armv4t/OP_IPUT_WIDE_QUICK.S */
     /* iput-wide-quick vA, vB, offset@CCCC */
     mov     r0, rINST, lsr #8           @ r0<- A(+)
     mov     r1, rINST, lsr #12          @ r1<- B

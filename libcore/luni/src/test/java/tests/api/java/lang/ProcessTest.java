@@ -17,6 +17,7 @@
 
 package tests.api.java.lang;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
@@ -179,6 +180,7 @@ public class ProcessTest extends junit.framework.TestCase {
         method = "destroy",
         args = {}
     )
+    @BrokenTest("Sporadic timeouts in CTS, but not in CoreTestRunner")
     public void test_destroy() {
         String[] commands = { "ls"};            
         try {

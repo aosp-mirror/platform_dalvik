@@ -506,7 +506,7 @@ class AlgorithmParameterKeyAgreementHelper extends TestHelper<AlgorithmParameter
             Assert.fail(e.getMessage());
         }
         
-        generator.initialize(512);
+        generator.initialize(1024);
         
         KeyPair keyPair = generator.generateKeyPair();
         

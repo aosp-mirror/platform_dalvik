@@ -985,6 +985,7 @@ public class DecimalFormatTest extends TestCase {
         method = "equals",
         args = {java.lang.Object.class}
     )
+    @BrokenTest("Behaves differently between cts host and run-core-tests")
     public void test_equalsLjava_lang_Object() {
         DecimalFormat format = (DecimalFormat) DecimalFormat
                 .getInstance(Locale.US);

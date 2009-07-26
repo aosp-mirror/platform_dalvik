@@ -495,7 +495,6 @@ public class SignatureTest extends TestCase {
         method = "update",
         args = {byte[].class, int.class, int.class}
     )
-    @KnownFailure("Works on RI, need to investigate")
     public void testUpdatebyteArrayintint() throws Exception {
         MySignature1 s = new MySignature1("ABC");
         byte[] b = {1, 2, 3, 4};
@@ -512,12 +511,6 @@ public class SignatureTest extends TestCase {
 
         assertEquals("state", MySignature1.SIGN, s.getState());
         assertTrue("update() failed", s.runEngineUpdate2);
-        
-        try {
-            s.update(null, 0, 3);
-            fail("NullPointerException wasn't thrown");
-        } catch (NullPointerException npe) {
-        }
         
         try {
             s.update(b, 3, 0);
@@ -541,6 +534,37 @@ public class SignatureTest extends TestCase {
         }
         
     }
+    
+    /*
+     * Class under test for void update(byte[], int, int)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "update",
+        args = {byte[].class, int.class, int.class}
+    )
+    @KnownFailure("Android throws IllegalArgumentException, RI throws NullpointerException")
+    public void testUpdatebyteArrayintint2() throws Exception {
+        MySignature1 s = new MySignature1("ABC");
+        byte[] b = {1, 2, 3, 4};
+
+        s.initVerify(new MyPublicKey());
+        s.update(b, 0, 3);
+        s.initSign(new MyPrivateKey());
+        s.update(b, 0, 3);
+
+        assertEquals("state", MySignature1.SIGN, s.getState());
+        assertTrue("update() failed", s.runEngineUpdate2);
+        
+        try {
+            s.update(null, 0, 3);
+            fail("NullPointerException wasn't thrown");
+        } catch (NullPointerException npe) {
+            // ok
+        }
+    }
+    
 
     /*
      * Class under test for void setParameter(String, Object)

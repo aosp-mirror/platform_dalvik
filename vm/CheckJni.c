@@ -84,6 +84,8 @@
 
 #define CHECK_FIELD_TYPE(_obj, _fieldid, _prim, _isstatic)                  \
     checkFieldType(_obj, _fieldid, _prim, _isstatic, __FUNCTION__)
+#define CHECK_INST_FIELD_ID(_env, _obj, _fieldid)                           \
+    checkInstanceFieldID(_env, _obj, _fieldid, __FUNCTION__)
 #define CHECK_CLASS(_env, _clazz)                                           \
     checkClass(_env, _clazz, __FUNCTION__)
 #define CHECK_STRING(_env, _str)                                            \
@@ -638,8 +640,15 @@ static void checkStaticFieldID(JNIEnv* env, jclass clazz, jfieldID fieldID)
 /*
  * Verify that this instance field ID is valid for this object.
  */
-static void checkInstanceFieldID(JNIEnv* env, jobject obj, jfieldID fieldID)
+static void checkInstanceFieldID(JNIEnv* env, jobject obj, jfieldID fieldID,
+    const char* func)
 {
+    if (obj == NULL) {
+        LOGW("JNI WARNING: invalid null object (%s)\n", func);
+        abortMaybe();
+        return;
+    }
+
     ClassObject* clazz = ((Object*)obj)->clazz;
 
     /*
@@ -736,21 +745,34 @@ static void* createGuardedCopy(const void* buf, size_t len, bool modOkay)
 /*
  * Verify the guard area and, if "modOkay" is false, that the data itself
  * has not been altered.
+ *
+ * The caller has already checked that "dataBuf" is non-NULL.
  */
 static bool checkGuardedCopy(const void* dataBuf, bool modOkay)
 {
+    static const u4 kMagicCmp = kGuardMagic;
     const u1* fullBuf = ((const u1*) dataBuf) - kGuardLen / 2;
     const GuardExtra* pExtra = getGuardExtra(dataBuf);
-    size_t len = pExtra->originalLen;
+    size_t len;
     const u2* pat;
     int i;
 
-    if (pExtra->magic != kGuardMagic) {
-        LOGE("JNI: guard magic does not match (found 0x%08x) "
+    /*
+     * Before we do anything with "pExtra", check the magic number.  We
+     * do the check with memcmp rather than "==" in case the pointer is
+     * unaligned.  If it points to completely bogus memory we're going
+     * to crash, but there's no easy way around that.
+     */
+    if (memcmp(&pExtra->magic, &kMagicCmp, 4) != 0) {
+        u1 buf[4];
+        memcpy(buf, &pExtra->magic, 4);
+        LOGE("JNI: guard magic does not match (found 0x%02x%02x%02x%02x) "
              "-- incorrect data pointer %p?\n",
-            pExtra->magic, dataBuf);
+            buf[3], buf[2], buf[1], buf[0], dataBuf); /* assume little endian */
         return false;
     }
+
+    len = pExtra->originalLen;
 
     /* check bottom half of guard; skip over optional checksum storage */
     pat = (u2*) fullBuf;
@@ -889,6 +911,7 @@ static void* releaseGuardedPACopy(ArrayObject* array, void* dataBuf, int mode)
     if (!checkGuardedCopy(dataBuf, true)) {
         LOGE("JNI: failed guarded copy check in releaseGuardedPACopy\n");
         abortMaybe();
+        return NULL;
     }
 
     switch (mode) {
@@ -1328,7 +1351,7 @@ SET_STATIC_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_ENTER(env, kFlag_Default);                                    \
         CHECK_OBJECT(env, obj);                                             \
         _ctype result;                                                      \
-        checkInstanceFieldID(env, obj, fieldID);                            \
+        CHECK_INST_FIELD_ID(env, obj, fieldID);                             \
         result = BASE_ENV(env)->Get##_jname##Field(env, obj, fieldID);      \
         CHECK_EXIT(env);                                                    \
         return result;                                                      \
@@ -1349,7 +1372,7 @@ GET_TYPE_FIELD(jdouble, Double, false);
     {                                                                       \
         CHECK_ENTER(env, kFlag_Default);                                    \
         CHECK_OBJECT(env, obj);                                             \
-        checkInstanceFieldID(env, obj, fieldID);                            \
+        CHECK_INST_FIELD_ID(env, obj, fieldID);                             \
         CHECK_FIELD_TYPE((jobject)(u4) value, fieldID, _ftype, false);      \
         BASE_ENV(env)->Set##_jname##Field(env, obj, fieldID, value);        \
         CHECK_EXIT(env);                                                    \
@@ -1571,6 +1594,7 @@ static void Check_ReleaseStringChars(JNIEnv* env, jstring string,
         if (!checkGuardedCopy(chars, false)) {
             LOGE("JNI: failed guarded copy check in ReleaseStringChars\n");
             abortMaybe();
+            return;
         }
         chars = (const jchar*) freeGuardedCopy((jchar*)chars);
     }
@@ -1626,6 +1650,7 @@ static void Check_ReleaseStringUTFChars(JNIEnv* env, jstring string,
         if (!checkGuardedCopy(utf, false)) {
             LOGE("JNI: failed guarded copy check in ReleaseStringUTFChars\n");
             abortMaybe();
+            return;
         }
         utf = (const char*) freeGuardedCopy((char*)utf);
     }
@@ -1892,6 +1917,7 @@ static void Check_ReleaseStringCritical(JNIEnv* env, jstring string,
         if (!checkGuardedCopy(carray, false)) {
             LOGE("JNI: failed guarded copy check in ReleaseStringCritical\n");
             abortMaybe();
+            return;
         }
         carray = (const jchar*) freeGuardedCopy((jchar*)carray);
     }
@@ -1945,6 +1971,7 @@ static jobject Check_NewDirectByteBuffer(JNIEnv* env, void* address,
         LOGW("JNI WARNING: invalid values for address (%p) or capacity (%ld)\n",
             address, (long) capacity);
         abortMaybe();
+        return NULL;
     }
     result = BASE_ENV(env)->NewDirectByteBuffer(env, address, capacity);
     CHECK_EXIT(env);

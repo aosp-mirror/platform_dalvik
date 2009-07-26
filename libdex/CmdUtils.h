@@ -34,6 +34,7 @@
 /* encode the result of unzipping to a file */
 typedef enum UnzipToFileResult {
     kUTFRSuccess = 0,
+    kUTFRGenericFailure,
     kUTFRBadArgs,
     kUTFRNotZip,
     kUTFRNoClassesDex,

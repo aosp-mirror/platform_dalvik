@@ -151,8 +151,19 @@ Since the ultimate goal of this test is to catch an unusual situation
 may not be worth the performance hit.
 */
 
+/*
+ * Class serial numbers start at this value.  We use a nonzero initial
+ * value so they stand out in binary dumps (e.g. hprof output).
+ */
 #define INITIAL_CLASS_SERIAL_NUMBER 0x50000000
-#define ZYGOTE_CLASS_CUTOFF 2000
+
+
+/*
+ * Constant used to size an auxillary class object data structure.
+ * For optimum memory use this should be equal to or slightly larger than
+ * the number of classes loaded when the zygote finishes initializing.
+ */
+#define ZYGOTE_CLASS_CUTOFF 2304
 
 static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap);
 static void freeCpeArray(ClassPathEntry* cpe);

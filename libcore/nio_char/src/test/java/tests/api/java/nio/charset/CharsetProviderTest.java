@@ -15,6 +15,7 @@
  */
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -84,7 +85,13 @@ public class CharsetProviderTest extends TestCase {
         } catch (MalformedURLException e) {
             fail("unexpected exception: " + e);
         }
-        URLClassLoader urlc = new URLClassLoader(new URL[] { url });
+        
+        ClassLoader parent = Thread.currentThread().getContextClassLoader();
+        if (parent == null) {
+            parent = ClassLoader.getSystemClassLoader();
+        }
+        
+        URLClassLoader urlc = new URLClassLoader(new URL[] { url }, parent);
         
         Thread.currentThread().setContextClassLoader(urlc);
     }
@@ -259,6 +266,8 @@ public class CharsetProviderTest extends TestCase {
         method = "charsetForName",
         args = {String.class}
     )
+    @KnownFailure("Android throws Error in case of insufficient privileges, " +
+            "RI throws SecurityException")
     public void testIsSupported_InsufficientPrivilege() throws Exception {
         SecurityManager oldMan = System.getSecurityManager();
         System.setSecurityManager(new MockSecurityManager());
@@ -292,6 +301,8 @@ public class CharsetProviderTest extends TestCase {
         method = "charsetForName",
         args = {String.class}
     )
+    @KnownFailure("Android throws Error in case of insufficient privileges, " +
+            "RI throws SecurityException")
     public void testForName_InsufficientPrivilege() throws Exception {
         SecurityManager oldMan = System.getSecurityManager();
         System.setSecurityManager(new MockSecurityManager());

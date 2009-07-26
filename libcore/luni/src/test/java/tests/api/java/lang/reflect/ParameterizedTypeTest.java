@@ -16,6 +16,7 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -54,6 +55,8 @@ public class ParameterizedTypeTest extends GenericReflectionTestsBase {
             args = {}
         )
     })
+    @KnownFailure("Class A can not be found, "
+            + "maybe the wrong class loader is used to get the raw type?")
     public void testStringParameterizedSuperClass() {
         Class<? extends B> clazz = B.class;
         Type genericSuperclass = clazz.getGenericSuperclass();
@@ -90,6 +93,8 @@ public class ParameterizedTypeTest extends GenericReflectionTestsBase {
             args = {}
         )
     })
+    @KnownFailure("Class C can not be found, "
+            + "maybe the wrong class loader is used to get the raw type?")
     public void testTypeParameterizedSuperClass() {
         Class<? extends D> clazz = D.class;
         Type genericSuperclass = clazz.getGenericSuperclass();

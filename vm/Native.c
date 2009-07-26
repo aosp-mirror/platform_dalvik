@@ -423,9 +423,21 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
      *   - check to see if the library is valid
      *   - check config/prelink-linux-arm.map to ensure that the library
      *     is listed and is not being overrun by the previous entry (if
-     *     loading suddenly stops working, this is a good one to check)
+     *     loading suddenly stops working on a prelinked library, this is
+     *     a good one to check)
+     *   - write a trivial app that calls sleep() then dlopen(), attach
+     *     to it with "strace -p <pid>" while it sleeps, and watch for
+     *     attempts to open nonexistent dependent shared libs
+     *
+     * This can execute slowly for a large library on a busy system, so we
+     * want to switch from RUNNING to VMWAIT while it executes.  This allows
+     * the GC to ignore us.
      */
+    Thread* self = dvmThreadSelf();
+    int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
     handle = dlopen(pathName, RTLD_LAZY);
+    dvmChangeStatus(self, oldStatus);
+
     if (handle == NULL) {
         LOGI("Unable to dlopen(%s): %s\n", pathName, dlerror());
         return false;
@@ -461,9 +473,9 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
             Object* prevOverride = self->classLoaderOverride;
 
             self->classLoaderOverride = classLoader;
-            dvmChangeStatus(NULL, THREAD_NATIVE);
+            oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
             version = (*func)(gDvm.vmList, NULL);
-            dvmChangeStatus(NULL, THREAD_RUNNING);
+            dvmChangeStatus(self, oldStatus);
             self->classLoaderOverride = prevOverride;
 
             if (version != JNI_VERSION_1_2 && version != JNI_VERSION_1_4 &&

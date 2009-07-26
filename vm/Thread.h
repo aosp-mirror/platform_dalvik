@@ -72,7 +72,7 @@ void dvmSlayDaemons(void);
 #define kInternalRefMax         4096    /* mainly a sanity check */
 
 #define kMinStackSize       (512 + STACK_OVERFLOW_RESERVE)
-#define kDefaultStackSize   (8*1024)    /* two 4K pages */
+#define kDefaultStackSize   (12*1024)   /* three 4K pages */
 #define kMaxStackSize       (256*1024 + STACK_OVERFLOW_RESERVE)
 
 /*
@@ -396,6 +396,11 @@ bool dvmIsOnThreadList(const Thread* thread);
  */
 INLINE JNIEnv* dvmGetThreadJNIEnv(Thread* self) { return self->jniEnv; }
 INLINE void dvmSetThreadJNIEnv(Thread* self, JNIEnv* env) { self->jniEnv = env;}
+
+/*
+ * Change the scheduler group of the current process
+ */
+int dvmChangeThreadSchedulerGroup(const char *group);
 
 /*
  * Update the priority value of the underlying pthread.

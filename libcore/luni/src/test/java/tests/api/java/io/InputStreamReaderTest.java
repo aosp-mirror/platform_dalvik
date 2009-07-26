@@ -694,5 +694,61 @@ public class InputStreamReaderTest extends TestCase {
         }
     }
     
+    /**
+     * Test for regression of a bug that dropped characters when
+     * multibyte encodings spanned buffer boundaries.
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {}
+    )      
+    public void test_readWhenCharacterSpansBuffer() {
+        final byte[] suffix = {
+            (byte) 0x93, (byte) 0xa1, (byte) 0x8c, (byte) 0xb4,
+            (byte) 0x97, (byte) 0x43, (byte) 0x88, (byte) 0xea,
+            (byte) 0x98, (byte) 0x59
+        };
+        final char[] decodedSuffix = {
+            (char) 0x85e4, (char) 0x539f, (char) 0x4f51, (char) 0x4e00,
+            (char) 0x90ce
+        };
+        final int prefixLength = 8189;
     
+        byte[] bytes = new byte[prefixLength + 10];
+        Arrays.fill(bytes, (byte) ' ');
+        System.arraycopy(suffix, 0, bytes, prefixLength, suffix.length);
+        ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+
+        try {
+            InputStreamReader isr = new InputStreamReader(is, "SHIFT_JIS");
+            char[] chars = new char[8192];
+            int at = 0;
+
+            outer:
+            for (;;) {
+                int amt = isr.read(chars);
+                if (amt <= 0) break;
+                for (int i = 0; i < amt; i++) {
+                    char c = chars[i];
+                    if (at < prefixLength) {
+                        if (c != ' ') {
+                            fail("Found bad prefix character " +
+                                    (int) c + " at " + at);
+                        }
+                    } else {
+                        char decoded = decodedSuffix[at - prefixLength];
+                        if (c != decoded) {
+                            fail("Found mismatched character " +
+                                    (int) c + " at " + at);
+                        }
+                    }
+                    at++;
+                }
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException("unexpected exception", ex);
+        }
+    }    
 }

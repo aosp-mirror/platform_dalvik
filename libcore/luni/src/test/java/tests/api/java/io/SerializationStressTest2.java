@@ -1897,34 +1897,48 @@ public class SerializationStressTest2 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    public void test_DeepNestingWithWriteObject() {
+    public void test_DeepNestingWithWriteObject() throws Throwable {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
 
-        Object objToSave = null;
-        Object objLoaded;
+        // this test was wrapped in a Thread so we can increase the max stack
+        // size to more than the default 8K. In this case we assign 256K
+        Thread t = new Thread(null, null, "deep nested", 256*1024) {
 
-        try {
-            DeepNestingWithWriteObject test = new DeepNestingWithWriteObject(50);
-            objToSave = test;
-            if (DEBUG)
-                System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+            @Override
+            public void run() {
+                try {
+                    deepNestingHelper();
+                } catch (Throwable e) {
+                    error = e;
+                }
+            }
+        };
+        t.start();
 
-            // Has to have worked
-            assertTrue(MSG_TEST_FAILED + objToSave, (test.equals(objLoaded)));
+        t.join();
 
-        } catch (IOException e) {
-            fail("IOException serializing " + objToSave + " : "
-                    + e.getMessage());
-        } catch (ClassNotFoundException e) {
-            fail("ClassNotFoundException reading Object type : "
-                    + e.getMessage());
-        } catch (Error err) {
-            // err.printStackTrace();
-            System.out.println("Error " + err + " when obj = " + objToSave);
-            throw err;
+        if (error != null) {
+            throw error;
         }
+    }
+
+    static Throwable error;
+
+    public void deepNestingHelper() throws IOException,
+            ClassNotFoundException {
+        // Test for method void
+        // java.io.ObjectOutputStream.writeObject(java.lang.Object)
+
+        DeepNestingWithWriteObject test = new DeepNestingWithWriteObject(50);
+        if (DEBUG) {
+            System.out.println("Obj = " + test);
+        }
+
+        Object objLoaded = dumpAndReload(test);
+
+        // Has to have worked
+        assertTrue(MSG_TEST_FAILED + test, (test.equals(objLoaded)));
     }
 
     @TestTargetNew(

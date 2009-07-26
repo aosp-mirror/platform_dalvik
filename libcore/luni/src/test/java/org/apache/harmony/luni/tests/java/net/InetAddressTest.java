@@ -17,6 +17,7 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
+import dalvik.annotation.BrokenTest; 
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -354,6 +355,7 @@ public class InetAddressTest extends junit.framework.TestCase {
         method = "getHostName",
         args = {}
     )
+    @BrokenTest("Crashes VM in CTS due to a JNI error in networking code")
     public void test_getHostName() throws Exception {
         // Test for method java.lang.String java.net.InetAddress.getHostName()
         InetAddress ia = InetAddress
@@ -633,6 +635,8 @@ public class InetAddressTest extends junit.framework.TestCase {
         method = "isReachable",
         args = {java.net.NetworkInterface.class, int.class, int.class}
     )
+    @BrokenTest("Depends on external network address and shows different" +
+            "behavior with WLAN and 3G networks")
     public void test_isReachableLjava_net_NetworkInterfaceII() throws Exception {
         // tests local address
         InetAddress ia = Inet4Address.getByName("127.0.0.1");

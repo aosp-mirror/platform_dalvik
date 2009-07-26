@@ -9,6 +9,7 @@
 #   --portable    -- use the portable interpreter
 #   --debug       -- wait for debugger to attach
 #   --zygote      -- use the zygote (if so, all other options are ignored)
+#   --dev         -- development mode
 #   --no-verify   -- turn off verification (on by default)
 #   --no-optimize -- turn off optimization (on by default)
 
@@ -43,6 +44,9 @@ while true; do
     elif [ "x$1" = "x--zygote" ]; then
         ZYGOTE="y"
         msg "Spawning from zygote"
+        shift
+    elif [ "x$1" = "x--dev" ]; then
+        # not used; ignore
         shift
     elif [ "x$1" = "x--no-verify" ]; then
         VERIFY="n"

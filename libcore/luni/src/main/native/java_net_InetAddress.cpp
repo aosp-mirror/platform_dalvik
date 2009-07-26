@@ -16,6 +16,8 @@
 
 #define LOG_TAG "InetAddress"
 
+#define LOG_DNS 0
+
 #include "JNIHelp.h"
 #include "utils/Log.h"
 #include "jni.h"
@@ -59,6 +61,7 @@ static void throwNullPointerException(JNIEnv* env)
     }
 }
 
+#if LOG_DNS
 static void logIpString(struct addrinfo* ai, const char* name)
 {
     char ipString[INET6_ADDRSTRLEN];
@@ -71,6 +74,11 @@ static void logIpString(struct addrinfo* ai, const char* name)
         LOGE("%s: getnameinfo: %s", name, gai_strerror(result));
     }
 }
+#else
+static inline void logIpString(struct addrinfo* ai, const char* name)
+{
+}
+#endif
 
 static jobjectArray getAllByNameUsingAdb(JNIEnv* env, const char* name)
 {
@@ -258,14 +266,17 @@ static jstring InetAddress_gethostbyaddr(JNIEnv* env, jobject obj,
             memset(sin, 0, sizeof(struct sockaddr_in));
             sin->sin_family = AF_INET;
             memcpy(&sin->sin_addr.s_addr, rawAddress, 4);
+            env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
             break;
         case 16:
             socklen = sizeof(struct sockaddr_in6);
             memset(sin6, 0, sizeof(struct sockaddr_in6));
             sin6->sin6_family = AF_INET6;
-            memcpy(&sin6->sin6_addr.s6_addr, rawAddress, 4);
+            memcpy(&sin6->sin6_addr.s6_addr, rawAddress, 16);
+            env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
             break;
         default:
+            env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
             jniThrowException(env, "java/net/UnknownHostException",
                                    "Invalid address length");
             return NULL;

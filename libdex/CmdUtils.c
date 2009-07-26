@@ -97,14 +97,14 @@ bail:
  *
  * If "quiet" is set, don't report common errors.
  *
- * Returns 0 on success.
+ * Returns 0 (kUTFRSuccess) on success.
  */
 UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
     MemMapping* pMap, bool quiet)
 {
-    UnzipToFileResult result = kUTFRSuccess;
+    UnzipToFileResult result = kUTFRGenericFailure;
     int len = strlen(fileName);
-    char tempName[32];
+    char tempNameBuf[32];
     bool removeTemp = false;
     int fd = -1;
 
@@ -125,18 +125,18 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
              * data to a temp file, the location of which varies.
              */
             if (access("/tmp", W_OK) == 0)
-                sprintf(tempName, "/tmp/dex-temp-%d", getpid());
+                sprintf(tempNameBuf, "/tmp/dex-temp-%d", getpid());
             else
-                sprintf(tempName, "/sdcard/dex-temp-%d", getpid());
+                sprintf(tempNameBuf, "/sdcard/dex-temp-%d", getpid());
 
-            tempFileName = tempName;
+            tempFileName = tempNameBuf;
         }
 
-        result = dexUnzipToFile(fileName, tempName, quiet);
+        result = dexUnzipToFile(fileName, tempFileName, quiet);
         
         if (result == kUTFRSuccess) {
-            //printf("+++ Good unzip to '%s'\n", tempName);
-            fileName = tempName;
+            //printf("+++ Good unzip to '%s'\n", tempFileName);
+            fileName = tempFileName;
             removeTemp = true;
         } else if (result == kUTFRNotZip) {
             if (!quiet) {
@@ -177,8 +177,10 @@ bail:
     if (fd >= 0)
         close(fd);
     if (removeTemp) {
-        if (unlink(tempName) != 0)
-            fprintf(stderr, "Warning: unable to remove temp '%s'\n", tempName);
+        if (unlink(tempFileName) != 0) {
+            fprintf(stderr, "Warning: unable to remove temp '%s'\n",
+                tempFileName);
+        }
     }
     return result;
 }

@@ -26,6 +26,9 @@ import dalvik.annotation.TestTargets;
 import junit.framework.TestCase;
 
 import tests.support.Support_Configuration;
+import tests.support.Support_PortManager;
+import tests.support.Support_TestWebData;
+import tests.support.Support_TestWebServer;
 import tests.support.resource.Support_Resources;
 
 import java.io.BufferedReader;
@@ -56,8 +59,11 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.UnknownServiceException;
 import java.security.Permission;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
@@ -371,7 +377,8 @@ public class URLConnectionTest extends TestCase {
     URLConnection uc;
 
     URLConnection uc2;
-    
+
+    Support_TestWebServer server;
     
     @Override
     public void setUp() throws Exception {
@@ -379,10 +386,12 @@ public class URLConnectionTest extends TestCase {
         
 //        ftpURL = new URL(Support_Configuration.testFTPURL);
        
-        
-        url = new URL(Support_Configuration.hTTPURLgoogle);
+        port = Support_PortManager.getNextPort();
+        server = new Support_TestWebServer();
+        server.initServer(port, false);
+        url = new URL("http://localhost:" + port + "/test1");
         uc = url.openConnection();
-        url2 =  new URL(Support_Configuration.hTTPURLyahoo);
+        url2 =  new URL("http://localhost:" + port + "/test2");
         uc2 = url2.openConnection();
         
         fileURL = createTempHelloWorldFile();
@@ -393,14 +402,12 @@ public class URLConnectionTest extends TestCase {
         
         gifURLCon = openGifURLConnection();
         gifURL = gifURLCon.getURL();
-        
-        port = 80;
-        
     }
 
     @Override
     public void tearDown()throws Exception {
         super.tearDown();
+        server.close();
         ((HttpURLConnection) uc).disconnect();
         ((HttpURLConnection) uc2).disconnect();
 //        if (((FtpURLConnection) ftpURLCon).getInputStream() !=  null) {
@@ -666,6 +673,7 @@ public class URLConnectionTest extends TestCase {
         method = "getContentEncoding",
         args = {}
     )
+    @BrokenTest("Fails in CTS, passes in CoreTestRunner")
     public void test_getContentEncoding() throws IOException {
         // faulty setup
         try {
@@ -704,11 +712,10 @@ public class URLConnectionTest extends TestCase {
         args = {}
     )
     public void test_getContentLength() {
-        assertEquals(testString.getBytes().length, fileURLCon.getContentLength());
-        assertEquals("getContentLength failed: " + uc.getContentLength(), -1,
-                uc.getContentLength());
-        
-        assertEquals(-1, uc2.getContentLength());
+        assertEquals(testString.getBytes().length,
+                fileURLCon.getContentLength());
+        assertEquals(Support_TestWebData.test1.length, uc.getContentLength());
+        assertEquals(Support_TestWebData.test2.length, uc2.getContentLength());
         
         assertNotNull(jarURLCon.getContentLength());
         assertNotNull(gifURLCon.getContentLength());
@@ -725,14 +732,14 @@ public class URLConnectionTest extends TestCase {
     )
     public void test_getContentType() throws IOException, MalformedURLException {
         
-        assertTrue("getContentType failed: " + fileURLCon.getContentType(), fileURLCon
-                .getContentType().contains("text/plain"));
+        assertTrue("getContentType failed: " + fileURLCon.getContentType(),
+                fileURLCon.getContentType().contains("text/plain"));
         
         URLConnection htmlFileCon = openHTMLFile();
         String contentType = htmlFileCon.getContentType();
         if (contentType != null) {
             assertTrue(contentType.equalsIgnoreCase("text/html"));
-            }
+        }
         
         
         /*
@@ -754,19 +761,16 @@ public class URLConnectionTest extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
-        notes = "From harmony branch.",
+        notes = "From harmony branch. URLConnection.getDate crashes in cases " +
+                "where the returned expiration date doesn't seems to be " +
+                "parsable. The RI just returns 0.",
         method = "getDate",
         args = {}
     )
     public void test_getDate() {
         // should be greater than 930000000000L which represents the past
-        if (uc.getDate() == 0) {
-            System.out
-                    .println("WARNING: server does not support 'Date', in test_getDate");
-        } else {
-            assertTrue("getDate gave wrong date: " + uc.getDate(),
+        assertTrue("getDate gave wrong date: " + uc.getDate(),
                     uc.getDate() > 930000000000L);
-        }
     }
 
     /**
@@ -848,7 +852,7 @@ public class URLConnectionTest extends TestCase {
         ),
         @TestTargetNew(
             level = TestLevel.COMPLETE,
-            notes = "From harmony branch. test fails: throws undocumented exception IllegalAccessException.",
+            notes = "From harmony branch.",
             method = "setDefaultUseCaches",
             args = {boolean.class}
         )
@@ -877,17 +881,16 @@ public class URLConnectionTest extends TestCase {
                 .getDefaultUseCaches());
         
         // subsequent connections should have default value
-        URL url3 =  new URL(Support_Configuration.hTTPURLyahoo);
+        URL url3 =  new URL("http://localhost:" + port + "/test2");
         URLConnection uc3 = url3.openConnection();
         assertFalse(uc3.getUseCaches());
         
-        // test if uc does not chash but uc2 does
+        // test if uc does not cache but uc2 does
         isGetCalled = false;
         isPutCalled = false;
         
         // test uc
         uc.setDoOutput(true);
-        
         assertFalse(isGetCalled);
         uc.connect();
         assertFalse(isGetCalled);
@@ -897,9 +900,6 @@ public class URLConnectionTest extends TestCase {
         assertFalse(isGetCalled);
         
         os.close();
-        
-        isGetCalled = false;
-        isPutCalled = false;
         
         //uc2 should be unaffected
         uc2.setDoOutput(true);
@@ -995,26 +995,22 @@ public class URLConnectionTest extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
-        notes = "From harmony branch.",
+        notes = "From harmony branch. URLConnection.getExpiration crashes in " +
+                "cases where the returned expiration date doesn't seems to " +
+                "be parsable. The RI just returns 0.",
         method = "getExpiration",
         args = {}
     )
-    @KnownFailure("URLConnection.getExpiration crashes because the returned" +
-            " expiration date doesn't seems to be parsable.")
     public void test_getExpiration() throws IOException {
-        URL url3 = new URL(Support_Configuration.hTTPURLwExpiration);
-        URLConnection uc3 = url3.openConnection();
         
         uc.connect();
         // should be unknown
         assertEquals("getExpiration returned wrong expiration", 0, uc
                 .getExpiration());
         
-        uc3.connect();
-        assertTrue("getExpiration returned wrong expiration", uc3
-                .getExpiration() > 0);
-        
-        ((HttpURLConnection) uc3).disconnect();
+        uc2.connect();
+        assertTrue("getExpiration returned wrong expiration: " + uc2
+                .getExpiration(), uc2.getExpiration() > 0);
     }
 
     /**
@@ -1069,34 +1065,37 @@ public class URLConnectionTest extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
-        notes = "From harmony branch.",
+        notes = "",
         method = "getHeaderFieldDate",
         args = {java.lang.String.class, long.class}
     )
+    @KnownFailure("getHeaderFieldDate on Content-Length throws an exception."
+            + " The RI just returns the default value")
     public void test_getHeaderFieldDateLjava_lang_StringJ() {
+        Support_TestWebData params = Support_TestWebData.testParams[0];
 
-        if (uc2.getHeaderFieldDate("Date", 22L) == 22L) {
-            System.out
-                    .println("WARNING: Server does not support 'Date', test_getHeaderFieldDateLjava_lang_StringJ not run");
-            return;
-        }
-        
-        if (uc2.getIfModifiedSince() > 0) {
-        
-        long time = uc2.getHeaderFieldDate("Last-Modified", 0);
-        assertTrue(time > 0);
-        /*
-          assertEquals("Wrong date: ", time,
-                Support_Configuration.URLConnectionLastModified);
-        */        
-        }
-        
-        long defaultTime;
-        
-        if (uc.getIfModifiedSince() == 0) {
-            defaultTime = uc.getHeaderFieldDate("Last-Modified", 0);
-            assertEquals(defaultTime,0);
-        }
+        long hf;
+        hf = uc.getHeaderFieldDate("Content-Encoding", Long.MIN_VALUE);
+        assertEquals("Long value returned for header field 'Content-Encoding':",
+                Long.MIN_VALUE, hf);
+        hf = uc.getHeaderFieldDate("Content-Length", Long.MIN_VALUE);
+        assertEquals("Long value returned for header field 'Content-Length': ",
+                Long.MIN_VALUE, hf);
+        hf = uc.getHeaderFieldDate("Content-Type", Long.MIN_VALUE);
+        assertEquals("Long value returned for header field 'Content-Type': ",
+                Long.MIN_VALUE, hf);
+        hf = uc.getHeaderFieldDate("content-type", Long.MIN_VALUE);
+        assertEquals("Long value returned for header field 'content-type': ",
+                Long.MIN_VALUE, hf);
+        hf = uc.getHeaderFieldDate("Date", Long.MIN_VALUE);
+        assertTrue("Wrong value returned for header field 'Date': " + hf,
+                new Date().getTime() - hf < 5000);
+        hf = uc.getHeaderFieldDate("SERVER", Long.MIN_VALUE);
+        assertEquals("Long value returned for header field 'SERVER': ",
+                Long.MIN_VALUE, hf);
+        hf = uc.getHeaderFieldDate("Last-Modified", Long.MIN_VALUE);
+        assertEquals("Long value returned for header field 'Last-Modified': ",
+                Long.MIN_VALUE, hf);
     }
 
     /**
@@ -1167,34 +1166,29 @@ public class URLConnectionTest extends TestCase {
         method = "getHeaderFieldInt",
         args = {java.lang.String.class, int.class}
     )
-    public void test_getHeaderFieldInt() throws IOException {
-        String header;
-        URL url3 = new URL(Support_Configuration.hTTPURLwExpiration);
-        URLConnection uc3 = url3.openConnection();
-        
+    public void test_getHeaderFieldInt() throws IOException, ParseException {
+        Support_TestWebData params = Support_TestWebData.testParams[1];
+
         int hf = 0;
-        hf = uc2.getHeaderFieldInt("Content-Encoding",Integer.MIN_VALUE);
+        hf = uc2.getHeaderFieldInt("Content-Encoding", Integer.MIN_VALUE);
         assertEquals(Integer.MIN_VALUE, hf);
-        hf = uc2.getHeaderFieldInt("Content-Length",Integer.MIN_VALUE);
+        hf = uc2.getHeaderFieldInt("Content-Length", Integer.MIN_VALUE);
+        assertEquals(params.testLength, hf);
+        hf = uc2.getHeaderFieldInt("Content-Type", Integer.MIN_VALUE);
         assertEquals(Integer.MIN_VALUE, hf);
-        hf = uc2.getHeaderFieldInt("Content-Type",Integer.MIN_VALUE);
+        hf = uc2.getHeaderFieldInt("Date", Integer.MIN_VALUE);
         assertEquals(Integer.MIN_VALUE, hf);
-        hf = uc2.getHeaderFieldInt("Date",Integer.MIN_VALUE);
+        hf = uc2.getHeaderFieldInt("Expires", Integer.MIN_VALUE);
         assertEquals(Integer.MIN_VALUE, hf);
-        long exp = uc3.getHeaderFieldDate("Expires", 0);
-        assertTrue(exp > 0);
-        hf = uc2.getHeaderFieldInt("SERVER",Integer.MIN_VALUE);
+        hf = uc2.getHeaderFieldInt("SERVER", Integer.MIN_VALUE);
         assertEquals(Integer.MIN_VALUE, hf);
-        hf = uc2.getHeaderFieldInt("Last-Modified",Integer.MIN_VALUE);
+        hf = uc2.getHeaderFieldInt("Last-Modified", Integer.MIN_VALUE);
         assertEquals(Integer.MIN_VALUE, hf);
-        hf = uc2.getHeaderFieldInt("accept-ranges",Integer.MIN_VALUE);
+        hf = uc2.getHeaderFieldInt("accept-ranges", Integer.MIN_VALUE);
         assertEquals(Integer.MIN_VALUE, hf);
-        hf = uc2.getHeaderFieldInt("DoesNotExist",Integer.MIN_VALUE);
+        hf = uc2.getHeaderFieldInt("DoesNotExist", Integer.MIN_VALUE);
         assertEquals(Integer.MIN_VALUE, hf);
-        hf = uc2.getHeaderFieldInt("Age",Integer.MIN_VALUE);
-        assertFalse(hf == Integer.MIN_VALUE);
         
-        ((HttpURLConnection) uc3).disconnect();
     }
 
     /**
@@ -1206,64 +1200,31 @@ public class URLConnectionTest extends TestCase {
         method = "getHeaderField",
         args = {java.lang.String.class}
     )
-    @BrokenTest("Flaky due to third party servers used to do the test.")
     public void test_getHeaderFieldLjava_lang_String() {
+        Support_TestWebData params = Support_TestWebData.testParams[0];
+
         String hf;
-        int hfDefault;
         hf = uc.getHeaderField("Content-Encoding");
-        if (hf != null) {
-            assertNull(
-                    "Wrong value returned for header field 'Content-Encoding': "
-                            + hf, hf);
-        }
+        assertNull("String value returned for header field 'Content-Encoding':",
+                hf);
         hf = uc.getHeaderField("Content-Length");
-        if (hf != null) {
-            assertEquals(
-                    "Wrong value returned for header field 'Content-Length': ",
-                    "25", hf);
-        }
+        assertEquals("Wrong value returned for header field 'Content-Length': ",
+                String.valueOf(params.testLength), hf);
         hf = uc.getHeaderField("Content-Type");
-        if (hf != null) {
-            assertTrue("Wrong value returned for header field 'Content-Type': "
-                    + hf, hf.contains("text/html"));
-        }
+        assertEquals("Wrong value returned for header field 'Content-Type': ",
+                params.testType, hf);
         hf = uc.getHeaderField("content-type");
-        if (hf != null) {
-            assertTrue("Wrong value returned for header field 'content-type': "
-                    + hf, hf.contains("text/html"));
-        }
+        assertEquals("Wrong value returned for header field 'content-type': ",
+                params.testType, hf);
         hf = uc.getHeaderField("Date");
-        if (hf != null) {
-            assertTrue("Wrong value returned for header field 'Date': " + hf,
-                    Integer.parseInt(hf.substring(hf.length() - 17,
-                            hf.length() - 13)) >= 1999);
-        }
-        hf = uc.getHeaderField("Expires");
-        if (hf != null) {
-            assertNull(
-                    "Wrong value returned for header field 'Expires': " + hf,
-                    hf);
-        }
+        assertTrue("Wrong string value returned for header field 'Date': "
+                + hf, hf.length() > 20);
         hf = uc.getHeaderField("SERVER");
-        assertNotNull(hf);
+        assertEquals("Wrong value returned for header field 'SERVER': ",
+                "TestWebServer" + port, hf);
         hf = uc.getHeaderField("Last-Modified");
-        if (hf != null) {
-            assertTrue(
-                    "No valid header field "
-                            + hf,
-                    Long.parseLong(hf) > 930000000000L);
-        }
-        hf = uc.getHeaderField("accept-ranges");
-        if (hf != null) {
-            assertTrue(
-                    "Wrong value returned for header field 'accept-ranges': "
-                            + hf, hf.equals("bytes"));
-        }
-        hf = uc.getHeaderField("DoesNotExist");
-        if (hf != null) {
-            assertNull("Wrong value returned for header field 'DoesNotExist': "
-                    + hf, hf);
-        }
+        assertNull("Wrong string value returned for 'Last-Modified': "
+                + hf, hf);
     }
 
     /**
@@ -1273,11 +1234,13 @@ public class URLConnectionTest extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
-        notes = "From harmony branch.",
+        notes = "",
         method = "getHeaderFields",
         args = {}
     )
     public void test_getHeaderFields() throws IOException, ClassNotFoundException, URISyntaxException {
+        Support_TestWebData params = Support_TestWebData.testParams[1];
+
         try {
             uc2.getInputStream();
         } catch (IOException e) {
@@ -1287,20 +1250,23 @@ public class URLConnectionTest extends TestCase {
         Map<String, List<String>> headers = uc2.getHeaderFields();
         assertNotNull(headers);
 
-        // 'content-type' is most likely to appear
         List<String> list = headers.get("content-type");
         if (list == null) {
             list = headers.get("Content-Type");
         }
+        if (list == null) {
+            list = headers.get("Content-type");
+        }
+
         assertNotNull(list);
         String contentType = (String) list.get(0);
-        assertNotNull(contentType);
+        assertEquals(params.testType, contentType);
 
         // there should be at least 2 headers
-        assertTrue("Not more than one header in URL connection",headers.size() > 1);
+        assertTrue("Not more than one header in URL connection",
+                headers.size() > 1);
         
-        JarURLConnection con1 = openJarURLConnection();
-        headers = con1.getHeaderFields();
+        headers = jarURLCon.getHeaderFields();
         assertNotNull(headers);
         assertEquals(0, headers.size());
 
@@ -1355,17 +1321,19 @@ public class URLConnectionTest extends TestCase {
     )
     public void test_getOutputStream() throws IOException {
         String posted = "this is a test";
-        uc.setDoOutput(true);
-        uc.connect();
+        URLConnection uc3 = new URL(Support_Configuration.hTTPURLgoogle)
+                .openConnection();
+        uc3.setDoOutput(true);
+        uc3.connect();
 
-        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(uc
+        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(uc3
                 .getOutputStream()), posted.getBytes().length);
 
         w.write(posted);
         w.flush();
         w.close();
 
-        int code = ((HttpURLConnection) uc).getResponseCode();
+        int code = ((HttpURLConnection) uc3).getResponseCode();
 
 
         // writing to url not allowed
@@ -1405,7 +1373,7 @@ public class URLConnectionTest extends TestCase {
         assertTrue("Permission of wrong type: " + p.toString(),
                 p instanceof java.net.SocketPermission);
         assertTrue("Permission has wrong name: " + p.getName(), p.getName()
-                .contains("google.com:" + port));
+                .contains("localhost:" + port));
 
         URL fileUrl = new URL("file:myfile");
         Permission perm = new FilePermission("myfile", "read");
@@ -1640,37 +1608,29 @@ public class URLConnectionTest extends TestCase {
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
-        notes = "test fails at UTF-8 stage. Test from harmony branch",
+        notes = "",
         method = "guessContentTypeFromStream",
         args = {java.io.InputStream.class}
     )
-    @BrokenTest("MIME type application xml is not supported: only text html."+
-            " Should be implemented if compatibility is required. The RI" +
-            " on the other hand doesn't recognise the '<head' tag.")
+    @KnownFailure("'<?xml' recognised as text/html instead of application/xml")
     public void test_guessContentTypeFromStreamLjava_io_InputStream()
             throws IOException {
-        String[] headers = new String[] { "<html>", "<head>", " <head ",
-                "<body", "<BODY ", //"<!DOCTYPE html",
-                "<?xml " };
-        String[] expected = new String[] { "text/html","text/html", "text/html",
-                "text/html","text/html", "application/xml" };
+        assertContentTypeEquals("ASCII", "text/html", "<html>");
+        assertContentTypeEquals("ASCII", "text/html", "<head>");
+        assertContentTypeEquals("ASCII", "text/html", "<head ");
+        assertContentTypeEquals("ASCII", "text/html", "<body");
+        assertContentTypeEquals("ASCII", "text/html", "<BODY ");
+        assertContentTypeEquals("ASCII", "application/xml", "<?xml ");
 
-        String[] encodings = new String[] { "ASCII", "UTF-8", 
-                //"UTF-16BE", not supported
-                //"UTF-16LE", not supported
-                //"UTF-32BE", not supported encoding
-                //"UTF-32LE" not supported encoding
-                };
-        for (int i = 0; i < headers.length; i++) {
-            for (String enc : encodings) {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                String encodedString = new String(headers[i].getBytes(), enc);
-                InputStream is = new ByteArrayInputStream(encodedString.getBytes());
-                String mime = URLConnection.guessContentTypeFromStream(is);
-                assertEquals("checking " + headers[i] + " with " + enc,
-                        expected[i], mime);
-            }
-        }
+        assertContentTypeEquals("UTF-8", "text/html", "<html>");
+        assertContentTypeEquals("UTF-8", "text/html", "<head>");
+        assertContentTypeEquals("UTF-8", "text/html", "<head ");
+        assertContentTypeEquals("UTF-8", "text/html", "<body");
+        assertContentTypeEquals("UTF-8", "text/html", "<BODY ");
+        assertContentTypeEquals("UTF-8", "application/xml", "<?xml ");
+        
+        //"UTF-16BE", "UTF-16LE", "UTF-32BE" and
+        //"UTF-32LE" are not supported
 
         // Try simple case
         try {
@@ -1691,74 +1651,16 @@ public class URLConnectionTest extends TestCase {
         }
         */
     }
-    
-//    /**
-//     * @throws IOException 
-//     * @throws IllegalAccessException 
-//     * @throws IllegalArgumentException 
-//     * @throws URISyntaxException 
-//     * @throws MalformedURLException
-//     * @tests {@link java.net.URLConnection#setContentHandlerFactory(java.net.ContentHandlerFactory)}
-//     */
-//    @TestTargetNew(
-//        level = TestLevel.SUFFICIENT,
-//        notes = "test adopted from ConentHandlerFactoryTest.",
-//        method = "setContentHandlerFactory",
-//        args = {java.net.ContentHandlerFactory.class}
-//    )
-//    public void testSetContentHandlerFactory() throws IOException,
-//            IllegalArgumentException, IllegalAccessException, URISyntaxException {
-//        String[] files = {
-//                "hyts_checkInput.txt", "hyts_htmltest.html"};
-//        ContentHandlerFactory factory = new TestContentHandlerFactory();
-//        Field contentHandlerFactoryField = null;
-//        int counter = 0;
-//
-//
-//        Field[] fields = URLConnection.class.getDeclaredFields();
-//
-//
-//        for (Field f : fields) {
-//            if (ContentHandlerFactory.class.equals(f.getType())) {
-//                counter++;
-//                contentHandlerFactoryField = f;
-//            }
-//        }
-//
-//        if (counter != 1) {
-//            fail("Error in test setup: not Factory found");
-//        }
-//
-//        contentHandlerFactoryField.setAccessible(true);
-//        ContentHandlerFactory old = (ContentHandlerFactory) contentHandlerFactoryField
-//                .get(null);
-//
-//        try {
-//            contentHandlerFactoryField.set(null, factory);
-//
-//            Vector<URL> urls = createContent(files);
-//            for (int i = 0; i < urls.size(); i++) {
-//                URLConnection urlCon = null;
-//                try {
-//                    urlCon = urls.elementAt(i).openConnection();
-//                    urlCon.setDoInput(true);
-//                    Object obj = urlCon.getContent();
-//                    if (obj instanceof String) {
-//                        String s = (String) obj;
-//                        assertTrue("Returned incorrect content for "
-//                                + urls.elementAt(i) + ": " + s, 
-//                                s.equals("ok"));
-//                    } else {
-//                        fail("Got wrong content handler");
-//                    }
-//                } catch (IOException e) {
-//                    fail("IOException was thrown for URL: "+ urls.elementAt(i).toURI().toString() +" " + e.toString());
-//                }
-//            }
-//        } finally {
-//            contentHandlerFactoryField.set(null, old);
-//        }
-//    }
+
+    void assertContentTypeEquals(String encoding, String expected,
+            String header) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        String encodedString = new String(header.getBytes(), encoding);
+        InputStream is = new ByteArrayInputStream(encodedString.getBytes());
+        String mime = URLConnection.guessContentTypeFromStream(is);
+        assertEquals("checking '" + header + "' with " + encoding,
+                expected, mime);
+    }
 
     /**
      * @tests {@link java.net.URLConnection#setConnectTimeout(int)}
@@ -2018,7 +1920,6 @@ public class URLConnectionTest extends TestCase {
         method = "getInputStream",
         args = {}
       )
-    @BrokenTest("Flaky test due to the use of third party servers")
     public void testGetInputStream() throws IOException {
         fileURLCon.setDoInput(true);
         fileURLCon.connect();
@@ -2033,18 +1934,11 @@ public class URLConnectionTest extends TestCase {
 
         buf.close();
 
+        assertNotNull(uc.getInputStream());
 
-        ((HttpURLConnection) uc).disconnect();
+        ((HttpURLConnection) uc2).disconnect();
 
-        try {
-            uc.getInputStream();
-            fail("Exception expected");
-        } catch (IOException e) {
-            // ok
-        }
-
-        uc2.getInputStream();
-
+        assertNotNull(uc2.getInputStream());
 
     }
     
@@ -2133,58 +2027,4 @@ public class URLConnectionTest extends TestCase {
         // read content from file
         return sampleFile.toURL();
     }
-    
-//    /**
-//     * Method copied form ContentHandlerFactory
-//     */
-//    private Vector<URL> createContent(String [] files) {
-//        
-//        File resources = new File(System.getProperty("java.io.tmpdir"));
-//        
-//        String resPath = resources.toString();
-//        if (resPath.charAt(0) == '/' || resPath.charAt(0) == '\\')
-//            resPath = resPath.substring(1);
-//        
-//        Vector<URL> urls = new Vector<URL> ();
-//        
-//        for(String file:files) {
-//            Support_Resources.copyFile(resources, null, file);
-//            URL resourceURL;
-//            try {
-//                resourceURL = new URL("file:/" + resPath + "/"
-//                        + file);
-//                urls.add(resourceURL);
-//            } catch (MalformedURLException e) {
-//                fail("URL can be created for " + file);
-//            }
-//            
-//        }
-//        return urls;
-//    }
-//    
-//    public class TestContentHandler extends ContentHandler {
-//
-//        public Object getContent(URLConnection u) {
-//             
-//            return new String("ok");
-//        }
-//    }
-//    
-//
-//    public class TestContentHandlerFactory implements ContentHandlerFactory {
-//
-//        final String[] mimeTypes = {
-//                "text/plain", "application/xml", "image/gif", "application/zip"};
-//
-//        public ContentHandler createContentHandler(String mimetype) {
-//            boolean isAllowed = false;
-//            for (String mime : mimeTypes) {
-//                if (mime.equals(mimetype)) isAllowed = true;
-//            }
-//            if (isAllowed) {
-//                return new TestContentHandler();
-//            } else
-//                return null;
-//        }
-//    }
 }

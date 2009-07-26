@@ -1,5 +1,5 @@
 /*
- * This file was generated automatically by gen-mterp.py for 'armv4'.
+ * This file was generated automatically by gen-mterp.py for 'armv4t'.
  *
  * --> DO NOT EDIT <--
  */

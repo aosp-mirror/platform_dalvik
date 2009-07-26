@@ -281,11 +281,6 @@ public class ReferenceTest extends junit.framework.TestCase {
 
             protected void finalize() {
                 testObjectFinalized = true;
-                if (!testWeakReference.clearSeen) {
-                    error = new AssertionFailedError("Clear should happen " +
-                            "before finalize.");
-                    throw error;
-                }
             }
         }
 

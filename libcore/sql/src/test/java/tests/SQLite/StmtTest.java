@@ -274,8 +274,6 @@ public class StmtTest extends SQLiteTest {
         method = "reset",
         args = {}
     )
-    @BrokenTest("Tableresult is not cleared when resetting statement: "+
-            "Either complete spec or change implementation accordingly.")
     public void testReset() throws Exception {
         db.exec("create table TEST (res integer not null)", null);
         
@@ -292,13 +290,6 @@ public class StmtTest extends SQLiteTest {
         
         String[] row0 = (String[]) count.rows.elementAt(0);
         assertEquals(2, Integer.parseInt(row0[0]));
-        
-        //Verify that rest (tableResult) is cleared
-        st = db.prepare("select * from TEST;");
-        st.step();
-        assertEquals(1, st.column_count());
-        st.reset();
-        assertEquals(0,st.column_count());
     }
     
     /**

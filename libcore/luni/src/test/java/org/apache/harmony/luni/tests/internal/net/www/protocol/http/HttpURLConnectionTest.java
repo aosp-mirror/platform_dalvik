@@ -17,6 +17,7 @@
 
 package org.apache.harmony.luni.tests.internal.net.www.protocol.http;
 
+import dalvik.annotation.SideEffect;
 import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass; 
@@ -172,7 +173,6 @@ public class HttpURLConnectionTest extends TestCase {
         method = "getOutputStream",
         args = {}
     )
-    @BrokenTest("openConnection seems to return null, wrong config?")
     public void testGetOutputStream() throws Exception {
         // Regression for HARMONY-482
         MockServer httpServer =
@@ -204,7 +204,6 @@ public class HttpURLConnectionTest extends TestCase {
         method = "usingProxy",
         args = {}
     )
-    @KnownFailure("Not implemented")
     public void testUsingProxy() throws Exception {
         // Regression for HARMONY-570
         MockServer server = new MockServer("server");
@@ -251,7 +250,6 @@ public class HttpURLConnectionTest extends TestCase {
         method = "usingProxy",
         args = {}
     )
-    @KnownFailure("Not implemented")
     public void testUsingProxySelector() throws Exception {
         // Regression for HARMONY-570
         MockServer server = new MockServer("server");
@@ -307,7 +305,7 @@ public class HttpURLConnectionTest extends TestCase {
             args = {}
         )
     })
-    @KnownFailure("Not umplemented")
+    @SideEffect("Suffers from side effect of other, currently unknown test")
     public void testProxyAuthorization() throws Exception {
         // Set up test Authenticator
         Authenticator.setDefault(new Authenticator() {

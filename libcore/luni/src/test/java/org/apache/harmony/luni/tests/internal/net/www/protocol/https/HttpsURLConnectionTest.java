@@ -18,6 +18,7 @@
 package org.apache.harmony.luni.tests.internal.net.www.protocol.https;
 
 import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.TestTargets;
@@ -160,6 +161,7 @@ public class HttpsURLConnectionTest extends TestCase {
         args = {javax.net.ssl.HostnameVerifier.class}
     )
     @KnownFailure("Handshake fails.")
+    @BrokenTest("Different behavior between cts host and run-core-test")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testHttpsConnection() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
@@ -219,6 +221,7 @@ public class HttpsURLConnectionTest extends TestCase {
         )
     })
     @KnownFailure("Handshake fails.")
+    @BrokenTest("Different behavior between cts host and run-core-test")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testHttpsConnection_Not_Found_Response() throws Throwable {
         // set up the properties defining the default values needed by SSL stuff
@@ -445,6 +448,7 @@ public class HttpsURLConnectionTest extends TestCase {
         args = {javax.net.ssl.HostnameVerifier.class}
     )
     @KnownFailure("Handshake fails.")
+    @BrokenTest("Different behavior between cts host and run-core-test")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void testSetHostnameVerifier() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -495,6 +499,7 @@ public class HttpsURLConnectionTest extends TestCase {
         args = {boolean.class}
     )
     @KnownFailure("Handshake fails.")
+    @BrokenTest("Different behavior between cts host and run-core-test")
     @AndroidOnly("we only have a .bks key store in the test resources")
     public void test_doOutput() throws Throwable {
         // setting up the properties pointing to the key/trust stores
@@ -933,7 +938,7 @@ public class HttpsURLConnectionTest extends TestCase {
         if (store != null) {
             String ksFileName = "org/apache/harmony/luni/tests/key_store."
                     + KeyStore.getDefaultType().toLowerCase();
-            InputStream in = ClassLoader.getSystemClassLoader()
+            InputStream in = getClass().getClassLoader()
                     .getResourceAsStream(ksFileName);
             FileOutputStream out = new FileOutputStream(store);
             BufferedInputStream bufIn = new BufferedInputStream(in, 8192);

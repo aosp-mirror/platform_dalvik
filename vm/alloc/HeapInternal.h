@@ -189,6 +189,7 @@ struct GcHeap {
     bool            hprofDumpOnGc;
     const char*     hprofFileName;
     hprof_context_t *hprofContext;
+    int             hprofResult;
 #endif
 };
 

@@ -158,7 +158,6 @@ public class DatagramSocketTest extends SocketTestCase {
         method = "DatagramSocket",
         args = {int.class}
     )
-    @KnownFailure("New DatagramSocket(1) doesn't throw an expected exception.")
     public void test_ConstructorI() {
         // Test for method java.net.DatagramSocket(int)
         try {
@@ -195,7 +194,9 @@ public class DatagramSocketTest extends SocketTestCase {
         
         try {
             DatagramSocket ds = new java.net.DatagramSocket(1);
-            fail("SocketException was not thrown.");
+            if (!("root".equals(System.getProperty("user.name")))) {
+                fail("SocketException was not thrown.");
+            }
         } catch (SocketException e) {
             //expected
         }

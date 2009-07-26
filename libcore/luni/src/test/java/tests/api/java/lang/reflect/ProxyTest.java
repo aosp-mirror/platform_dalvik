@@ -89,7 +89,6 @@ public class ProxyTest extends junit.framework.TestCase {
         method = "getProxyClass",
         args = {java.lang.ClassLoader.class, java.lang.Class[].class}
     )
-    @KnownFailure("Needs investigation")
     public void test_getProxyClassLjava_lang_ClassLoader$Ljava_lang_Class() {
         Class proxy = Proxy.getProxyClass(Support_Proxy_I1.class
                 .getClassLoader(), new Class[] { Support_Proxy_I1.class });
@@ -104,13 +103,17 @@ public class ProxyTest extends junit.framework.TestCase {
                         new Class[] { Comparable.class })));
 
         boolean aborted = false;
-        try {
-            Proxy.getProxyClass(null, new Class[] { Support_Proxy_I1.class,
-                    Support_Proxy_I2.class });
-        } catch (IllegalArgumentException e) {
-            aborted = true;
-        }
-        assertTrue("Default classLoader should not see app class ", aborted);
+// TODO: We load the test classes in the bootclasspath, so they are visible
+// to the default loader. We can re-enable this test once we move the CTS
+// tests to the system classpath.
+//        
+//        try {
+//            Proxy.getProxyClass(null, new Class[] { Support_Proxy_I1.class,
+//                    Support_Proxy_I2.class });
+//        } catch (IllegalArgumentException e) {
+//            aborted = true;
+//        }
+//        assertTrue("Default classLoader should not see app class ", aborted);
         
         aborted = false;
         try {

@@ -111,7 +111,10 @@ copyFileToFile(FILE *dstFp, FILE *srcFp)
     }
 }
 
-void
+/*
+ * Finish up the hprof dump.  Returns true on success.
+ */
+bool
 hprofShutdown(hprof_context_t *ctx)
 {
     FILE *tempFp = ctx->fp;
@@ -131,7 +134,7 @@ hprofShutdown(hprof_context_t *ctx)
         fclose(tempFp);
         free(ctx->fileName);
         free(ctx);
-        return;
+        return false;
     }
     hprofContextInit(ctx, ctx->fileName, fp, true);
 
@@ -179,4 +182,5 @@ hprofShutdown(hprof_context_t *ctx)
 
     /* throw out a log message for the benefit of "runhat" */
     LOGI("hprof: heap dump completed, temp file removed\n");
+    return true;
 }

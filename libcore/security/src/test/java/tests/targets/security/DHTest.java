@@ -15,6 +15,7 @@
  */
 package tests.targets.security;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -39,8 +40,8 @@ public class DHTest extends TestCase {
         method = "method",
         args = {}
     )
-    public void testDHGen() throws Exception
-    {
+    @BrokenTest("Suffers from DH slowness, disabling for now")
+    public void testDHGen() throws Exception {
         KeyPairGenerator gen = null;
         try {
             gen = KeyPairGenerator.getInstance("DH");
@@ -49,7 +50,7 @@ public class DHTest extends TestCase {
         }
         
         AlgorithmParameterGenerator algorithmparametergenerator = AlgorithmParameterGenerator.getInstance("DH");
-        algorithmparametergenerator.init(960, new SecureRandom());
+        algorithmparametergenerator.init(1024, new SecureRandom());
         AlgorithmParameters algorithmparameters = algorithmparametergenerator.generateParameters();
         DHParameterSpec dhparameterspec = algorithmparameters.getParameterSpec(DHParameterSpec.class);
 

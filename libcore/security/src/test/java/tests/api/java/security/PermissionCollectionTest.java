@@ -17,22 +17,23 @@
 
 package tests.api.java.security;
 
-import dalvik.annotation.BrokenTest;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.CodeSource;
 import java.security.PermissionCollection;
+import java.security.ProtectionDomain;
 import java.security.SecurityPermission;
 import java.util.StringTokenizer;
 
 import tests.support.Support_Exec;
 import tests.support.Support_GetLocal;
 import tests.support.resource.Support_Resources;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(PermissionCollection.class)
 public class PermissionCollectionTest extends junit.framework.TestCase {
@@ -65,12 +66,18 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
         method = "implies",
         args = {java.security.Permission.class}
     )
-    @BrokenTest("Android doesn't support protection domains. NPE at first Line")
+    @KnownFailure("Android doesn't support protection domains.")
     public void test_impliesLjava_security_Permission() throws Exception{
 
         // Look for the tests classpath
-        URL classURL = this.getClass().getProtectionDomain().getCodeSource()
-                .getLocation();
+        ProtectionDomain protectionDomain = getClass().getProtectionDomain();
+        assertNotNull("ProtectionDomain is null", protectionDomain);
+
+        CodeSource codeSource = protectionDomain.getCodeSource();
+
+        assertNotNull("CodeSource is null", codeSource);
+        
+        URL classURL = codeSource.getLocation();
         assertNotNull("Could not get this class' location", classURL);
 
         File policyFile = Support_GetLocal.createTempFile(".policy");

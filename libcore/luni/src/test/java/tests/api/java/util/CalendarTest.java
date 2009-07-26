@@ -17,6 +17,7 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -899,6 +900,7 @@ public class CalendarTest extends junit.framework.TestCase {
             args = {}
         )
     })
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getFirstDayOfWeek() {
         Calendar cal = Calendar.getInstance();
 
@@ -915,6 +917,7 @@ public class CalendarTest extends junit.framework.TestCase {
         method = "getInstance",
         args = {java.util.Locale.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getInstanceLjava_util_Locale() {
         Calendar cal1 = Calendar.getInstance(Locale.FRANCE);
         Locale.setDefault(Locale.FRANCE);
@@ -931,7 +934,7 @@ public class CalendarTest extends junit.framework.TestCase {
         method = "getInstance",
         args = {java.util.TimeZone.class}
     )
-    public void testget_InstanceLjava_util_TimeZone() {
+    public void test_get_InstanceLjava_util_TimeZone() {
         Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT-6"));
         Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
         assertNotSame(cal1.getTimeZone().getRawOffset(), cal2.getTimeZone().getRawOffset());
@@ -943,6 +946,7 @@ public class CalendarTest extends junit.framework.TestCase {
         method = "getInstance",
         args = {java.util.TimeZone.class, java.util.Locale.class}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getInstanceLjava_util_TimeZoneLjava_util_Locale() {
         Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT-6"), Locale.FRANCE);
         Locale.setDefault(Locale.FRANCE);
@@ -961,6 +965,7 @@ public class CalendarTest extends junit.framework.TestCase {
         method = "getMinimalDaysInFirstWeek",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getMinimalDaysInFirstWeek() {
         Calendar cal = Calendar.getInstance();
         assertTrue(cal.getMinimalDaysInFirstWeek()==1);
@@ -1006,6 +1011,7 @@ public class CalendarTest extends junit.framework.TestCase {
         method = "hashCode",
         args = {}
     )
+    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hashCode() {
         Calendar cal1 = Calendar.getInstance();
         Locale.setDefault(Locale.FRANCE);
@@ -1277,7 +1283,7 @@ public class CalendarTest extends junit.framework.TestCase {
         args = {int.class}
     )
     public void test_EdgeCases() {
-        Calendar c = Calendar.getInstance();
+        Calendar c = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         
         c.setTimeInMillis(Long.MAX_VALUE);
         

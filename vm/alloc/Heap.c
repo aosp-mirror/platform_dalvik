@@ -774,6 +774,11 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
         /* Current value is numerically greater than "normal", which
          * in backward UNIX terms means lower priority.
          */
+
+        if (priorityResult >= ANDROID_PRIORITY_BACKGROUND) {
+            dvmChangeThreadSchedulerGroup(NULL);
+        }
+
         if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
             LOGI_HEAP("Unable to elevate priority from %d to %d\n",
                 priorityResult, ANDROID_PRIORITY_NORMAL);
@@ -830,6 +835,8 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
 
     if (gcHeap->hprofDumpOnGc) {
         char nameBuf[128];
+
+        gcHeap->hprofResult = -1;
 
         if (gcHeap->hprofFileName == NULL) {
             /* no filename was provided; invent one */
@@ -982,7 +989,8 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
     if (gcHeap->hprofContext != NULL) {
         hprofFinishHeapDump(gcHeap->hprofContext);
 //TODO: write a HEAP_SUMMARY record
-        hprofShutdown(gcHeap->hprofContext);
+        if (hprofShutdown(gcHeap->hprofContext))
+            gcHeap->hprofResult = 0;    /* indicate success */
         gcHeap->hprofContext = NULL;
     }
 #endif
@@ -1016,6 +1024,10 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
         } else {
             LOGD_HEAP("Reset priority to %d\n", oldThreadPriority);
         }
+
+        if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
+            dvmChangeThreadSchedulerGroup("bg_non_interactive");
+        }
     }
     gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;
     if (gcElapsedTime < 10000) {
@@ -1046,16 +1058,23 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
  * Perform garbage collection, writing heap information to the specified file.
  *
  * If "fileName" is NULL, a suitable name will be generated automatically.
+ *
+ * Returns 0 on success, or an error code on failure.
  */
-void hprofDumpHeap(const char* fileName)
+int hprofDumpHeap(const char* fileName)
 {
+    int result;
+
     dvmLockMutex(&gDvm.gcHeapLock);
 
     gDvm.gcHeap->hprofDumpOnGc = true;
     gDvm.gcHeap->hprofFileName = fileName;
     dvmCollectGarbageInternal(false);
+    result = gDvm.gcHeap->hprofResult;
 
     dvmUnlockMutex(&gDvm.gcHeapLock);
+
+    return result;
 }
 
 void dvmHeapSetHprofGcScanState(hprof_heap_tag_t state, u4 threadSerialNumber)
