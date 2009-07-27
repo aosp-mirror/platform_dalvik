@@ -271,6 +271,12 @@ static void linearAllocTests()
     char* str = dvmLinearStrdup(NULL, "This is a test!");
     LOGI("GOT: '%s'\n", str);
 
+    /* try to check the bounds; allocator may round allocation size up */
+    fiddle = dvmLinearAlloc(NULL, 12);
+    LOGI("Should be 1: %d\n", dvmLinearAllocContains(fiddle, 12));
+    LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle, 13));
+    LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle - 128*1024, 1));
+
     dvmLinearAllocDump(NULL);
     dvmLinearFree(NULL, str);
 }

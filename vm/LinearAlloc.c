@@ -688,3 +688,21 @@ static void checkAllFree(Object* classLoader)
     dvmUnlockMutex(&pHdr->lock);
 }
 
+/*
+ * Determine if [start, start+length) is contained in the in-use area of
+ * a single LinearAlloc.  The full set of linear allocators is scanned.
+ *
+ * [ Since we currently only have one region, this is pretty simple.  In
+ * the future we'll need to traverse a table of class loaders. ]
+ */
+bool dvmLinearAllocContains(void* start, size_t length)
+{
+    LinearAllocHdr* pHdr = getHeader(NULL);
+
+    if (pHdr == NULL)
+        return false;
+
+    return (char*) start >= pHdr->mapAddr &&
+           ((char*)start + length) <= (pHdr->mapAddr + pHdr->curOffset);
+}
+
