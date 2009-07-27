@@ -20,18 +20,23 @@
 #define _DALVIK_VM_COMPILERCODEGEN_H_
 
 /* Work unit is architecture dependent */
-void *dvmCompilerDoWork(CompilerWorkOrder *work);
+bool dvmCompilerDoWork(CompilerWorkOrder *work);
 
 /* Lower middle-level IR to low-level IR */
 void dvmCompilerMIR2LIR(CompilationUnit *cUnit);
 
 /* Assemble LIR into machine code */
-void dvmCompilerAssembleLIR(CompilationUnit *cUnit);
+void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info);
 
 /* Implemented in the codegen/<target>/ArchUtility.c */
 void dvmCompilerCodegenDump(CompilationUnit *cUnit);
 
 /* Implemented in the codegen/<target>/Assembler.c */
 void* dvmJitChain(void *tgtAddr, u4* branchAddr);
+u4* dvmJitUnchain(void *codeAddr);
+void dvmJitUnchainAll(void);
+
+/* Implemented in codegen/<target>/<target_variant>/ArchVariant.c */
+JitInstructionSetType dvmCompilerInstructionSet(CompilationUnit *cUnit);
 
 #endif /* _DALVIK_VM_COMPILERCODEGEN_H_ */

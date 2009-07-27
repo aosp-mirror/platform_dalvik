@@ -3544,24 +3544,24 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 }
 
 /* Accept the work and start compiling */
-void *dvmCompilerDoWork(CompilerWorkOrder *work)
+bool dvmCompilerDoWork(CompilerWorkOrder *work)
 {
-   void *res;
+   bool res;
 
    if (gDvmJit.codeCacheFull) {
-       return NULL;
+       return false;
    }
 
    switch (work->kind) {
        case kWorkOrderMethod:
-           res = dvmCompileMethod(work->info);
+           res = dvmCompileMethod(work->info, &work->result);
            break;
        case kWorkOrderTrace:
            /* Start compilation with maximally allowed trace length */
-           res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN);
+           res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result);
            break;
        default:
-           res = NULL;
+           res = false;
            dvmAbort();
    }
    return res;

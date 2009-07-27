@@ -179,6 +179,7 @@ typedef struct Armv5teEncodingMap {
     int flags;
     char *name;
     char* fmt;
+    int size;
 } Armv5teEncodingMap;
 
 extern Armv5teEncodingMap EncodingMap[ARMV5TE_LAST];
@@ -194,6 +195,7 @@ typedef struct Armv5teLIR {
     int operands[3];    // [0..2] = [dest, src1, src2]
     bool isNop;         // LIR is optimized away
     int age;            // default is 0, set lazily by the optimizer
+    int size;           // 16-bit unit size (1 for thumb, 1 or 2 for thumb2)
 } Armv5teLIR;
 
 /* Chain cell for predicted method invocation */

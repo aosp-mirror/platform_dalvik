@@ -224,7 +224,7 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
     for (lirInsn = cUnit->wordList; lirInsn; lirInsn = lirInsn->next) {
         armLIR = (Armv5teLIR *) lirInsn;
         LOGD("%p (%04x): .word (0x%x)\n",
-             cUnit->baseAddr + armLIR->generic.offset, armLIR->generic.offset,
+             (char*)cUnit->baseAddr + armLIR->generic.offset, armLIR->generic.offset,
              armLIR->operands[0]);
     }
 }

@@ -118,7 +118,6 @@ static void *compilerThreadStart(void *arg)
             continue;
         } else {
             do {
-                void *compiledCodePtr;
                 CompilerWorkOrder work = workDequeue();
                 dvmUnlockMutex(&gDvmJit.compilerLock);
                 /* Check whether there is a suspend request on me */
@@ -131,10 +130,10 @@ static void *compilerThreadStart(void *arg)
                 if (gDvmJit.haltCompilerThread) {
                     LOGD("Compiler shutdown in progress - discarding request");
                 } else {
-                    compiledCodePtr = dvmCompilerDoWork(&work);
                     /* Compilation is successful */
-                    if (compiledCodePtr) {
-                        dvmJitSetCodeAddr(work.pc, compiledCodePtr);
+                    if (dvmCompilerDoWork(&work)) {
+                        dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
+                                          work.result.instructionSet);
                     }
                 }
                 free(work.info);

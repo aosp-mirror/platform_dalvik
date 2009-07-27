@@ -25,6 +25,21 @@
 #define COMPILER_TRACEE(X)
 #define COMPILER_TRACE_CHAINING(X)
 
+typedef enum JitInstructionSetType {
+    DALVIK_JIT_NONE = 0,
+    DALVIK_JIT_ARM,
+    DALVIK_JIT_THUMB,
+    DALVIK_JIT_THUMB2,
+    DALVIK_JIT_THUMBEE,
+    DALVIK_JIT_X86
+} JitInstructionSetType;
+
+/* Description of a compiled trace. */
+typedef struct JitTranslationInfo {
+    void     *codeAddress;
+    JitInstructionSetType instructionSet;
+} JitTranslationInfo;
+
 typedef enum WorkOrderKind {
     kWorkOrderInvalid = 0,      // Should never see by the backend
     kWorkOrderMethod = 1,       // Work is to compile a whole method
@@ -35,6 +50,7 @@ typedef struct CompilerWorkOrder {
     const u2* pc;
     WorkOrderKind kind;
     void* info;
+    JitTranslationInfo result;
 } CompilerWorkOrder;
 
 typedef enum JitState {
@@ -98,10 +114,12 @@ bool dvmCompilerStartup(void);
 void dvmCompilerShutdown(void);
 bool dvmCompilerWorkEnqueue(const u2* pc, WorkOrderKind kind, void* info);
 void *dvmCheckCodeCache(void *method);
-void *dvmCompileMethod(const Method *method);
-void *dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts);
+bool dvmCompileMethod(const Method *method, JitTranslationInfo *info);
+bool dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts,
+                     JitTranslationInfo *info);
 void dvmCompilerDumpStats(void);
 void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);
+void dvmCompilerSortAndPrintTraceProfiles(void);
 
 #endif /* _DALVIK_VM_COMPILER */
