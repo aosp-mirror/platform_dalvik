@@ -2201,6 +2201,16 @@ static int computeJniArgInfo(const DexProto* proto)
     case 'J':
         returnType = DALVIK_JNI_RETURN_S8;
         break;
+    case 'Z':
+    case 'B':
+        returnType = DALVIK_JNI_RETURN_S1;
+        break;
+    case 'C':
+        returnType = DALVIK_JNI_RETURN_U2;
+        break;
+    case 'S':
+        returnType = DALVIK_JNI_RETURN_S2;
+        break;
     default:
         returnType = DALVIK_JNI_RETURN_S4;
         break;
