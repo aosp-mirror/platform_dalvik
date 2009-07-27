@@ -428,10 +428,14 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
          * currently only due to trace length constraint. In this case we need
          * to generate an explicit branch at the end of the block to jump to
          * the chaining cell.
+         *
+         * NOTE: INVOKE_DIRECT_EMPTY is actually not an invoke but a nop
          */
         curBB->needFallThroughBranch =
-            (flags & (kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
-                      kInstrInvoke)) == 0;
+            ((flags & (kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
+                       kInstrInvoke)) == 0) ||
+            (lastInsn->dalvikInsn.opCode == OP_INVOKE_DIRECT_EMPTY);
+
 
         /* Target block not included in the trace */
         if (curBB->taken == NULL &&
