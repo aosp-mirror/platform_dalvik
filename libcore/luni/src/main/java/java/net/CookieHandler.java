@@ -22,8 +22,6 @@ import java.util.Map;
 
 /**
  * This class provides a way to manage cookies with a HTTP protocol handler.
- * 
- * @since Android 1.0
  */
 public abstract class CookieHandler {
 
@@ -37,9 +35,8 @@ public abstract class CookieHandler {
 
     /**
      * Returns the system-wide cookie handler or {@code null} if not set.
-     * 
+     *
      * @return the system-wide cookie handler.
-     * @since Android 1.0
      */
     public static CookieHandler getDefault() {
         SecurityManager sm = System.getSecurityManager();
@@ -51,10 +48,9 @@ public abstract class CookieHandler {
 
     /**
      * Sets the system-wide cookie handler.
-     * 
+     *
      * @param cHandler
      *            a cookie handler to set as the system-wide default handler.
-     * @since Android 1.0
      */
     public static void setDefault(CookieHandler cHandler) {
         SecurityManager sm = System.getSecurityManager();
@@ -66,7 +62,7 @@ public abstract class CookieHandler {
 
     /**
      * Gets all cookies for a specific URI from the cookie cache.
-     * 
+     *
      * @param uri
      *            a URI to search for applicable cookies.
      * @param requestHeaders
@@ -74,7 +70,6 @@ public abstract class CookieHandler {
      * @return an unchangeable map of all appropriate cookies.
      * @throws IOException
      *             if an error occurs during the I/O operation.
-     * @since Android 1.0
      */
     public abstract Map<String, List<String>> get(URI uri,
             Map<String, List<String>> requestHeaders) throws IOException;
@@ -82,14 +77,13 @@ public abstract class CookieHandler {
     /**
      * Sets all cookies of a specific URI in the {@code responseHeaders} into
      * the cookie cache.
-     * 
+     *
      * @param uri
      *            the origin URI of the cookies.
      * @param responseHeaders
      *            a list of request headers.
      * @throws IOException
      *             if an error occurs during the I/O operation.
-     * @since Android 1.0
      */
     public abstract void put(URI uri, Map<String, List<String>> responseHeaders)
             throws IOException;

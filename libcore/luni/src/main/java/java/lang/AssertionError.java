@@ -19,8 +19,8 @@ package java.lang;
 
 /**
  * Thrown when an assertion has failed.
- * 
- * @since Android 1.0
+ *
+ * @since 1.4
  */
 public class AssertionError extends Error {
 
@@ -28,8 +28,6 @@ public class AssertionError extends Error {
 
     /**
      * Constructs a new {@code AssertionError} with no message.
-     * 
-     * @since Android 1.0
      */
     public AssertionError() {
         super();
@@ -44,7 +42,6 @@ public class AssertionError extends Error {
      * @param detailMessage
      *            the object to be converted into the detail message and
      *            optionally the cause.
-     * @since Android 1.0
      */
     public AssertionError(Object detailMessage) {
         super(String.valueOf(detailMessage),
@@ -58,7 +55,6 @@ public class AssertionError extends Error {
      * 
      * @param detailMessage
      *            the value to be converted into the message.
-     * @since Android 1.0
      */
     public AssertionError(boolean detailMessage) {
         this(String.valueOf(detailMessage));
@@ -70,7 +66,6 @@ public class AssertionError extends Error {
      * 
      * @param detailMessage
      *            the value to be converted into the message.
-     * @since Android 1.0
      */
     public AssertionError(char detailMessage) {
         this(String.valueOf(detailMessage));
@@ -82,7 +77,6 @@ public class AssertionError extends Error {
      * 
      * @param detailMessage
      *            the value to be converted into the message.
-     * @since Android 1.0
      */
     public AssertionError(int detailMessage) {
         this(Integer.toString(detailMessage));
@@ -94,7 +88,6 @@ public class AssertionError extends Error {
      * 
      * @param detailMessage
      *            the value to be converted into the message.
-     * @since Android 1.0
      */
     public AssertionError(long detailMessage) {
         this(Long.toString(detailMessage));
@@ -106,7 +99,6 @@ public class AssertionError extends Error {
      * 
      * @param detailMessage
      *            the value to be converted into the message.
-     * @since Android 1.0
      */
     public AssertionError(float detailMessage) {
         this(Float.toString(detailMessage));
@@ -118,7 +110,6 @@ public class AssertionError extends Error {
      * 
      * @param detailMessage
      *            the value to be converted into the message.
-     * @since Android 1.0
      */
     public AssertionError(double detailMessage) {
         this(Double.toString(detailMessage));

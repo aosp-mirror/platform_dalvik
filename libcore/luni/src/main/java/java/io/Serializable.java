@@ -28,13 +28,9 @@ package java.io;
  * <p>
  * {@code private void writeObject(java.io.ObjectOutputStream out) throws
  * IOException}
- * </p>
  * <p>
  * {@code private void readObject(java.io.ObjectInputStream in) throws
  * IOException, ClassNotFoundException}
- * </p>
- * 
- * @since Android 1.0
  */
 public interface Serializable {
     /* empty */

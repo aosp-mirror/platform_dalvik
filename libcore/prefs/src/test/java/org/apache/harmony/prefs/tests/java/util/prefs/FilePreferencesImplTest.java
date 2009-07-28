@@ -32,15 +32,25 @@ import junit.framework.TestCase;
 @TestTargetClass(java.util.prefs.Preferences.class)
 public class FilePreferencesImplTest extends TestCase {
 
-    public FilePreferencesImplTest() {
-        super();
+    String oldUserHome = System.getProperty("user.home");
+    String oldJavaHome = System.getProperty("java.home");
+
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        System.setProperty("user.home", System.getProperty("java.io.tmpdir"));
+        System.setProperty("java.home", System.getProperty("java.io.tmpdir"));
+        Preferences.systemRoot().clear();
+        Preferences.userRoot().clear();
     }
-    
-    @Override
-    protected void setUp(){
-    }
-    @Override
-    protected void tearDown(){
+
+    protected void tearDown() throws Exception {
+        Preferences.systemRoot().clear();
+        Preferences.userRoot().clear();
+        System.setProperty("user.home", oldUserHome);
+        System.setProperty("java.home", oldJavaHome);
+
+        super.tearDown();
     }
 
     @TestTargets({

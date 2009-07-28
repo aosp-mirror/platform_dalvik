@@ -21,8 +21,6 @@ import java.io.IOException;
 
 /**
  * Is thrown when a hostname can not be resolved.
- * 
- * @since Android 1.0
  */
 public class UnknownHostException extends IOException {
 
@@ -31,8 +29,6 @@ public class UnknownHostException extends IOException {
     /**
      * Constructs a new {@code UnknownHostException} instance with its walkback
      * filled in.
-     * 
-     * @since Android 1.0
      */
     public UnknownHostException() {
         super();
@@ -44,7 +40,6 @@ public class UnknownHostException extends IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public UnknownHostException(String detailMessage) {
         super(detailMessage);

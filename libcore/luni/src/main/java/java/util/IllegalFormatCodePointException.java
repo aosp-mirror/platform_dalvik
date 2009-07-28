@@ -24,7 +24,6 @@ import java.io.Serializable;
  * passed as a parameter to a Formatter.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class IllegalFormatCodePointException extends IllegalFormatException
         implements Serializable {

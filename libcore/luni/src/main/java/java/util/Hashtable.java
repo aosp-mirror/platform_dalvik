@@ -31,12 +31,11 @@ import org.apache.harmony.luni.internal.nls.Messages;
  * factor is a float value which determines how full the Hashtable gets before
  * expanding the capacity. If the load factor of the Hashtable is exceeded, the
  * capacity is doubled.
- * 
+ *
  * @see Enumeration
  * @see java.io.Serializable
  * @see java.lang.Object#equals
  * @see java.lang.Object#hashCode
- * @since Android 1.0
  */
 
 public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
@@ -65,6 +64,21 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
 
         public Object nextElement() {
             throw new NoSuchElementException();
+        }
+    };
+
+    private static final Iterator<?> EMPTY_ITERATOR = new Iterator<Object>() {
+
+        public boolean hasNext() {
+            return false;
+        }
+
+        public Object next() {
+            throw new NoSuchElementException();
+        }
+
+        public void remove() {
+            throw new IllegalStateException();
         }
     };
 
@@ -121,16 +135,16 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
         }
     }
 
-    private final class HashIterator<E> implements Iterator<E> {
-        private int position, expectedModCount;
+    private class HashIterator<E> implements Iterator<E> {
+        int position, expectedModCount;
 
-        private final MapEntry.Type<E, K, V> type;
+        final MapEntry.Type<E, K, V> type;
 
-        private Entry<K, V> lastEntry;
+        Entry<K, V> lastEntry;
 
-        private int lastPosition;
+        int lastPosition;
 
-        private boolean canRemove = false;
+        boolean canRemove = false;
 
         HashIterator(MapEntry.Type<E, K, V> value) {
             type = value;
@@ -218,47 +232,9 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
         }
     }
 
-    private final class HashEnumerator<E> implements Enumeration<E> {
-        boolean key;
-
-        int start;
-
-        Entry<K, V> entry;
-
-        HashEnumerator(boolean isKey) {
-            key = isKey;
-            start = lastSlot + 1;
-        }
-
-        public boolean hasMoreElements() {
-            if (entry != null) {
-                return true;
-            }
-            while (--start >= firstSlot) {
-                if (elementData[start] != null) {
-                    entry = elementData[start];
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        @SuppressWarnings("unchecked")
-        public E nextElement() {
-            if (hasMoreElements()) {
-                Object result = key ? entry.key : entry.value;
-                entry = entry.next;
-                return (E) result;
-            }
-            throw new NoSuchElementException();
-        }
-    }
-
     /**
      * Constructs a new {@code Hashtable} using the default capacity and load
      * factor.
-     * 
-     * @since Android 1.0
      */
     public Hashtable() {
         this(11);
@@ -267,10 +243,9 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Constructs a new {@code Hashtable} using the specified capacity and the
      * default load factor.
-     * 
+     *
      * @param capacity
      *            the initial capacity.
-     * @since Android 1.0
      */
     public Hashtable(int capacity) {
         if (capacity >= 0) {
@@ -287,12 +262,11 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Constructs a new {@code Hashtable} using the specified capacity and load
      * factor.
-     * 
+     *
      * @param capacity
      *            the initial capacity.
      * @param loadFactor
      *            the initial load factor.
-     * @since Android 1.0
      */
     public Hashtable(int capacity, float loadFactor) {
         if (capacity >= 0 && loadFactor > 0) {
@@ -309,10 +283,9 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Constructs a new instance of {@code Hashtable} containing the mappings
      * from the specified map.
-     * 
+     *
      * @param map
      *            the mappings to add.
-     * @since Android 1.0
      */
     public Hashtable(Map<? extends K, ? extends V> map) {
         this(map.size() < 6 ? 11 : (map.size() * 4 / 3) + 11);
@@ -327,10 +300,9 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Removes all key/value pairs from this {@code Hashtable}, leaving the
      * size zero and the capacity unchanged.
-     * 
+     *
      * @see #isEmpty
      * @see #size
-     * @since Android 1.0
      */
     public synchronized void clear() {
         elementCount = 0;
@@ -341,17 +313,16 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Returns a new {@code Hashtable} with the same key/value pairs, capacity
      * and load factor.
-     * 
+     *
      * @return a shallow copy of this {@code Hashtable}.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
     public synchronized Object clone() {
         try {
             Hashtable<K, V> hashtable = (Hashtable<K, V>) super.clone();
-            hashtable.elementData = elementData.clone();
+            hashtable.elementData = new Entry[elementData.length];
             Entry<K, V> entry;
             for (int i = elementData.length; --i >= 0;) {
                 if ((entry = elementData[i]) != null) {
@@ -371,14 +342,13 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Returns true if this {@code Hashtable} contains the specified object as
      * the value of at least one of the key/value pairs.
-     * 
+     *
      * @param value
      *            the object to look for as a value in this {@code Hashtable}.
      * @return {@code true} if object is a value in this {@code Hashtable},
      *         {@code false} otherwise.
      * @see #containsKey
      * @see java.lang.Object#equals
-     * @since Android 1.0
      */
     public synchronized boolean contains(Object value) {
         if (value == null) {
@@ -388,7 +358,7 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
         for (int i = elementData.length; --i >= 0;) {
             Entry<K, V> entry = elementData[i];
             while (entry != null) {
-                if (value.equals(entry.value)) {
+                if (entry.value.equals(value)) {
                     return true;
                 }
                 entry = entry.next;
@@ -400,14 +370,13 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Returns true if this {@code Hashtable} contains the specified object as a
      * key of one of the key/value pairs.
-     * 
+     *
      * @param key
      *            the object to look for as a key in this {@code Hashtable}.
      * @return {@code true} if object is a key in this {@code Hashtable},
      *         {@code false} otherwise.
      * @see #contains
      * @see java.lang.Object#equals
-     * @since Android 1.0
      */
     public synchronized boolean containsKey(Object key) {
         return getEntry(key) != null;
@@ -415,12 +384,11 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
 
     /**
      * Searches this {@code Hashtable} for the specified value.
-     * 
+     *
      * @param value
      *            the object to search for.
      * @return {@code true} if {@code value} is a value of this
      *         {@code Hashtable}, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean containsValue(Object value) {
         return contains(value);
@@ -430,12 +398,11 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
      * Returns an enumeration on the values of this {@code Hashtable}. The
      * results of the Enumeration may be affected if the contents of this
      * {@code Hashtable} are modified.
-     * 
+     *
      * @return an enumeration of the values of this {@code Hashtable}.
      * @see #keys
      * @see #size
      * @see Enumeration
-     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -443,7 +410,11 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
         if (elementCount == 0) {
             return (Enumeration<V>) EMPTY_ENUMERATION;
         }
-        return new HashEnumerator<V>(false);
+        return new HashEnumIterator<V>(new MapEntry.Type<V, K, V>() {
+            public V get(MapEntry<K, V> entry) {
+                return entry.value;
+            }
+        }, true);
     }
 
     /**
@@ -451,18 +422,15 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
      * element in the set is a {@link Map.Entry}. The set is backed by this
      * {@code Hashtable} so changes to one are reflected by the other. The set
      * does not support adding.
-     * 
+     *
      * @return a set of the mappings.
-     * @since Android 1.0
      */
     public Set<Map.Entry<K, V>> entrySet() {
         return new Collections.SynchronizedSet<Map.Entry<K, V>>(
                 new AbstractSet<Map.Entry<K, V>>() {
                     @Override
                     public int size() {
-                        synchronized (Hashtable.this) {
-                            return elementCount;
-                        }
+                        return elementCount;
                     }
 
                     @Override
@@ -473,25 +441,20 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
                     @Override
                     @SuppressWarnings("unchecked")
                     public boolean remove(Object object) {
-                        synchronized (Hashtable.this) {
-                            if (contains(object)) {
-                                Hashtable.this
-                                        .remove(((Map.Entry<K, V>) object)
-                                                .getKey());
-                                return true;
-                            }
-                            return false;
+                        if (contains(object)) {
+                            Hashtable.this.remove(((Map.Entry<K, V>) object)
+                                    .getKey());
+                            return true;
                         }
+                        return false;
                     }
 
                     @Override
                     @SuppressWarnings("unchecked")
                     public boolean contains(Object object) {
-                        synchronized (Hashtable.this) {
-                            Entry<K, V> entry = getEntry(((Map.Entry<K, V>) object)
-                                    .getKey());
-                            return object.equals(entry);
-                        }
+                        Entry<K, V> entry = getEntry(((Map.Entry<K, V>) object)
+                                .getKey());
+                        return object.equals(entry);
                     }
 
                     @Override
@@ -511,13 +474,12 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
      * Compares this {@code Hashtable} with the specified object and indicates
      * if they are equal. In order to be equal, {@code object} must be an
      * instance of Map and contain the same key/value pairs.
-     * 
+     *
      * @param object
      *            the object to compare with this object.
      * @return {@code true} if the specified object is equal to this Map,
      *         {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public synchronized boolean equals(Object object) {
@@ -544,13 +506,12 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Returns the value associated with the specified key in this
      * {@code Hashtable}.
-     * 
+     *
      * @param key
      *            the key of the value returned.
      * @return the value associated with the specified key, or {@code null} if
      *         the specified key does not exist.
      * @see #put
-     * @since Android 1.0
      */
     @Override
     public synchronized V get(Object key) {
@@ -597,11 +558,10 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
 
     /**
      * Returns true if this {@code Hashtable} has no key/value pairs.
-     * 
+     *
      * @return {@code true} if this {@code Hashtable} has no key/value pairs,
      *         {@code false} otherwise.
      * @see #size
-     * @since Android 1.0
      */
     @Override
     public synchronized boolean isEmpty() {
@@ -612,12 +572,11 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
      * Returns an enumeration on the keys of this {@code Hashtable} instance.
      * The results of the enumeration may be affected if the contents of this
      * {@code Hashtable} are modified.
-     * 
+     *
      * @return an enumeration of the keys of this {@code Hashtable}.
      * @see #elements
      * @see #size
      * @see Enumeration
-     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -625,31 +584,30 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
         if (elementCount == 0) {
             return (Enumeration<K>) EMPTY_ENUMERATION;
         }
-        return new HashEnumerator<K>(true);
+        return new HashEnumIterator<K>(new MapEntry.Type<K, K, V>() {
+            public K get(MapEntry<K, V> entry) {
+                return entry.key;
+            }
+        }, true);
     }
 
     /**
      * Returns a set of the keys contained in this {@code Hashtable}. The set
      * is backed by this {@code Hashtable} so changes to one are reflected by
      * the other. The set does not support adding.
-     * 
+     *
      * @return a set of the keys.
-     * @since Android 1.0
      */
     public Set<K> keySet() {
         return new Collections.SynchronizedSet<K>(new AbstractSet<K>() {
             @Override
             public boolean contains(Object object) {
-                synchronized (Hashtable.this) {
-                    return containsKey(object);
-                }
+                return containsKey(object);
             }
 
             @Override
             public int size() {
-                synchronized (Hashtable.this) {
-                    return elementCount;
-                }
+                return elementCount;
             }
 
             @Override
@@ -659,18 +617,19 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
 
             @Override
             public boolean remove(Object key) {
-                synchronized (Hashtable.this) {
-                    if (containsKey(key)) {
-                        Hashtable.this.remove(key);
-                        return true;
-                    }
-                    return false;
+                if (containsKey(key)) {
+                    Hashtable.this.remove(key);
+                    return true;
                 }
+                return false;
             }
 
             @Override
             public Iterator<K> iterator() {
-                return new HashIterator<K>(new MapEntry.Type<K, K, V>() {
+                if (this.size() == 0) {
+                    return (Iterator<K>) EMPTY_ITERATOR;
+                }
+                return new HashEnumIterator<K>(new MapEntry.Type<K, K, V>() {
                     public K get(MapEntry<K, V> entry) {
                         return entry.key;
                     }
@@ -679,11 +638,89 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
         }, this);
     }
 
+    class HashEnumIterator<E> extends HashIterator<E> implements Enumeration<E> {
+
+        private boolean isEnumeration = false;
+
+        int start;
+
+        Entry<K, V> entry;
+
+        HashEnumIterator(MapEntry.Type<E, K, V> value) {
+            super(value);
+        }
+
+        HashEnumIterator(MapEntry.Type<E, K, V> value, boolean isEnumeration) {
+            super(value);
+            this.isEnumeration = isEnumeration;
+            start = lastSlot + 1;
+        }
+
+        public boolean hasMoreElements() {
+            if (isEnumeration) {
+                if (entry != null) {
+                    return true;
+                }
+                while (start > firstSlot) {
+                    if (elementData[--start] != null) {
+                        entry = elementData[start];
+                        return true;
+                    }
+                }
+                return false;
+            }
+            // iterator
+            return super.hasNext();
+        }
+
+        public boolean hasNext() {
+            if (isEnumeration) {
+                return hasMoreElements();
+            }
+            // iterator
+            return super.hasNext();
+        }
+
+        public E next() {
+            if (isEnumeration) {
+                if (expectedModCount == modCount) {
+                    return nextElement();
+                } else {
+                    throw new ConcurrentModificationException();
+                }
+            }
+            // iterator
+            return super.next();
+        }
+
+        @SuppressWarnings("unchecked")
+        public E nextElement() {
+            if (isEnumeration) {
+                if (hasMoreElements()) {
+                    Object result = type.get(entry);
+                    entry = entry.next;
+                    return (E) result;
+                }
+                throw new NoSuchElementException();
+            }
+            // iterator
+            return super.next();
+        }
+
+        public void remove() {
+            if (isEnumeration) {
+                throw new UnsupportedOperationException();
+            } else {
+                super.remove();
+            }
+        }
+    }
+
     /**
      * Associate the specified value with the specified key in this
      * {@code Hashtable}. If the key already exists, the old value is replaced.
      * The key and value cannot be null.
-     * 
+     *
      * @param key
      *            the key to add.
      * @param value
@@ -694,7 +731,6 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
      * @see #get
      * @see #keys
      * @see java.lang.Object#equals
-     * @since Android 1.0
      */
     @Override
     public synchronized V put(K key, V value) {
@@ -731,10 +767,9 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
 
     /**
      * Copies every mapping to this {@code Hashtable} from the specified map.
-     * 
+     *
      * @param map
      *            the map to copy mappings from.
-     * @since Android 1.0
      */
     public synchronized void putAll(Map<? extends K, ? extends V> map) {
         for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
@@ -745,8 +780,6 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Increases the capacity of this {@code Hashtable}. This method is called
      * when the size of this {@code Hashtable} exceeds the load factor.
-     * 
-     * @since Android 1.0
      */
     protected void rehash() {
         int length = (elementData.length << 1) + 1;
@@ -781,14 +814,13 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
     /**
      * Removes the key/value pair with the specified key from this
      * {@code Hashtable}.
-     * 
+     *
      * @param key
      *            the key to remove.
      * @return the value associated with the specified key, or {@code null} if
      *         the specified key did not exist.
      * @see #get
      * @see #put
-     * @since Android 1.0
      */
     @Override
     public synchronized V remove(Object key) {
@@ -817,11 +849,10 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
 
     /**
      * Returns the number of key/value pairs in this {@code Hashtable}.
-     * 
+     *
      * @return the number of key/value pairs in this {@code Hashtable}.
      * @see #elements
      * @see #keys
-     * @since Android 1.0
      */
     @Override
     public synchronized int size() {
@@ -830,9 +861,8 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
 
     /**
      * Returns the string representation of this {@code Hashtable}.
-     * 
+     *
      * @return the string representation of this {@code Hashtable}.
-     * @since Android 1.0
      */
     @Override
     public synchronized String toString() {
@@ -874,25 +904,20 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
      * Returns a collection of the values contained in this {@code Hashtable}.
      * The collection is backed by this {@code Hashtable} so changes to one are
      * reflected by the other. The collection does not support adding.
-     * 
+     *
      * @return a collection of the values.
-     * @since Android 1.0
      */
     public Collection<V> values() {
         return new Collections.SynchronizedCollection<V>(
                 new AbstractCollection<V>() {
                     @Override
                     public boolean contains(Object object) {
-                        synchronized (Hashtable.this) {
-                            return Hashtable.this.contains(object);
-                        }
+                        return Hashtable.this.contains(object);
                     }
 
                     @Override
                     public int size() {
-                        synchronized (Hashtable.this) {
-                            return elementCount;
-                        }
+                        return elementCount;
                     }
 
                     @Override

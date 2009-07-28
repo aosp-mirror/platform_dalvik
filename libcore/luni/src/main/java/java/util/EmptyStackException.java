@@ -21,9 +21,8 @@ package java.util;
 /**
  * An {@code EmptyStackException} is thrown if the pop/peek method of a stack is
  * executed on an empty stack.
- * 
+ *
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class EmptyStackException extends RuntimeException {
 

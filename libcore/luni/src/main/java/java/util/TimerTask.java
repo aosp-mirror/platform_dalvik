@@ -23,7 +23,6 @@ package java.util;
  * 
  * @see Timer
  * @see java.lang.Object#wait(long)
- * @since Android 1.0
  */
 public abstract class TimerTask implements Runnable {
     /* Lock object for synchronization. It's also used by Timer class. */
@@ -77,8 +76,6 @@ public abstract class TimerTask implements Runnable {
 
     /**
      * Creates a new {@code TimerTask}.
-     * 
-     * @since Android 1.0
      */
     protected TimerTask() {
         super();
@@ -91,7 +88,6 @@ public abstract class TimerTask implements Runnable {
      * 
      * @return {@code true} if the call prevented a scheduled execution
      *         from taking place, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean cancel() {
         synchronized (lock) {
@@ -107,7 +103,6 @@ public abstract class TimerTask implements Runnable {
      * have not yet run return an undefined value.
      * 
      * @return the most recent execution time.
-     * @since Android 1.0
      */
     public long scheduledExecutionTime() {
         synchronized (lock) {
@@ -118,8 +113,6 @@ public abstract class TimerTask implements Runnable {
     /**
      * The task to run should be specified in the implementation of the {@code run()}
      * method.
-     * 
-     * @since Android 1.0
      */
     public abstract void run();
 

@@ -21,38 +21,38 @@ import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.Util;
 
 /**
- * Wraps an existing {@link InputStream} and reads typed data from it. 
+ * Wraps an existing {@link InputStream} and reads typed data from it.
  * Typically, this stream has been written by a DataOutputStream. Types that can
  * be read include byte, 16-bit short, 32-bit int, 32-bit float, 64-bit long,
  * 64-bit double, byte strings, and strings encoded in
  * {@link DataInput modified UTF-8}.
- * 
+ *
  * @see DataOutputStream
- * 
- * @since Android 1.0
  */
 public class DataInputStream extends FilterInputStream implements DataInput {
+
+    byte[] buff;
 
     /**
      * Constructs a new DataInputStream on the InputStream {@code in}. All
      * reads are then filtered through this stream. Note that data read by this
      * stream is not in a human readable format and was most likely created by a
      * DataOutputStream.
-     * 
+     *
      * @param in
      *            the source InputStream the filter reads from.
      * @see DataOutputStream
      * @see RandomAccessFile
-     * @since Android 1.0
      */
     public DataInputStream(InputStream in) {
         super(in);
+        buff = new byte[8];
     }
 
     /**
      * Reads bytes from this stream into the byte array {@code buffer}. Returns
      * the number of bytes that have been read.
-     * 
+     *
      * @param buffer
      *            the buffer to read bytes into.
      * @return the number of bytes that have been read or -1 if the end of the
@@ -61,7 +61,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#write(byte[])
      * @see DataOutput#write(byte[], int, int)
-     * @since Android 1.0
      */
     @Override
     public final int read(byte[] buffer) throws IOException {
@@ -73,7 +72,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * the byte array {@code buffer} starting at {@code offset}. Returns the
      * number of bytes that have been read or -1 if no bytes have been read and
      * the end of the stream has been reached.
-     * 
+     *
      * @param buffer
      *            the byte array in which to store the bytes read.
      * @param offset
@@ -87,7 +86,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#write(byte[])
      * @see DataOutput#write(byte[], int, int)
-     * @since Android 1.0
      */
     @Override
     public final int read(byte[] buffer, int offset, int length)
@@ -97,7 +95,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
 
     /**
      * Reads a boolean from this stream.
-     * 
+     *
      * @return the next boolean value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream is reached before one byte
@@ -105,7 +103,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeBoolean(boolean)
-     * @since Android 1.0
      */
     public final boolean readBoolean() throws IOException {
         int temp = in.read();
@@ -117,7 +114,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
 
     /**
      * Reads an 8-bit byte value from this stream.
-     * 
+     *
      * @return the next byte value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream is reached before one byte
@@ -125,7 +122,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeByte(int)
-     * @since Android 1.0
      */
     public final byte readByte() throws IOException {
         int temp = in.read();
@@ -137,7 +133,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
 
     /**
      * Reads a 16-bit character value from this stream.
-     * 
+     *
      * @return the next char value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream is reached before two bytes
@@ -145,20 +141,29 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeChar(int)
-     * @since Android 1.0
      */
     public final char readChar() throws IOException {
-        int b1 = in.read();
-        int b2 = in.read();
-        if ((b1 | b2) < 0) {
+        if (readToBuff(2) < 0){
             throw new EOFException();
         }
-        return (char) ((b1 << 8) + b2);
+        return (char) (((buff[0] & 0xff) << 8) | (buff[1] & 0xff));
+
+    }
+
+    private int readToBuff(int count) throws IOException {
+        int offset = 0;
+
+        while(offset < count) {
+            int bytesRead = in.read(buff, offset, count - offset);
+            if(bytesRead == -1) return bytesRead;
+            offset += bytesRead;
+        }
+        return offset;
     }
 
     /**
      * Reads a 64-bit double value from this stream.
-     * 
+     *
      * @return the next double value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream is reached before eight
@@ -166,7 +171,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeDouble(double)
-     * @since Android 1.0
      */
     public final double readDouble() throws IOException {
         return Double.longBitsToDouble(readLong());
@@ -174,7 +178,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
 
     /**
      * Reads a 32-bit float value from this stream.
-     * 
+     *
      * @return the next float value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream is reached before four
@@ -182,7 +186,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeFloat(float)
-     * @since Android 1.0
      */
     public final float readFloat() throws IOException {
         return Float.intBitsToFloat(readInt());
@@ -192,7 +195,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * Reads bytes from this stream into the byte array {@code buffer}. This
      * method will block until {@code buffer.length} number of bytes have been
      * read.
-     * 
+     *
      * @param buffer
      *            to read bytes into.
      * @throws EOFException
@@ -202,7 +205,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#write(byte[])
      * @see DataOutput#write(byte[], int, int)
-     * @since Android 1.0
      */
     public final void readFully(byte[] buffer) throws IOException {
         readFully(buffer, 0, buffer.length);
@@ -213,7 +215,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * buffer} starting at the position {@code offset}. This method blocks until
      * {@code length} bytes have been read. If {@code length} is zero, then this
      * method returns without reading any bytes.
-     * 
+     *
      * @param buffer
      *            the byte array into which the data is read.
      * @param offset
@@ -232,7 +234,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws NullPointerException
      *             if {@code buffer} or the source stream are null.
      * @see java.io.DataInput#readFully(byte[], int, int)
-     * @since Android 1.0
      */
     public final void readFully(byte[] buffer, int offset, int length)
             throws IOException {
@@ -271,7 +272,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
 
     /**
      * Reads a 32-bit integer value from this stream.
-     * 
+     *
      * @return the next int value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream is reached before four
@@ -279,25 +280,13 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeInt(int)
-     * @since Android 1.0
      */
     public final int readInt() throws IOException {
-        // BEGIN android-changed
-        byte[] buf = new byte[4];
-        int nread = 0;
-        while (nread < 4) {
-          int nbytes = in.read(buf, nread, 4 - nread);
-          if (nbytes == -1) {
-              throw new EOFException();
-          }
-          nread += nbytes;
+        if (readToBuff(4) < 0){
+            throw new EOFException();
         }
-        int b1 = buf[0] & 0xff;
-        int b2 = buf[1] & 0xff;
-        int b3 = buf[2] & 0xff;
-        int b4 = buf[3] & 0xff;
-        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + b4);
-        // END android-changed
+        return ((buff[0] & 0xff) << 24) | ((buff[1] & 0xff) << 16) |
+            ((buff[2] & 0xff) << 8) | (buff[3] & 0xff);
     }
 
     /**
@@ -305,13 +294,12 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * source stream. A line is represented by zero or more characters followed
      * by {@code '\n'}, {@code '\r'}, {@code "\r\n"} or the end of the stream.
      * The string does not include the newline sequence.
-     * 
+     *
      * @return the contents of the line or {@code null} if no characters were
      *         read before the end of the source stream has been reached.
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @deprecated Use {@link BufferedReader}
-     * @since Android 1.0
      */
     @Deprecated
     public final String readLine() throws IOException {
@@ -350,7 +338,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
 
     /**
      * Reads a 64-bit long value from this stream.
-     * 
+     *
      * @return the next long value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream is reached before eight
@@ -358,24 +346,22 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeLong(long)
-     * @since Android 1.0
      */
     public final long readLong() throws IOException {
-        int i1 = readInt();
-        int b1 = in.read();
-        int b2 = in.read();
-        int b3 = in.read();
-        int b4 = in.read();
-        if ((b1 | b2 | b3 | b4) < 0) {
+        if (readToBuff(8) < 0){
             throw new EOFException();
         }
-        return (((long) i1) << 32) + ((long) b1 << 24) + (b2 << 16) + (b3 << 8)
-                + b4;
+        int i1 = ((buff[0] & 0xff) << 24) | ((buff[1] & 0xff) << 16) |
+            ((buff[2] & 0xff) << 8) | (buff[3] & 0xff);
+        int i2 = ((buff[4] & 0xff) << 24) | ((buff[5] & 0xff) << 16) |
+            ((buff[6] & 0xff) << 8) | (buff[7] & 0xff);
+
+        return ((i1 & 0xffffffffL) << 32) | (i2 & 0xffffffffL);
     }
 
     /**
      * Reads a 16-bit short value from this stream.
-     * 
+     *
      * @return the next short value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream is reached before two bytes
@@ -383,29 +369,18 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeShort(int)
-     * @since Android 1.0
      */
     public final short readShort() throws IOException {
-        // BEGIN android-changed
-        byte[] buf = new byte[2];
-        int nread = 0;
-        while (nread < 2) {
-          int nbytes = in.read(buf, nread, 2 - nread);
-          if (nbytes == -1) {
-              throw new EOFException();
-          }
-          nread += nbytes;
+        if (readToBuff(2) < 0){
+            throw new EOFException();
         }
-        int b1 = buf[0] & 0xff;
-        int b2 = buf[1] & 0xff;
-        return (short) ((b1 << 8) + b2);
-        // END android-changed
+        return (short) (((buff[0] & 0xff) << 8) | (buff[1] & 0xff));
     }
 
     /**
      * Reads an unsigned 8-bit byte value from this stream and returns it as an
      * int.
-     * 
+     *
      * @return the next unsigned byte value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream has been reached before one
@@ -413,7 +388,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeByte(int)
-     * @since Android 1.0
      */
     public final int readUnsignedByte() throws IOException {
         int temp = in.read();
@@ -426,7 +400,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
     /**
      * Reads a 16-bit unsigned short value from this stream and returns it as an
      * int.
-     * 
+     *
      * @return the next unsigned short value from the source stream.
      * @throws EOFException
      *             if the end of the filtered stream is reached before two bytes
@@ -434,21 +408,18 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeShort(int)
-     * @since Android 1.0
      */
     public final int readUnsignedShort() throws IOException {
-        int b1 = in.read();
-        int b2 = in.read();
-        if ((b1 | b2) < 0) {
+        if (readToBuff(2) < 0){
             throw new EOFException();
         }
-        return ((b1 << 8) + b2);
+        return (char) (((buff[0] & 0xff) << 8) | (buff[1] & 0xff));
     }
 
     /**
      * Reads an string encoded in {@link DataInput modified UTF-8} from this
      * stream.
-     * 
+     *
      * @return the next {@link DataInput MUTF-8} encoded string read from the
      *         source stream.
      * @throws EOFException if the end of the input is reached before the read
@@ -456,90 +427,28 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutput#writeUTF(java.lang.String)
-     * @since Android 1.0
      */
     public final String readUTF() throws IOException {
-        int utfSize = readUnsignedShort();
-        return decodeUTF(utfSize);
+        return decodeUTF(readUnsignedShort());
     }
 
-    // BEGIN android-removed
-    // static final int MAX_BUF_SIZE = 8192;
-    //
-    // private static class CacheLock {
-    // }
-    //
-    // static final Object cacheLock = new CacheLock();
-    //
-    // static boolean useShared = true;
-    //
-    // static byte[] byteBuf = new byte[0];
-    //
-    // static char[] charBuf = new char[0];
-    // END android-removed
 
     String decodeUTF(int utfSize) throws IOException {
-        // BEGIN android-removed
-        // byte[] buf;
-        // char[] out = null;
-        // boolean makeBuf = true;
-        //
-        // /*
-        //  * Try to avoid the synchronization -- if we get a stale value for
-        //  * useShared then there is no foul below, but those that sync on the
-        //  * lock must see the right value.
-        //  */
-        // if (utfSize <= MAX_BUF_SIZE && useShared) {
-        //     synchronized (cacheLock) {
-        //         if (useShared) {
-        //             useShared = false;
-        //             makeBuf = false;
-        //         }
-        //     }
-        // }
-        // if (makeBuf) {
-        //     buf = new byte[utfSize];
-        //     out = new char[utfSize];
-        // } else {
-        //     /*
-        //      * Need to 'sample' byteBuf and charBuf before using them because
-        //      * they are not protected by the cacheLock. They may get out of sync
-        //      * with the static and one another, but that is ok because we
-        //      * explicitly check and fix their length after sampling.
-        //      */
-        //     buf = byteBuf;
-        //     if (buf.length < utfSize) {
-        //         buf = byteBuf = new byte[utfSize];
-        //     }
-        //     out = charBuf;
-        //     if (out.length < utfSize) {
-        //         out = charBuf = new char[utfSize];
-        //     }
-        // }
-        // END android-removed
-        // BEGIN android-added
+        return decodeUTF(utfSize, this);
+    }
+
+    private static String decodeUTF(int utfSize, DataInput in) throws IOException {
         byte[] buf = new byte[utfSize];
         char[] out = new char[utfSize];
-        // END android-added
-        readFully(buf, 0, utfSize);
-        String result;
-        result = Util.convertUTF8WithBuf(buf, out, 0, utfSize);
-        // BEGIN android-removed
-        // if (!makeBuf) {
-        //     /*
-        //      * Do not synchronize useShared on cacheLock, it will make it back
-        //      * to main storage at some point, and no harm until it does.
-        //      */
-        //     useShared = true;
-        // }
-        //END android-removed
-        return result;
+        in.readFully(buf, 0, utfSize);
+
+        return Util.convertUTF8WithBuf(buf, out, 0, utfSize);
     }
 
     /**
      * Reads a string encoded in {@link DataInput modified UTF-8} from the
      * {@code DataInput} stream {@code in}.
-     * 
+     *
      * @param in
      *            the input stream to read from.
      * @return the next {@link DataInput MUTF-8} encoded string from the source
@@ -547,19 +456,18 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      * @throws IOException
      *             if a problem occurs while reading from this stream.
      * @see DataOutputStream#writeUTF(java.lang.String)
-     * @since Android 1.0
      */
     public static final String readUTF(DataInput in) throws IOException {
-        return in.readUTF();
+        return decodeUTF(in.readUnsignedShort(), in);
     }
 
     /**
      * Skips {@code count} number of bytes in this stream. Subsequent {@code
      * read()}s will not return these bytes unless {@code reset()} is used.
-     * 
+     *
      * This method will not throw an {@link EOFException} if the end of the
      * input is reached before {@code count} bytes where skipped.
-     * 
+     *
      * @param count
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
@@ -567,7 +475,6 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      *             if a problem occurs during skipping.
      * @see #mark(int)
      * @see #reset()
-     * @since Android 1.0
      */
     public final int skipBytes(int count) throws IOException {
         int skipped = 0;

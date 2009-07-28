@@ -45,8 +45,8 @@ import java.util.prefs.Preferences;
 @TestTargetClass(Preferences.class)
 public class PreferencesTest extends TestCase {
 
-    private String oldJavaHome;
-    private String oldUserHome;
+    String oldUserHome = System.getProperty("user.home");
+    String oldJavaHome = System.getProperty("java.home");
 
     MockSecurityManager manager = new MockSecurityManager();
 
@@ -81,6 +81,8 @@ public class PreferencesTest extends TestCase {
                         .getBytes("UTF-8"));
         stream = new MockInputStream(in);
 
+        System.setProperty("user.home", System.getProperty("java.io.tmpdir"));
+        System.setProperty("java.home", System.getProperty("java.io.tmpdir"));
         Preferences.systemRoot().clear();
         Preferences.userRoot().clear();
 
@@ -107,6 +109,8 @@ public class PreferencesTest extends TestCase {
 
         Preferences.systemRoot().clear();
         Preferences.userRoot().clear();
+        System.setProperty("user.home", oldUserHome);
+        System.setProperty("java.home", oldJavaHome);
     }
 
     @TestTargetNew(

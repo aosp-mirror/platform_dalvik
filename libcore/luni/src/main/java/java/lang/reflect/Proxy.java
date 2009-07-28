@@ -35,8 +35,7 @@ import org.apache.harmony.luni.util.Msg;
  * invocations to an {@code InvocationHandler}.
  *
  * @see InvocationHandler
- * 
- * @since Android 1.0
+ * @since 1.3
  */
 public class Proxy implements Serializable {
 
@@ -52,8 +51,6 @@ public class Proxy implements Serializable {
 
     /**
      * The invocation handler on which the method calls are dispatched.
-     *
-     * @since Android 1.0
      */
     protected InvocationHandler h;
 
@@ -64,11 +61,9 @@ public class Proxy implements Serializable {
     /**
      * Constructs a new {@code Proxy} instance with the specified invocation
      * handler.
-     * 
+     *
      * @param h
      *            the invocation handler for the newly created proxy
-     *            
-     * @since Android 1.0
      */
     protected Proxy(InvocationHandler h) {
         this.h = h;
@@ -81,24 +76,20 @@ public class Proxy implements Serializable {
      * different order result in different generated classes. The interfaces
      * must be visible from the supplied class loader; no duplicates are
      * permitted. All non-public interfaces must be defined in the same package.
-     * 
+     *
      * @param loader
      *            the class loader that will define the proxy class
      * @param interfaces
      *            an array of {@code Class} objects, each one identifying an
      *            interface that will be implemented by the returned proxy
      *            class
-     * 
      * @return a proxy class that implements all of the interfaces referred to
      *         in the contents of {@code interfaces}
-     * 
      * @throws IllegalArgumentException
      *                if any of the interface restrictions are violated
      * @throws NullPointerException
      *                if either {@code interfaces} or any of its elements are
      *                {@code null}
-     * 
-     * @since Android 1.0
      */
     public static Class<?> getProxyClass(ClassLoader loader,
             Class<?>... interfaces) throws IllegalArgumentException {
@@ -174,19 +165,17 @@ public class Proxy implements Serializable {
             WeakReference<Class<?>> ref = interfaceCache.get(interfaceKey);
             if (ref == null) {
                 String nextClassName = "$Proxy" + NextClassNameIndex++; //$NON-NLS-1$
-                if (commonPackageName != null) {
+                if (commonPackageName != null && commonPackageName.length() > 0) {
                     nextClassName = commonPackageName + "." + nextClassName; //$NON-NLS-1$
                 }
                 // BEGIN android-changed
-                //byte[] classFileBytes = ProxyClassFile.generateBytes(
-                //        nextClassName, interfaces);
-                // END android-changed
+                // byte[] classFileBytes = ProxyClassFile.generateBytes(
+                //         nextClassName, interfaces);
+                // newClass = defineClassImpl(loader, nextClassName.replace('.',
+                //         '/'), classFileBytes);
                 if (loader == null) {
                     loader = ClassLoader.getSystemClassLoader();
                 }
-                // BEGIN android-changed
-                //newClass = defineClassImpl(loader, nextClassName.replace('.',
-                //        '/'), classFileBytes);
                 newClass = generateProxy(nextClassName.replace('.', '/'),
                         interfaces, loader);
                 // END android-changed
@@ -200,6 +189,10 @@ public class Proxy implements Serializable {
                 }
             } else {
                 newClass = ref.get();
+                assert newClass != null : "\ninterfaceKey=\"" + interfaceKey + "\""
+                                        + "\nloaderCache=\"" + loaderCache + "\""
+                                        + "\nintfCache=\"" + interfaceCache + "\""
+                                        + "\nproxyCache=\"" + proxyCache + "\"";
             }
             return newClass;
         }
@@ -211,7 +204,7 @@ public class Proxy implements Serializable {
      * the specified invocation handler. The interfaces must be visible from the
      * supplied class loader; no duplicates are permitted. All non-public
      * interfaces must be defined in the same package.
-     * 
+     *
      * @param loader
      *            the class loader that will define the proxy class
      * @param interfaces
@@ -221,15 +214,11 @@ public class Proxy implements Serializable {
      * @param h
      *            the invocation handler that handles the dispatched method
      *            invocations
-     * 
      * @return a new proxy object that delegates to the handler {@code h}
-     * 
      * @throws IllegalArgumentException
      *                if any of the interface restrictions are violated
      * @throws NullPointerException
      *                if the interfaces or any of its elements are null
-     * 
-     * @since Android 1.0
      */
     public static Object newProxyInstance(ClassLoader loader,
             Class<?>[] interfaces, InvocationHandler h)
@@ -260,17 +249,13 @@ public class Proxy implements Serializable {
     /**
      * Indicates whether or not the specified class is a dynamically generated
      * proxy class.
-     * 
+     *
      * @param cl
      *            the class
-     * 
      * @return {@code true} if the class is a proxy class, {@code false}
      *         otherwise
-     * 
      * @throws NullPointerException
      *                if the class is {@code null}
-     * 
-     * @since Android 1.0
      */
     public static boolean isProxyClass(Class<?> cl) {
         if (cl == null) {
@@ -283,16 +268,12 @@ public class Proxy implements Serializable {
 
     /**
      * Returns the invocation handler of the specified proxy instance.
-     * 
+     *
      * @param proxy
      *            the proxy instance
-     * 
      * @return the invocation handler of the specified proxy instance
-     * 
      * @throws IllegalArgumentException
      *                if the supplied {@code proxy} is not a proxy object
-     * 
-     * @since Android 1.0
      */
     public static InvocationHandler getInvocationHandler(Object proxy)
             throws IllegalArgumentException {

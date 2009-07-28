@@ -22,8 +22,6 @@ package java.lang;
  * platform or virtual machine specific limit. Typically, this will occur only
  * when a program becomes infinitely recursive, but it can also occur in
  * correctly written (but deeply recursive) programs.
- * 
- * @since Android 1.0
  */
 public class StackOverflowError extends java.lang.VirtualMachineError {
 
@@ -32,8 +30,6 @@ public class StackOverflowError extends java.lang.VirtualMachineError {
     /**
      * Constructs a new {@code StackOverflowError} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public StackOverflowError() {
         super();
@@ -45,7 +41,6 @@ public class StackOverflowError extends java.lang.VirtualMachineError {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public StackOverflowError(String detailMessage) {
         super(detailMessage);

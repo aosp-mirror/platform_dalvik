@@ -19,8 +19,6 @@ package java.io;
 
 /**
  * Thrown when a file specified by a program cannot be found.
- * 
- * @since Android 1.0
  */
 public class FileNotFoundException extends IOException {
 
@@ -29,8 +27,6 @@ public class FileNotFoundException extends IOException {
     /**
      * Constructs a new {@code FileNotFoundException} with its stack trace
      * filled in.
-     * 
-     * @since Android 1.0
      */
     public FileNotFoundException() {
         super();
@@ -42,7 +38,6 @@ public class FileNotFoundException extends IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public FileNotFoundException(String detailMessage) {
         super(detailMessage);

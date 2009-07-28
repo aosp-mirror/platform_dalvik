@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when an attempt is made to create an array with a size of less than
  * zero.
- * 
- * @since Android 1.0
  */
 public class NegativeArraySizeException extends RuntimeException {
 
@@ -30,8 +28,6 @@ public class NegativeArraySizeException extends RuntimeException {
     /**
      * Constructs a new {@code NegativeArraySizeException} that includes the
      * current stack trace.
-     * 
-     * @since Android 1.0
      */
     public NegativeArraySizeException() {
         super();
@@ -43,7 +39,6 @@ public class NegativeArraySizeException extends RuntimeException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public NegativeArraySizeException(String detailMessage) {
         super(detailMessage);

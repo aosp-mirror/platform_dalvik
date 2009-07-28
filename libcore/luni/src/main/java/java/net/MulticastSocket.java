@@ -20,15 +20,14 @@ package java.net;
 import java.io.IOException;
 import java.util.Enumeration;
 
-import org.apache.harmony.luni.net.SocketImplProvider;
+import org.apache.harmony.luni.net.PlainDatagramSocketImpl;
 import org.apache.harmony.luni.util.Msg;
 
 /**
  * This class implements a multicast socket for sending and receiving IP
  * multicast datagram packets.
- * 
+ *
  * @see DatagramSocket
- * @since Android 1.0
  */
 public class MulticastSocket extends DatagramSocket {
 
@@ -39,10 +38,9 @@ public class MulticastSocket extends DatagramSocket {
     /**
      * Constructs a multicast socket, bound to any available port on the
      * localhost.
-     * 
+     *
      * @throws IOException
      *             if an error occurs creating or binding the socket.
-     * @since Android 1.0
      */
     public MulticastSocket() throws IOException {
         super();
@@ -52,12 +50,11 @@ public class MulticastSocket extends DatagramSocket {
     /**
      * Constructs a multicast socket, bound to the specified port on the
      * localhost.
-     * 
+     *
      * @param aPort
      *            the port to bind on the localhost.
      * @throws IOException
      *             if an error occurs creating or binding the socket.
-     * @since Android 1.0
      */
     public MulticastSocket(int aPort) throws IOException {
         super(aPort);
@@ -67,12 +64,11 @@ public class MulticastSocket extends DatagramSocket {
     /**
      * Gets the network address used by this socket. This is useful on
      * multihomed machines.
-     * 
+     *
      * @return the address of the network interface through which the datagram
      *         packets are sent or received.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while getting the interface address.
-     * @since Android 1.0
      */
     public InetAddress getInterface() throws SocketException {
         checkClosedAndBind(false);
@@ -104,12 +100,12 @@ public class MulticastSocket extends DatagramSocket {
     /**
      * Gets the network interface used by this socket. This is useful on
      * multihomed machines.
-     * 
+     *
      * @return the network interface used by this socket or {@code null} if no
      *         interface is set.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while getting the interface.
-     * @since Android 1.0
+     * @since 1.4
      */
     public NetworkInterface getNetworkInterface() throws SocketException {
         checkClosedAndBind(false);
@@ -162,11 +158,10 @@ public class MulticastSocket extends DatagramSocket {
 
     /**
      * Gets the time-to-live (TTL) for multicast packets sent on this socket.
-     * 
+     *
      * @return the default value for the time-to-life field.
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs reading the default value.
-     * @since Android 1.0
      */
     public int getTimeToLive() throws IOException {
         checkClosedAndBind(false);
@@ -175,13 +170,12 @@ public class MulticastSocket extends DatagramSocket {
 
     /**
      * Gets the time-to-live (TTL) for multicast packets sent on this socket.
-     * 
+     *
      * @return the default value for the time-to-life field.
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs reading the default value.
      * @deprecated Replaced by {@link #getTimeToLive}
      * @see #getTimeToLive()
-     * @since Android 1.0
      */
     @Deprecated
     public byte getTTL() throws IOException {
@@ -189,21 +183,15 @@ public class MulticastSocket extends DatagramSocket {
         return impl.getTTL();
     }
 
-    @Override
-    boolean isMulticastSocket() {
-        return true;
-    }
-
     /**
      * Adds this socket to the specified multicast group. A socket must join a
      * group before data may be received. A socket may be a member of multiple
      * groups but may join any group only once.
-     * 
+     *
      * @param groupAddr
      *            the multicast group to be joined.
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs while joining a group.
-     * @since Android 1.0
      */
     public void joinGroup(InetAddress groupAddr) throws IOException {
         checkClosedAndBind(false);
@@ -221,19 +209,19 @@ public class MulticastSocket extends DatagramSocket {
      * Adds this socket to the specified multicast group. A socket must join a
      * group before data may be received. A socket may be a member of multiple
      * groups but may join any group only once.
-     * 
+     *
      * @param groupAddress
      *            the multicast group to be joined.
      * @param netInterface
      *            the network interface on which the datagram packets will be
      *            received.
-     * @exception IOException
+     * @throws IOException
      *                if the specified address is not a multicast address.
-     * @exception SecurityException
+     * @throws SecurityException
      *                if the caller is not authorized to join the group.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if no multicast group is specified.
-     * @since Android 1.0
+     * @since 1.4
      */
     public void joinGroup(SocketAddress groupAddress,
             NetworkInterface netInterface) throws IOException {
@@ -271,14 +259,15 @@ public class MulticastSocket extends DatagramSocket {
 
     /**
      * Removes this socket from the specified multicast group.
-     * 
+     *
      * @param groupAddr
      *            the multicast group to be left.
-     * @exception IOException
+     * @throws NullPointerException
+     *                if {@code groupAddr} is {@code null}.
+     * @throws IOException
      *                if the specified group address is not a multicast address.
-     * @exception SecurityException
+     * @throws SecurityException
      *                if the caller is not authorized to leave the group.
-     * @since Android 1.0
      */
     public void leaveGroup(InetAddress groupAddr) throws IOException {
         checkClosedAndBind(false);
@@ -294,19 +283,19 @@ public class MulticastSocket extends DatagramSocket {
 
     /**
      * Removes this socket from the specified multicast group.
-     * 
+     *
      * @param groupAddress
      *            the multicast group to be left.
      * @param netInterface
      *            the network interface on which the addresses should be
      *            dropped.
-     * @exception IOException
+     * @throws IOException
      *                if the specified group address is not a multicast address.
-     * @exception SecurityException
+     * @throws SecurityException
      *                if the caller is not authorized to leave the group.
-     * @exception IllegalArgumentException
-     *                if no multicast group is specified.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if {@code groupAddress} is {@code null}.
+     * @since 1.4
      */
     public void leaveGroup(SocketAddress groupAddress,
             NetworkInterface netInterface) throws IOException {
@@ -344,16 +333,15 @@ public class MulticastSocket extends DatagramSocket {
     /**
      * Send the packet on this socket. The packet must satisfy the security
      * policy before it may be sent.
-     * 
+     *
      * @param pack
      *            the {@code DatagramPacket} to send
      * @param ttl
      *            the TTL setting for this transmission, overriding the socket
      *            default
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs while sending data or setting options.
      * @deprecated use {@link #setTimeToLive}.
-     * @since Android 1.0
      */
     @Deprecated
     public void send(DatagramPacket pack, byte ttl) throws IOException {
@@ -384,13 +372,12 @@ public class MulticastSocket extends DatagramSocket {
      * Sets the interface address used by this socket. This allows to send
      * multicast packets on a different interface than the default interface of
      * the local system. This is useful on multihomed machines.
-     * 
+     *
      * @param addr
      *            the multicast interface network address to set.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while setting the network interface
      *                address option.
-     * @since Android 1.0
      */
     public void setInterface(InetAddress addr) throws SocketException {
         checkClosedAndBind(false);
@@ -435,13 +422,13 @@ public class MulticastSocket extends DatagramSocket {
     /**
      * Sets the network interface used by this socket. This is useful for
      * multihomed machines.
-     * 
+     *
      * @param netInterface
      *            the multicast network interface to set.
-     * @exception SocketException
+     * @throws SocketException
      *                if an error occurs while setting the network interface
      *                option.
-     * @since Android 1.0
+     * @since 1.4
      */
     public void setNetworkInterface(NetworkInterface netInterface)
             throws SocketException {
@@ -529,13 +516,12 @@ public class MulticastSocket extends DatagramSocket {
     /**
      * Sets the time-to-live (TTL) for multicast packets sent on this socket.
      * Valid TTL values are between 0 and 255 inclusive.
-     * 
+     *
      * @param ttl
      *            the default time-to-live field value for packets sent on this
      *            socket. {@code 0 <= ttl <= 255}.
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs while setting the TTL option value.
-     * @since Android 1.0
      */
     public void setTimeToLive(int ttl) throws IOException {
         checkClosedAndBind(false);
@@ -548,15 +534,14 @@ public class MulticastSocket extends DatagramSocket {
     /**
      * Sets the time-to-live (TTL) for multicast packets sent on this socket.
      * Valid TTL values are between 0 and 255 inclusive.
-     * 
+     *
      * @param ttl
      *            the default time-to-live field value for packets sent on this
      *            socket: {@code 0 <= ttl <= 255}.
-     * @exception IOException
+     * @throws IOException
      *                if an error occurs while setting the TTL option value.
      * @deprecated Replaced by {@link #setTimeToLive}
      * @see #setTimeToLive(int)
-     * @since Android 1.0
      */
     @Deprecated
     public void setTTL(byte ttl) throws IOException {
@@ -568,11 +553,10 @@ public class MulticastSocket extends DatagramSocket {
     synchronized void createSocket(int aPort, InetAddress addr)
             throws SocketException {
         impl = factory != null ? factory.createDatagramSocketImpl()
-                : SocketImplProvider.getMulticastSocketImpl();
+                : new PlainDatagramSocketImpl();
         impl.create();
         try {
-            // the required default options are now set in the VM where they
-            // should be
+            impl.setOption(SocketOptions.SO_REUSEADDR, Boolean.TRUE);
             impl.bind(aPort, addr);
             isBound = true;
         } catch (SocketException e) {
@@ -585,14 +569,14 @@ public class MulticastSocket extends DatagramSocket {
      * Constructs a {@code MulticastSocket} bound to the host/port specified by
      * the {@code SocketAddress}, or an unbound {@code DatagramSocket} if the
      * {@code SocketAddress} is {@code null}.
-     * 
+     *
      * @param localAddr
      *            the local machine address and port to bind to.
      * @throws IllegalArgumentException
      *             if the {@code SocketAddress} is not supported.
      * @throws IOException
      *             if an error occurs creating or binding the socket.
-     * @since Android 1.0
+     * @since 1.4
      */
     public MulticastSocket(SocketAddress localAddr) throws IOException {
         super(localAddr);
@@ -601,12 +585,12 @@ public class MulticastSocket extends DatagramSocket {
 
     /**
      * Gets the state of the {@code SocketOptions.IP_MULTICAST_LOOP}.
-     * 
+     *
      * @return {@code true} if the IP multicast loop is enabled, {@code false}
      *         otherwise.
      * @throws SocketException
      *             if the socket is closed or the option is invalid.
-     * @since Android 1.0
+     * @since 1.4
      */
     public boolean getLoopbackMode() throws SocketException {
         checkClosedAndBind(false);
@@ -616,13 +600,13 @@ public class MulticastSocket extends DatagramSocket {
 
     /**
      * Sets the {@code SocketOptions.IP_MULTICAST_LOOP}.
-     * 
+     *
      * @param loop
      *            the value for the socket option socket {@code
      *            SocketOptions.IP_MULTICAST_LOOP}.
      * @throws SocketException
      *             if the socket is closed or the option is invalid.
-     * @since Android 1.0
+     * @since 1.4
      */
     public void setLoopbackMode(boolean loop) throws SocketException {
         checkClosedAndBind(false);

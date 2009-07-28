@@ -23,15 +23,11 @@ import java.io.Serializable;
  * This abstract class represents a protocol-independent base for
  * socket-endpoint representing classes. The class has to be implemented
  * according to a specific protocol.
- * 
- * @since Android 1.0
  */
 public abstract class SocketAddress implements Serializable {
 
     /**
      * Creates a new {@code SocketAddress} instance.
-     * 
-     * @since Android 1.0
      */
     public SocketAddress() {
         super();

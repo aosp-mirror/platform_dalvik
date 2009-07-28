@@ -22,8 +22,6 @@ package java.lang.reflect;
  * an InvocationHandler.
  *
  * @see java.lang.reflect.InvocationHandler#invoke
- *
- * @since Android 1.0
  */
 public class UndeclaredThrowableException extends RuntimeException {
 
@@ -37,8 +35,6 @@ public class UndeclaredThrowableException extends RuntimeException {
      * 
      * @param exception
      *            the undeclared, checked exception that occurred
-     * 
-     * @since Android 1.0
      */
     public UndeclaredThrowableException(Throwable exception) {
         super();
@@ -54,8 +50,6 @@ public class UndeclaredThrowableException extends RuntimeException {
      *            the detail message for the exception
      * @param exception
      *            the undeclared, checked exception that occurred
-     * 
-     * @since Android 1.0
      */
     public UndeclaredThrowableException(Throwable exception,
             String detailMessage) {
@@ -69,8 +63,6 @@ public class UndeclaredThrowableException extends RuntimeException {
      * {@code null}.
      *
      * @return the undeclared, checked exception that occurred
-     * 
-     * @since Android 1.0
      */
     public Throwable getUndeclaredThrowable() {
         return undeclaredThrowable;
@@ -81,8 +73,6 @@ public class UndeclaredThrowableException extends RuntimeException {
      * {@code null}.
      *
      * @return the undeclared, checked exception that occurred
-     * 
-     * @since Android 1.0
      */
     @Override
     public Throwable getCause() {

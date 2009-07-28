@@ -21,25 +21,33 @@ import dalvik.system.VMStack;
 // END android-changed
 
 /**
- * Platform
- *  
+ * The Platform class gives access to the low-level underlying capabilities of
+ * the operating system.
+ *
+ * The platform is structured into operations on the process heap memory,
+ * network subsystem, and file system through different OS components.
+ *
+ * OS components are 'dangerous' in that they pass through the calls and
+ * arguments to the OS with very little checking, and as such may cause fatal
+ * exceptions in the runtime. Access to the OS components is restricted to
+ * trusted code running on the system classpath.
+ *
+ * @see IFileSystem
+ * @see INetworkSystem
+ * @see IMemorySystem
  */
 public class Platform {
 
-    static final IAdapterManager ADAPTER_MANAGER = new AdapterManager();
+    static final IFileSystem FILE_SYSTEM = OSFileSystem.getOSFileSystem();
 
-    static final IFileSystem FILE_SYSTEM = OSComponentFactory.getFileSystem();
+    static final IMemorySystem MEMORY_SYSTEM = OSMemory.getOSMemory();
 
-    static final IMemorySystem MEMORY_SYSTEM = OSComponentFactory
-            .getMemorySystem();
+    static final INetworkSystem NETWORK_SYSTEM = OSNetworkSystem.getOSNetworkSystem();
 
-    static final INetworkSystem NETWORK_SYSTEM = OSComponentFactory
-            .getNetworkSystem();
-
-    public static IAdapterManager getAdapterManager() {
-        return ADAPTER_MANAGER;
-    }
-
+    /**
+     * Checks to ensure that whoever is asking for the OS component is running
+     * on the system classpath.
+     */
     private static final void accessCheck() {
         // BEGIN android-changed
         if (VMStack.getCallingClassLoader() != null) {
@@ -48,16 +56,31 @@ public class Platform {
         // END android-changed
     }
 
+    /**
+     * Answers the instance that interacts directly with the OS file system.
+     *
+     * @return a low-level file system interface.
+     */
     public static IFileSystem getFileSystem() {
         accessCheck();
         return FILE_SYSTEM;
     }
 
+    /**
+     * Answers the instance that interacts directly with the OS memory system.
+     *
+     * @return a low-level memory system interface.
+     */
     public static IMemorySystem getMemorySystem() {
         accessCheck();
         return MEMORY_SYSTEM;
     }
 
+    /**
+     * Answers the instance that interacts directly with the OS network system.
+     *
+     * @return a low-level network system interface.
+     */
     public static INetworkSystem getNetworkSystem() {
         accessCheck();
         return NETWORK_SYSTEM;

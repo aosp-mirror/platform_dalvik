@@ -28,13 +28,10 @@ import java.util.Map;
  * getHeaders()} to fetch the response headers.
  * 
  * @see ResponseCache
- * @since Android 1.0
  */
 public abstract class CacheResponse {
     /**
      * This implementation does nothing.
-     * 
-     * @since Android 1.0
      */
     public CacheResponse() {
         super();
@@ -48,7 +45,6 @@ public abstract class CacheResponse {
      * @throws IOException
      *             if an I/O error is encountered while retrieving the response
      *             body.
-     * @since Android 1.0
      */
     public abstract InputStream getBody() throws IOException;
 
@@ -62,7 +58,6 @@ public abstract class CacheResponse {
      * @throws IOException
      *             if an I/O error is encountered while retrieving the response
      *             headers.
-     * @since Android 1.0
      */
     public abstract Map<String, List<String>> getHeaders() throws IOException;
 }

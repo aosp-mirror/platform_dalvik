@@ -19,9 +19,9 @@ package java.lang;
 
 /**
  * The wrapper for the primitive type {@code double}.
- * 
+ *
  * @see java.lang.Number
- * @since Android 1.0
+ * @since 1.0
  */
 public final class Double extends Number implements Comparable<Double> {
 
@@ -35,15 +35,11 @@ public final class Double extends Number implements Comparable<Double> {
     /**
      * Constant for the maximum {@code double} value, (2 - 2<sup>-52</sup>) *
      * 2<sup>1023</sup>.
-     * 
-     * @since Android 1.0
      */
     public static final double MAX_VALUE = 1.79769313486231570e+308;
 
     /**
      * Constant for the minimum {@code double} value, 2<sup>-1074</sup>.
-     * 
-     * @since Android 1.0
      */
     public static final double MIN_VALUE = 5e-324;
 
@@ -51,30 +47,24 @@ public final class Double extends Number implements Comparable<Double> {
 
     /**
      * Constant for the Not-a-Number (NaN) value of the {@code double} type.
-     * 
-     * @since Android 1.0
      */
     public static final double NaN = 0.0 / 0.0;
 
     /**
      * Constant for the Positive Infinity value of the {@code double} type.
-     * 
-     * @since Android 1.0
      */
     public static final double POSITIVE_INFINITY = 1.0 / 0.0;
 
     /**
      * Constant for the Negative Infinity value of the {@code double} type.
-     * 
-     * @since Android 1.0
      */
     public static final double NEGATIVE_INFINITY = -1.0 / 0.0;
 
     /**
      * The {@link Class} object that represents the primitive type {@code
      * double}.
-     * 
-     * @since Android 1.0
+     *
+     * @since 1.1
      */
     @SuppressWarnings("unchecked")
     public static final Class<Double> TYPE = (Class<Double>) new double[0]
@@ -86,18 +76,17 @@ public final class Double extends Number implements Comparable<Double> {
     /**
      * Constant for the number of bits needed to represent a {@code double} in
      * two's complement form.
-     * 
-     * @since Android 1.0
+     *
+     * @since 1.5
      */
     public static final int SIZE = 64;
 
     /**
      * Constructs a new {@code Double} with the specified primitive double
      * value.
-     * 
+     *
      * @param value
      *            the primitive double value to store in the new instance.
-     * @since Android 1.0
      */
     public Double(double value) {
         this.value = value;
@@ -105,13 +94,12 @@ public final class Double extends Number implements Comparable<Double> {
 
     /**
      * Constructs a new {@code Double} from the specified string.
-     * 
+     *
      * @param string
      *            the string representation of a double value.
      * @throws NumberFormatException
      *             if {@code string} can not be decoded into a double value.
      * @see #parseDouble(String)
-     * @since Android 1.0
      */
     public Double(String string) throws NumberFormatException {
         this(parseDouble(string));
@@ -125,36 +113,20 @@ public final class Double extends Number implements Comparable<Double> {
      * than any other double value, including {@code Double.POSITIVE_INFINITY};</li>
      * <li>+0.0d is greater than -0.0d</li>
      * </ul>
-     * 
+     *
      * @param object
      *            the double object to compare this object to.
      * @return a negative value if the value of this double is less than the
      *         value of {@code object}; 0 if the value of this double and the
      *         value of {@code object} are equal; a positive value if the value
      *         of this double is greater than the value of {@code object}.
+     * @throws NullPointerException
+     *             if {@code object} is {@code null}.
      * @see java.lang.Comparable
-     * @since Android 1.0
+     * @since 1.2
      */
     public int compareTo(Double object) {
-        long d1, d2;
-        long NaNbits = Double.doubleToLongBits(Double.NaN);
-        if ((d1 = Double.doubleToLongBits(value)) == NaNbits) {
-            if (Double.doubleToLongBits(object.value) == NaNbits) {
-                return 0;
-            }
-            return 1;
-        }
-        if ((d2 = Double.doubleToLongBits(object.value)) == NaNbits) {
-            return -1;
-        }
-        if (value == object.value) {
-            if (d1 == d2) {
-                return 0;
-            }
-            // check for -0
-            return d1 > d2 ? 1 : -1;
-        }
-        return value > object.value ? 1 : -1;
+        return compare(value, object.value);
     }
 
     @Override
@@ -167,14 +139,13 @@ public final class Double extends Number implements Comparable<Double> {
      * to the IEEE 754 floating-point double precision bit layout. All
      * <em>Not-a-Number (NaN)</em> values are converted to a single NaN
      * representation ({@code 0x7ff8000000000000L}).
-     * 
+     *
      * @param value
      *            the double value to convert.
      * @return the IEEE 754 floating-point double precision representation of
      *         {@code value}.
      * @see #doubleToRawLongBits(double)
      * @see #longBitsToDouble(long)
-     * @since Android 1.0
      */
     public static native long doubleToLongBits(double value);
 
@@ -182,22 +153,20 @@ public final class Double extends Number implements Comparable<Double> {
      * Converts the specified double value to a binary representation conforming
      * to the IEEE 754 floating-point double precision bit layout.
      * <em>Not-a-Number (NaN)</em> values are preserved.
-     * 
+     *
      * @param value
      *            the double value to convert.
      * @return the IEEE 754 floating-point double precision representation of
      *         {@code value}.
      * @see #doubleToLongBits(double)
      * @see #longBitsToDouble(long)
-     * @since Android 1.0
      */
     public static native long doubleToRawLongBits(double value);
 
     /**
      * Gets the primitive value of this double.
-     * 
+     *
      * @return this object's primitive value.
-     * @since Android 1.0
      */
     @Override
     public double doubleValue() {
@@ -209,12 +178,11 @@ public final class Double extends Number implements Comparable<Double> {
      * equal. In order to be equal, {@code object} must be an instance of
      * {@code Double} and the bit pattern of its double value is the same as
      * this object's.
-     * 
+     *
      * @param object
      *            the object to compare this double with.
      * @return {@code true} if the specified object is equal to this
      *         {@code Double}; {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -241,10 +209,9 @@ public final class Double extends Number implements Comparable<Double> {
 
     /**
      * Indicates whether this object represents an infinite value.
-     * 
+     *
      * @return {@code true} if the value of this double is positive or negative
      *         infinity; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isInfinite() {
         return isInfinite(value);
@@ -252,12 +219,11 @@ public final class Double extends Number implements Comparable<Double> {
 
     /**
      * Indicates whether the specified double represents an infinite value.
-     * 
+     *
      * @param d
      *            the double to check.
      * @return {@code true} if the value of {@code d} is positive or negative
      *         infinity; {@code false} otherwise.
-     * @since Android 1.0
      */
     public static boolean isInfinite(double d) {
         return (d == POSITIVE_INFINITY) || (d == NEGATIVE_INFINITY);
@@ -265,10 +231,9 @@ public final class Double extends Number implements Comparable<Double> {
 
     /**
      * Indicates whether this object is a <em>Not-a-Number (NaN)</em> value.
-     * 
+     *
      * @return {@code true} if this double is <em>Not-a-Number</em>;
      *         {@code false} if it is a (potentially infinite) double number.
-     * @since Android 1.0
      */
     public boolean isNaN() {
         return isNaN(value);
@@ -277,12 +242,11 @@ public final class Double extends Number implements Comparable<Double> {
     /**
      * Indicates whether the specified double is a <em>Not-a-Number (NaN)</em>
      * value.
-     * 
+     *
      * @param d
      *            the double value to check.
      * @return {@code true} if {@code d} is <em>Not-a-Number</em>;
      *         {@code false} if it is a (potentially infinite) double number.
-     * @since Android 1.0
      */
     public static boolean isNaN(double d) {
         return d != d;
@@ -291,14 +255,13 @@ public final class Double extends Number implements Comparable<Double> {
     /**
      * Converts the specified IEEE 754 floating-point double precision bit
      * pattern to a Java double value.
-     * 
+     *
      * @param bits
      *            the IEEE 754 floating-point double precision representation of
      *            a double value.
      * @return the double value converted from {@code bits}.
      * @see #doubleToLongBits(double)
      * @see #doubleToRawLongBits(double)
-     * @since Android 1.0
      */
     public static native double longBitsToDouble(long bits);
 
@@ -309,14 +272,13 @@ public final class Double extends Number implements Comparable<Double> {
 
     /**
      * Parses the specified string as a double value.
-     * 
+     *
      * @param string
      *            the string representation of a double value.
      * @return the primitive double value represented by {@code string}.
      * @throws NumberFormatException
      *             if {@code string} is {@code null}, has a length of zero or
      *             can not be parsed as a double value.
-     * @since Android 1.0
      */
     public static double parseDouble(String string)
             throws NumberFormatException {
@@ -337,11 +299,10 @@ public final class Double extends Number implements Comparable<Double> {
     /**
      * Returns a string containing a concise, human-readable description of the
      * specified double value.
-     * 
+     *
      * @param d
      *             the double to convert to a string.
      * @return a printable representation of {@code d}.
-     * @since Android 1.0
      */
     public static String toString(double d) {
         return org.apache.harmony.luni.util.NumberConverter.convert(d);
@@ -349,7 +310,7 @@ public final class Double extends Number implements Comparable<Double> {
 
     /**
      * Parses the specified string as a double value.
-     * 
+     *
      * @param string
      *            the string representation of a double value.
      * @return a {@code Double} instance containing the double value represented
@@ -358,7 +319,6 @@ public final class Double extends Number implements Comparable<Double> {
      *             if {@code string} is {@code null}, has a length of zero or
      *             can not be parsed as a double value.
      * @see #parseDouble(String)
-     * @since Android 1.0
      */
     public static Double valueOf(String string) throws NumberFormatException {
         return new Double(parseDouble(string));
@@ -371,7 +331,7 @@ public final class Double extends Number implements Comparable<Double> {
      * than any other double value, including {@code Double.POSITIVE_INFINITY};</li>
      * <li>+0.0d is greater than -0.0d</li>
      * </ul>
-     * 
+     *
      * @param double1
      *            the first value to compare.
      * @param double2
@@ -379,37 +339,44 @@ public final class Double extends Number implements Comparable<Double> {
      * @return a negative value if {@code double1} is less than {@code double2};
      *         0 if {@code double1} and {@code double2} are equal; a positive
      *         value if {@code double1} is greater than {@code double2}.
-     * @since Android 1.0         
      */
     public static int compare(double double1, double double2) {
-        long d1, d2;
-        long NaNbits = Double.doubleToLongBits(Double.NaN);
-        if ((d1 = Double.doubleToLongBits(double1)) == NaNbits) {
-            if (Double.doubleToLongBits(double2) == NaNbits) {
+        // Non-zero, non-NaN checking.
+        if (double1 > double2) {
+            return 1;
+        }
+        if (double2 > double1) {
+            return -1;
+        }
+        if (double1 == double2 && 0.0d != double1) {
+            return 0;
+        }
+
+        // NaNs are equal to other NaNs and larger than any other double
+        if (isNaN(double1)) {
+            if (isNaN(double2)) {
                 return 0;
             }
             return 1;
-        }
-        if ((d2 = Double.doubleToLongBits(double2)) == NaNbits) {
+        } else if (isNaN(double2)) {
             return -1;
         }
-        if (double1 == double2) {
-            if (d1 == d2) {
-                return 0;
-            }
-            // check for -0
-            return d1 > d2 ? 1 : -1;
-        }
-        return double1 > double2 ? 1 : -1;
+
+        // Deal with +0.0 and -0.0
+        long d1 = doubleToRawLongBits(double1);
+        long d2 = doubleToRawLongBits(double2);
+        // The below expression is equivalent to:
+        // (d1 == d2) ? 0 : (d1 < d2) ? -1 : 1
+        return (int) ((d1 >> 63) - (d2 >> 63));
     }
 
     /**
      * Returns a {@code Double} instance for the specified double value.
-     * 
+     *
      * @param d
      *            the double value to store in the instance.
      * @return a {@code Double} instance containing {@code d}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static Double valueOf(double d) {
         return new Double(d);
@@ -417,11 +384,11 @@ public final class Double extends Number implements Comparable<Double> {
 
     /**
      * Converts the specified double into its hexadecimal string representation.
-     * 
+     *
      * @param d
      *            the double to convert.
      * @return the hexadecimal string representation of {@code d}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toHexString(double d) {
         /*

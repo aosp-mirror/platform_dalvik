@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when an action is attempted at a time when the virtual machine is not
  * in the correct state.
- * 
- * @since Android 1.0
  */
 public class IllegalStateException extends RuntimeException {
 
@@ -30,8 +28,6 @@ public class IllegalStateException extends RuntimeException {
     /**
      * Constructs a new {@code IllegalStateException} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public IllegalStateException() {
         super();
@@ -43,7 +39,6 @@ public class IllegalStateException extends RuntimeException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public IllegalStateException(String detailMessage) {
         super(detailMessage);
@@ -57,7 +52,7 @@ public class IllegalStateException extends RuntimeException {
      *            the detail message for this exception.
      * @param cause
      *            the cause of this exception.
-     * @since Android 1.0
+     * @since 1.5
      */
     public IllegalStateException(String message, Throwable cause) {
         super(message, cause);
@@ -69,7 +64,7 @@ public class IllegalStateException extends RuntimeException {
      * 
      * @param cause
      *            the cause of this exception, may be {@code null}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public IllegalStateException(Throwable cause) {
         super((cause == null ? null : cause.toString()), cause);

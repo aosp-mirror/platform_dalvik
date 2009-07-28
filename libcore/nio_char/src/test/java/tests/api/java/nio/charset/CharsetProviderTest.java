@@ -266,8 +266,6 @@ public class CharsetProviderTest extends TestCase {
         method = "charsetForName",
         args = {String.class}
     )
-    @KnownFailure("Android throws Error in case of insufficient privileges, " +
-            "RI throws SecurityException")
     public void testIsSupported_InsufficientPrivilege() throws Exception {
         SecurityManager oldMan = System.getSecurityManager();
         System.setSecurityManager(new MockSecurityManager());
@@ -301,8 +299,6 @@ public class CharsetProviderTest extends TestCase {
         method = "charsetForName",
         args = {String.class}
     )
-    @KnownFailure("Android throws Error in case of insufficient privileges, " +
-            "RI throws SecurityException")
     public void testForName_InsufficientPrivilege() throws Exception {
         SecurityManager oldMan = System.getSecurityManager();
         System.setSecurityManager(new MockSecurityManager());

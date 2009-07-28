@@ -34,7 +34,6 @@ import org.apache.harmony.luni.util.Msg;
  * and directories contained in that directory. If the pathname
  * ends in {@code /-}, it includes all the files and directories in that
  * directory <i>recursively</i>. The following pathnames have a special meaning:
- * </p>
  * <ul>
  *   <li>
  *     "*": all files in the current directory;
@@ -46,8 +45,6 @@ import org.apache.harmony.luni.util.Msg;
  *     "&lt;&lt;ALL FILES&gt;&gt;": any file and directory in the file system.
  *   </li>
  * </ul>
- * 
- * @since Android 1.0
  */
 public final class FilePermission extends Permission implements Serializable {
     
@@ -87,8 +84,7 @@ public final class FilePermission extends Permission implements Serializable {
      *             it contains a string other than "read", "write", "execute"
      *             and "delete".
      * @throws NullPointerException
-     *             if {@code path} is null.
-     * @since Android 1.0
+     *             if {@code path} is {@code null}.
      */
     public FilePermission(String path, String actions) {
         super(path);
@@ -197,7 +193,6 @@ public final class FilePermission extends Permission implements Serializable {
      * Returns the actions associated with this file permission.
      * 
      * @return the actions associated with this file permission.
-     * @since Android 1.0
      */
     @Override
     public String getActions() {
@@ -213,7 +208,6 @@ public final class FilePermission extends Permission implements Serializable {
      *            the object to check equality with.
      * @return {@code true} if this file permission is equal to {@code obj},
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -245,7 +239,6 @@ public final class FilePermission extends Permission implements Serializable {
      *            the permission to check.
      * @return {@code true} if the argument permission is implied by the
      *         receiver, and {@code false} if it is not.
-     * @since Android 1.0
      */
     @Override
     public boolean implies(Permission p) {
@@ -361,7 +354,6 @@ public final class FilePermission extends Permission implements Serializable {
      * 
      * @return A new PermissionCollection object suitable for storing
      *         FilePermission objects.
-     * @since Android 1.0
      */
     @Override
     public PermissionCollection newPermissionCollection() {
@@ -372,7 +364,6 @@ public final class FilePermission extends Permission implements Serializable {
      * Calculates the hash code value for this file permission.
      * 
      * @return the hash code value for this file permission.
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {

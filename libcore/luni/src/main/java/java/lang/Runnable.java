@@ -21,8 +21,6 @@ package java.lang;
 /**
  * Represents a command that can be executed. Often used to run code in a
  * different {@link Thread}.
- * 
- * @since Android 1.0
  */
 public interface Runnable {
 
@@ -30,8 +28,6 @@ public interface Runnable {
      * Starts executing the active part of the class' code. This method is
      * called when a thread is started that has been created with a class which
      * implements {@code Runnable}.
-     * 
-     * @since Android 1.0
      */
     public void run();
 }

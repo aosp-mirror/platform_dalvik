@@ -23,7 +23,6 @@ package java.util;
  * receive notification of updates on an {@code Observable} object.
  * 
  * @see Observable 
- * @since Android 1.0
  */
 public interface Observer {
 
@@ -36,7 +35,6 @@ public interface Observer {
      *            the {@link Observable} object.
      * @param data
      *            the data passed to {@link Observable#notifyObservers(Object)}.
-     * @since Android 1.0
      */
     void update(Observable observable, Object data);
 }

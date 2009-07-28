@@ -29,16 +29,11 @@ import java.net.SocketException;
 import java.net.SocketImpl;
 import java.net.UnknownHostException;
 import java.nio.channels.Channel;
-import java.nio.channels.SelectableChannel;
 
 /*
  * The interface for network methods.
  */
 public interface INetworkSystem {
-
-    // -----------------------------------------------
-    // Class Const
-    // -----------------------------------------------
 
     /*
      * Socket connect Step start
@@ -50,34 +45,24 @@ public interface INetworkSystem {
      */
     public final int SOCKET_CONNECT_STEP_CHECK = 1;
 
-    // -----------------------------------------------
-    // Methods
-    // -----------------------------------------------
-
     /*
      * socket accept
      */
     public void accept(FileDescriptor fdServer, SocketImpl newSocket,
             FileDescriptor fdnewSocket, int timeout) throws IOException;
 
-    public void bind(FileDescriptor aFD, int port, InetAddress inetAddress)
+    public void bind(FileDescriptor aFD, InetAddress inetAddress, int port)
             throws SocketException;
-
-    public boolean bind2(FileDescriptor aFD, int port, boolean bindToDevice,
-            InetAddress inetAddress) throws SocketException;
-
-    public void createSocket(FileDescriptor fd, boolean preferIPv4Stack)
-            throws IOException;
 
     public int read(FileDescriptor aFD, byte[] data, int offset, int count,
             int timeout) throws IOException;
-    
+
     public int readDirect(FileDescriptor aFD, int address, int offset, int count,
             int timeout) throws IOException;
 
     public int write(FileDescriptor fd, byte[] data, int offset, int count)
             throws IOException;
-    
+
     public int writeDirect(FileDescriptor fd, int address, int offset, int count)
             throws IOException;
 
@@ -96,7 +81,7 @@ public interface INetworkSystem {
     public int sendDatagram(FileDescriptor fd, byte[] data, int offset,
             int length, int port, boolean bindToDevice, int trafficClass,
             InetAddress inetAddress) throws IOException;
-    
+
     public int sendDatagramDirect(FileDescriptor fd, int address, int offset,
             int length, int port, boolean bindToDevice, int trafficClass,
             InetAddress inetAddress) throws IOException;
@@ -104,7 +89,7 @@ public interface INetworkSystem {
     public int receiveDatagram(FileDescriptor aFD, DatagramPacket packet,
             byte[] data, int offset, int length, int receiveTimeout,
             boolean peek) throws IOException;
-    
+
     public int receiveDatagramDirect(FileDescriptor aFD, DatagramPacket packet,
             int address, int offset, int length, int receiveTimeout,
             boolean peek) throws IOException;
@@ -112,17 +97,17 @@ public interface INetworkSystem {
     public int recvConnectedDatagram(FileDescriptor aFD, DatagramPacket packet,
             byte[] data, int offset, int length, int receiveTimeout,
             boolean peek) throws IOException;
-    
+
     public int recvConnectedDatagramDirect(FileDescriptor aFD,
             DatagramPacket packet, int address, int offset, int length,
             int receiveTimeout, boolean peek) throws IOException;
-    
+
     public int peekDatagram(FileDescriptor aFD, InetAddress sender,
             int receiveTimeout) throws IOException;
 
     public int sendConnectedDatagram(FileDescriptor fd, byte[] data,
             int offset, int length, boolean bindToDevice) throws IOException;
-    
+
     public int sendConnectedDatagramDirect(FileDescriptor fd, int address,
             int offset, int length, boolean bindToDevice) throws IOException;
 
@@ -134,17 +119,17 @@ public interface INetworkSystem {
     public void connectDatagram(FileDescriptor aFD, int port, int trafficClass,
             InetAddress inetAddress) throws SocketException;
 
-    public void createMulticastSocket(FileDescriptor aFD,
-            boolean preferIPv4Stack) throws SocketException;
-
-    public void createServerStreamSocket(FileDescriptor aFD,
-            boolean preferIPv4Stack) throws SocketException;
-
+    /**
+     * @deprecated Use {@link #read(FileDescriptor, byte[], int, int, int)}
+     */
+    @Deprecated
     public int receiveStream(FileDescriptor aFD, byte[] data, int offset,
             int count, int timeout) throws IOException;
 
+    // BEGIN android-added
     public int sendStream(FileDescriptor fd, byte[] data, int offset, int count)
             throws IOException;
+    // END android-added
 
     public void shutdownInput(FileDescriptor descriptor) throws IOException;
 
@@ -160,10 +145,13 @@ public interface INetworkSystem {
     // public void acceptStreamSocket(FileDescriptor fdServer,
     //         SocketImpl newSocket, FileDescriptor fdnewSocket, int timeout)
     //         throws IOException;
-    // 
-    // public void createStreamSocket(FileDescriptor aFD, boolean preferIPv4Stack)
-    //         throws SocketException;
     // END android-removed
+
+    public void createServerStreamSocket(FileDescriptor aFD, boolean preferIPv4Stack)
+            throws SocketException;
+
+    public void createStreamSocket(FileDescriptor aFD, boolean preferIPv4Stack)
+            throws SocketException;
 
     public void listenStreamSocket(FileDescriptor aFD, int backlog)
             throws SocketException;
@@ -184,7 +172,7 @@ public interface INetworkSystem {
 
     /*
      * Query the IP stack for the local port to which this socket is bound.
-     * 
+     *
      * @param aFD the socket descriptor @param preferIPv6Addresses address
      * preference for nodes that support both IPv4 and IPv6 @return int the
      * local port to which the socket is bound
@@ -194,10 +182,10 @@ public interface INetworkSystem {
 
     /*
      * Query the IP stack for the nominated socket option.
-     * 
+     *
      * @param aFD the socket descriptor @param opt the socket option type
      * @return the nominated socket option value
-     * 
+     *
      * @throws SocketException if the option is invalid
      */
     public Object getSocketOption(FileDescriptor aFD, int opt)
@@ -205,10 +193,10 @@ public interface INetworkSystem {
 
     /*
      * Set the nominated socket option in the IP stack.
-     * 
+     *
      * @param aFD the socket descriptor @param opt the option selector @param
      * optVal the nominated option value
-     * 
+     *
      * @throws SocketException if the option is invalid or cannot be set
      */
     public void setSocketOption(FileDescriptor aFD, int opt, Object optVal)
@@ -218,7 +206,7 @@ public interface INetworkSystem {
 
     /*
      * Close the socket in the IP stack.
-     * 
+     *
      * @param aFD the socket descriptor
      */
     public void socketClose(FileDescriptor aFD) throws IOException;
@@ -233,8 +221,8 @@ public interface INetworkSystem {
     // BEGIN android-removed
     // public boolean isReachableByICMP(InetAddress dest,InetAddress source,int ttl,int timeout);
     // END android-removed
-    
+
     public Channel inheritedChannel();
-    
+
     public void oneTimeInitialization(boolean jcl_supports_ipv6);
 }

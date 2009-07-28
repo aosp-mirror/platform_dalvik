@@ -27,8 +27,6 @@ public class PortUnreachableException extends SocketException {
 
     /**
      * Constructs a new instance of this class with its walkback filled in.
-     * 
-     * @since Android 1.0
      */
     public PortUnreachableException() {
     }
@@ -39,7 +37,6 @@ public class PortUnreachableException extends SocketException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public PortUnreachableException(String detailMessage) {
         super(detailMessage);

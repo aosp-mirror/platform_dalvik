@@ -17,7 +17,6 @@
 
 package java.util;
 
-
 import java.lang.reflect.Array;
 
 /**
@@ -26,23 +25,18 @@ import java.lang.reflect.Array;
  * iterator()} and {@code size()} to create an immutable collection. To create a
  * modifiable collection it's necessary to override the {@code add()} method that
  * currently throws an {@code UnsupportedOperationException}.
- * 
- * @since Android 1.0
+ *
+ * @since 1.2
  */
 public abstract class AbstractCollection<E> implements Collection<E> {
 
     /**
-     * Constructs a new instance of this {@code AbstractCollection}.
-     * 
-     * @since Android 1.0
+     * Constructs a new instance of this AbstractCollection.
      */
     protected AbstractCollection() {
         super();
     }
 
-    /**
-     * @see Collection#add
-     */         
     public boolean add(E object) {
         throw new UnsupportedOperationException();
     }
@@ -64,18 +58,17 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      *            the collection of objects.
      * @return {@code true} if this {@code Collection} is modified, {@code false}
      *         otherwise.
-     * @exception UnsupportedOperationException
-     *                when adding to this {@code Collection} is not supported.
-     * @exception ClassCastException
-     *                when the class of an object is inappropriate for this
+     * @throws UnsupportedOperationException
+     *                if adding to this {@code Collection} is not supported.
+     * @throws ClassCastException
+     *                if the class of an object is inappropriate for this
      *                {@code Collection}.
-     * @exception IllegalArgumentException
-     *                when an object cannot be added to this {@code Collection}.
-     * @exception NullPointerException
-     *                when {@code collection} is {@code null}, or if it contains
+     * @throws IllegalArgumentException
+     *                if an object cannot be added to this {@code Collection}.
+     * @throws NullPointerException
+     *                if {@code collection} is {@code null}, or if it contains
      *                {@code null} elements and this {@code Collection} does not support
      *                such elements.
-     * @since Android 1.0
      */
     public boolean addAll(Collection<? extends E> collection) {
         boolean result = false;
@@ -97,13 +90,12 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * Concrete implementations usually can clear a {@code Collection} more efficiently
      * and should therefore overwrite this method.
      * 
-     * @exception UnsupportedOperationException
-     *                when the iterator does not support removing elements from
+     * @throws UnsupportedOperationException
+     *                it the iterator does not support removing elements from
      *                this {@code Collection}
      * @see #iterator
      * @see #isEmpty
      * @see #size
-     * @since Android 1.0
      */
     public void clear() {
         Iterator<E> it = iterator();
@@ -126,12 +118,11 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      *            the object to search for.
      * @return {@code true} if object is an element of this {@code Collection}, {@code
      *         false} otherwise.
-     * @exception ClassCastException
+     * @throws ClassCastException
      *                if the object to look for isn't of the correct type.
-     * @exception NullPointerException
+     * @throws NullPointerException
      *                if the object to look for is {@code null} and this
      *                {@code Collection} doesn't support {@code null} elements.
-     * @since Android 1.0
      */
     public boolean contains(Object object) {
         Iterator<E> it = iterator();
@@ -161,16 +152,15 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      *            the collection of objects.
      * @return {@code true} if all objects in the specified {@code Collection} are
      *         elements of this {@code Collection}, {@code false} otherwise.
-     * @exception ClassCastException
+     * @throws ClassCastException
      *                if one or more elements of {@code collection} isn't of the
      *                correct type.
-     * @exception NullPointerException
+     * @throws NullPointerException
      *                if {@code collection} contains at least one {@code null}
      *                element and this {@code Collection} doesn't support {@code null}
      *                elements.
-     * @exception NullPointerException
+     * @throws NullPointerException
      *                if {@code collection} is {@code null}.
-     * @since Android 1.0
      */
     public boolean containsAll(Collection<?> collection) {
         Iterator<?> it = collection.iterator();
@@ -188,9 +178,8 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * 
      * @return {@code true} if this {@code Collection} has no elements, {@code false}
      *         otherwise.
-     * 
+     *
      * @see #size
-     * @since Android 1.0
      */
     public boolean isEmpty() {
         return size() == 0;
@@ -206,7 +195,6 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * by concrete {@code Collection} implementations.
      * 
      * @return an iterator for accessing the {@code Collection} contents.
-     * @since Android 1.0
      */
     public abstract Iterator<E> iterator();
 
@@ -226,14 +214,13 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      *            the object to remove.
      * @return {@code true} if this {@code Collection} is modified, {@code false}
      *         otherwise.
-     * @exception UnsupportedOperationException
-     *                when removing from this {@code Collection} is not supported.
-     * @exception ClassCastException
-     *                when the object passed is not of the correct type.
-     * @exception NullPointerException
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code Collection} is not supported.
+     * @throws ClassCastException
+     *                if the object passed is not of the correct type.
+     * @throws NullPointerException
      *                if {@code object} is {@code null} and this {@code Collection}
      *                doesn't support {@code null} elements.
-     * @since Android 1.0
      */
     public boolean remove(Object object) {
         Iterator<?> it = iterator();
@@ -272,18 +259,17 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      *            the collection of objects to remove.
      * @return {@code true} if this {@code Collection} is modified, {@code false}
      *         otherwise.
-     * @exception UnsupportedOperationException
-     *                when removing from this {@code Collection} is not supported.
-     * @exception ClassCastException
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code Collection} is not supported.
+     * @throws ClassCastException
      *                if one or more elements of {@code collection} isn't of the
      *                correct type.
-     * @exception NullPointerException
+     * @throws NullPointerException
      *                if {@code collection} contains at least one {@code null}
      *                element and this {@code Collection} doesn't support {@code null}
      *                elements.
-     * @exception NullPointerException
+     * @throws NullPointerException
      *                if {@code collection} is {@code null}.
-     * @since Android 1.0
      */
     public boolean removeAll(Collection<?> collection) {
         boolean result = false;
@@ -314,18 +300,17 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      *            the collection of objects to retain.
      * @return {@code true} if this {@code Collection} is modified, {@code false}
      *         otherwise.
-     * @exception UnsupportedOperationException
-     *                when removing from this {@code Collection} is not supported.
-     * @exception ClassCastException
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code Collection} is not supported.
+     * @throws ClassCastException
      *                if one or more elements of {@code collection}
      *                isn't of the correct type.
-     * @exception NullPointerException
+     * @throws NullPointerException
      *                if {@code collection} contains at least one
      *                {@code null} element and this {@code Collection} doesn't support
      *                {@code null} elements.
-     * @exception NullPointerException
+     * @throws NullPointerException
      *                if {@code collection} is {@code null}.
-     * @since Android 1.0
      */
     public boolean retainAll(Collection<?> collection) {
         boolean result = false;
@@ -348,7 +333,6 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * @return how many objects this {@code Collection} contains, or {@code Integer.MAX_VALUE}
      *         if there are more than {@code Integer.MAX_VALUE} elements in this
      *         {@code Collection}.
-     * @since Android 1.0
      */
     public abstract int size();
 
@@ -367,10 +351,10 @@ public abstract class AbstractCollection<E> implements Collection<E> {
         int size = size(), index = 0;
         if (size > contents.length) {
             Class<?> ct = contents.getClass().getComponentType();
-            contents = (T[])Array.newInstance(ct, size);
+            contents = (T[]) Array.newInstance(ct, size);
         }
-        for (E entry: this) {
-            contents[index++] = (T)entry;
+        for (E entry : this) {
+            contents[index++] = (T) entry;
         }
         if (index < contents.length) {
             contents[index] = null;
@@ -384,7 +368,6 @@ public abstract class AbstractCollection<E> implements Collection<E> {
      * are separated by ', ' (comma and space).
      * 
      * @return the string representation of this {@code Collection}.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -402,7 +385,7 @@ public abstract class AbstractCollection<E> implements Collection<E> {
             } else {
                 buffer.append("(this Collection)"); //$NON-NLS-1$
             }
-            if(it.hasNext()) {
+            if (it.hasNext()) {
                 buffer.append(", "); //$NON-NLS-1$
             }
         }

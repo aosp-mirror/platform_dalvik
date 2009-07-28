@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when the virtual machine notices that a program tries to reference,
  * on a class or object, a method that does not exist.
- * 
- * @since Android 1.0
  */
 public class NoSuchMethodError extends IncompatibleClassChangeError {
 
@@ -30,8 +28,6 @@ public class NoSuchMethodError extends IncompatibleClassChangeError {
     /**
      * Constructs a new {@code NoSuchMethodError} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public NoSuchMethodError() {
         super();
@@ -43,7 +39,6 @@ public class NoSuchMethodError extends IncompatibleClassChangeError {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public NoSuchMethodError(String detailMessage) {
         super(detailMessage);

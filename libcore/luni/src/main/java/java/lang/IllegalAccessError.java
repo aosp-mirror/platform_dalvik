@@ -22,9 +22,6 @@ package java.lang;
  * which is not accessible from where it is referenced.
  * <p>
  * Note that this can only occur when inconsistent class files have been loaded.
- * </p>
- * 
- * @since Android 1.0
  */
 public class IllegalAccessError extends IncompatibleClassChangeError {
 
@@ -33,8 +30,6 @@ public class IllegalAccessError extends IncompatibleClassChangeError {
     /**
      * Constructs a new {@code IllegalAccessError} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public IllegalAccessError() {
         super();
@@ -46,7 +41,6 @@ public class IllegalAccessError extends IncompatibleClassChangeError {
      * 
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public IllegalAccessError(String detailMessage) {
         super(detailMessage);

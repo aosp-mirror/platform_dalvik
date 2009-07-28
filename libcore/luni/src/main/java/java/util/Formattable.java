@@ -20,16 +20,15 @@ package java.util;
  * Classes that handle custom formatting for the 's' specifier of {@code Formatter}
  * should implement the {@code Formattable} interface. It gives basic control over
  * formatting objects.
- *  
+ *
  * @see Formatter
- * @since Android 1.0
  */
 
 public interface Formattable {
 
     /**
      * Formats the object using the specified {@code Formatter}.
-     * 
+     *
      * @param formatter
      *            the {@code Formatter} to use.
      * @param flags
@@ -54,7 +53,6 @@ public interface Formattable {
      *            is -1, then maximum length is not enforced.
      * @throws IllegalFormatException
      *             if any of the parameters is not supported.
-     * @since Android 1.0
      */
     void formatTo(Formatter formatter, int flags, int width, int precision)
             throws IllegalFormatException;

@@ -21,8 +21,8 @@ package java.lang;
  * type through a string that contains the type's name and the type cannot be
  * found. This exception is an unchecked alternative to
  * {@link java.lang.ClassNotFoundException}.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public class TypeNotPresentException extends RuntimeException {
     private static final long serialVersionUID = -5101214195716534496L;
@@ -38,7 +38,6 @@ public class TypeNotPresentException extends RuntimeException {
      *            the fully qualified name of the type that could not be found.
      * @param cause
      *            the optional cause of this exception, may be {@code null}.
-     * @since Android 1.0
      */
     public TypeNotPresentException(String typeName, Throwable cause) {
         super("Type " + typeName + " not present", cause);

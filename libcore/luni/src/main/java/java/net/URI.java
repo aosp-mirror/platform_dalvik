@@ -28,8 +28,6 @@ import org.apache.harmony.luni.util.Msg;
 
 /**
  * This class represents an instance of a URI as defined by RFC 2396.
- * 
- * @since Android 1.0
  */
 public final class URI implements Comparable<URI>, Serializable {
 
@@ -78,13 +76,12 @@ public final class URI implements Comparable<URI>, Serializable {
 
     /**
      * Creates a new URI instance according to the given string {@code uri}.
-     * 
+     *
      * @param uri
      *            the textual URI representation to be parsed into a URI object.
      * @throws URISyntaxException
      *             if the given string {@code uri} doesn't fit to the
      *             specification RFC2396 or could not be parsed correctly.
-     * @since Android 1.0
      */
     public URI(String uri) throws URISyntaxException {
         new Helper().parseURI(uri, false);
@@ -96,8 +93,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * string will be parsed later on to create the URI instance.
      * <p>
      * {@code [scheme:]scheme-specific-part[#fragment]}
-     * </p>
-     * 
+     *
      * @param scheme
      *            the scheme part of the URI.
      * @param ssp
@@ -107,7 +103,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * @throws URISyntaxException
      *             if the temporary created string doesn't fit to the
      *             specification RFC2396 or could not be parsed correctly.
-     * @since Android 1.0
      */
     public URI(String scheme, String ssp, String frag)
             throws URISyntaxException {
@@ -135,8 +130,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * string will be parsed later on to create the URI instance.
      * <p>
      * {@code [scheme:][user-info@]host[:port][path][?query][#fragment]}
-     * </p>
-     * 
+     *
      * @param scheme
      *            the scheme part of the URI.
      * @param userinfo
@@ -156,7 +150,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * @throws URISyntaxException
      *             if the temporary created string doesn't fit to the
      *             specification RFC2396 or could not be parsed correctly.
-     * @since Android 1.0
      */
     public URI(String scheme, String userinfo, String host, int port,
             String path, String query, String fragment)
@@ -230,8 +223,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * string will be parsed later on to create the URI instance.
      * <p>
      * {@code [scheme:]host[path][#fragment]}
-     * </p>
-     * 
+     *
      * @param scheme
      *            the scheme part of the URI.
      * @param host
@@ -243,7 +235,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * @throws URISyntaxException
      *             if the temporary created string doesn't fit to the
      *             specification RFC2396 or could not be parsed correctly.
-     * @since Android 1.0
      */
     public URI(String scheme, String host, String path, String fragment)
             throws URISyntaxException {
@@ -256,8 +247,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * string will be parsed later on to create the URI instance.
      * <p>
      * {@code [scheme:][//authority][path][?query][#fragment]}
-     * </p>
-     * 
+     *
      * @param scheme
      *            the scheme part of the URI.
      * @param authority
@@ -272,7 +262,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * @throws URISyntaxException
      *             if the temporary created string doesn't fit to the
      *             specification RFC2396 or could not be parsed correctly.
-     * @since Android 1.0
      */
     public URI(String scheme, String authority, String path, String query,
             String fragment) throws URISyntaxException {
@@ -718,7 +707,7 @@ public final class URI implements Comparable<URI>, Serializable {
                     // case for a closed bracket at end of IP [x:x:x:...x]
                     case ']':
                         if (i != length - 1) {
-                            return false; // must be last charcter
+                            return false; // must be last character
                         }
                         if (ipAddress.charAt(0) != '[') {
                             return false; // must have a open [
@@ -856,11 +845,10 @@ public final class URI implements Comparable<URI>, Serializable {
      * in the natural case-sensitive way. A hierarchical URI is less than an
      * opaque URI and if one part is {@code null} the URI with the undefined
      * part is less than the other one.
-     * 
+     *
      * @param uri
      *            the URI this instance has to compare with.
      * @return the value representing the order of the two instances.
-     * @since Android 1.0
      */
     public int compareTo(URI uri) {
         int ret = 0;
@@ -969,11 +957,10 @@ public final class URI implements Comparable<URI>, Serializable {
     /**
      * Parses the given argument {@code uri} and creates an appropriate URI
      * instance.
-     * 
+     *
      * @param uri
      *            the string which has to be parsed to create the URI instance.
      * @return the created instance representing the given URI.
-     * @since Android 1.0
      */
     public static URI create(String uri) {
         URI result = null;
@@ -1057,12 +1044,11 @@ public final class URI implements Comparable<URI>, Serializable {
      * Compares this URI instance with the given argument {@code o} and
      * determines if both are equal. Two URI instances are equal if all single
      * parts are identical in their meaning.
-     * 
+     *
      * @param o
      *            the URI this instance has to be compared with.
      * @return {@code true} if both URI instances point to the same resource,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -1147,9 +1133,8 @@ public final class URI implements Comparable<URI>, Serializable {
 
     /**
      * Gets the decoded authority part of this URI.
-     * 
+     *
      * @return the decoded authority part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getAuthority() {
         return decode(authority);
@@ -1159,7 +1144,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the decoded fragment part of this URI.
      * 
      * @return the decoded fragment part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getFragment() {
         return decode(fragment);
@@ -1169,7 +1153,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the host part of this URI.
      * 
      * @return the host part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getHost() {
         return host;
@@ -1179,7 +1162,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the decoded path part of this URI.
      * 
      * @return the decoded path part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getPath() {
         return decode(path);
@@ -1189,7 +1171,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the port number of this URI.
      * 
      * @return the port number or {@code -1} if undefined.
-     * @since Android 1.0
      */
     public int getPort() {
         return port;
@@ -1199,7 +1180,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the decoded query part of this URI.
      * 
      * @return the decoded query part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getQuery() {
         return decode(query);
@@ -1209,7 +1189,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the authority part of this URI in raw form.
      * 
      * @return the encoded authority part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getRawAuthority() {
         return authority;
@@ -1219,7 +1198,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the fragment part of this URI in raw form.
      * 
      * @return the encoded fragment part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getRawFragment() {
         return fragment;
@@ -1229,7 +1207,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the path part of this URI in raw form.
      * 
      * @return the encoded path part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getRawPath() {
         return path;
@@ -1239,7 +1216,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the query part of this URI in raw form.
      * 
      * @return the encoded query part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getRawQuery() {
         return query;
@@ -1249,17 +1225,15 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the scheme-specific part of this URI in raw form.
      * 
      * @return the encoded scheme-specific part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getRawSchemeSpecificPart() {
         return schemespecificpart;
     }
-    
+
     /**
      * Gets the user-info part of this URI in raw form.
      * 
      * @return the encoded user-info part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getRawUserInfo() {
         return userinfo;
@@ -1269,17 +1243,15 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the scheme part of this URI.
      * 
      * @return the scheme part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getScheme() {
         return scheme;
     }
-    
+
     /**
      * Gets the decoded scheme-specific part of this URI.
      * 
      * @return the decoded scheme-specific part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getSchemeSpecificPart() {
         return decode(schemespecificpart);
@@ -1289,7 +1261,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * Gets the decoded user-info part of this URI.
      * 
      * @return the decoded user-info part or {@code null} if undefined.
-     * @since Android 1.0
      */
     public String getUserInfo() {
         return decode(userinfo);
@@ -1297,9 +1268,8 @@ public final class URI implements Comparable<URI>, Serializable {
 
     /**
      * Gets the hashcode value of this URI instance.
-     * 
+     *
      * @return the appropriate hashcode value.
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -1314,7 +1284,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * defined in this URI.
      * 
      * @return {@code true} if this URI is absolute, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isAbsolute() {
         return absolute;
@@ -1327,7 +1296,6 @@ public final class URI implements Comparable<URI>, Serializable {
      * undefined.
      * 
      * @return {@code true} if the URI is opaque, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isOpaque() {
         return opaque;
@@ -1424,10 +1392,9 @@ public final class URI implements Comparable<URI>, Serializable {
 
     /**
      * Normalizes the path part of this URI.
-     * 
+     *
      * @return an URI object which represents this instance with a normalized
      *         path.
-     * @since Android 1.0
      */
     public URI normalize() {
         if (opaque) {
@@ -1450,12 +1417,11 @@ public final class URI implements Comparable<URI>, Serializable {
      * Tries to parse the authority component of this URI to divide it into the
      * host, port, and user-info. If this URI is already determined as a
      * ServerAuthority this instance will be returned without changes.
-     * 
+     *
      * @return this instance with the components of the parsed server authority.
      * @throws URISyntaxException
      *             if the authority part could not be parsed as a server-based
      *             authority.
-     * @since Android 1.0
      */
     public URI parseServerAuthority() throws URISyntaxException {
         if (!serverAuthority) {
@@ -1467,11 +1433,10 @@ public final class URI implements Comparable<URI>, Serializable {
     /**
      * Makes the given URI {@code relative} to a relative URI against the URI
      * represented by this instance.
-     * 
+     *
      * @param relative
      *            the URI which has to be relativized against this URI.
      * @return the relative URI.
-     * @since Android 1.0
      */
     public URI relativize(URI relative) {
         if (relative.opaque || opaque) {
@@ -1516,17 +1481,17 @@ public final class URI implements Comparable<URI>, Serializable {
         result.query = relative.query;
         // the result URI is the remainder of the relative URI's path
         result.path = relativePath.substring(thisPath.length());
+        result.setSchemeSpecificPart();
         return result;
     }
 
     /**
      * Resolves the given URI {@code relative} against the URI represented by
      * this instance.
-     * 
+     *
      * @param relative
      *            the URI which has to be resolved against this URI.
      * @return the resolved URI.
-     * @since Android 1.0
      */
     public URI resolve(URI relative) {
         if (relative.absolute || opaque) {
@@ -1602,12 +1567,11 @@ public final class URI implements Comparable<URI>, Serializable {
      * Creates a new URI instance by parsing the given string {@code relative}
      * and resolves the created URI against the URI represented by this
      * instance.
-     * 
+     *
      * @param relative
      *            the given string to create the new URI instance which has to
      *            be resolved later on.
      * @return the created and resolved URI.
-     * @since Android 1.0
      */
     public URI resolve(String relative) {
         return resolve(create(relative));
@@ -1652,9 +1616,8 @@ public final class URI implements Comparable<URI>, Serializable {
     /**
      * Returns the textual string representation of this URI instance using the
      * US-ASCII encoding.
-     * 
+     *
      * @return the US-ASCII string representation of this URI.
-     * @since Android 1.0
      */
     public String toASCIIString() {
         return encodeOthers(toString());
@@ -1662,9 +1625,8 @@ public final class URI implements Comparable<URI>, Serializable {
 
     /**
      * Returns the textual string representation of this URI instance.
-     * 
+     *
      * @return the textual string representation of this URI.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -1751,12 +1713,11 @@ public final class URI implements Comparable<URI>, Serializable {
 
     /**
      * Converts this URI instance to a URL.
-     * 
+     *
      * @return the created URL representing the same resource as this URI.
      * @throws MalformedURLException
      *             if an error occurs while creating the URL or no protocol
      *             handler could be found.
-     * @since Android 1.0
      */
     public URL toURL() throws MalformedURLException {
         if (!absolute) {

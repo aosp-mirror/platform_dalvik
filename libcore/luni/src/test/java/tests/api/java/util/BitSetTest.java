@@ -252,7 +252,7 @@ public class BitSetTest extends junit.framework.TestCase {
         initialSize = bs.size();
         bs.set(0, initialSize);
         bs.clear(7, 64);
-        assertEquals("Failed to grow BitSet", 128, bs.size());
+        assertEquals("Failed to grow BitSet", 64, bs.size());
         for (int i = 0; i < 7; i++)
             assertTrue("Shouldn't have cleared bit " + i, bs.get(i));
         for (int i = 7; i < 64; i++)
@@ -624,7 +624,7 @@ public class BitSetTest extends junit.framework.TestCase {
         // pos1 and pos2 is in the same bitset element, boundary testing
         bs = new BitSet(16);
         bs.set(7, 64);
-        assertEquals("Failed to grow BitSet", 128, bs.size());
+        assertEquals("Failed to grow BitSet", 64, bs.size());
         for (int i = 0; i < 7; i++)
             assertTrue("Shouldn't have set bit " + i, !bs.get(i));
         for (int i = 7; i < 64; i++)
@@ -858,7 +858,7 @@ public class BitSetTest extends junit.framework.TestCase {
         bs.set(7);
         bs.set(10);
         bs.flip(7, 64);
-        assertEquals("Failed to grow BitSet", 128, bs.size());
+        assertEquals("Failed to grow BitSet", 64, bs.size());
         for (int i = 0; i < 7; i++)
             assertTrue("Shouldn't have flipped bit " + i, !bs.get(i));
         assertTrue("Failed to flip bit 7", !bs.get(7));

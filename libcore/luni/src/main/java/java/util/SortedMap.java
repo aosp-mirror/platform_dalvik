@@ -21,8 +21,6 @@ package java.util;
 /**
  * A map that has its keys ordered. The sorting is according to either the
  * natural ordering of its keys or the ordering given by a specified comparator.
- * 
- * @since Android 1.0
  */
 public interface SortedMap<K,V> extends Map<K,V> {
     
@@ -30,7 +28,6 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * Returns the comparator used to compare keys in this sorted map.
      * 
      * @return the comparator or {@code null} if the natural order is used.
-     * @since Android 1.0
      */
     public Comparator<? super K> comparator();
 
@@ -38,9 +35,8 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * Returns the first key in this sorted map.
      * 
      * @return the first key in this sorted map.
-     * @exception NoSuchElementException
+     * @throws NoSuchElementException
      *                if this sorted map is empty.
-     * @since Android 1.0
      */
     public K firstKey();
 
@@ -51,8 +47,7 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * <p>
      * Note: The returned map will not allow an insertion of a key outside the
      * specified range.
-     * </p>
-     * 
+     *
      * @param endKey
      *            the high boundary of the range specified.
      * @return a sorted map where the keys are less than {@code endKey}.
@@ -65,7 +60,6 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * @throws IllegalArgumentException
      *             if this map is itself a sorted map over a range of another
      *             map and the specified key is outside of its range.
-     * @since Android 1.0
      */
     public SortedMap<K,V> headMap(K endKey);
 
@@ -73,9 +67,8 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * Returns the last key in this sorted map.
      * 
      * @return the last key in this sorted map.
-     * @exception NoSuchElementException
+     * @throws NoSuchElementException
      *                if this sorted map is empty.
-     * @since Android 1.0
      */
     public K lastKey();
 
@@ -87,8 +80,7 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * <p>
      * Note: The returned map will not allow an insertion of a key outside the
      * specified range.
-     * </p>
-     * 
+     *
      * @param startKey
      *            the low boundary of the range (inclusive).
      * @param endKey
@@ -104,7 +96,6 @@ public interface SortedMap<K,V> extends Map<K,V> {
      *             if the start key is greater than the end key, or if this map
      *             is itself a sorted map over a range of another sorted map and
      *             the specified range is outside of its range.
-     * @since Android 1.0
      */
     public SortedMap<K,V> subMap(K startKey, K endKey);
 
@@ -115,7 +106,6 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * <p>
      * Note: The returned map will not allow an insertion of a key outside the
      * specified range.
-     * </p>
      * 
      * @param startKey
      *            the low boundary of the range specified.
@@ -130,7 +120,6 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * @throws IllegalArgumentException
      *             if this map itself a sorted map over a range of another map
      *             and the specified key is outside of its range.
-     * @since Android 1.0
      */
     public SortedMap<K,V> tailMap(K startKey);
 }

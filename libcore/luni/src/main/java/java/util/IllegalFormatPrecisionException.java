@@ -21,7 +21,6 @@ package java.util;
  * a negative other than -1 or in other cases where precision is not supported.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 
 public class IllegalFormatPrecisionException extends IllegalFormatException {

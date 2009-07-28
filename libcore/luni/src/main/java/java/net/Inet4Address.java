@@ -28,8 +28,6 @@ import java.io.ObjectStreamException;
  * address ({@code b.bbb} ) allows to represent a class A network address as
  * <i>net.host</i>. If there is only one part ({@code bbbb} ) the address is
  * represented without any byte rearrangement.
- * 
- * @since Android 1.0
  */
 public final class Inet4Address extends InetAddress {
 
@@ -50,7 +48,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a multicast address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMulticastAddress() {
@@ -63,7 +60,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents the wildcard ANY
      *         address, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isAnyLocalAddress() {
@@ -81,7 +77,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a lookback address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isLoopbackAddress() {
@@ -95,11 +90,9 @@ public final class Inet4Address extends InetAddress {
      * Default Address Selection for Internet Protocol Version 6 (IPv6) states
      * IPv4 auto-configuration addresses, prefix 169.254/16, IPv4 loopback
      * addresses, prefix 127/8, are assigned link-local scope.
-     * </p>
-     * 
+     *
      * @return {@code true} if this instance represents a link-local address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isLinkLocalAddress() {
@@ -115,11 +108,9 @@ public final class Inet4Address extends InetAddress {
      * Default Address Selection for Internet Protocol Version 6 (IPv6) states
      * IPv4 private addresses, prefixes 10/8, 172.16/12, and 192.168/16, are
      * assigned site-local scope.
-     * </p>
      * 
      * @return {@code true} if this instance represents a site-local address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isSiteLocalAddress() {
@@ -135,7 +126,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if the address is in the global multicast group,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCGlobal() {
@@ -174,7 +164,6 @@ public final class Inet4Address extends InetAddress {
      * addresses.
      * 
      * @return {@code false} for all IPv4 addresses.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCNodeLocal() {
@@ -188,7 +177,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a link-local address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCLinkLocal() {
@@ -202,7 +190,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a site-local address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCSiteLocal() {
@@ -217,7 +204,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a organization-local
      *         address, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCOrgLocal() {
@@ -229,7 +215,6 @@ public final class Inet4Address extends InetAddress {
      * Returns a textual representation of this IP address.
      * 
      * @return the textual representation of this host address.
-     * @since Android 1.0
      */
     @Override
     public String getHostAddress() {
@@ -247,7 +232,6 @@ public final class Inet4Address extends InetAddress {
      * Gets the hashcode of the represented IP address.
      * 
      * @return the appropriate hashcode value.
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -262,7 +246,6 @@ public final class Inet4Address extends InetAddress {
      * @param obj
      *            the object to be tested for equality.
      * @return {@code true} if the addresses are equal, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {

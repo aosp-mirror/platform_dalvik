@@ -24,7 +24,6 @@ import java.io.Serializable;
  * allowed to be instantiated.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class IllegalFormatException extends IllegalArgumentException implements
         Serializable {

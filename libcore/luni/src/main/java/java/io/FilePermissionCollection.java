@@ -25,8 +25,6 @@ import java.util.Vector;
 /**
  * Collects {@link FilePermission} objects and allows to query whether a
  * particular permission is implied by it.
- * 
- * @since Android 1.0
  */
 final class FilePermissionCollection extends PermissionCollection implements
         Serializable {

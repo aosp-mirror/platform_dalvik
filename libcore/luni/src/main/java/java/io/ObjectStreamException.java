@@ -28,8 +28,6 @@ package java.io;
  * @see OptionalDataException
  * @see StreamCorruptedException
  * @see WriteAbortedException
- * 
- * @since Android 1.0
  */
 public abstract class ObjectStreamException extends IOException {
 
@@ -38,8 +36,6 @@ public abstract class ObjectStreamException extends IOException {
     /**
      * Constructs a new {@code ObjectStreamException} with its stack trace
      * filled in.
-     * 
-     * @since Android 1.0
      */
     protected ObjectStreamException() {
         super();
@@ -51,7 +47,6 @@ public abstract class ObjectStreamException extends IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     protected ObjectStreamException(String detailMessage) {
         super(detailMessage);

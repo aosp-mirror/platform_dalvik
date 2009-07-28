@@ -838,6 +838,8 @@ public class ClassTest extends junit.framework.TestCase {
         args = {}
     )
     public void test_getClassLoader() {
+        // this fails if ClassTest.class was loaded by the regular classloader,
+        // but passes if it was loaded by the boot class loader.
 
         assertEquals(ExtendTestClass.class.getClassLoader(),
                          PublicTestClass.class.getClassLoader());

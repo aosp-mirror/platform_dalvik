@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when the virtual machine is unable to locate a class which it has been
  * asked to load.
- * 
- * @since Android 1.0
  */
 public class NoClassDefFoundError extends LinkageError {
 
@@ -30,8 +28,6 @@ public class NoClassDefFoundError extends LinkageError {
     /**
      * Constructs a new {@code NoClassDefFoundError} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public NoClassDefFoundError() {
         super();
@@ -43,7 +39,6 @@ public class NoClassDefFoundError extends LinkageError {
      * 
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public NoClassDefFoundError(String detailMessage) {
         super(detailMessage);

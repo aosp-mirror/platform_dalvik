@@ -17,7 +17,6 @@
 
 package java.util;
 
-
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -36,26 +35,21 @@ import java.lang.reflect.Array;
  * The capacity of a vector may be specified when the vector is created. If the
  * capacity of the vector is exceeded, the capacity is increased (doubled by
  * default).
- * 
+ *
  * @see java.lang.StringBuffer
- * @since Android 1.0
  */
-public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
-        Cloneable, Serializable {
-    
+public class Vector<E> extends AbstractList<E> implements List<E>,
+        RandomAccess, Cloneable, Serializable {
+
     private static final long serialVersionUID = -2767605614048989439L;
 
     /**
      * The number of elements or the size of the vector.
-     * 
-     * @since Android 1.0
      */
     protected int elementCount;
 
     /**
      * The elements of the vector.
-     * 
-     * @since Android 1.0
      */
     protected Object[] elementData;
 
@@ -63,8 +57,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * How many elements should be added to the vector when it is detected that
      * it needs to grow to accommodate extra entries. If this value is zero or
      * negative the size will be doubled if an increase is needed.
-     * 
-     * @since Android 1.0
      */
     protected int capacityIncrement;
 
@@ -72,8 +64,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Constructs a new vector using the default capacity.
-     * 
-     * @since Android 1.0
      */
     public Vector() {
         this(DEFAULT_SIZE, 0);
@@ -81,12 +71,11 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Constructs a new vector using the specified capacity.
-     * 
+     *
      * @param capacity
      *            the initial capacity of the new vector.
      * @throws IllegalArgumentException
      *             if {@code capacity} is negative.
-     * @since Android 1.0
      */
     public Vector(int capacity) {
         this(capacity, 0);
@@ -95,22 +84,20 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Constructs a new vector using the specified capacity and capacity
      * increment.
-     * 
+     *
      * @param capacity
      *            the initial capacity of the new vector.
      * @param capacityIncrement
      *            the amount to increase the capacity when this vector is full.
      * @throws IllegalArgumentException
      *             if {@code capacity} is negative.
-     * @since Android 1.0
      */
     public Vector(int capacity, int capacityIncrement) {
-        elementCount = 0;
-        try {
-            elementData = newElementArray(capacity);
-        } catch (NegativeArraySizeException e) {
+        if (capacity < 0) {
             throw new IllegalArgumentException();
         }
+        elementData = newElementArray(capacity);
+        elementCount = 0;
         this.capacityIncrement = capacityIncrement;
     }
 
@@ -118,10 +105,9 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Constructs a new instance of {@code Vector} containing the elements in
      * {@code collection}. The order of the elements in the new {@code Vector}
      * is dependent on the iteration order of the seed collection.
-     * 
+     *
      * @param collection
      *            the collection of elements to add.
-     * @since Android 1.0
      */
     public Vector(Collection<? extends E> collection) {
         this(collection.size(), 0);
@@ -130,10 +116,10 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
             elementData[elementCount++] = it.next();
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     private E[] newElementArray(int size) {
-        return (E[])new Object[size];
+        return (E[]) new Object[size];
     }
 
     /**
@@ -141,16 +127,15 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * object is inserted before any element with the same or a higher index
      * increasing their index by 1. If the location is equal to the size of this
      * vector, the object is added at the end.
-     * 
+     *
      * @param location
      *            the index at which to insert the element.
      * @param object
      *            the object to insert in this vector.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location < 0 || location > size()}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location < 0 || location > size()}.
      * @see #addElement
      * @see #size
-     * @since Android 1.0
      */
     @Override
     public void add(int location, E object) {
@@ -159,15 +144,18 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Adds the specified object at the end of this vector.
-     * 
+     *
      * @param object
      *            the object to add to the vector.
      * @return {@code true}
-     * @since Android 1.0
      */
     @Override
-    public boolean add(E object) {
-        addElement(object);
+    public synchronized boolean add(E object) {
+        if (elementCount == elementData.length) {
+            growByOne();
+        }
+        elementData[elementCount++] = object;
+        modCount++;
         return true;
     }
 
@@ -177,18 +165,18 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * returned from the Collection iterator. The elements with an index equal
      * or higher than {@code location} have their index increased by the size of
      * the added collection.
-     * 
+     *
      * @param location
      *            the location to insert the objects.
      * @param collection
      *            the collection of objects.
      * @return {@code true} if this vector is modified, {@code false} otherwise.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location < 0} or {@code location > size()}.
-     * @since Android 1.0
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location < 0} or {@code location > size()}.
      */
     @Override
-    public synchronized boolean addAll(int location, Collection<? extends E> collection) {
+    public synchronized boolean addAll(int location,
+            Collection<? extends E> collection) {
         if (0 <= location && location <= elementCount) {
             int size = collection.size();
             if (size == 0) {
@@ -216,11 +204,10 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Adds the objects in the specified collection to the end of this vector.
-     * 
+     *
      * @param collection
      *            the collection of objects.
      * @return {@code true} if this vector is modified, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public synchronized boolean addAll(Collection<? extends E> collection) {
@@ -229,10 +216,9 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Adds the specified object at the end of this vector.
-     * 
+     *
      * @param object
      *            the object to add to the vector.
-     * @since Android 1.0
      */
     public synchronized void addElement(E object) {
         if (elementCount == elementData.length) {
@@ -244,11 +230,10 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Returns the number of elements this vector can hold without growing.
-     * 
+     *
      * @return the capacity of this vector.
      * @see #ensureCapacity
      * @see #size
-     * @since Android 1.0
      */
     public synchronized int capacity() {
         return elementData.length;
@@ -256,10 +241,9 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Removes all elements from this vector, leaving it empty.
-     * 
+     *
      * @see #isEmpty
      * @see #size
-     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -269,10 +253,9 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Returns a new vector with the same elements, size, capacity and capacity
      * increment as this vector.
-     * 
+     *
      * @return a shallow copy of this vector.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -288,7 +271,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Searches this vector for the specified object.
-     * 
+     *
      * @param object
      *            the object to look for in this vector.
      * @return {@code true} if object is an element of this vector,
@@ -296,7 +279,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * @see #indexOf(Object)
      * @see #indexOf(Object, int)
      * @see java.lang.Object#equals
-     * @since Android 1.0
      */
     @Override
     public boolean contains(Object object) {
@@ -305,12 +287,11 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Searches this vector for all objects in the specified collection.
-     * 
+     *
      * @param collection
      *            the collection of objects.
      * @return {@code true} if all objects in the specified collection are
      *         elements of this vector, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public synchronized boolean containsAll(Collection<?> collection) {
@@ -320,14 +301,13 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Attempts to copy elements contained by this {@code Vector} into the
      * corresponding elements of the supplied {@code Object} array.
-     * 
+     *
      * @param elements
      *            the {@code Object} array into which the elements of this
      *            vector are copied.
      * @throws IndexOutOfBoundsException
      *             if {@code elements} is not big enough.
      * @see #clone
-     * @since Android 1.0
      */
     public synchronized void copyInto(Object[] elements) {
         System.arraycopy(elementData, 0, elements, 0, elementCount);
@@ -335,18 +315,18 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Returns the element at the specified location in this vector.
-     * 
+     *
      * @param location
      *            the index of the element to return in this vector.
      * @return the element at the specified location.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location < 0 || location >= size()}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location < 0 || location >= size()}.
      * @see #size
-     * @since Android 1.0
      */
+    @SuppressWarnings("unchecked")
     public synchronized E elementAt(int location) {
         if (location < elementCount) {
-            return (E)elementData[location];
+            return (E) elementData[location];
         }
         throw new ArrayIndexOutOfBoundsException(location);
     }
@@ -354,26 +334,24 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Returns an enumeration on the elements of this vector. The results of the
      * enumeration may be affected if the contents of this vector is modified.
-     * 
+     *
      * @return an enumeration of the elements of this vector.
      * @see #elementAt
      * @see Enumeration
-     * @since Android 1.0
      */
     public Enumeration<E> elements() {
         return new Enumeration<E>() {
             int pos = 0;
 
             public boolean hasMoreElements() {
-                synchronized (Vector.this) {
-                    return pos < elementCount;
-                }
+                return pos < elementCount;
             }
 
+            @SuppressWarnings("unchecked")
             public E nextElement() {
                 synchronized (Vector.this) {
                     if (pos < elementCount) {
-                        return (E)elementData[pos++];
+                        return (E) elementData[pos++];
                     }
                 }
                 throw new NoSuchElementException();
@@ -384,12 +362,11 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Ensures that this vector can hold the specified number of elements
      * without growing.
-     * 
+     *
      * @param minimumCapacity
      *            the minimum number of elements that this vector will hold
      *            before growing.
      * @see #capacity
-     * @since Android 1.0
      */
     public synchronized void ensureCapacity(int minimumCapacity) {
         if (elementData.length < minimumCapacity) {
@@ -404,13 +381,12 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Compares the specified object to this vector and returns if they are
      * equal. The object must be a List which contains the same objects in the
      * same order.
-     * 
+     *
      * @param object
      *            the object to compare with this object
      * @return {@code true} if the specified object is equal to this vector,
      *         {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public synchronized boolean equals(Object object) {
@@ -418,8 +394,8 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
             return true;
         }
         if (object instanceof List) {
-            List<?> list = (List) object;
-            if (list.size() != size()) {
+            List<?> list = (List<?>) object;
+            if (list.size() != elementCount) {
                 return false;
             }
 
@@ -438,35 +414,34 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Returns the first element in this vector.
-     * 
+     *
      * @return the element at the first position.
-     * @exception NoSuchElementException
-     *                when this vector is empty.
+     * @throws NoSuchElementException
+     *                if this vector is empty.
      * @see #elementAt
      * @see #lastElement
      * @see #size
-     * @since Android 1.0
      */
+    @SuppressWarnings("unchecked")
     public synchronized E firstElement() {
         if (elementCount > 0) {
-            return (E)elementData[0];
+            return (E) elementData[0];
         }
         throw new NoSuchElementException();
     }
 
     /**
      * Returns the element at the specified location in this vector.
-     * 
+     *
      * @param location
      *            the index of the element to return in this vector.
      * @return the element at the specified location.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location < 0 || location >= size()}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location < 0 || location >= size()}.
      * @see #size
-     * @since Android 1.0
      */
     @Override
-    public synchronized E get(int location) {
+    public E get(int location) {
         return elementAt(location);
     }
 
@@ -474,7 +449,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
         E[] newData = newElementArray(newCapacity);
         // Assumes elementCount is <= newCapacity
         assert elementCount <= newCapacity;
-        System.arraycopy(elementData, 0, newData, 0, elementCount); 
+        System.arraycopy(elementData, 0, newData, 0, elementCount);
         elementData = newData;
     }
 
@@ -519,10 +494,9 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Returns an integer hash code for the receiver. Objects which are equal
      * return the same value for this method.
-     * 
+     *
      * @return the receiver's hash.
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public synchronized int hashCode() {
@@ -538,7 +512,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Searches in this vector for the index of the specified object. The search
      * for the object starts at the beginning and moves towards the end of this
      * vector.
-     * 
+     *
      * @param object
      *            the object to find in this vector.
      * @return the index in this vector of the specified element, -1 if the
@@ -546,7 +520,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * @see #contains
      * @see #lastIndexOf(Object)
      * @see #lastIndexOf(Object, int)
-     * @since Android 1.0
      */
     @Override
     public int indexOf(Object object) {
@@ -557,19 +530,18 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Searches in this vector for the index of the specified object. The search
      * for the object starts at the specified location and moves towards the end
      * of this vector.
-     * 
+     *
      * @param object
      *            the object to find in this vector.
      * @param location
      *            the index at which to start searching.
      * @return the index in this vector of the specified element, -1 if the
      *         element isn't found.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location < 0}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location < 0}.
      * @see #contains
      * @see #lastIndexOf(Object)
      * @see #lastIndexOf(Object, int)
-     * @since Android 1.0
      */
     public synchronized int indexOf(Object object, int location) {
         if (object != null) {
@@ -594,16 +566,15 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * location. All elements with an index equal or greater than
      * {@code location} have their index increased by 1. If the location is
      * equal to the size of this vector, the object is added at the end.
-     * 
+     *
      * @param object
      *            the object to insert in this vector.
      * @param location
      *            the index at which to insert the element.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location < 0 || location > size()}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location < 0 || location > size()}.
      * @see #addElement
      * @see #size
-     * @since Android 1.0
      */
     public synchronized void insertElementAt(E object, int location) {
         if (0 <= location && location <= elementCount) {
@@ -625,11 +596,10 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Returns if this vector has no elements, a size of zero.
-     * 
+     *
      * @return {@code true} if this vector has no elements, {@code false}
      *         otherwise.
      * @see #size
-     * @since Android 1.0
      */
     @Override
     public synchronized boolean isEmpty() {
@@ -638,18 +608,18 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Returns the last element in this vector.
-     * 
+     *
      * @return the element at the last position.
-     * @exception NoSuchElementException
-     *                when this vector is empty.
+     * @throws NoSuchElementException
+     *                if this vector is empty.
      * @see #elementAt
      * @see #firstElement
      * @see #size
-     * @since Android 1.0
      */
+    @SuppressWarnings("unchecked")
     public synchronized E lastElement() {
         try {
-            return (E)elementData[elementCount - 1];
+            return (E) elementData[elementCount - 1];
         } catch (IndexOutOfBoundsException e) {
             throw new NoSuchElementException();
         }
@@ -659,7 +629,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Searches in this vector for the index of the specified object. The search
      * for the object starts at the end and moves towards the start of this
      * vector.
-     * 
+     *
      * @param object
      *            the object to find in this vector.
      * @return the index in this vector of the specified element, -1 if the
@@ -667,7 +637,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * @see #contains
      * @see #indexOf(Object)
      * @see #indexOf(Object, int)
-     * @since Android 1.0
      */
     @Override
     public synchronized int lastIndexOf(Object object) {
@@ -678,19 +647,18 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Searches in this vector for the index of the specified object. The search
      * for the object starts at the specified location and moves towards the
      * start of this vector.
-     * 
+     *
      * @param object
      *            the object to find in this vector.
      * @param location
      *            the index at which to start searching.
      * @return the index in this vector of the specified element, -1 if the
      *         element isn't found.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location >= size()}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location >= size()}.
      * @see #contains
      * @see #indexOf(Object)
      * @see #indexOf(Object, int)
-     * @since Android 1.0
      */
     public synchronized int lastIndexOf(Object object, int location) {
         if (location < elementCount) {
@@ -716,18 +684,18 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Removes the object at the specified location from this vector. All
      * elements with an index bigger than {@code location} have their index
      * decreased by 1.
-     * 
+     *
      * @param location
      *            the index of the object to remove.
      * @return the removed object.
-     * @exception IndexOutOfBoundsException
-     *                when {@code location < 0 || location >= size()}.
-     * @since Android 1.0
+     * @throws IndexOutOfBoundsException
+     *                if {@code location < 0 || location >= size()}.
      */
+    @SuppressWarnings("unchecked")
     @Override
     public synchronized E remove(int location) {
         if (location < elementCount) {
-            E result = (E)elementData[location];
+            E result = (E) elementData[location];
             elementCount--;
             int size = elementCount - location;
             if (size > 0) {
@@ -746,7 +714,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * towards the end, of the specified object from this vector. All elements
      * with an index bigger than the element that gets removed have their index
      * decreased by 1.
-     * 
+     *
      * @param object
      *            the object to remove from this vector.
      * @return {@code true} if the specified object was found, {@code false}
@@ -754,7 +722,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * @see #removeAllElements
      * @see #removeElementAt
      * @see #size
-     * @since Android 1.0
      */
     @Override
     public boolean remove(Object object) {
@@ -764,13 +731,12 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Removes all occurrences in this vector of each object in the specified
      * Collection.
-     * 
+     *
      * @param collection
      *            the collection of objects to remove.
      * @return {@code true} if this vector is modified, {@code false} otherwise.
      * @see #remove(Object)
      * @see #contains(Object)
-     * @since Android 1.0
      */
     @Override
     public synchronized boolean removeAll(Collection<?> collection) {
@@ -780,13 +746,14 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Removes all elements from this vector, leaving the size zero and the
      * capacity unchanged.
-     * 
+     *
      * @see #isEmpty
      * @see #size
-     * @since Android 1.0
      */
     public synchronized void removeAllElements() {
-        Arrays.fill(elementData, 0, elementCount, null);
+        for (int i = 0; i < elementCount; i++) {
+            elementData[i] = null;
+        }
         modCount++;
         elementCount = 0;
     }
@@ -796,7 +763,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * towards the end, of the specified object from this vector. All elements
      * with an index bigger than the element that gets removed have their index
      * decreased by 1.
-     * 
+     *
      * @param object
      *            the object to remove from this vector.
      * @return {@code true} if the specified object was found, {@code false}
@@ -804,7 +771,6 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * @see #removeAllElements
      * @see #removeElementAt
      * @see #size
-     * @since Android 1.0
      */
     public synchronized boolean removeElement(Object object) {
         int index;
@@ -819,15 +785,14 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Removes the element found at index position {@code location} from
      * this {@code Vector}. All elements with an index bigger than
      * {@code location} have their index decreased by 1.
-     * 
+     *
      * @param location
      *            the index of the element to remove.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location < 0 || location >= size()}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location < 0 || location >= size()}.
      * @see #removeElement
      * @see #removeAllElements
      * @see #size
-     * @since Android 1.0
      */
     public synchronized void removeElementAt(int location) {
         if (0 <= location && location < elementCount) {
@@ -848,19 +813,18 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Removes the objects in the specified range from the start to the, but not
      * including, end index. All elements with an index bigger than or equal to
      * {@code end} have their index decreased by {@code end - start}.
-     * 
+     *
      * @param start
      *            the index at which to start removing.
      * @param end
      *            the index one past the end of the range to remove.
-     * @exception IndexOutOfBoundsException
-     *                when {@code start < 0, start > end} or
+     * @throws IndexOutOfBoundsException
+     *                if {@code start < 0, start > end} or
      *                {@code end > size()}.
-     * @since Android 1.0
      */
     @Override
     protected void removeRange(int start, int end) {
-        if (start >= 0 && start <= end && end <= size()) {
+        if (start >= 0 && start <= end && end <= elementCount) {
             if (start == end) {
                 return;
             }
@@ -883,12 +847,11 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Removes all objects from this vector that are not contained in the
      * specified collection.
-     * 
+     *
      * @param collection
      *            the collection of objects to retain.
      * @return {@code true} if this vector is modified, {@code false} otherwise.
      * @see #remove(Object)
-     * @since Android 1.0
      */
     @Override
     public synchronized boolean retainAll(Collection<?> collection) {
@@ -898,21 +861,21 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Replaces the element at the specified location in this vector with the
      * specified object.
-     * 
+     *
      * @param location
      *            the index at which to put the specified object.
      * @param object
      *            the object to add to this vector.
      * @return the previous element at the location.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location < 0 || location >= size()}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location < 0 || location >= size()}.
      * @see #size
-     * @since Android 1.0
      */
+    @SuppressWarnings("unchecked")
     @Override
     public synchronized E set(int location, E object) {
         if (location < elementCount) {
-            E result = (E)elementData[location];
+            E result = (E) elementData[location];
             elementData[location] = object;
             return result;
         }
@@ -922,15 +885,14 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
     /**
      * Replaces the element at the specified location in this vector with the
      * specified object.
-     * 
+     *
      * @param object
      *            the object to add to this vector.
      * @param location
      *            the index at which to put the specified object.
-     * @exception ArrayIndexOutOfBoundsException
-     *                when {@code location < 0 || location >= size()}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code location < 0 || location >= size()}.
      * @see #size
-     * @since Android 1.0
      */
     public synchronized void setElementAt(E object, int location) {
         if (location < elementCount) {
@@ -945,11 +907,10 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * than length elements in this vector, the elements at end are lost. If
      * there are less than length elements in the vector, the additional
      * elements contain null.
-     * 
+     *
      * @param length
      *            the new size of this vector.
      * @see #size
-     * @since Android 1.0
      */
     public synchronized void setSize(int length) {
         if (length == elementCount) {
@@ -965,11 +926,10 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Returns the number of elements in this vector.
-     * 
+     *
      * @return the number of elements in this vector.
      * @see #elementCount
      * @see #lastElement
-     * @since Android 1.0
      */
     @Override
     public synchronized int size() {
@@ -980,29 +940,27 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * Returns a List of the specified portion of this vector from the start
      * index to one less than the end index. The returned List is backed by this
      * vector so changes to one are reflected by the other.
-     * 
+     *
      * @param start
      *            the index at which to start the sublist.
      * @param end
      *            the index one past the end of the sublist.
      * @return a List of a portion of this vector.
-     * @exception IndexOutOfBoundsException
-     *                when {@code start < 0} or {@code end > size()}.
-     * @exception IllegalArgumentException
-     *                when {@code start > end}.
-     * @since Android 1.0
+     * @throws IndexOutOfBoundsException
+     *                if {@code start < 0} or {@code end > size()}.
+     * @throws IllegalArgumentException
+     *                if {@code start > end}.
      */
     @Override
     public synchronized List<E> subList(int start, int end) {
-        return new Collections.SynchronizedRandomAccessList<E>(
-                super.subList(start, end), this);
+        return new Collections.SynchronizedRandomAccessList<E>(super.subList(
+                start, end), this);
     }
 
     /**
      * Returns a new array containing all elements contained in this vector.
-     * 
+     *
      * @return an array of the elements from this vector.
-     * @since Android 1.0
      */
     @Override
     public synchronized Object[] toArray() {
@@ -1017,14 +975,13 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
      * is used, otherwise an array of the same type is created. If the specified
      * array is used and is larger than this vector, the array element following
      * the collection elements is set to null.
-     * 
+     *
      * @param contents
      *            the array to fill.
      * @return an array of the elements from this vector.
-     * @exception ArrayStoreException
-     *                when the type of an element in this vector cannot be
+     * @throws ArrayStoreException
+     *                if the type of an element in this vector cannot be
      *                stored in the type of the specified array.
-     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -1042,29 +999,28 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Returns the string representation of this vector.
-     * 
+     *
      * @return the string representation of this vector.
      * @see #elements
-     * @since Android 1.0
      */
     @Override
     public synchronized String toString() {
         if (elementCount == 0) {
-            return "[]";
+            return "[]"; //$NON-NLS-1$
         }
         int length = elementCount - 1;
-        StringBuffer buffer = new StringBuffer(size() * 16);
+        StringBuffer buffer = new StringBuffer(elementCount * 16);
         buffer.append('[');
         for (int i = 0; i < length; i++) {
             if (elementData[i] == this) {
-                buffer.append("(this Collection)");
+                buffer.append("(this Collection)"); //$NON-NLS-1$
             } else {
                 buffer.append(elementData[i]);
             }
-            buffer.append(", ");
+            buffer.append(", "); //$NON-NLS-1$
         }
         if (elementData[length] == this) {
-            buffer.append("(this Collection)");
+            buffer.append("(this Collection)"); //$NON-NLS-1$
         } else {
             buffer.append(elementData[length]);
         }
@@ -1074,11 +1030,10 @@ public class Vector<E> extends AbstractList<E> implements List<E>, RandomAccess,
 
     /**
      * Sets the capacity of this vector to be the same as the size.
-     * 
+     *
      * @see #capacity
      * @see #ensureCapacity
      * @see #size
-     * @since Android 1.0
      */
     public synchronized void trimToSize() {
         if (elementData.length != elementCount) {

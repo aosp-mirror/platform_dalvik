@@ -26,10 +26,8 @@ import org.apache.harmony.luni.util.Msg;
  * in a sequential manner, appending them in the process. The result can later
  * be queried using the {@link #StringWriter(int)} or {@link #toString()}
  * methods.
- * 
+ *
  * @see StringReader
- * 
- * @since Android 1.0
  */
 public class StringWriter extends Writer {
 
@@ -40,8 +38,6 @@ public class StringWriter extends Writer {
      * allocated with the default size of 16 characters. The {@code
      * StringBuffer} is also the {@code lock} used to synchronize access to this
      * writer.
-     * 
-     * @since Android 1.0
      */
     public StringWriter() {
         super();
@@ -54,10 +50,9 @@ public class StringWriter extends Writer {
      * allocated with a size of {@code initialSize} characters. The {@code
      * StringBuffer} is also the {@code lock} used to synchronize access to this
      * writer.
-     * 
+     *
      * @param initialSize
      *            the intial size of the target string buffer.
-     * @since Android 1.0
      */
     public StringWriter(int initialSize) {
         if (initialSize < 0) {
@@ -71,10 +66,9 @@ public class StringWriter extends Writer {
      * Calling this method has no effect. In contrast to most {@code Writer} subclasses,
      * the other methods in {@code StringWriter} do not throw an {@code IOException} if
      * {@code close()} has been called.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this writer.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -83,8 +77,6 @@ public class StringWriter extends Writer {
 
     /**
      * Calling this method has no effect.
-     * 
-     * @since Android 1.0
      */
     @Override
     public void flush() {
@@ -94,33 +86,27 @@ public class StringWriter extends Writer {
     /**
      * Gets a reference to this writer's internal {@link StringBuffer}. Any
      * changes made to the returned buffer are reflected in this writer.
-     * 
+     *
      * @return a reference to this writer's internal {@code StringBuffer}.
-     * @since Android 1.0
      */
     public StringBuffer getBuffer() {
-        synchronized (lock) {
-            return buf;
-        }
+        return buf;
     }
 
     /**
      * Gets a copy of the contents of this writer as a string.
-     * 
+     *
      * @return this writer's contents as a string.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
-        synchronized (lock) {
-            return buf.toString();
-        }
+        return buf.toString();
     }
 
     /**
      * Writes {@code count} characters starting at {@code offset} in {@code buf}
      * to this writer's {@code StringBuffer}.
-     * 
+     *
      * @param cbuf
      *            the non-null character array to write.
      * @param offset
@@ -130,7 +116,6 @@ public class StringWriter extends Writer {
      * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code count < 0}, or if {@code
      *             offset + count} is greater than the size of {@code buf}.
-     * @since Android 1.0
      */
     @Override
     public void write(char[] cbuf, int offset, int count) {
@@ -147,45 +132,40 @@ public class StringWriter extends Writer {
             throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
         }
         // END android-changed
-        synchronized (lock) {
-            this.buf.append(cbuf, offset, count);
+        if (count == 0) {
+            return;
         }
+        buf.append(cbuf, offset, count);
     }
 
     /**
      * Writes one character to this writer's {@code StringBuffer}. Only the two
      * least significant bytes of the integer {@code oneChar} are written.
-     * 
+     *
      * @param oneChar
      *            the character to write to this writer's {@code StringBuffer}.
-     * @since Android 1.0
      */
     @Override
     public void write(int oneChar) {
-        synchronized (lock) {
-            buf.append((char) oneChar);
-        }
+        buf.append((char) oneChar);
     }
 
     /**
      * Writes the characters from the specified string to this writer's {@code
      * StringBuffer}.
-     * 
+     *
      * @param str
      *            the non-null string containing the characters to write.
-     * @since Android 1.0
      */
     @Override
     public void write(String str) {
-        synchronized (lock) {
-            buf.append(str);
-        }
+        buf.append(str);
     }
 
     /**
      * Writes {@code count} characters from {@code str} starting at {@code
      * offset} to this writer's {@code StringBuffer}.
-     * 
+     *
      * @param str
      *            the non-null string containing the characters to write.
      * @param offset
@@ -195,24 +175,20 @@ public class StringWriter extends Writer {
      * @throws StringIndexOutOfBoundsException
      *             if {@code offset < 0} or {@code count < 0}, or if {@code
      *             offset + count} is greater than the length of {@code str}.
-     * @since Android 1.0
      */
     @Override
     public void write(String str, int offset, int count) {
         String sub = str.substring(offset, offset + count);
-        synchronized (lock) {
-            buf.append(sub);
-        }
+        buf.append(sub);
     }
 
     /**
      * Appends the character {@code c} to this writer's {@code StringBuffer}.
      * This method works the same way as {@link #write(int)}.
-     * 
+     *
      * @param c
      *            the character to append to the target stream.
      * @return this writer.
-     * @since Android 1.0
      */
     @Override
     public StringWriter append(char c) {
@@ -225,18 +201,17 @@ public class StringWriter extends Writer {
      * StringBuffer}. This method works the same way as {@code
      * StringWriter.write(csq.toString())}. If {@code csq} is {@code null}, then
      * the string "null" is written to the target stream.
-     * 
+     *
      * @param csq
      *            the character sequence appended to the target.
      * @return this writer.
-     * @since Android 1.0
      */
     @Override
     public StringWriter append(CharSequence csq) {
         if (null == csq) {
-            append(TOKEN_NULL, 0, TOKEN_NULL.length());
+            write(TOKEN_NULL);
         } else {
-            append(csq, 0, csq.length());
+            write(csq.toString());
         }
         return this;
     }
@@ -247,7 +222,7 @@ public class StringWriter extends Writer {
      * StringWriter.writer(csq.subsequence(start, end).toString())}. If {@code
      * csq} is {@code null}, then the specified subsequence of the string "null"
      * will be written to the target.
-     * 
+     *
      * @param csq
      *            the character sequence appended to the target.
      * @param start
@@ -261,7 +236,6 @@ public class StringWriter extends Writer {
      *             if {@code start > end}, {@code start < 0}, {@code end < 0} or
      *             either {@code start} or {@code end} are greater or equal than
      *             the length of {@code csq}.
-     * @since Android 1.0
      */
     @Override
     public StringWriter append(CharSequence csq, int start, int end) {

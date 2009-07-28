@@ -21,8 +21,8 @@ import java.io.Serializable;
 
 /**
  * The wrapper for the primitive type {@code boolean}.
- * 
- * @since Android 1.0
+ *
+ * @since 1.0
  */
 public final class Boolean implements Serializable, Comparable<Boolean> {
 
@@ -36,8 +36,6 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
     /**
      * The {@link Class} object that represents the primitive type {@code
      * boolean}.
-     * 
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final Class<Boolean> TYPE = (Class<Boolean>) new boolean[0]
@@ -49,16 +47,12 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
     /**
      * The {@code Boolean} object that represents the primitive value
      * {@code true}.
-     * 
-     * @since Android 1.0
      */
     public static final Boolean TRUE = new Boolean(true);
 
     /**
      * The {@code Boolean} object that represents the primitive value
      * {@code false}.
-     * 
-     * @since Android 1.0
      */
     public static final Boolean FALSE = new Boolean(false);
 
@@ -68,10 +62,9 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
      * "true" using a non-case sensitive comparison, the result will be a
      * Boolean representing the primitive value {@code true}, otherwise it will
      * be a Boolean representing the primitive value {@code false}.
-     * 
+     *
      * @param string
      *            the string representing a boolean value.
-     * @since Android 1.0
      */
     public Boolean(String string) {
         this(parseBoolean(string));
@@ -80,10 +73,9 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
     /**
      * Constructs a new {@code Boolean} with the specified primitive boolean
      * value.
-     * 
+     *
      * @param value
      *            the primitive boolean value, {@code true} or {@code false}.
-     * @since Android 1.0
      */
     public Boolean(boolean value) {
         this.value = value;
@@ -92,9 +84,8 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
     /**
      * Gets the primitive value of this boolean, either {@code true} or
      * {@code false}.
-     * 
+     *
      * @return this object's primitive value, {@code true} or {@code false}.
-     * @since Android 1.0
      */
     public boolean booleanValue() {
         return value;
@@ -104,12 +95,11 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
      * Compares this instance with the specified object and indicates if they
      * are equal. In order to be equal, {@code o} must be an instance of
      * {@code Boolean} and have the same boolean value as this object.
-     * 
+     *
      * @param o
      *            the object to compare this boolean with.
      * @return {@code true} if the specified object is equal to this
      *         {@code Boolean}; {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -120,7 +110,7 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
     /**
      * Compares this object to the specified boolean object to determine their
      * relative order.
-     * 
+     *
      * @param that
      *            the boolean object to compare this object to.
      * @return 0 if the value of this boolean and the value of {@code that} are
@@ -129,7 +119,7 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
      *         negative value if the value if this boolean is {@code false} and
      *         the value of {@code that} is {@code true}.
      * @see java.lang.Comparable
-     * @since Android 1.0
+     * @since 1.5
      */
     public int compareTo(Boolean that) {
         if (that == null) {
@@ -145,10 +135,9 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
 
     /**
      * Returns an integer hash code for this boolean.
-     * 
+     *
      * @return this boolean's hash code, which is {@code 1231} for {@code true}
      *         values and {@code 1237} for {@code false} values.
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -158,10 +147,9 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
     /**
      * Returns a string containing a concise, human-readable description of this
      * boolean.
-     * 
+     *
      * @return "true" if the value of this boolean is {@code true}, "false"
      *         otherwise.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -171,14 +159,13 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
     /**
      * Returns the {@code boolean} value of the system property identified by
      * {@code string}.
-     * 
+     *
      * @param string
      *            the name of the requested system property.
      * @return {@code true} if the system property named by {@code string}
      *         exists and it is equal to "true" using case insensitive
      *         comparison, {@code false} otherwise.
      * @see System#getProperty(String)
-     * @since Android 1.0
      */
     public static boolean getBoolean(String string) {
         if (string == null || string.length() == 0) {
@@ -189,25 +176,24 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
 
     /**
      * Parses the specified string as a {@code boolean}.
-     * 
+     *
      * @param s
      *            the string representation of a boolean value.
      * @return {@code true} if {@code s} is not {@code null} and is equal to
      *         {@code "true"} using case insensitive comparison, {@code false}
      *         otherwise.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static boolean parseBoolean(String s) {
         return "true".equalsIgnoreCase(s); //$NON-NLS-1$
     }
 
     /**
-     * Converts the specified boolean to its string representation. 
-     * 
+     * Converts the specified boolean to its string representation.
+     *
      * @param value
      *            the boolean to convert.
      * @return "true" if {@code value} is {@code true}, "false" otherwise.
-     * @since Android 1.0
      */
     public static String toString(boolean value) {
         return String.valueOf(value);
@@ -215,13 +201,12 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
 
     /**
      * Parses the specified string as a boolean value.
-     * 
+     *
      * @param string
      *            the string representation of a boolean value.
      * @return {@code Boolean.TRUE} if {@code string} is equal to "true" using
      *         case insensitive comparison, {@code Boolean.FALSE} otherwise.
      * @see #parseBoolean(String)
-     * @since Android 1.0
      */
     public static Boolean valueOf(String string) {
         return parseBoolean(string) ? Boolean.TRUE : Boolean.FALSE;
@@ -233,13 +218,11 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
      * If it is not necessary to get a new {@code Boolean} instance, it is
      * recommended to use this method instead of the constructor, since it
      * returns its static instances, which results in better performance.
-     * </p>
-     * 
+     *
      * @param b
      *            the boolean to convert to a {@code Boolean}.
      * @return {@code Boolean.TRUE} if {@code b} is equal to {@code true},
      *         {@code Boolean.FALSE} otherwise.
-     * @since Android 1.0
      */
     public static Boolean valueOf(boolean b) {
         return b ? Boolean.TRUE : Boolean.FALSE;

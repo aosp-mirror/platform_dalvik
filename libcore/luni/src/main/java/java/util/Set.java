@@ -20,8 +20,8 @@ package java.util;
 
 /**
  * A {@code Set} is a data structure which does not allow duplicate elements.
- * 
- * @since Android 1.0
+ *
+ * @since 1.2
  */
 public interface Set<E> extends Collection<E> {
     
@@ -38,7 +38,6 @@ public interface Set<E> extends Collection<E> {
      *             when the class of the object is inappropriate for this set.
      * @throws IllegalArgumentException
      *             when the object cannot be added to this set.
-     * @since Android 1.0
      */
     public boolean add(E object);
 
@@ -55,7 +54,6 @@ public interface Set<E> extends Collection<E> {
      *             when the class of an object is inappropriate for this set.
      * @throws IllegalArgumentException
      *             when an object cannot be added to this set.
-     * @since Android 1.0
      */
     public boolean addAll(Collection<? extends E> collection);
 
@@ -66,7 +64,6 @@ public interface Set<E> extends Collection<E> {
      *             when removing from this set is not supported.
      * @see #isEmpty
      * @see #size
-     * @since Android 1.0
      */
     public void clear();
 
@@ -77,7 +74,6 @@ public interface Set<E> extends Collection<E> {
      *            the object to search for.
      * @return {@code true} if object is an element of this set, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean contains(Object object);
 
@@ -88,7 +84,6 @@ public interface Set<E> extends Collection<E> {
      *            the collection of objects.
      * @return {@code true} if all objects in the specified collection are
      *         elements of this set, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean containsAll(Collection<?> collection);
 
@@ -103,7 +98,6 @@ public interface Set<E> extends Collection<E> {
      * @return boolean {@code true} if the object is the same as this object,
      *         and {@code false} if it is different from this object.
      * @see #hashCode
-     * @since Android 1.0
      */
     public boolean equals(Object object);
 
@@ -114,7 +108,6 @@ public interface Set<E> extends Collection<E> {
      * @return the hash code of this set.
      * 
      * @see #equals
-     * @since Android 1.0
      */
     public int hashCode();
 
@@ -124,7 +117,6 @@ public interface Set<E> extends Collection<E> {
      * @return {@code true} if this set has no elements, {@code false}
      *         otherwise.
      * @see #size
-     * @since Android 1.0
      */
     public boolean isEmpty();
 
@@ -134,7 +126,6 @@ public interface Set<E> extends Collection<E> {
      * 
      * @return an iterator on the elements of this set.
      * @see Iterator
-     * @since Android 1.0
      */
     public Iterator<E> iterator();
 
@@ -146,7 +137,6 @@ public interface Set<E> extends Collection<E> {
      * @return {@code true} if this set was modified, {@code false} otherwise.
      * @throws UnsupportedOperationException
      *             when removing from this set is not supported.
-     * @since Android 1.0
      */
     public boolean remove(Object object);
 
@@ -158,7 +148,6 @@ public interface Set<E> extends Collection<E> {
      * @return {@code true} if this set was modified, {@code false} otherwise.
      * @throws UnsupportedOperationException
      *             when removing from this set is not supported.
-     * @since Android 1.0
      */
     public boolean removeAll(Collection<?> collection);
 
@@ -171,7 +160,6 @@ public interface Set<E> extends Collection<E> {
      * @return {@code true} if this set was modified, {@code false} otherwise.
      * @throws UnsupportedOperationException
      *             when removing from this set is not supported.
-     * @since Android 1.0
      */
     public boolean retainAll(Collection<?> collection);
 
@@ -179,7 +167,6 @@ public interface Set<E> extends Collection<E> {
      * Returns the number of elements in this set.
      * 
      * @return the number of elements in this set.
-     * @since Android 1.0
      */
     public int size();
 
@@ -187,7 +174,6 @@ public interface Set<E> extends Collection<E> {
      * Returns an array containing all elements contained in this set.
      * 
      * @return an array of the elements from this set.
-     * @since Android 1.0
      */
     public Object[] toArray();
 
@@ -205,7 +191,6 @@ public interface Set<E> extends Collection<E> {
      *             when the type of an element in this set cannot be stored in
      *             the type of the specified array.
      * @see Collection#toArray(Object[])
-     * @since Android 1.0
      */
     public <T> T[] toArray(T[] array);
 }

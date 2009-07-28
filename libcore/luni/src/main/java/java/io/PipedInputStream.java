@@ -23,10 +23,8 @@ import org.apache.harmony.luni.util.Msg;
  * Receives information from a communications pipe. When two threads want to
  * pass data back and forth, one creates a piped output stream and the other one
  * creates a piped input stream.
- * 
+ *
  * @see PipedOutputStream
- * 
- * @since Android 1.0
  */
 public class PipedInputStream extends InputStream {
 
@@ -36,29 +34,21 @@ public class PipedInputStream extends InputStream {
 
     /**
      * The circular buffer through which data is passed.
-     * 
-     * @since Android 1.0
      */
     protected byte buffer[];
 
     /**
      * The index in {@code buffer} where the next byte will be written.
-     * 
-     * @since Android 1.0
      */
     protected int in = -1;
 
     /**
      * The index in {@code buffer} where the next byte will be read.
-     * 
-     * @since Android 1.0
      */
     protected int out = 0;
 
     /**
      * The size of the default pipe in bytes.
-     * 
-     * @since Android 1.0
      */
     protected static final int PIPE_SIZE = 1024;
 
@@ -71,8 +61,6 @@ public class PipedInputStream extends InputStream {
      * Constructs a new unconnected {@code PipedInputStream}. The resulting
      * stream must be connected to a {@link PipedOutputStream} before data may
      * be read from it.
-     * 
-     * @since Android 1.0
      */
     public PipedInputStream() {
         /* empty */
@@ -82,12 +70,11 @@ public class PipedInputStream extends InputStream {
      * Constructs a new {@code PipedInputStream} connected to the
      * {@link PipedOutputStream} {@code out}. Any data written to the output
      * stream can be read from the this input stream.
-     * 
+     *
      * @param out
      *            the piped output stream to connect to.
      * @throws IOException
      *             if this stream or {@code out} are already connected.
-     * @since Android 1.0
      */
     public PipedInputStream(PipedOutputStream out) throws IOException {
         connect(out);
@@ -97,11 +84,10 @@ public class PipedInputStream extends InputStream {
      * Returns the number of bytes that are available before this stream will
      * block. This implementation returns the number of bytes written to this
      * pipe that have not been read yet.
-     * 
+     *
      * @return the number of bytes available before blocking.
      * @throws IOException
      *             if an error occurs in this stream.
-     * @since Android 1.0
      */
     @Override
     public synchronized int available() throws IOException {
@@ -114,10 +100,9 @@ public class PipedInputStream extends InputStream {
     /**
      * Closes this stream. This implementation releases the buffer used for the
      * pipe and notifies all threads waiting to read or write.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this stream.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -134,12 +119,11 @@ public class PipedInputStream extends InputStream {
      * Connects this {@code PipedInputStream} to a {@link PipedOutputStream}.
      * Any data written to the output stream becomes readable in this input
      * stream.
-     * 
+     *
      * @param src
      *            the source output stream.
      * @throws IOException
      *             if either stream is already connected.
-     * @since Android 1.0
      */
     public void connect(PipedOutputStream src) throws IOException {
         src.connect(this);
@@ -155,15 +139,13 @@ public class PipedInputStream extends InputStream {
      * Separate threads should be used to read from a {@code PipedInputStream}
      * and to write to the connected {@link PipedOutputStream}. If the same
      * thread is used, a deadlock may occur.
-     * </p>
-     * 
+     *
      * @return the byte read or -1 if the end of the source stream has been
      *         reached.
      * @throws IOException
      *             if this stream is closed or not connected to an output
      *             stream, or if the thread writing to the connected output
      *             stream is no longer alive.
-     * @since Android 1.0
      */
     @Override
     public synchronized int read() throws IOException {
@@ -180,16 +162,15 @@ public class PipedInputStream extends InputStream {
          */
         lastReader = Thread.currentThread();
         try {
-            boolean first = true;
+            int attempts = 3;
             while (in == -1) {
                 // Are we at end of stream?
                 if (isClosed) {
                     return -1;
                 }
-                if (!first && lastWriter != null && !lastWriter.isAlive()) {
+                if ((attempts-- <= 0) && lastWriter != null && !lastWriter.isAlive()) {
                     throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
                 }
-                first = false;
                 // Notify callers of receive()
                 notifyAll();
                 wait(1000);
@@ -219,8 +200,7 @@ public class PipedInputStream extends InputStream {
      * Separate threads should be used to read from a {@code PipedInputStream}
      * and to write to the connected {@link PipedOutputStream}. If the same
      * thread is used, a deadlock may occur.
-     * </p>
-     * 
+     *
      * @param bytes
      *            the array in which to store the bytes read.
      * @param offset
@@ -278,16 +258,15 @@ public class PipedInputStream extends InputStream {
          */
         lastReader = Thread.currentThread();
         try {
-            boolean first = true;
+            int attempts = 3;
             while (in == -1) {
                 // Are we at end of stream?
                 if (isClosed) {
                     return -1;
                 }
-                if (!first && lastWriter != null && !lastWriter.isAlive()) {
+                if ((attempts-- <= 0) && lastWriter != null && !lastWriter.isAlive()) {
                     throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
                 }
-                first = false;
                 // Notify callers of receive()
                 notifyAll();
                 wait(1000);
@@ -342,8 +321,7 @@ public class PipedInputStream extends InputStream {
      * {@code in} in the {@code buffer}.
      * <p>
      * This method blocks as long as {@code buffer} is full.
-     * </p>
-     * 
+     *
      * @param oneByte
      *            the byte to store in this pipe.
      * @throws InterruptedIOException

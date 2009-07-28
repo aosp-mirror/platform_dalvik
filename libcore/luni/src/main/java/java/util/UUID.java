@@ -27,19 +27,16 @@ import java.security.SecureRandom;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * <p>
  * UUID is an immutable representation of a 128-bit universally unique
  * identifier (UUID).
- * </p>
  * <p>
  * There are multiple, variant layouts of UUIDs, but this class is based upon
  * variant 2 of <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>, the
  * Leach-Salz variant. This class can be used to model alternate variants, but
  * most of the methods will be unsupported in those cases; see each method for
  * details.
- * </p>
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public final class UUID implements Serializable, Comparable<UUID> {
 
@@ -60,13 +57,11 @@ public final class UUID implements Serializable, Comparable<UUID> {
     /**
      * <p>
      * Constructs an instance with the specified bits.
-     * </p>
-     * 
+     *
      * @param mostSigBits
      *            The 64 most significant bits of the UUID.
      * @param leastSigBits
      *            The 64 least significant bits of the UUID.
-     * @since Android 1.0
      */
     public UUID(long mostSigBits, long leastSigBits) {
         super();
@@ -79,7 +74,6 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <p>
      * Sets up the transient fields of this instance based on the current values
      * of the {@code mostSigBits} and {@code leastSigBits} fields.
-     * </p>
      */
     private void init() {
         // setup hash field
@@ -123,10 +117,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <p>
      * Generates a variant 2, version 4 (randomly generated number) UUID as per
      * <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
-     * </p>
-     * 
+     *
      * @return an UUID instance.
-     * @since Android 1.0
      */
     public static UUID randomUUID() {
         byte[] data;
@@ -135,9 +127,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
             if (rng == null) {
                 rng = new SecureRandom();
             }
-            rng.nextBytes(data = new byte[16]);
         }
-
+        rng.nextBytes(data = new byte[16]);
         long msb = (data[0] & 0xFFL) << 56;
         msb |= (data[1] & 0xFFL) << 48;
         msb |= (data[2] & 0xFFL) << 40;
@@ -164,12 +155,10 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <p>
      * Generates a variant 2, version 3 (name-based, MD5-hashed) UUID as per <a
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
-     * </p>
-     * 
+     *
      * @param name
      *            the name used as byte array to create an UUID.
      * @return an UUID instance.
-     * @since Android 1.0
      */
     public static UUID nameUUIDFromBytes(byte[] name) {
         if (name == null) {
@@ -209,57 +198,57 @@ public final class UUID implements Serializable, Comparable<UUID> {
     /**
      * <p>
      * Parses a UUID string with the format defined by {@link #toString()}.
-     * </p>
-     * 
+     *
      * @param uuid
      *            the UUID string to parse.
      * @return an UUID instance.
+     * @throws NullPointerException
+     *             if {@code uuid} is {@code null}.
      * @throws IllegalArgumentException
      *             if {@code uuid} is not formatted correctly.
-     * @since Android 1.0
      */
     public static UUID fromString(String uuid) {
         if (uuid == null) {
             throw new NullPointerException();
         }
-        
+
         int[] position = new int[5];
         int lastPosition = 1;
         int startPosition = 0;
-        
+
         int i = 0;
-        for (; i < position.length  && lastPosition > 0; i++) {
+        for (; i < position.length && lastPosition > 0; i++) {
             position[i] = uuid.indexOf("-", startPosition); //$NON-NLS-1$
             lastPosition = position[i];
             startPosition = position[i] + 1;
         }
 
         // should have and only can have four "-" in UUID
-        if(i != position.length || lastPosition != -1)
-        {
+        if (i != position.length || lastPosition != -1) {
             throw new IllegalArgumentException(Msg.getString("KA014") + uuid); //$NON-NLS-1$
         }
 
         long m1 = Long.parseLong(uuid.substring(0, position[0]), 16);
-        long m2 = Long.parseLong(uuid.substring(position[0]+ 1, position[1]), 16);
-        long m3 = Long.parseLong(uuid.substring(position[1] + 1, position[2]), 16);
+        long m2 = Long.parseLong(uuid.substring(position[0] + 1, position[1]),
+                16);
+        long m3 = Long.parseLong(uuid.substring(position[1] + 1, position[2]),
+                16);
 
-        long lsb1 = Long.parseLong(uuid.substring(position[2] + 1, position[3]), 16);
-        long lsb2 = Long.parseLong(uuid.substring(position[3]+ 1), 16);
+        long lsb1 = Long.parseLong(
+                uuid.substring(position[2] + 1, position[3]), 16);
+        long lsb2 = Long.parseLong(uuid.substring(position[3] + 1), 16);
 
         long msb = (m1 << 32) | (m2 << 16) | m3;
         long lsb = (lsb1 << 48) | lsb2;
-        
+
         return new UUID(msb, lsb);
     }
 
     /**
      * <p>
      * The 64 least significant bits of the UUID.
-     * </p>
-     * 
+     *
      * @return the 64 least significant bits.
-     * @since Android 1.0
      */
     public long getLeastSignificantBits() {
         return leastSigBits;
@@ -268,10 +257,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
     /**
      * <p>
      * The 64 most significant bits of the UUID.
-     * </p>
-     * 
+     *
      * @return the 64 most significant bits.
-     * @since Android 1.0
      */
     public long getMostSignificantBits() {
         return mostSigBits;
@@ -282,7 +269,6 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * The version of the variant 2 UUID as per <a
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>. If the variant
      * is not 2, then the version will be 0.
-     * </p>
      * <ul>
      * <li>1 - Time-based UUID</li>
      * <li>2 - DCE Security UUID</li>
@@ -290,9 +276,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <li>4 - Randomly generated UUID ({@link #randomUUID()})</li>
      * <li>5 - Name-based with SHA-1 hashing UUID</li>
      * </ul>
-     * 
+     *
      * @return an {@code int} value.
-     * @since Android 1.0
      */
     public int version() {
         return version;
@@ -302,16 +287,14 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <p>
      * The variant of the UUID as per <a
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
-     * </p>
      * <ul>
      * <li>0 - Reserved for NCS compatibility</li>
      * <li>2 - RFC 4122/Leach-Salz</li>
      * <li>6 - Reserved for Microsoft Corporation compatibility</li>
      * <li>7 - Reserved for future use</li>
      * </ul>
-     * 
+     *
      * @return an {@code int} value.
-     * @since Android 1.0
      */
     public int variant() {
         return variant;
@@ -321,12 +304,10 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <p>
      * The timestamp value of the version 1, variant 2 UUID as per <a
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
-     * </p>
-     * 
+     *
      * @return a {@code long} value.
      * @throws UnsupportedOperationException
      *             if {@link #version()} is not 1.
-     * @since Android 1.0
      */
     public long timestamp() {
         if (version != 1) {
@@ -339,12 +320,10 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <p>
      * The clock sequence value of the version 1, variant 2 UUID as per <a
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
-     * </p>
-     * 
+     *
      * @return a {@code long} value.
      * @throws UnsupportedOperationException
      *             if {@link #version()} is not 1.
-     * @since Android 1.0
      */
     public int clockSequence() {
         if (version != 1) {
@@ -357,12 +336,10 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <p>
      * The node value of the version 1, variant 2 UUID as per <a
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
-     * </p>
-     * 
+     *
      * @return a {@code long} value.
      * @throws UnsupportedOperationException
      *             if {@link #version()} is not 1.
-     * @since Android 1.0
      */
     public long node() {
         if (version != 1) {
@@ -376,13 +353,11 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * Compares this UUID to the specified UUID. The natural ordering of UUIDs
      * is based upon the value of the bits from most significant to least
      * significant.
-     * </p>
-     * 
+     *
      * @param uuid
      *            the UUID to compare to.
      * @return a value of -1, 0 or 1 if this UUID is less than, equal to or
      *         greater than {@code uuid}.
-     * @since Android 1.0
      */
     public int compareTo(UUID uuid) {
         if (uuid == this) {
@@ -409,13 +384,11 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * Compares this UUID to another object for equality. If {@code object}
      * is not {@code null}, is a UUID instance, and all bits are equal, then
      * {@code true} is returned.
-     * </p>
-     * 
+     *
      * @param object
      *            the {@code Object} to compare to.
      * @return {@code true} if this UUID is equal to {@code object}
      *         or {@code false} if not.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -441,10 +414,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <p>
      * Returns a hash value for this UUID that is consistent with the
      * {@link #equals(Object)} method.
-     * </p>
-     * 
+     *
      * @return an {@code int} value.
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -455,8 +426,7 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <p>
      * Returns a string representation of this UUID in the following format, as
      * per <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
-     * </p>
-     * 
+     *
      * <pre>
      *            UUID                   = time-low &quot;-&quot; time-mid &quot;-&quot;
      *                                     time-high-and-version &quot;-&quot;
@@ -474,9 +444,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      *                &quot;a&quot; / &quot;b&quot; / &quot;c&quot; / &quot;d&quot; / &quot;e&quot; / &quot;f&quot; /
      *                &quot;A&quot; / &quot;B&quot; / &quot;C&quot; / &quot;D&quot; / &quot;E&quot; / &quot;F&quot;
      * </pre>
-     * 
+     *
      * @return a String instance.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -507,8 +476,7 @@ public final class UUID implements Serializable, Comparable<UUID> {
     /**
      * <p>
      * Resets the transient fields to match the behavior of the constructor.
-     * </p>
-     * 
+     *
      * @param in
      *            the {@code InputStream} to read from.
      * @throws IOException

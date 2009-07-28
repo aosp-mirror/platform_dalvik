@@ -29,14 +29,11 @@ import java.io.OutputStream;
  * the current cache store operation is abandoned.
  * 
  * @see ResponseCache
- * @since Android 1.0
  */
 public abstract class CacheRequest {
 
     /**
      * This implementation does nothing.
-     * 
-     * @since Android 1.0
      */
     public CacheRequest() {
         super();
@@ -46,8 +43,6 @@ public abstract class CacheRequest {
      * Aborts the current cache operation. If an {@code IOException} occurs
      * while reading the response or writing resource data to the cache, the
      * current cache store operation is aborted.
-     * 
-     * @since Android 1.0
      */
     public abstract void abort();
 
@@ -58,7 +53,6 @@ public abstract class CacheRequest {
      * @throws IOException
      *             if an I/O error is encountered during writing response body
      *             operation.
-     * @since Android 1.0
      */
     public abstract OutputStream getBody() throws IOException;
 }

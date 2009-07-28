@@ -183,22 +183,24 @@ public class FtpURLConnection extends URLConnection {
             ProxySelector selector = ProxySelector.getDefault();
             Iterator<Proxy> iter = proxyList.iterator();
             boolean connectOK = false;
+            String failureReason = ""; //$NON-NLS-1$
             while (iter.hasNext() && !connectOK) {
                 currentProxy = iter.next();
                 try {
                     connectInternal();
                     connectOK = true;
                 } catch (IOException ioe) {
+                    failureReason = ioe.getLocalizedMessage();
                     // If connect failed, callback "connectFailed"
                     // should be invoked.
                     if (null != selector && Proxy.NO_PROXY != currentProxy) {
-                        selector
-                                .connectFailed(uri, currentProxy.address(), ioe);
+                        selector.connectFailed(uri, currentProxy.address(), ioe);
                     }
                 }
             }
             if (!connectOK) {
-                throw new IOException(Msg.getString("K0097")); //$NON-NLS-1$
+                // K0097=Unable to connect to server\: {0}
+                throw new IOException(Msg.getString("K0097", failureReason)); //$NON-NLS-1$
             }
         }
     }

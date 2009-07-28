@@ -14,12 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2008, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 package java.util;
 
@@ -27,24 +21,19 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-// BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
-// END android-note
 /**
  * {@code GregorianCalendar} is a concrete subclass of {@link Calendar}
  * and provides the standard calendar used by most of the world.
- * 
+ *
  * <p>
  * The standard (Gregorian) calendar has 2 eras, BC and AD.
- * 
+ *
  * <p>
  * This implementation handles a single discontinuity, which corresponds by
  * default to the date the Gregorian calendar was instituted (October 15, 1582
  * in some countries, later in others). The cutover date may be changed by the
  * caller by calling {@code setGregorianChange()}.
- * 
+ *
  * <p>
  * Historically, in those countries which adopted the Gregorian calendar first,
  * October 4, 1582 was thus followed by October 15, 1582. This calendar models
@@ -53,7 +42,7 @@ import java.io.ObjectOutputStream;
  * the Julian calendar is the leap year rule. The Julian calendar specifies leap
  * years every four years, whereas the Gregorian calendar omits century years
  * which are not divisible by 400.
- * 
+ *
  * <p>
  * {@code GregorianCalendar} implements <em>proleptic</em> Gregorian
  * and Julian calendars. That is, dates are computed by extrapolating the
@@ -64,13 +53,13 @@ import java.io.ObjectOutputStream;
  * 4 AD onward, when modern Julian calendar rules were adopted. Before this
  * date, leap year rules were applied irregularly, and before 45 BC the Julian
  * calendar did not even exist.
- * 
+ *
  * <p>
  * Prior to the institution of the Gregorian calendar, New Year's Day was March
  * 25. To avoid confusion, this calendar always uses January 1. A manual
  * adjustment may be made if desired for dates that are prior to the Gregorian
  * changeover and which fall between January 1 and March 24.
- * 
+ *
  * <p>
  * Values calculated for the {@code WEEK_OF_YEAR} field range from 1 to
  * 53. Week 1 for a year is the earliest seven day period starting on
@@ -80,7 +69,7 @@ import java.io.ObjectOutputStream;
  * {@code getFirstDayOfWeek()}, and the day of the week of January 1.
  * Weeks between week 1 of one year and week 1 of the following year are
  * numbered sequentially from 2 to 52 or 53 (as needed).
- * 
+ *
  * <p>
  * For example, January 1, 1998 was a Thursday. If
  * {@code getFirstDayOfWeek()} is {@code MONDAY} and
@@ -90,7 +79,7 @@ import java.io.ObjectOutputStream;
  * {@code getFirstDayOfWeek()} is {@code SUNDAY}, then week 1 of
  * 1998 starts on January 4, 1998, and ends on January 10, 1998; the first three
  * days of 1998 then are part of week 53 of 1997.
- * 
+ *
  * <p>
  * Values calculated for the {@code WEEK_OF_MONTH} field range from 0 or
  * 1 to 4 or 5. Week 1 of a month (the days with <code>WEEK_OF_MONTH =
@@ -102,7 +91,7 @@ import java.io.ObjectOutputStream;
  * {@code getFirstDayOfWeek()}, and will not include days of the
  * previous month. Days of a month before week 1 have a
  * {@code WEEK_OF_MONTH} of 0.
- * 
+ *
  * <p>
  * For example, if {@code getFirstDayOfWeek()} is {@code SUNDAY}
  * and {@code getMinimalDaysInFirstWeek()} is 4, then the first week of
@@ -111,10 +100,10 @@ import java.io.ObjectOutputStream;
  * Saturday, January 3 have a {@code WEEK_OF_MONTH} of 0. If
  * {@code getMinimalDaysInFirstWeek()} is changed to 3, then January 1
  * through January 3 have a {@code WEEK_OF_MONTH} of 1.
- * 
+ *
  * <p>
  * <strong>Example:</strong> <blockquote>
- * 
+ *
  * <pre>
  * // get the supported ids for GMT-08:00 (Pacific Standard Time)
  * String[] ids = TimeZone.getAvailableIDs(-8 * 60 * 60 * 1000);
@@ -186,13 +175,11 @@ import java.io.ObjectOutputStream;
  * System.out.println("DST_OFFSET: "
  *        + (calendar.get(Calendar.DST_OFFSET)/(60*60*1000))); // in hours
  * </pre>
- * 
+ *
  * </blockquote>
- * 
+ *
  * @see Calendar
  * @see TimeZone
- * 
- * @since Android 1.0
  */
 public class GregorianCalendar extends Calendar {
 
@@ -200,18 +187,14 @@ public class GregorianCalendar extends Calendar {
 
     /**
      * Value for the BC era.
-     * 
-     * @since Android 1.0
      */
     public static final int BC = 0;
 
     /**
      * Value for the AD era.
-     * 
-     * @since Android 1.0
      */
     public static final int AD = 1;
-    
+
     private static final long defaultGregorianCutover = -12219292800000l;
 
     private long gregorianCutover = defaultGregorianCutover;
@@ -251,8 +234,6 @@ public class GregorianCalendar extends Calendar {
     /**
      * Constructs a new {@code GregorianCalendar} initialized to the current date and
      * time with the default {@code Locale} and {@code TimeZone}.
-     * 
-     * @since Android 1.0
      */
     public GregorianCalendar() {
         this(TimeZone.getDefault(), Locale.getDefault());
@@ -261,14 +242,13 @@ public class GregorianCalendar extends Calendar {
     /**
      * Constructs a new {@code GregorianCalendar} initialized to midnight in the default
      * {@code TimeZone} and {@code Locale} on the specified date.
-     * 
+     *
      * @param year
      *            the year.
      * @param month
      *            the month.
      * @param day
      *            the day of the month.
-     * @since Android 1.0
      */
     public GregorianCalendar(int year, int month, int day) {
         super(TimeZone.getDefault(), Locale.getDefault());
@@ -278,7 +258,7 @@ public class GregorianCalendar extends Calendar {
     /**
      * Constructs a new {@code GregorianCalendar} initialized to the specified date and
      * time in the default {@code TimeZone} and {@code Locale}.
-     * 
+     *
      * @param year
      *            the year.
      * @param month
@@ -289,7 +269,6 @@ public class GregorianCalendar extends Calendar {
      *            the hour.
      * @param minute
      *            the minute.
-     * @since Android 1.0
      */
     public GregorianCalendar(int year, int month, int day, int hour, int minute) {
         super(TimeZone.getDefault(), Locale.getDefault());
@@ -299,7 +278,7 @@ public class GregorianCalendar extends Calendar {
     /**
      * Constructs a new {@code GregorianCalendar} initialized to the specified date and
      * time in the default {@code TimeZone} and {@code Locale}.
-     * 
+     *
      * @param year
      *            the year.
      * @param month
@@ -312,7 +291,6 @@ public class GregorianCalendar extends Calendar {
      *            the minute.
      * @param second
      *            the second.
-     * @since Android 1.0
      */
     public GregorianCalendar(int year, int month, int day, int hour,
             int minute, int second) {
@@ -328,10 +306,9 @@ public class GregorianCalendar extends Calendar {
     /**
      * Constructs a new {@code GregorianCalendar} initialized to the current date and
      * time and using the specified {@code Locale} and the default {@code TimeZone}.
-     * 
+     *
      * @param locale
      *            the {@code Locale}.
-     * @since Android 1.0
      */
     public GregorianCalendar(Locale locale) {
         this(TimeZone.getDefault(), locale);
@@ -340,10 +317,9 @@ public class GregorianCalendar extends Calendar {
     /**
      * Constructs a new {@code GregorianCalendar} initialized to the current date and
      * time and using the specified {@code TimeZone} and the default {@code Locale}.
-     * 
+     *
      * @param timezone
      *            the {@code TimeZone}.
-     * @since Android 1.0
      */
     public GregorianCalendar(TimeZone timezone) {
         this(timezone, Locale.getDefault());
@@ -352,12 +328,11 @@ public class GregorianCalendar extends Calendar {
     /**
      * Constructs a new {@code GregorianCalendar} initialized to the current date and
      * time and using the specified {@code TimeZone} and {@code Locale}.
-     * 
+     *
      * @param timezone
      *            the {@code TimeZone}.
      * @param locale
      *            the {@code Locale}.
-     * @since Android 1.0
      */
     public GregorianCalendar(TimeZone timezone, Locale locale) {
         super(timezone, locale);
@@ -372,15 +347,14 @@ public class GregorianCalendar extends Calendar {
 
     /**
      * Adds the specified amount to a {@code Calendar} field.
-     * 
+     *
      * @param field
      *            the {@code Calendar} field to modify.
      * @param value
      *            the amount to add to the field.
-     * 
-     * @exception IllegalArgumentException
-     *                when the specified field is DST_OFFSET or ZONE_OFFSET.
-     * @since Android 1.0
+     *
+     * @throws IllegalArgumentException
+     *                if the specified field is DST_OFFSET or ZONE_OFFSET.
      */
     @Override
     public void add(int field, int value) {
@@ -477,9 +451,8 @@ public class GregorianCalendar extends Calendar {
 
     /**
      * Creates new instance of {@code GregorianCalendar} with the same properties.
-     * 
+     *
      * @return a shallow copy of this {@code GregorianCalendar}.
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -508,7 +481,7 @@ public class GregorianCalendar extends Calendar {
 
         int dayOfYear = computeYearAndDay(days, timeVal + zoneOffset);
         fields[DAY_OF_YEAR] = dayOfYear;
-        if(fields[YEAR] == changeYear && gregorianCutover < timeVal + zoneOffset){
+        if(fields[YEAR] == changeYear && gregorianCutover <= timeVal + zoneOffset){
             dayOfYear += currentYearSkew;
         }
         int month = dayOfYear / 32;
@@ -539,7 +512,7 @@ public class GregorianCalendar extends Calendar {
                 dayOfYear = computeYearAndDay(days, timeVal - zoneOffset
                         + dstOffset);
                 fields[DAY_OF_YEAR] = dayOfYear;
-                if(fields[YEAR] == changeYear && gregorianCutover < timeVal - zoneOffset + dstOffset){
+                if(fields[YEAR] == changeYear && gregorianCutover <= timeVal - zoneOffset + dstOffset){
                     dayOfYear += currentYearSkew;
                 }
                 month = dayOfYear / 32;
@@ -621,7 +594,9 @@ public class GregorianCalendar extends Calendar {
     protected void computeFields() {
         int zoneOffset = getTimeZone().getRawOffset();
 
-        fields[ZONE_OFFSET] = zoneOffset;
+        if(!isSet[ZONE_OFFSET]) {
+            fields[ZONE_OFFSET] = zoneOffset;
+        }
 
         int millis = (int) (time % 86400000);
         int savedMillis = millis;
@@ -864,6 +839,9 @@ public class GregorianCalendar extends Calendar {
                                         - (days + daysInMonth(leapYear, month) - 3))
                                 + fields[DAY_OF_WEEK_IN_MONTH] * 7;
                     }
+                } else if (isSet[DAY_OF_WEEK]) {
+                    int skew = mod7(days - 3 - (getFirstDayOfWeek() - 1));
+                    days += mod7(mod7(skew + dayOfWeek - (days - 3)) - skew);
                 }
             }
         } else {
@@ -967,7 +945,7 @@ public class GregorianCalendar extends Calendar {
         return (year - 1970) * 365 + ((year - 1972) / 4)
                 - ((year - 2000) / 100) + ((year - 2000) / 400);
     }
-    
+
     private int daysInMonth() {
         return daysInMonth(isLeapYear(fields[YEAR]), fields[MONTH]);
     }
@@ -1003,16 +981,15 @@ public class GregorianCalendar extends Calendar {
      * Compares the specified {@code Object} to this {@code GregorianCalendar} and returns whether
      * they are equal. To be equal, the {@code Object} must be an instance of {@code GregorianCalendar} and
      * have the same properties.
-     * 
+     *
      * @param object
      *            the {@code Object} to compare with this {@code GregorianCalendar}.
      * @return {@code true} if {@code object} is equal to this
      *         {@code GregorianCalendar}, {@code false} otherwise.
-     * @exception IllegalArgumentException
-     *                when the time is not set and the time cannot be computed
+     * @throws IllegalArgumentException
+     *                if the time is not set and the time cannot be computed
      *                from the current field values.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -1023,11 +1000,10 @@ public class GregorianCalendar extends Calendar {
     /**
      * Gets the maximum value of the specified field for the current date. For
      * example, the maximum number of days in the current month.
-     * 
+     *
      * @param field
      *            the field.
      * @return the maximum value of the specified field.
-     * @since Android 1.0
      */
     @Override
     public int getActualMaximum(int field) {
@@ -1095,11 +1071,10 @@ public class GregorianCalendar extends Calendar {
      * Gets the minimum value of the specified field for the current date. For
      * the gregorian calendar, this value is the same as
      * {@code getMinimum()}.
-     * 
+     *
      * @param field
      *            the field.
      * @return the minimum value of the specified field.
-     * @since Android 1.0
      */
     @Override
     public int getActualMinimum(int field) {
@@ -1109,11 +1084,10 @@ public class GregorianCalendar extends Calendar {
     /**
      * Gets the greatest minimum value of the specified field. For the gregorian
      * calendar, this value is the same as {@code getMinimum()}.
-     * 
+     *
      * @param field
      *            the field.
      * @return the greatest minimum value of the specified field.
-     * @since Android 1.0
      */
     @Override
     public int getGreatestMinimum(int field) {
@@ -1123,9 +1097,8 @@ public class GregorianCalendar extends Calendar {
     /**
      * Returns the gregorian change date of this calendar. This is the date on
      * which the gregorian calendar came into effect.
-     * 
+     *
      * @return a {@code Date} which represents the gregorian change date.
-     * @since Android 1.0
      */
     public final Date getGregorianChange() {
         return new Date(gregorianCutover);
@@ -1134,11 +1107,10 @@ public class GregorianCalendar extends Calendar {
     /**
      * Gets the smallest maximum value of the specified field. For example, 28
      * for the day of month field.
-     * 
+     *
      * @param field
      *            the field.
      * @return the smallest maximum value of the specified field.
-     * @since Android 1.0
      */
     @Override
     public int getLeastMaximum(int field) {
@@ -1158,11 +1130,10 @@ public class GregorianCalendar extends Calendar {
     /**
      * Gets the greatest maximum value of the specified field. For example, 31
      * for the day of month field.
-     * 
+     *
      * @param field
      *            the field.
      * @return the greatest maximum value of the specified field.
-     * @since Android 1.0
      */
     @Override
     public int getMaximum(int field) {
@@ -1171,11 +1142,10 @@ public class GregorianCalendar extends Calendar {
 
     /**
      * Gets the smallest minimum value of the specified field.
-     * 
+     *
      * @param field
      *            the field.
      * @return the smallest minimum value of the specified field.
-     * @since Android 1.0
      */
     @Override
     public int getMinimum(int field) {
@@ -1234,11 +1204,10 @@ public class GregorianCalendar extends Calendar {
     /**
      * Returns an integer hash code for the receiver. Objects which are equal
      * return the same value for this method.
-     * 
+     *
      * @return the receiver's hash.
-     * 
+     *
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -1248,12 +1217,11 @@ public class GregorianCalendar extends Calendar {
 
     /**
      * Returns whether the specified year is a leap year.
-     * 
+     *
      * @param year
      *            the year.
      * @return {@code true} if the specified year is a leap year, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean isLeapYear(int year) {
         if (year > changeYear) {
@@ -1288,15 +1256,14 @@ public class GregorianCalendar extends Calendar {
      * field when it goes beyond the maximum or minimum value for the current
      * date. Other fields will be adjusted as required to maintain a consistent
      * date.
-     * 
+     *
      * @param field
      *            the field to roll.
      * @param value
      *            the amount to add.
-     * 
-     * @exception IllegalArgumentException
-     *                when an invalid field is specified.
-     * @since Android 1.0
+     *
+     * @throws IllegalArgumentException
+     *                if an invalid field is specified.
      */
     @Override
     public void roll(int field, int value) {
@@ -1310,72 +1277,90 @@ public class GregorianCalendar extends Calendar {
         isCached = false;
 
         complete();
+        int days, day, mod, maxWeeks, newWeek;
         int max = -1;
         switch (field) {
-            case YEAR:
-                max = maximums[field];
-                break;
-            case WEEK_OF_YEAR:
-            case WEEK_OF_MONTH:
-                int days,
-                day;
-                if (field == WEEK_OF_YEAR) {
-                    days = daysInYear(fields[YEAR]);
-                    day = DAY_OF_YEAR;
+        case YEAR:
+            max = maximums[field];
+            break;
+        case WEEK_OF_YEAR:
+            days = daysInYear(fields[YEAR]);
+            day = DAY_OF_YEAR;
+            mod = mod7(fields[DAY_OF_WEEK] - fields[day]
+                    - (getFirstDayOfWeek() - 1));
+            maxWeeks = (days - 1 + mod) / 7 + 1;
+            newWeek = mod(fields[field] - 1 + value, maxWeeks) + 1;
+            if (newWeek == maxWeeks) {
+                int addDays = (newWeek - fields[field]) * 7;
+                if (fields[day] > addDays && fields[day] + addDays > days) {
+                    set(field, 1);
                 } else {
-                    days = daysInMonth();
-                    day = DATE;
+                    set(field, newWeek - 1);
                 }
-                int mod = mod7(fields[DAY_OF_WEEK] - fields[day]
-                        - (getFirstDayOfWeek() - 1));
-                int maxWeeks = (days - 1 + mod) / 7 + 1;
-                int newWeek = mod(fields[field] - 1 + value, maxWeeks) + 1;
-                if (newWeek == maxWeeks) {
-                    if (fields[day] + (newWeek - fields[field]) * 7 > days) {
-                        set(day, days);
-                    } else {
-                        set(field, newWeek);
-                    }
-                } else if (newWeek == 1) {
-                    int week = (fields[day] - ((fields[day] - 1) / 7 * 7) - 1 + mod) / 7 + 1;
-                    if (week > 1) {
-                        set(day, 1);
-                    } else {
-                        set(field, newWeek);
-                    }
+            } else if (newWeek == 1) {
+                int week = (fields[day] - ((fields[day] - 1) / 7 * 7) - 1 + mod) / 7 + 1;
+                if (week > 1) {
+                    set(field, 1);
                 } else {
                     set(field, newWeek);
                 }
-                break;
-            case DATE:
-                max = daysInMonth();
-                break;
-            case DAY_OF_YEAR:
-                max = daysInYear(fields[YEAR]);
-                break;
-            case DAY_OF_WEEK:
-                max = maximums[field];
-                lastDateFieldSet = WEEK_OF_MONTH;
-                break;
-            case DAY_OF_WEEK_IN_MONTH:
-                max = (fields[DATE] + ((daysInMonth() - fields[DATE]) / 7 * 7) - 1) / 7 + 1;
-                break;
-
-            case ERA:
-            case MONTH:
-            case AM_PM:
-            case HOUR:
-            case HOUR_OF_DAY:
-            case MINUTE:
-            case SECOND:
-            case MILLISECOND:
-                set(field, mod(fields[field] + value, maximums[field] + 1));
-                if (field == MONTH && fields[DATE] > daysInMonth()) {
-                    set(DATE, daysInMonth());
-                } else if (field == AM_PM) {
-                    lastTimeFieldSet = HOUR;
+            } else {
+                set(field, newWeek);
+            }
+            break;
+        case WEEK_OF_MONTH:
+            days = daysInMonth();
+            day = DATE;
+            mod = mod7(fields[DAY_OF_WEEK] - fields[day]
+                    - (getFirstDayOfWeek() - 1));
+            maxWeeks = (days - 1 + mod) / 7 + 1;
+            newWeek = mod(fields[field] - 1 + value, maxWeeks) + 1;
+            if (newWeek == maxWeeks) {
+                if (fields[day] + (newWeek - fields[field]) * 7 > days) {
+                    set(day, days);
+                } else {
+                    set(field, newWeek);
                 }
-                break;
+            } else if (newWeek == 1) {
+                int week = (fields[day] - ((fields[day] - 1) / 7 * 7) - 1 + mod) / 7 + 1;
+                if (week > 1) {
+                    set(day, 1);
+                } else {
+                    set(field, newWeek);
+                }
+            } else {
+                set(field, newWeek);
+            }
+            break;
+        case DATE:
+            max = daysInMonth();
+            break;
+        case DAY_OF_YEAR:
+            max = daysInYear(fields[YEAR]);
+            break;
+        case DAY_OF_WEEK:
+            max = maximums[field];
+            lastDateFieldSet = WEEK_OF_MONTH;
+            break;
+        case DAY_OF_WEEK_IN_MONTH:
+            max = (fields[DATE] + ((daysInMonth() - fields[DATE]) / 7 * 7) - 1) / 7 + 1;
+            break;
+
+        case ERA:
+        case MONTH:
+        case AM_PM:
+        case HOUR:
+        case HOUR_OF_DAY:
+        case MINUTE:
+        case SECOND:
+        case MILLISECOND:
+            set(field, mod(fields[field] + value, maximums[field] + 1));
+            if (field == MONTH && fields[DATE] > daysInMonth()) {
+                set(DATE, daysInMonth());
+            } else if (field == AM_PM) {
+                lastTimeFieldSet = HOUR;
+            }
+            break;
         }
         if (max != -1) {
             set(field, mod(fields[field] - 1 + value, max) + 1);
@@ -1389,15 +1374,14 @@ public class GregorianCalendar extends Calendar {
      * date. Other fields will be adjusted as required to maintain a consistent
      * date. For example, March 31 will roll to April 30 when rolling the month
      * field.
-     * 
+     *
      * @param field
      *            the field to roll.
      * @param increment
      *            {@code true} to increment the field, {@code false} to
      *            decrement.
-     * @exception IllegalArgumentException
-     *                when an invalid field is specified.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if an invalid field is specified.
      */
     @Override
     public void roll(int field, boolean increment) {
@@ -1406,10 +1390,9 @@ public class GregorianCalendar extends Calendar {
 
     /**
      * Sets the gregorian change date of this calendar.
-     * 
+     *
      * @param date
      *            a {@code Date} which represents the gregorian change date.
-     * @since Android 1.0
      */
     public void setGregorianChange(Date date) {
         gregorianCutover = date.getTime();

@@ -26,8 +26,6 @@ package java.io;
  * 
  * @see ObjectOutput#writeObject(Object)
  * @see ObjectOutputStream#writeObject(Object)
- * 
- * @since Android 1.0
  */
 public class NotSerializableException extends ObjectStreamException {
 
@@ -36,8 +34,6 @@ public class NotSerializableException extends ObjectStreamException {
     /**
      * Constructs a new {@code NotSerializableException} with its stack trace
      * filled in.
-     * 
-     * @since Android 1.0
      */
     public NotSerializableException() {
         super();
@@ -49,7 +45,6 @@ public class NotSerializableException extends ObjectStreamException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public NotSerializableException(String detailMessage) {
         super(detailMessage);

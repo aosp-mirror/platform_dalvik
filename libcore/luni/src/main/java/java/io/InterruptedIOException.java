@@ -21,8 +21,6 @@ package java.io;
  * Signals that a blocking I/O operation has been interrupted. The number of
  * bytes that were transferred successfully before the interruption took place
  * is stored in a field of the exception.
- * 
- * @since Android 1.0
  */
 public class InterruptedIOException extends IOException {
 
@@ -30,16 +28,12 @@ public class InterruptedIOException extends IOException {
 
     /**
      * The number of bytes transferred before the I/O interrupt occurred.
-     * 
-     * @since Android 1.0
      */
     public int bytesTransferred;
 
     /**
      * Constructs a new {@code InterruptedIOException} with its stack trace
      * filled in.
-     * 
-     * @since Android 1.0
      */
     public InterruptedIOException() {
         super();
@@ -51,7 +45,6 @@ public class InterruptedIOException extends IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public InterruptedIOException(String detailMessage) {
         super(detailMessage);

@@ -24,8 +24,6 @@ import java.io.IOException;
  * particular service requested by the URL connection. This could be happened if
  * there is an invalid MIME type or the application wants to send data over a
  * read-only connection.
- * 
- * @since Android 1.0
  */
 public class UnknownServiceException extends IOException {
 
@@ -34,8 +32,6 @@ public class UnknownServiceException extends IOException {
     /**
      * Constructs a new {@code UnknownServiceException} instance with its
      * walkback filled in.
-     * 
-     * @since Android 1.0
      */
     public UnknownServiceException() {
         super();
@@ -47,7 +43,6 @@ public class UnknownServiceException extends IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public UnknownServiceException(String detailMessage) {
         super(detailMessage);

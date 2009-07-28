@@ -21,8 +21,6 @@ package java.net;
  * Signals that either a connection attempt to a socket of the wrong type, the
  * application of an unsupported operation or that a general error in the
  * underlying protocol has occurred.
- * 
- * @since Android 1.0
  */
 public class ProtocolException extends java.io.IOException {
 
@@ -30,8 +28,6 @@ public class ProtocolException extends java.io.IOException {
 
     /**
      * Constructs a new instance of this class with its walkback filled in.
-     * 
-     * @since Android 1.0
      */
     public ProtocolException() {
         super();
@@ -43,7 +39,6 @@ public class ProtocolException extends java.io.IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public ProtocolException(String detailMessage) {
         super(detailMessage);

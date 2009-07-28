@@ -39,6 +39,27 @@ public class NodeChangeEventTest extends TestCase {
 
     NodeChangeEvent event;
 
+    String oldUserHome = System.getProperty("user.home");
+    String oldJavaHome = System.getProperty("java.home");
+
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        System.setProperty("user.home", System.getProperty("java.io.tmpdir"));
+        System.setProperty("java.home", System.getProperty("java.io.tmpdir"));
+        Preferences.systemRoot().clear();
+        Preferences.userRoot().clear();
+    }
+
+    protected void tearDown() throws Exception {
+        Preferences.systemRoot().clear();
+        Preferences.userRoot().clear();
+        System.setProperty("user.home", oldUserHome);
+        System.setProperty("java.home", oldJavaHome);
+
+        super.tearDown();
+    }
+
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",

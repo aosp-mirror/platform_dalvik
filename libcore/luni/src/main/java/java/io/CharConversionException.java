@@ -19,8 +19,6 @@ package java.io;
 
 /**
  * The top level class for character conversion exceptions.
- * 
- * @since Android 1.0
  */
 public class CharConversionException extends IOException {
 
@@ -29,8 +27,6 @@ public class CharConversionException extends IOException {
     /**
      * Constructs a new {@code CharConversionException} with its stack trace
      * filled in.
-     * 
-     * @since Android 1.0
      */
     public CharConversionException() {
         super();
@@ -39,10 +35,9 @@ public class CharConversionException extends IOException {
     /**
      * Constructs a new {@code CharConversionException} with its stack trace and
      * detail message filled in.
-     * 
+     *
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public CharConversionException(String detailMessage) {
         super(detailMessage);

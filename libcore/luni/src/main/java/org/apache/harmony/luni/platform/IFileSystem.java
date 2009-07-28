@@ -29,7 +29,7 @@ import java.io.IOException;
  * TODO Type description
  * 
  */
-public interface IFileSystem extends ISystemComponent {
+public interface IFileSystem {
 
     public final int SHARED_LOCK_TYPE = 1;
 

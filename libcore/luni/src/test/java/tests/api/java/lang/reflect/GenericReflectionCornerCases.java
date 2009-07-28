@@ -169,8 +169,6 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
         )
     })
     @SuppressWarnings("unchecked")
-    @KnownFailure("Class MultipleBoundedWildcardUnEquality can not be found, "
-            + "maybe the wrong class loader is used to get the raw type?")
     public void testMultipleBoundedWildcardUnEquality() throws Exception {
         Class<? extends MultipleBoundedWildcardUnEquality> clazz = MultipleBoundedWildcardUnEquality.class;
 
@@ -240,8 +238,6 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
         )
     })
     @SuppressWarnings("unchecked")
-    @KnownFailure("Class MultipleBoundedWildcardEquality can not be found, "
-            + "maybe the wrong class loader is used to get the raw type?")
     public void testMultipleBoundedWildcard() throws Exception {
         Class<? extends MultipleBoundedWildcardEquality> clazz = MultipleBoundedWildcardEquality.class;
 

@@ -30,8 +30,6 @@ import java.io.IOException;
  * Even though this Exception inherits the {@code Serializable} interface, it is not
  * serializable. The methods used for serialization throw
  * {@code NotSerializableException}s.
- * 
- * @since Android 1.0
  */
 public class InvalidPropertiesFormatException extends IOException {
     

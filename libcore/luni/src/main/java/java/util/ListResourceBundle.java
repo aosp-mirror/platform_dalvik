@@ -17,22 +17,19 @@
 
 package java.util;
 
-
 /**
  * {@code ListResourceBundle} is the abstract superclass of classes which provide
  * resources by implementing the {@code getContents()} method to return
  * the list of resources.
- * 
+ *
  * @see ResourceBundle
- * @since Android 1.0
+ * @since 1.1
  */
 public abstract class ListResourceBundle extends ResourceBundle {
-    Hashtable<String, Object> table;
+    HashMap<String, Object> table;
 
     /**
      * Constructs a new instance of this class.
-     * 
-     * @since Android 1.0
      */
     public ListResourceBundle() {
         super();
@@ -43,73 +40,81 @@ public abstract class ListResourceBundle extends ResourceBundle {
      * {@code ListResourceBundle}. Each element in the array is an array of two
      * elements, the first is the resource key string and the second is the
      * resource.
-     * 
+     *
      * @return a {@code Object} array containing the resources.
-     * @since Android 1.0
      */
     protected abstract Object[][] getContents();
 
     /**
      * Returns the names of the resources contained in this {@code ListResourceBundle}.
-     * 
+     *
      * @return an {@code Enumeration} of the resource names.
-     * @since Android 1.0
      */
     @Override
     public Enumeration<String> getKeys() {
-        if (table == null) {
-            initializeTable();
-        }
-        if (parent == null) {
-            return table.keys();
-        }
-        return new Enumeration<String>() {
-            Enumeration<String> local = table.keys();
+        initializeTable();
+        if (parent != null) {
+            return new Enumeration<String>() {
+                Iterator<String> local = table.keySet().iterator();
 
-            Enumeration<String> pEnum = parent.getKeys();
+                Enumeration<String> pEnum = parent.getKeys();
 
-            String nextElement;
+                String nextElement;
 
-            private boolean findNext() {
-                if (nextElement != null) {
-                    return true;
-                }
-                while (pEnum.hasMoreElements()) {
-                    String next = pEnum.nextElement();
-                    if (!table.containsKey(next)) {
-                        nextElement = next;
+                private boolean findNext() {
+                    if (nextElement != null) {
                         return true;
                     }
+                    while (pEnum.hasMoreElements()) {
+                        String next = pEnum.nextElement();
+                        if (!table.containsKey(next)) {
+                            nextElement = next;
+                            return true;
+                        }
+                    }
+                    return false;
                 }
-                return false;
-            }
 
-            public boolean hasMoreElements() {
-                if (local.hasMoreElements()) {
-                    return true;
+                public boolean hasMoreElements() {
+                    if (local.hasNext()) {
+                        return true;
+                    }
+                    return findNext();
                 }
-                return findNext();
-            }
 
-            public String nextElement() {
-                if (local.hasMoreElements()) {
-                    return local.nextElement();
+                public String nextElement() {
+                    if (local.hasNext()) {
+                        return local.next();
+                    }
+                    if (findNext()) {
+                        String result = nextElement;
+                        nextElement = null;
+                        return result;
+                    }
+                    // Cause an exception
+                    return pEnum.nextElement();
                 }
-                if (findNext()) {
-                    String result = nextElement;
-                    nextElement = null;
-                    return result;
+            };
+        } else {
+            return new Enumeration<String>() {
+                Iterator<String> it = table.keySet().iterator();
+
+                public boolean hasMoreElements() {
+                    return it.hasNext();
                 }
-                // Cause an exception
-                return pEnum.nextElement();
-            }
-        };
+
+                public String nextElement() {
+                    return it.next();
+                }
+            };
+        }
     }
 
     @Override
     public final Object handleGetObject(String key) {
-        if (table == null) {
-            initializeTable();
+        initializeTable();
+        if (key == null) {
+            throw new NullPointerException();
         }
         return table.get(key);
     }
@@ -117,9 +122,12 @@ public abstract class ListResourceBundle extends ResourceBundle {
     private synchronized void initializeTable() {
         if (table == null) {
             Object[][] contents = getContents();
-            table = new Hashtable<String, Object>(contents.length / 3 * 4 + 3);
-            for (int i = 0; i < contents.length; i++) {
-                table.put((String)contents[i][0], contents[i][1]);
+            table = new HashMap<String, Object>(contents.length / 3 * 4 + 3);
+            for (Object[] content : contents) {
+                if (content[0] == null || content[1] == null) {
+                    throw new NullPointerException();
+                }
+                table.put((String) content[0], content[1]);
             }
         }
     }

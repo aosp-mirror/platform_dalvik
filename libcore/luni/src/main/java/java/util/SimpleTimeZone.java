@@ -14,12 +14,12 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2008, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
+
+// BEGIN android-note
+// This implementation is based on an old version of Apache Harmony. The current
+// Harmony uses ICU4J, which makes it much simpler. We should consider updating
+// this implementation to leverage ICU4JNI.
+// END android-note
 
 package java.util;
 
@@ -27,32 +27,40 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
+// BEGIN android-removed
+// import java.security.AccessController;
+// import java.security.PrivilegedAction;
+// END android-removed
 
 import org.apache.harmony.luni.util.Msg;
 
-// BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
-// END android-note
 /**
  * {@code SimpleTimeZone} is a concrete subclass of {@code TimeZone}
  * that represents a time zone for use with a Gregorian calendar. This class
  * does not handle historical changes.
- * <P>
+ * <p>
  * Use a negative value for {@code dayOfWeekInMonth} to indicate that
  * {@code SimpleTimeZone} should count from the end of the month
  * backwards. For example, Daylight Savings Time ends at the last
  * (dayOfWeekInMonth = -1) Sunday in October, at 2 AM in standard time.
- * 
+ *
  * @see Calendar
  * @see GregorianCalendar
  * @see TimeZone
- * @since Android 1.0
  */
 public class SimpleTimeZone extends TimeZone {
-    
+
     private static final long serialVersionUID = -403250971215465050L;
+
+    // BEGIN android-removed
+    // private static com.ibm.icu.util.TimeZone getICUTimeZone(final String name){
+    //     return AccessController.doPrivileged(new PrivilegedAction<com.ibm.icu.util.TimeZone>(){
+    //         public com.ibm.icu.util.TimeZone run() {
+    //             return com.ibm.icu.util.TimeZone.getTimeZone(name);
+    //         }
+    //     });
+    // }
+    // END android-removed
 
     private int rawOffset;
 
@@ -67,8 +75,6 @@ public class SimpleTimeZone extends TimeZone {
 
     /**
      * The constant for representing a start or end time in GMT time mode.
-     * 
-     * @since Android 1.0
      */
     public static final int UTC_TIME = 2;
 
@@ -76,8 +82,6 @@ public class SimpleTimeZone extends TimeZone {
      * The constant for representing a start or end time in standard local time mode,
      * based on timezone's raw offset from GMT; does not include Daylight
      * savings.
-     * 
-     * @since Android 1.0
      */
     public static final int STANDARD_TIME = 1;
 
@@ -85,8 +89,6 @@ public class SimpleTimeZone extends TimeZone {
      * The constant for representing a start or end time in local wall clock time
      * mode, based on timezone's adjusted offset from GMT; includes
      * Daylight savings.
-     * 
-     * @since Android 1.0
      */
     public static final int WALL_TIME = 0;
 
@@ -96,22 +98,37 @@ public class SimpleTimeZone extends TimeZone {
 
     private int dstSavings = 3600000;
 
+    // BEGIN android-removed
+    // private final transient com.ibm.icu.util.TimeZone icuTZ;
+    //
+    // private final transient boolean isSimple;
+    // END android-removed
+
     /**
      * Constructs a {@code SimpleTimeZone} with the given base time zone offset from GMT
      * and time zone ID. Timezone IDs can be obtained from
      * {@code TimeZone.getAvailableIDs}. Normally you should use {@code TimeZone.getDefault} to
      * construct a {@code TimeZone}.
-     * 
+     *
      * @param offset
      *            the given base time zone offset to GMT.
      * @param name
      *            the time zone ID which is obtained from
      *            {@code TimeZone.getAvailableIDs}.
-     * @since Android 1.0
      */
-    public SimpleTimeZone(int offset, String name) {
+    public SimpleTimeZone(int offset, final String name) {
         setID(name);
         rawOffset = offset;
+        // BEGIN android-removed
+        // icuTZ = getICUTimeZone(name);
+        // if (icuTZ instanceof com.ibm.icu.util.SimpleTimeZone) {
+        //     isSimple = true;
+        //     icuTZ.setRawOffset(offset);
+        // } else {
+        //     isSimple = false;
+        // }
+        // useDaylight = icuTZ.useDaylightTime();
+        // END android-removed
     }
 
     /**
@@ -146,8 +163,8 @@ public class SimpleTimeZone extends TimeZone {
      * The above examples refer to the {@code startMonth}, {@code startDay}, and {@code startDayOfWeek};
      * the same applies for the {@code endMonth}, {@code endDay}, and {@code endDayOfWeek}.
      * <p>
-     * The daylight savings time difference is set to the default value: one hour.          
-     * 
+     * The daylight savings time difference is set to the default value: one hour.
+     *
      * @param offset
      *            the given base time zone offset to GMT.
      * @param name
@@ -182,7 +199,6 @@ public class SimpleTimeZone extends TimeZone {
      * @throws IllegalArgumentException
      *             if the month, day, dayOfWeek, or time parameters are out of
      *             range for the start or end rule.
-     * @since Android 1.0
      */
     public SimpleTimeZone(int offset, String name, int startMonth,
             int startDay, int startDayOfWeek, int startTime, int endMonth,
@@ -193,9 +209,9 @@ public class SimpleTimeZone extends TimeZone {
 
     /**
      * Constructs a {@code SimpleTimeZone} with the given base time zone offset from GMT,
-     * time zone ID, times to start and end the daylight savings time, and 
-     * the daylight savings time difference in milliseconds
-     * 
+     * time zone ID, times to start and end the daylight savings time, and
+     * the daylight savings time difference in milliseconds.
+     *
      * @param offset
      *            the given base time zone offset to GMT.
      * @param name
@@ -212,7 +228,7 @@ public class SimpleTimeZone extends TimeZone {
      *            description of {@link #SimpleTimeZone(int, String, int, int, int, int, int, int, int, int)} for an example.
      * @param startTime
      *            The daylight savings starting time in local wall time, which
-     *            is standard time in this case. Please see the description of 
+     *            is standard time in this case. Please see the description of
      *            {@link #SimpleTimeZone(int, String, int, int, int, int, int, int, int, int)} for an example.
      * @param endMonth
      *            the daylight savings ending month. Month is 0-based. eg, 0 for
@@ -221,7 +237,7 @@ public class SimpleTimeZone extends TimeZone {
      *            the daylight savings ending day-of-week-in-month. Please see
      *            the description of {@link #SimpleTimeZone(int, String, int, int, int, int, int, int, int, int)} for an example.
      * @param endDayOfWeek
-     *            the daylight savings ending day-of-week. Please see the description of 
+     *            the daylight savings ending day-of-week. Please see the description of
      *            {@link #SimpleTimeZone(int, String, int, int, int, int, int, int, int, int)} for an example.
      * @param endTime
      *            the daylight savings ending time in local wall time, which is
@@ -229,31 +245,50 @@ public class SimpleTimeZone extends TimeZone {
      *            for an example.
      * @param daylightSavings
      *            the daylight savings time difference in milliseconds.
-     * @exception IllegalArgumentException
-     *                the month, day, dayOfWeek, or time parameters are out of
+     * @throws IllegalArgumentException
+     *                if the month, day, dayOfWeek, or time parameters are out of
      *                range for the start or end rule.
-     * @since Android 1.0
      */
     public SimpleTimeZone(int offset, String name, int startMonth,
             int startDay, int startDayOfWeek, int startTime, int endMonth,
             int endDay, int endDayOfWeek, int endTime, int daylightSavings) {
+        // BEGIN android-changed
+        // icuTZ = getICUTimeZone(name);
+        // if (icuTZ instanceof com.ibm.icu.util.SimpleTimeZone) {
+        //     isSimple = true;
+        //     com.ibm.icu.util.SimpleTimeZone tz = (com.ibm.icu.util.SimpleTimeZone)icuTZ;
+        //     tz.setRawOffset(offset);
+        //     tz.setStartRule(startMonth, startDay, startDayOfWeek, startTime);
+        //     tz.setEndRule(endMonth, endDay, endDayOfWeek, endTime);
+        //     tz.setDSTSavings(daylightSavings);
+        // } else {
+        //     isSimple = false;
+        // }
+        // setID(name);
+        // rawOffset = offset;
         this(offset, name);
+        // END android-changed
         if (daylightSavings <= 0) {
-            throw new IllegalArgumentException(Msg.getString("K00e9", daylightSavings)); //$NON-NLS-1$
+            throw new IllegalArgumentException(Msg.getString(
+                    "K00e9", daylightSavings)); //$NON-NLS-1$
         }
         dstSavings = daylightSavings;
 
         setStartRule(startMonth, startDay, startDayOfWeek, startTime);
         setEndRule(endMonth, endDay, endDayOfWeek, endTime);
+
+        // BEGIN android-removed
+        // useDaylight = daylightSavings > 0 || icuTZ.useDaylightTime();
+        // END android-removed
     }
 
     /**
      * Construct a {@code SimpleTimeZone} with the given base time zone offset from GMT,
-     * time zone ID, times to start and end the daylight savings time including a 
+     * time zone ID, times to start and end the daylight savings time including a
      * mode specifier, the daylight savings time difference in milliseconds.
      * The mode specifies either {@link #WALL_TIME}, {@link #STANDARD_TIME}, or
      * {@link #UTC_TIME}.
-     * 
+     *
      * @param offset
      *            the given base time zone offset to GMT.
      * @param name
@@ -269,21 +304,21 @@ public class SimpleTimeZone extends TimeZone {
      *            the daylight savings starting day-of-week. Please see the
      *            description of {@link #SimpleTimeZone(int, String, int, int, int, int, int, int, int, int)} for an example.
      * @param startTime
-     *            the time of day in milliseconds on which daylight savings 
+     *            the time of day in milliseconds on which daylight savings
      *            time starts, based on the {@code startTimeMode}.
      * @param startTimeMode
      *            the mode (UTC, standard, or wall time) of the start time
      *            value.
-     * @param endDay 
-     *            the day of the week on which daylight savings time ends. 
+     * @param endDay
+     *            the day of the week on which daylight savings time ends.
      * @param endMonth
      *            the daylight savings ending month. The month indexing is 0-based. eg, 0 for
      *            January.
      * @param endDayOfWeek
-     *            the daylight savings ending day-of-week. Please see the description of 
+     *            the daylight savings ending day-of-week. Please see the description of
      *            {@link #SimpleTimeZone(int, String, int, int, int, int, int, int, int, int)} for an example.
      * @param endTime
-     *            the time of day in milliseconds on which daylight savings 
+     *            the time of day in milliseconds on which daylight savings
      *            time ends, based on the {@code endTimeMode}.
      * @param endTimeMode
      *            the mode (UTC, standard, or wall time) of the end time value.
@@ -292,7 +327,6 @@ public class SimpleTimeZone extends TimeZone {
      * @throws IllegalArgumentException
      *             if the month, day, dayOfWeek, or time parameters are out of
      *             range for the start or end rule.
-     * @since Android 1.0
      */
     public SimpleTimeZone(int offset, String name, int startMonth,
             int startDay, int startDayOfWeek, int startTime, int startTimeMode,
@@ -308,10 +342,9 @@ public class SimpleTimeZone extends TimeZone {
     /**
      * Returns a new {@code SimpleTimeZone} with the same ID, {@code rawOffset} and daylight
      * savings time rules as this SimpleTimeZone.
-     * 
+     *
      * @return a shallow copy of this {@code SimpleTimeZone}.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -326,13 +359,12 @@ public class SimpleTimeZone extends TimeZone {
      * Compares the specified object to this {@code SimpleTimeZone} and returns whether they
      * are equal. The object must be an instance of {@code SimpleTimeZone} and have the
      * same internal data.
-     * 
+     *
      * @param object
      *            the object to compare with this object.
      * @return {@code true} if the specified object is equal to this
      *         {@code SimpleTimeZone}, {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -372,6 +404,8 @@ public class SimpleTimeZone extends TimeZone {
             checkDay(month, day);
         }
 
+        // BEGIN android-changed
+        // return icuTZ.getOffset(era, year, month, day, dayOfWeek, time);
         if (!useDaylightTime() || era != GregorianCalendar.AD
                 || year < startYear) {
             return rawOffset;
@@ -389,38 +423,39 @@ public class SimpleTimeZone extends TimeZone {
         int ruleDay = 0, daysInMonth, firstDayOfMonth = mod7(dayOfWeek - day);
         if (month == startMonth) {
             switch (startMode) {
-            case DOM_MODE:
-                ruleDay = startDay;
-                break;
-            case DOW_IN_MONTH_MODE:
-                if (startDay >= 0) {
-                    ruleDay = mod7(startDayOfWeek - firstDayOfMonth) + 1
-                            + (startDay - 1) * 7;
-                } else {
-                    daysInMonth = GregorianCalendar.DaysInMonth[startMonth];
-                    if (startMonth == Calendar.FEBRUARY && isLeapYear(year)) {
-                        daysInMonth += 1;
+                case DOM_MODE:
+                    ruleDay = startDay;
+                    break;
+                case DOW_IN_MONTH_MODE:
+                    if (startDay >= 0) {
+                        ruleDay = mod7(startDayOfWeek - firstDayOfMonth) + 1
+                                + (startDay - 1) * 7;
+                    } else {
+                        daysInMonth = GregorianCalendar.DaysInMonth[startMonth];
+                        if (startMonth == Calendar.FEBRUARY && isLeapYear(
+                                year)) {
+                            daysInMonth += 1;
+                        }
+                        ruleDay = daysInMonth
+                                + 1
+                                + mod7(startDayOfWeek
+                                - (firstDayOfMonth + daysInMonth))
+                                + startDay * 7;
                     }
-                    ruleDay = daysInMonth
-                            + 1
+                    break;
+                case DOW_GE_DOM_MODE:
+                    ruleDay = startDay
                             + mod7(startDayOfWeek
-                                    - (firstDayOfMonth + daysInMonth))
-                            + startDay * 7;
-                }
-                break;
-            case DOW_GE_DOM_MODE:
-                ruleDay = startDay
-                        + mod7(startDayOfWeek
-                                - (firstDayOfMonth + startDay - 1));
-                break;
-            case DOW_LE_DOM_MODE:
-                ruleDay = startDay
-                        + mod7(startDayOfWeek
-                                - (firstDayOfMonth + startDay - 1));
-                if (ruleDay != startDay) {
-                    ruleDay -= 7;
-                }
-                break;
+                            - (firstDayOfMonth + startDay - 1));
+                    break;
+                case DOW_LE_DOM_MODE:
+                    ruleDay = startDay
+                            + mod7(startDayOfWeek
+                            - (firstDayOfMonth + startDay - 1));
+                    if (ruleDay != startDay) {
+                        ruleDay -= 7;
+                    }
+                    break;
             }
             if (ruleDay > day || ruleDay == day && time < startTime) {
                 return rawOffset;
@@ -431,36 +466,38 @@ public class SimpleTimeZone extends TimeZone {
         int nextMonth = (month + 1) % 12;
         if (month == endMonth || (ruleTime < 0 && nextMonth == endMonth)) {
             switch (endMode) {
-            case DOM_MODE:
-                ruleDay = endDay;
-                break;
-            case DOW_IN_MONTH_MODE:
-                if (endDay >= 0) {
-                    ruleDay = mod7(endDayOfWeek - firstDayOfMonth) + 1
-                            + (endDay - 1) * 7;
-                } else {
-                    daysInMonth = GregorianCalendar.DaysInMonth[endMonth];
-                    if (endMonth == Calendar.FEBRUARY && isLeapYear(year)) {
-                        daysInMonth++;
+                case DOM_MODE:
+                    ruleDay = endDay;
+                    break;
+                case DOW_IN_MONTH_MODE:
+                    if (endDay >= 0) {
+                        ruleDay = mod7(endDayOfWeek - firstDayOfMonth) + 1
+                                + (endDay - 1) * 7;
+                    } else {
+                        daysInMonth = GregorianCalendar.DaysInMonth[endMonth];
+                        if (endMonth == Calendar.FEBRUARY && isLeapYear(year)) {
+                            daysInMonth++;
+                        }
+                        ruleDay = daysInMonth
+                                + 1
+                                + mod7(endDayOfWeek
+                                - (firstDayOfMonth + daysInMonth)) + endDay
+                                * 7;
                     }
-                    ruleDay = daysInMonth
-                            + 1
-                            + mod7(endDayOfWeek
-                                    - (firstDayOfMonth + daysInMonth)) + endDay
-                            * 7;
-                }
-                break;
-            case DOW_GE_DOM_MODE:
-                ruleDay = endDay
-                        + mod7(endDayOfWeek - (firstDayOfMonth + endDay - 1));
-                break;
-            case DOW_LE_DOM_MODE:
-                ruleDay = endDay
-                        + mod7(endDayOfWeek - (firstDayOfMonth + endDay - 1));
-                if (ruleDay != endDay) {
-                    ruleDay -= 7;
-                }
-                break;
+                    break;
+                case DOW_GE_DOM_MODE:
+                    ruleDay = endDay
+                            + mod7(
+                            endDayOfWeek - (firstDayOfMonth + endDay - 1));
+                    break;
+                case DOW_LE_DOM_MODE:
+                    ruleDay = endDay
+                            + mod7(
+                            endDayOfWeek - (firstDayOfMonth + endDay - 1));
+                    if (ruleDay != endDay) {
+                        ruleDay -= 7;
+                    }
+                    break;
             }
 
             int ruleMonth = endMonth;
@@ -488,10 +525,13 @@ public class SimpleTimeZone extends TimeZone {
             }
         }
         return rawOffset + dstSavings;
+        // END android-changed
     }
 
     @Override
     public int getOffset(long time) {
+        // BEGIN android-changed
+        // return icuTZ.getOffset(time);
         if (!useDaylightTime()) {
             return rawOffset;
         }
@@ -499,6 +539,7 @@ public class SimpleTimeZone extends TimeZone {
             daylightSavings = new GregorianCalendar(this);
         }
         return daylightSavings.getOffset(time + rawOffset);
+        // END android-changed
     }
 
     @Override
@@ -509,10 +550,9 @@ public class SimpleTimeZone extends TimeZone {
     /**
      * Returns an integer hash code for the receiver. Objects which are equal
      * return the same value for this method.
-     * 
+     *
      * @return the receiver's hash.
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public synchronized int hashCode() {
@@ -548,6 +588,8 @@ public class SimpleTimeZone extends TimeZone {
 
     @Override
     public boolean inDaylightTime(Date time) {
+        // BEGIN android-changed
+        // return icuTZ.inDaylightTime(time);
         // check for null pointer
         long millis = time.getTime();
         if (!useDaylightTime()) {
@@ -557,6 +599,7 @@ public class SimpleTimeZone extends TimeZone {
             daylightSavings = new GregorianCalendar(this);
         }
         return daylightSavings.getOffset(millis + rawOffset) != rawOffset;
+        // END android-changed
     }
 
     private boolean isLeapYear(int year) {
@@ -566,17 +609,18 @@ public class SimpleTimeZone extends TimeZone {
         return year % 4 == 0;
     }
 
+    // BEGIN android-added
     private int mod7(int num1) {
         int rem = num1 % 7;
         return (num1 < 0 && rem < 0) ? 7 + rem : rem;
     }
+    // END android-added
 
     /**
      * Sets the daylight savings offset in milliseconds for this {@code SimpleTimeZone}.
-     * 
+     *
      * @param milliseconds
      *            the daylight savings offset in milliseconds.
-     * @since Android 1.0
      */
     public void setDSTSavings(int milliseconds) {
         if (milliseconds > 0) {
@@ -591,7 +635,8 @@ public class SimpleTimeZone extends TimeZone {
             throw new IllegalArgumentException(Msg.getString("K00e5", month)); //$NON-NLS-1$
         }
         if (dayOfWeek < Calendar.SUNDAY || dayOfWeek > Calendar.SATURDAY) {
-            throw new IllegalArgumentException(Msg.getString("K00e7", dayOfWeek)); //$NON-NLS-1$
+            throw new IllegalArgumentException(Msg
+                    .getString("K00e7", dayOfWeek)); //$NON-NLS-1$
         }
         if (time < 0 || time >= 24 * 3600000) {
             throw new IllegalArgumentException(Msg.getString("K00e8", time)); //$NON-NLS-1$
@@ -626,7 +671,8 @@ public class SimpleTimeZone extends TimeZone {
                 checkDay(endMonth, endDay);
             } else {
                 if (endDay < -5 || endDay > 5) {
-                    throw new IllegalArgumentException(Msg.getString("K00f8", endDay)); //$NON-NLS-1$
+                    throw new IllegalArgumentException(Msg.getString(
+                            "K00f8", endDay)); //$NON-NLS-1$
                 }
             }
         }
@@ -637,7 +683,7 @@ public class SimpleTimeZone extends TimeZone {
 
     /**
      * Sets the rule which specifies the end of daylight savings time.
-     * 
+     *
      * @param month
      *            the {@code Calendar} month in which daylight savings time ends.
      * @param dayOfMonth
@@ -646,7 +692,6 @@ public class SimpleTimeZone extends TimeZone {
      * @param time
      *            the time of day in milliseconds standard time on which
      *            daylight savings time ends.
-     * @since Android 1.0
      */
     public void setEndRule(int month, int dayOfMonth, int time) {
         endMonth = month;
@@ -654,11 +699,17 @@ public class SimpleTimeZone extends TimeZone {
         endDayOfWeek = 0; // Initialize this value for hasSameRules()
         endTime = time;
         setEndMode();
+        // BEGIN android-removed
+        // if (isSimple) {
+        //     ((com.ibm.icu.util.SimpleTimeZone) icuTZ).setEndRule(month,
+        //             dayOfMonth, time);
+        // }
+        // END android-removed
     }
 
     /**
      * Sets the rule which specifies the end of daylight savings time.
-     * 
+     *
      * @param month
      *            the {@code Calendar} month in which daylight savings time ends.
      * @param day
@@ -670,7 +721,6 @@ public class SimpleTimeZone extends TimeZone {
      * @param time
      *            the time of day in milliseconds standard time on which
      *            daylight savings time ends.
-     * @since Android 1.0
      */
     public void setEndRule(int month, int day, int dayOfWeek, int time) {
         endMonth = month;
@@ -678,11 +728,17 @@ public class SimpleTimeZone extends TimeZone {
         endDayOfWeek = dayOfWeek;
         endTime = time;
         setEndMode();
+        // BEGIN android-removed
+        // if (isSimple) {
+        //     ((com.ibm.icu.util.SimpleTimeZone) icuTZ).setEndRule(month, day,
+        //             dayOfWeek, time);
+        // }
+        // END android-removed
     }
 
     /**
      * Sets the rule which specifies the end of daylight savings time.
-     * 
+     *
      * @param month
      *            the {@code Calendar} month in which daylight savings time ends.
      * @param day
@@ -695,7 +751,6 @@ public class SimpleTimeZone extends TimeZone {
      *            ends.
      * @param after
      *            selects the day after or before the day of month.
-     * @since Android 1.0
      */
     public void setEndRule(int month, int day, int dayOfWeek, int time,
             boolean after) {
@@ -704,18 +759,26 @@ public class SimpleTimeZone extends TimeZone {
         endDayOfWeek = -dayOfWeek;
         endTime = time;
         setEndMode();
+        // BEGIN android-removed
+        // if (isSimple) {
+        //     ((com.ibm.icu.util.SimpleTimeZone) icuTZ).setEndRule(month, day,
+        //             dayOfWeek, time, after);
+        // }
+        // END android-removed
     }
 
     /**
      * Sets the offset for standard time from GMT for this {@code SimpleTimeZone}.
-     * 
+     *
      * @param offset
      *            the offset from GMT of standard time in milliseconds.
-     * @since Android 1.0
      */
     @Override
     public void setRawOffset(int offset) {
         rawOffset = offset;
+        // BEGIN android-removed
+        // icuTZ.setRawOffset(offset);
+        // END android-removed
     }
 
     private void setStartMode() {
@@ -740,7 +803,8 @@ public class SimpleTimeZone extends TimeZone {
                 checkDay(startMonth, startDay);
             } else {
                 if (startDay < -5 || startDay > 5) {
-                    throw new IllegalArgumentException(Msg.getString("K00f8", startDay)); //$NON-NLS-1$
+                    throw new IllegalArgumentException(Msg.getString(
+                            "K00f8", startDay)); //$NON-NLS-1$
                 }
             }
         }
@@ -751,7 +815,7 @@ public class SimpleTimeZone extends TimeZone {
 
     /**
      * Sets the rule which specifies the start of daylight savings time.
-     * 
+     *
      * @param month
      *            the {@code Calendar} month in which daylight savings time starts.
      * @param dayOfMonth
@@ -760,7 +824,6 @@ public class SimpleTimeZone extends TimeZone {
      * @param time
      *            the time of day in milliseconds on which daylight savings time
      *            starts.
-     * @since Android 1.0
      */
     public void setStartRule(int month, int dayOfMonth, int time) {
         startMonth = month;
@@ -768,11 +831,17 @@ public class SimpleTimeZone extends TimeZone {
         startDayOfWeek = 0; // Initialize this value for hasSameRules()
         startTime = time;
         setStartMode();
+        // BEGIN android-removed
+        // if (isSimple) {
+        //     ((com.ibm.icu.util.SimpleTimeZone) icuTZ).setStartRule(month,
+        //             dayOfMonth, time);
+        // }
+        // END android-removed
     }
 
     /**
      * Sets the rule which specifies the start of daylight savings time.
-     * 
+     *
      * @param month
      *            the {@code Calendar} month in which daylight savings time starts.
      * @param day
@@ -784,7 +853,6 @@ public class SimpleTimeZone extends TimeZone {
      * @param time
      *            the time of day in milliseconds on which daylight savings time
      *            starts.
-     * @since Android 1.0
      */
     public void setStartRule(int month, int day, int dayOfWeek, int time) {
         startMonth = month;
@@ -792,11 +860,17 @@ public class SimpleTimeZone extends TimeZone {
         startDayOfWeek = dayOfWeek;
         startTime = time;
         setStartMode();
+        // BEGIN android-removed
+        // if (isSimple) {
+        //     ((com.ibm.icu.util.SimpleTimeZone) icuTZ).setStartRule(month, day,
+        //             dayOfWeek, time);
+        // }
+        // END android-removed
     }
 
     /**
      * Sets the rule which specifies the start of daylight savings time.
-     * 
+     *
      * @param month
      *            the {@code Calendar} month in which daylight savings time starts.
      * @param day
@@ -809,7 +883,6 @@ public class SimpleTimeZone extends TimeZone {
      *            starts.
      * @param after
      *            selects the day after or before the day of month.
-     * @since Android 1.0
      */
     public void setStartRule(int month, int day, int dayOfWeek, int time,
             boolean after) {
@@ -818,15 +891,20 @@ public class SimpleTimeZone extends TimeZone {
         startDayOfWeek = -dayOfWeek;
         startTime = time;
         setStartMode();
+        // BEGIN android-removed
+        // if (isSimple) {
+        //     ((com.ibm.icu.util.SimpleTimeZone) icuTZ).setStartRule(month, day,
+        //             dayOfWeek, time, after);
+        // }
+        // END android-removed
     }
 
     /**
      * Sets the starting year for daylight savings time in this {@code SimpleTimeZone}.
      * Years before this start year will always be in standard time.
-     * 
+     *
      * @param year
      *            the starting year.
-     * @since Android 1.0
      */
     public void setStartYear(int year) {
         startYear = year;
@@ -835,9 +913,8 @@ public class SimpleTimeZone extends TimeZone {
 
     /**
      * Returns the string representation of this {@code SimpleTimeZone}.
-     * 
+     *
      * @return the string representation of this {@code SimpleTimeZone}.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -864,7 +941,7 @@ public class SimpleTimeZone extends TimeZone {
                 + endMode + ",endMonth=" + endMonth + ",endDay=" + endDay //$NON-NLS-1$ //$NON-NLS-2$
                 + ",endDayOfWeek=" //$NON-NLS-1$
                 + (useDaylight && (endMode != DOM_MODE) ? endDayOfWeek + 1 : 0)
-                + ",endTime=" + endTime + "]";  //$NON-NLS-1$//$NON-NLS-2$
+                + ",endTime=" + endTime + "]"; //$NON-NLS-1$//$NON-NLS-2$
     }
 
     @Override

@@ -28,24 +28,20 @@ import java.util.Map;
  * getDefault()}. If {@code URLConnection#useCaches} is set, {@code
  * URLConnection} class will use {@code ResponseCache} to store and get
  * resources.
- * </p>
  * <p>
  * Whether the resource is cached depends on the implementation of {@code
  * ResponseCache}. If so, a {@code CacheResponse} is returned from which the
  * stream handler reads. If the stream handler fails to get a resource from the
  * cache, it must get the resource from its original location.
- * </p>
  * <p>
  * To write to the cache, the protocol handlers call {@code put()}, upon which a
  * {@code CacheRequest} is supplied to which the resources are written.
- * </p>
- * 
+ *
  * @see #put(URI, URLConnection)
  * @see CacheRequest
  * @see CacheResponse
  * @see URLConnection
  * @see URLStreamHandler
- * @since Android 1.0
  */
 public abstract class ResponseCache {
 
@@ -92,8 +88,6 @@ public abstract class ResponseCache {
 
     /**
      * Creates a new instance of this class.
-     * 
-     * @since Android 1.0
      */
     public ResponseCache() {
         super();
@@ -106,7 +100,6 @@ public abstract class ResponseCache {
      * @throws SecurityException
      *             if a security manager is installed but it doesn't have the
      *             {@code NetPermission("getResponseCache")}.
-     * @since Android 1.0
      */
     public static ResponseCache getDefault() {
         checkGetResponseCachePermission();
@@ -126,7 +119,6 @@ public abstract class ResponseCache {
      * @throws SecurityException
      *             if a security manager is installed but it doesn't have the
      *             {@code NetPermission("setResponseCache")}.
-     * @since Android 1.0
      */
     public static void setDefault(ResponseCache responseCache) {
         checkSetResponseCachePermission();
@@ -149,7 +141,6 @@ public abstract class ResponseCache {
      *             if an I/O error occurs while getting the cached data.
      * @throws IllegalArgumentException
      *             if any one of the parameters is set to {@code null}.
-     * @since Android 1.0
      */
     public abstract CacheResponse get(URI uri, String rqstMethod,
             Map<String, List<String>> rqstHeaders) throws IOException;
@@ -171,7 +162,6 @@ public abstract class ResponseCache {
      *             if an I/O error occurs while adding the resource.
      * @throws IllegalArgumentException
      *             if any one of the parameters is set to {@code null}.
-     * @since Android 1.0
      */
     public abstract CacheRequest put(URI uri, URLConnection conn)
             throws IOException;

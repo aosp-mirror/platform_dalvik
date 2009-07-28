@@ -16,25 +16,24 @@
  */
 
 // BEGIN android-note
-// This implementation was changed significantly. Changes where not marked.
+// This implementation is quite different from Harmony. Changes are not marked.
 // END android-note
+
 package java.lang.ref;
 
 /**
  * The {@code ReferenceQueue} is the container on which reference objects are
  * enqueued when the garbage collector detects the reachability type specified
  * for the referent.
- * 
- * @since Android 1.0
+ *
+ * @since 1.2
  */
 public class ReferenceQueue<T> {
-    
+
     private Reference<? extends T> head;
 
     /**
      * Constructs a new instance of this class.
-     * 
-     * @since Android 1.0
      */
     public ReferenceQueue() {
         super();
@@ -43,11 +42,9 @@ public class ReferenceQueue<T> {
     /**
      * Returns the next available reference from the queue, removing it in the
      * process. Does not wait for a reference to become available.
-     * 
+     *
      * @return the next available reference, or {@code null} if no reference is
      *         immediately available
-     *            
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public synchronized Reference<? extends T> poll() {
@@ -73,37 +70,31 @@ public class ReferenceQueue<T> {
     /**
      * Returns the next available reference from the queue, removing it in the
      * process. Waits indefinitely for a reference to become available.
-     * 
+     *
      * @return the next available reference
-     * 
+     *
      * @throws InterruptedException
-     *             if the blocking call was interrupted for some reason  
-     *            
-     * @since Android 1.0
+     *             if the blocking call was interrupted for some reason
      */
     public Reference<? extends T> remove() throws InterruptedException {
         return remove(0L);
     }
-    
+
     /**
      * Returns the next available reference from the queue, removing it in the
      * process. Waits for a reference to become available or the given timeout
      * period to elapse, whichever happens first.
-     * 
+     *
      * @param timeout
      *            maximum time (in ms) to spend waiting for a reference object
      *            to become available. A value of zero results in the method
      *            waiting indefinitely.
-     *            
      * @return the next available reference, or {@code null} if no reference
      *         becomes available within the timeout period
-     * 
      * @throws IllegalArgumentException
      *             if the wait period is negative.
      * @throws InterruptedException
-     *             if the blocking call was interrupted for some reason  
-     *            
-     * @since Android 1.0
+     *             if the blocking call was interrupted for some reason
      */
     public synchronized Reference<? extends T> remove(long timeout) throws IllegalArgumentException,
             InterruptedException {
@@ -128,20 +119,20 @@ public class ReferenceQueue<T> {
     }
 
     /**
-     * Enqueues the reference object on the receiver.
-     * 
-     * @param toQueue
+     * Enqueue the reference object on the receiver.
+     *
+     * @param reference
      *            reference object to be enqueued.
-     *            
-     * @since Android 1.0
+     * @return boolean true if reference is enqueued. false if reference failed
+     *         to enqueue.
      */
-    synchronized void enqueue(Reference<? extends T> toQueue) {
+    synchronized void enqueue(Reference<? extends T> reference) {
         if (head == null) {
-            toQueue.queueNext = toQueue;
+            reference.queueNext = reference;
         } else {
-            toQueue.queueNext = head;
+            reference.queueNext = head;
         }
-        head = toQueue;
+        head = reference;
         notify();
     }
 }

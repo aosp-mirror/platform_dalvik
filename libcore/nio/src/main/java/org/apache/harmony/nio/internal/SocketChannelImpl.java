@@ -17,6 +17,11 @@
 
 package org.apache.harmony.nio.internal;
 
+// BEGIN android-note
+// Copied from a newer version of Harmony.
+// In this class the address length was changed from long to int.
+// END android-note
+
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,24 +47,19 @@ import java.nio.channels.UnresolvedAddressException;
 import java.nio.channels.UnsupportedAddressTypeException;
 import java.nio.channels.spi.SelectorProvider;
 
-import org.apache.harmony.luni.net.SocketImplProvider;
+import org.apache.harmony.luni.net.PlainSocketImpl;
 import org.apache.harmony.luni.platform.FileDescriptorHandler;
 import org.apache.harmony.luni.platform.INetworkSystem;
 import org.apache.harmony.luni.platform.Platform;
 import org.apache.harmony.luni.util.ErrorCodeException;
+import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.nio.AddressUtil;
 import org.apache.harmony.nio.internal.nls.Messages;
 
 /*
- * 
  * The default implementation class of java.nio.channels.SocketChannel.
- * 
  */
 class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
-
-    // -------------------------------------------------------------------
-    // Class variables
-    // -------------------------------------------------------------------
 
     private static final int EOF = -1;
 
@@ -68,41 +68,37 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     // The singleton to do the native network operation.
     static final INetworkSystem networkSystem = Platform.getNetworkSystem();
 
-    // status un-init, not initialized.
+    // Status un-init, not initialized.
     static final int SOCKET_STATUS_UNINIT = EOF;
 
-    // status before connect.
+    // Status before connect.
     static final int SOCKET_STATUS_UNCONNECTED = 0;
 
-    // status connection pending
+    // Status connection pending.
     static final int SOCKET_STATUS_PENDING = 1;
 
-    // status after connection success
+    // Status after connection success.
     static final int SOCKET_STATUS_CONNECTED = 2;
 
-    // status closed.
+    // Status closed.
     static final int SOCKET_STATUS_CLOSED = 3;
 
-    // timeout used for non-block mode.
+    // Timeout used for non-block mode.
     private static final int TIMEOUT_NONBLOCK = 0;
 
-    // timeout used for block mode.
+    // Timeout used for block mode.
     private static final int TIMEOUT_BLOCK = EOF;
 
-    // step used for connect
+    // Step used for connect.
     private static final int HY_SOCK_STEP_START = 0;
 
-    // step used for finishConnect
+    // Step used for finishConnect.
     private static final int HY_PORT_SOCKET_STEP_CHECK = 1;
 
-    // connect success
+    // Connect success.
     private static final int CONNECT_SUCCESS = 0;
 
-    // -------------------------------------------------------------------
-    // Instance Variables
-    // -------------------------------------------------------------------
-
-    // The fd to interact with native code
+    // The descriptor to interact with native code.
     FileDescriptor fd;
 
     // Our internal Socket.
@@ -111,24 +107,23 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     // The address to be connected.
     InetSocketAddress connectAddress = null;
 
-    // Local address of the this socket (package private for adapter)
+    // Local address of the this socket (package private for adapter).
     InetAddress localAddress = null;
 
-    // local port
+    // Local port number.
     int localPort;
 
     // At first, uninitialized.
     int status = SOCKET_STATUS_UNINIT;
 
-    // BEGIN android-changed
-    // copied from a newer version of harmony
-    // whether the socket is bound
+    // Whether the socket is bound.
     volatile boolean isBound = false;
-    // END adroid-changed
 
-    private final Object readLock = new Object();
+    private static class ReadLock {}
+    private final Object readLock = new ReadLock();
 
-    private final Object writeLock = new Object();
+    private static class WriteLock {}
+    private final Object writeLock = new WriteLock();
 
     // BEGIN android-changed
     // this content is a struct used in connect_withtimeout().
@@ -136,30 +131,37 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     private byte[] connectContext = new byte[392];
     // END android-changed
 
-    // used to store the trafficClass value which is simply returned
+    // Used to store the trafficClass value which is simply returned
     // as the value that was set. We also need it to pass it to methods
-    // that specify an address packets are going to be sent to
+    // that specify an address packets are going to be sent to.
     private int trafficClass = 0;
 
-    // -------------------------------------------------------------------
-    // Constructor
-    // -------------------------------------------------------------------
-
     /*
-     * Constructor
+     * Constructor for creating a connected socket channel.
      */
     public SocketChannelImpl(SelectorProvider selectorProvider)
+            throws IOException {
+        this(selectorProvider, true);
+    }
+
+    /*
+     * Constructor for creating an optionally connected socket channel.
+     */
+    public SocketChannelImpl(SelectorProvider selectorProvider, boolean connect)
             throws IOException {
         super(selectorProvider);
         fd = new FileDescriptor();
         status = SOCKET_STATUS_UNCONNECTED;
-        networkSystem.createSocket(fd, true);
+        if (connect) {
+            networkSystem.createStreamSocket(fd, true);
+        }
     }
 
     /*
-     * for native call
+     * For native call.
      */
-    private SocketChannelImpl(){
+    @SuppressWarnings("unused")
+    private SocketChannelImpl() {
         super(SelectorProvider.provider());
         fd = new FileDescriptor();
         connectAddress = new InetSocketAddress(0);
@@ -186,10 +188,6 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         status = SOCKET_STATUS_UNCONNECTED;
     }
 
-    // -------------------------------------------------------------------
-    // Methods for getting internal Socket.
-    // -------------------------------------------------------------------
-
     /*
      * Getting the internal Socket If we have not the socket, we create a new
      * one.
@@ -204,8 +202,8 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                     addr = connectAddress.getAddress();
                     port = connectAddress.getPort();
                 }
-                socket = new SocketAdapter(SocketImplProvider.getSocketImpl(fd,
-                        localPort, addr, port), this);
+                socket = new SocketAdapter(
+                        new PlainSocketImpl(fd, localPort, addr, port), this);
             } catch (SocketException e) {
                 return null;
             }
@@ -213,11 +211,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         return socket;
     }
 
-    // -------------------------------------------------------------------
-    // Methods for connect and finishConnect
-    // -------------------------------------------------------------------
-
-    /*
+    /**
      * @see java.nio.channels.SocketChannel#isConnected()
      */
     @Override
@@ -226,20 +220,17 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     }
 
     /*
-     * status setting used by other class.
+     * Status setting used by other class.
      */
     synchronized void setConnected() {
         status = SOCKET_STATUS_CONNECTED;
     }
 
-    // BEGIN android-added
-    // copied from a newer version of harmony
     void setBound(boolean flag) {
         isBound = flag;
     }
-    // END android-added
 
-    /*
+    /**
      * @see java.nio.channels.SocketChannel#isConnectionPending()
      */
     @Override
@@ -247,7 +238,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         return status == SOCKET_STATUS_PENDING;
     }
 
-    /*
+    /**
      * @see java.nio.channels.SocketChannel#connect(java.net.SocketAddress)
      */
     @Override
@@ -257,9 +248,15 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
 
         // check the address
         InetSocketAddress inetSocketAddress = validateAddress(socketAddress);
+        InetAddress normalAddr = inetSocketAddress.getAddress();
+
+        // When connecting, map ANY address to Localhost
+        if (normalAddr.isAnyLocalAddress()) {
+            normalAddr = InetAddress.getLocalHost();
+        }
 
         int port = inetSocketAddress.getPort();
-        String hostName = inetSocketAddress.getAddress().getHostName();
+        String hostName = normalAddr.getHostName();
         // security check
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -271,23 +268,12 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         boolean finished = false;
 
         try {
-            if (!isBound) {
-                // bind
-                networkSystem.bind2(fd, 0, true, InetAddress
-                        .getByAddress(new byte[] { 0, 0, 0, 0 }));
-                isBound = true;
-            }
-
             if (isBlocking()) {
                 begin();
-                result = networkSystem.connect(fd, trafficClass,
-                        inetSocketAddress.getAddress(), inetSocketAddress
-                                .getPort());
-
+                result = networkSystem.connect(fd, trafficClass, normalAddr, port);
             } else {
                 result = networkSystem.connectWithTimeout(fd, 0, trafficClass,
-                        inetSocketAddress.getAddress(), inetSocketAddress
-                                .getPort(), HY_SOCK_STEP_START, connectContext);
+                        normalAddr, port, HY_SOCK_STEP_START, connectContext);
                 // set back to nonblocking to work around with a bug in portlib
                 if (!this.isBlocking()) {
                     networkSystem.setNonBlocking(fd, true);
@@ -328,7 +314,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         return finished;
     }
 
-    /*
+    /**
      * @see java.nio.channels.SocketChannel#finishConnect()
      */
     @Override
@@ -372,14 +358,13 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         synchronized (this) {
             status = (finished ? SOCKET_STATUS_CONNECTED : status);
             isBound = finished;
+            // TPE: Workaround for bug that turns socket back to blocking
+            if (!isBlocking()) implConfigureBlocking(false);
         }
         return finished;
     }
 
-    // -------------------------------------------------------------------
-    // Methods for read and write
-    // -------------------------------------------------------------------
-    /*
+    /**
      * @see java.nio.channels.SocketChannel#read(java.nio.ByteBuffer)
      */
     @Override
@@ -411,7 +396,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         return readCount;
     }
 
-    /*
+    /**
      * @see java.nio.channels.SocketChannel#read(java.nio.ByteBuffer[], int,
      *      int)
      */
@@ -449,16 +434,17 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
 
     private boolean isIndexValid(ByteBuffer[] targets, int offset, int length) {
         return (length >= 0) && (offset >= 0)
-                && ((long)length + (long)offset <= targets.length);
+                && ((long) length + (long) offset <= targets.length);
     }
 
-    /*
-     * read from channel, and store the result in the target.
+    /**
+     * Read from channel, and store the result in the target.
      * 
-     * @param target output parameter
+     * @param target
+     *            output parameter
      */
     private int readImpl(ByteBuffer target) throws IOException {
-        synchronized(readLock){
+        synchronized (readLock) {
             int readCount = 0;
             try {
                 if (isBlocking()) {
@@ -467,10 +453,13 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                 int offset = target.position();
                 int length = target.remaining();
                 if (target.isDirect()) {
+                    // BEGIN android-changed
+                    // changed address from long to int; split address and offset paramters
                     int address = AddressUtil.getDirectBufferAddress(target);
                     readCount = networkSystem.readDirect(fd, address, offset,
                             length, (isBlocking() ? TIMEOUT_BLOCK
                                     : TIMEOUT_NONBLOCK));
+                    // END android-changed
                 } else {
                     // target is assured to have array.
                     byte[] array = target.array();
@@ -487,8 +476,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         }
     }
 
-    /*
-     * 
+    /**
      * @see java.nio.channels.SocketChannel#write(java.nio.ByteBuffer)
      */
     @Override
@@ -503,7 +491,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         return writeImpl(source);
     }
 
-    /*
+    /**
      * @see java.nio.channels.SocketChannel#write(java.nio.ByteBuffer[], int,
      *      int)
      */
@@ -520,7 +508,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             return 0;
         }
         ByteBuffer writeBuf = ByteBuffer.allocate(count);
-        for (int val = offset; val < length+offset; val++) {
+        for (int val = offset; val < length + offset; val++) {
             ByteBuffer source = sources[val];
             int oldPosition = source.position();
             writeBuf.put(source);
@@ -550,10 +538,10 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     }
 
     /*
-     * write the source. return the count of bytes written.
+     * Write the source. return the count of bytes written.
      */
     private int writeImpl(ByteBuffer source) throws IOException {
-        synchronized(writeLock){
+        synchronized (writeLock) {
             if (!source.hasRemaining()) {
                 return 0;
             }
@@ -565,9 +553,12 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                     begin();
                 }
                 if (source.isDirect()) {
+                    // BEGIN android-changed
+                    // changed address from long to int; split address and pos parameters
                     int address = AddressUtil.getDirectBufferAddress(source);
-                    writeCount = networkSystem
-                            .writeDirect(fd, address, pos, length);
+                    writeCount = networkSystem.writeDirect(fd, address, pos,
+                            length);
+                    // END android-changed
                 } else if (source.hasArray()) {
                     pos += source.arrayOffset();
                     writeCount = networkSystem.write(fd, source.array(), pos,
@@ -595,12 +586,8 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         }
     }
 
-    // -------------------------------------------------------------------
-    // Shared methods
-    // -------------------------------------------------------------------
-
     /*
-     * status check, open and "connected", when read and write.
+     * Status check, open and "connected", when read and write.
      */
     synchronized private void checkOpenConnected()
             throws ClosedChannelException {
@@ -613,7 +600,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     }
 
     /*
-     * status check, open and "unconnected", before connection.
+     * Status check, open and "unconnected", before connection.
      */
     synchronized private void checkUnconnected() throws IOException {
         if (!isOpen()) {
@@ -628,7 +615,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     }
 
     /*
-     * shared by this class and DatagramChannelImpl, to do the address transfer
+     * Shared by this class and DatagramChannelImpl, to do the address transfer
      * and check.
      */
     static InetSocketAddress validateAddress(SocketAddress socketAddress) {
@@ -646,7 +633,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     }
 
     /*
-     * get local address
+     * Get local address.
      */
     public InetAddress getLocalAddress() throws UnknownHostException {
         byte[] any_bytes = { 0, 0, 0, 0 };
@@ -656,11 +643,8 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         return localAddress;
     }
 
-    // -------------------------------------------------------------------
-    // Protected inherited methods
-    // -------------------------------------------------------------------
     /*
-     * do really closing action here
+     * Do really closing action here.
      */
     @Override
     synchronized protected void implCloseSelectableChannel() throws IOException {
@@ -674,7 +658,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         }
     }
 
-    /*
+    /**
      * @see java.nio.channels.spi.AbstractSelectableChannel#implConfigureBlocking(boolean)
      */
     @Override
@@ -685,29 +669,20 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     }
 
     /*
-     * get the fd
+     * Get the fd.
      */
     public FileDescriptor getFD() {
         return fd;
     }
 
-    // -------------------------------------------------------------------
-    // Adapter classes for internal socket.
-    // -------------------------------------------------------------------
-
+    /*
+     * Adapter classes for internal socket.
+     */
     private static class SocketAdapter extends Socket {
-
-        // ----------------------------------------------------
-        // Class Variables
-        // ----------------------------------------------------
 
         SocketChannelImpl channel;
 
         SocketImpl socketImpl;
-
-        // ----------------------------------------------------
-        // Methods
-        // ----------------------------------------------------
 
         SocketAdapter(SocketImpl socketimpl, SocketChannelImpl channel)
                 throws SocketException {
@@ -716,8 +691,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             this.channel = channel;
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#getChannel()
          */
         @Override
@@ -725,8 +699,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             return channel;
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#isBound()
          */
         @Override
@@ -734,8 +707,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             return channel.isBound;
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#isConnected()
          */
         @Override
@@ -743,8 +715,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             return channel.isConnected();
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#getLocalAddress()
          */
         @Override
@@ -756,8 +727,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             }
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#connect(java.net.SocketAddress, int)
          */
         @Override
@@ -778,8 +748,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             }
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#bind(java.net.SocketAddress)
          */
         @Override
@@ -798,8 +767,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
 
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#close()
          */
         @Override
@@ -849,8 +817,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                     .intValue();
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#getKeepAlive()
          */
         @Override
@@ -860,8 +827,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                     .booleanValue();
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#getOOBInline()
          */
         @Override
@@ -871,8 +837,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                     .booleanValue();
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#getSoLinger()
          */
         @Override
@@ -882,7 +847,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                     .intValue();
         }
 
-        /*
+        /**
          * @see java.net.Socket#getTcpNoDelay()
          */
         @Override
@@ -892,7 +857,82 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                     .booleanValue();
         }
 
-        /*
+        @Override
+        public void setKeepAlive(boolean value) throws SocketException {
+            checkOpen();
+            socketImpl.setOption(SocketOptions.SO_KEEPALIVE, value ? Boolean.TRUE
+                    : Boolean.FALSE);
+        }
+
+        @Override
+        public void setOOBInline(boolean oobinline) throws SocketException {
+            checkOpen();
+            socketImpl.setOption(SocketOptions.SO_OOBINLINE, oobinline ? Boolean.TRUE
+                    : Boolean.FALSE);
+        }
+
+        @Override
+        public synchronized void setReceiveBufferSize(int size)
+                throws SocketException {
+            checkOpen();
+            if (size < 1) {
+                throw new IllegalArgumentException(Msg.getString("K0035")); //$NON-NLS-1$
+            }
+            socketImpl
+                    .setOption(SocketOptions.SO_RCVBUF, Integer.valueOf(size));
+        }
+
+        @Override
+        public void setReuseAddress(boolean reuse) throws SocketException {
+            checkOpen();
+            socketImpl.setOption(SocketOptions.SO_REUSEADDR, reuse ? Boolean.TRUE
+                    : Boolean.FALSE);
+        }
+
+        @Override
+        public synchronized void setSendBufferSize(int size) throws SocketException {
+            checkOpen();
+            if (size < 1) {
+                throw new IllegalArgumentException(Msg.getString("K0035")); //$NON-NLS-1$
+            }
+            socketImpl.setOption(SocketOptions.SO_SNDBUF, Integer.valueOf(size));
+        }
+
+        @Override
+        public void setSoLinger(boolean on, int timeout) throws SocketException {
+            checkOpen();
+            if (on && timeout < 0) {
+                throw new IllegalArgumentException(Msg.getString("K0045")); //$NON-NLS-1$
+            }
+            int val = on ? (65535 < timeout ? 65535 : timeout) : -1;
+            socketImpl.setOption(SocketOptions.SO_LINGER, Integer.valueOf(val));
+        }
+
+        @Override
+        public synchronized void setSoTimeout(int timeout) throws SocketException {
+            checkOpen();
+            if (timeout < 0) {
+                throw new IllegalArgumentException(Msg.getString("K0036")); //$NON-NLS-1$
+            }
+            socketImpl.setOption(SocketOptions.SO_TIMEOUT, Integer.valueOf(timeout));
+        }
+
+        @Override
+        public void setTcpNoDelay(boolean on) throws SocketException {
+            checkOpen();
+            socketImpl.setOption(SocketOptions.TCP_NODELAY, Boolean.valueOf(on));
+        }
+
+        @Override
+        public void setTrafficClass(int value) throws SocketException {
+            checkOpen();
+            if (value < 0 || value > 255) {
+                throw new IllegalArgumentException();
+            }
+            socketImpl.setOption(SocketOptions.IP_TOS, Integer.valueOf(value));
+        }
+
+        /**
          * @see java.net.Socket#getOutputStream()
          */
         @Override
@@ -912,8 +952,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             return new SocketChannelOutputStream(channel);
         }
 
-        /*
-         * 
+        /**
          * @see java.net.Socket#getInputStream()
          */
         @Override
@@ -934,7 +973,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         }
 
         /*
-         * Checks whether the channel is open
+         * Checks whether the channel is open.
          */
         private void checkOpen() throws SocketException {
             if (isClosed()) {
@@ -944,7 +983,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         }
 
         /*
-         * used for net and nio exchange
+         * Used for net and nio exchange.
          */
         public SocketImpl getImpl() {
             return socketImpl;
@@ -964,7 +1003,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         }
 
         /*
-         * Closes this stream and channel
+         * Closes this stream and channel.
          * 
          * @exception IOException thrown if an error occurs during the close
          */
@@ -973,7 +1012,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             channel.close();
         }
 
-        /*
+        /**
          * @see java.io.OutputStream#write(byte[], int, int)
          */
         @Override
@@ -989,7 +1028,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             channel.write(buf);
         }
 
-        /*
+        /**
          * @see java.io.OutputStream#write(int)
          */
         @Override
@@ -1023,7 +1062,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             channel.close();
         }
 
-        /*
+        /**
          * @see java.io.InputStream#read()
          */
         @Override
@@ -1038,7 +1077,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
             // END android-changed
         }
 
-        /*
+        /**
          * @see java.io.InputStream#read(byte[], int, int)
          */
         @Override

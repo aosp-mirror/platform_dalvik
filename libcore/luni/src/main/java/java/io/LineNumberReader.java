@@ -22,8 +22,6 @@ package java.io;
  * while reading the data. The line number starts at 0 and is incremented any
  * time {@code '\r'}, {@code '\n'} or {@code "\r\n"} is read. The class has an
  * internal buffer for its data. The size of the buffer defaults to 8 KB.
- * 
- * @since Android 1.0
  */
 public class LineNumberReader extends BufferedReader {
 
@@ -38,10 +36,9 @@ public class LineNumberReader extends BufferedReader {
     /**
      * Constructs a new LineNumberReader on the Reader {@code in}. The internal
      * buffer gets the default size (8 KB).
-     * 
+     *
      * @param in
      *            the Reader that is buffered.
-     * @since Android 1.0
      */
     public LineNumberReader(Reader in) {
         super(in);
@@ -50,14 +47,13 @@ public class LineNumberReader extends BufferedReader {
     /**
      * Constructs a new LineNumberReader on the Reader {@code in}. The size of
      * the internal buffer is specified by the parameter {@code size}.
-     * 
+     *
      * @param in
      *            the Reader that is buffered.
      * @param size
      *            the size of the buffer to allocate.
      * @throws IllegalArgumentException
      *             if {@code size <= 0}.
-     * @since Android 1.0
      */
     public LineNumberReader(Reader in, int size) {
         super(in, size);
@@ -65,9 +61,8 @@ public class LineNumberReader extends BufferedReader {
 
     /**
      * Returns the current line number for this reader. Numbering starts at 0.
-     * 
+     *
      * @return the current line number.
-     * @since Android 1.0
      */
     public int getLineNumber() {
         synchronized (lock) {
@@ -82,7 +77,7 @@ public class LineNumberReader extends BufferedReader {
      * position, provided that {@code readlimit} has not been surpassed. The
      * line number associated with this marked position is also stored so that
      * it can be restored when {@code reset()} is called.
-     * 
+     *
      * @param readlimit
      *            the number of characters that can be read from this stream
      *            before the mark is invalidated.
@@ -90,7 +85,6 @@ public class LineNumberReader extends BufferedReader {
      *             if an error occurs while setting the mark in this reader.
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public void mark(int readlimit) throws IOException {
@@ -110,14 +104,13 @@ public class LineNumberReader extends BufferedReader {
      * Recognized line terminator sequences are {@code '\r'}, {@code '\n'} and
      * {@code "\r\n"}. Line terminator sequences are always translated into
      * {@code '\n'}.
-     * </p>
-     * 
+     *
      * @return the character read or -1 if the end of the source reader has been
      *         reached.
      * @throws IOException
      *             if the reader is closed or another IOException occurs.
-     * @since Android 1.0
      */
+    @SuppressWarnings("fallthrough")
     @Override
     public int read() throws IOException {
         synchronized (lock) {
@@ -148,8 +141,7 @@ public class LineNumberReader extends BufferedReader {
      * Recognized line terminator sequences are {@code '\r'}, {@code '\n'} and
      * {@code "\r\n"}. Line terminator sequences are always translated into
      * {@code '\n'}.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the array in which to store the characters read.
      * @param offset
@@ -161,7 +153,6 @@ public class LineNumberReader extends BufferedReader {
      *         source reader has been reached while reading.
      * @throws IOException
      *             if this reader is closed or another IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public int read(char[] buffer, int offset, int count) throws IOException {
@@ -193,28 +184,17 @@ public class LineNumberReader extends BufferedReader {
      * represented by 0 or more characters followed by {@code '\r'},
      * {@code '\n'}, {@code "\r\n"} or the end of the stream. The returned
      * string does not include the newline sequence.
-     * 
+     *
      * @return the contents of the line or {@code null} if no characters have
      *         been read before the end of the stream has been reached.
      * @throws IOException
      *             if this reader is closed or another IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public String readLine() throws IOException {
         synchronized (lock) {
-            /* Typical Line Length */
-            StringBuilder result = new StringBuilder(80);
-            while (true) {
-                int character = read();
-                if (character == -1) {
-                    return result.length() != 0 ? result.toString() : null;
-                }
-                if (character == '\n') {
-                    return result.toString();
-                }
-                result.append((char) character);
-            }
+            lineNumber++;
+            return super.readLine();
         }
     }
 
@@ -222,14 +202,13 @@ public class LineNumberReader extends BufferedReader {
      * Resets this reader to the last marked location. It also resets the line
      * count to what is was when this reader was marked. This implementation
      * resets the source reader.
-     * 
+     *
      * @throws IOException
      *             if this reader is already closed, no mark has been set or the
      *             mark is no longer valid because more than {@code readlimit}
      *             bytes have been read since setting the mark.
      * @see #mark(int)
      * @see #markSupported()
-     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {
@@ -244,12 +223,11 @@ public class LineNumberReader extends BufferedReader {
      * Sets the line number of this reader to the specified {@code lineNumber}.
      * Note that this may have side effects on the line number associated with
      * the last marked position.
-     * 
+     *
      * @param lineNumber
      *            the new line number value.
      * @see #mark(int)
      * @see #reset()
-     * @since Android 1.0
      */
     public void setLineNumber(int lineNumber) {
         synchronized (lock) {
@@ -263,7 +241,7 @@ public class LineNumberReader extends BufferedReader {
      * is used. This implementation skips {@code count} number of characters in
      * the source reader and increments the line number count whenever line
      * terminator sequences are skipped.
-     * 
+     *
      * @param count
      *            the number of characters to skip.
      * @return the number of characters actually skipped.
@@ -274,7 +252,6 @@ public class LineNumberReader extends BufferedReader {
      * @see #mark(int)
      * @see #read()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public long skip(long count) throws IOException {

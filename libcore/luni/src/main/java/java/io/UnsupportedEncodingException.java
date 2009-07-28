@@ -18,11 +18,8 @@
 package java.io;
 
 /**
- * Signals that a requested character encoding is not available, either because
- * it is not included a specific Android system, or because the encoding name
- * is simply incorrect.
- * 
- * @since Android 1.0
+ * Thrown when a program asks for a particular character converter that is
+ * unavailable.
  */
 public class UnsupportedEncodingException extends IOException {
 
@@ -31,8 +28,6 @@ public class UnsupportedEncodingException extends IOException {
     /**
      * Constructs a new {@code UnsupportedEncodingException} with its stack
      * trace filled in.
-     * 
-     * @since Android 1.0
      */
     public UnsupportedEncodingException() {
         super();
@@ -44,7 +39,6 @@ public class UnsupportedEncodingException extends IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public UnsupportedEncodingException(String detailMessage) {
         super(detailMessage);

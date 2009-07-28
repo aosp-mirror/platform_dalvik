@@ -23,9 +23,6 @@ package java.lang;
  * {@code new} is invoked.
  * <p>
  * Note that this can only occur when inconsistent class files are being loaded.
- * </p>
- * 
- * @since Android 1.0
  */
 public class InstantiationError extends IncompatibleClassChangeError {
     private static final long serialVersionUID = -4885810657349421204L;
@@ -33,8 +30,6 @@ public class InstantiationError extends IncompatibleClassChangeError {
     /**
      * Constructs a new {@code InstantiationError} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public InstantiationError() {
         super();
@@ -46,7 +41,6 @@ public class InstantiationError extends IncompatibleClassChangeError {
      * 
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public InstantiationError(String detailMessage) {
         super(detailMessage);
@@ -58,7 +52,6 @@ public class InstantiationError extends IncompatibleClassChangeError {
      * 
      * @param clazz
      *            the class that can not be instantiated.
-     * @since Android 1.0
      */
     InstantiationError(Class<?> clazz) {
         super(clazz.getName());

@@ -30,9 +30,8 @@ import org.apache.harmony.luni.util.PriviAction;
 
 /**
  * Default implementation for {@code ProxySelector}.
- * 
- * @since Android 1.0
  */
+@SuppressWarnings("unchecked")
 class ProxySelectorImpl extends ProxySelector {
 
     private static final int HTTP_PROXY_PORT = 80;
@@ -239,7 +238,7 @@ class ProxySelectorImpl extends ProxySelector {
      */
     private boolean isNonProxyHost(String host, String nonProxyHosts) {
         // nonProxyHosts is not set
-        if (null == nonProxyHosts) {
+        if (null == host || null == nonProxyHosts) {
             return false;
         }
         // Construct regex expression of nonProxyHosts

@@ -23,7 +23,6 @@ import java.io.Serializable;
  * closed.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class FormatterClosedException extends IllegalStateException implements
         Serializable {

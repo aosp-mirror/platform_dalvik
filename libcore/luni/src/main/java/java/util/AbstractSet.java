@@ -22,15 +22,13 @@ package java.util;
  * implementation does not support adding. A subclass must implement the
  * abstract methods iterator() and size().
  * 
- * @since Android 1.0
+ * @since 1.2
  */
 public abstract class AbstractSet<E> extends AbstractCollection<E> implements
         Set<E> {
 
     /**
      * Constructs a new instance of this AbstractSet.
-     * 
-     * @since Android 1.0
      */
     protected AbstractSet() {
         super();
@@ -46,7 +44,6 @@ public abstract class AbstractSet<E> extends AbstractCollection<E> implements
      * @return {@code true} if the specified object is equal to this set,
      *         {@code false} otherwise
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -55,14 +52,12 @@ public abstract class AbstractSet<E> extends AbstractCollection<E> implements
         }
         if (object instanceof Set) {
             Set<?> s = (Set<?>) object;
-            // BEGIN android-changed
-            // copied from a newer version of harmony
+
             try {
                 return size() == s.size() && containsAll(s);
             } catch (ClassCastException cce) {
                 return false;
             }
-            // END android-changed
         }
         return false;
     }
@@ -74,7 +69,6 @@ public abstract class AbstractSet<E> extends AbstractCollection<E> implements
      * 
      * @return the hash code of this set.
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -95,9 +89,8 @@ public abstract class AbstractSet<E> extends AbstractCollection<E> implements
      *            the collection of objects to remove.
      * @return {@code true} if this collection was modified, {@code false}
      *         otherwise.
-     * @exception UnsupportedOperationException
-     *                when removing from this collection is not supported.
-     * @since Android 1.0
+     * @throws UnsupportedOperationException
+     *                if removing from this collection is not supported.
      */
     @Override
     public boolean removeAll(Collection<?> collection) {

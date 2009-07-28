@@ -28,21 +28,17 @@ package java.lang;
  * invertible (the sign of the result of x.compareTo(y) must be equal to the
  * negation of the sign of the result of y.compareTo(x) for all combinations of
  * x and y).
- * </p>
  * <p>
  * In addition, it is recommended (but not required) that if and only if the
  * result of x.compareTo(y) is zero, then the result of x.equals(y) should be
  * {@code true}.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface Comparable<T> {
-    
+
     /**
      * Compares this object to the specified object to determine their relative
      * order.
-     * 
+     *
      * @param another
      *            the object to compare to this instance.
      * @return a negative integer if this instance is less than {@code another};
@@ -52,7 +48,6 @@ public interface Comparable<T> {
      * @throws ClassCastException
      *             if {@code another} cannot be converted into something
      *             comparable to {@code this} instance.
-     * @since Android 1.0
      */
     int compareTo(T another);
 }

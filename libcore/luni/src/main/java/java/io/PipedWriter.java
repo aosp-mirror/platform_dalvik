@@ -23,10 +23,8 @@ import org.apache.harmony.luni.util.Msg;
  * Places information on a communications pipe. When two threads want to pass
  * data back and forth, one creates a piped writer and the other creates a piped
  * reader.
- * 
+ *
  * @see PipedReader
- * 
- * @since Android 1.0
  */
 public class PipedWriter extends Writer {
     /**
@@ -40,9 +38,8 @@ public class PipedWriter extends Writer {
      * Constructs a new unconnected {@code PipedWriter}. The resulting writer
      * must be connected to a {@code PipedReader} before data may be written to
      * it.
-     * 
+     *
      * @see PipedReader
-     * @since Android 1.0
      */
     public PipedWriter() {
         super();
@@ -52,12 +49,11 @@ public class PipedWriter extends Writer {
      * Constructs a new {@code PipedWriter} connected to the {@link PipedReader}
      * {@code dest}. Any data written to this writer can be read from {@code
      * dest}.
-     * 
+     *
      * @param dest
      *            the {@code PipedReader} to connect to.
      * @throws IOException
      *             if {@code dest} is already connected.
-     * @since Android 1.0
      */
     public PipedWriter(PipedReader dest) throws IOException {
         super(dest);
@@ -68,10 +64,9 @@ public class PipedWriter extends Writer {
      * Closes this writer. If a {@link PipedReader} is connected to this writer,
      * it is closed as well and the pipe is disconnected. Any data buffered in
      * the reader can still be read.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this writer.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -88,13 +83,12 @@ public class PipedWriter extends Writer {
     /**
      * Connects this {@code PipedWriter} to a {@link PipedReader}. Any data
      * written to this writer becomes readable in the reader.
-     * 
+     *
      * @param stream
      *            the reader to connect to.
      * @throws IOException
      *             if this writer is closed or already connected, or if {@code
      *             stream} is already connected.
-     * @since Android 1.0
      */
     public void connect(PipedReader stream) throws IOException {
         synchronized (lock) {
@@ -112,10 +106,9 @@ public class PipedWriter extends Writer {
     /**
      * Notifies the readers of this {@code PipedReader} that characters can be read. This
      * method does nothing if this Writer is not connected.
-     * 
+     *
      * @throws IOException
      *             if an I/O error occurs while flushing this writer.
-     * @since Android 1.0
      */
     @Override
     public void flush() throws IOException {
@@ -132,8 +125,7 @@ public class PipedWriter extends Writer {
      * Separate threads should be used to write to a {@code PipedWriter} and to
      * read from the connected {@code PipedReader}. If the same thread is used,
      * a deadlock may occur.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the buffer to write.
      * @param offset
@@ -155,7 +147,6 @@ public class PipedWriter extends Writer {
      *             correctly.
      * @throws NullPointerException
      *             if {@code buffer} is {@code null}.
-     * @since Android 1.0
      */
     @Override
     public void write(char[] buffer, int offset, int count) throws IOException {
@@ -194,8 +185,7 @@ public class PipedWriter extends Writer {
      * Separate threads should be used to write to a {@code PipedWriter} and to
      * read from the connected {@code PipedReader}. If the same thread is used,
      * a deadlock may occur.
-     * </p>
-     * 
+     *
      * @param c
      *            the character to write.
      * @throws InterruptedIOException
@@ -207,7 +197,6 @@ public class PipedWriter extends Writer {
      *             reader is closed or if the thread reading from the target
      *             reader is no longer alive. This case is currently not handled
      *             correctly.
-     * @since Android 1.0
      */
     @Override
     public void write(int c) throws IOException {

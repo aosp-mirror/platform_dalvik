@@ -31,11 +31,9 @@ package java.net;
  * <dd>Allows a stream (protocol) handler to be set when constructing an URL
  * object</dd>
  * </dl>
- * </p>
  * 
  * @see java.security.BasicPermission
  * @see SecurityManager
- * @since Android 1.0
  */
 public final class NetPermission extends java.security.BasicPermission {
 
@@ -46,7 +44,6 @@ public final class NetPermission extends java.security.BasicPermission {
      * 
      * @param name
      *            the name of the new NetPermission instance.
-     * @since Android 1.0
      */
     public NetPermission(String name) {
         super(name);
@@ -60,7 +57,6 @@ public final class NetPermission extends java.security.BasicPermission {
      *            the name of the new {@code NetPermission} instance.
      * @param actions
      *            the ignored action string.
-     * @since Android 1.0
      */
     public NetPermission(String name, String actions) {
         super(name, actions);

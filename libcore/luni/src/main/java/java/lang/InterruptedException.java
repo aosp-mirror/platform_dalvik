@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when a waiting thread is activated before the condition it was waiting
  * for has been satisfied.
- * 
- * @since Android 1.0
  */
 public class InterruptedException extends Exception {
 
@@ -30,8 +28,6 @@ public class InterruptedException extends Exception {
     /**
      * Constructs a new {@code InterruptedException} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public InterruptedException() {
         super();
@@ -43,7 +39,6 @@ public class InterruptedException extends Exception {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public InterruptedException(String detailMessage) {
         super(detailMessage);

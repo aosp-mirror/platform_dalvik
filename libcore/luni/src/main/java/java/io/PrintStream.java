@@ -18,6 +18,7 @@
 package java.io;
 
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.security.AccessController;
 import java.util.Formatter;
 import java.util.IllegalFormatException;
@@ -33,8 +34,6 @@ import org.apache.harmony.luni.util.PriviAction;
  * so that they can be read back in. No {@code IOException} is thrown by this
  * class. Instead, callers should use {@link #checkError()} to see if a problem
  * has occurred in this stream.
- * 
- * @since Android 1.0
  */
 public class PrintStream extends FilterOutputStream implements Appendable,
         Closeable {
@@ -63,12 +62,11 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * Constructs a new {@code PrintStream} with {@code out} as its target
      * stream. By default, the new print stream does not automatically flush its
      * contents to the target stream when a newline is encountered.
-     * 
+     *
      * @param out
      *            the target output stream.
      * @throws NullPointerException
      *             if {@code out} is {@code null}.
-     * @since Android 1.0
      */
     public PrintStream(OutputStream out) {
         super(out);
@@ -82,7 +80,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * stream. The parameter {@code autoflush} determines if the print stream
      * automatically flushes its contents to the target stream when a newline is
      * encountered.
-     * 
+     *
      * @param out
      *            the target output stream.
      * @param autoflush
@@ -90,7 +88,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *            newline sequence.
      * @throws NullPointerException
      *             if {@code out} is {@code null}.
-     * @since Android 1.0
      */
     public PrintStream(OutputStream out, boolean autoflush) {
         super(out);
@@ -105,7 +102,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * stream and using the character encoding {@code enc} while writing. The
      * parameter {@code autoflush} determines if the print stream automatically
      * flushes its contents to the target stream when a newline is encountered.
-     * 
+     *
      * @param out
      *            the target output stream.
      * @param autoflush
@@ -117,7 +114,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *             if {@code out} or {@code enc} are {@code null}.
      * @throws UnsupportedEncodingException
      *             if the encoding specified by {@code enc} is not supported.
-     * @since Android 1.0
      */
     public PrintStream(OutputStream out, boolean autoflush, String enc)
             throws UnsupportedEncodingException {
@@ -126,7 +122,11 @@ public class PrintStream extends FilterOutputStream implements Appendable,
             throw new NullPointerException();
         }
         this.autoflush = autoflush;
-        if (!Charset.isSupported(enc)) {
+        try {
+            if (!Charset.isSupported(enc)) {
+                throw new UnsupportedEncodingException(enc);
+            }
+        } catch (IllegalCharsetNameException e) {
             throw new UnsupportedEncodingException(enc);
         }
         encoding = enc;
@@ -135,7 +135,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Constructs a new {@code PrintStream} with {@code file} as its target. The
      * virtual machine's default character set is used for character encoding.
-     * 
+     *
      * @param file
      *            the target file. If the file already exists, its contents are
      *            removed, otherwise a new file is created.
@@ -144,7 +144,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * @throws SecurityException
      *             if a security manager exists and it denies writing to the
      *             target file.
-     * @since Android 1.0
      */
     public PrintStream(File file) throws FileNotFoundException {
         super(new FileOutputStream(file));
@@ -153,7 +152,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Constructs a new {@code PrintStream} with {@code file} as its target. The
      * character set named {@code csn} is used for character encoding.
-     * 
+     *
      * @param file
      *            the target file. If the file already exists, its contents are
      *            removed, otherwise a new file is created.
@@ -168,7 +167,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *             target file.
      * @throws UnsupportedEncodingException
      *             if the encoding specified by {@code csn} is not supported.
-     * @since Android 1.0
      */
     public PrintStream(File file, String csn) throws FileNotFoundException,
             UnsupportedEncodingException {
@@ -186,7 +184,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * Constructs a new {@code PrintStream} with the file identified by
      * {@code fileName} as its target. The virtual machine's default character
      * set is used for character encoding.
-     * 
+     *
      * @param fileName
      *            the target file's name. If the file already exists, its
      *            contents are removed, otherwise a new file is created.
@@ -195,7 +193,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * @throws SecurityException
      *             if a security manager exists and it denies writing to the
      *             target file.
-     * @since Android 1.0
      */
     public PrintStream(String fileName) throws FileNotFoundException {
         this(new File(fileName));
@@ -205,7 +202,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * Constructs a new {@code PrintStream} with the file identified by
      * {@code fileName} as its target. The character set named {@code csn} is
      * used for character encoding.
-     * 
+     *
      * @param fileName
      *            the target file's name. If the file already exists, its
      *            contents are removed, otherwise a new file is created.
@@ -220,7 +217,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *             target file.
      * @throws UnsupportedEncodingException
      *             if the encoding specified by {@code csn} is not supported.
-     * @since Android 1.0
      */
     public PrintStream(String fileName, String csn)
             throws FileNotFoundException, UnsupportedEncodingException {
@@ -229,12 +225,11 @@ public class PrintStream extends FilterOutputStream implements Appendable,
 
     /**
      * Flushes this stream and returns the value of the error flag.
-     * 
+     *
      * @return {@code true} if either an {@code IOException} has been thrown
      *         previously or if {@code setError()} has been called;
      *         {@code false} otherwise.
-     * @see #setError()         
-     * @since Android 1.0
+     * @see #setError()
      */
     public boolean checkError() {
         if (out != null) {
@@ -247,8 +242,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * Closes this print stream. Flushes this stream and then closes the target
      * stream. If an I/O error occurs, this stream's error state is set to
      * {@code true}.
-     * 
-     * @since Android 1.0
      */
     @Override
     public synchronized void close() {
@@ -267,8 +260,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * Ensures that all pending data is sent out to the target stream. It also
      * flushes the target stream. If an I/O error occurs, this stream's error
      * state is set to {@code true}.
-     * 
-     * @since Android 1.0
      */
     @Override
     public synchronized void flush() {
@@ -288,7 +279,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * target stream using the specified format string and arguments. For the
      * locale, the default value of the current virtual machine instance is
      * used.
-     * 
+     *
      * @param format
      *            the format string used for {@link java.util.Formatter#format}.
      * @param args
@@ -302,7 +293,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *             error regarding the format string or arguments is detected.
      * @throws NullPointerException
      *             if {@code format} is {@code null}.
-     * @since Android 1.0
      */
     public PrintStream format(String format, Object... args) {
         return format(Locale.getDefault(), format, args);
@@ -311,7 +301,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Writes a string formatted by an intermediate {@link Formatter} to this
      * stream using the specified locale, format string and arguments.
-     * 
+     *
      * @param l
      *            the locale used in the method. No localization will be applied
      *            if {@code l} is {@code null}.
@@ -328,7 +318,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *             error regarding the format string or arguments is detected.
      * @throws NullPointerException
      *             if {@code format} is {@code null}.
-     * @since Android 1.0
      */
     public PrintStream format(Locale l, String format, Object... args) {
         if (format == null) {
@@ -342,7 +331,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * Prints a formatted string. The behavior of this method is the same as
      * this stream's {@code #format(String, Object...)} method. For the locale,
      * the default value of the current virtual machine instance is used.
-     * 
+     *
      * @param format
      *            the format string used for
      *            {@link java.util.Formatter#format}.
@@ -357,7 +346,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *             error regarding the format string or arguments is detected.
      * @throws NullPointerException
      *             if {@code format} is {@code null}.
-     * @since Android 1.0
      */
     public PrintStream printf(String format, Object... args) {
         return format(format, args);
@@ -366,7 +354,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints a formatted string. The behavior of this method is the same as
      * this stream's {@code #format(Locale, String, Object...)} method.
-     * 
+     *
      * @param l
      *            the locale used in the method. No localization will be applied
      *            if {@code l} is {@code null}.
@@ -383,7 +371,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *             error regarding the format string or arguments is detected.
      * @throws NullPointerException
      *             if {@code format} is {@code null}.
-     * @since Android 1.0
      */
     public PrintStream printf(Locale l, String format, Object... args) {
         return format(l, format, args);
@@ -399,11 +386,10 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified character array
      * to the target stream.
-     * 
+     *
      * @param charArray
      *            the character array to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
      */
     public void print(char[] charArray) {
         print(new String(charArray, 0, charArray.length));
@@ -412,11 +398,10 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified character to the target
      * stream.
-     * 
+     *
      * @param ch
      *            the character to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
      */
     public void print(char ch) {
         print(String.valueOf(ch));
@@ -425,11 +410,10 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified double to the target
      * stream.
-     * 
+     *
      * @param dnum
      *            the double value to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
      */
     public void print(double dnum) {
         print(String.valueOf(dnum));
@@ -438,12 +422,11 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified float to the target
      * stream.
-     * 
+     *
      * @param fnum
      *            the float value to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
-     */   
+     */
     public void print(float fnum) {
         print(String.valueOf(fnum));
     }
@@ -451,12 +434,11 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified integer to the target
      * stream.
-     * 
+     *
      * @param inum
      *            the integer value to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
-     */   
+     */
     public void print(int inum) {
         print(String.valueOf(inum));
     }
@@ -464,12 +446,11 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified long to the target
      * stream.
-     * 
+     *
      * @param lnum
      *            the long value to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
-     */   
+     */
     public void print(long lnum) {
         print(String.valueOf(lnum));
     }
@@ -477,12 +458,11 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified object to the target
      * stream.
-     * 
+     *
      * @param obj
      *            the object to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
-     */   
+     */
     public void print(Object obj) {
         print(String.valueOf(obj));
     }
@@ -494,12 +474,10 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * {@code write(int)}.
      * <p>
      * If an I/O error occurs, this stream's error state is set to {@code true}.
-     * </p>
-     * 
+     *
      * @param str
      *            the string to print to the target stream.
      * @see #write(int)
-     * @since Android 1.0
      */
     public synchronized void print(String str) {
         if (out == null) {
@@ -525,12 +503,11 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified boolean to the target
      * stream.
-     * 
+     *
      * @param bool
      *            the boolean value to print the target stream.
      * @see #print(String)
-     * @since Android 1.0
-     */   
+     */
     public void print(boolean bool) {
         print(String.valueOf(bool));
     }
@@ -538,8 +515,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the system property
      * {@code "line.separator"} to the target stream.
-     * 
-     * @since Android 1.0
      */
     public void println() {
         newline();
@@ -549,11 +524,10 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * Prints the string representation of the specified character array
      * followed by the system property {@code "line.separator"} to the target
      * stream.
-     * 
+     *
      * @param charArray
      *            the character array to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
      */
     public void println(char[] charArray) {
         println(new String(charArray, 0, charArray.length));
@@ -562,11 +536,10 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified character followed by
      * the system property {@code "line.separator"} to the target stream.
-     * 
+     *
      * @param ch
      *            the character to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
      */
     public void println(char ch) {
         println(String.valueOf(ch));
@@ -575,11 +548,10 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified double followed by the
      * system property {@code "line.separator"} to the target stream.
-     * 
+     *
      * @param dnum
      *            the double value to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
      */
     public void println(double dnum) {
         println(String.valueOf(dnum));
@@ -588,12 +560,11 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified float followed by the
      * system property {@code "line.separator"} to the target stream.
-     * 
+     *
      * @param fnum
      *            the float value to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
-     */   
+     */
    public void println(float fnum) {
         println(String.valueOf(fnum));
     }
@@ -601,12 +572,12 @@ public class PrintStream extends FilterOutputStream implements Appendable,
    /**
      * Prints the string representation of the specified integer followed by the
      * system property {@code "line.separator"} to the target stream.
-     * 
+     *
      * @param inum
      *            the integer value to print to the target stream.
      * @see #print(String)
      * @since Android 1.0
-     */   
+     */
     public void println(int inum) {
         println(String.valueOf(inum));
     }
@@ -614,12 +585,12 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified long followed by the
      * system property {@code "line.separator"} to the target stream.
-     * 
+     *
      * @param lnum
      *            the long value to print to the target stream.
      * @see #print(String)
      * @since Android 1.0
-     */   
+     */
     public void println(long lnum) {
         println(String.valueOf(lnum));
     }
@@ -627,12 +598,12 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified object followed by the
      * system property {@code "line.separator"} to the target stream.
-     * 
+     *
      * @param obj
      *            the object to print to the target stream.
      * @see #print(String)
      * @since Android 1.0
-     */   
+     */
     public void println(Object obj) {
         println(String.valueOf(obj));
     }
@@ -645,7 +616,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * <p>
      * If an I/O error occurs, this stream's error state is set to {@code true}.
      * </p>
-     * 
+     *
      * @param str
      *            the string to print to the target stream.
      * @see #write(int)
@@ -659,20 +630,17 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Prints the string representation of the specified boolean followed by the
      * system property {@code "line.separator"} to the target stream.
-     * 
+     *
      * @param bool
      *            the boolean value to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
-     */   
+     */
     public void println(boolean bool) {
         println(String.valueOf(bool));
     }
 
     /**
      * Sets the error flag of this print stream to {@code true}.
-     * 
-     * @since Android 1.0
      */
     protected void setError() {
         ioError = true;
@@ -685,8 +653,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * <p>
      * This stream's error flag is set to {@code true} if this stream is closed
      * or an I/O error occurs.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the buffer to be written.
      * @param offset
@@ -697,7 +664,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *             if {@code offset < 0} or {@code count < 0}, or if {@code
      *             offset + count} is bigger than the length of {@code buffer}.
      * @see #flush()
-     * @since Android 1.0
      */
     @Override
     public void write(byte[] buffer, int offset, int count) {
@@ -738,11 +704,9 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * <p>
      * This stream's error flag is set to {@code true} if it is closed or an I/O
      * error occurs.
-     * </p>
-     * 
+     *
      * @param oneByte
      *            the byte to be written
-     * @since Android 1.0
      */
     @Override
     public synchronized void write(int oneByte) {
@@ -763,11 +727,10 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     /**
      * Appends the character {@code c} to the target stream. This method works
      * the same way as {@link #print(char)}.
-     * 
+     *
      * @param c
      *            the character to append to the target stream.
      * @return this stream.
-     * @since Android 1.0
      */
     public PrintStream append(char c) {
         print(c);
@@ -779,11 +742,10 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * method works the same way as {@code PrintStream.print(csq.toString())}.
      * If {@code csq} is {@code null}, then the string "null" is written to the
      * target stream.
-     * 
+     *
      * @param csq
      *            the character sequence appended to the target stream.
      * @return this stream.
-     * @since Android 1.0
      */
     public PrintStream append(CharSequence csq) {
         if (null == csq) {
@@ -800,7 +762,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * PrintStream.print(csq.subsequence(start, end).toString())}. If {@code
      * csq} is {@code null}, then the specified subsequence of the string "null"
      * will be written to the target stream.
-     * 
+     *
      * @param csq
      *            the character sequence appended to the target stream.
      * @param start
@@ -814,7 +776,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *             if {@code start > end}, {@code start < 0}, {@code end < 0} or
      *             either {@code start} or {@code end} are greater or equal than
      *             the length of {@code csq}.
-     * @since Android 1.0
      */
     public PrintStream append(CharSequence csq, int start, int end) {
         if (null == csq) {
