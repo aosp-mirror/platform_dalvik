@@ -33,7 +33,6 @@ import c/opcommon.c
 
 # opcode list; argument to op-start is default directory
 op-start x86
-    op OP_THROW_VERIFICATION_ERROR c
 op-end
 
 # arch-specific entry point to interpreter
