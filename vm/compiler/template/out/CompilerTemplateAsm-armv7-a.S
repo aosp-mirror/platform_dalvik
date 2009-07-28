@@ -325,7 +325,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN:
      * Thumb code through the link register to transfer control to the callee
      * method through a dedicated chaining cell.
      *
-     * The predicted chaining cell is declared in Armv5teLIR.h with the
+     * The predicted chaining cell is declared in ArmLIR.h with the
      * following layout:
      *
      *  typedef struct PredictedChainingCell {

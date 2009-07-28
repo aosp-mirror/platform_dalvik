@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_VM_COMPILER_CODEGEN_ARMV5TE_ARMV5TE_VFP_ARCHVARIANT_H
-#define _DALVIK_VM_COMPILER_CODEGEN_ARMV5TE_ARMV5TE_VFP_ARCHVARIANT_H
+#include "Dalvik.h"
+#include "interp/InterpDefs.h"
+#include "libdex/OpCode.h"
+#include "dexdump/OpCodeNames.h"
+#include "vm/compiler/CompilerInternals.h"
+#include "ArmLIR.h"
+#include "vm/mterp/common/FindInterface.h"
 
-/* Create the TemplateOpcode enum */
-#define JIT_TEMPLATE(X) TEMPLATE_##X,
-typedef enum {
-#include "../../../template/armv5te-vfp/TemplateOpList.h"
-/*
- * For example,
- *     TEMPLATE_CMP_LONG,
- *     TEMPLATE_RETURN,
- *     ...
- */
-    TEMPLATE_LAST_MARK,
-} TemplateOpCode;
-#undef JIT_TEMPLATE
+#include "armv5te-vfp/ArchVariant.h"
 
-#endif /* _DALVIK_VM_COMPILER_CODEGEN_ARMV5TE_ARMV5TE_VFP_ARCHVARIANT_H */
+#include "Codegen.c"
+#include "armv5te-vfp/ArchVariant.c"

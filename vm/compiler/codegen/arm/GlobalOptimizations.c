@@ -16,7 +16,7 @@
 
 #include "Dalvik.h"
 #include "vm/compiler/CompilerInternals.h"
-#include "Armv5teLIR.h"
+#include "ArmLIR.h"
 
 /*
  * Identify unconditional branches that jump to the immediate successor of the
@@ -24,15 +24,15 @@
  */
 static void applyRedundantBranchElimination(CompilationUnit *cUnit)
 {
-    Armv5teLIR *thisLIR;
+    ArmLIR *thisLIR;
 
-    for (thisLIR = (Armv5teLIR *) cUnit->firstLIRInsn;
-         thisLIR != (Armv5teLIR *) cUnit->lastLIRInsn;
+    for (thisLIR = (ArmLIR *) cUnit->firstLIRInsn;
+         thisLIR != (ArmLIR *) cUnit->lastLIRInsn;
          thisLIR = NEXT_LIR(thisLIR)) {
 
         /* Branch to the next instruction */
-        if (thisLIR->opCode == ARMV5TE_B_UNCOND) {
-            Armv5teLIR *nextLIR = thisLIR;
+        if (thisLIR->opCode == THUMB_B_UNCOND) {
+            ArmLIR *nextLIR = thisLIR;
 
             while (true) {
                 nextLIR = NEXT_LIR(nextLIR);
@@ -40,7 +40,7 @@ static void applyRedundantBranchElimination(CompilationUnit *cUnit)
                 /*
                  * Is the branch target the next instruction?
                  */
-                if (nextLIR == (Armv5teLIR *) thisLIR->generic.target) {
+                if (nextLIR == (ArmLIR *) thisLIR->generic.target) {
                     thisLIR->isNop = true;
                     break;
                 }
@@ -49,7 +49,7 @@ static void applyRedundantBranchElimination(CompilationUnit *cUnit)
                  * Found real useful stuff between the branch and the target
                  */
                 if (!isPseudoOpCode(nextLIR->opCode) ||
-                    nextLIR->opCode == ARMV5TE_PSEUDO_ALIGN4)
+                    nextLIR->opCode == ARM_PSEUDO_ALIGN4)
                     break;
             }
         }

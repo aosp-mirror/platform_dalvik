@@ -19,11 +19,11 @@
 #include "dexdump/OpCodeNames.h"
 
 #include "../../CompilerInternals.h"
-#include "Armv5teLIR.h"
+#include "ArmLIR.h"
 #include <unistd.h>             /* for cacheflush */
 
 /*
- * opcode: Armv5teOpCode enum
+ * opcode: ArmOpCode enum
  * skeleton: pre-designated bit-pattern for this opcode
  * ds: dest start bit position
  * de: dest end bit position
@@ -63,226 +63,226 @@
  *
  *  [!] escape.  To insert "!", use "!!"
  */
-/* NOTE: must be kept in sync with enum Armv5teOpcode from Armv5teLIR.h */
-Armv5teEncodingMap EncodingMap[ARMV5TE_LAST] = {
-    ENCODING_MAP(ARMV5TE_16BIT_DATA,    0x0000, 15, 0, -1, -1, -1, -1,
+/* NOTE: must be kept in sync with enum ArmOpcode from ArmLIR.h */
+ArmEncodingMap EncodingMap[ARM_LAST] = {
+    ENCODING_MAP(ARM_16BIT_DATA,    0x0000, 15, 0, -1, -1, -1, -1,
                  IS_UNARY_OP,
                  "data", "0x!0h(!0d)", 1),
-    ENCODING_MAP(ARMV5TE_ADC,           0x4140, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_ADC,           0x4140, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "adc", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_ADD_RRI3,      0x1c00, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_ADD_RRI3,      0x1c00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "add", "r!0d, r!1d, #!2d", 1),
-    ENCODING_MAP(ARMV5TE_ADD_RI8,       0x3000, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_ADD_RI8,       0x3000, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "add", "r!0d, r!0d, #!1d", 1),
-    ENCODING_MAP(ARMV5TE_ADD_RRR,       0x1800, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_ADD_RRR,       0x1800, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "add", "r!0d, r!1d, r!2d", 1),
-    ENCODING_MAP(ARMV5TE_ADD_RR_LH,     0x4440, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_ADD_RR_LH,     0x4440, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "add",
                  "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_ADD_RR_HL,     0x4480, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_ADD_RR_HL,     0x4480, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "add", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_ADD_RR_HH,     0x44c0, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_ADD_RR_HH,     0x44c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "add", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_ADD_PC_REL,    0xa000, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_ADD_PC_REL,    0xa000, 10, 8, 7, 0, -1, -1,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "add", "r!0d, pc, #!1E", 1),
-    ENCODING_MAP(ARMV5TE_ADD_SP_REL,    0xa800, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_ADD_SP_REL,    0xa800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "add", "r!0d, sp, #!1E", 1),
-    ENCODING_MAP(ARMV5TE_ADD_SPI7,      0xb000, 6, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_ADD_SPI7,      0xb000, 6, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | CLOBBER_DEST,
                  "add", "sp, #!0d*4", 1),
-    ENCODING_MAP(ARMV5TE_AND_RR,        0x4000, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_AND_RR,        0x4000, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "and", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_ASR,           0x1000, 2, 0, 5, 3, 10, 6,
+    ENCODING_MAP(THUMB_ASR,           0x1000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "asr", "r!0d, r!1d, #!2d", 1),
-    ENCODING_MAP(ARMV5TE_ASRV,          0x4100, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_ASRV,          0x4100, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "asr", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_B_COND,        0xd000, 7, 0, 11, 8, -1, -1,
+    ENCODING_MAP(THUMB_B_COND,        0xd000, 7, 0, 11, 8, -1, -1,
                  IS_BINARY_OP | IS_BRANCH,
                  "!1c", "!0t", 1),
-    ENCODING_MAP(ARMV5TE_B_UNCOND,      0xe000, 10, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_B_UNCOND,      0xe000, 10, 0, -1, -1, -1, -1,
                  NO_OPERAND | IS_BRANCH,
                  "b", "!0t", 1),
-    ENCODING_MAP(ARMV5TE_BIC,           0x4380, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_BIC,           0x4380, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "bic", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_BKPT,          0xbe00, 7, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_BKPT,          0xbe00, 7, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
                  "bkpt", "!0d", 1),
-    ENCODING_MAP(ARMV5TE_BLX_1,         0xf000, 10, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_BLX_1,         0xf000, 10, 0, -1, -1, -1, -1,
                  IS_BINARY_OP | IS_BRANCH,
                  "blx_1", "!0u", 1),
-    ENCODING_MAP(ARMV5TE_BLX_2,         0xe800, 10, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_BLX_2,         0xe800, 10, 0, -1, -1, -1, -1,
                  IS_BINARY_OP | IS_BRANCH,
                  "blx_2", "!0v", 1),
-    ENCODING_MAP(ARMV5TE_BL_1,          0xf000, 10, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_BL_1,          0xf000, 10, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
                  "bl_1", "!0u", 1),
-    ENCODING_MAP(ARMV5TE_BL_2,          0xf800, 10, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_BL_2,          0xf800, 10, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
                  "bl_2", "!0v", 1),
-    ENCODING_MAP(ARMV5TE_BLX_R,         0x4780, 6, 3, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_BLX_R,         0x4780, 6, 3, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
                  "blx", "r!0d", 1),
-    ENCODING_MAP(ARMV5TE_BX,            0x4700, 6, 3, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_BX,            0x4700, 6, 3, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
                  "bx", "r!0d", 1),
-    ENCODING_MAP(ARMV5TE_CMN,           0x42c0, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_CMN,           0x42c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
                  "cmn", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_CMP_RI8,       0x2800, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_CMP_RI8,       0x2800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP,
                  "cmp", "r!0d, #!1d", 1),
-    ENCODING_MAP(ARMV5TE_CMP_RR,        0x4280, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_CMP_RR,        0x4280, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
                  "cmp", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_CMP_LH,        0x4540, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_CMP_LH,        0x4540, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
                  "cmp", "r!0d, r!1D", 1),
-    ENCODING_MAP(ARMV5TE_CMP_HL,        0x4580, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_CMP_HL,        0x4580, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
                  "cmp", "r!0D, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_CMP_HH,        0x45c0, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_CMP_HH,        0x45c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP,
                  "cmp", "r!0D, r!1D", 1),
-    ENCODING_MAP(ARMV5TE_EOR,           0x4040, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_EOR,           0x4040, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "eor", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_LDMIA,         0xc800, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_LDMIA,         0xc800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST | CLOBBER_SRC1,
                  "ldmia", "r!0d!!, <!1R>", 1),
-    ENCODING_MAP(ARMV5TE_LDR_RRI5,      0x6800, 2, 0, 5, 3, 10, 6,
+    ENCODING_MAP(THUMB_LDR_RRI5,      0x6800, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldr", "r!0d, [r!1d, #!2E]", 1),
-    ENCODING_MAP(ARMV5TE_LDR_RRR,       0x5800, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_LDR_RRR,       0x5800, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldr", "r!0d, [r!1d, r!2d]", 1),
-    ENCODING_MAP(ARMV5TE_LDR_PC_REL,    0x4800, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_LDR_PC_REL,    0x4800, 10, 8, 7, 0, -1, -1,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldr", "r!0d, [pc, #!1E]", 1),
-    ENCODING_MAP(ARMV5TE_LDR_SP_REL,    0x9800, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_LDR_SP_REL,    0x9800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "ldr", "r!0d, [sp, #!1E]", 1),
-    ENCODING_MAP(ARMV5TE_LDRB_RRI5,     0x7800, 2, 0, 5, 3, 10, 6,
+    ENCODING_MAP(THUMB_LDRB_RRI5,     0x7800, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldrb", "r!0d, [r!1d, #2d]", 1),
-    ENCODING_MAP(ARMV5TE_LDRB_RRR,      0x5c00, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_LDRB_RRR,      0x5c00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldrb", "r!0d, [r!1d, r!2d]", 1),
-    ENCODING_MAP(ARMV5TE_LDRH_RRI5,     0x8800, 2, 0, 5, 3, 10, 6,
+    ENCODING_MAP(THUMB_LDRH_RRI5,     0x8800, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldrh", "r!0d, [r!1d, #!2F]", 1),
-    ENCODING_MAP(ARMV5TE_LDRH_RRR,      0x5a00, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_LDRH_RRR,      0x5a00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldrh", "r!0d, [r!1d, r!2d]", 1),
-    ENCODING_MAP(ARMV5TE_LDRSB_RRR,     0x5600, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_LDRSB_RRR,     0x5600, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldrsb", "r!0d, [r!1d, r!2d]", 1),
-    ENCODING_MAP(ARMV5TE_LDRSH_RRR,     0x5e00, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_LDRSH_RRR,     0x5e00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldrsh", "r!0d, [r!1d, r!2d]", 1),
-    ENCODING_MAP(ARMV5TE_LSL,           0x0000, 2, 0, 5, 3, 10, 6,
+    ENCODING_MAP(THUMB_LSL,           0x0000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "lsl", "r!0d, r!1d, #!2d", 1),
-    ENCODING_MAP(ARMV5TE_LSLV,          0x4080, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_LSLV,          0x4080, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "lsl", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_LSR,           0x0800, 2, 0, 5, 3, 10, 6,
+    ENCODING_MAP(THUMB_LSR,           0x0800, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "lsr", "r!0d, r!1d, #!2d", 1),
-    ENCODING_MAP(ARMV5TE_LSRV,          0x40c0, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_LSRV,          0x40c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "lsr", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_MOV_IMM,       0x2000, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_MOV_IMM,       0x2000, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mov", "r!0d, #!1d", 1),
-    ENCODING_MAP(ARMV5TE_MOV_RR,        0x1c00, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_MOV_RR,        0x1c00, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mov", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_MOV_RR_H2H,    0x46c0, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_MOV_RR_H2H,    0x46c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mov", "r!0D, r!1D", 1),
-    ENCODING_MAP(ARMV5TE_MOV_RR_H2L,    0x4640, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_MOV_RR_H2L,    0x4640, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mov", "r!0d, r!1D", 1),
-    ENCODING_MAP(ARMV5TE_MOV_RR_L2H,    0x4680, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_MOV_RR_L2H,    0x4680, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mov", "r!0D, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_MUL,           0x4340, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_MUL,           0x4340, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mul", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_MVN,           0x43c0, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_MVN,           0x43c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "mvn", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_NEG,           0x4240, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_NEG,           0x4240, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "neg", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_ORR,           0x4300, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_ORR,           0x4300, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "orr", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_POP,           0xbc00, 8, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_POP,           0xbc00, 8, 0, -1, -1, -1, -1,
                  IS_UNARY_OP,
                  "pop", "<!0R>", 1),
-    ENCODING_MAP(ARMV5TE_PUSH,          0xb400, 8, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_PUSH,          0xb400, 8, 0, -1, -1, -1, -1,
                  IS_UNARY_OP,
                  "push", "<!0R>", 1),
-    ENCODING_MAP(ARMV5TE_ROR,           0x41c0, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_ROR,           0x41c0, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "ror", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_SBC,           0x4180, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_SBC,           0x4180, 2, 0, 5, 3, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "sbc", "r!0d, r!1d", 1),
-    ENCODING_MAP(ARMV5TE_STMIA,         0xc000, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_STMIA,         0xc000, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_SRC1,
                  "stmia", "r!0d!!, <!1R>", 1),
-    ENCODING_MAP(ARMV5TE_STR_RRI5,      0x6000, 2, 0, 5, 3, 10, 6,
+    ENCODING_MAP(THUMB_STR_RRI5,      0x6000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP,
                  "str", "r!0d, [r!1d, #!2E]", 1),
-    ENCODING_MAP(ARMV5TE_STR_RRR,       0x5000, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_STR_RRR,       0x5000, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP,
                  "str", "r!0d, [r!1d, r!2d]", 1),
-    ENCODING_MAP(ARMV5TE_STR_SP_REL,    0x9000, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_STR_SP_REL,    0x9000, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP,
                  "str", "r!0d, [sp, #!1E]", 1),
-    ENCODING_MAP(ARMV5TE_STRB_RRI5,     0x7000, 2, 0, 5, 3, 10, 6,
+    ENCODING_MAP(THUMB_STRB_RRI5,     0x7000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP,
                  "strb", "r!0d, [r!1d, #!2d]", 1),
-    ENCODING_MAP(ARMV5TE_STRB_RRR,      0x5400, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_STRB_RRR,      0x5400, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP,
                  "strb", "r!0d, [r!1d, r!2d]", 1),
-    ENCODING_MAP(ARMV5TE_STRH_RRI5,     0x8000, 2, 0, 5, 3, 10, 6,
+    ENCODING_MAP(THUMB_STRH_RRI5,     0x8000, 2, 0, 5, 3, 10, 6,
                  IS_TERTIARY_OP,
                  "strh", "r!0d, [r!1d, #!2F]", 1),
-    ENCODING_MAP(ARMV5TE_STRH_RRR,      0x5200, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_STRH_RRR,      0x5200, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP,
                  "strh", "r!0d, [r!1d, r!2d]", 1),
-    ENCODING_MAP(ARMV5TE_SUB_RRI3,      0x1e00, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_SUB_RRI3,      0x1e00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "sub", "r!0d, r!1d, #!2d]", 1),
-    ENCODING_MAP(ARMV5TE_SUB_RI8,       0x3800, 10, 8, 7, 0, -1, -1,
+    ENCODING_MAP(THUMB_SUB_RI8,       0x3800, 10, 8, 7, 0, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
                  "sub", "r!0d, #!1d", 1),
-    ENCODING_MAP(ARMV5TE_SUB_RRR,       0x1a00, 2, 0, 5, 3, 8, 6,
+    ENCODING_MAP(THUMB_SUB_RRR,       0x1a00, 2, 0, 5, 3, 8, 6,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "sub", "r!0d, r!1d, r!2d", 1),
-    ENCODING_MAP(ARMV5TE_SUB_SPI7,      0xb080, 6, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_SUB_SPI7,      0xb080, 6, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | CLOBBER_DEST,
                  "sub", "sp, #!0d", 1),
-    ENCODING_MAP(ARMV5TE_SWI,           0xdf00, 7, 0, -1, -1, -1, -1,
+    ENCODING_MAP(THUMB_SWI,           0xdf00, 7, 0, -1, -1, -1, -1,
                  IS_UNARY_OP | IS_BRANCH,
                  "swi", "!0d", 1),
-    ENCODING_MAP(ARMV5TE_TST,           0x4200, 2, 0, 5, 3, -1, -1,
+    ENCODING_MAP(THUMB_TST,           0x4200, 2, 0, 5, 3, -1, -1,
                  IS_UNARY_OP,
                  "tst", "r!0d, r!1d", 1),
 };
@@ -293,7 +293,7 @@ Armv5teEncodingMap EncodingMap[ARMV5TE_LAST] = {
 static void installDataContent(CompilationUnit *cUnit)
 {
     int *dataPtr = (int *) ((char *) cUnit->baseAddr + cUnit->dataOffset);
-    Armv5teLIR *dataLIR = (Armv5teLIR *) cUnit->wordList;
+    ArmLIR *dataLIR = (ArmLIR *) cUnit->wordList;
     while (dataLIR) {
         *dataPtr++ = dataLIR->operands[0];
         dataLIR = NEXT_LIR(dataLIR);
@@ -315,11 +315,11 @@ static int jitTraceDescriptionSize(const JitTraceDescription *desc)
 static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
 {
     short *bufferAddr = (short *) cUnit->codeBuffer;
-    Armv5teLIR *lir;
+    ArmLIR *lir;
 
-    for (lir = (Armv5teLIR *) cUnit->firstLIRInsn; lir; lir = NEXT_LIR(lir)) {
+    for (lir = (ArmLIR *) cUnit->firstLIRInsn; lir; lir = NEXT_LIR(lir)) {
         if (lir->opCode < 0) {
-            if ((lir->opCode == ARMV5TE_PSEUDO_ALIGN4) &&
+            if ((lir->opCode == ARM_PSEUDO_ALIGN4) &&
                 /* 1 means padding is needed */
                 (lir->operands[0] == 1)) {
                 *bufferAddr++ = PADDING_MOV_R0_R0;
@@ -331,9 +331,9 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             continue;
         }
 
-        if (lir->opCode == ARMV5TE_LDR_PC_REL ||
-            lir->opCode == ARMV5TE_ADD_PC_REL) {
-            Armv5teLIR *lirTarget = (Armv5teLIR *) lir->generic.target;
+        if (lir->opCode == THUMB_LDR_PC_REL ||
+            lir->opCode == THUMB_ADD_PC_REL) {
+            ArmLIR *lirTarget = (ArmLIR *) lir->generic.target;
             intptr_t pc = (lir->generic.offset + 4) & ~3;
             /*
              * Allow an offset (stored in operands[2] to be added to the
@@ -350,8 +350,8 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                 return true;
             }
             lir->operands[1] = delta >> 2;
-        } else if (lir->opCode == ARMV5TE_B_COND) {
-            Armv5teLIR *targetLIR = (Armv5teLIR *) lir->generic.target;
+        } else if (lir->opCode == THUMB_B_COND) {
+            ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
             intptr_t pc = lir->generic.offset + 4;
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
@@ -359,8 +359,8 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                 return true;
             }
             lir->operands[0] = delta >> 1;
-        } else if (lir->opCode == ARMV5TE_B_UNCOND) {
-            Armv5teLIR *targetLIR = (Armv5teLIR *) lir->generic.target;
+        } else if (lir->opCode == THUMB_B_UNCOND) {
+            ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
             intptr_t pc = lir->generic.offset + 4;
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
@@ -369,8 +369,8 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                 dvmAbort();
             }
             lir->operands[0] = delta >> 1;
-        } else if (lir->opCode == ARMV5TE_BLX_1) {
-            assert(NEXT_LIR(lir)->opCode == ARMV5TE_BLX_2);
+        } else if (lir->opCode == THUMB_BLX_1) {
+            assert(NEXT_LIR(lir)->opCode == THUMB_BLX_2);
             /* curPC is Thumb */
             intptr_t curPC = (startAddr + lir->generic.offset + 4) & ~3;
             intptr_t target = lir->operands[1];
@@ -386,7 +386,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             NEXT_LIR(lir)->operands[0] = (delta>> 1) & 0x7ff;
         }
 
-        Armv5teEncodingMap *encoder = &EncodingMap[lir->opCode];
+        ArmEncodingMap *encoder = &EncodingMap[lir->opCode];
         short bits = encoder->skeleton;
         int i;
         for (i = 0; i < 3; i++) {
@@ -444,7 +444,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
 void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 {
     LIR *lir;
-    Armv5teLIR *armLIR;
+    ArmLIR *armLIR;
     int offset = 0;
     int i;
     ChainCellCounts chainCellCounts;
@@ -454,13 +454,13 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     info->instructionSet = cUnit->instructionSet;
 
     /* Beginning offset needs to allow space for chain cell offset */
-    for (armLIR = (Armv5teLIR *) cUnit->firstLIRInsn;
+    for (armLIR = (ArmLIR *) cUnit->firstLIRInsn;
          armLIR;
          armLIR = NEXT_LIR(armLIR)) {
         armLIR->generic.offset = offset;
         if (armLIR->opCode >= 0 && !armLIR->isNop) {
             offset += 2;
-        } else if (armLIR->opCode == ARMV5TE_PSEUDO_ALIGN4) {
+        } else if (armLIR->opCode == ARM_PSEUDO_ALIGN4) {
             if (offset & 0x2) {
                 offset += 2;
                 armLIR->operands[0] = 1;
@@ -476,10 +476,10 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 
     /* Add space for chain cell counts & trace description */
     u4 chainCellOffset = offset;
-    Armv5teLIR *chainCellOffsetLIR = (Armv5teLIR *) cUnit->chainCellOffsetLIR;
+    ArmLIR *chainCellOffsetLIR = (ArmLIR *) cUnit->chainCellOffsetLIR;
     assert(chainCellOffsetLIR);
     assert(chainCellOffset < 0x10000);
-    assert(chainCellOffsetLIR->opCode == ARMV5TE_16BIT_DATA &&
+    assert(chainCellOffsetLIR->opCode == ARM_16BIT_DATA &&
            chainCellOffsetLIR->operands[0] == CHAIN_CELL_OFFSET_TAG);
 
     /*

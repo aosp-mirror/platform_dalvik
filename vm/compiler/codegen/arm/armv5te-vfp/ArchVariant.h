@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef _DALVIK_VM_COMPILER_CODEGEN_ARMV5TE_ARMV5TE_ARCHVARIANT_H
-#define _DALVIK_VM_COMPILER_CODEGEN_ARMV5TE_ARMV5TE_ARCHVARIANT_H
+#ifndef _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMV5TE_VFP_ARCHVARIANT_H
+#define _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMV5TE_VFP_ARCHVARIANT_H
 
 /* Create the TemplateOpcode enum */
 #define JIT_TEMPLATE(X) TEMPLATE_##X,
 typedef enum {
-#include "../../../template/armv5te/TemplateOpList.h"
+#include "../../../template/armv5te-vfp/TemplateOpList.h"
 /*
  * For example,
  *     TEMPLATE_CMP_LONG,
@@ -31,4 +31,4 @@ typedef enum {
 } TemplateOpCode;
 #undef JIT_TEMPLATE
 
-#endif /* _DALVIK_VM_COMPILER_CODEGEN_ARMV5TE_ARMV5TE_ARCHVARIANT_H */
+#endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMV5TE_VFP_ARCHVARIANT_H */

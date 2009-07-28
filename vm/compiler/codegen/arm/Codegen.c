@@ -56,19 +56,19 @@ static int opcodeCoverage[256];
  * The following are building blocks to construct low-level IRs with 0 - 3
  * operands.
  */
-static Armv5teLIR *newLIR0(CompilationUnit *cUnit, Armv5teOpCode opCode)
+static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpCode opCode)
 {
-    Armv5teLIR *insn = dvmCompilerNew(sizeof(Armv5teLIR), true);
+    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpCode(opCode) || (EncodingMap[opCode].flags & NO_OPERAND));
     insn->opCode = opCode;
     dvmCompilerAppendLIR(cUnit, (LIR *) insn);
     return insn;
 }
 
-static Armv5teLIR *newLIR1(CompilationUnit *cUnit, Armv5teOpCode opCode,
+static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpCode opCode,
                            int dest)
 {
-    Armv5teLIR *insn = dvmCompilerNew(sizeof(Armv5teLIR), true);
+    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpCode(opCode) || (EncodingMap[opCode].flags & IS_UNARY_OP));
     insn->opCode = opCode;
     insn->operands[0] = dest;
@@ -76,10 +76,10 @@ static Armv5teLIR *newLIR1(CompilationUnit *cUnit, Armv5teOpCode opCode,
     return insn;
 }
 
-static Armv5teLIR *newLIR2(CompilationUnit *cUnit, Armv5teOpCode opCode,
+static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpCode opCode,
                            int dest, int src1)
 {
-    Armv5teLIR *insn = dvmCompilerNew(sizeof(Armv5teLIR), true);
+    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpCode(opCode) ||
            (EncodingMap[opCode].flags & IS_BINARY_OP));
     insn->opCode = opCode;
@@ -89,10 +89,10 @@ static Armv5teLIR *newLIR2(CompilationUnit *cUnit, Armv5teOpCode opCode,
     return insn;
 }
 
-static Armv5teLIR *newLIR3(CompilationUnit *cUnit, Armv5teOpCode opCode,
+static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpCode opCode,
                            int dest, int src1, int src2)
 {
-    Armv5teLIR *insn = dvmCompilerNew(sizeof(Armv5teLIR), true);
+    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpCode(opCode) ||
            (EncodingMap[opCode].flags & IS_TERTIARY_OP));
     insn->opCode = opCode;
@@ -103,7 +103,7 @@ static Armv5teLIR *newLIR3(CompilationUnit *cUnit, Armv5teOpCode opCode,
     return insn;
 }
 
-static Armv5teLIR *newLIR23(CompilationUnit *cUnit, Armv5teOpCode opCode,
+static ArmLIR *newLIR23(CompilationUnit *cUnit, ArmOpCode opCode,
                             int srcdest, int src2)
 {
     assert(!isPseudoOpCode(opCode));
@@ -195,19 +195,19 @@ static inline int selectFirstRegister(CompilationUnit *cUnit, int vSrc,
  */
 
 /* Add a 32-bit constant either in the constant pool or mixed with code */
-static Armv5teLIR *addWordData(CompilationUnit *cUnit, int value, bool inPlace)
+static ArmLIR *addWordData(CompilationUnit *cUnit, int value, bool inPlace)
 {
     /* Add the constant to the literal pool */
     if (!inPlace) {
-        Armv5teLIR *newValue = dvmCompilerNew(sizeof(Armv5teLIR), true);
+        ArmLIR *newValue = dvmCompilerNew(sizeof(ArmLIR), true);
         newValue->operands[0] = value;
         newValue->generic.next = cUnit->wordList;
         cUnit->wordList = (LIR *) newValue;
         return newValue;
     } else {
         /* Add the constant in the middle of code stream */
-        newLIR1(cUnit, ARMV5TE_16BIT_DATA, (value & 0xffff));
-        newLIR1(cUnit, ARMV5TE_16BIT_DATA, (value >> 16));
+        newLIR1(cUnit, ARM_16BIT_DATA, (value & 0xffff));
+        newLIR1(cUnit, ARM_16BIT_DATA, (value >> 16));
     }
     return NULL;
 }
@@ -216,14 +216,14 @@ static Armv5teLIR *addWordData(CompilationUnit *cUnit, int value, bool inPlace)
  * Search the existing constants in the literal pool for an exact or close match
  * within specified delta (greater or equal to 0).
  */
-static Armv5teLIR *scanLiteralPool(CompilationUnit *cUnit, int value,
+static ArmLIR *scanLiteralPool(CompilationUnit *cUnit, int value,
                                    unsigned int delta)
 {
     LIR *dataTarget = cUnit->wordList;
     while (dataTarget) {
-        if (((unsigned) (value - ((Armv5teLIR *) dataTarget)->operands[0])) <=
+        if (((unsigned) (value - ((ArmLIR *) dataTarget)->operands[0])) <=
             delta)
-            return (Armv5teLIR *) dataTarget;
+            return (ArmLIR *) dataTarget;
         dataTarget = dataTarget->next;
     }
     return NULL;
@@ -237,20 +237,20 @@ void loadConstant(CompilationUnit *cUnit, int rDest, int value)
 {
     /* See if the value can be constructed cheaply */
     if ((value >= 0) && (value <= 255)) {
-        newLIR2(cUnit, ARMV5TE_MOV_IMM, rDest, value);
+        newLIR2(cUnit, THUMB_MOV_IMM, rDest, value);
         return;
     } else if ((value & 0xFFFFFF00) == 0xFFFFFF00) {
-        newLIR2(cUnit, ARMV5TE_MOV_IMM, rDest, ~value);
-        newLIR2(cUnit, ARMV5TE_MVN, rDest, rDest);
+        newLIR2(cUnit, THUMB_MOV_IMM, rDest, ~value);
+        newLIR2(cUnit, THUMB_MVN, rDest, rDest);
         return;
     }
     /* No shortcut - go ahead and use literal pool */
-    Armv5teLIR *dataTarget = scanLiteralPool(cUnit, value, 255);
+    ArmLIR *dataTarget = scanLiteralPool(cUnit, value, 255);
     if (dataTarget == NULL) {
         dataTarget = addWordData(cUnit, value, false);
     }
-    Armv5teLIR *loadPcRel = dvmCompilerNew(sizeof(Armv5teLIR), true);
-    loadPcRel->opCode = ARMV5TE_LDR_PC_REL;
+    ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
+    loadPcRel->opCode = THUMB_LDR_PC_REL;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
@@ -260,7 +260,7 @@ void loadConstant(CompilationUnit *cUnit, int rDest, int value)
      * add up to 255 to an existing constant value.
      */
     if (dataTarget->operands[0] != value) {
-        newLIR2(cUnit, ARMV5TE_ADD_RI8, rDest, value - dataTarget->operands[0]);
+        newLIR2(cUnit, THUMB_ADD_RI8, rDest, value - dataTarget->operands[0]);
     }
 }
 
@@ -269,24 +269,24 @@ static void genExportPC(CompilationUnit *cUnit, MIR *mir, int rDPC, int rAddr)
 {
     int offset = offsetof(StackSaveArea, xtra.currentPc);
     loadConstant(cUnit, rDPC, (int) (cUnit->method->insns + mir->offset));
-    newLIR2(cUnit, ARMV5TE_MOV_RR, rAddr, rFP);
-    newLIR2(cUnit, ARMV5TE_SUB_RI8, rAddr, sizeof(StackSaveArea) - offset);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, rDPC, rAddr, 0);
+    newLIR2(cUnit, THUMB_MOV_RR, rAddr, rFP);
+    newLIR2(cUnit, THUMB_SUB_RI8, rAddr, sizeof(StackSaveArea) - offset);
+    newLIR3(cUnit, THUMB_STR_RRI5, rDPC, rAddr, 0);
 }
 
 /* Generate conditional branch instructions */
 static void genConditionalBranch(CompilationUnit *cUnit,
-                                 Armv5teConditionCode cond,
-                                 Armv5teLIR *target)
+                                 ArmConditionCode cond,
+                                 ArmLIR *target)
 {
-    Armv5teLIR *branch = newLIR2(cUnit, ARMV5TE_B_COND, 0, cond);
+    ArmLIR *branch = newLIR2(cUnit, THUMB_B_COND, 0, cond);
     branch->generic.target = (LIR *) target;
 }
 
 /* Generate unconditional branch instructions */
-static void genUnconditionalBranch(CompilationUnit *cUnit, Armv5teLIR *target)
+static void genUnconditionalBranch(CompilationUnit *cUnit, ArmLIR *target)
 {
-    Armv5teLIR *branch = newLIR0(cUnit, ARMV5TE_B_UNCOND);
+    ArmLIR *branch = newLIR0(cUnit, THUMB_B_UNCOND);
     branch->generic.target = (LIR *) target;
 }
 
@@ -298,10 +298,10 @@ static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
     gDvmJit.returnOp++;
 #endif
     int dPC = (int) (cUnit->method->insns + mir->offset);
-    Armv5teLIR *branch = newLIR0(cUnit, ARMV5TE_B_UNCOND);
+    ArmLIR *branch = newLIR0(cUnit, THUMB_B_UNCOND);
     /* Set up the place holder to reconstruct this Dalvik PC */
-    Armv5teLIR *pcrLabel = dvmCompilerNew(sizeof(Armv5teLIR), true);
-    pcrLabel->opCode = ARMV5TE_PSEUDO_PC_RECONSTRUCTION_CELL;
+    ArmLIR *pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+    pcrLabel->opCode = ARM_PSEUDO_PC_RECONSTRUCTION_CELL;
     pcrLabel->operands[0] = dPC;
     pcrLabel->operands[1] = mir->offset;
     /* Insert the place holder to the growable list */
@@ -319,20 +319,20 @@ static void loadValuePair(CompilationUnit *cUnit, int vSrc, int rDestLo,
 {
     /* Use reg + imm5*4 to load the values if possible */
     if (vSrc <= 30) {
-        newLIR3(cUnit, ARMV5TE_LDR_RRI5, rDestLo, rFP, vSrc);
-        newLIR3(cUnit, ARMV5TE_LDR_RRI5, rDestHi, rFP, vSrc+1);
+        newLIR3(cUnit, THUMB_LDR_RRI5, rDestLo, rFP, vSrc);
+        newLIR3(cUnit, THUMB_LDR_RRI5, rDestHi, rFP, vSrc+1);
     } else {
         if (vSrc <= 64) {
             /* Sneak 4 into the base address first */
-            newLIR3(cUnit, ARMV5TE_ADD_RRI3, rDestLo, rFP, 4);
-            newLIR2(cUnit, ARMV5TE_ADD_RI8, rDestLo, (vSrc-1)*4);
+            newLIR3(cUnit, THUMB_ADD_RRI3, rDestLo, rFP, 4);
+            newLIR2(cUnit, THUMB_ADD_RI8, rDestLo, (vSrc-1)*4);
         } else {
             /* Offset too far from rFP */
             loadConstant(cUnit, rDestLo, vSrc*4);
-            newLIR3(cUnit, ARMV5TE_ADD_RRR, rDestLo, rFP, rDestLo);
+            newLIR3(cUnit, THUMB_ADD_RRR, rDestLo, rFP, rDestLo);
         }
         assert(rDestLo < rDestHi);
-        newLIR2(cUnit, ARMV5TE_LDMIA, rDestLo, (1<<rDestLo) | (1<<(rDestHi)));
+        newLIR2(cUnit, THUMB_LDMIA, rDestLo, (1<<rDestLo) | (1<<(rDestHi)));
     }
 }
 
@@ -349,20 +349,20 @@ static void storeValuePair(CompilationUnit *cUnit, int rSrcLo, int rSrcHi,
 
     /* Use reg + imm5*4 to store the values if possible */
     if (vDest <= 30) {
-        newLIR3(cUnit, ARMV5TE_STR_RRI5, rSrcLo, rFP, vDest);
-        newLIR3(cUnit, ARMV5TE_STR_RRI5, rSrcHi, rFP, vDest+1);
+        newLIR3(cUnit, THUMB_STR_RRI5, rSrcLo, rFP, vDest);
+        newLIR3(cUnit, THUMB_STR_RRI5, rSrcHi, rFP, vDest+1);
     } else {
         if (vDest <= 64) {
             /* Sneak 4 into the base address first */
-            newLIR3(cUnit, ARMV5TE_ADD_RRI3, rScratch, rFP, 4);
-            newLIR2(cUnit, ARMV5TE_ADD_RI8, rScratch, (vDest-1)*4);
+            newLIR3(cUnit, THUMB_ADD_RRI3, rScratch, rFP, 4);
+            newLIR2(cUnit, THUMB_ADD_RI8, rScratch, (vDest-1)*4);
         } else {
             /* Offset too far from rFP */
             loadConstant(cUnit, rScratch, vDest*4);
-            newLIR3(cUnit, ARMV5TE_ADD_RRR, rScratch, rFP, rScratch);
+            newLIR3(cUnit, THUMB_ADD_RRR, rScratch, rFP, rScratch);
         }
         assert(rSrcLo < rSrcHi);
-        newLIR2(cUnit, ARMV5TE_STMIA, rScratch, (1<<rSrcLo) | (1 << (rSrcHi)));
+        newLIR2(cUnit, THUMB_STMIA, rScratch, (1<<rSrcLo) | (1 << (rSrcHi)));
     }
 }
 
@@ -371,14 +371,14 @@ static void loadValueAddress(CompilationUnit *cUnit, int vSrc, int rDest)
 {
     /* RRI3 can add up to 7 */
     if (vSrc <= 1) {
-        newLIR3(cUnit, ARMV5TE_ADD_RRI3, rDest, rFP, vSrc*4);
+        newLIR3(cUnit, THUMB_ADD_RRI3, rDest, rFP, vSrc*4);
     } else if (vSrc <= 64) {
         /* Sneak 4 into the base address first */
-        newLIR3(cUnit, ARMV5TE_ADD_RRI3, rDest, rFP, 4);
-        newLIR2(cUnit, ARMV5TE_ADD_RI8, rDest, (vSrc-1)*4);
+        newLIR3(cUnit, THUMB_ADD_RRI3, rDest, rFP, 4);
+        newLIR2(cUnit, THUMB_ADD_RI8, rDest, (vSrc-1)*4);
     } else {
         loadConstant(cUnit, rDest, vSrc*4);
-        newLIR3(cUnit, ARMV5TE_ADD_RRR, rDest, rFP, rDest);
+        newLIR3(cUnit, THUMB_ADD_RRR, rDest, rFP, rDest);
     }
 }
 
@@ -387,10 +387,10 @@ static void loadValue(CompilationUnit *cUnit, int vSrc, int rDest)
 {
     /* Use reg + imm5*4 to load the value if possible */
     if (vSrc <= 31) {
-        newLIR3(cUnit, ARMV5TE_LDR_RRI5, rDest, rFP, vSrc);
+        newLIR3(cUnit, THUMB_LDR_RRI5, rDest, rFP, vSrc);
     } else {
         loadConstant(cUnit, rDest, vSrc*4);
-        newLIR3(cUnit, ARMV5TE_LDR_RRR, rDest, rFP, rDest);
+        newLIR3(cUnit, THUMB_LDR_RRR, rDest, rFP, rDest);
     }
 }
 
@@ -401,10 +401,10 @@ static void loadWordDisp(CompilationUnit *cUnit, int rBase, int displacement,
     assert((displacement & 0x3) == 0);
     /* Can it fit in a RRI5? */
     if (displacement < 128) {
-        newLIR3(cUnit, ARMV5TE_LDR_RRI5, rDest, rBase, displacement >> 2);
+        newLIR3(cUnit, THUMB_LDR_RRI5, rDest, rBase, displacement >> 2);
     } else {
         loadConstant(cUnit, rDest, displacement);
-        newLIR3(cUnit, ARMV5TE_LDR_RRR, rDest, rBase, rDest);
+        newLIR3(cUnit, THUMB_LDR_RRR, rDest, rBase, rDest);
     }
 }
 
@@ -417,10 +417,10 @@ static void storeValue(CompilationUnit *cUnit, int rSrc, int vDest,
 
     /* Use reg + imm5*4 to store the value if possible */
     if (vDest <= 31) {
-        newLIR3(cUnit, ARMV5TE_STR_RRI5, rSrc, rFP, vDest);
+        newLIR3(cUnit, THUMB_STR_RRI5, rSrc, rFP, vDest);
     } else {
         loadConstant(cUnit, rScratch, vDest*4);
-        newLIR3(cUnit, ARMV5TE_STR_RRR, rSrc, rFP, rScratch);
+        newLIR3(cUnit, THUMB_STR_RRR, rSrc, rFP, rScratch);
     }
 }
 
@@ -429,7 +429,7 @@ static void storeValue(CompilationUnit *cUnit, int rSrc, int vDest,
  * r0/r1 pair.
  */
 static void genBinaryOpWide(CompilationUnit *cUnit, int vDest,
-                            Armv5teOpCode preinst, Armv5teOpCode inst,
+                            ArmOpCode preinst, ArmOpCode inst,
                             int reg0, int reg2)
 {
     int reg1 = NEXT_REG(reg0);
@@ -440,7 +440,7 @@ static void genBinaryOpWide(CompilationUnit *cUnit, int vDest,
 }
 
 /* Perform a binary operation on 32-bit operands and leave the results in r0. */
-static void genBinaryOp(CompilationUnit *cUnit, int vDest, Armv5teOpCode inst,
+static void genBinaryOp(CompilationUnit *cUnit, int vDest, ArmOpCode inst,
                         int reg0, int reg1, int regDest)
 {
     if (EncodingMap[inst].flags & IS_BINARY_OP) {
@@ -453,15 +453,15 @@ static void genBinaryOp(CompilationUnit *cUnit, int vDest, Armv5teOpCode inst,
 }
 
 /* Create the PC reconstruction slot if not already done */
-static inline Armv5teLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
-                                         Armv5teLIR *branch,
-                                         Armv5teLIR *pcrLabel)
+static inline ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
+                                         ArmLIR *branch,
+                                         ArmLIR *pcrLabel)
 {
     /* Set up the place holder to reconstruct this Dalvik PC */
     if (pcrLabel == NULL) {
         int dPC = (int) (cUnit->method->insns + dOffset);
-        pcrLabel = dvmCompilerNew(sizeof(Armv5teLIR), true);
-        pcrLabel->opCode = ARMV5TE_PSEUDO_PC_RECONSTRUCTION_CELL;
+        pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+        pcrLabel->opCode = ARM_PSEUDO_PC_RECONSTRUCTION_CELL;
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = dOffset;
         /* Insert the place holder to the growable list */
@@ -476,13 +476,13 @@ static inline Armv5teLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
  * Perform a "reg cmp imm" operation and jump to the PCR region if condition
  * satisfies.
  */
-static inline Armv5teLIR *genRegImmCheck(CompilationUnit *cUnit,
-                                         Armv5teConditionCode cond, int reg,
+static inline ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
+                                         ArmConditionCode cond, int reg,
                                          int checkValue, int dOffset,
-                                         Armv5teLIR *pcrLabel)
+                                         ArmLIR *pcrLabel)
 {
-    newLIR2(cUnit, ARMV5TE_CMP_RI8, reg, checkValue);
-    Armv5teLIR *branch = newLIR2(cUnit, ARMV5TE_B_COND, 0, cond);
+    newLIR2(cUnit, THUMB_CMP_RI8, reg, checkValue);
+    ArmLIR *branch = newLIR2(cUnit, THUMB_B_COND, 0, cond);
     return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
 }
 
@@ -490,13 +490,13 @@ static inline Armv5teLIR *genRegImmCheck(CompilationUnit *cUnit,
  * Perform a "reg cmp reg" operation and jump to the PCR region if condition
  * satisfies.
  */
-static inline Armv5teLIR *inertRegRegCheck(CompilationUnit *cUnit,
-                                           Armv5teConditionCode cond,
+static inline ArmLIR *inertRegRegCheck(CompilationUnit *cUnit,
+                                           ArmConditionCode cond,
                                            int reg1, int reg2, int dOffset,
-                                           Armv5teLIR *pcrLabel)
+                                           ArmLIR *pcrLabel)
 {
-    newLIR2(cUnit, ARMV5TE_CMP_RR, reg1, reg2);
-    Armv5teLIR *branch = newLIR2(cUnit, ARMV5TE_B_COND, 0, cond);
+    newLIR2(cUnit, THUMB_CMP_RR, reg1, reg2);
+    ArmLIR *branch = newLIR2(cUnit, THUMB_B_COND, 0, cond);
     return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
 }
 
@@ -505,8 +505,8 @@ static inline Armv5teLIR *inertRegRegCheck(CompilationUnit *cUnit,
  * and mReg is the machine register holding the actual value. If internal state
  * indicates that vReg has been checked before the check request is ignored.
  */
-static Armv5teLIR *genNullCheck(CompilationUnit *cUnit, int vReg, int mReg,
-                                int dOffset, Armv5teLIR *pcrLabel)
+static ArmLIR *genNullCheck(CompilationUnit *cUnit, int vReg, int mReg,
+                                int dOffset, ArmLIR *pcrLabel)
 {
     /* This particular Dalvik register has been null-checked */
     if (dvmIsBitSet(cUnit->registerScoreboard.nullCheckedRegs, vReg)) {
@@ -520,25 +520,25 @@ static Armv5teLIR *genNullCheck(CompilationUnit *cUnit, int vReg, int mReg,
  * Perform zero-check on a register. Similar to genNullCheck but the value being
  * checked does not have a corresponding Dalvik register.
  */
-static Armv5teLIR *genZeroCheck(CompilationUnit *cUnit, int mReg,
-                                int dOffset, Armv5teLIR *pcrLabel)
+static ArmLIR *genZeroCheck(CompilationUnit *cUnit, int mReg,
+                                int dOffset, ArmLIR *pcrLabel)
 {
     return genRegImmCheck(cUnit, ARM_COND_EQ, mReg, 0, dOffset, pcrLabel);
 }
 
 /* Perform bound check on two registers */
-static Armv5teLIR *genBoundsCheck(CompilationUnit *cUnit, int rIndex,
-                                  int rBound, int dOffset, Armv5teLIR *pcrLabel)
+static ArmLIR *genBoundsCheck(CompilationUnit *cUnit, int rIndex,
+                                  int rBound, int dOffset, ArmLIR *pcrLabel)
 {
     return inertRegRegCheck(cUnit, ARM_COND_CS, rIndex, rBound, dOffset,
                             pcrLabel);
 }
 
 /* Generate a unconditional branch to go to the interpreter */
-static inline Armv5teLIR *genTrap(CompilationUnit *cUnit, int dOffset,
-                                  Armv5teLIR *pcrLabel)
+static inline ArmLIR *genTrap(CompilationUnit *cUnit, int dOffset,
+                                  ArmLIR *pcrLabel)
 {
-    Armv5teLIR *branch = newLIR0(cUnit, ARMV5TE_B_UNCOND);
+    ArmLIR *branch = newLIR0(cUnit, THUMB_B_UNCOND);
     return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
 }
 
@@ -563,8 +563,8 @@ static void genIGetWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
     loadValue(cUnit, dInsn->vB, reg2);
     loadConstant(cUnit, reg3, fieldOffset);
     genNullCheck(cUnit, dInsn->vB, reg2, mir->offset, NULL); /* null object? */
-    newLIR3(cUnit, ARMV5TE_ADD_RRR, reg2, reg2, reg3);
-    newLIR2(cUnit, ARMV5TE_LDMIA, reg2, (1<<reg0 | 1<<reg1));
+    newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+    newLIR2(cUnit, THUMB_LDMIA, reg2, (1<<reg0 | 1<<reg1));
     storeValuePair(cUnit, reg0, reg1, dInsn->vA, reg3);
 }
 
@@ -592,21 +592,21 @@ static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
     updateLiveRegisterPair(cUnit, dInsn->vA, reg0, reg1);
     loadConstant(cUnit, reg3, fieldOffset);
     genNullCheck(cUnit, dInsn->vB, reg2, mir->offset, NULL); /* null object? */
-    newLIR3(cUnit, ARMV5TE_ADD_RRR, reg2, reg2, reg3);
-    newLIR2(cUnit, ARMV5TE_STMIA, reg2, (1<<reg0 | 1<<reg1));
+    newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+    newLIR2(cUnit, THUMB_STMIA, reg2, (1<<reg0 | 1<<reg1));
 }
 
 /*
  * Load a field from an object instance
  *
  * Inst should be one of:
- *      ARMV5TE_LDR_RRR
- *      ARMV5TE_LDRB_RRR
- *      ARMV5TE_LDRH_RRR
- *      ARMV5TE_LDRSB_RRR
- *      ARMV5TE_LDRSH_RRR
+ *      THUMB_LDR_RRR
+ *      THUMB_LDRB_RRR
+ *      THUMB_LDRH_RRR
+ *      THUMB_LDRSB_RRR
+ *      THUMB_LDRSH_RRR
  */
-static void genIGet(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
+static void genIGet(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
                     int fieldOffset)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
@@ -626,11 +626,11 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
  * Store a field to an object instance
  *
  * Inst should be one of:
- *      ARMV5TE_STR_RRR
- *      ARMV5TE_STRB_RRR
- *      ARMV5TE_STRH_RRR
+ *      THUMB_STR_RRR
+ *      THUMB_STRB_RRR
+ *      THUMB_STRH_RRR
  */
-static void genIPut(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
+static void genIPut(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
                     int fieldOffset)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
@@ -656,13 +656,13 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
  * Generate array load
  *
  * Inst should be one of:
- *      ARMV5TE_LDR_RRR
- *      ARMV5TE_LDRB_RRR
- *      ARMV5TE_LDRH_RRR
- *      ARMV5TE_LDRSB_RRR
- *      ARMV5TE_LDRSH_RRR
+ *      THUMB_LDR_RRR
+ *      THUMB_LDRB_RRR
+ *      THUMB_LDRH_RRR
+ *      THUMB_LDRSB_RRR
+ *      THUMB_LDRSH_RRR
  */
-static void genArrayGet(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
+static void genArrayGet(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
                         int vArray, int vIndex, int vDest, int scale)
 {
     int lenOffset = offsetof(ArrayObject, length);
@@ -678,17 +678,17 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
     loadValue(cUnit, vIndex, reg3);
 
     /* null object? */
-    Armv5teLIR * pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset,
+    ArmLIR * pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset,
                                          NULL);
-    newLIR3(cUnit, ARMV5TE_LDR_RRI5, reg0, reg2, lenOffset >> 2);  /* Get len */
-    newLIR2(cUnit, ARMV5TE_ADD_RI8, reg2, dataOffset); /* reg2 -> array data */
+    newLIR3(cUnit, THUMB_LDR_RRI5, reg0, reg2, lenOffset >> 2);  /* Get len */
+    newLIR2(cUnit, THUMB_ADD_RI8, reg2, dataOffset); /* reg2 -> array data */
     genBoundsCheck(cUnit, reg3, reg0, mir->offset, pcrLabel);
     if (scale) {
-        newLIR3(cUnit, ARMV5TE_LSL, reg3, reg3, scale);
+        newLIR3(cUnit, THUMB_LSL, reg3, reg3, scale);
     }
     if (scale==3) {
         newLIR3(cUnit, inst, reg0, reg2, reg3);
-        newLIR2(cUnit, ARMV5TE_ADD_RI8, reg2, 4);
+        newLIR2(cUnit, THUMB_ADD_RI8, reg2, 4);
         newLIR3(cUnit, inst, reg1, reg2, reg3);
         storeValuePair(cUnit, reg0, reg1, vDest, reg3);
     } else {
@@ -703,11 +703,11 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
  * Generate array store
  *
  * Inst should be one of:
- *      ARMV5TE_STR_RRR
- *      ARMV5TE_STRB_RRR
- *      ARMV5TE_STRH_RRR
+ *      THUMB_STR_RRR
+ *      THUMB_STRB_RRR
+ *      THUMB_STRH_RRR
  */
-static void genArrayPut(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
+static void genArrayPut(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
                         int vArray, int vIndex, int vSrc, int scale)
 {
     int lenOffset = offsetof(ArrayObject, length);
@@ -723,10 +723,10 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
     loadValue(cUnit, vIndex, reg3);
 
     /* null object? */
-    Armv5teLIR * pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset,
+    ArmLIR * pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset,
                                          NULL);
-    newLIR3(cUnit, ARMV5TE_LDR_RRI5, reg0, reg2, lenOffset >> 2);  /* Get len */
-    newLIR2(cUnit, ARMV5TE_ADD_RI8, reg2, dataOffset); /* reg2 -> array data */
+    newLIR3(cUnit, THUMB_LDR_RRI5, reg0, reg2, lenOffset >> 2);  /* Get len */
+    newLIR2(cUnit, THUMB_ADD_RI8, reg2, dataOffset); /* reg2 -> array data */
     genBoundsCheck(cUnit, reg3, reg0, mir->offset, pcrLabel);
     /* at this point, reg2 points to array, reg3 is unscaled index */
     if (scale==3) {
@@ -737,7 +737,7 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
         updateLiveRegister(cUnit, vSrc, reg0);
     }
     if (scale) {
-        newLIR3(cUnit, ARMV5TE_LSL, reg3, reg3, scale);
+        newLIR3(cUnit, THUMB_LSL, reg3, reg3, scale);
     }
     /*
      * at this point, reg2 points to array, reg3 is scaled index, and
@@ -745,7 +745,7 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, Armv5teOpCode inst,
      */
     if (scale==3) {
         newLIR3(cUnit, inst, reg0, reg2, reg3);
-        newLIR2(cUnit, ARMV5TE_ADD_RI8, reg2, 4);
+        newLIR2(cUnit, THUMB_ADD_RI8, reg2, 4);
         newLIR3(cUnit, inst, reg1, reg2, reg3);
     } else {
         newLIR3(cUnit, inst, reg0, reg2, reg3);
@@ -824,7 +824,7 @@ bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
         case OP_NEG_FLOAT: {
             loadValue(cUnit, vSrc2, reg0);
             loadConstant(cUnit, reg1, 0x80000000);
-            newLIR3(cUnit, ARMV5TE_ADD_RRR, reg0, reg0, reg1);
+            newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, reg1);
             storeValue(cUnit, reg0, vDest, reg1);
             return false;
         }
@@ -834,7 +834,7 @@ bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
     loadConstant(cUnit, r2, (int)funct);
     loadValue(cUnit, vSrc1, r0);
     loadValue(cUnit, vSrc2, r1);
-    newLIR1(cUnit, ARMV5TE_BLX_R, r2);
+    newLIR1(cUnit, THUMB_BLX_R, r2);
     storeValue(cUnit, r0, vDest, r1);
     return false;
 }
@@ -880,7 +880,7 @@ bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
         case OP_NEG_DOUBLE: {
             loadValuePair(cUnit, vSrc2, reg0, reg1);
             loadConstant(cUnit, reg2, 0x80000000);
-            newLIR3(cUnit, ARMV5TE_ADD_RRR, reg1, reg1, reg2);
+            newLIR3(cUnit, THUMB_ADD_RRR, reg1, reg1, reg2);
             storeValuePair(cUnit, reg0, reg1, vDest, reg2);
             return false;
         }
@@ -894,7 +894,7 @@ bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
     loadConstant(cUnit, r4PC, (int)funct);
     loadValuePair(cUnit, vSrc1, r0, r1);
     loadValuePair(cUnit, vSrc2, r2, r3);
-    newLIR1(cUnit, ARMV5TE_BLX_R, r4PC);
+    newLIR1(cUnit, THUMB_BLX_R, r4PC);
     storeValuePair(cUnit, r0, r1, vDest, r2);
     return false;
 }
@@ -902,8 +902,8 @@ bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
 static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
                            int vSrc1, int vSrc2)
 {
-    int firstOp = ARMV5TE_BKPT;
-    int secondOp = ARMV5TE_BKPT;
+    int firstOp = THUMB_BKPT;
+    int secondOp = THUMB_BKPT;
     bool callOut = false;
     void *callTgt;
     int retReg = r0;
@@ -913,18 +913,18 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
 
     switch (mir->dalvikInsn.opCode) {
         case OP_NOT_LONG:
-            firstOp = ARMV5TE_MVN;
-            secondOp = ARMV5TE_MVN;
+            firstOp = THUMB_MVN;
+            secondOp = THUMB_MVN;
             break;
         case OP_ADD_LONG:
         case OP_ADD_LONG_2ADDR:
-            firstOp = ARMV5TE_ADD_RRR;
-            secondOp = ARMV5TE_ADC;
+            firstOp = THUMB_ADD_RRR;
+            secondOp = THUMB_ADC;
             break;
         case OP_SUB_LONG:
         case OP_SUB_LONG_2ADDR:
-            firstOp = ARMV5TE_SUB_RRR;
-            secondOp = ARMV5TE_SBC;
+            firstOp = THUMB_SUB_RRR;
+            secondOp = THUMB_SBC;
             break;
         case OP_MUL_LONG:
         case OP_MUL_LONG_2ADDR:
@@ -949,18 +949,18 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
             break;
         case OP_AND_LONG:
         case OP_AND_LONG_2ADDR:
-            firstOp = ARMV5TE_AND_RR;
-            secondOp = ARMV5TE_AND_RR;
+            firstOp = THUMB_AND_RR;
+            secondOp = THUMB_AND_RR;
             break;
         case OP_OR_LONG:
         case OP_OR_LONG_2ADDR:
-            firstOp = ARMV5TE_ORR;
-            secondOp = ARMV5TE_ORR;
+            firstOp = THUMB_ORR;
+            secondOp = THUMB_ORR;
             break;
         case OP_XOR_LONG:
         case OP_XOR_LONG_2ADDR:
-            firstOp = ARMV5TE_EOR;
-            secondOp = ARMV5TE_EOR;
+            firstOp = THUMB_EOR;
+            secondOp = THUMB_EOR;
             break;
         case OP_NEG_LONG: {
             reg0 = selectFirstRegister(cUnit, vSrc2, true);
@@ -970,8 +970,8 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
 
             loadValuePair(cUnit, vSrc2, reg0, reg1);
             loadConstant(cUnit, reg3, 0);
-            newLIR3(cUnit, ARMV5TE_SUB_RRR, reg2, reg3, reg0);
-            newLIR2(cUnit, ARMV5TE_SBC, reg3, reg1);
+            newLIR3(cUnit, THUMB_SUB_RRR, reg2, reg3, reg0);
+            newLIR2(cUnit, THUMB_SBC, reg3, reg1);
             storeValuePair(cUnit, reg2, reg3, vDest, reg0);
             return false;
         }
@@ -996,7 +996,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
         loadValuePair(cUnit, vSrc2, r2, r3);
         loadConstant(cUnit, r4PC, (int) callTgt);
         loadValuePair(cUnit, vSrc1, r0, r1);
-        newLIR1(cUnit, ARMV5TE_BLX_R, r4PC);
+        newLIR1(cUnit, THUMB_BLX_R, r4PC);
         storeValuePair(cUnit, retReg, retReg+1, vDest, r4PC);
     }
     return false;
@@ -1005,7 +1005,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
 static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
                           int vSrc1, int vSrc2)
 {
-    int armOp = ARMV5TE_BKPT;
+    int armOp = THUMB_BKPT;
     bool callOut = false;
     bool checkZero = false;
     int retReg = r0;
@@ -1018,22 +1018,22 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
 
     switch (mir->dalvikInsn.opCode) {
         case OP_NEG_INT:
-            armOp = ARMV5TE_NEG;
+            armOp = THUMB_NEG;
             break;
         case OP_NOT_INT:
-            armOp = ARMV5TE_MVN;
+            armOp = THUMB_MVN;
             break;
         case OP_ADD_INT:
         case OP_ADD_INT_2ADDR:
-            armOp = ARMV5TE_ADD_RRR;
+            armOp = THUMB_ADD_RRR;
             break;
         case OP_SUB_INT:
         case OP_SUB_INT_2ADDR:
-            armOp = ARMV5TE_SUB_RRR;
+            armOp = THUMB_SUB_RRR;
             break;
         case OP_MUL_INT:
         case OP_MUL_INT_2ADDR:
-            armOp = ARMV5TE_MUL;
+            armOp = THUMB_MUL;
             break;
         case OP_DIV_INT:
         case OP_DIV_INT_2ADDR:
@@ -1052,27 +1052,27 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
             break;
         case OP_AND_INT:
         case OP_AND_INT_2ADDR:
-            armOp = ARMV5TE_AND_RR;
+            armOp = THUMB_AND_RR;
             break;
         case OP_OR_INT:
         case OP_OR_INT_2ADDR:
-            armOp = ARMV5TE_ORR;
+            armOp = THUMB_ORR;
             break;
         case OP_XOR_INT:
         case OP_XOR_INT_2ADDR:
-            armOp = ARMV5TE_EOR;
+            armOp = THUMB_EOR;
             break;
         case OP_SHL_INT:
         case OP_SHL_INT_2ADDR:
-            armOp = ARMV5TE_LSLV;
+            armOp = THUMB_LSLV;
             break;
         case OP_SHR_INT:
         case OP_SHR_INT_2ADDR:
-            armOp = ARMV5TE_ASRV;
+            armOp = THUMB_ASRV;
             break;
         case OP_USHR_INT:
         case OP_USHR_INT_2ADDR:
-            armOp = ARMV5TE_LSRV;
+            armOp = THUMB_LSRV;
             break;
         default:
             LOGE("Invalid word arith op: 0x%x(%d)",
@@ -1121,7 +1121,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
         if (checkZero) {
             genNullCheck(cUnit, vSrc2, r1, mir->offset, NULL);
         }
-        newLIR1(cUnit, ARMV5TE_BLX_R, r2);
+        newLIR1(cUnit, THUMB_BLX_R, r2);
         storeValue(cUnit, retReg, vDest, r2);
     }
     return false;
@@ -1180,7 +1180,7 @@ static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
     } else {
         loadValuePair(cUnit, mir->dalvikInsn.vB, r0, r1);
     }
-    newLIR1(cUnit, ARMV5TE_BLX_R, r2);
+    newLIR1(cUnit, THUMB_BLX_R, r2);
     if (tgtSize == 1) {
         storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
     } else {
@@ -1198,7 +1198,7 @@ static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
     loadValue(cUnit, dInsn->arg[0], regObj);
     genNullCheck(cUnit, dInsn->arg[0], regObj, mir->offset, NULL);
     loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, reg1);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, reg1, rGLUE, offset >> 2);
+    newLIR3(cUnit, THUMB_STR_RRI5, reg1, rGLUE, offset >> 2);
     return false;
 }
 
@@ -1223,18 +1223,18 @@ static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
     int regOff = NEXT_REG(regMax);
     loadValue(cUnit, dInsn->arg[0], regObj);
     loadValue(cUnit, dInsn->arg[1], regIdx);
-    Armv5teLIR * pcrLabel = genNullCheck(cUnit, dInsn->arg[0], regObj,
+    ArmLIR * pcrLabel = genNullCheck(cUnit, dInsn->arg[0], regObj,
                                          mir->offset, NULL);
     loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, regMax);
     loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_offset, regOff);
     loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_value, regObj);
     genBoundsCheck(cUnit, regIdx, regMax, mir->offset, pcrLabel);
 
-    newLIR2(cUnit, ARMV5TE_ADD_RI8, regObj, contents);
-    newLIR3(cUnit, ARMV5TE_ADD_RRR, regIdx, regIdx, regOff);
-    newLIR3(cUnit, ARMV5TE_ADD_RRR, regIdx, regIdx, regIdx);
-    newLIR3(cUnit, ARMV5TE_LDRH_RRR, regMax, regObj, regIdx);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, regMax, rGLUE, offset >> 2);
+    newLIR2(cUnit, THUMB_ADD_RI8, regObj, contents);
+    newLIR3(cUnit, THUMB_ADD_RRR, regIdx, regIdx, regOff);
+    newLIR3(cUnit, THUMB_ADD_RRR, regIdx, regIdx, regIdx);
+    newLIR3(cUnit, THUMB_LDRH_RRR, regMax, regObj, regIdx);
+    newLIR3(cUnit, THUMB_STR_RRI5, regMax, rGLUE, offset >> 2);
     return false;
 }
 
@@ -1246,10 +1246,10 @@ static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
     int sign = NEXT_REG(reg0);
     /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
     loadValue(cUnit, dInsn->arg[0], reg0);
-    newLIR3(cUnit, ARMV5TE_ASR, sign, reg0, 31);
-    newLIR3(cUnit, ARMV5TE_ADD_RRR, reg0, reg0, sign);
-    newLIR2(cUnit, ARMV5TE_EOR, reg0, sign);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, reg0, rGLUE, offset >> 2);
+    newLIR3(cUnit, THUMB_ASR, sign, reg0, 31);
+    newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, sign);
+    newLIR2(cUnit, THUMB_EOR, reg0, sign);
+    newLIR3(cUnit, THUMB_STR_RRI5, reg0, rGLUE, offset >> 2);
     return false;
 }
 
@@ -1261,8 +1261,8 @@ static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
     int signMask = NEXT_REG(reg0);
     loadValue(cUnit, dInsn->arg[0], reg0);
     loadConstant(cUnit, signMask, 0x7fffffff);
-    newLIR2(cUnit, ARMV5TE_AND_RR, reg0, signMask);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, reg0, rGLUE, offset >> 2);
+    newLIR2(cUnit, THUMB_AND_RR, reg0, signMask);
+    newLIR3(cUnit, THUMB_STR_RRI5, reg0, rGLUE, offset >> 2);
     return false;
 }
 
@@ -1275,9 +1275,9 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
     int signMask = NEXT_REG(ophi);
     loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
     loadConstant(cUnit, signMask, 0x7fffffff);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, oplo, rGLUE, offset >> 2);
-    newLIR2(cUnit, ARMV5TE_AND_RR, ophi, signMask);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, ophi, rGLUE, (offset >> 2)+1);
+    newLIR3(cUnit, THUMB_STR_RRI5, oplo, rGLUE, offset >> 2);
+    newLIR2(cUnit, THUMB_AND_RR, ophi, signMask);
+    newLIR3(cUnit, THUMB_STR_RRI5, ophi, rGLUE, (offset >> 2)+1);
     return false;
 }
 
@@ -1290,12 +1290,12 @@ static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
     int reg1 = NEXT_REG(reg0);
     loadValue(cUnit, dInsn->arg[0], reg0);
     loadValue(cUnit, dInsn->arg[1], reg1);
-    newLIR2(cUnit, ARMV5TE_CMP_RR, reg0, reg1);
-    Armv5teLIR *branch1 = newLIR2(cUnit, ARMV5TE_B_COND, 2,
+    newLIR2(cUnit, THUMB_CMP_RR, reg0, reg1);
+    ArmLIR *branch1 = newLIR2(cUnit, THUMB_B_COND, 2,
            isMin ? ARM_COND_LT : ARM_COND_GT);
-    newLIR2(cUnit, ARMV5TE_MOV_RR, reg0, reg1);
-    Armv5teLIR *target =
-        newLIR3(cUnit, ARMV5TE_STR_RRI5, reg0, rGLUE, offset >> 2);
+    newLIR2(cUnit, THUMB_MOV_RR, reg0, reg1);
+    ArmLIR *target =
+        newLIR3(cUnit, THUMB_STR_RRI5, reg0, rGLUE, offset >> 2);
     branch1->generic.target = (LIR *)target;
     return false;
 }
@@ -1309,19 +1309,19 @@ static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
     int sign = NEXT_REG(ophi);
     /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
     loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
-    newLIR3(cUnit, ARMV5TE_ASR, sign, ophi, 31);
-    newLIR3(cUnit, ARMV5TE_ADD_RRR, oplo, oplo, sign);
-    newLIR2(cUnit, ARMV5TE_ADC, ophi, sign);
-    newLIR2(cUnit, ARMV5TE_EOR, oplo, sign);
-    newLIR2(cUnit, ARMV5TE_EOR, ophi, sign);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, oplo, rGLUE, offset >> 2);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, ophi, rGLUE, (offset >> 2)+1);
+    newLIR3(cUnit, THUMB_ASR, sign, ophi, 31);
+    newLIR3(cUnit, THUMB_ADD_RRR, oplo, oplo, sign);
+    newLIR2(cUnit, THUMB_ADC, ophi, sign);
+    newLIR2(cUnit, THUMB_EOR, oplo, sign);
+    newLIR2(cUnit, THUMB_EOR, ophi, sign);
+    newLIR3(cUnit, THUMB_STR_RRI5, oplo, rGLUE, offset >> 2);
+    newLIR3(cUnit, THUMB_STR_RRI5, ophi, rGLUE, (offset >> 2)+1);
     return false;
 }
 
 static void genProcessArgsNoRange(CompilationUnit *cUnit, MIR *mir,
                                   DecodedInstruction *dInsn,
-                                  Armv5teLIR **pcrLabel)
+                                  ArmLIR **pcrLabel)
 {
     unsigned int i;
     unsigned int regMask = 0;
@@ -1333,21 +1333,21 @@ static void genProcessArgsNoRange(CompilationUnit *cUnit, MIR *mir,
     }
     if (regMask) {
         /* Up to 5 args are pushed on top of FP - sizeofStackSaveArea */
-        newLIR2(cUnit, ARMV5TE_MOV_RR, r7, rFP);
-        newLIR2(cUnit, ARMV5TE_SUB_RI8, r7,
+        newLIR2(cUnit, THUMB_MOV_RR, r7, rFP);
+        newLIR2(cUnit, THUMB_SUB_RI8, r7,
                 sizeof(StackSaveArea) + (dInsn->vA << 2));
         /* generate null check */
         if (pcrLabel) {
             *pcrLabel = genNullCheck(cUnit, dInsn->arg[0], r0, mir->offset,
                                      NULL);
         }
-        newLIR2(cUnit, ARMV5TE_STMIA, r7, regMask);
+        newLIR2(cUnit, THUMB_STMIA, r7, regMask);
     }
 }
 
 static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
                                 DecodedInstruction *dInsn,
-                                Armv5teLIR **pcrLabel)
+                                ArmLIR **pcrLabel)
 {
     int srcOffset = dInsn->vC << 2;
     int numArgs = dInsn->vA;
@@ -1357,22 +1357,22 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
      * r7: &newFP[0]
      */
     if (srcOffset < 8) {
-        newLIR3(cUnit, ARMV5TE_ADD_RRI3, r4PC, rFP, srcOffset);
+        newLIR3(cUnit, THUMB_ADD_RRI3, r4PC, rFP, srcOffset);
     } else {
         loadConstant(cUnit, r4PC, srcOffset);
-        newLIR3(cUnit, ARMV5TE_ADD_RRR, r4PC, rFP, r4PC);
+        newLIR3(cUnit, THUMB_ADD_RRR, r4PC, rFP, r4PC);
     }
     /* load [r0 .. min(numArgs,4)] */
     regMask = (1 << ((numArgs < 4) ? numArgs : 4)) - 1;
-    newLIR2(cUnit, ARMV5TE_LDMIA, r4PC, regMask);
+    newLIR2(cUnit, THUMB_LDMIA, r4PC, regMask);
 
     if (sizeof(StackSaveArea) + (numArgs << 2) < 256) {
-        newLIR2(cUnit, ARMV5TE_MOV_RR, r7, rFP);
-        newLIR2(cUnit, ARMV5TE_SUB_RI8, r7,
+        newLIR2(cUnit, THUMB_MOV_RR, r7, rFP);
+        newLIR2(cUnit, THUMB_SUB_RI8, r7,
                 sizeof(StackSaveArea) + (numArgs << 2));
     } else {
         loadConstant(cUnit, r7, sizeof(StackSaveArea) + (numArgs << 2));
-        newLIR3(cUnit, ARMV5TE_SUB_RRR, r7, rFP, r7);
+        newLIR3(cUnit, THUMB_SUB_RRR, r7, rFP, r7);
     }
 
     /* generate null check */
@@ -1385,40 +1385,40 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
      * store previously loaded 4 values and load the next 4 values
      */
     if (numArgs >= 8) {
-        Armv5teLIR *loopLabel = NULL;
+        ArmLIR *loopLabel = NULL;
         /*
          * r0 contains "this" and it will be used later, so push it to the stack
          * first. Pushing r5 is just for stack alignment purposes.
          */
-        newLIR1(cUnit, ARMV5TE_PUSH, 1 << r0 | 1 << 5);
+        newLIR1(cUnit, THUMB_PUSH, 1 << r0 | 1 << 5);
         /* No need to generate the loop structure if numArgs <= 11 */
         if (numArgs > 11) {
             loadConstant(cUnit, 5, ((numArgs - 4) >> 2) << 2);
-            loopLabel = newLIR0(cUnit, ARMV5TE_PSEUDO_TARGET_LABEL);
+            loopLabel = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
         }
-        newLIR2(cUnit, ARMV5TE_STMIA, r7, regMask);
-        newLIR2(cUnit, ARMV5TE_LDMIA, r4PC, regMask);
+        newLIR2(cUnit, THUMB_STMIA, r7, regMask);
+        newLIR2(cUnit, THUMB_LDMIA, r4PC, regMask);
         /* No need to generate the loop structure if numArgs <= 11 */
         if (numArgs > 11) {
-            newLIR2(cUnit, ARMV5TE_SUB_RI8, 5, 4);
+            newLIR2(cUnit, THUMB_SUB_RI8, 5, 4);
             genConditionalBranch(cUnit, ARM_COND_NE, loopLabel);
         }
     }
 
     /* Save the last batch of loaded values */
-    newLIR2(cUnit, ARMV5TE_STMIA, r7, regMask);
+    newLIR2(cUnit, THUMB_STMIA, r7, regMask);
 
     /* Generate the loop epilogue - don't use r0 */
     if ((numArgs > 4) && (numArgs % 4)) {
         regMask = ((1 << (numArgs & 0x3)) - 1) << 1;
-        newLIR2(cUnit, ARMV5TE_LDMIA, r4PC, regMask);
+        newLIR2(cUnit, THUMB_LDMIA, r4PC, regMask);
     }
     if (numArgs >= 8)
-        newLIR1(cUnit, ARMV5TE_POP, 1 << r0 | 1 << 5);
+        newLIR1(cUnit, THUMB_POP, 1 << r0 | 1 << 5);
 
     /* Save the modulo 4 arguments */
     if ((numArgs > 4) && (numArgs % 4)) {
-        newLIR2(cUnit, ARMV5TE_STMIA, r7, regMask);
+        newLIR2(cUnit, THUMB_STMIA, r7, regMask);
     }
 }
 
@@ -1427,14 +1427,14 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
  * is not a native method.
  */
 static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
-                                     BasicBlock *bb, Armv5teLIR *labelList,
-                                     Armv5teLIR *pcrLabel,
+                                     BasicBlock *bb, ArmLIR *labelList,
+                                     ArmLIR *pcrLabel,
                                      const Method *calleeMethod)
 {
-    Armv5teLIR *retChainingCell = &labelList[bb->fallThrough->id];
+    ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
 
     /* r1 = &retChainingCell */
-    Armv5teLIR *addrRetChain = newLIR3(cUnit, ARMV5TE_ADD_PC_REL,
+    ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL,
                                            r1, 0, 0);
     /* r4PC = dalvikCallsite */
     loadConstant(cUnit, r4PC,
@@ -1484,9 +1484,9 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
  */
 static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
                                    int methodIndex,
-                                   Armv5teLIR *retChainingCell,
-                                   Armv5teLIR *predChainingCell,
-                                   Armv5teLIR *pcrLabel)
+                                   ArmLIR *retChainingCell,
+                                   ArmLIR *predChainingCell,
+                                   ArmLIR *pcrLabel)
 {
     /* "this" is already left in r0 by genProcessArgs* */
 
@@ -1495,13 +1495,13 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
                  (int) (cUnit->method->insns + mir->offset));
 
     /* r1 = &retChainingCell */
-    Armv5teLIR *addrRetChain = newLIR2(cUnit, ARMV5TE_ADD_PC_REL,
+    ArmLIR *addrRetChain = newLIR2(cUnit, THUMB_ADD_PC_REL,
                                        r1, 0);
     addrRetChain->generic.target = (LIR *) retChainingCell;
 
     /* r2 = &predictedChainingCell */
-    Armv5teLIR *predictedChainingCell =
-        newLIR2(cUnit, ARMV5TE_ADD_PC_REL, r2, 0);
+    ArmLIR *predictedChainingCell =
+        newLIR2(cUnit, THUMB_ADD_PC_REL, r2, 0);
     predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
     genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
@@ -1515,8 +1515,8 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      */
     if (pcrLabel == NULL) {
         int dPC = (int) (cUnit->method->insns + mir->offset);
-        pcrLabel = dvmCompilerNew(sizeof(Armv5teLIR), true);
-        pcrLabel->opCode = ARMV5TE_PSEUDO_PC_RECONSTRUCTION_CELL;
+        pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+        pcrLabel->opCode = ARM_PSEUDO_PC_RECONSTRUCTION_CELL;
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = mir->offset;
         /* Insert the place holder to the growable list */
@@ -1537,19 +1537,19 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
 
     /* r0 <- calleeMethod */
     if (methodIndex < 32) {
-        newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r7, methodIndex);
+        newLIR3(cUnit, THUMB_LDR_RRI5, r0, r7, methodIndex);
     } else {
         loadConstant(cUnit, r0, methodIndex<<2);
-        newLIR3(cUnit, ARMV5TE_LDR_RRR, r0, r7, r0);
+        newLIR3(cUnit, THUMB_LDR_RRR, r0, r7, r0);
     }
 
     /* Check if rechain limit is reached */
-    newLIR2(cUnit, ARMV5TE_CMP_RI8, r1, 0);
+    newLIR2(cUnit, THUMB_CMP_RI8, r1, 0);
 
-    Armv5teLIR *bypassRechaining =
-        newLIR2(cUnit, ARMV5TE_B_COND, 0, ARM_COND_GT);
+    ArmLIR *bypassRechaining =
+        newLIR2(cUnit, THUMB_B_COND, 0, ARM_COND_GT);
 
-    newLIR3(cUnit, ARMV5TE_LDR_RRI5, r7, rGLUE,
+    newLIR3(cUnit, THUMB_LDR_RRI5, r7, rGLUE,
             offsetof(InterpState,
                      jitToInterpEntries.dvmJitToPatchPredictedChain)
             >> 2);
@@ -1563,10 +1563,10 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      * when patching the chaining cell and will be clobbered upon
      * returning so it will be reconstructed again.
      */
-    newLIR1(cUnit, ARMV5TE_BLX_R, r7);
+    newLIR1(cUnit, THUMB_BLX_R, r7);
 
     /* r1 = &retChainingCell */
-    addrRetChain = newLIR3(cUnit, ARMV5TE_ADD_PC_REL, r1, 0, 0);
+    addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL, r1, 0, 0);
     addrRetChain->generic.target = (LIR *) retChainingCell;
 
     bypassRechaining->generic.target = (LIR *) addrRetChain;
@@ -1592,21 +1592,21 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
  * The return LIR is a branch based on the comparison result. The actual branch
  * target will be setup in the caller.
  */
-static Armv5teLIR *genCheckPredictedChain(CompilationUnit *cUnit,
-                                          Armv5teLIR *predChainingCell,
-                                          Armv5teLIR *retChainingCell,
+static ArmLIR *genCheckPredictedChain(CompilationUnit *cUnit,
+                                          ArmLIR *predChainingCell,
+                                          ArmLIR *retChainingCell,
                                           MIR *mir)
 {
     /* r3 now contains this->clazz */
-    newLIR3(cUnit, ARMV5TE_LDR_RRI5, r3, r0,
+    newLIR3(cUnit, THUMB_LDR_RRI5, r3, r0,
             offsetof(Object, clazz) >> 2);
 
     /*
      * r2 now contains predicted class. The starting offset of the
      * cached value is 4 bytes into the chaining cell.
      */
-    Armv5teLIR *getPredictedClass =
-        newLIR3(cUnit, ARMV5TE_LDR_PC_REL, r2, 0,
+    ArmLIR *getPredictedClass =
+        newLIR3(cUnit, THUMB_LDR_PC_REL, r2, 0,
                 offsetof(PredictedChainingCell, clazz));
     getPredictedClass->generic.target = (LIR *) predChainingCell;
 
@@ -1614,14 +1614,14 @@ static Armv5teLIR *genCheckPredictedChain(CompilationUnit *cUnit,
      * r0 now contains predicted method. The starting offset of the
      * cached value is 8 bytes into the chaining cell.
      */
-    Armv5teLIR *getPredictedMethod =
-        newLIR3(cUnit, ARMV5TE_LDR_PC_REL, r0, 0,
+    ArmLIR *getPredictedMethod =
+        newLIR3(cUnit, THUMB_LDR_PC_REL, r0, 0,
                 offsetof(PredictedChainingCell, method));
     getPredictedMethod->generic.target = (LIR *) predChainingCell;
 
     /* Load the stats counter to see if it is time to unchain and refresh */
-    Armv5teLIR *getRechainingRequestCount =
-        newLIR3(cUnit, ARMV5TE_LDR_PC_REL, r7, 0,
+    ArmLIR *getRechainingRequestCount =
+        newLIR3(cUnit, THUMB_LDR_PC_REL, r7, 0,
                 offsetof(PredictedChainingCell, counter));
     getRechainingRequestCount->generic.target =
         (LIR *) predChainingCell;
@@ -1631,14 +1631,14 @@ static Armv5teLIR *genCheckPredictedChain(CompilationUnit *cUnit,
                  (int) (cUnit->method->insns + mir->offset));
 
     /* r1 = &retChainingCell */
-    Armv5teLIR *addrRetChain = newLIR3(cUnit, ARMV5TE_ADD_PC_REL,
+    ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL,
                                        r1, 0, 0);
     addrRetChain->generic.target = (LIR *) retChainingCell;
 
     /* Check if r2 (predicted class) == r3 (actual class) */
-    newLIR2(cUnit, ARMV5TE_CMP_RR, r2, r3);
+    newLIR2(cUnit, THUMB_CMP_RR, r2, r3);
 
-    return newLIR2(cUnit, ARMV5TE_B_COND, 0, ARM_COND_EQ);
+    return newLIR2(cUnit, THUMB_B_COND, 0, ARM_COND_EQ);
 }
 
 /* Geneate a branch to go back to the interpreter */
@@ -1646,9 +1646,9 @@ static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
 {
     /* r0 = dalvik pc */
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + offset));
-    newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, rGLUE,
+    newLIR3(cUnit, THUMB_LDR_RRI5, r1, rGLUE,
             offsetof(InterpState, jitToInterpEntries.dvmJitToInterpPunt) >> 2);
-    newLIR1(cUnit, ARMV5TE_BLX_R, r1);
+    newLIR1(cUnit, THUMB_BLX_R, r1);
 }
 
 /*
@@ -1666,12 +1666,12 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     }
     int entryAddr = offsetof(InterpState,
                              jitToInterpEntries.dvmJitToInterpSingleStep);
-    newLIR3(cUnit, ARMV5TE_LDR_RRI5, r2, rGLUE, entryAddr >> 2);
+    newLIR3(cUnit, THUMB_LDR_RRI5, r2, rGLUE, entryAddr >> 2);
     /* r0 = dalvik pc */
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + mir->offset));
     /* r1 = dalvik pc of following instruction */
     loadConstant(cUnit, r1, (int) (cUnit->method->insns + mir->next->offset));
-    newLIR1(cUnit, ARMV5TE_BLX_R, r2);
+    newLIR1(cUnit, THUMB_BLX_R, r2);
 }
 
 
@@ -1683,7 +1683,7 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
  */
 
 static bool handleFmt10t_Fmt20t_Fmt30t(CompilationUnit *cUnit, MIR *mir,
-                                       BasicBlock *bb, Armv5teLIR *labelList)
+                                       BasicBlock *bb, ArmLIR *labelList)
 {
     /* For OP_GOTO, OP_GOTO_16, and OP_GOTO_32 */
     genUnconditionalBranch(cUnit, &labelList[bb->taken->id]);
@@ -1735,7 +1735,7 @@ static bool handleFmt11n_Fmt31i(CompilationUnit *cUnit, MIR *mir)
             reg1 = NEXT_REG(reg0);
             reg2 = NEXT_REG(reg1);
             loadConstant(cUnit, reg0, mir->dalvikInsn.vB);
-            newLIR3(cUnit, ARMV5TE_ASR, reg1, reg0, 31);
+            newLIR3(cUnit, THUMB_ASR, reg1, reg0, 31);
             storeValuePair(cUnit, reg0, reg1, mir->dalvikInsn.vA, reg2);
             break;
         }
@@ -1828,7 +1828,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
             assert(fieldPtr != NULL);
             loadConstant(cUnit, regvNone,  (int) fieldPtr + valOffset);
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, regvNone, regvNone, 0);
+            newLIR3(cUnit, THUMB_LDR_RRI5, regvNone, regvNone, 0);
             storeValue(cUnit, regvNone, mir->dalvikInsn.vA, NEXT_REG(regvNone));
             break;
         }
@@ -1843,7 +1843,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             reg1 = NEXT_REG(reg0);
             reg2 = NEXT_REG(reg1);
             loadConstant(cUnit, reg2,  (int) fieldPtr + valOffset);
-            newLIR2(cUnit, ARMV5TE_LDMIA, reg2, (1<<reg0 | 1<<reg1));
+            newLIR2(cUnit, THUMB_LDMIA, reg2, (1<<reg0 | 1<<reg1));
             storeValuePair(cUnit, reg0, reg1, mir->dalvikInsn.vA, reg2);
             break;
         }
@@ -1861,7 +1861,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadValue(cUnit, mir->dalvikInsn.vA, regvA);
             updateLiveRegister(cUnit, mir->dalvikInsn.vA, regvA);
             loadConstant(cUnit, NEXT_REG(regvA),  (int) fieldPtr + valOffset);
-            newLIR3(cUnit, ARMV5TE_STR_RRI5, regvA, NEXT_REG(regvA), 0);
+            newLIR3(cUnit, THUMB_STR_RRI5, regvA, NEXT_REG(regvA), 0);
             break;
         }
         case OP_SPUT_WIDE: {
@@ -1877,7 +1877,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadValuePair(cUnit, mir->dalvikInsn.vA, reg0, reg1);
             updateLiveRegisterPair(cUnit, mir->dalvikInsn.vA, reg0, reg1);
             loadConstant(cUnit, reg2,  (int) fieldPtr + valOffset);
-            newLIR2(cUnit, ARMV5TE_STMIA, reg2, (1<<reg0 | 1<<reg1));
+            newLIR2(cUnit, THUMB_STMIA, reg2, (1<<reg0 | 1<<reg1));
             break;
         }
         case OP_NEW_INSTANCE: {
@@ -1898,7 +1898,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r0, (int) classPtr);
             genExportPC(cUnit, mir, r2, r3 );
             loadConstant(cUnit, r1, ALLOC_DONT_TRACK);
-            newLIR1(cUnit, ARMV5TE_BLX_R, r4PC);
+            newLIR1(cUnit, THUMB_BLX_R, r4PC);
             /*
              * TODO: As coded, we'll bail and reinterpret on alloc failure.
              * Need a general mechanism to bail to thrown exception code.
@@ -1921,22 +1921,22 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
              * instruction made into a trace, but we are seeing NULL at runtime
              * so this check is temporarily used as a workaround.
              */
-            Armv5teLIR * pcrLabel = genZeroCheck(cUnit, r1, mir->offset, NULL);
-            newLIR2(cUnit, ARMV5TE_CMP_RI8, r0, 0);    /* Null? */
-            Armv5teLIR *branch1 =
-                newLIR2(cUnit, ARMV5TE_B_COND, 4, ARM_COND_EQ);
+            ArmLIR * pcrLabel = genZeroCheck(cUnit, r1, mir->offset, NULL);
+            newLIR2(cUnit, THUMB_CMP_RI8, r0, 0);    /* Null? */
+            ArmLIR *branch1 =
+                newLIR2(cUnit, THUMB_B_COND, 4, ARM_COND_EQ);
             /* r0 now contains object->clazz */
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r0,
+            newLIR3(cUnit, THUMB_LDR_RRI5, r0, r0,
                     offsetof(Object, clazz) >> 2);
             loadConstant(cUnit, r4PC, (int)dvmInstanceofNonTrivial);
-            newLIR2(cUnit, ARMV5TE_CMP_RR, r0, r1);
-            Armv5teLIR *branch2 =
-                newLIR2(cUnit, ARMV5TE_B_COND, 2, ARM_COND_EQ);
-            newLIR1(cUnit, ARMV5TE_BLX_R, r4PC);
+            newLIR2(cUnit, THUMB_CMP_RR, r0, r1);
+            ArmLIR *branch2 =
+                newLIR2(cUnit, THUMB_B_COND, 2, ARM_COND_EQ);
+            newLIR1(cUnit, THUMB_BLX_R, r4PC);
             /* check cast failed - punt to the interpreter */
             genZeroCheck(cUnit, r0, mir->offset, pcrLabel);
             /* check cast passed - branch target here */
-            Armv5teLIR *target = newLIR0(cUnit, ARMV5TE_PSEUDO_TARGET_LABEL);
+            ArmLIR *target = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
             branch1->generic.target = (LIR *)target;
             branch2->generic.target = (LIR *)target;
             break;
@@ -1954,30 +1954,30 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
         case OP_MOVE_EXCEPTION: {
             int offset = offsetof(InterpState, self);
             int exOffset = offsetof(Thread, exception);
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, rGLUE, offset >> 2);
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, r1, exOffset >> 2);
+            newLIR3(cUnit, THUMB_LDR_RRI5, r1, rGLUE, offset >> 2);
+            newLIR3(cUnit, THUMB_LDR_RRI5, r0, r1, exOffset >> 2);
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
            break;
         }
         case OP_MOVE_RESULT:
         case OP_MOVE_RESULT_OBJECT: {
             int offset = offsetof(InterpState, retval);
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, rGLUE, offset >> 2);
+            newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE, offset >> 2);
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
             break;
         }
         case OP_MOVE_RESULT_WIDE: {
             int offset = offsetof(InterpState, retval);
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, rGLUE, offset >> 2);
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, rGLUE, (offset >> 2)+1);
+            newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE, offset >> 2);
+            newLIR3(cUnit, THUMB_LDR_RRI5, r1, rGLUE, (offset >> 2)+1);
             storeValuePair(cUnit, r0, r1, mir->dalvikInsn.vA, r2);
             break;
         }
         case OP_RETURN_WIDE: {
             loadValuePair(cUnit, mir->dalvikInsn.vA, r0, r1);
             int offset = offsetof(InterpState, retval);
-            newLIR3(cUnit, ARMV5TE_STR_RRI5, r0, rGLUE, offset >> 2);
-            newLIR3(cUnit, ARMV5TE_STR_RRI5, r1, rGLUE, (offset >> 2)+1);
+            newLIR3(cUnit, THUMB_STR_RRI5, r0, rGLUE, offset >> 2);
+            newLIR3(cUnit, THUMB_STR_RRI5, r1, rGLUE, (offset >> 2)+1);
             genReturnCommon(cUnit,mir);
             break;
         }
@@ -1985,7 +1985,7 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
         case OP_RETURN_OBJECT: {
             loadValue(cUnit, mir->dalvikInsn.vA, r0);
             int offset = offsetof(InterpState, retval);
-            newLIR3(cUnit, ARMV5TE_STR_RRI5, r0, rGLUE, offset >> 2);
+            newLIR3(cUnit, THUMB_STR_RRI5, r0, rGLUE, offset >> 2);
             genReturnCommon(cUnit,mir);
             break;
         }
@@ -1999,7 +1999,7 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
         case OP_MONITOR_EXIT: {
             int offset = offsetof(InterpState, self);
             loadValue(cUnit, mir->dalvikInsn.vA, r1);
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, rGLUE, offset >> 2);
+            newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE, offset >> 2);
             if (dalvikOpCode == OP_MONITOR_ENTER) {
                 loadConstant(cUnit, r2, (int)dvmLockObject);
             } else {
@@ -2012,7 +2012,7 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
            */
             genNullCheck(cUnit, mir->dalvikInsn.vA, r1, mir->offset, NULL);
             /* Do the call */
-            newLIR1(cUnit, ARMV5TE_BLX_R, r2);
+            newLIR1(cUnit, THUMB_BLX_R, r2);
             break;
         }
         case OP_THROW: {
@@ -2123,7 +2123,7 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             reg2 = NEXT_REG(reg1);
 
             loadValue(cUnit, vSrc2, reg0);
-            newLIR3(cUnit, ARMV5TE_ASR, reg1, reg0, 31);
+            newLIR3(cUnit, THUMB_ASR, reg1, reg0, 31);
             storeValuePair(cUnit, reg0, reg1, vSrc1Dest, reg2);
             break;
         }
@@ -2135,27 +2135,27 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             break;
         case OP_INT_TO_BYTE:
             loadValue(cUnit, vSrc2, reg0);
-            newLIR3(cUnit, ARMV5TE_LSL, reg0, reg0, 24);
-            newLIR3(cUnit, ARMV5TE_ASR, reg0, reg0, 24);
+            newLIR3(cUnit, THUMB_LSL, reg0, reg0, 24);
+            newLIR3(cUnit, THUMB_ASR, reg0, reg0, 24);
             storeValue(cUnit, reg0, vSrc1Dest, reg1);
             break;
         case OP_INT_TO_SHORT:
             loadValue(cUnit, vSrc2, reg0);
-            newLIR3(cUnit, ARMV5TE_LSL, reg0, reg0, 16);
-            newLIR3(cUnit, ARMV5TE_ASR, reg0, reg0, 16);
+            newLIR3(cUnit, THUMB_LSL, reg0, reg0, 16);
+            newLIR3(cUnit, THUMB_ASR, reg0, reg0, 16);
             storeValue(cUnit, reg0, vSrc1Dest, reg1);
             break;
         case OP_INT_TO_CHAR:
             loadValue(cUnit, vSrc2, reg0);
-            newLIR3(cUnit, ARMV5TE_LSL, reg0, reg0, 16);
-            newLIR3(cUnit, ARMV5TE_LSR, reg0, reg0, 16);
+            newLIR3(cUnit, THUMB_LSL, reg0, reg0, 16);
+            newLIR3(cUnit, THUMB_LSR, reg0, reg0, 16);
             storeValue(cUnit, reg0, vSrc1Dest, reg1);
             break;
         case OP_ARRAY_LENGTH: {
             int lenOffset = offsetof(ArrayObject, length);
             loadValue(cUnit, vSrc2, reg0);
             genNullCheck(cUnit, vSrc2, reg0, mir->offset, NULL);
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, reg0, reg0, lenOffset >> 2);
+            newLIR3(cUnit, THUMB_LDR_RRI5, reg0, reg0, lenOffset >> 2);
             storeValue(cUnit, reg0, vSrc1Dest, reg1);
             break;
         }
@@ -2180,7 +2180,7 @@ static bool handleFmt21s(CompilationUnit *cUnit, MIR *mir)
         reg2 = NEXT_REG(reg1);
 
         loadConstant(cUnit, reg0, BBBB);
-        newLIR3(cUnit, ARMV5TE_ASR, reg1, reg0, 31);
+        newLIR3(cUnit, THUMB_ASR, reg1, reg0, 31);
 
         /* Save the long values to the specified Dalvik register pair */
         storeValuePair(cUnit, reg0, reg1, vDest, reg2);
@@ -2201,14 +2201,14 @@ static bool handleFmt21s(CompilationUnit *cUnit, MIR *mir)
 
 /* Compare agaist zero */
 static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
-                         Armv5teLIR *labelList)
+                         ArmLIR *labelList)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
-    Armv5teConditionCode cond;
+    ArmConditionCode cond;
     int reg0 = selectFirstRegister(cUnit, mir->dalvikInsn.vA, false);
 
     loadValue(cUnit, mir->dalvikInsn.vA, reg0);
-    newLIR2(cUnit, ARMV5TE_CMP_RI8, reg0, 0);
+    newLIR2(cUnit, THUMB_CMP_RI8, reg0, 0);
 
     switch (dalvikOpCode) {
         case OP_IF_EQZ:
@@ -2262,22 +2262,22 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
         case OP_ADD_INT_LIT16:
             loadValue(cUnit, vSrc, reg0);
             if (lit <= 7 && lit >= 0) {
-                newLIR3(cUnit, ARMV5TE_ADD_RRI3, regDest, reg0, lit);
+                newLIR3(cUnit, THUMB_ADD_RRI3, regDest, reg0, lit);
                 storeValue(cUnit, regDest, vDest, reg1);
             } else if (lit <= 255 && lit >= 0) {
-                newLIR2(cUnit, ARMV5TE_ADD_RI8, reg0, lit);
+                newLIR2(cUnit, THUMB_ADD_RI8, reg0, lit);
                 storeValue(cUnit, reg0, vDest, reg1);
             } else if (lit >= -7 && lit <= 0) {
                 /* Convert to a small constant subtraction */
-                newLIR3(cUnit, ARMV5TE_SUB_RRI3, regDest, reg0, -lit);
+                newLIR3(cUnit, THUMB_SUB_RRI3, regDest, reg0, -lit);
                 storeValue(cUnit, regDest, vDest, reg1);
             } else if (lit >= -255 && lit <= 0) {
                 /* Convert to a small constant subtraction */
-                newLIR2(cUnit, ARMV5TE_SUB_RI8, reg0, -lit);
+                newLIR2(cUnit, THUMB_SUB_RI8, reg0, -lit);
                 storeValue(cUnit, reg0, vDest, reg1);
             } else {
                 loadConstant(cUnit, reg1, lit);
-                genBinaryOp(cUnit, vDest, ARMV5TE_ADD_RRR, reg0, reg1, regDest);
+                genBinaryOp(cUnit, vDest, THUMB_ADD_RRR, reg0, reg1, regDest);
             }
             break;
 
@@ -2285,7 +2285,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
         case OP_RSUB_INT:
             loadValue(cUnit, vSrc, reg1);
             loadConstant(cUnit, reg0, lit);
-            genBinaryOp(cUnit, vDest, ARMV5TE_SUB_RRR, reg0, reg1, regDest);
+            genBinaryOp(cUnit, vDest, THUMB_SUB_RRR, reg0, reg1, regDest);
             break;
 
         case OP_MUL_INT_LIT8:
@@ -2301,19 +2301,19 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             switch (dalvikOpCode) {
                 case OP_MUL_INT_LIT8:
                 case OP_MUL_INT_LIT16:
-                    armOp = ARMV5TE_MUL;
+                    armOp = THUMB_MUL;
                     break;
                 case OP_AND_INT_LIT8:
                 case OP_AND_INT_LIT16:
-                    armOp = ARMV5TE_AND_RR;
+                    armOp = THUMB_AND_RR;
                     break;
                 case OP_OR_INT_LIT8:
                 case OP_OR_INT_LIT16:
-                    armOp = ARMV5TE_ORR;
+                    armOp = THUMB_ORR;
                     break;
                 case OP_XOR_INT_LIT8:
                 case OP_XOR_INT_LIT16:
-                    armOp = ARMV5TE_EOR;
+                    armOp = THUMB_EOR;
                     break;
                 default:
                     dvmAbort();
@@ -2327,13 +2327,13 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             loadValue(cUnit, vSrc, reg0);
             switch (dalvikOpCode) {
                 case OP_SHL_INT_LIT8:
-                    armOp = ARMV5TE_LSL;
+                    armOp = THUMB_LSL;
                     break;
                 case OP_SHR_INT_LIT8:
-                    armOp = ARMV5TE_ASR;
+                    armOp = THUMB_ASR;
                     break;
                 case OP_USHR_INT_LIT8:
-                    armOp = ARMV5TE_LSR;
+                    armOp = THUMB_LSR;
                     break;
                 default: dvmAbort();
             }
@@ -2352,7 +2352,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r2, (int)__aeabi_idiv);
             loadConstant(cUnit, r1, lit);
             loadValue(cUnit, vSrc, r0);
-            newLIR1(cUnit, ARMV5TE_BLX_R, r2);
+            newLIR1(cUnit, THUMB_BLX_R, r2);
             storeValue(cUnit, r0, vDest, r2);
             break;
 
@@ -2367,7 +2367,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r2, (int)__aeabi_idivmod);
             loadConstant(cUnit, r1, lit);
             loadValue(cUnit, vSrc, r0);
-            newLIR1(cUnit, ARMV5TE_BLX_R, r2);
+            newLIR1(cUnit, THUMB_BLX_R, r2);
             storeValue(cUnit, r1, vDest, r2);
             break;
         default:
@@ -2404,11 +2404,11 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             loadValue(cUnit, mir->dalvikInsn.vB, r1);  /* Len */
             loadConstant(cUnit, r0, (int) classPtr );
             loadConstant(cUnit, r4PC, (int)dvmAllocArrayByClass);
-            Armv5teLIR *pcrLabel =
+            ArmLIR *pcrLabel =
                 genRegImmCheck(cUnit, ARM_COND_MI, r1, 0, mir->offset, NULL);
             genExportPC(cUnit, mir, r2, r3 );
-            newLIR2(cUnit, ARMV5TE_MOV_IMM,r2,ALLOC_DONT_TRACK);
-            newLIR1(cUnit, ARMV5TE_BLX_R, r4PC);
+            newLIR2(cUnit, THUMB_MOV_IMM,r2,ALLOC_DONT_TRACK);
+            newLIR1(cUnit, THUMB_BLX_R, r4PC);
             /*
              * TODO: As coded, we'll bail and reinterpret on alloc failure.
              * Need a general mechanism to bail to thrown exception code.
@@ -2427,23 +2427,23 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             assert(classPtr != NULL);
             loadValue(cUnit, mir->dalvikInsn.vB, r0);  /* Ref */
             loadConstant(cUnit, r2, (int) classPtr );
-            newLIR2(cUnit, ARMV5TE_CMP_RI8, r0, 0);    /* Null? */
+            newLIR2(cUnit, THUMB_CMP_RI8, r0, 0);    /* Null? */
             /* When taken r0 has NULL which can be used for store directly */
-            Armv5teLIR *branch1 = newLIR2(cUnit, ARMV5TE_B_COND, 4,
+            ArmLIR *branch1 = newLIR2(cUnit, THUMB_B_COND, 4,
                                           ARM_COND_EQ);
             /* r1 now contains object->clazz */
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, r0,
+            newLIR3(cUnit, THUMB_LDR_RRI5, r1, r0,
                     offsetof(Object, clazz) >> 2);
             loadConstant(cUnit, r4PC, (int)dvmInstanceofNonTrivial);
             loadConstant(cUnit, r0, 1);                /* Assume true */
-            newLIR2(cUnit, ARMV5TE_CMP_RR, r1, r2);
-            Armv5teLIR *branch2 = newLIR2(cUnit, ARMV5TE_B_COND, 2,
+            newLIR2(cUnit, THUMB_CMP_RR, r1, r2);
+            ArmLIR *branch2 = newLIR2(cUnit, THUMB_B_COND, 2,
                                           ARM_COND_EQ);
-            newLIR2(cUnit, ARMV5TE_MOV_RR, r0, r1);
-            newLIR2(cUnit, ARMV5TE_MOV_RR, r1, r2);
-            newLIR1(cUnit, ARMV5TE_BLX_R, r4PC);
+            newLIR2(cUnit, THUMB_MOV_RR, r0, r1);
+            newLIR2(cUnit, THUMB_MOV_RR, r1, r2);
+            newLIR1(cUnit, THUMB_BLX_R, r4PC);
             /* branch target here */
-            Armv5teLIR *target = newLIR0(cUnit, ARMV5TE_PSEUDO_TARGET_LABEL);
+            ArmLIR *target = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
             branch1->generic.target = (LIR *)target;
             branch2->generic.target = (LIR *)target;
@@ -2454,34 +2454,34 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             break;
         case OP_IGET:
         case OP_IGET_OBJECT:
-            genIGet(cUnit, mir, ARMV5TE_LDR_RRR, fieldOffset);
+            genIGet(cUnit, mir, THUMB_LDR_RRR, fieldOffset);
             break;
         case OP_IGET_BOOLEAN:
-            genIGet(cUnit, mir, ARMV5TE_LDRB_RRR, fieldOffset);
+            genIGet(cUnit, mir, THUMB_LDRB_RRR, fieldOffset);
             break;
         case OP_IGET_BYTE:
-            genIGet(cUnit, mir, ARMV5TE_LDRSB_RRR, fieldOffset);
+            genIGet(cUnit, mir, THUMB_LDRSB_RRR, fieldOffset);
             break;
         case OP_IGET_CHAR:
-            genIGet(cUnit, mir, ARMV5TE_LDRH_RRR, fieldOffset);
+            genIGet(cUnit, mir, THUMB_LDRH_RRR, fieldOffset);
             break;
         case OP_IGET_SHORT:
-            genIGet(cUnit, mir, ARMV5TE_LDRSH_RRR, fieldOffset);
+            genIGet(cUnit, mir, THUMB_LDRSH_RRR, fieldOffset);
             break;
         case OP_IPUT_WIDE:
             genIPutWide(cUnit, mir, fieldOffset);
             break;
         case OP_IPUT:
         case OP_IPUT_OBJECT:
-            genIPut(cUnit, mir, ARMV5TE_STR_RRR, fieldOffset);
+            genIPut(cUnit, mir, THUMB_STR_RRR, fieldOffset);
             break;
         case OP_IPUT_SHORT:
         case OP_IPUT_CHAR:
-            genIPut(cUnit, mir, ARMV5TE_STRH_RRR, fieldOffset);
+            genIPut(cUnit, mir, THUMB_STRH_RRR, fieldOffset);
             break;
         case OP_IPUT_BYTE:
         case OP_IPUT_BOOLEAN:
-            genIPut(cUnit, mir, ARMV5TE_STRB_RRR, fieldOffset);
+            genIPut(cUnit, mir, THUMB_STRB_RRR, fieldOffset);
             break;
         default:
             return true;
@@ -2496,11 +2496,11 @@ static bool handleFmt22cs(CompilationUnit *cUnit, MIR *mir)
     switch (dalvikOpCode) {
         case OP_IGET_QUICK:
         case OP_IGET_OBJECT_QUICK:
-            genIGet(cUnit, mir, ARMV5TE_LDR_RRR, fieldOffset);
+            genIGet(cUnit, mir, THUMB_LDR_RRR, fieldOffset);
             break;
         case OP_IPUT_QUICK:
         case OP_IPUT_OBJECT_QUICK:
-            genIPut(cUnit, mir, ARMV5TE_STR_RRR, fieldOffset);
+            genIPut(cUnit, mir, THUMB_STR_RRR, fieldOffset);
             break;
         case OP_IGET_WIDE_QUICK:
             genIGetWide(cUnit, mir, fieldOffset);
@@ -2517,10 +2517,10 @@ static bool handleFmt22cs(CompilationUnit *cUnit, MIR *mir)
 
 /* Compare agaist zero */
 static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
-                         Armv5teLIR *labelList)
+                         ArmLIR *labelList)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
-    Armv5teConditionCode cond;
+    ArmConditionCode cond;
     int reg0, reg1;
 
     if (cUnit->registerScoreboard.liveDalvikReg == (int) mir->dalvikInsn.vA) {
@@ -2536,7 +2536,7 @@ static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
         loadValue(cUnit, mir->dalvikInsn.vA, reg0);
         loadValue(cUnit, mir->dalvikInsn.vB, reg1);
     }
-    newLIR2(cUnit, ARMV5TE_CMP_RR, reg0, reg1);
+    newLIR2(cUnit, THUMB_CMP_RR, reg0, reg1);
 
     switch (dalvikOpCode) {
         case OP_IF_EQ:
@@ -2626,38 +2626,38 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
             storeValue(cUnit, r0, vA, r1);
             break;
         case OP_AGET_WIDE:
-            genArrayGet(cUnit, mir, ARMV5TE_LDR_RRR, vB, vC, vA, 3);
+            genArrayGet(cUnit, mir, THUMB_LDR_RRR, vB, vC, vA, 3);
             break;
         case OP_AGET:
         case OP_AGET_OBJECT:
-            genArrayGet(cUnit, mir, ARMV5TE_LDR_RRR, vB, vC, vA, 2);
+            genArrayGet(cUnit, mir, THUMB_LDR_RRR, vB, vC, vA, 2);
             break;
         case OP_AGET_BOOLEAN:
-            genArrayGet(cUnit, mir, ARMV5TE_LDRB_RRR, vB, vC, vA, 0);
+            genArrayGet(cUnit, mir, THUMB_LDRB_RRR, vB, vC, vA, 0);
             break;
         case OP_AGET_BYTE:
-            genArrayGet(cUnit, mir, ARMV5TE_LDRSB_RRR, vB, vC, vA, 0);
+            genArrayGet(cUnit, mir, THUMB_LDRSB_RRR, vB, vC, vA, 0);
             break;
         case OP_AGET_CHAR:
-            genArrayGet(cUnit, mir, ARMV5TE_LDRH_RRR, vB, vC, vA, 1);
+            genArrayGet(cUnit, mir, THUMB_LDRH_RRR, vB, vC, vA, 1);
             break;
         case OP_AGET_SHORT:
-            genArrayGet(cUnit, mir, ARMV5TE_LDRSH_RRR, vB, vC, vA, 1);
+            genArrayGet(cUnit, mir, THUMB_LDRSH_RRR, vB, vC, vA, 1);
             break;
         case OP_APUT_WIDE:
-            genArrayPut(cUnit, mir, ARMV5TE_STR_RRR, vB, vC, vA, 3);
+            genArrayPut(cUnit, mir, THUMB_STR_RRR, vB, vC, vA, 3);
             break;
         case OP_APUT:
         case OP_APUT_OBJECT:
-            genArrayPut(cUnit, mir, ARMV5TE_STR_RRR, vB, vC, vA, 2);
+            genArrayPut(cUnit, mir, THUMB_STR_RRR, vB, vC, vA, 2);
             break;
         case OP_APUT_SHORT:
         case OP_APUT_CHAR:
-            genArrayPut(cUnit, mir, ARMV5TE_STRH_RRR, vB, vC, vA, 1);
+            genArrayPut(cUnit, mir, THUMB_STRH_RRR, vB, vC, vA, 1);
             break;
         case OP_APUT_BYTE:
         case OP_APUT_BOOLEAN:
-            genArrayPut(cUnit, mir, ARMV5TE_STRB_RRR, vB, vC, vA, 0);
+            genArrayPut(cUnit, mir, THUMB_STRB_RRR, vB, vC, vA, 0);
             break;
         default:
             return true;
@@ -2675,7 +2675,7 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r1, (mir->dalvikInsn.vB << 1) +
                  (int) (cUnit->method->insns + mir->offset));
             genExportPC(cUnit, mir, r2, r3 );
-            newLIR1(cUnit, ARMV5TE_BLX_R, r4PC);
+            newLIR1(cUnit, THUMB_BLX_R, r4PC);
             genZeroCheck(cUnit, r0, mir->offset, NULL);
             break;
         }
@@ -2695,14 +2695,14 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             loadValue(cUnit, mir->dalvikInsn.vA, r1);
             loadConstant(cUnit, r0, (mir->dalvikInsn.vB << 1) +
                  (int) (cUnit->method->insns + mir->offset));
-            newLIR1(cUnit, ARMV5TE_BLX_R, r4PC);
+            newLIR1(cUnit, THUMB_BLX_R, r4PC);
             loadConstant(cUnit, r1, (int)(cUnit->method->insns + mir->offset));
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r2, rGLUE,
+            newLIR3(cUnit, THUMB_LDR_RRI5, r2, rGLUE,
                 offsetof(InterpState, jitToInterpEntries.dvmJitToInterpNoChain)
                     >> 2);
-            newLIR3(cUnit, ARMV5TE_ADD_RRR, r0, r0, r0);
-            newLIR3(cUnit, ARMV5TE_ADD_RRR, r4PC, r0, r1);
-            newLIR1(cUnit, ARMV5TE_BLX_R, r2);
+            newLIR3(cUnit, THUMB_ADD_RRR, r0, r0, r0);
+            newLIR3(cUnit, THUMB_ADD_RRR, r4PC, r0, r1);
+            newLIR1(cUnit, THUMB_BLX_R, r2);
             break;
         }
         default:
@@ -2712,10 +2712,10 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
 }
 
 static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
-                             Armv5teLIR *labelList)
+                             ArmLIR *labelList)
 {
-    Armv5teLIR *retChainingCell = &labelList[bb->fallThrough->id];
-    Armv5teLIR *pcrLabel = NULL;
+    ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
+    ArmLIR *pcrLabel = NULL;
 
     DecodedInstruction *dInsn = &mir->dalvikInsn;
     switch (mir->dalvikInsn.opCode) {
@@ -2726,7 +2726,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
          */
         case OP_INVOKE_VIRTUAL:
         case OP_INVOKE_VIRTUAL_RANGE: {
-            Armv5teLIR *predChainingCell = &labelList[bb->taken->id];
+            ArmLIR *predChainingCell = &labelList[bb->taken->id];
             int methodIndex =
                 cUnit->method->clazz->pDvmDex->pResMethods[dInsn->vB]->
                 methodIndex;
@@ -2870,7 +2870,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
          */
         case OP_INVOKE_INTERFACE:
         case OP_INVOKE_INTERFACE_RANGE: {
-            Armv5teLIR *predChainingCell = &labelList[bb->taken->id];
+            ArmLIR *predChainingCell = &labelList[bb->taken->id];
             int methodIndex = dInsn->vB;
 
             if (mir->dalvikInsn.opCode == OP_INVOKE_INTERFACE)
@@ -2885,13 +2885,13 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
                          (int) (cUnit->method->insns + mir->offset));
 
             /* r1 = &retChainingCell */
-            Armv5teLIR *addrRetChain = newLIR2(cUnit, ARMV5TE_ADD_PC_REL,
+            ArmLIR *addrRetChain = newLIR2(cUnit, THUMB_ADD_PC_REL,
                                                r1, 0);
             addrRetChain->generic.target = (LIR *) retChainingCell;
 
             /* r2 = &predictedChainingCell */
-            Armv5teLIR *predictedChainingCell =
-                newLIR2(cUnit, ARMV5TE_ADD_PC_REL, r2, 0);
+            ArmLIR *predictedChainingCell =
+                newLIR2(cUnit, THUMB_ADD_PC_REL, r2, 0);
             predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
             genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
@@ -2905,8 +2905,8 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              */
             if (pcrLabel == NULL) {
                 int dPC = (int) (cUnit->method->insns + mir->offset);
-                pcrLabel = dvmCompilerNew(sizeof(Armv5teLIR), true);
-                pcrLabel->opCode = ARMV5TE_PSEUDO_PC_RECONSTRUCTION_CELL;
+                pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+                pcrLabel->opCode = ARM_PSEUDO_PC_RECONSTRUCTION_CELL;
                 pcrLabel->operands[0] = dPC;
                 pcrLabel->operands[1] = mir->offset;
                 /* Insert the place holder to the growable list */
@@ -2926,12 +2926,12 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              */
 
             /* Save count, &predictedChainCell, and class to high regs first */
-            newLIR2(cUnit, ARMV5TE_MOV_RR_L2H, r9 & THUMB_REG_MASK, r1);
-            newLIR2(cUnit, ARMV5TE_MOV_RR_L2H, r10 & THUMB_REG_MASK, r2);
-            newLIR2(cUnit, ARMV5TE_MOV_RR_L2H, r12 & THUMB_REG_MASK, r3);
+            newLIR2(cUnit, THUMB_MOV_RR_L2H, r9 & THUMB_REG_MASK, r1);
+            newLIR2(cUnit, THUMB_MOV_RR_L2H, r10 & THUMB_REG_MASK, r2);
+            newLIR2(cUnit, THUMB_MOV_RR_L2H, r12 & THUMB_REG_MASK, r3);
 
             /* r0 now contains this->clazz */
-            newLIR2(cUnit, ARMV5TE_MOV_RR, r0, r3);
+            newLIR2(cUnit, THUMB_MOV_RR, r0, r3);
 
             /* r1 = BBBB */
             loadConstant(cUnit, r1, dInsn->vB);
@@ -2944,25 +2944,25 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 
             loadConstant(cUnit, r7,
                          (intptr_t) dvmFindInterfaceMethodInCache);
-            newLIR1(cUnit, ARMV5TE_BLX_R, r7);
+            newLIR1(cUnit, THUMB_BLX_R, r7);
 
             /* r0 = calleeMethod (returned from dvmFindInterfaceMethodInCache */
 
-            newLIR2(cUnit, ARMV5TE_MOV_RR_H2L, r1, r9 & THUMB_REG_MASK);
+            newLIR2(cUnit, THUMB_MOV_RR_H2L, r1, r9 & THUMB_REG_MASK);
 
             /* Check if rechain limit is reached */
-            newLIR2(cUnit, ARMV5TE_CMP_RI8, r1, 0);
+            newLIR2(cUnit, THUMB_CMP_RI8, r1, 0);
 
-            Armv5teLIR *bypassRechaining =
-                newLIR2(cUnit, ARMV5TE_B_COND, 0, ARM_COND_GT);
+            ArmLIR *bypassRechaining =
+                newLIR2(cUnit, THUMB_B_COND, 0, ARM_COND_GT);
 
-            newLIR3(cUnit, ARMV5TE_LDR_RRI5, r7, rGLUE,
+            newLIR3(cUnit, THUMB_LDR_RRI5, r7, rGLUE,
                     offsetof(InterpState,
                              jitToInterpEntries.dvmJitToPatchPredictedChain)
                     >> 2);
 
-            newLIR2(cUnit, ARMV5TE_MOV_RR_H2L, r2, r10 & THUMB_REG_MASK);
-            newLIR2(cUnit, ARMV5TE_MOV_RR_H2L, r3, r12 & THUMB_REG_MASK);
+            newLIR2(cUnit, THUMB_MOV_RR_H2L, r2, r10 & THUMB_REG_MASK);
+            newLIR2(cUnit, THUMB_MOV_RR_H2L, r3, r12 & THUMB_REG_MASK);
 
             /*
              * r0 = calleeMethod
@@ -2973,10 +2973,10 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              * when patching the chaining cell and will be clobbered upon
              * returning so it will be reconstructed again.
              */
-            newLIR1(cUnit, ARMV5TE_BLX_R, r7);
+            newLIR1(cUnit, THUMB_BLX_R, r7);
 
             /* r1 = &retChainingCell */
-            addrRetChain = newLIR3(cUnit, ARMV5TE_ADD_PC_REL,
+            addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL,
                                                r1, 0, 0);
             addrRetChain->generic.target = (LIR *) retChainingCell;
 
@@ -3012,11 +3012,11 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 }
 
 static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
-                               BasicBlock *bb, Armv5teLIR *labelList)
+                               BasicBlock *bb, ArmLIR *labelList)
 {
-    Armv5teLIR *retChainingCell = &labelList[bb->fallThrough->id];
-    Armv5teLIR *predChainingCell = &labelList[bb->taken->id];
-    Armv5teLIR *pcrLabel = NULL;
+    ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
+    ArmLIR *predChainingCell = &labelList[bb->taken->id];
+    ArmLIR *pcrLabel = NULL;
 
     DecodedInstruction *dInsn = &mir->dalvikInsn;
     switch (mir->dalvikInsn.opCode) {
@@ -3119,10 +3119,10 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
             }
 
             /* Materialize pointer to retval & push */
-            newLIR2(cUnit, ARMV5TE_MOV_RR, r4PC, rGLUE);
-            newLIR2(cUnit, ARMV5TE_ADD_RI8, r4PC, offset);
+            newLIR2(cUnit, THUMB_MOV_RR, r4PC, rGLUE);
+            newLIR2(cUnit, THUMB_ADD_RI8, r4PC, offset);
             /* Push r4 and (just to take up space) r5) */
-            newLIR1(cUnit, ARMV5TE_PUSH, (1<<r4PC | 1<<rFP));
+            newLIR1(cUnit, THUMB_PUSH, (1<<r4PC | 1<<rFP));
 
             /* Get code pointer to inline routine */
             loadConstant(cUnit, r4PC, (int)inLineTable[operation].func);
@@ -3135,10 +3135,10 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
                 loadValue(cUnit, dInsn->arg[i], i);
             }
             /* Call inline routine */
-            newLIR1(cUnit, ARMV5TE_BLX_R, r4PC);
+            newLIR1(cUnit, THUMB_BLX_R, r4PC);
 
             /* Strip frame */
-            newLIR1(cUnit, ARMV5TE_ADD_SPI7, 2);
+            newLIR1(cUnit, THUMB_ADD_SPI7, 2);
 
             /* Did we throw? If so, redo under interpreter*/
             genZeroCheck(cUnit, r0, mir->offset, NULL);
@@ -3171,9 +3171,9 @@ static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)
 static void handleNormalChainingCell(CompilationUnit *cUnit,
                                      unsigned int offset)
 {
-    newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, rGLUE,
+    newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE,
         offsetof(InterpState, jitToInterpEntries.dvmJitToInterpNormal) >> 2);
-    newLIR1(cUnit, ARMV5TE_BLX_R, r0);
+    newLIR1(cUnit, THUMB_BLX_R, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
@@ -3184,9 +3184,9 @@ static void handleNormalChainingCell(CompilationUnit *cUnit,
 static void handleHotChainingCell(CompilationUnit *cUnit,
                                   unsigned int offset)
 {
-    newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, rGLUE,
+    newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE,
         offsetof(InterpState, jitToInterpEntries.dvmJitToTraceSelect) >> 2);
-    newLIR1(cUnit, ARMV5TE_BLX_R, r0);
+    newLIR1(cUnit, THUMB_BLX_R, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
@@ -3194,9 +3194,9 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
 static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
                                               const Method *callee)
 {
-    newLIR3(cUnit, ARMV5TE_LDR_RRI5, r0, rGLUE,
+    newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE,
         offsetof(InterpState, jitToInterpEntries.dvmJitToTraceSelect) >> 2);
-    newLIR1(cUnit, ARMV5TE_BLX_R, r0);
+    newLIR1(cUnit, THUMB_BLX_R, r0);
     addWordData(cUnit, (int) (callee->insns), true);
 }
 
@@ -3219,10 +3219,10 @@ static void handleInvokePredictedChainingCell(CompilationUnit *cUnit)
 
 /* Load the Dalvik PC into r0 and jump to the specified target */
 static void handlePCReconstruction(CompilationUnit *cUnit,
-                                   Armv5teLIR *targetLabel)
+                                   ArmLIR *targetLabel)
 {
-    Armv5teLIR **pcrLabel =
-        (Armv5teLIR **) cUnit->pcReconstructionList.elemList;
+    ArmLIR **pcrLabel =
+        (ArmLIR **) cUnit->pcReconstructionList.elemList;
     int numElems = cUnit->pcReconstructionList.numUsed;
     int i;
     for (i = 0; i < numElems; i++) {
@@ -3237,8 +3237,8 @@ static void handlePCReconstruction(CompilationUnit *cUnit,
 void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 {
     /* Used to hold the labels of each block */
-    Armv5teLIR *labelList =
-        dvmCompilerNew(sizeof(Armv5teLIR) * cUnit->numBlocks, true);
+    ArmLIR *labelList =
+        dvmCompilerNew(sizeof(ArmLIR) * cUnit->numBlocks, true);
     GrowableList chainingListByType[CHAINING_CELL_LAST];
     int i;
 
@@ -3267,20 +3267,20 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
          *       add   r1, #1
          *       str   r1, [r0]
          */
-        newLIR1(cUnit, ARMV5TE_16BIT_DATA, 0);
-        newLIR1(cUnit, ARMV5TE_16BIT_DATA, 0);
+        newLIR1(cUnit, ARM_16BIT_DATA, 0);
+        newLIR1(cUnit, ARM_16BIT_DATA, 0);
         cUnit->chainCellOffsetLIR =
-            (LIR *) newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
+            (LIR *) newLIR1(cUnit, ARM_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
         cUnit->headerSize = 6;
-        newLIR2(cUnit, ARMV5TE_MOV_RR_H2L, r0, rpc & THUMB_REG_MASK);
-        newLIR2(cUnit, ARMV5TE_SUB_RI8, r0, 10);
-        newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, r0, 0);
-        newLIR2(cUnit, ARMV5TE_ADD_RI8, r1, 1);
-        newLIR3(cUnit, ARMV5TE_STR_RRI5, r1, r0, 0);
+        newLIR2(cUnit, THUMB_MOV_RR_H2L, r0, rpc & THUMB_REG_MASK);
+        newLIR2(cUnit, THUMB_SUB_RI8, r0, 10);
+        newLIR3(cUnit, THUMB_LDR_RRI5, r1, r0, 0);
+        newLIR2(cUnit, THUMB_ADD_RI8, r1, 1);
+        newLIR3(cUnit, THUMB_STR_RRI5, r1, r0, 0);
     } else {
          /* Just reserve 2 bytes for the chain cell offset */
         cUnit->chainCellOffsetLIR =
-            (LIR *) newLIR1(cUnit, ARMV5TE_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
+            (LIR *) newLIR1(cUnit, ARM_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
         cUnit->headerSize = 2;
     }
 
@@ -3300,20 +3300,20 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         }
 
         if (blockList[i]->blockType == DALVIK_BYTECODE) {
-            labelList[i].opCode = ARMV5TE_PSEUDO_NORMAL_BLOCK_LABEL;
+            labelList[i].opCode = ARM_PSEUDO_NORMAL_BLOCK_LABEL;
             /* Reset the register state */
             resetRegisterScoreboard(cUnit);
         } else {
             switch (blockList[i]->blockType) {
                 case CHAINING_CELL_NORMAL:
-                    labelList[i].opCode = ARMV5TE_PSEUDO_CHAINING_CELL_NORMAL;
+                    labelList[i].opCode = ARM_PSEUDO_CHAINING_CELL_NORMAL;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
                         &chainingListByType[CHAINING_CELL_NORMAL], (void *) i);
                     break;
                 case CHAINING_CELL_INVOKE_SINGLETON:
                     labelList[i].opCode =
-                        ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_SINGLETON;
+                        ARM_PSEUDO_CHAINING_CELL_INVOKE_SINGLETON;
                     labelList[i].operands[0] =
                         (int) blockList[i]->containingMethod;
                     /* handle the codegen later */
@@ -3323,7 +3323,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     break;
                 case CHAINING_CELL_INVOKE_PREDICTED:
                     labelList[i].opCode =
-                        ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_PREDICTED;
+                        ARM_PSEUDO_CHAINING_CELL_INVOKE_PREDICTED;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
                         &chainingListByType[CHAINING_CELL_INVOKE_PREDICTED],
@@ -3331,7 +3331,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     break;
                 case CHAINING_CELL_HOT:
                     labelList[i].opCode =
-                        ARMV5TE_PSEUDO_CHAINING_CELL_HOT;
+                        ARM_PSEUDO_CHAINING_CELL_HOT;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
                         &chainingListByType[CHAINING_CELL_HOT],
@@ -3340,18 +3340,18 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 case PC_RECONSTRUCTION:
                     /* Make sure exception handling block is next */
                     labelList[i].opCode =
-                        ARMV5TE_PSEUDO_PC_RECONSTRUCTION_BLOCK_LABEL;
+                        ARM_PSEUDO_PC_RECONSTRUCTION_BLOCK_LABEL;
                     assert (i == cUnit->numBlocks - 2);
                     handlePCReconstruction(cUnit, &labelList[i+1]);
                     break;
                 case EXCEPTION_HANDLING:
-                    labelList[i].opCode = ARMV5TE_PSEUDO_EH_BLOCK_LABEL;
+                    labelList[i].opCode = ARM_PSEUDO_EH_BLOCK_LABEL;
                     if (cUnit->pcReconstructionList.numUsed) {
-                        newLIR3(cUnit, ARMV5TE_LDR_RRI5, r1, rGLUE,
+                        newLIR3(cUnit, THUMB_LDR_RRI5, r1, rGLUE,
                             offsetof(InterpState,
                                      jitToInterpEntries.dvmJitToInterpPunt)
                             >> 2);
-                        newLIR1(cUnit, ARMV5TE_BLX_R, r1);
+                        newLIR1(cUnit, THUMB_BLX_R, r1);
                     }
                     break;
                 default:
@@ -3360,14 +3360,14 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             continue;
         }
 
-        Armv5teLIR *headLIR = NULL;
+        ArmLIR *headLIR = NULL;
 
         for (mir = blockList[i]->firstMIRInsn; mir; mir = mir->next) {
             OpCode dalvikOpCode = mir->dalvikInsn.opCode;
             InstructionFormat dalvikFormat =
                 dexGetInstrFormat(gDvm.instrFormat, dalvikOpCode);
-            Armv5teLIR *boundaryLIR =
-                newLIR2(cUnit, ARMV5TE_PSEUDO_DALVIK_BYTECODE_BOUNDARY,
+            ArmLIR *boundaryLIR =
+                newLIR2(cUnit, ARM_PSEUDO_DALVIK_BYTECODE_BOUNDARY,
                         mir->offset,dalvikOpCode);
             /* Remember the first LIR for this block */
             if (headLIR == NULL) {
@@ -3511,7 +3511,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             int blockId = blockIdList[j];
 
             /* Align this chaining cell first */
-            newLIR0(cUnit, ARMV5TE_PSEUDO_ALIGN4);
+            newLIR0(cUnit, ARM_PSEUDO_ALIGN4);
 
             /* Insert the pseudo chaining instruction */
             dvmCompilerAppendLIR(cUnit, (LIR *) &labelList[blockId]);

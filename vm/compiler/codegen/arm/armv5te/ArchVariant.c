@@ -45,10 +45,10 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
      * we fake BLX_1 is a two operand instruction and the absolute target
      * address is stored in operand[1].
      */
-    newLIR2(cUnit, ARMV5TE_BLX_1,
+    newLIR2(cUnit, THUMB_BLX_1,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-    newLIR2(cUnit, ARMV5TE_BLX_2,
+    newLIR2(cUnit, THUMB_BLX_2,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
 #else
@@ -69,7 +69,7 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
         default: templatePtr = NULL;
     }
     loadConstant(cUnit, r7, (int) templatePtr);
-    newLIR1(cUnit, ARMV5TE_BLX_R, r7);
+    newLIR1(cUnit, THUMB_BLX_R, r7);
 #endif
 }
 

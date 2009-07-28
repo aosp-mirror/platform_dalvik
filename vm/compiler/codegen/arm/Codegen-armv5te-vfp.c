@@ -19,7 +19,7 @@
 #include "libdex/OpCode.h"
 #include "dexdump/OpCodeNames.h"
 #include "vm/compiler/CompilerInternals.h"
-#include "Armv5teLIR.h"
+#include "ArmLIR.h"
 #include "vm/mterp/common/FindInterface.h"
 
 #include "armv5te-vfp/ArchVariant.h"

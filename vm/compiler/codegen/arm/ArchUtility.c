@@ -16,7 +16,7 @@
 
 #include "../../CompilerInternals.h"
 #include "dexdump/OpCodeNames.h"
-#include "Armv5teLIR.h"
+#include "ArmLIR.h"
 
 /* Decode and print a ARM register name */
 static char * decodeRegList(int vector, char *buf)
@@ -41,7 +41,7 @@ static char * decodeRegList(int vector, char *buf)
  * Interpret a format string and build a string no longer than size
  * See format key in Assemble.c.
  */
-static void buildInsnString(char *fmt, Armv5teLIR *lir, char* buf,
+static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                             unsigned char *baseAddr, int size)
 {
     int i;
@@ -151,7 +151,7 @@ static void buildInsnString(char *fmt, Armv5teLIR *lir, char* buf,
 /* Pretty-print a LIR instruction */
 static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
 {
-    Armv5teLIR *lir = (Armv5teLIR *) arg;
+    ArmLIR *lir = (ArmLIR *) arg;
     char buf[256];
     char opName[256];
     int offset = lir->generic.offset;
@@ -159,40 +159,40 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
     u2 *cPtr = (u2*)baseAddr;
     /* Handle pseudo-ops individually, and all regular insns as a group */
     switch(lir->opCode) {
-        case ARMV5TE_PSEUDO_TARGET_LABEL:
+        case ARM_PSEUDO_TARGET_LABEL:
             break;
-        case ARMV5TE_PSEUDO_CHAINING_CELL_NORMAL:
+        case ARM_PSEUDO_CHAINING_CELL_NORMAL:
             LOGD("-------- chaining cell (normal): 0x%04x\n", dest);
             break;
-        case ARMV5TE_PSEUDO_CHAINING_CELL_HOT:
+        case ARM_PSEUDO_CHAINING_CELL_HOT:
             LOGD("-------- chaining cell (hot): 0x%04x\n", dest);
             break;
-        case ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_PREDICTED:
+        case ARM_PSEUDO_CHAINING_CELL_INVOKE_PREDICTED:
             LOGD("-------- chaining cell (predicted)\n");
             break;
-        case ARMV5TE_PSEUDO_CHAINING_CELL_INVOKE_SINGLETON:
+        case ARM_PSEUDO_CHAINING_CELL_INVOKE_SINGLETON:
             LOGD("-------- chaining cell (invoke singleton): %s/%p\n",
                  ((Method *)dest)->name,
                  ((Method *)dest)->insns);
             break;
-        case ARMV5TE_PSEUDO_DALVIK_BYTECODE_BOUNDARY:
+        case ARM_PSEUDO_DALVIK_BYTECODE_BOUNDARY:
             LOGD("-------- dalvik offset: 0x%04x @ %s\n", dest,
                    getOpcodeName(lir->operands[1]));
             break;
-        case ARMV5TE_PSEUDO_ALIGN4:
+        case ARM_PSEUDO_ALIGN4:
             LOGD("%p (%04x): .align4\n", baseAddr + offset, offset);
             break;
-        case ARMV5TE_PSEUDO_PC_RECONSTRUCTION_CELL:
+        case ARM_PSEUDO_PC_RECONSTRUCTION_CELL:
             LOGD("-------- reconstruct dalvik PC : 0x%04x @ +0x%04x\n", dest,
                  lir->operands[1]);
             break;
-        case ARMV5TE_PSEUDO_PC_RECONSTRUCTION_BLOCK_LABEL:
+        case ARM_PSEUDO_PC_RECONSTRUCTION_BLOCK_LABEL:
             /* Do nothing */
             break;
-        case ARMV5TE_PSEUDO_EH_BLOCK_LABEL:
+        case ARM_PSEUDO_EH_BLOCK_LABEL:
             LOGD("Exception_Handling:\n");
             break;
-        case ARMV5TE_PSEUDO_NORMAL_BLOCK_LABEL:
+        case ARM_PSEUDO_NORMAL_BLOCK_LABEL:
             LOGD("L%#06x:\n", dest);
             break;
         default:
@@ -214,7 +214,7 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
 {
     LOGD("Dumping LIR insns\n");
     LIR *lirInsn;
-    Armv5teLIR *armLIR;
+    ArmLIR *armLIR;
 
     LOGD("installed code is at %p\n", cUnit->baseAddr);
     LOGD("total size is %d bytes\n", cUnit->totalSize);
@@ -222,7 +222,7 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
         dumpLIRInsn(lirInsn, cUnit->baseAddr);
     }
     for (lirInsn = cUnit->wordList; lirInsn; lirInsn = lirInsn->next) {
-        armLIR = (Armv5teLIR *) lirInsn;
+        armLIR = (ArmLIR *) lirInsn;
         LOGD("%p (%04x): .word (0x%x)\n",
              (char*)cUnit->baseAddr + armLIR->generic.offset, armLIR->generic.offset,
              armLIR->operands[0]);

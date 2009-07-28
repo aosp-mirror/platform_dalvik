@@ -45,10 +45,10 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
      * we fake BLX_1 is a two operand instruction and the absolute target
      * address is stored in operand[1].
      */
-    newLIR2(cUnit, ARMV5TE_BLX_1,
+    newLIR2(cUnit, THUMB_BLX_1,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-    newLIR2(cUnit, ARMV5TE_BLX_2,
+    newLIR2(cUnit, THUMB_BLX_2,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
 #else
@@ -69,7 +69,7 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
         default: templatePtr = NULL;
     }
     loadConstant(cUnit, r7, (int) templatePtr);
-    newLIR1(cUnit, ARMV5TE_BLX_R, r7);
+    newLIR1(cUnit, THUMB_BLX_R, r7);
 #endif
 }
 
@@ -119,8 +119,8 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     int vSrc = mir->dalvikInsn.vA;
     loadValueAddress(cUnit, vSrc, r2);
     genDispatchToHandler(cUnit, TEMPLATE_SQRT_DOUBLE_VFP);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, r0, rGLUE, offset >> 2);
-    newLIR3(cUnit, ARMV5TE_STR_RRI5, r1, rGLUE, (offset >> 2) + 1);
+    newLIR3(cUnit, THUMB_STR_RRI5, r0, rGLUE, offset >> 2);
+    newLIR3(cUnit, THUMB_STR_RRI5, r1, rGLUE, (offset >> 2) + 1);
     return false;
 }
 

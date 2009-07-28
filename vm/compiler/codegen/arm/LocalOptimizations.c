@@ -16,7 +16,7 @@
 
 #include "Dalvik.h"
 #include "vm/compiler/CompilerInternals.h"
-#include "Armv5teLIR.h"
+#include "ArmLIR.h"
 
 /*
  * Perform a pass of top-down walk to
@@ -24,10 +24,10 @@
  * 2) Sink stores to latest possible slot
  */
 static void applyLoadStoreElimination(CompilationUnit *cUnit,
-                                      Armv5teLIR *headLIR,
-                                      Armv5teLIR *tailLIR)
+                                      ArmLIR *headLIR,
+                                      ArmLIR *tailLIR)
 {
-    Armv5teLIR *thisLIR;
+    ArmLIR *thisLIR;
 
     cUnit->optRound++;
     for (thisLIR = headLIR;
@@ -37,11 +37,11 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
         if (thisLIR->age >= cUnit->optRound) {
             continue;
         }
-        if (thisLIR->opCode == ARMV5TE_STR_RRI5 &&
+        if (thisLIR->opCode == THUMB_STR_RRI5 &&
             thisLIR->operands[1] == rFP) {
             int dRegId = thisLIR->operands[2];
             int nativeRegId = thisLIR->operands[0];
-            Armv5teLIR *checkLIR;
+            ArmLIR *checkLIR;
             int sinkDistance = 0;
 
             for (checkLIR = NEXT_LIR(thisLIR);
@@ -49,14 +49,14 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                  checkLIR = NEXT_LIR(checkLIR)) {
 
                 /* Check if a Dalvik register load is redundant */
-                if (checkLIR->opCode == ARMV5TE_LDR_RRI5 &&
+                if (checkLIR->opCode == THUMB_LDR_RRI5 &&
                     checkLIR->operands[1] == rFP &&
                     checkLIR->operands[2] == dRegId) {
                     /* Insert a move to replace the load */
                     if (checkLIR->operands[0] != nativeRegId) {
-                        Armv5teLIR *moveLIR =
-                            dvmCompilerNew(sizeof(Armv5teLIR), true);
-                        moveLIR->opCode = ARMV5TE_MOV_RR;
+                        ArmLIR *moveLIR =
+                            dvmCompilerNew(sizeof(ArmLIR), true);
+                        moveLIR->opCode = THUMB_MOV_RR;
                         moveLIR->operands[0] = checkLIR->operands[0];
                         moveLIR->operands[1] = nativeRegId;
                         /*
@@ -70,7 +70,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                     continue;
 
                 /* Found a true output dependency - nuke the previous store */
-                } else if (checkLIR->opCode == ARMV5TE_STR_RRI5 &&
+                } else if (checkLIR->opCode == THUMB_STR_RRI5 &&
                            checkLIR->operands[1] == rFP &&
                            checkLIR->operands[2] == dRegId) {
                     thisLIR->isNop = true;
@@ -90,10 +90,10 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                      * Conservatively assume there is a memory dependency
                      * for st/ld multiples and reg+reg address mode
                      */
-                    stopHere |= checkLIR->opCode == ARMV5TE_STMIA ||
-                                checkLIR->opCode == ARMV5TE_LDMIA ||
-                                checkLIR->opCode == ARMV5TE_STR_RRR ||
-                                checkLIR->opCode == ARMV5TE_LDR_RRR;
+                    stopHere |= checkLIR->opCode == THUMB_STMIA ||
+                                checkLIR->opCode == THUMB_LDMIA ||
+                                checkLIR->opCode == THUMB_STR_RRR ||
+                                checkLIR->opCode == THUMB_LDR_RRR;
 
                     stopHere |= (EncodingMap[checkLIR->opCode].flags &
                                  IS_BRANCH) != 0;
@@ -103,8 +103,8 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
 
                         /* The store can be sunk for at least one cycle */
                         if (sinkDistance != 0) {
-                            Armv5teLIR *newStoreLIR =
-                                dvmCompilerNew(sizeof(Armv5teLIR), true);
+                            ArmLIR *newStoreLIR =
+                                dvmCompilerNew(sizeof(ArmLIR), true);
                             *newStoreLIR = *thisLIR;
                             newStoreLIR->age = cUnit->optRound;
                             /*
@@ -134,6 +134,6 @@ void dvmCompilerApplyLocalOptimizations(CompilationUnit *cUnit, LIR *headLIR,
                                         LIR *tailLIR)
 {
     applyLoadStoreElimination(cUnit,
-                              (Armv5teLIR *) headLIR,
-                              (Armv5teLIR *) tailLIR);
+                              (ArmLIR *) headLIR,
+                              (ArmLIR *) tailLIR);
 }
