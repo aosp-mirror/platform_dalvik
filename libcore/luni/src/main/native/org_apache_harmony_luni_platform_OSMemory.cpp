@@ -184,7 +184,7 @@ static void harmony_nio_putShortsImpl(JNIEnv *_env, jobject _this,
     if (swap) {
         swapShorts(src_ + offset, length);
     }
-    memcpy((jbyte *)pointer, src_ + offset, length);
+    memcpy((jbyte *)pointer, (jbyte *)src_ + offset, length);
     if (swap) {
         swapShorts(src_ + offset, length);
     }
@@ -198,7 +198,7 @@ static void harmony_nio_putShortsImpl(JNIEnv *_env, jobject _this,
  */
 static void harmony_nio_putIntsImpl(JNIEnv *_env, jobject _this,
        jint pointer, jintArray src, jint offset, jint length, jboolean swap) {
-       
+
     offset = offset << 2;
     length = length << 2;
        
@@ -207,7 +207,7 @@ static void harmony_nio_putIntsImpl(JNIEnv *_env, jobject _this,
     if (swap) {
         swapInts(src_ + offset, length);
     }
-    memcpy((jbyte *)pointer, src_ + offset, length);
+    memcpy((jbyte *)pointer, (jbyte *)src_ + offset, length);
     if (swap) {
         swapInts(src_ + offset, length);
     }
