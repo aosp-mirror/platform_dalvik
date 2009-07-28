@@ -2714,8 +2714,11 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
 static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
                              ArmLIR *labelList)
 {
-    ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
+    ArmLIR *retChainingCell;
     ArmLIR *pcrLabel = NULL;
+
+    if (bb->fallThrough != NULL)
+        retChainingCell = &labelList[bb->fallThrough->id];
 
     DecodedInstruction *dInsn = &mir->dalvikInsn;
     switch (mir->dalvikInsn.opCode) {
