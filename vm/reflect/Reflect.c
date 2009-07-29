@@ -212,7 +212,7 @@ static ClassObject* convertSignaturePartToClass(char** pSignature,
             ;
         savedChar = *++signature;
         *signature = '\0';
-        clazz = dvmFindClass(*pSignature, defClass->classLoader);
+        clazz = dvmFindClassNoInit(*pSignature, defClass->classLoader);
         *signature = savedChar;
     } else {
         clazz = dvmFindPrimitiveClass(*signature++);

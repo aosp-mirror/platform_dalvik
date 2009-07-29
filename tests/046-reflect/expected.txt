@@ -92,3 +92,6 @@ myMethod (I)I
 ReflectTest done!
 checkType invoking null
 checkType got expected exception
+got methods
+NoisyInitUser is initializing
+NoisyInit is initializing
