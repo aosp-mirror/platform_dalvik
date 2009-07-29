@@ -40,6 +40,13 @@ public final class VMStack {
     native public static ClassLoader getCallingClassLoader2();
 
     /**
+     * Returns the class of the caller's caller's caller.
+     *
+     * @return the requested class, or {@code null}.
+     */
+    native public static Class<?> getStackClass2();
+
+    /**
      * Creates an array of classes from the methods at the top of the stack.
      * We continue until we reach the bottom of the stack or exceed the
      * specified maximum depth.  If stopAtPrivileged is set, the last

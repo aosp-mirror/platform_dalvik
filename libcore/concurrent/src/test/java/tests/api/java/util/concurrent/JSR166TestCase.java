@@ -2,8 +2,8 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
 package tests.api.java.util.concurrent;
@@ -19,13 +19,13 @@ import java.security.*;
  * utility methods and classes, as well as a simple framework for
  * helping to make sure that assertions failing in generated threads
  * cause the associated test that generated them to itself fail (which
- * JUnit doe not otherwise arrange).  The rules for creating such
+ * JUnit does not otherwise arrange).  The rules for creating such
  * tests are:
  *
  * <ol>
  *
  * <li> All assertions in code running in generated threads must use
- * the forms {@link #threadFail} , {@link #threadAssertTrue} {@link
+ * the forms {@link #threadFail}, {@link #threadAssertTrue}, {@link
  * #threadAssertEquals}, or {@link #threadAssertNull}, (not
  * <tt>fail</tt>, <tt>assertTrue</tt>, etc.) It is OK (but not
  * particularly recommended) for other code to use these forms too.
@@ -46,7 +46,7 @@ import java.security.*;
  * is always discriminable as larger than SHORT and smaller than
  * MEDIUM.  And so on. These constants are set to conservative values,
  * but even so, if there is ever any doubt, they can all be increased
- * in one spot to rerun tests on slower platforms</li>
+ * in one spot to rerun tests on slower platforms.</li>
  *
  * <li> All threads generated must be joined inside each test case
  * method (or <tt>fail</tt> to do so) before returning from the
@@ -65,7 +65,7 @@ import java.security.*;
  * "normal" behaviors differ significantly. And sometimes testcases
  * cover multiple methods when they cannot be tested in
  * isolation.</li>
- * 
+ *
  * <li> The documentation style for testcases is to provide as javadoc
  * a simple sentence or two describing the property that the testcase
  * method purports to test. The javadocs do not say anything about how
@@ -90,10 +90,10 @@ import java.security.*;
 public class JSR166TestCase extends TestCase {
     /**
      * Runs all JSR166 unit tests using junit.textui.TestRunner
-     */ 
+     */
     public static void main (String[] args) {
         int iters = 1;
-        if (args.length > 0) 
+        if (args.length > 0)
             iters = Integer.parseInt(args[0]);
         Test s = suite();
         for (int i = 0; i < iters; ++i) {
@@ -106,7 +106,7 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * Collects all JSR166 unit tests as one suite
-     */ 
+     */
     public static Test suite ( ) {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite("JSR166 Unit Tests");
         // BEGIN android-changed
@@ -114,18 +114,18 @@ public class JSR166TestCase extends TestCase {
         suite.addTest(AbstractQueueTest.suite());
         suite.addTest(AbstractQueuedSynchronizerTest.suite());
         suite.addTest(ArrayBlockingQueueTest.suite());
-        suite.addTest(AtomicBooleanTest.suite()); 
-        suite.addTest(AtomicIntegerArrayTest.suite()); 
-        suite.addTest(AtomicIntegerFieldUpdaterTest.suite()); 
-        suite.addTest(AtomicIntegerTest.suite()); 
-        suite.addTest(AtomicLongArrayTest.suite()); 
-        suite.addTest(AtomicLongFieldUpdaterTest.suite()); 
-        suite.addTest(AtomicLongTest.suite()); 
-        suite.addTest(AtomicMarkableReferenceTest.suite()); 
-        suite.addTest(AtomicReferenceArrayTest.suite()); 
-        suite.addTest(AtomicReferenceFieldUpdaterTest.suite()); 
-        suite.addTest(AtomicReferenceTest.suite()); 
-        suite.addTest(AtomicStampedReferenceTest.suite()); 
+        suite.addTest(AtomicBooleanTest.suite());
+        suite.addTest(AtomicIntegerArrayTest.suite());
+        suite.addTest(AtomicIntegerFieldUpdaterTest.suite());
+        suite.addTest(AtomicIntegerTest.suite());
+        suite.addTest(AtomicLongArrayTest.suite());
+        suite.addTest(AtomicLongFieldUpdaterTest.suite());
+        suite.addTest(AtomicLongTest.suite());
+        suite.addTest(AtomicMarkableReferenceTest.suite());
+        suite.addTest(AtomicReferenceArrayTest.suite());
+        suite.addTest(AtomicReferenceFieldUpdaterTest.suite());
+        suite.addTest(AtomicReferenceTest.suite());
+        suite.addTest(AtomicStampedReferenceTest.suite());
         suite.addTest(ConcurrentHashMapTest.suite());
         suite.addTest(ConcurrentLinkedQueueTest.suite());
         suite.addTest(CopyOnWriteArrayListTest.suite());
@@ -164,16 +164,16 @@ public class JSR166TestCase extends TestCase {
 
 
     /**
-     * Return the shortest timed delay. This could
+     * Returns the shortest timed delay. This could
      * be reimplemented to use for example a Property.
-     */ 
+     */
     protected long getShortDelay() {
         return 50;
     }
 
 
     /**
-     * Set delays as multiples of SHORT_DELAY.
+     * Sets delays as multiples of SHORT_DELAY.
      */
     protected  void setDelays() {
         SHORT_DELAY_MS = getShortDelay();
@@ -188,23 +188,23 @@ public class JSR166TestCase extends TestCase {
     volatile boolean threadFailed;
 
     /**
-     * Initialize test to indicate that no thread assertions have failed
+     * Initializes test to indicate that no thread assertions have failed
      */
-    public void setUp() { 
+    public void setUp() {
         setDelays();
-        threadFailed = false;  
+        threadFailed = false;
     }
 
     /**
-     * Trigger test case failure if any thread assertions have failed
+     * Triggers test case failure if any thread assertions have failed
      */
-    public void tearDown() { 
-        assertFalse(threadFailed);  
+    public void tearDown() {
+        assertFalse(threadFailed);
     }
 
     /**
      * Fail, also setting status to indicate current testcase should fail
-     */ 
+     */
     public void threadFail(String reason) {
         threadFailed = true;
         fail(reason);
@@ -213,7 +213,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * If expression not true, set status to indicate current testcase
      * should fail
-     */ 
+     */
     public void threadAssertTrue(boolean b) {
         if (!b) {
             threadFailed = true;
@@ -224,7 +224,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * If expression not false, set status to indicate current testcase
      * should fail
-     */ 
+     */
     public void threadAssertFalse(boolean b) {
         if (b) {
             threadFailed = true;
@@ -235,7 +235,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * If argument not null, set status to indicate current testcase
      * should fail
-     */ 
+     */
     public void threadAssertNull(Object x) {
         if (x != null) {
             threadFailed = true;
@@ -246,7 +246,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * If arguments not equal, set status to indicate current testcase
      * should fail
-     */ 
+     */
     public void threadAssertEquals(long x, long y) {
         if (x != y) {
             threadFailed = true;
@@ -257,7 +257,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * If arguments not equal, set status to indicate current testcase
      * should fail
-     */ 
+     */
     public void threadAssertEquals(Object x, Object y) {
         if (x != y && (x == null || !x.equals(y))) {
             threadFailed = true;
@@ -267,10 +267,15 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * threadFail with message "should throw exception"
-     */ 
+     */
     public void threadShouldThrow() {
-        threadFailed = true;
-        fail("should throw exception");
+       try {
+           threadFailed = true;
+           fail("should throw exception");
+       } catch (AssertionFailedError e) {
+           e.printStackTrace();
+           throw e;
+       }
     }
 
     /**
@@ -281,6 +286,14 @@ public class JSR166TestCase extends TestCase {
         fail("Unexpected exception");
     }
 
+    /**
+     * threadFail with message "Unexpected exception", with argument
+     */
+    public void threadUnexpectedException(Throwable ex) {
+        threadFailed = true;
+        ex.printStackTrace();
+        fail("Unexpected exception: " + ex);
+    }
 
     /**
      * Wait out termination of a thread pool or fail doing so
@@ -299,7 +312,7 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * fail with message "should throw exception"
-     */ 
+     */
     public void shouldThrow() {
         fail("Should throw exception");
     }
@@ -334,6 +347,7 @@ public class JSR166TestCase extends TestCase {
     static final Integer m3  = new Integer(-3);
     static final Integer m4 = new Integer(-4);
     static final Integer m5 = new Integer(-5);
+    static final Integer m6 = new Integer(-6);
     static final Integer m10 = new Integer(-10);
 
 
@@ -389,7 +403,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SHORT_DELAY_MS);
             }
             catch(Exception e) {
-                threadUnexpectedException();
+                threadUnexpectedException(e);
             }
         }
     }
@@ -411,7 +425,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SMALL_DELAY_MS);
             }
             catch(Exception e) {
-                threadUnexpectedException();
+                threadUnexpectedException(e);
             }
         }
     }
@@ -432,7 +446,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(SMALL_DELAY_MS);
             }
             catch(Exception e) {
-                threadUnexpectedException();
+                threadUnexpectedException(e);
             }
             return Boolean.TRUE;
         }
@@ -456,7 +470,7 @@ public class JSR166TestCase extends TestCase {
                 Thread.sleep(MEDIUM_DELAY_MS);
             }
             catch(Exception e) {
-                threadUnexpectedException();
+                threadUnexpectedException(e);
             }
         }
     }
@@ -498,7 +512,7 @@ public class JSR166TestCase extends TestCase {
     static class SimpleThreadFactory implements ThreadFactory{
         public Thread newThread(Runnable r){
             return new Thread(r);
-        }   
+        }
     }
 
     static class TrackedShortRunnable implements Runnable {
@@ -558,8 +572,8 @@ public class JSR166TestCase extends TestCase {
      * For use as RejectedExecutionHandler in constructors
      */
     static class NoOpREHandler implements RejectedExecutionHandler{
-        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor){} 
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor){}
     }
- 
-    
+
+
 }

@@ -757,6 +757,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             while (!q.isEmpty()) 
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
+            e.printStackTrace();
             unexpectedException();
         }
     }

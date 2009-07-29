@@ -16,7 +16,7 @@ import java.io.*;
 public class LinkedBlockingQueueTest extends JSR166TestCase {
 
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());        
+        junit.textui.TestRunner.run (suite());
     }
 
     public static Test suite() {
@@ -38,7 +38,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         assertEquals(n, q.size());
         return q;
     }
- 
+
     /**
      * A new queue has the indicated capacity, or Integer.MAX_VALUE if
      * none given
@@ -151,7 +151,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             LinkedBlockingQueue q = new LinkedBlockingQueue(1);
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -162,7 +162,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             LinkedBlockingQueue q = new LinkedBlockingQueue(1);
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) { }
     }
 
     /**
@@ -186,7 +186,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             assertEquals(0, q.remainingCapacity());
             q.add(new Integer(SIZE));
         } catch (IllegalStateException success){
-        }   
+        }
     }
 
     /**
@@ -280,9 +280,9 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             LinkedBlockingQueue q = new LinkedBlockingQueue(SIZE);
             q.put(null);
             shouldThrow();
-        } 
+        }
         catch (NullPointerException success){
-        }   
+        }
         catch (InterruptedException ie) {
             unexpectedException();
         }
@@ -323,11 +323,11 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
                         threadShouldThrow();
                     } catch (InterruptedException ie){
                         threadAssertEquals(added, SIZE);
-                    }   
+                    }
                 }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
+        try {
+           Thread.sleep(SHORT_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -386,7 +386,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
                     } catch (InterruptedException success){}
                 }
             });
-        
+
         try {
             t.start();
             Thread.sleep(SMALL_DELAY_MS);
@@ -408,7 +408,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             }
         } catch (InterruptedException e){
             unexpectedException();
-        }   
+        }
     }
 
     /**
@@ -421,7 +421,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
                     try {
                         q.take();
                         threadShouldThrow();
-                    } catch (InterruptedException success){ }                
+                    } catch (InterruptedException success){ }
                 }
             });
         try {
@@ -448,11 +448,11 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
                         q.take();
                         threadShouldThrow();
                     } catch (InterruptedException success){
-                    }   
+                    }
                 }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
+        try {
+           Thread.sleep(SHORT_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -485,7 +485,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             assertNull(q.poll(0, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
             unexpectedException();
-        }   
+        }
     }
 
     /**
@@ -500,7 +500,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
         } catch (InterruptedException e){
             unexpectedException();
-        }   
+        }
     }
 
     /**
@@ -517,11 +517,11 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
                         }
                         threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
                     } catch (InterruptedException success){
-                    }   
+                    }
                 }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
+        try {
+           Thread.sleep(SHORT_DELAY_MS);
            t.interrupt();
            t.join();
         }
@@ -543,7 +543,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
                         threadShouldThrow();
-                    } catch (InterruptedException success) { }                
+                    } catch (InterruptedException success) { }
                 }
             });
         try {
@@ -555,7 +555,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         } catch (Exception e){
             unexpectedException();
         }
-    }  
+    }
 
     /**
      * peek returns next element, or null if empty
@@ -599,7 +599,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             q.remove();
             shouldThrow();
         } catch (NoSuchElementException success){
-        }   
+        }
     }
 
     /**
@@ -616,7 +616,24 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         }
         assertTrue(q.isEmpty());
     }
-        
+
+    /**
+     * An add following remove(x) succeeds
+     */
+    public void testRemoveElementAndAdd() {
+        try {
+            LinkedBlockingQueue q = new LinkedBlockingQueue();
+            assertTrue(q.add(new Integer(1)));
+            assertTrue(q.add(new Integer(2)));
+            assertTrue(q.remove(new Integer(1)));
+            assertTrue(q.remove(new Integer(2)));
+            assertTrue(q.add(new Integer(3)));
+            assertTrue(q.take() != null);
+        } catch (Exception e){
+            unexpectedException();
+        }
+    }
+
     /**
      * contains(x) reports true when elements added but not yet removed
      */
@@ -640,6 +657,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         assertEquals(SIZE, q.remainingCapacity());
         q.add(one);
         assertFalse(q.isEmpty());
+        assertTrue(q.contains(one));
         q.clear();
         assertTrue(q.isEmpty());
     }
@@ -704,7 +722,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             assertEquals(o[i], q.take());
         } catch (InterruptedException e){
             unexpectedException();
-        }    
+        }
     }
 
     /**
@@ -719,7 +737,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
                 assertEquals(ints[i], q.take());
         } catch (InterruptedException e){
             unexpectedException();
-        }    
+        }
     }
 
     /**
@@ -744,7 +762,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         } catch(ArrayStoreException  success){}
     }
 
-    
+
     /**
      * iterator iterates through all elements
      */
@@ -757,7 +775,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             }
         } catch (InterruptedException e){
             unexpectedException();
-        }    
+        }
     }
 
     /**
@@ -772,7 +790,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         Iterator it = q.iterator();
         it.next();
         it.remove();
-        
+
         it = q.iterator();
         assertEquals(it.next(), one);
         assertEquals(it.next(), three);
@@ -827,7 +845,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
 
     /**
@@ -862,7 +880,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
                 }
             }
         });
-        
+
         joinPool(executor);
     }
 
@@ -896,7 +914,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
                 }
             }
         });
-        
+
         joinPool(executor);
     }
 
@@ -916,7 +934,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
             LinkedBlockingQueue r = (LinkedBlockingQueue)in.readObject();
             assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
+            while (!q.isEmpty())
                 assertEquals(q.remove(), r.remove());
         } catch(Exception e){
             unexpectedException();
@@ -925,7 +943,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(null) throws NPE
-     */ 
+     */
     public void testDrainToNull() {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -937,7 +955,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(this) throws IAE
-     */ 
+     */
     public void testDrainToSelf() {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -949,27 +967,38 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(c) empties queue into another collection c
-     */ 
+     */
     public void testDrainTo() {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         ArrayList l = new ArrayList();
         q.drainTo(l);
         assertEquals(q.size(), 0);
         assertEquals(l.size(), SIZE);
-        for (int i = 0; i < SIZE; ++i) 
+        for (int i = 0; i < SIZE; ++i)
+            assertEquals(l.get(i), new Integer(i));
+        q.add(zero);
+        q.add(one);
+        assertFalse(q.isEmpty());
+        assertTrue(q.contains(zero));
+        assertTrue(q.contains(one));
+        l.clear();
+        q.drainTo(l);
+        assertEquals(q.size(), 0);
+        assertEquals(l.size(), 2);
+        for (int i = 0; i < 2; ++i)
             assertEquals(l.get(i), new Integer(i));
     }
 
     /**
      * drainTo empties full queue, unblocking a waiting put.
-     */ 
+     */
     public void testDrainToWithActivePut() {
         final LinkedBlockingQueue q = populatedQueue(SIZE);
         Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
                         q.put(new Integer(SIZE+1));
-                    } catch (InterruptedException ie){ 
+                    } catch (InterruptedException ie){
                         threadUnexpectedException();
                     }
                 }
@@ -979,7 +1008,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
             ArrayList l = new ArrayList();
             q.drainTo(l);
             assertTrue(l.size() >= SIZE);
-            for (int i = 0; i < SIZE; ++i) 
+            for (int i = 0; i < SIZE; ++i)
                 assertEquals(l.get(i), new Integer(i));
             t.join();
             assertTrue(q.size() + l.size() >= SIZE);
@@ -990,7 +1019,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(null, n) throws NPE
-     */ 
+     */
     public void testDrainToNullN() {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -1002,7 +1031,7 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(this, n) throws IAE
-     */ 
+     */
     public void testDrainToSelfN() {
         LinkedBlockingQueue q = populatedQueue(SIZE);
         try {
@@ -1014,17 +1043,20 @@ public class LinkedBlockingQueueTest extends JSR166TestCase {
 
     /**
      * drainTo(c, n) empties first max {n, size} elements of queue into c
-     */ 
+     */
     public void testDrainToN() {
+        LinkedBlockingQueue q = new LinkedBlockingQueue();
         for (int i = 0; i < SIZE + 2; ++i) {
-            LinkedBlockingQueue q = populatedQueue(SIZE);
+            for(int j = 0; j < SIZE; j++)
+                assertTrue(q.offer(new Integer(j)));
             ArrayList l = new ArrayList();
             q.drainTo(l, i);
             int k = (i < SIZE)? i : SIZE;
-            assertEquals(q.size(), SIZE-k);
             assertEquals(l.size(), k);
-            for (int j = 0; j < k; ++j) 
+            assertEquals(q.size(), SIZE-k);
+            for (int j = 0; j < k; ++j)
                 assertEquals(l.get(j), new Integer(j));
+            while (q.poll() != null) ;
         }
     }
 

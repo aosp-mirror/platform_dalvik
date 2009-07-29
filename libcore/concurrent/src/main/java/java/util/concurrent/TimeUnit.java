@@ -12,7 +12,11 @@ package java.util.concurrent;
  * and to perform timing and delay operations in these units.  A
  * <tt>TimeUnit</tt> does not maintain time information, but only
  * helps organize and use time representations that may be maintained
- * separately across various contexts.
+ * separately across various contexts.  A nanosecond is defined as one
+ * thousandth of a microsecond, a microsecond as one thousandth of a
+ * millisecond, a millisecond as one thousandth of a second, a minute
+ * as sixty seconds, an hour as sixty minutes, and a day as twenty four
+ * hours.
  *
  * <p>A <tt>TimeUnit</tt> is mainly used to inform time-based methods
  * how a given timing parameter should be interpreted. For example,
@@ -37,60 +41,79 @@ package java.util.concurrent;
  */
 public enum TimeUnit {
     /** TimeUnit which represents one nanosecond. */
-    NANOSECONDS(0), 
+    NANOSECONDS {
+        public long toNanos(long d)   { return d; }
+        public long toMicros(long d)  { return d/(C1/C0); }
+        public long toMillis(long d)  { return d/(C2/C0); }
+        public long toSeconds(long d) { return d/(C3/C0); }
+        public long toMinutes(long d) { return d/(C4/C0); }
+        public long toHours(long d)   { return d/(C5/C0); }
+        public long toDays(long d)    { return d/(C6/C0); }
+        public long convert(long d, TimeUnit u) { return u.toNanos(d); }
+        int excessNanos(long d, long m) { return (int)(d - (m*C2)); }
+    },
     /** TimeUnit which represents one microsecond. */
-    MICROSECONDS(1), 
+    MICROSECONDS {
+        public long toNanos(long d)   { return x(d, C1/C0, MAX/(C1/C0)); }
+        public long toMicros(long d)  { return d; }
+        public long toMillis(long d)  { return d/(C2/C1); }
+        public long toSeconds(long d) { return d/(C3/C1); }
+        public long toMinutes(long d) { return d/(C4/C1); }
+        public long toHours(long d)   { return d/(C5/C1); }
+        public long toDays(long d)    { return d/(C6/C1); }
+        public long convert(long d, TimeUnit u) { return u.toMicros(d); }
+        int excessNanos(long d, long m) { return (int)((d*C1) - (m*C2)); }
+    },
     /** TimeUnit which represents one millisecond. */
-    MILLISECONDS(2), 
+    MILLISECONDS {
+        public long toNanos(long d)   { return x(d, C2/C0, MAX/(C2/C0)); }
+        public long toMicros(long d)  { return x(d, C2/C1, MAX/(C2/C1)); }
+        public long toMillis(long d)  { return d; }
+        public long toSeconds(long d) { return d/(C3/C2); }
+        public long toMinutes(long d) { return d/(C4/C2); }
+        public long toHours(long d)   { return d/(C5/C2); }
+        public long toDays(long d)    { return d/(C6/C2); }
+        public long convert(long d, TimeUnit u) { return u.toMillis(d); }
+        int excessNanos(long d, long m) { return 0; }
+    },
     /** TimeUnit which represents one second. */
-    SECONDS(3);
-
-    /** the index of this unit */
-    private final int index;
-
-    /** Internal constructor */
-    TimeUnit(int index) { 
-        this.index = index; 
-    }
-
-    /** Lookup table for conversion factors */
-    private static final int[] multipliers = { 
-        1, 
-        1000, 
-        1000 * 1000, 
-        1000 * 1000 * 1000 
+    SECONDS {
+        public long toNanos(long d)   { return x(d, C3/C0, MAX/(C3/C0)); }
+        public long toMicros(long d)  { return x(d, C3/C1, MAX/(C3/C1)); }
+        public long toMillis(long d)  { return x(d, C3/C2, MAX/(C3/C2)); }
+        public long toSeconds(long d) { return d; }
+        public long toMinutes(long d) { return d/(C4/C3); }
+        public long toHours(long d)   { return d/(C5/C3); }
+        public long toDays(long d)    { return d/(C6/C3); }
+        public long convert(long d, TimeUnit u) { return u.toSeconds(d); }
+        int excessNanos(long d, long m) { return 0; }
     };
-    
-    /** 
-     * Lookup table to check saturation.  Note that because we are
-     * dividing these down, we don't have to deal with asymmetry of
-     * MIN/MAX values.
-     */
-    private static final long[] overflows = { 
-        0, // unused
-        Long.MAX_VALUE / 1000,
-        Long.MAX_VALUE / (1000 * 1000),
-        Long.MAX_VALUE / (1000 * 1000 * 1000) 
-    };
+
+    // Handy constants for conversion methods
+    static final long C0 = 1L;
+    static final long C1 = C0 * 1000L;
+    static final long C2 = C1 * 1000L;
+    static final long C3 = C2 * 1000L;
+    static final long C4 = C3 * 60L;
+    static final long C5 = C4 * 60L;
+    static final long C6 = C5 * 24L;
+
+    static final long MAX = Long.MAX_VALUE;
 
     /**
-     * Perform conversion based on given delta representing the
-     * difference between units
-     * @param delta the difference in index values of source and target units
-     * @param duration the duration
-     * @return converted duration or saturated value
+     * Scale d by m, checking for overflow.
+     * This has a short name to make above code more readable.
      */
-    private static long doConvert(int delta, long duration) {
-        if (delta == 0)
-            return duration;
-        if (delta < 0) 
-            return duration / multipliers[-delta];
-        if (duration > overflows[delta])
-            return Long.MAX_VALUE;
-        if (duration < -overflows[delta])
-            return Long.MIN_VALUE;
-        return duration * multipliers[delta];
+    static long x(long d, long m, long over) {
+        if (d >  over) return Long.MAX_VALUE;
+        if (d < -over) return Long.MIN_VALUE;
+        return d * m;
     }
+
+    // To maintain full signature compatibility with 1.5, and to improve the
+    // clarity of the generated javadoc (see 6287639: Abstract methods in
+    // enum classes should not be listed as abstract), method convert
+    // etc. are not declared abstract but otherwise act as abstract methods.
 
     /**
      * Convert the given time duration in the given unit to this
@@ -102,14 +125,17 @@ public enum TimeUnit {
      * <tt>Long.MIN_VALUE</tt> if negative or <tt>Long.MAX_VALUE</tt>
      * if positive.
      *
-     * @param duration the time duration in the given <tt>unit</tt>
-     * @param unit the unit of the <tt>duration</tt> argument
+     * <p>For example, to convert 10 minutes to milliseconds, use:
+     * <tt>TimeUnit.MILLISECONDS.convert(10L, TimeUnit.MINUTES)</tt>
+     *
+     * @param sourceDuration the time duration in the given <tt>sourceUnit</tt>
+     * @param sourceUnit the unit of the <tt>sourceDuration</tt> argument
      * @return the converted duration in this unit,
      * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
      * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      */
-    public long convert(long duration, TimeUnit unit) {
-        return doConvert(unit.index - index, duration);
+    public long convert(long sourceDuration, TimeUnit sourceUnit) {
+        throw new AbstractMethodError();
     }
 
     /**
@@ -121,7 +147,7 @@ public enum TimeUnit {
      * @see #convert
      */
     public long toNanos(long duration) {
-        return doConvert(index, duration);
+        throw new AbstractMethodError();
     }
 
     /**
@@ -133,7 +159,7 @@ public enum TimeUnit {
      * @see #convert
      */
     public long toMicros(long duration) {
-        return doConvert(index - MICROSECONDS.index, duration);
+        throw new AbstractMethodError();
     }
 
     /**
@@ -145,34 +171,66 @@ public enum TimeUnit {
      * @see #convert
      */
     public long toMillis(long duration) {
-        return doConvert(index - MILLISECONDS.index, duration);
+        throw new AbstractMethodError();
     }
 
     /**
      * Equivalent to <tt>SECONDS.convert(duration, this)</tt>.
      * @param duration the duration
-     * @return the converted duration.
+     * @return the converted duration,
+     * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+     * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
      * @see #convert
      */
     public long toSeconds(long duration) {
-        return doConvert(index - SECONDS.index, duration);
+        throw new AbstractMethodError();
     }
 
-
     /**
-     * Utility method to compute the excess-nanosecond argument to
-     * wait, sleep, join.
+     * Equivalent to <tt>MINUTES.convert(duration, this)</tt>.
+     * @param duration the duration
+     * @return the converted duration,
+     * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+     * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
+     * @see #convert
      */
-    private int excessNanos(long time, long ms) {
-        if (this == NANOSECONDS)
-            return (int) (time  - (ms * 1000 * 1000));
-        if (this == MICROSECONDS)
-            return (int) ((time * 1000) - (ms * 1000 * 1000));
-        return 0;
+    long toMinutes(long duration) {
+        throw new AbstractMethodError();
     }
 
     /**
-     * Perform a timed <tt>Object.wait</tt> using this time unit.
+     * Equivalent to <tt>HOURS.convert(duration, this)</tt>.
+     * @param duration the duration
+     * @return the converted duration,
+     * or <tt>Long.MIN_VALUE</tt> if conversion would negatively
+     * overflow, or <tt>Long.MAX_VALUE</tt> if it would positively overflow.
+     * @see #convert
+     */
+    long toHours(long duration) {
+        throw new AbstractMethodError();
+    }
+
+    /**
+     * Equivalent to <tt>DAYS.convert(duration, this)</tt>.
+     * @param duration the duration
+     * @return the converted duration
+     * @see #convert
+     */
+    long toDays(long duration) {
+        throw new AbstractMethodError();
+    }
+
+    /**
+     * Utility to compute the excess-nanosecond argument to wait,
+     * sleep, join.
+     * @param d the duration
+     * @param m the number of milliseconds
+     * @return the number of nanoseconds
+     */
+    abstract int excessNanos(long d, long m);
+
+    /**
+     * Performs a timed <tt>Object.wait</tt> using this time unit.
      * This is a convenience method that converts timeout arguments
      * into the form required by the <tt>Object.wait</tt> method.
      *
@@ -180,7 +238,7 @@ public enum TimeUnit {
      * method (see {@link BlockingQueue#poll BlockingQueue.poll})
      * using:
      *
-     * <pre>  public synchronized  Object poll(long timeout, TimeUnit unit) throws InterruptedException {
+     * <pre>  public synchronized Object poll(long timeout, TimeUnit unit) throws InterruptedException {
      *    while (empty) {
      *      unit.timedWait(this, timeout);
      *      ...
@@ -188,12 +246,13 @@ public enum TimeUnit {
      *  }</pre>
      *
      * @param obj the object to wait on
-     * @param timeout the maximum time to wait. 
+     * @param timeout the maximum time to wait. If less than
+     * or equal to zero, do not wait at all.
      * @throws InterruptedException if interrupted while waiting.
      * @see Object#wait(long, int)
      */
     public void timedWait(Object obj, long timeout)
-        throws InterruptedException {
+    throws InterruptedException {
         if (timeout > 0) {
             long ms = toMillis(timeout);
             int ns = excessNanos(timeout, ms);
@@ -202,16 +261,17 @@ public enum TimeUnit {
     }
 
     /**
-     * Perform a timed <tt>Thread.join</tt> using this time unit.
+     * Performs a timed <tt>Thread.join</tt> using this time unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.join</tt> method.
      * @param thread the thread to wait for
-     * @param timeout the maximum time to wait
+     * @param timeout the maximum time to wait. If less than
+     * or equal to zero, do not wait at all.
      * @throws InterruptedException if interrupted while waiting.
      * @see Thread#join(long, int)
      */
     public void timedJoin(Thread thread, long timeout)
-        throws InterruptedException {
+    throws InterruptedException {
         if (timeout > 0) {
             long ms = toMillis(timeout);
             int ns = excessNanos(timeout, ms);
@@ -220,10 +280,11 @@ public enum TimeUnit {
     }
 
     /**
-     * Perform a <tt>Thread.sleep</tt> using this unit.
+     * Performs a <tt>Thread.sleep</tt> using this unit.
      * This is a convenience method that converts time arguments into the
      * form required by the <tt>Thread.sleep</tt> method.
-     * @param timeout the minimum time to sleep
+     * @param timeout the minimum time to sleep. If less than
+     * or equal to zero, do not sleep at all.
      * @throws InterruptedException if interrupted while sleeping.
      * @see Thread#sleep
      */
