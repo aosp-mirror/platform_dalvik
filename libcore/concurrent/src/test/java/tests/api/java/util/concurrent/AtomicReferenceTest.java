@@ -46,7 +46,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
         assertEquals(two,ai.get());
         ai.set(m3);
         assertEquals(m3,ai.get());
-        
+
     }
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
@@ -86,7 +86,7 @@ public class AtomicReferenceTest extends JSR166TestCase {
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet(){
         AtomicReference ai = new AtomicReference(one);

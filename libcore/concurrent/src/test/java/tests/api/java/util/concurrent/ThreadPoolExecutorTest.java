@@ -9,6 +9,7 @@
 package tests.api.java.util.concurrent;
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import junit.framework.*;
 import java.util.*;
 
@@ -37,6 +38,15 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             terminatedCalled = true;
         }
     }
+
+    static class FailingThreadFactory implements ThreadFactory{
+        int calls = 0;
+        public Thread newThread(Runnable r){
+            if (++calls > 1) return null;
+            return new Thread(r);
+        }   
+    }
+    
 
     /**
      *  execute successfully executes a runnable
@@ -342,6 +352,9 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
             assertSame(q, wq);
             assertFalse(wq.contains(tasks[0]));
             assertTrue(wq.contains(tasks[4]));
+            for (int i = 1; i < 5; ++i)
+                tasks[i].cancel(true);
+            p1.shutdownNow();
         } catch(Exception e) {
             unexpectedException();
         } finally {
@@ -1500,5 +1513,58 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
         }
     }
 
+    /**
+     * Execution continues if there is at least one thread even if
+     * thread factory fails to create more
+     */
+    public void testFailingThreadFactory() {
+        ExecutorService e = new ThreadPoolExecutor(100, 100, LONG_DELAY_MS, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new FailingThreadFactory());
+        try {
+            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            for (int k = 0; k < 100; ++k) {
+                e.execute(new NoOpRunnable());
+            }
+            Thread.sleep(LONG_DELAY_MS);
+        } catch(Exception ex) {
+            unexpectedException();
+        } finally {
+            joinPool(e);
+        }
+    }
 
+    /**
+     * execute allows the same task to be submitted multiple times, even
+     * if rejected
+     */
+    public void testRejectedRecycledTask() {
+        final int nTasks = 1000;
+        final AtomicInteger nRun = new AtomicInteger(0);
+        final Runnable recycledTask = new Runnable() {
+                public void run() {
+                    nRun.getAndIncrement();
+                } };
+        final ThreadPoolExecutor p = 
+            new ThreadPoolExecutor(1, 30, 60, TimeUnit.SECONDS, 
+                                   new ArrayBlockingQueue(30));
+        try {
+            for (int i = 0; i < nTasks; ++i) {
+                for (;;) {
+                    try {
+                        p.execute(recycledTask);
+                        break;
+                    }
+                    catch (RejectedExecutionException ignore) {
+                    }
+                }
+            }
+            Thread.sleep(5000); // enough time to run all tasks
+            assertEquals(nRun.get(), nTasks);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            unexpectedException();
+        } finally {
+            p.shutdown();
+        }
+    }
+            
 }

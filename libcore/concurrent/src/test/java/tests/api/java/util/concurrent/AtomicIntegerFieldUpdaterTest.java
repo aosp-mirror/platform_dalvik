@@ -62,6 +62,27 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         catch (RuntimeException rt) {}
     }
 
+    static class Base {
+        protected volatile int f = 0;
+    }
+    static class Sub1 extends Base {
+        AtomicIntegerFieldUpdater<Base> fUpdater
+                = AtomicIntegerFieldUpdater.newUpdater(Base.class, "f");
+    }
+    static class Sub2 extends Base {}
+
+    public void testProtectedFieldOnAnotherSubtype() {
+        Sub1 sub1 = new Sub1();
+        Sub2 sub2 = new Sub2();
+
+        sub1.fUpdater.set(sub1, 1);
+        try {
+            sub1.fUpdater.set(sub2, 2);
+            shouldThrow();
+        } 
+        catch (RuntimeException rt) {}
+    }
+
     /**
      *  get returns the last value set or assigned
      */
@@ -80,6 +101,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         assertEquals(-3,a.get(this));
         
     }
+
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */

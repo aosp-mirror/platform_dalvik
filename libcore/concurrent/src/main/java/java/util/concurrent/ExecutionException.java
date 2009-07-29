@@ -19,14 +19,14 @@ public class ExecutionException extends Exception {
     private static final long serialVersionUID = 7830266012832686185L;
 
     /**
-     * Constructs a <tt>ExecutionException</tt> with no detail message.
+     * Constructs an <tt>ExecutionException</tt> with no detail message.
      * The cause is not initialized, and may subsequently be
      * initialized by a call to {@link #initCause(Throwable) initCause}.
      */
     protected ExecutionException() { }
 
     /**
-     * Constructs a <tt>ExecutionException</tt> with the specified detail
+     * Constructs an <tt>ExecutionException</tt> with the specified detail
      * message. The cause is not initialized, and may subsequently be
      * initialized by a call to {@link #initCause(Throwable) initCause}.
      *
@@ -37,7 +37,7 @@ public class ExecutionException extends Exception {
     }
 
     /**
-     * Constructs a <tt>ExecutionException</tt> with the specified detail
+     * Constructs an <tt>ExecutionException</tt> with the specified detail
      * message and cause.
      *
      * @param  message the detail message
@@ -49,7 +49,7 @@ public class ExecutionException extends Exception {
     }
 
     /**
-     * Constructs a <tt>ExecutionException</tt> with the specified cause.
+     * Constructs an <tt>ExecutionException</tt> with the specified cause.
      * The detail message is set to:
      * <pre>
      *  (cause == null ? null : cause.toString())</pre>
