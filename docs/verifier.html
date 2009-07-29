@@ -33,10 +33,9 @@ Why do it all, when our system relies on UNIX processes for security?
     error cases because the verifier guarantees that they are impossible.
     Also, we can optimize the DEX file more aggressively if we start
     with a stronger set of assumptions about the bytecode.
-    <li>"Exact" GC.  The work peformed during verification has significant
-    overlap with the work required to compute register use maps for exact
-    GC.  Improper register use, caught by the verifier, could lead to
-    subtle problems with an "exact" GC.
+    <li>"Precise" GC.  The work peformed during verification has significant
+    overlap with the work required to compute register use maps for
+    type-precise GC.
     <li>Intra-application security.  If an app wants to download bits
     of interpreted code over the network and execute them, it can safely
     do so using well-established security mechanisms.
@@ -85,6 +84,12 @@ There are also some new ones, such as:
 </ul>
 
 <p>
+The VM is permitted but not required to enforce "structured locking"
+constraints, which are designed to ensure that, when a method returns, all
+monitors locked by the method have been unlocked an equal number of times.
+This is not currently implemented.
+
+<p>
 The Dalvik verifier is more restrictive than other VMs in one area:
 type safety on sub-32-bit integer widths.  These additional restrictions
 should make it impossible to, say, pass a value outside the range
@@ -94,24 +99,31 @@ should make it impossible to, say, pass a value outside the range
 <h2>Verification Failures</h2>
 
 <p>
-When the verifier rejects a class, it always throws a VerifyError.
-This is different in some cases from other implementations.  For example,
-if a class attempts to perform an illegal access on a field, the expected
-behavior is to receive an IllegalAccessError at runtime the first time
-the field is actually accessed.  The Dalvik verifier will reject the
-entire class immediately.
+The verifier may reject a class immediately, or it may defer throwing
+an exception until the code is actually used.  For example, if a class
+attempts to perform an illegal access on a field, the VM should throw
+an IllegalAccessError the first time the instruction is encountered.
+On the other hand, if a class contains an invalid bytecode, it should be
+rejected immediately with a VerifyError.
 
 <p>
-It's difficult to throw the error on first use in Dalvik.  Possible ways
-to implement this behavior include:
+Immediate VerifyErrors are accompanied by detailed, if somewhat cryptic,
+information in the log file.  From this it's possible to determine the
+exact instruction that failed, and the reason for the failure.
+
+<p>
+It's a bit tricky to implement deferred verification errors in Dalvik.
+A few approaches were considered:
 
 <ol>
 <li>We could replace the invalid field access instruction with a special
 instruction that generates an illegal access error, and allow class
 verification to complete successfully.  This type of verification must
-often be deferred to first class load, rather than be performed ahead of time
-during DEX optimization, which means the bytecode instructions will be
-mapped read-only during verification.  So this won't work.
+be deferred to first class load, rather than be performed ahead of time
+during DEX optimization, because some failures will depend on the current
+execution environment (e.g. not all classes are available at dexopt time).
+At that point the bytecode instructions are mapped read-only during
+verification, so rewriting them isn't possible.
 </li>
 
 <li>We can perform the access checks when the field/method/class is
@@ -120,7 +132,7 @@ entry is resolved in the context of the current classfile, but our DEX
 files combine multiple classfiles together, merging the field/method/class
 resolution results into a single large table.  Once one class successfully
 resolves the field, every other class in the same DEX file would be able
-to access the field.  This is bad.
+to access the field.  This is incorrect.
 </li>
 
 <li>Perform the access checks on every field/method/class access.
@@ -134,25 +146,29 @@ and we don't currently have an optimized form of certain instructions
 </ol>
 
 <p>
-Other implementations are possible, but they all involve allocating
-some amount of additional memory or spending additional cycles
-on non-DEX-optimized instructions.  We don't want to throw an
-IllegalAccessError at verification time, since that would indicate that
-access to the class being verified was illegal.
+In early versions of Dalvik (as shipped with Android 1.0/1.5), the verifier
+simply regarded all problems as immediately fatal.  This generally worked,
+but in some cases the VM was rejecting classes because of bits of code
+that were never used.  The VerifyError itself was sometimes difficult to
+decipher, because it was thrown during verification rather than at the
+point where the problem was first noticed during execution.
 <p>
-One approach that might be worth pursuing: for situations like illegal
-accesses, the verifier makes an in-RAM private copy of the method, and
-alters the instructions there.  The class object is altered to point at
-the new copy of the instructions.  This requires minimal memory overhead
-and provides a better experience for developers.
+The current version uses a variation of approach #1.  The dexopt
+command works the way it did before, leaving the code untouched and
+flagging fully-correct classes as "pre-verified".  When the VM loads a
+class that didn't pass pre-verification, the verifier is invoked.  If a
+"deferrable" problem is detected, a modifiable copy of the instructions
+in the problematic method is made.  In that copy, the troubled instruction
+is replaced with an "always throw" opcode, and verification continues.
 
 <p>
-The VerifyError is accompanied by detailed, if somewhat cryptic,
-information in the log file.  From this it's possible to determine the
-exact instruction that failed, and the reason for the failure.  We can
-also constructor the VerifyError with an IllegalAccessError passed in as
-the cause.
+In the example used earlier, an attempt to read from an inaccessible
+field would result in the "field get" instruction being replaced by
+"always throw IllegalAccessError on field X".  Creating copies of method
+bodies requires additional heap space, but since this affects very few
+methods overall the memory impact should be minor.
 
+<p>
 <address>Copyright &copy; 2008 The Android Open Source Project</address>
 
 </body>
