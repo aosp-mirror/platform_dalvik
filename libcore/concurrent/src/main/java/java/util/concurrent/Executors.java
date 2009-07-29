@@ -359,7 +359,7 @@ public class Executors {
      * @return a callable object
      * @throws NullPointerException if action null
      */
-    public static Callable<Object> callable(final PrivilegedAction<?> action) {
+    public static Callable<Object> callable(final PrivilegedAction action) {
         if (action == null)
             throw new NullPointerException();
         return new Callable<Object>() {
@@ -374,7 +374,7 @@ public class Executors {
      * @return a callable object
      * @throws NullPointerException if action null
      */
-    public static Callable<Object> callable(final PrivilegedExceptionAction<?> action) {
+    public static Callable<Object> callable(final PrivilegedExceptionAction action) {
         if (action == null)
             throw new NullPointerException();
         return new Callable<Object>() {
