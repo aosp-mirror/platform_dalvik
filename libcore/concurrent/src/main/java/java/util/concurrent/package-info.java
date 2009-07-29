@@ -41,10 +41,6 @@
  * a function, allows determination of whether execution has
  * completed, and provides a means to cancel execution.
  *
- * A {@link java.util.concurrent.RunnableFuture} is a {@code Future}
- * that possesses a {@code run} method that upon execution,
- * sets its results.
- *
  * <p>
  *
  * <b>Implementations.</b>

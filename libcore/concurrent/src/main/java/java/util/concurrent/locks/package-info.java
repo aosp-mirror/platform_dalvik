@@ -34,13 +34,10 @@
  *
  * <p>The {@link java.util.concurrent.locks.AbstractQueuedSynchronizer}
  * class serves as a useful superclass for defining locks and other
- * synchronizers that rely on queuing blocked threads.  The {@link
- * java.util.concurrent.locks.AbstractQueuedLongSynchronizer} class
- * provides the same functionality but extends support to 64 bits of
- * synchronization state. The {@link java.util.concurrent.locks.LockSupport}
- * class provides lower-level blocking and unblocking support that is
- * useful for those developers implementing their own customized lock
- * classes.
+ * synchronizers that rely on queuing blocked threads. The
+ * {@link java.util.concurrent.locks.LockSupport} class provides
+ * lower-level blocking and unblocking support that is useful for those
+ * developers implementing their own customized lock classes.
  *
  * @since 1.5
  */
