@@ -22,6 +22,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.SocketChannel;
 import java.security.AccessController;
+// BEGIN android-added
+import java.util.logging.Logger;
+import java.util.logging.Level;
+// END android-added
 
 import org.apache.harmony.luni.net.NetUtil;
 import org.apache.harmony.luni.net.PlainSocketImpl;
@@ -64,6 +68,15 @@ public class Socket {
     static final int TCP_NODELAY = 4;
 
     static final int FLAG_SHUTDOWN = 8;
+
+    static private Logger logger;
+
+    static private Logger getLogger() {
+        if (logger == null) {
+            logger = Logger.getLogger(Socket.class.getName());
+        }
+        return logger;
+    }
 
     static {
         Platform.getNetworkSystem().oneTimeInitialization(true);
@@ -126,10 +139,68 @@ public class Socket {
         this.proxy = proxy;
     }
 
+    // BEGIN android-added
+    /**
+     * Tries to connect a socket to all IP addresses of the given hostname.
+     *
+     * @param dstName
+     *            the target host name or IP address to connect to.
+     * @param dstPort
+     *            the port on the target host to connect to.
+     * @param localAddress
+     *            the address on the local host to bind to.
+     * @param localPort
+     *            the port on the local host to bind to.
+     * @param streaming
+     *            if {@code true} a streaming socket is returned, a datagram
+     *            socket otherwise.
+     * @throws UnknownHostException
+     *             if the host name could not be resolved into an IP address.
+     * @throws IOException
+     *             if an error occurs while creating the socket.
+     * @throws SecurityException
+     *             if a security manager exists and it denies the permission to
+     *             connect to the given address and port.
+     */
+    private void tryAllAddresses(String dstName, int dstPort, InetAddress
+            localAddress, int localPort, boolean streaming) throws IOException {
+        InetAddress[] dstAddresses = InetAddress.getAllByName(dstName);
+        // Loop through all the destination addresses except the last, trying to
+        // connect to each one and ignoring errors. There must be at least one
+        // address, or getAllByName would have thrown UnknownHostException.
+        InetAddress dstAddress;
+        for (int i = 0; i < dstAddresses.length - 1; i++) {
+            dstAddress = dstAddresses[i];
+            try {
+                checkDestination(dstAddress, dstPort);
+                startupSocket(dstAddress, dstPort, localAddress, localPort,
+                        streaming);
+                return;
+            } catch(SecurityException e1) {
+                getLogger().log(Level.INFO, dstAddress + "(" + dstPort + "): " +
+                        e1.getClass().getName() + ": " + e1.getMessage());
+            } catch(IOException e2) {
+                getLogger().log(Level.INFO, dstAddress + "(" + dstPort + "): " +
+                        e2.getClass().getName() + ": " + e2.getMessage());
+            }
+        }
+
+        // Now try to connect to the last address in the array, handing back to
+        // the caller any exceptions that are thrown.
+        dstAddress = dstAddresses[dstAddresses.length - 1];
+        checkDestination(dstAddress, dstPort);
+        startupSocket(dstAddress, dstPort, localAddress, localPort, streaming);
+    }
+    // END android-added
+
     /**
      * Creates a new streaming socket connected to the target host specified by
      * the parameters {@code dstName} and {@code dstPort}. The socket is bound
      * to any available port on the local host.
+     * <p><strong>Implementation note:</strong> this implementation tries each
+     * IP address for the given hostname until it either connects successfully
+     * or it exhausts the set. It will try both IPv4 and IPv6 addresses in the
+     * order specified by {@code preferIPv6Addresses}.
      *
      * @param dstName
      *            the target host name or IP address to connect to.
@@ -145,10 +216,9 @@ public class Socket {
      */
     public Socket(String dstName, int dstPort) throws UnknownHostException,
             IOException {
-        this();
-        InetAddress dstAddress = InetAddress.getByName(dstName);
-        checkDestination(dstAddress, dstPort);
-        startupSocket(dstAddress, dstPort, null, 0, true);
+        // BEGIN android-changed
+        this(dstName, dstPort, null, 0);
+        // END android-changed
     }
 
     /**
@@ -158,6 +228,10 @@ public class Socket {
      * {@code localPort}.
      *
      * If {@code host} is {@code null} a loopback address is used to connect to.
+     * <p><strong>Implementation note:</strong> this implementation tries each
+     * IP address for the given hostname until it either connects successfully
+     * or it exhausts the set. It will try both IPv4 and IPv6 addresses in the
+     * order specified by {@code preferIPv6Addresses}.
      *
      * @param dstName
      *            the target host name or IP address to connect to.
@@ -178,15 +252,19 @@ public class Socket {
     public Socket(String dstName, int dstPort, InetAddress localAddress,
             int localPort) throws IOException {
         this();
-        InetAddress dstAddress = InetAddress.getByName(dstName);
-        checkDestination(dstAddress, dstPort);
-        startupSocket(dstAddress, dstPort, localAddress, localPort, true);
+        // BEGIN android-changed
+        tryAllAddresses(dstName, dstPort, localAddress, localPort, true);
+        // END android-changed
     }
 
     /**
      * Creates a new streaming or datagram socket connected to the target host
      * specified by the parameters {@code hostName} and {@code port}. The socket
      * is bound to any available port on the local host.
+     * <p><strong>Implementation note:</strong> this implementation tries each
+     * IP address for the given hostname until it either connects successfully
+     * or it exhausts the set. It will try both IPv4 and IPv6 addresses in the
+     * order specified by {@code preferIPv6Addresses}.
      *
      * @param hostName
      *            the target host name or IP address to connect to.
@@ -210,9 +288,9 @@ public class Socket {
     public Socket(String hostName, int port, boolean streaming)
             throws IOException {
         this();
-        InetAddress host = InetAddress.getByName(hostName);
-        checkDestination(host, port);
-        startupSocket(host, port, null, 0, streaming);
+        // BEGIN android-changed
+        tryAllAddresses(hostName, port, null, 0, streaming);
+        // END android-changed
     }
 
     /**
