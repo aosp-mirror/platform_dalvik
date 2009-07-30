@@ -21,12 +21,46 @@
 #define _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H
 
 /*
- * r0, r1, r2, r3, and r7 are always scratch
- * r4PC is scratch if used solely in the compiled land. Otherwise it holds the
- * Dalvik PC.
- * rFP holds the current frame pointer
- * rGLUE holds &InterpState
+ * r0, r1, r2, r3 are always scratch
+ * r4 (rPC) is scratch for Jit, but most be restored when resuming interp
+ * r5 (rFP) is reserved [holds Dalvik frame pointer]
+ * r6 (rGLUE) is reserved [holds current &interpState]
+ * r7 (rINST) is scratch for Jit
+ * r8 (rIBASE) is scratch for Jit, but must be restored when resuming interp
+ * r9 is always scratch
+ * r10 is always scratch
+ * r11 (fp) used by gcc unless -fomit-frame-pointer set [available for jit?]
+ * r12 is always scratch
+ * r13 (sp) is reserved
+ * r14 (lr) is scratch for Jit
+ * r15 (pc) is reserved
+ *
+ * For Thumb code use:
+ *       r0, r1, r2, r3 to hold operands/results via scoreboard
+ *       r4, r7 for temps
+ *
+ * For Thumb2 code use:
+ *       r0, r1, r2, r3, r8, r9, r10, r11 for operands/results via scoreboard
+ *       r4, r7, r14 for temps
+ *
+ * When transitioning from code cache to interp:
+ *       restore rIBASE
+ *       restore rPC
+ *       restore r11 (fp)?
+ *
+ * Double precision values are stored in consecutive single precision registers
+ * such that dr0 -> (sr0,sr1), dr1 -> (sr2,sr3) ... dr16 -> (sr30,sr31)
  */
+
+/* Offset to distingish FP regs */
+#define FP_REG_OFFSET 32
+/* Is reg fp? */
+#define IS_FP_REG(x) (x & FP_REG_OFFSET)
+/* Mask to strip off fp flags */
+#define FP_REG_MASK (FP_REG_OFFSET-1)
+/* Mask to convert high reg to low for Thumb */
+#define THUMB_REG_MASK 0x7
+
 typedef enum NativeRegisterPool {
     r0 = 0,
     r1 = 1,
@@ -43,11 +77,40 @@ typedef enum NativeRegisterPool {
     r12 = 12,
     r13 = 13,
     rlr = 14,
-    rpc = 15
+    rpc = 15,
+    fr0  =  0 + FP_REG_OFFSET,
+    fr1  =  1 + FP_REG_OFFSET,
+    fr2  =  2 + FP_REG_OFFSET,
+    fr3  =  3 + FP_REG_OFFSET,
+    fr4  =  4 + FP_REG_OFFSET,
+    fr5  =  5 + FP_REG_OFFSET,
+    fr6  =  6 + FP_REG_OFFSET,
+    fr7  =  7 + FP_REG_OFFSET,
+    fr8  =  8 + FP_REG_OFFSET,
+    fr9  =  9 + FP_REG_OFFSET,
+    fr10 = 10 + FP_REG_OFFSET,
+    fr11 = 11 + FP_REG_OFFSET,
+    fr12 = 12 + FP_REG_OFFSET,
+    fr13 = 13 + FP_REG_OFFSET,
+    fr14 = 14 + FP_REG_OFFSET,
+    fr15 = 15 + FP_REG_OFFSET,
+    fr16 = 16 + FP_REG_OFFSET,
+    fr17 = 17 + FP_REG_OFFSET,
+    fr18 = 18 + FP_REG_OFFSET,
+    fr19 = 19 + FP_REG_OFFSET,
+    fr20 = 20 + FP_REG_OFFSET,
+    fr21 = 21 + FP_REG_OFFSET,
+    fr22 = 22 + FP_REG_OFFSET,
+    fr23 = 23 + FP_REG_OFFSET,
+    fr24 = 24 + FP_REG_OFFSET,
+    fr25 = 25 + FP_REG_OFFSET,
+    fr26 = 26 + FP_REG_OFFSET,
+    fr27 = 27 + FP_REG_OFFSET,
+    fr28 = 28 + FP_REG_OFFSET,
+    fr29 = 29 + FP_REG_OFFSET,
+    fr30 = 30 + FP_REG_OFFSET,
+    fr31 = 31 + FP_REG_OFFSET,
 } NativeRegisterPool;
-
-/* Mask to convert high reg to low for Thumb */
-#define THUMB_REG_MASK 0x7
 
 /* Thumb condition encodings */
 typedef enum ArmConditionCode {
@@ -154,6 +217,43 @@ typedef enum ArmOpCode {
     THUMB_SUB_SPI7,       /* sub(4)  [101100001] imm_7[6..0] */
     THUMB_SWI,            /* swi     [11011111] imm_8[7..0] */
     THUMB_TST,            /* tst     [0100001000] rm[5..3] rn[2..0] */
+// FIXME: Enhance assembly encoding. Only low fp regs supported here
+    THUMB2_VLDRS,         /* vldr low  sx [111011011001] rn[19..16] rd[15-12]
+                                       [1010] imm_8[7..0] */
+    THUMB2_VLDRD,         /* vldr low  dx [111011011001] rn[19..16] rd[15-12]
+                                       [1011] imm_8[7..0] */
+    THUMB2_VMULS,         /* vmul vd, vn, vm [111011100010] rn[19..16]
+                                       rd[15-12] [10100000] rm[3..0] */
+    THUMB2_VMULD,         /* vmul vd, vn, vm [111011100010] rn[19..16]
+                                       rd[15-12] [10110000] rm[3..0] */
+    THUMB2_VSTRS,         /* vstr low  sx [111011011000] rn[19..16] rd[15-12]
+                                       [1010] imm_8[7..0] */
+    THUMB2_VSTRD,         /* vstr low  dx [111011011000] rn[19..16] rd[15-12]
+                                       [1011] imm_8[7..0] */
+    THUMB2_VSUBS,         /* vsub vd, vn, vm [111011100011] rn[19..16]
+                                       rd[15-12] [10100040] rm[3..0] */
+    THUMB2_VSUBD,         /* vsub vd, vn, vm [111011100011] rn[19..16]
+                                       rd[15-12] [10110040] rm[3..0] */
+    THUMB2_VADDS,         /* vadd vd, vn, vm [111011100011] rn[19..16]
+                                       rd[15-12] [10100000] rm[3..0] */
+    THUMB2_VADDD,         /* vadd vd, vn, vm [111011100011] rn[19..16]
+                                       rd[15-12] [10110000] rm[3..0] */
+    THUMB2_VDIVS,         /* vdiv vd, vn, vm [111011101000] rn[19..16]
+                                       rd[15-12] [10100000] rm[3..0] */
+    THUMB2_VDIVD,         /* vdiv vd, vn, vm [111011101000] rn[19..16]
+                                       rd[15-12] [10110000] rm[3..0] */
+    THUMB2_VCVTIF,        /* vcvt.F32 vd, vm [1110111010111000] vd[15..12]
+                                       [10101100] vm[3..0] */
+    THUMB2_VCVTID,        /* vcvt.F64 vd, vm [1110111010111000] vd[15..12]
+                                       [10111100] vm[3..0] */
+    THUMB2_VCVTFI,        /* vcvt.S32.F32 vd, vm [1110111010111101] vd[15..12]
+                                       [10101100] vm[3..0] */
+    THUMB2_VCVTDI,        /* vcvt.S32.F32 vd, vm [1110111010111101] vd[15..12]
+                                       [10111100] vm[3..0] */
+    THUMB2_VCVTFD,        /* vcvt.F64.F32 vd, vm [1110111010110111] vd[15..12]
+                                       [10101100] vm[3..0] */
+    THUMB2_VCVTDF,        /* vcvt.F32.F64 vd, vm [1110111010110111] vd[15..12]
+                                       [10111100] vm[3..0] */
     ARM_LAST,
 } ArmOpCode;
 
@@ -168,12 +268,23 @@ typedef enum ArmOpFeatureFlags {
     IS_TERTIARY_OP =      1 << 7,
 } ArmOpFeatureFlags;
 
+/* Instruction assembly fieldLoc kind */
+typedef enum ArmEncodingKind {
+    UNUSED,
+    BITBLT,        /* Bit string using end/start */
+    DFP,           /* Double FP reg */
+    SFP,           /* Single FP reg */
+    IMMSHIFT8,     /* Shifted 8-bit immed field using [26,14..12,7..0] */
+    IMM12,         /* Zero-extended 12-bit immediate using [26,14..12,7..0] */
+} ArmEncodingKind;
+
 /* Struct used to define the snippet positions for each Thumb opcode */
 typedef struct ArmEncodingMap {
-    short skeleton;
+    u4 skeleton;
     struct {
-        int end;
-        int start;
+        ArmEncodingKind kind;
+        int end;   /* end for BITBLT, 1-bit slice end for FP regs */
+        int start; /* start for BITBLT, 4-bit slice end for FP regs */
     } fieldLoc[3];
     ArmOpCode opCode;
     int flags;
