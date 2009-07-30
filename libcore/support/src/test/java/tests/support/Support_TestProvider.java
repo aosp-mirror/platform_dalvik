@@ -54,8 +54,8 @@ public class Support_TestProvider extends Provider {
                 // Digest engine
                 put("MessageDigest.SHA",
                         "made.up.provider.name.MessageDigestSHA");
-                put("MessageDigest.MD2",
-                        "made.up.provider.name.MessageDigestMD2");
+                put("MessageDigest.MD5",
+                        "made.up.provider.name.MessageDigestMD5");
                 // aliases
                 put("Alg.Alias.MessageDigest.SHA1", "SHA");
                 put("Alg.Alias.MessageDigest.SHA-1", "SHA");

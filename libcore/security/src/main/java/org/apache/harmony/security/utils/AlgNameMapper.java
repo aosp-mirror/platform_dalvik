@@ -84,7 +84,10 @@ public class AlgNameMapper {
         {"1.2.840.10040.4.1",       "DSA"}, //$NON-NLS-1$ //$NON-NLS-2$
         {"1.2.840.10040.4.3",       "SHA1withDSA"}, //$NON-NLS-1$ //$NON-NLS-2$
         {"1.2.840.113549.1.1.1",    "RSA"}, //$NON-NLS-1$ //$NON-NLS-2$
-        {"1.2.840.113549.1.1.2",    "MD2withRSA"}, //$NON-NLS-1$ //$NON-NLS-2$
+        // BEGIN android-removed
+        // Dropping MD2
+        // {"1.2.840.113549.1.1.2",    "MD2withRSA"}, //$NON-NLS-1$ //$NON-NLS-2$
+        // END android-removed
         {"1.2.840.113549.1.1.4",    "MD5withRSA"}, //$NON-NLS-1$ //$NON-NLS-2$
         {"1.2.840.113549.1.1.5",    "SHA1withRSA"}, //$NON-NLS-1$ //$NON-NLS-2$
         {"1.2.840.113549.1.3.1",    "DiffieHellman"}, //$NON-NLS-1$ //$NON-NLS-2$

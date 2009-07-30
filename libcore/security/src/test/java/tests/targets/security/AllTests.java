@@ -19,10 +19,6 @@ package tests.targets.security;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.Security;
-
 public class AllTests {
 
     public static void main(String[] args) {
@@ -33,6 +29,7 @@ public class AllTests {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.targets.security;");
         // $JUnit-BEGIN$
 
+        suite.addTestSuite(MessageDigestTestMD2.class);
         suite.addTestSuite(MessageDigestTestMD5.class);
         suite.addTestSuite(MessageDigestTestSHA1.class);
         suite.addTestSuite(MessageDigestTestSHA224.class);

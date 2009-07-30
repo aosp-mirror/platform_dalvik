@@ -10,7 +10,10 @@ public interface PKCSObjectIdentifiers
     //
     static final String                 pkcs_1                    = "1.2.840.113549.1.1";
     static final DERObjectIdentifier    rsaEncryption             = new DERObjectIdentifier(pkcs_1 + ".1");
-    static final DERObjectIdentifier    md2WithRSAEncryption      = new DERObjectIdentifier(pkcs_1 + ".2");
+    // BEGIN android-removed
+    // Dropping MD2
+    // static final DERObjectIdentifier    md2WithRSAEncryption      = new DERObjectIdentifier(pkcs_1 + ".2");
+    // END android-removed
     static final DERObjectIdentifier    md4WithRSAEncryption      = new DERObjectIdentifier(pkcs_1 + ".3");
     static final DERObjectIdentifier    md5WithRSAEncryption      = new DERObjectIdentifier(pkcs_1 + ".4");
     static final DERObjectIdentifier    sha1WithRSAEncryption     = new DERObjectIdentifier(pkcs_1 + ".5");
@@ -65,7 +68,10 @@ public interface PKCSObjectIdentifiers
     // md2 OBJECT IDENTIFIER ::=
     //      {iso(1) member-body(2) US(840) rsadsi(113549) digestAlgorithm(2) 2}
     //
-    static final DERObjectIdentifier    md2                     = new DERObjectIdentifier(digestAlgorithm + ".2");
+    // BEGIN android-removed
+    // Dropping MD2
+    // static final DERObjectIdentifier    md2                     = new DERObjectIdentifier(digestAlgorithm + ".2");
+    // END android-removed
 
     //
     // md4 OBJECT IDENTIFIER ::=

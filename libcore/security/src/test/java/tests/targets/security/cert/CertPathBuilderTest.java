@@ -21,11 +21,8 @@ import dalvik.annotation.TestTargets;
 
 import junit.framework.TestCase;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathBuilder;
-import java.security.cert.CertPathBuilderException;
 import java.security.cert.CertPathBuilderResult;
 import java.security.cert.CertPathParameters;
 public abstract class CertPathBuilderTest extends TestCase {
@@ -37,13 +34,14 @@ public abstract class CertPathBuilderTest extends TestCase {
         this.algorithmName = algorithmName;
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         
         params = getCertPathParameters();
     }
 
-    abstract CertPathParameters getCertPathParameters();
+    abstract CertPathParameters getCertPathParameters() throws Exception;
     abstract void validateCertPath(CertPath path);
 
     @TestTargets({
@@ -69,22 +67,11 @@ public abstract class CertPathBuilderTest extends TestCase {
                 args={}
         )
     })
-    public void testCertPathBuilder() {
-        CertPathBuilder pathBuilder = null;
-        try {
-            pathBuilder = CertPathBuilder.getInstance(algorithmName);
-        } catch (NoSuchAlgorithmException e) {
-            fail(e.getMessage());
-        }
+    public void testCertPathBuilder() throws Exception {
+        CertPathBuilder pathBuilder = CertPathBuilder.getInstance(
+                algorithmName);
 
-        CertPathBuilderResult builderResult = null;
-        try {
-            builderResult = pathBuilder.build(params);
-        } catch (CertPathBuilderException e) {
-            fail(e.getMessage());
-        } catch (InvalidAlgorithmParameterException e) {
-            fail(e.getMessage());
-        }
+        CertPathBuilderResult builderResult = pathBuilder.build(params);
 
         CertPath path = builderResult.getCertPath();
 
