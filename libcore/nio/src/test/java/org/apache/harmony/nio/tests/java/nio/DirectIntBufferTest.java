@@ -22,6 +22,7 @@ import dalvik.annotation.TestTargetClass;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 
 @TestTargetClass(java.nio.IntBuffer.class)
 public class DirectIntBufferTest extends IntBufferTest {
@@ -35,6 +36,30 @@ public class DirectIntBufferTest extends IntBufferTest {
     public void tearDown(){
         buf = null;
         baseBuf = null;
+    }
+
+    /**
+     * Regression for http://code.google.com/p/android/issues/detail?id=3279
+     */
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "put",
+            args = {int[].class, int.class, int.class}
+    )
+    public void testPutWhenOffsetIsNonZero() {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(40);
+        byteBuffer.order(ByteOrder.nativeOrder());
+        IntBuffer intBuffer = byteBuffer.asIntBuffer();
+
+        int[] source = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+
+        intBuffer.put(source, 2, 2);
+        intBuffer.put(source, 4, 2);
+        assertEquals(4, intBuffer.get(0));
+        assertEquals(5, intBuffer.get(1));
+        assertEquals(6, intBuffer.get(2));
+        assertEquals(7, intBuffer.get(3));
     }
 
     @TestTargetNew(
