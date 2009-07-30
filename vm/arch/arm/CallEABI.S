@@ -154,7 +154,7 @@ DBG bne     dvmAbort
     subeq   r3, r3, #1
 
     @ Do we have arg padding flags in "argInfo"? (just need to check hi bit)
-    teqs    r2, #0
+    teq     r2, #0
     bmi     .Lno_arg_info
 
     /*
