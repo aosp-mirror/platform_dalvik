@@ -698,13 +698,31 @@ bail:
     RETURN_BOOLEAN(result);
 }
 
+/*
+ * static void crash()
+ *
+ * Dump the current thread's interpreted stack and abort the VM.  Useful
+ * for seeing both interpreted and native stack traces.
+ *
+ * (Might want to restrict this to debuggable processes as a security
+ * measure, or check SecurityManager.checkExit().)
+ */
+static void Dalvik_dalvik_system_VMDebug_crash(const u4* args,
+    JValue* pResult)
+{
+    UNUSED_PARAMETER(args);
+    UNUSED_PARAMETER(pResult);
+
+    LOGW("Crashing VM on request\n");
+    dvmDumpThread(dvmThreadSelf(), false);
+    dvmAbort();
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
     { "getAllocCount",              "(I)I",
         Dalvik_dalvik_system_VMDebug_getAllocCount },
     { "resetAllocCount",            "(I)V",
         Dalvik_dalvik_system_VMDebug_resetAllocCount },
-    //{ "print",              "(Ljava/lang/String;)V",
-    //    Dalvik_dalvik_system_VMDebug_print },
     { "startAllocCounting",         "()V",
         Dalvik_dalvik_system_VMDebug_startAllocCounting },
     { "stopAllocCounting",          "()V",
@@ -747,6 +765,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_dumpHprofData },
     { "cacheRegisterMap",           "(Ljava/lang/String;)Z",
         Dalvik_dalvik_system_VMDebug_cacheRegisterMap },
+    { "crash",                      "()V",
+        Dalvik_dalvik_system_VMDebug_crash },
     { NULL, NULL, NULL },
 };
 
