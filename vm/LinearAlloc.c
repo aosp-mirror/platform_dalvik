@@ -138,7 +138,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
 
     fd = ashmem_create_region("dalvik-LinearAlloc", DEFAULT_MAX_LENGTH);
     if (fd < 0) {
-        LOGE("ashmem LinearAlloc failed %s", strerror(errno)); 
+        LOGE("ashmem LinearAlloc failed %s", strerror(errno));
         free(pHdr);
         return NULL;
     }
@@ -155,7 +155,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
 
     close(fd);
 #else /*USE_ASHMEM*/
-    // MAP_ANON is listed as "deprecated" on Linux, 
+    // MAP_ANON is listed as "deprecated" on Linux,
     // but MAP_ANONYMOUS is not defined under Mac OS X.
     pHdr->mapAddr = mmap(NULL, pHdr->mapLength, PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANON, -1, 0);
@@ -695,7 +695,7 @@ static void checkAllFree(Object* classLoader)
  * [ Since we currently only have one region, this is pretty simple.  In
  * the future we'll need to traverse a table of class loaders. ]
  */
-bool dvmLinearAllocContains(void* start, size_t length)
+bool dvmLinearAllocContains(const void* start, size_t length)
 {
     LinearAllocHdr* pHdr = getHeader(NULL);
 
