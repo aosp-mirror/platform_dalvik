@@ -282,8 +282,15 @@ public final class VMDebug {
      */
     public static native boolean cacheRegisterMap(String classAndMethodDesc);
 
-    /* don't ask */
-    static native void printThis(Object thisThing, int count, int thing);
+    /**
+     * Crashes the VM.  Seriously.  Dumps the stack trace for the current
+     * thread and then aborts the VM so you can see the native stack trace.
+     * Useful for figuring out how you got somewhere when lots of native
+     * code is involved.
+     *
+     * @hide
+     */
+    public static native void crash();
 
     /*
      * Fake method, inserted into dmtrace output when the garbage collector
