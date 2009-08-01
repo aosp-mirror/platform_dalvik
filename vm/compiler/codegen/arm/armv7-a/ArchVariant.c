@@ -118,13 +118,13 @@ bool dvmCompilerArchInit(void)
 static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
     int offset = offsetof(InterpState, retval);
-    OpCode opCode = mir->dalvikInsn.opCode;
     int vSrc = mir->dalvikInsn.vA;
-    loadValueAddress(cUnit, vSrc, r2);
-    genDispatchToHandler(cUnit, TEMPLATE_SQRT_DOUBLE_VFP);
-    newLIR3(cUnit, THUMB_STR_RRI5, r0, rGLUE, offset >> 2);
-    newLIR3(cUnit, THUMB_STR_RRI5, r1, rGLUE, (offset >> 2) + 1);
-    return false;
+    loadDouble(cUnit, vSrc, fr2);
+    newLIR2(cUnit, THUMB2_VSQRTD, fr0, fr2);
+    assert(offset & 0x3 == 0);  /* Must be word aligned */
+    assert(offset < 1024);
+    newLIR3(cUnit, THUMB2_VSTRD, fr0, rGLUE, offset >> 2);
+    return true;
 }
 
 static bool genInlineCos(CompilationUnit *cUnit, MIR *mir)
@@ -272,7 +272,7 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
     else
         loadFloat(cUnit, vSrc2, fr2);
     newLIR2(cUnit, op, fr0, fr2);
-    if (longSrc)
+    if (longDest)
         storeDouble(cUnit, fr0, vSrc1Dest, 0);
     else
         storeFloat(cUnit, fr0, vSrc1Dest, 0);

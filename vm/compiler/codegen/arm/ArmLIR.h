@@ -254,6 +254,10 @@ typedef enum ArmOpCode {
                                        [10101100] vm[3..0] */
     THUMB2_VCVTDF,        /* vcvt.F32.F64 vd, vm [1110111010110111] vd[15..12]
                                        [10111100] vm[3..0] */
+    THUMB2_VSQRTS,        /* vsqrt.f32 vd, vm [1110111010110001] vd[15..12]
+                                       [10101100] vm[3..0] */
+    THUMB2_VSQRTD,        /* vsqrt.f64 vd, vm [1110111010110001] vd[15..12]
+                                       [10111100] vm[3..0] */
     ARM_LAST,
 } ArmOpCode;
 

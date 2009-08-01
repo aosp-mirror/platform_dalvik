@@ -671,12 +671,12 @@ bool dvmJitResizeJitTable( unsigned int size )
  */
 s8 dvmJitd2l(double d)
 {
-    static const double kMaxLong = (double)0x7fffffffffffffffULL;
-    static const double kMinLong = (double)0x8000000000000000ULL;
+    static const double kMaxLong = (double)(s8)0x7fffffffffffffffULL;
+    static const double kMinLong = (double)(s8)0x8000000000000000ULL;
     if (d >= kMaxLong)
-        return 0x7fffffffffffffffULL;
+        return (s8)0x7fffffffffffffffULL;
     else if (d <= kMinLong)
-        return 0x8000000000000000ULL;
+        return (s8)0x8000000000000000ULL;
     else if (d != d) // NaN case
         return 0;
     else
@@ -685,12 +685,12 @@ s8 dvmJitd2l(double d)
 
 s8 dvmJitf2l(float f)
 {
-    static const float kMaxLong = (float)0x7fffffffffffffffULL;
-    static const float kMinLong = (float)0x8000000000000000ULL;
+    static const float kMaxLong = (float)(s8)0x7fffffffffffffffULL;
+    static const float kMinLong = (float)(s8)0x8000000000000000ULL;
     if (f >= kMaxLong)
-        return 0x7fffffffffffffffULL;
+        return (s8)0x7fffffffffffffffULL;
     else if (f <= kMinLong)
-        return 0x8000000000000000ULL;
+        return (s8)0x8000000000000000ULL;
     else if (f != f) // NaN case
         return 0;
     else

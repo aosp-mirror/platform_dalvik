@@ -62,6 +62,12 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                assert((unsigned)(nc-'0') < 3);
                operand = lir->operands[nc-'0'];
                switch(*fmt++) {
+                   case 's':
+                       sprintf(tbuf,"s%d",operand & FP_REG_MASK);
+                       break;
+                   case 'S':
+                       sprintf(tbuf,"d%d",(operand & FP_REG_MASK) >> 1);
+                       break;
                    case 'h':
                        sprintf(tbuf,"%04x", operand);
                        break;

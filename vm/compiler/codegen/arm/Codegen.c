@@ -2817,17 +2817,17 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
                     return genInlinedStringCharAt(cUnit, mir);
                 case INLINE_MATH_SQRT:
                     if (genInlineSqrt(cUnit, mir))
-                        return true;
+                        return false;
                     else
                         break;   /* Handle with C routine */
                 case INLINE_MATH_COS:
                     if (genInlineCos(cUnit, mir))
-                        return true;
+                        return false;
                     else
                         break;   /* Handle with C routine */
                 case INLINE_MATH_SIN:
                     if (genInlineSin(cUnit, mir))
-                        return true;
+                        return false;
                     else
                         break;   /* Handle with C routine */
                 case INLINE_MATH_ABS_FLOAT:
