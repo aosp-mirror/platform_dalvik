@@ -95,6 +95,12 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                                 checkLIR->opCode == THUMB_STR_RRR ||
                                 checkLIR->opCode == THUMB_LDR_RRR;
 
+// FIXME: need to enhance this code to sink & play well with coprocessor ld/str
+                    stopHere |= checkLIR->opCode == THUMB2_VSTRS ||
+                                checkLIR->opCode == THUMB2_VSTRD ||
+                                checkLIR->opCode == THUMB2_VLDRS ||
+                                checkLIR->opCode == THUMB2_VLDRD;
+
                     stopHere |= (EncodingMap[checkLIR->opCode].flags &
                                  IS_BRANCH) != 0;
 

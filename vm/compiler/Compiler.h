@@ -30,7 +30,7 @@ typedef enum JitInstructionSetType {
     DALVIK_JIT_ARM,
     DALVIK_JIT_THUMB,
     DALVIK_JIT_THUMB2,
-    DALVIK_JIT_THUMBEE,
+    DALVIK_JIT_THUMB2EE,
     DALVIK_JIT_X86
 } JitInstructionSetType;
 
