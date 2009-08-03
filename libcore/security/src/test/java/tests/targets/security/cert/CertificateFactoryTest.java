@@ -59,23 +59,12 @@ public abstract class CertificateFactoryTest extends TestCase {
                 args={}
         )
     })
-    public void testCertificateFactory() {
-        CertificateFactory certificateFactory = null;
-        try {
-            certificateFactory = CertificateFactory.getInstance(algorithmName);
-        } catch (CertificateException e) {
-            fail(e.getMessage());
-        }
+    public void testCertificateFactory() throws Exception {
+        CertificateFactory certificateFactory = CertificateFactory.getInstance(
+                algorithmName);
 
-        Certificate certificate = null;
-        try {
-            certificate = certificateFactory
-                    .generateCertificate(new ByteArrayInputStream(
-                            certificateData));
-        } catch (CertificateException e) {
-            fail(e.getMessage());
-        }
-
+        Certificate certificate = certificateFactory.generateCertificate(
+                new ByteArrayInputStream(certificateData));
         assertNotNull(certificate);
     }
 }

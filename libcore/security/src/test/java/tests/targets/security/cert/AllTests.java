@@ -28,6 +28,7 @@ public class AllTests {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.targets.security.certs;");
         // $JUnit-BEGIN$
 
+        suite.addTestSuite(CertificateTest.class);
         suite.addTestSuite(CertificateFactoryTestX509.class);
         suite.addTestSuite(CertPathBuilderTestPKIX.class);
         suite.addTestSuite(CertPathValidatorTestPKIX.class);

@@ -21,6 +21,7 @@ import java.security.cert.X509CRLEntry;
 import java.security.cert.X509CRLSelector;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -237,12 +238,22 @@ public class PKIXCertPathValidatorSpi extends CertPathValidatorSpi
         X500Principal workingIssuerName;
 
         X509Certificate sign = trust.getTrustedCert();
+        boolean trustAnchorInChain = false;
         try
         {
             if (sign != null)
             {
                 workingIssuerName = CertPathValidatorUtilities.getSubjectPrincipal(sign);
                 workingPublicKey = sign.getPublicKey();
+
+                // There is similar code in CertPathValidatorUtilities.
+                try {
+                    byte[] trustBytes = sign.getEncoded();
+                    byte[] certBytes = lastCert.getEncoded();
+                    trustAnchorInChain = Arrays.equals(trustBytes, certBytes);
+                } catch(Exception e) {
+                    // ignore, continue with trustAnchorInChain being false
+                }
             }
             else
             {
@@ -253,13 +264,6 @@ public class PKIXCertPathValidatorSpi extends CertPathValidatorSpi
         catch (IllegalArgumentException ex)
         {
             throw new CertPathValidatorException("TrustAnchor subjectDN: " + ex.toString());
-        }
-
-        boolean trustAnchorInChain = false;
-        if (workingIssuerName.equals(CertPathValidatorUtilities.getSubjectPrincipal(lastCert)) &&
-            workingPublicKey.equals(lastCert.getPublicKey()))
-        {
-            trustAnchorInChain = true;
         }
 
         AlgorithmIdentifier workingAlgId = CertPathValidatorUtilities.getAlgorithmIdentifier(workingPublicKey);
@@ -324,7 +328,10 @@ public class PKIXCertPathValidatorSpi extends CertPathValidatorSpi
                 {
                     // (a) (1)
                     //
-                    cert.verify(workingPublicKey, "BC");
+                    if (!(i == 1 && trustAnchorInChain)) // if not at the root certificate
+                    {
+                        cert.verify(workingPublicKey, "BC");
+                    }
                 }
                 catch (GeneralSecurityException e)
                 {

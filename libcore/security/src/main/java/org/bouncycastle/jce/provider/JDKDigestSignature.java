@@ -21,7 +21,9 @@ import org.bouncycastle.asn1.x509.X509ObjectIdentifiers;
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.Digest;
-import org.bouncycastle.crypto.digests.MD2Digest;
+// BEGIN android-removed
+// import org.bouncycastle.crypto.digests.MD2Digest;
+// END android-removed
 import org.bouncycastle.crypto.digests.MD4Digest;
 import org.bouncycastle.crypto.digests.MD5Digest;
 // BEGIN android-removed
@@ -280,15 +282,17 @@ public class JDKDigestSignature
             super("SHA512withRSA", NISTObjectIdentifiers.id_sha512, new SHA512Digest(), new PKCS1Encoding(new RSAEngine()));
         }
     }
-    
-    static public class MD2WithRSAEncryption
-        extends JDKDigestSignature
-    {
-        public MD2WithRSAEncryption()
-        {
-            super("MD2withRSA", md2, new MD2Digest(), new PKCS1Encoding(new RSAEngine()));
-        }
-    }
+
+    // BEGIN android-removed
+    // static public class MD2WithRSAEncryption
+    //     extends JDKDigestSignature
+    // {
+    //     public MD2WithRSAEncryption()
+    //     {
+    //         super("MD2withRSA", md2, new MD2Digest(), new PKCS1Encoding(new RSAEngine()));
+    //     }
+    // }
+    // END android-removed
 
     static public class MD4WithRSAEncryption
         extends JDKDigestSignature

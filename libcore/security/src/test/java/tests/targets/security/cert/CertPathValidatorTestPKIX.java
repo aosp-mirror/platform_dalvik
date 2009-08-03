@@ -18,21 +18,15 @@ package tests.targets.security.cert;
 import dalvik.annotation.TestTargetClass;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathBuilder;
-import java.security.cert.CertPathBuilderException;
 import java.security.cert.CertPathBuilderResult;
 import java.security.cert.CertPathParameters;
 import java.security.cert.CertPathValidatorResult;
 import java.security.cert.CertStore;
 import java.security.cert.CertStoreParameters;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.PKIXBuilderParameters;
@@ -61,45 +55,17 @@ public class CertPathValidatorTestPKIX extends CertPathValidatorTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        KeyStore keyStore = null;
-        try {
-            keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        } catch (KeyStoreException e) {
-            fail(e.getMessage());
-        }
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keyStore.load(null, null);
 
-        try {
-            keyStore.load(null, null);
-        } catch (NoSuchAlgorithmException e) {
-            fail(e.getMessage());
-        } catch (CertificateException e) {
-            fail(e.getMessage());
-        } catch (IOException e) {
-            fail(e.getMessage());
-        }
+        CertificateFactory certificateFactory = CertificateFactory.getInstance(
+                "X509");
 
-        CertificateFactory certificateFactory = null;
-        try {
-            certificateFactory = CertificateFactory.getInstance("X509");
-        } catch (CertificateException e) {
-            fail(e.getMessage());
-        }
+        X509Certificate selfSignedcertificate =
+                (X509Certificate) certificateFactory.generateCertificate(
+                        new ByteArrayInputStream(selfSignedCert.getBytes()));
 
-        X509Certificate selfSignedcertificate = null;
-        try {
-            selfSignedcertificate = (X509Certificate) certificateFactory
-                    .generateCertificate(new ByteArrayInputStream(
-                            selfSignedCert.getBytes()));
-        } catch (CertificateException e) {
-            fail(e.getMessage());
-        }
-
-        try {
-            keyStore.setCertificateEntry("selfSignedCert",
-                    selfSignedcertificate);
-        } catch (KeyStoreException e) {
-            fail(e.getMessage());
-        }
+        keyStore.setCertificateEntry("selfSignedCert", selfSignedcertificate);
 
         X509CertSelector targetConstraints = new X509CertSelector();
         targetConstraints.setCertificate(selfSignedcertificate);
@@ -109,53 +75,21 @@ public class CertPathValidatorTestPKIX extends CertPathValidatorTest {
         CertStoreParameters storeParams = new CollectionCertStoreParameters(
                 certList);
 
+        CertStore certStore = CertStore.getInstance("Collection", storeParams);
 
-        CertStore certStore = null;
-        try {
-            certStore = CertStore.getInstance("Collection", storeParams);
-        } catch (InvalidAlgorithmParameterException e) {
-            fail(e.getMessage());
-        } catch (NoSuchAlgorithmException e) {
-            fail(e.getMessage());
-        }
+        PKIXBuilderParameters parameters = new PKIXBuilderParameters(keyStore,
+                targetConstraints);
+        parameters.addCertStore(certStore);
+        parameters.setRevocationEnabled(false);
 
+        CertPathBuilder pathBuilder = CertPathBuilder.getInstance("PKIX");
 
-        PKIXBuilderParameters parameters = null;
-        try {
-            parameters = new PKIXBuilderParameters(keyStore, targetConstraints);
-            parameters.addCertStore(certStore);
-            parameters.setRevocationEnabled(false);
-        } catch (KeyStoreException e) {
-            fail(e.getMessage());
-        } catch (InvalidAlgorithmParameterException e) {
-            fail(e.getMessage());
-        }
-
-        CertPathBuilder pathBuilder = null;
-        try {
-            pathBuilder = CertPathBuilder.getInstance("PKIX");
-        } catch (NoSuchAlgorithmException e) {
-            fail(e.getMessage());
-        }
-        CertPathBuilderResult builderResult = null;
-        try {
-            builderResult = pathBuilder.build(parameters);
-        } catch (CertPathBuilderException e) {
-            fail(e.getMessage());
-        } catch (InvalidAlgorithmParameterException e) {
-            fail(e.getMessage());
-        }
+        CertPathBuilderResult builderResult = pathBuilder.build(parameters);
 
         certPath = builderResult.getCertPath();
 
-        try {
-            params = new PKIXParameters(keyStore);
-            params.setRevocationEnabled(false);
-        } catch (KeyStoreException e) {
-            fail(e.getMessage());
-        } catch (InvalidAlgorithmParameterException e) {
-            fail(e.getMessage());
-        }
+        params = new PKIXParameters(keyStore);
+        params.setRevocationEnabled(false);
     }
 
     @Override

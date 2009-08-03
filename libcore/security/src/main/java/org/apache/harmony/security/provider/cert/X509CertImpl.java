@@ -570,13 +570,23 @@ public class X509CertImpl extends X509Certificate {
      * @throws InvalidKeyException 
      */
     private void fastVerify(PublicKey key) throws SignatureException,
-            InvalidKeyException {
+            InvalidKeyException, NoSuchAlgorithmException {
         if (!(key instanceof RSAPublicKey)) {
             throw new InvalidKeyException(Messages.getString("security.15C1"));
         }
         RSAPublicKey rsaKey = (RSAPublicKey) key;
         
         String algorithm = getSigAlgName();
+
+        // We don't support MD2 anymore. This needs to also check for aliases
+        // and OIDs.
+        if ("MD2withRSA".equalsIgnoreCase(algorithm) ||
+                "MD2withRSAEncryption".equalsIgnoreCase(algorithm) ||
+                "1.2.840.113549.1.1.2".equalsIgnoreCase(algorithm) ||
+                "MD2/RSA".equalsIgnoreCase(algorithm)) {
+            throw new NoSuchAlgorithmException(algorithm);
+        }
+
         int i = algorithm.indexOf("with");
         algorithm = algorithm.substring(i + 4) + "-" + algorithm.substring(0, i);
         

@@ -38,10 +38,16 @@ public class OIDDatabase {
     private OIDDatabase() {
         // First, encryption algorithms...
 
-        // MD2withRSA
-        DBEntry oid = new DBEntry("1.2.840.113549.1.1.2");
-        DBEntry alg = new DBEntry("MD2withRSA");
-        wireTogether(oid, alg);
+        // BEGIN android-changed
+        // Dropping MD2
+        DBEntry oid;
+        DBEntry alg;
+
+        // // MD2withRSA
+        // DBEntry oid = new DBEntry("1.2.840.113549.1.1.2");
+        // DBEntry alg = new DBEntry("MD2withRSA");
+        // wireTogether(oid, alg);
+        // END android-changed
 
         // MD5withRSA
         oid = new DBEntry("1.2.840.113549.1.1.4");

@@ -970,11 +970,8 @@ public class X509CertSelectorTest extends TestCase {
             }
         }
 
-        String pkaid1 = "1.2.840.113549.1.1.1"; // RSA encryption (source:
-        // http://asn1.elibel.tm.fr)
-        String pkaid2 = "1.2.840.113549.1.1.2"; // MD2 with RSA encryption
-        // (source:
-        // http://asn1.elibel.tm.fr)
+        String pkaid1 = "1.2.840.113549.1.1.1"; // RSA encryption
+        String pkaid2 = "1.2.840.113549.1.1.4"; // MD5 with RSA encryption
 
         try {
             selector.setSubjectPublicKeyAlgID(pkaid1);

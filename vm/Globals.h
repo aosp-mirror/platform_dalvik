@@ -184,10 +184,12 @@ struct DvmGlobals {
     ClassObject* classJavaLangReflectProxy;
     ClassObject* classJavaLangExceptionInInitializerError;
     ClassObject* classJavaLangRefReference;
+    ClassObject* classJavaNioReadWriteDirectByteBuffer;
     ClassObject* classJavaSecurityAccessController;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
+    ClassObject* classOrgApacheHarmonyNioInternalDirectBuffer;
 
     /* synthetic classes for arrays of primitives */
     ClassObject* classArrayBoolean;
@@ -289,6 +291,15 @@ struct DvmGlobals {
 
     /* fake native entry point method */
     Method*     methFakeNativeEntry;
+
+    /* assorted direct buffer helpers */
+    Method*     methJavaNioReadWriteDirectByteBuffer_init;
+    Method*     methOrgApacheHarmonyLuniPlatformPlatformAddress_on;
+    Method*     methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress;
+    int         offJavaNioBuffer_capacity;
+    int         offJavaNioBuffer_effectiveDirectAddress;
+    int         offOrgApacheHarmonyLuniPlatformPlatformAddress_osaddr;
+    int         voffOrgApacheHarmonyLuniPlatformPlatformAddress_toLong;
 
     /*
      * VM-synthesized primitive classes, for arrays.

@@ -41,6 +41,8 @@
 #define BASE_ENV(_env)  (((JNIEnvExt*)_env)->baseFuncTable)
 #define BASE_VM(_vm)    (((JavaVMExt*)_vm)->baseFuncTable)
 
+#define kRedundantDirectBufferTest true
+
 /*
  * Flags passed into checkThread().
  */
@@ -319,7 +321,7 @@ static void checkFieldType(jobject obj, jfieldID fieldID, PrimitiveType prim,
  * Verify that "obj" is a valid object, and that it's an object that JNI
  * is allowed to know about.  We allow NULL references.
  *
- * The caller should have switched to "running" mode before calling here.
+ * Switches to "running" mode before performing checks.
  */
 static void checkObject(JNIEnv* env, jobject obj, const char* func)
 {
@@ -328,6 +330,8 @@ static void checkObject(JNIEnv* env, jobject obj, const char* func)
 
     if (obj == NULL)
         return;
+
+    JNI_ENTER();
     if (!dvmIsValidObject(obj)) {
         LOGW("JNI WARNING: native code passing in bad object %p (%s)\n",
             obj, func);
@@ -341,6 +345,8 @@ static void checkObject(JNIEnv* env, jobject obj, const char* func)
         showLocation(dvmGetCurrentJNIMethod(), func);
         abortMaybe();
     }
+
+    JNI_EXIT();
 }
 
 /*
@@ -371,14 +377,13 @@ static void checkClass(JNIEnv* env, jclass jclazz, const char* func)
         LOGW("JNI WARNING: jclass does not point to class object (%p - %s)\n",
             jclazz, clazz->descriptor);
         printWarn = true;
-    } else {
-        checkObject(env, jclazz, func);
     }
+    JNI_EXIT();
 
     if (printWarn)
         abortMaybe();
-
-    JNI_EXIT();
+    else
+        checkObject(env, jclazz, func);
 }
 
 /*
@@ -403,14 +408,13 @@ static void checkString(JNIEnv* env, jstring str, const char* func)
         else
             LOGW("JNI WARNING: jstring %p is bogus (%s)\n", str, func);
         printWarn = true;
-    } else {
-        checkObject(env, str, func);
     }
+    JNI_EXIT();
 
     if (printWarn)
         abortMaybe();
-
-    JNI_EXIT();
+    else
+        checkObject(env, str, func);
 }
 
 /*
@@ -543,14 +547,14 @@ static void checkArray(JNIEnv* env, jarray array, const char* func)
         else
             LOGW("JNI WARNING: jarray is bogus (%p)\n", array);
         printWarn = true;
-    } else {
-        checkObject(env, array, func);
     }
+
+    JNI_EXIT();
 
     if (printWarn)
         abortMaybe();
-
-    JNI_EXIT();
+    else
+        checkObject(env, array, func);
 }
 
 /*
@@ -643,10 +647,12 @@ static void checkStaticFieldID(JNIEnv* env, jclass clazz, jfieldID fieldID)
 static void checkInstanceFieldID(JNIEnv* env, jobject obj, jfieldID fieldID,
     const char* func)
 {
+    JNI_ENTER();
+
     if (obj == NULL) {
         LOGW("JNI WARNING: invalid null object (%s)\n", func);
         abortMaybe();
-        return;
+        goto bail;
     }
 
     ClassObject* clazz = ((Object*)obj)->clazz;
@@ -659,7 +665,7 @@ static void checkInstanceFieldID(JNIEnv* env, jobject obj, jfieldID fieldID,
         if ((InstField*) fieldID >= clazz->ifields &&
             (InstField*) fieldID < clazz->ifields + clazz->ifieldCount)
         {
-            return;
+            goto bail;
         }
 
         clazz = clazz->super;
@@ -668,6 +674,9 @@ static void checkInstanceFieldID(JNIEnv* env, jobject obj, jfieldID fieldID,
     LOGW("JNI WARNING: inst fieldID %p not valid for class %s\n",
         fieldID, ((Object*)obj)->clazz->descriptor);
     abortMaybe();
+
+bail:
+    JNI_EXIT();
 }
 
 
@@ -1982,12 +1991,59 @@ static void* Check_GetDirectBufferAddress(JNIEnv* env, jobject buf)
 {
     CHECK_ENTER(env, kFlag_Default);
     CHECK_OBJECT(env, buf);
-    void* result;
-    //if (buf == NULL)
-    //    result = NULL;
-    //else
-        result = BASE_ENV(env)->GetDirectBufferAddress(env, buf);
+    void* result = BASE_ENV(env)->GetDirectBufferAddress(env, buf);
     CHECK_EXIT(env);
+
+    /* optional - check result vs. "safe" implementation */
+    if (kRedundantDirectBufferTest) {
+        jobject platformAddr = NULL;
+        void* checkResult = NULL;
+
+        /*
+         * Start by determining if the object supports the DirectBuffer
+         * interfaces.  Note this does not guarantee that it's a direct buffer.
+         */
+        if (JNI_FALSE == (*env)->IsInstanceOf(env, buf,
+                (jclass) gDvm.classOrgApacheHarmonyNioInternalDirectBuffer))
+        {
+            goto bail;
+        }
+
+        /*
+         * Get the PlatformAddress object.
+         *
+         * If this isn't a direct buffer, platformAddr will be NULL and/or an
+         * exception will have been thrown.
+         */
+        platformAddr = (*env)->CallObjectMethod(env, buf,
+            (jmethodID) gDvm.methOrgApacheHarmonyNioInternalDirectBuffer_getEffectiveAddress);
+
+        if ((*env)->ExceptionCheck(env)) {
+            (*env)->ExceptionClear(env);
+            platformAddr = NULL;
+        }
+        if (platformAddr == NULL) {
+            LOGV("Got request for address of non-direct buffer\n");
+            goto bail;
+        }
+
+        Method* toLong = ((Object*)platformAddr)->clazz->vtable[
+                gDvm.voffOrgApacheHarmonyLuniPlatformPlatformAddress_toLong];
+        checkResult = (void*)(u4)(*env)->CallLongMethod(env, platformAddr,
+                (jmethodID)toLong);
+
+    bail:
+        if (platformAddr != NULL)
+            (*env)->DeleteLocalRef(env, platformAddr);
+
+        if (result != checkResult) {
+            LOGW("JNI WARNING: direct buffer result mismatch (%p vs %p)\n",
+                result, checkResult);
+            abortMaybe();
+            /* keep going */
+        }
+    }
+
     return result;
 }
 
@@ -1995,11 +2051,8 @@ static jlong Check_GetDirectBufferCapacity(JNIEnv* env, jobject buf)
 {
     CHECK_ENTER(env, kFlag_Default);
     CHECK_OBJECT(env, buf);
-    jlong result;
-    //if (buf == NULL)
-    //    result = -1;
-    //else
-        result = BASE_ENV(env)->GetDirectBufferCapacity(env, buf);
+    /* TODO: verify "buf" is an instance of java.nio.Buffer */
+    jlong result = BASE_ENV(env)->GetDirectBufferCapacity(env, buf);
     CHECK_EXIT(env);
     return result;
 }

@@ -18,6 +18,11 @@ public interface MessageDigests {
     }
 
     @VirtualTestTarget
+    static abstract class MD2 extends Internal {
+        protected abstract void method();
+    }
+
+    @VirtualTestTarget
     static abstract class MD5 extends Internal {
         protected abstract void method();
     }

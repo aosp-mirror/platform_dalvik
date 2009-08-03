@@ -72,6 +72,8 @@ typedef struct JavaVMExt {
 
 /*
  * Native function return type; used by dvmPlatformInvoke().
+ *
+ * This is part of Method.jniArgInfo, and must fit in 3 bits.
  */
 typedef enum DalvikJniReturnType {
     DALVIK_JNI_RETURN_VOID = 0,     /* must be zero */

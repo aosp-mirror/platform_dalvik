@@ -65,7 +65,11 @@ final class FloatToByteBufferAdapter extends FloatBuffer implements DirectBuffer
 
     public PlatformAddress getEffectiveAddress() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).getEffectiveAddress();
+            // BEGIN android-changed
+            PlatformAddress addr = ((DirectBuffer)byteBuffer).getEffectiveAddress();
+            effectiveDirectAddress = addr.toInt();
+            return addr;
+            // END android-changed
         } else {
             assert false : byteBuffer;
             return null;

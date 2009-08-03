@@ -402,17 +402,19 @@ public class JCEKeyGenerator
 
     // HMAC Related secret keys..
   
-    /**
-     * MD2HMAC
-     */
-    public static class MD2HMAC
-        extends JCEKeyGenerator
-    {
-        public MD2HMAC()
-        {
-            super("HMACMD2", 128, new CipherKeyGenerator());
-        }
-    }
+    // BEGIN android-removed
+    // /**
+    //  * MD2HMAC
+    //  */
+    // public static class MD2HMAC
+    //     extends JCEKeyGenerator
+    // {
+    //     public MD2HMAC()
+    //     {
+    //         super("HMACMD2", 128, new CipherKeyGenerator());
+    //     }
+    // }
+    // END android-removed
 
 
     /**

@@ -243,29 +243,29 @@ public class Security2Test extends junit.framework.TestCase {
         }
 
         filter = new Hashtable<String, String>();
-        filter.put("MessageDigest.MD2", "");
+        filter.put("MessageDigest.SHA-384", "");
         filter.put("CertificateFactory.X.509", "");
         filter.put("KeyFactory.RSA", "");
         provTest = Security.getProviders(filter);
         if (provTest == null) {
-            assertEquals("Filter : <MessageDigest.MD2>,<CertificateFactory.X.509>,<KeyFactory.RSA>",
+            assertEquals("Filter : <MessageDigest.SHA-384>,<CertificateFactory.X.509>,<KeyFactory.RSA>",
                     0, getProvidersCount(filter));
         } else {
             assertEquals(
-                    "Filter : <MessageDigest.MD2>,<CertificateFactory.X.509>,<KeyFactory.RSA>",
+                    "Filter : <MessageDigest.SHA-384>,<CertificateFactory.X.509>,<KeyFactory.RSA>",
                     getProvidersCount(filter), provTest.length);
         }
 
         filter = new Hashtable<String, String>();
-        filter.put("MessageDigest.SHA", "");
-        filter.put("CertificateFactory.X.509", "");
+        filter.put("MessageDigest.SHA1", "");
+        filter.put("TrustManagerFactory.X509", "");
         provTest = Security.getProviders(filter);
         if (provTest == null) {
-            assertEquals("Filter : <MessageDigest.SHA><CertificateFactory.X.509>",
+            assertEquals("Filter : <MessageDigest.SHA1><TrustManagerFactory.X509>",
                     0, getProvidersCount(filter));
         } else {
             assertEquals(
-                    "Filter : <MessageDigest.SHA><CertificateFactory.X.509>",
+                    "Filter : <MessageDigest.SHA1><TrustManagerFactory.X509>",
                     getProvidersCount(filter), provTest.length);
         }
 

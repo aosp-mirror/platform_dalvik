@@ -64,7 +64,7 @@ public class SignatureTest extends TestCase {
     )
     public void testConstructor() {
         String [] algorithms = { "SHA256WITHRSA", "NONEWITHDSA", "SHA384WITHRSA",
-            "MD2WITHRSA", "MD5ANDSHA1WITHRSA", "SHA512WITHRSA",
+            "MD5ANDSHA1WITHRSA", "SHA512WITHRSA",
             "SHA1WITHRSA", "SHA1WITHDSA", "MD5WITHRSA" };
         for (int i = 0; i < algorithms.length; i ++) {
             MySignature1 s = new MySignature1(algorithms[i]);
