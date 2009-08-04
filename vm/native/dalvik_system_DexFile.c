@@ -63,6 +63,8 @@ static int hashcmpDexOrJar(const void* tableVal, const void* newVal)
  * Verify that the "cookie" is a DEX file we opened.
  *
  * Expects that the hash table will be *unlocked* here.
+ *
+ * If the cookie is invalid, we throw an exception and return "false".
  */
 static bool validateCookie(int cookie)
 {
@@ -78,8 +80,11 @@ static bool validateCookie(int cookie)
     void* result = dvmHashTableLookup(gDvm.userDexFiles, hash, pDexOrJar,
                 hashcmpDexOrJar, false);
     dvmHashTableUnlock(gDvm.userDexFiles);
-    if (result == NULL)
+    if (result == NULL) {
+        dvmThrowException("Ljava/lang/RuntimeException;",
+            "invalid DexFile cookie");
         return false;
+    }
 
     return true;
 }
@@ -213,7 +218,7 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
     LOGV("Closing DEX file %p (%s)\n", pDexOrJar, pDexOrJar->fileName);
 
     if (!validateCookie(cookie))
-        dvmAbort();
+        RETURN_VOID();
 
     /*
      * We can't just free arbitrary DEX files because they have bits and
@@ -273,7 +278,7 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
     free(name);
 
     if (!validateCookie(cookie))
-        dvmAbort();
+        RETURN_VOID();
 
     if (pDexOrJar->isDex)
         pDvmDex = dvmGetRawDexFileDex(pDexOrJar->pRawDexFile);
@@ -333,7 +338,7 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
     ArrayObject* stringArray;
 
     if (!validateCookie(cookie))
-        dvmAbort();
+        RETURN_VOID();
 
     if (pDexOrJar->isDex)
         pDvmDex = dvmGetRawDexFileDex(pDexOrJar->pRawDexFile);
