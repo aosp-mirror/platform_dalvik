@@ -410,8 +410,12 @@ bool dvmThreadObjStartup(void)
 void dvmThreadShutdown(void)
 {
     if (gDvm.threadList != NULL) {
-        assert(gDvm.threadList->next == NULL);
-        assert(gDvm.threadList->prev == NULL);
+        /*
+         * If we walk through the thread list and try to free the
+         * lingering thread structures (which should only be for daemon
+         * threads), the daemon threads may crash if they execute before
+         * the process dies.  Let them leak.
+         */
         freeThread(gDvm.threadList);
         gDvm.threadList = NULL;
     }
