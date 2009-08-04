@@ -20,9 +20,6 @@ package java.math;
 /**
  * Static library that provides {@link BigInteger} base conversion from/to any
  * integer represented in an {@link java.lang.String} Object.
- * 
- * @author Intel Middleware Product Division
- * @author Instituto Tecnologico de Cordoba
  */
 class Conversion {
 
