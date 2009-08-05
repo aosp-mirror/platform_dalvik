@@ -14,21 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 // BEGIN android-note
 // Since the original Harmony Code of the BigInteger class was strongly modified,
@@ -63,8 +48,6 @@ import org.apache.harmony.math.internal.nls.Messages;
  * <b>Implementation Note:</b> <br>
  * The native OpenSSL library with its BIGNUM operations covers all the
  * meaningful functionality (everything but bit level operations).
- * 
- * @since Android 1.0
  */
 public class BigInteger extends Number implements Comparable<BigInteger>,
         Serializable {
@@ -139,34 +122,24 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
     /** The magnitude of this in the little-endian representation. */
     transient int digits[];
 
-    /**
-     * The length of this in measured in ints. Can be less than digits.length().
-     */
+    /** The length of this in measured in ints. Can be less than digits.length(). */
     transient int numberLength;
 
     /** The sign of this. */
     transient int sign;
 
-    /* Static Fields */
-
     /**
      * The {@code BigInteger} constant 0.
-     * 
-     * @since Android 1.0
      */
     public static final BigInteger ZERO = new BigInteger(0, 0);
 
     /**
      * The {@code BigInteger} constant 1.
-     * 
-     * @since Android 1.0
      */
     public static final BigInteger ONE = new BigInteger(1, 1);
 
     /**
      * The {@code BigInteger} constant 10.
-     * 
-     * @since Android 1.0
      */
     public static final BigInteger TEN = new BigInteger(1, 10);
 
@@ -191,8 +164,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
     /**/
     private transient int firstNonzeroDigit = -2;
     
-    /* Serialized Fields */
-
     /** sign field, used for serialization. */
     private int signum;
 
@@ -201,9 +172,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
     
     /** Cache for the hash code. */
     private transient int hashCode = 0;
-
-
-    /* Package Constructors */
 
     BigInteger(BigInt a) {
         bigInt = a;
@@ -239,9 +207,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
         withNewRepresentation("BigInteger(int sign, int numberLength, int[] digits)");
     }
 
-
-    /* Public Constructors */
-
     /**
      * Constructs a random non-negative {@code BigInteger} instance in the range
      * [0, 2^(numBits)-1].
@@ -252,8 +217,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *            is an optional random generator to be used.
      * @throws IllegalArgumentException
      *             if {@code numBits} < 0.
-     * 
-     * @since Android 1.0
      */
     public BigInteger(int numBits, Random rnd) {
         if (numBits < 0) {
@@ -299,8 +262,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *            is an optional random generator to be used.
      * @throws ArithmeticException
      *             if {@code bitLength} < 2.
-     * 
-     * @since Android 1.0
      */
     public BigInteger(int bitLength, int certainty, Random rnd) {
         if (bitLength < 2) {
@@ -324,8 +285,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @throws NumberFormatException
      *             if {@code val} is not a valid representation of a {@code
      *             BigInteger}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger(String val) {
         bigInt = new BigInt();
@@ -351,8 +310,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *             if {@code val} is not a valid representation of a {@code
      *             BigInteger} or if {@code radix < Character.MIN_RADIX} or
      *             {@code radix > Character.MAX_RADIX}.
-     *             
-     * @since Android 1.0
      */
     public BigInteger(String val, int radix) {
         if (val == null) {
@@ -399,8 +356,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @throws NumberFormatException
      *             if the sign is not one of -1, 0, 1 or if the sign is zero and
      *             the magnitude contains non-zero entries.
-     *             
-     * @since Android 1.0
      */
     public BigInteger(int signum, byte[] magnitude) {
         if (magnitude == null) {
@@ -435,8 +390,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *             if {@code val == null}.
      * @throws NumberFormatException
      *             if the length of {@code val} is zero.
-     *             
-     * @since Android 1.0
      */
     public BigInteger(byte[] val) {
         if (val.length == 0) {
@@ -449,8 +402,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
     }
 
 
-    /* Public Methods */
-
     /**
      * Creates a new {@code BigInteger} whose value is equal to the specified
      * {@code long} argument.
@@ -458,8 +409,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @param val
      *            the value of the new {@code BigInteger}.
      * @return {@code BigInteger} instance with the value {@code val}.
-     * 
-     * @since Android 1.0
      */
     public static BigInteger valueOf(long val) {
         if (val < 0) {
@@ -479,8 +428,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * array.
      * 
      * @return two's complement representation of {@code this}.
-     * 
-     * @since Android 1.0
      */
     public byte[] toByteArray() {
         return twosComplement();
@@ -491,8 +438,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * {@code this}.
      * 
      * @return {@code abs(this)}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger abs() {
         validate1("abs()", this);
@@ -508,8 +453,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * Returns a new {@code BigInteger} whose value is the {@code -this}.
      * 
      * @return {@code -this}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger negate() {
         validate1("negate()", this);
@@ -530,8 +473,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this + val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     *             
-     * @since Android 1.0
      */
     public BigInteger add(BigInteger val) {
         validate2("add", this, val);
@@ -548,8 +489,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this - val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     *             
-     * @since Android 1.0
      */
     public BigInteger subtract(BigInteger val) {
         validate2("subtract", this, val);
@@ -563,8 +502,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code -1} if {@code this < 0}, 
      *         {@code 0} if {@code this == 0},
      *         {@code 1} if {@code this > 0}.
-     *         
-     * @since Android 1.0
      */
     public int signum() {
      // Optimization to avoid unnecessary duplicate representation:
@@ -586,8 +523,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *            shift distance
      * @return {@code this >> n} if {@code n >= 0}; {@code this << (-n)}
      *         otherwise
-     *         
-     * @since Android 1.0
      */
     public BigInteger shiftRight(int n) {
         return shiftLeft(-n);
@@ -606,8 +541,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *            shift distance.
      * @return {@code this << n} if {@code n >= 0}; {@code this >> (-n)}.
      *         otherwise
-     * 
-     * @since Android 1.0
      */
     public BigInteger shiftLeft(int n) {
         if (n == 0) return this;
@@ -626,6 +559,10 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
         }
     }
 
+    BigInteger shiftLeftOneBit() {
+        return (signum() == 0) ? this : BitLevel.shiftLeftOneBit(this);
+    }
+
     /**
      * Returns the length of the value's two's complement representation without
      * leading zeros for positive numbers / without leading ones for negative
@@ -639,8 +576,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * 
      * @return the length of the minimal two's complement representation for
      *         {@code this} without the sign bit.
-     * 
-     * @since Android 1.0
      */
     public int bitLength() {
      // Optimization to avoid unnecessary duplicate representation:
@@ -662,8 +597,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this & (2^n) != 0}.
      * @throws ArithmeticException
      *             if {@code n < 0}.
-     * 
-     * @since Android 1.0
      */
     public boolean testBit(int n) {
         if (n < 0) {
@@ -717,8 +650,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this | 2^n}.
      * @throws ArithmeticException
      *             if {@code n < 0}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger setBit(int n) {
         establishOldRepresentation("setBit");
@@ -742,8 +673,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this & ~(2^n)}.
      * @throws ArithmeticException
      *             if {@code n < 0}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger clearBit(int n) {
         establishOldRepresentation("clearBit");
@@ -767,8 +696,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this ^ 2^n}.
      * @throws ArithmeticException
      *             if {@code n < 0}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger flipBit(int n) {
         establishOldRepresentation("flipBit");
@@ -788,8 +715,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * the current implementation is not efficient.
      * 
      * @return position of lowest bit if {@code this != 0}, {@code -1} otherwise
-     * 
-     * @since Android 1.0
      */
     public int getLowestSetBit() {
         establishOldRepresentation("getLowestSetBit");
@@ -816,8 +741,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * 
      * @return number of bits in the binary representation of {@code this} which
      *         differ from the sign bit
-     * 
-     * @since Android 1.0
      */
     public int bitCount() {
         establishOldRepresentation("bitCount");
@@ -832,8 +755,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * the current implementation is not efficient.
      * 
      * @return {@code ~this}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger not() {
         this.establishOldRepresentation("not");
@@ -851,8 +772,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this & val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger and(BigInteger val) {
         this.establishOldRepresentation("and1");
@@ -871,8 +790,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this | val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger or(BigInteger val) {
         this.establishOldRepresentation("or1");
@@ -891,8 +808,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this ^ val}
      * @throws NullPointerException
      *             if {@code val == null}
-     * 
-     * @since Android 1.0
      */
     public BigInteger xor(BigInteger val) {
         this.establishOldRepresentation("xor1");
@@ -913,8 +828,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this & ~val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger andNot(BigInteger val) {
         this.establishOldRepresentation("andNot1");
@@ -927,8 +840,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * big to be represented as an int, then {@code this} % 2^32 is returned.
      * 
      * @return this {@code BigInteger} as an int value.
-     * 
-     * @since Android 1.0
      */
     @Override
     public int intValue() {
@@ -946,8 +857,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * big to be represented as an long, then {@code this} % 2^64 is returned.
      * 
      * @return this {@code BigInteger} as a long value.
-     * 
-     * @since Android 1.0
      */
     @Override
     public long longValue() {
@@ -972,8 +881,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * 24. For example, 2^24+1 = 16777217 is returned as float 16777216.0.
      * 
      * @return this {@code BigInteger} as a float value.
-     *
-     * @since Android 1.0
      */
     @Override
     public float floatValue() {
@@ -991,8 +898,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * 9007199254740993 is returned as double 9007199254740992.0.
      * 
      * @return this {@code BigInteger} as a double value
-     * 
-     * @since Android 1.0
      */
     @Override
     public double doubleValue() {
@@ -1010,8 +915,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *         , {@code 0} if {@code this == val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * 
-     * @since Android 1.0
      */
     public int compareTo(BigInteger val) {
         validate2("compareTo", this, val);
@@ -1026,8 +929,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code min(this, val)}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger min(BigInteger val) {
         return ((this.compareTo(val) == -1) ? this : val);
@@ -1041,8 +942,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code max(this, val)}
      * @throws NullPointerException
      *             if {@code val == null}
-     * 
-     * @since Android 1.0
      */
     public BigInteger max(BigInteger val) {
         return ((this.compareTo(val) == 1) ? this : val);
@@ -1052,8 +951,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * Returns a hash code for this {@code BigInteger}.
      * 
      * @return hash code for {@code this}.
-     * 
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -1077,8 +974,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *            object to be compared with {@code this}.
      * @return true if {@code x} is a BigInteger and {@code this == x}, 
      *          {@code false} otherwise.
-     * 
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object x) {
@@ -1096,8 +991,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * form.
      * 
      * @return a string representation of {@code this} in decimal form.
-     * 
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -1115,8 +1008,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @param radix
      *            base to be used for the string representation.
      * @return a string representation of this with radix 10.
-     * 
-     * @since Android 1.0
      */
     public String toString(int radix) {
         validate1("toString(int radix)", this);
@@ -1140,8 +1031,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code gcd(this, val)}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger gcd(BigInteger val) {
         validate2("gcd", this, val);
@@ -1156,8 +1045,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this * val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger multiply(BigInteger val) {
         validate2("multiply", this, val);
@@ -1172,8 +1059,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return {@code this ^ exp}.
      * @throws ArithmeticException
      *             if {@code exp < 0}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger pow(int exp) {
         if (exp < 0) {
@@ -1197,8 +1082,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *             if {@code divisor == 0}.
      * @see #divide
      * @see #remainder
-     *
-@since Android 1.0
      */
     public BigInteger[] divideAndRemainder(BigInteger divisor) {
         validate2("divideAndRemainder", this, divisor);
@@ -1223,8 +1106,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *             if {@code divisor == null}.
      * @throws ArithmeticException
      *             if {@code divisor == 0}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger divide(BigInteger divisor) {
         validate2("divide", this, divisor);
@@ -1245,8 +1126,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *             if {@code divisor == null}.
      * @throws ArithmeticException
      *             if {@code divisor == 0}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger remainder(BigInteger divisor) {
         validate2("remainder", this, divisor);
@@ -1269,8 +1148,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @throws ArithmeticException
      *             if {@code m < 0 or} if {@code this} is not relatively prime
      *             to {@code m}
-     * 
-     * @since Android 1.0
      */
     public BigInteger modInverse(BigInteger m) {
         if (m.signum() <= 0) {
@@ -1299,8 +1176,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @throws ArithmeticException
      *             if {@code m < 0} or if {@code exponent<0} and this is not
      *             relatively prime to {@code m}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger modPow(BigInteger exponent, BigInteger m) {
         if (m.signum() <= 0) {
@@ -1332,8 +1207,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *             if {@code m == null}.
      * @throws ArithmeticException
      *             if {@code m < 0}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger mod(BigInteger m) {
         if (m.signum() <= 0) {
@@ -1355,8 +1228,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *            tolerated primality uncertainty.
      * @return {@code true}, if {@code this} is probably prime, {@code false}
      *         otherwise.
-     * 
-     * @since Android 1.0
      */
     public boolean isProbablePrime(int certainty) {
         validate1("isProbablePrime", this);
@@ -1371,8 +1242,6 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return smallest integer > {@code this} which is robably prime.
      * @throws ArithmeticException
      *             if {@code this < 0}.
-     * 
-     * @since Android 1.0
      */
     public BigInteger nextProbablePrime() {
         if (sign < 0) {
@@ -1396,13 +1265,10 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * @return probably prime random {@code BigInteger} instance.
      * @throws IllegalArgumentException
      *             if {@code bitLength < 2}.
-     * 
-     * @since Android 1.0
      */
     public static BigInteger probablePrime(int bitLength, Random rnd) {
         return new BigInteger(bitLength, 100, rnd);
     }
-
 
     /* Private Methods */
 

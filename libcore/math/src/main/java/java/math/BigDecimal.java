@@ -25,51 +25,48 @@ import java.io.Serializable;
 import org.apache.harmony.math.internal.nls.Messages;
 
 /**
- * This class represents immutable arbitrary precision decimal numbers. Each
- * {@code BigDecimal} instance is represented with a unscaled arbitrary
- * precision mantissa (the unscaled value) and a scale. The value of the {@code
- * BigDecimal} is {@code unscaledValue} 10^(-{@code scale}).
- * 
- * @since Android 1.0
+ * This class represents immutable integer numbers of arbitrary length. Large
+ * numbers are typically used in security applications and therefore BigIntegers
+ * offer dedicated functionality like the generation of large prime numbers or
+ * the computation of modular inverse.
+ * <p>
+ * Since the class was modeled to offer all the functionality as the {@link Integer}
+ * class does, it provides even methods that operate bitwise on a two's
+ * complement representation of large integers. Note however that the
+ * implementations favors an internal representation where magnitude and sign
+ * are treated separately. Hence such operations are inefficient and should be
+ * discouraged. In simple words: Do NOT implement any bit fields based on
+ * BigInteger.
  */
 public class BigDecimal extends Number implements Comparable<BigDecimal>, Serializable {
-    /* Static Fields */
 
     /**
      * The constant zero as a {@code BigDecimal}.
-     * 
-     * @since Android 1.0
      */
     public static final BigDecimal ZERO = new BigDecimal(0, 0);
 
     /**
      * The constant one as a {@code BigDecimal}.
-     * 
-     * @since Android 1.0
      */
     public static final BigDecimal ONE = new BigDecimal(1, 0);
 
     /**
      * The constant ten as a {@code BigDecimal}.
-     * 
-     * @since Android 1.0
      */
     public static final BigDecimal TEN = new BigDecimal(10, 0);
 
     /**
      * Rounding mode where positive values are rounded towards positive infinity
      * and negative values towards negative infinity.
-     * 
+     *
      * @see RoundingMode#UP
-     * @since Android 1.0
      */
     public static final int ROUND_UP = 0;
 
     /**
      * Rounding mode where the values are rounded towards zero.
-     * 
+     *
      * @see RoundingMode#DOWN
-     * @since Android 1.0
      */
     public static final int ROUND_DOWN = 1;
 
@@ -77,9 +74,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Rounding mode to round towards positive infinity. For positive values
      * this rounding mode behaves as {@link #ROUND_UP}, for negative values as
      * {@link #ROUND_DOWN}.
-     * 
+     *
      * @see RoundingMode#CEILING
-     * @since Android 1.0
      */
     public static final int ROUND_CEILING = 2;
 
@@ -87,36 +83,32 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Rounding mode to round towards negative infinity. For positive values
      * this rounding mode behaves as {@link #ROUND_DOWN}, for negative values as
      * {@link #ROUND_UP}.
-     * 
+     *
      * @see RoundingMode#FLOOR
-     * @since Android 1.0
      */
     public static final int ROUND_FLOOR = 3;
 
     /**
      * Rounding mode where values are rounded towards the nearest neighbor.
      * Ties are broken by rounding up.
-     * 
+     *
      * @see RoundingMode#HALF_UP
-     * @since Android 1.0
      */
     public static final int ROUND_HALF_UP = 4;
 
     /**
      * Rounding mode where values are rounded towards the nearest neighbor.
      * Ties are broken by rounding down.
-     * 
+     *
      * @see RoundingMode#HALF_DOWN
-     * @since Android 1.0
      */
     public static final int ROUND_HALF_DOWN = 5;
 
     /**
      * Rounding mode where values are rounded towards the nearest neighbor.
      * Ties are broken by rounding to the even neighbor.
-     * 
+     *
      * @see RoundingMode#HALF_EVEN
-     * @since Android 1.0
      */
     public static final int ROUND_HALF_EVEN = 6;
 
@@ -124,13 +116,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Rounding mode where the rounding operations throws an {@code
      * ArithmeticException} for the case that rounding is necessary, i.e. for
      * the case that the value cannot be represented exactly.
-     * 
+     *
      * @see RoundingMode#UNNECESSARY
-     * @since Android 1.0
      */
     public static final int ROUND_UNNECESSARY = 7;
-
-    /* Private Fields */
 
     /** This is the serialVersionUID used by the sun implementation. */
     private static final long serialVersionUID = 6108874887143696463L;
@@ -180,8 +169,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         10000000000000000L,
         100000000000000000L,
         1000000000000000000L, };
-    
-    
+
+
     private static final long[] LONG_FIVE_POW = new long[]
     {   1L,
         5L,
@@ -211,10 +200,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         298023223876953125L,
         1490116119384765625L,
         7450580596923828125L, };
-    
+
     private static final int[] LONG_FIVE_POW_BIT_LENGTH = new int[LONG_FIVE_POW.length];
     private static final int[] LONG_TEN_POW_BIT_LENGTH = new int[LONG_TEN_POW.length];
-    
+
     private static final int BI_SCALED_BY_ZERO_LENGTH = 11;
 
     /**
@@ -241,7 +230,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             ZERO_SCALED_BY[i] = new BigDecimal(0, i);
             CH_ZEROS[i] = '0';
         }
-        
+
         for (; i < CH_ZEROS.length; i++) {
             CH_ZEROS[i] = '0';
         }
@@ -251,7 +240,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         for(int j=0; j<LONG_TEN_POW_BIT_LENGTH.length; j++) {
             LONG_TEN_POW_BIT_LENGTH[j] = bitLength(LONG_TEN_POW[j]);
         }
-        
+
         // Taking the references of useful powers.
         TEN_POW = Multiplication.bigTenPows;
         FIVE_POW = Multiplication.bigFivePows;
@@ -262,13 +251,13 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * representation of {@code BigDecimal}.
      */
     private BigInteger intVal;
-    
+
     private transient int bitLength;
-    
+
     private transient long smallValue;
 
-    /** 
-     * The 32-bit integer scale in the internal representation of {@code BigDecimal}. 
+    /**
+     * The 32-bit integer scale in the internal representation of {@code BigDecimal}.
      */
     private int scale;
 
@@ -277,20 +266,18 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * precision is calculated the first time, and used in the following calls
      * of method <code>precision()</code>. Note that some call to the private
      * method <code>inplaceRound()</code> could update this field.
-     * 
+     *
      * @see #precision()
      * @see #inplaceRound(MathContext)
      */
     private transient int precision = 0;
-
-    /* Constructors */
 
     private BigDecimal(long smallValue, int scale){
         this.smallValue = smallValue;
         this.scale = scale;
         this.bitLength = bitLength(smallValue);
     }
-    
+
     private BigDecimal(int smallValue, int scale){
         this.smallValue = smallValue;
         this.scale = scale;
@@ -300,7 +287,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Constructs a new {@code BigDecimal} instance from a string representation
      * given as a character array.
-     * 
+     *
      * @param in
      *            array of characters containing the string representation of
      *            this {@code BigDecimal}.
@@ -316,7 +303,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @throws NumberFormatException
      *             if in does not contain a valid string representation of a big
      *             decimal.
-     * @since Android 1.0
      */
     public BigDecimal(char[] in, int offset, int len) {
         int begin = offset; // first index to be copied
@@ -347,9 +333,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
                 if (in[offset] == '0') {
                     counter++;
                 } else {
-                    wasNonZero = true;    
-                }                
-            };
+                    wasNonZero = true;
+                }
+            }
 
         }
         unscaledBuffer.append(in, begin, offset - begin);
@@ -365,9 +351,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
                     if (in[offset] == '0') {
                         counter++;
                     } else {
-                        wasNonZero = true;    
-                    }                
-                };
+                        wasNonZero = true;
+                    }
+                }
             }
             scale = offset - begin;
             bufLength +=scale;
@@ -388,7 +374,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             }
             // Accumulating all remaining digits
             scaleString = String.valueOf(in, begin, last + 1 - begin);
-            // Checking if the scale is defined            
+            // Checking if the scale is defined
             newScale = (long)scale - Integer.parseInt(scaleString);
             scale = (int)newScale;
             if (newScale != scale) {
@@ -402,17 +388,17 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             bitLength = bitLength(smallValue);
         } else {
             setUnscaledValue(new BigInteger(unscaledBuffer.toString()));
-        }        
+        }
         precision = unscaledBuffer.length() - counter;
         if (unscaledBuffer.charAt(0) == '-') {
             precision --;
-        }    
+        }
     }
 
     /**
      * Constructs a new {@code BigDecimal} instance from a string representation
      * given as a character array.
-     * 
+     *
      * @param in
      *            array of characters containing the string representation of
      *            this {@code BigDecimal}.
@@ -434,7 +420,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code mc.precision > 0} and {@code mc.roundingMode ==
      *             UNNECESSARY} and the new big decimal cannot be represented
      *             within the given precision without rounding.
-     * @since Android 1.0
      */
     public BigDecimal(char[] in, int offset, int len, MathContext mc) {
         this(in, offset, len);
@@ -444,7 +429,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Constructs a new {@code BigDecimal} instance from a string representation
      * given as a character array.
-     * 
+     *
      * @param in
      *            array of characters containing the string representation of
      *            this {@code BigDecimal}.
@@ -453,7 +438,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @throws NumberFormatException
      *             if {@code in} does not contain a valid string representation
      *             of a big decimal.
-     * @since Android 1.0
      */
     public BigDecimal(char[] in) {
         this(in, 0, in.length);
@@ -463,7 +447,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Constructs a new {@code BigDecimal} instance from a string representation
      * given as a character array. The result is rounded according to the
      * specified math context.
-     * 
+     *
      * @param in
      *            array of characters containing the string representation of
      *            this {@code BigDecimal}.
@@ -478,7 +462,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code mc.precision > 0} and {@code mc.roundingMode ==
      *             UNNECESSARY} and the new big decimal cannot be represented
      *             within the given precision without rounding.
-     * @since Android 1.0
      */
     public BigDecimal(char[] in, MathContext mc) {
         this(in, 0, in.length);
@@ -488,14 +471,13 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Constructs a new {@code BigDecimal} instance from a string
      * representation.
-     * 
+     *
      * @param val
      *            string containing the string representation of this {@code
      *            BigDecimal}.
      * @throws NumberFormatException
      *             if {@code val} does not contain a valid string representation
      *             of a big decimal.
-     * @since Android 1.0
      */
     public BigDecimal(String val) {
         this(val.toCharArray(), 0, val.length());
@@ -505,7 +487,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Constructs a new {@code BigDecimal} instance from a string
      * representation. The result is rounded according to the specified math
      * context.
-     * 
+     *
      * @param val
      *            string containing the string representation of this {@code
      *            BigDecimal}.
@@ -518,7 +500,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code mc.precision > 0} and {@code mc.roundingMode ==
      *             UNNECESSARY} and the new big decimal cannot be represented
      *             within the given precision without rounding.
-     * @since Android 1.0
      */
     public BigDecimal(String val, MathContext mc) {
         this(val.toCharArray(), 0, val.length());
@@ -534,12 +515,11 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * To generate a big decimal instance which is equivalent to {@code 0.1} use
      * the {@code BigDecimal(String)} constructor.
-     * 
+     *
      * @param val
      *            double value to be converted to a {@code BigDecimal} instance.
      * @throws NumberFormatException
      *             if {@code val} is infinity or not a number.
-     * @since Android 1.0
      */
     public BigDecimal(double val) {
         if (Double.isInfinite(val) || Double.isNaN(val)) {
@@ -558,7 +538,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             scale = 0;
             precision = 1;
         }
-        // To simplify all factors '2' in the mantisa 
+        // To simplify all factors '2' in the mantisa
         if (scale > 0) {
             trailingZeros = Math.min(scale, Long.numberOfTrailingZeros(mantisa));
             mantisa >>>= trailingZeros;
@@ -606,7 +586,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * To generate a big decimal instance which is equivalent to {@code 0.1} use
      * the {@code BigDecimal(String)} constructor.
-     * 
+     *
      * @param val
      *            double value to be converted to a {@code BigDecimal} instance.
      * @param mc
@@ -617,7 +597,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code mc.precision > 0} and {@code mc.roundingMode ==
      *             UNNECESSARY} and the new big decimal cannot be represented
      *             within the given precision without rounding.
-     * @since Android 1.0
      */
     public BigDecimal(double val, MathContext mc) {
         this(val);
@@ -627,11 +606,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Constructs a new {@code BigDecimal} instance from the given big integer
      * {@code val}. The scale of the result is {@code 0}.
-     * 
+     *
      * @param val
      *            {@code BigInteger} value to be converted to a {@code
      *            BigDecimal} instance.
-     * @since Android 1.0
      */
     public BigDecimal(BigInteger val) {
         this(val, 0);
@@ -640,7 +618,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Constructs a new {@code BigDecimal} instance from the given big integer
      * {@code val}. The scale of the result is {@code 0}.
-     * 
+     *
      * @param val
      *            {@code BigInteger} value to be converted to a {@code
      *            BigDecimal} instance.
@@ -650,7 +628,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code mc.precision > 0} and {@code mc.roundingMode ==
      *             UNNECESSARY} and the new big decimal cannot be represented
      *             within the given precision without rounding.
-     * @since Android 1.0
      */
     public BigDecimal(BigInteger val, MathContext mc) {
         this(val);
@@ -661,7 +638,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Constructs a new {@code BigDecimal} instance from a given unscaled value
      * {@code unscaledVal} and a given scale. The value of this instance is
      * {@code unscaledVal} 10^(-{@code scale}).
-     * 
+     *
      * @param unscaledVal
      *            {@code BigInteger} representing the unscaled value of this
      *            {@code BigDecimal} instance.
@@ -669,7 +646,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *            scale of this {@code BigDecimal} instance.
      * @throws NullPointerException
      *             if {@code unscaledVal == null}.
-     * @since Android 1.0
      */
     public BigDecimal(BigInteger unscaledVal, int scale) {
         if (unscaledVal == null) {
@@ -684,7 +660,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * {@code unscaledVal} and a given scale. The value of this instance is
      * {@code unscaledVal} 10^(-{@code scale}). The result is rounded according
      * to the specified math context.
-     * 
+     *
      * @param unscaledVal
      *            {@code BigInteger} representing the unscaled value of this
      *            {@code BigDecimal} instance.
@@ -698,7 +674,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             within the given precision without rounding.
      * @throws NullPointerException
      *             if {@code unscaledVal == null}.
-     * @since Android 1.0
      */
     public BigDecimal(BigInteger unscaledVal, int scale, MathContext mc) {
         this(unscaledVal, scale);
@@ -708,10 +683,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Constructs a new {@code BigDecimal} instance from the given int
      * {@code val}. The scale of the result is 0.
-     * 
+     *
      * @param val
      *            int value to be converted to a {@code BigDecimal} instance.
-     * @since Android 1.0
      */
     public BigDecimal(int val) {
         this(val,0);
@@ -721,7 +695,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Constructs a new {@code BigDecimal} instance from the given int {@code
      * val}. The scale of the result is {@code 0}. The result is rounded
      * according to the specified math context.
-     * 
+     *
      * @param val
      *            int value to be converted to a {@code BigDecimal} instance.
      * @param mc
@@ -730,7 +704,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code mc.precision > 0} and {@code c.roundingMode ==
      *             UNNECESSARY} and the new big decimal cannot be represented
      *             within the given precision without rounding.
-     * @since Android 1.0
      */
     public BigDecimal(int val, MathContext mc) {
         this(val,0);
@@ -740,10 +713,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Constructs a new {@code BigDecimal} instance from the given long {@code
      * val}. The scale of the result is {@code 0}.
-     * 
+     *
      * @param val
      *            long value to be converted to a {@code BigDecimal} instance.
-     * @since Android 1.0
      */
     public BigDecimal(long val) {
         this(val,0);
@@ -753,7 +725,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Constructs a new {@code BigDecimal} instance from the given long {@code
      * val}. The scale of the result is {@code 0}. The result is rounded
      * according to the specified math context.
-     * 
+     *
      * @param val
      *            long value to be converted to a {@code BigDecimal} instance.
      * @param mc
@@ -762,7 +734,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code mc.precision > 0} and {@code mc.roundingMode ==
      *             UNNECESSARY} and the new big decimal cannot be represented
      *             within the given precision without rounding.
-     * @since Android 1.0
      */
     public BigDecimal(long val, MathContext mc) {
         this(val);
@@ -775,7 +746,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns a new {@code BigDecimal} instance whose value is equal to {@code
      * unscaledVal} 10^(-{@code scale}). The scale of the result is {@code
      * scale}, and its unscaled value is {@code unscaledVal}.
-     * 
+     *
      * @param unscaledVal
      *            unscaled value to be used to construct the new {@code
      *            BigDecimal}.
@@ -783,7 +754,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *            scale to be used to construct the new {@code BigDecimal}.
      * @return {@code BigDecimal} instance with the value {@code unscaledVal}*
      *         10^(-{@code unscaledVal}).
-     * @since Android 1.0
      */
     public static BigDecimal valueOf(long unscaledVal, int scale) {
         if (scale == 0) {
@@ -800,11 +770,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns a new {@code BigDecimal} instance whose value is equal to {@code
      * unscaledVal}. The scale of the result is {@code 0}, and its unscaled
      * value is {@code unscaledVal}.
-     * 
+     *
      * @param unscaledVal
      *            value to be converted to a {@code BigDecimal}.
      * @return {@code BigDecimal} instance with the value {@code unscaledVal}.
-     * @since Android 1.0
      */
     public static BigDecimal valueOf(long unscaledVal) {
         if ((unscaledVal >= 0) && (unscaledVal < BI_SCALED_BY_ZERO_LENGTH)) {
@@ -815,23 +784,21 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
 
     /**
      * Returns a new {@code BigDecimal} instance whose value is equal to {@code
-     * unscaledVal}. The new decimal is constructed as if the {@code
-     * BigDecimal(String)} constructor is called with an argument which is equal
-     * to {@code Double.toString(val)}. For example, {@code valueOf(0.1)} is
-     * converted to (unscaled=1, scale=1), although the double {@code 0.1}
-     * cannot be represented exactly as a double value. In contrast to that, a
-     * new {@code BigDecimal(0.1)} instance has the value {@code
+     * val}. The new decimal is constructed as if the {@code BigDecimal(String)}
+     * constructor is called with an argument which is equal to {@code
+     * Double.toString(val)}. For example, {@code valueOf("0.1")} is converted to
+     * (unscaled=1, scale=1), although the double {@code 0.1} cannot be
+     * represented exactly as a double value. In contrast to that, a new {@code
+     * BigDecimal(0.1)} instance has the value {@code
      * 0.1000000000000000055511151231257827021181583404541015625} with an
-     * unscaled value {@code
-     * 1000000000000000055511151231257827021181583404541015625} and the scale
-     * {@code 55}.
-     * 
+     * unscaled value {@code 1000000000000000055511151231257827021181583404541015625}
+     * and the scale {@code 55}.
+     *
      * @param val
      *            double value to be converted to a {@code BigDecimal}.
      * @return {@code BigDecimal} instance with the value {@code val}.
      * @throws NumberFormatException
      *             if {@code val} is infinite or {@code val} is not a number
-     * @since Android 1.0
      */
     public static BigDecimal valueOf(double val) {
         if (Double.isInfinite(val) || Double.isNaN(val)) {
@@ -845,13 +812,12 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns a new {@code BigDecimal} whose value is {@code this + augend}.
      * The scale of the result is the maximum of the scales of the two
      * arguments.
-     * 
+     *
      * @param augend
      *            value to be added to {@code this}.
      * @return {@code this + augend}.
      * @throws NullPointerException
      *             if {@code augend == null}.
-     * @since Android 1.0
      */
     public BigDecimal add(BigDecimal augend) {
         int diffScale = this.scale - augend.scale;
@@ -895,11 +861,11 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         }
         // END android-changed
     }
-    
+
     /**
      * Returns a new {@code BigDecimal} whose value is {@code this + augend}.
      * The result is rounded according to the passed context {@code mc}.
-     * 
+     *
      * @param augend
      *            value to be added to {@code this}.
      * @param mc
@@ -907,7 +873,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @return {@code this + augend}.
      * @throws NullPointerException
      *             if {@code augend == null} or {@code mc == null}.
-     * @since Android 1.0
      */
     public BigDecimal add(BigDecimal augend, MathContext mc) {
         BigDecimal larger; // operand with the largest unscaled value
@@ -915,7 +880,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         BigInteger tempBI;
         long diffScale = (long)this.scale - augend.scale;
         int largerSignum;
-        // Some operand is zero or the precision is infinity  
+        // Some operand is zero or the precision is infinity
         if ((augend.isZero()) || (this.isZero())
                 || (mc.getPrecision() == 0)) {
             return add(augend).round(mc);
@@ -927,14 +892,14 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         } else if (augend.aproxPrecision() < -diffScale - 1) {
             larger = this;
             smaller = augend;
-        } else {// No optimization is done 
+        } else {// No optimization is done
             return add(augend).round(mc);
         }
         if (mc.getPrecision() >= larger.aproxPrecision()) {
             // No optimization is done
             return add(augend).round(mc);
         }
-        // Cases where it's unnecessary to add two numbers with very different scales 
+        // Cases where it's unnecessary to add two numbers with very different scales
         largerSignum = larger.signum();
         if (largerSignum == smaller.signum()) {
             tempBI = Multiplication.multiplyByPositiveInt(larger.getUnscaledValue(),10)
@@ -945,22 +910,20 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             tempBI = Multiplication.multiplyByPositiveInt(tempBI,10)
             .add(BigInteger.valueOf(largerSignum * 9));
         }
-        // Rounding the improved adding 
+        // Rounding the improved adding
         larger = new BigDecimal(tempBI, larger.scale + 1);
         return larger.round(mc);
     }
 
     /**
-     * Returns a new {@code BigDecimal} whose value is {@code this - subtrahend}
-     * . The scale of the result is the maximum of the scales of the two
-     * arguments.
-     * 
+     * Returns a new {@code BigDecimal} whose value is {@code this - subtrahend}.
+     * The scale of the result is the maximum of the scales of the two arguments.
+     *
      * @param subtrahend
      *            value to be subtracted from {@code this}.
      * @return {@code this - subtrahend}.
      * @throws NullPointerException
      *             if {@code subtrahend == null}.
-     * @since Android 1.0
      */
     public BigDecimal subtract(BigDecimal subtrahend) {
         int diffScale = this.scale - subtrahend.scale;
@@ -1006,7 +969,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Returns a new {@code BigDecimal} whose value is {@code this - subtrahend}.
      * The result is rounded according to the passed context {@code mc}.
-     * 
+     *
      * @param subtrahend
      *            value to be subtracted from {@code this}.
      * @param mc
@@ -1014,14 +977,13 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @return {@code this - subtrahend}.
      * @throws NullPointerException
      *             if {@code subtrahend == null} or {@code mc == null}.
-     * @since Android 1.0
      */
     public BigDecimal subtract(BigDecimal subtrahend, MathContext mc) {
         long diffScale = subtrahend.scale - (long)this.scale;
         int thisSignum;
-        BigDecimal leftOperand; // it will be only the left operand (this) 
+        BigDecimal leftOperand; // it will be only the left operand (this)
         BigInteger tempBI;
-        // Some operand is zero or the precision is infinity  
+        // Some operand is zero or the precision is infinity
         if ((subtrahend.isZero()) || (this.isZero())
                 || (mc.getPrecision() == 0)) {
             return subtract(subtrahend).round(mc);
@@ -1052,13 +1014,12 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns a new {@code BigDecimal} whose value is {@code this *
      * multiplicand}. The scale of the result is the sum of the scales of the
      * two arguments.
-     * 
+     *
      * @param multiplicand
      *            value to be multiplied with {@code this}.
      * @return {@code this * multiplicand}.
      * @throws NullPointerException
      *             if {@code multiplicand == null}.
-     * @since Android 1.0
      */
     public BigDecimal multiply(BigDecimal multiplicand) {
         long newScale = (long)this.scale + multiplicand.scale;
@@ -1079,7 +1040,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns a new {@code BigDecimal} whose value is {@code this *
      * multiplicand}. The result is rounded according to the passed context
      * {@code mc}.
-     * 
+     *
      * @param multiplicand
      *            value to be multiplied with {@code this}.
      * @param mc
@@ -1087,7 +1048,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @return {@code this * multiplicand}.
      * @throws NullPointerException
      *             if {@code multiplicand == null} or {@code mc == null}.
-     * @since Android 1.0
      */
     public BigDecimal multiply(BigDecimal multiplicand, MathContext mc) {
         BigDecimal result = multiply(multiplicand);
@@ -1101,7 +1061,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * As scale of the result the parameter {@code scale} is used. If rounding
      * is required to meet the specified scale, then the specified rounding mode
      * {@code roundingMode} is applied.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @param scale
@@ -1119,7 +1079,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @throws ArithmeticException
      *             if {@code roundingMode == ROUND_UNNECESSARY} and rounding is
      *             necessary according to the given scale.
-     * @since Android 1.0
      */
     public BigDecimal divide(BigDecimal divisor, int scale, int roundingMode) {
         return divide(divisor, scale, RoundingMode.valueOf(roundingMode));
@@ -1130,7 +1089,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * As scale of the result the parameter {@code scale} is used. If rounding
      * is required to meet the specified scale, then the specified rounding mode
      * {@code roundingMode} is applied.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @param scale
@@ -1147,7 +1106,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code roundingMode == RoundingMode.UNNECESSAR}Y and
      *             rounding is necessary according to the given scale and given
      *             precision.
-     * @since Android 1.0
      */
     public BigDecimal divide(BigDecimal divisor, int scale, RoundingMode roundingMode) {
         // Let be: this = [u1,s1]  and  divisor = [u2,s2]
@@ -1158,7 +1116,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             // math.04=Division by zero
             throw new ArithmeticException(Messages.getString("math.04")); //$NON-NLS-1$
         }
-        
+
         long diffScale = ((long)this.scale - divisor.scale) - scale;
         if(this.bitLength < 64 && divisor.bitLength < 64 ) {
             if(diffScale == 0) {
@@ -1182,12 +1140,12 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
                             scale,
                             roundingMode);
                 }
-                
+
             }
         }
         BigInteger scaledDividend = this.getUnscaledValue();
         BigInteger scaledDivisor = divisor.getUnscaledValue(); // for scaling of 'u2'
-        
+
         if (diffScale > 0) {
             // Multiply 'u2'  by:  10^((s1 - s2) - scale)
             scaledDivisor = Multiplication.multiplyByTenPow(scaledDivisor, (int)diffScale);
@@ -1197,9 +1155,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         }
         return divideBigIntegers(scaledDividend, scaledDivisor, scale, roundingMode);
         }
-    
+
     private static BigDecimal divideBigIntegers(BigInteger scaledDividend, BigInteger scaledDivisor, int scale, RoundingMode roundingMode) {
-        
+
         BigInteger[] quotAndRem = scaledDividend.divideAndRemainder(scaledDivisor);  // quotient and remainder
         // If after division there is a remainder...
         BigInteger quotient = quotAndRem[0];
@@ -1216,10 +1174,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             // To look if there is a carry
             compRem = roundingBehavior(quotient.testBit(0) ? 1 : 0,
                     sign * (5 + compRem), roundingMode);
-            
+
         } else {
-            // Checking if:  remainder * 2 >= scaledDivisor 
-            compRem = remainder.abs().shiftLeft(1).compareTo(scaledDivisor.abs());
+            // Checking if:  remainder * 2 >= scaledDivisor
+            compRem = remainder.abs().shiftLeftOneBit().compareTo(scaledDivisor.abs());
             compRem = roundingBehavior(quotient.testBit(0) ? 1 : 0,
                     sign * (5 + compRem), roundingMode);
         }
@@ -1233,7 +1191,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         // Constructing the result with the appropriate unscaled value
         return new BigDecimal(quotient, scale);
     }
-    
+
     private static BigDecimal dividePrimitiveLongs(long scaledDividend, long scaledDivisor, int scale, RoundingMode roundingMode) {
         long quotient = scaledDividend / scaledDivisor;
         long remainder = scaledDividend % scaledDivisor;
@@ -1256,7 +1214,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * The scale of the result is the scale of {@code this}. If rounding is
      * required to meet the specified scale, then the specified rounding mode
      * {@code roundingMode} is applied.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @param roundingMode
@@ -1272,7 +1230,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @throws ArithmeticException
      *             if {@code roundingMode == ROUND_UNNECESSARY} and rounding is
      *             necessary according to the scale of this.
-     * @since Android 1.0
      */
     public BigDecimal divide(BigDecimal divisor, int roundingMode) {
         return divide(divisor, scale, RoundingMode.valueOf(roundingMode));
@@ -1283,7 +1240,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * The scale of the result is the scale of {@code this}. If rounding is
      * required to meet the specified scale, then the specified rounding mode
      * {@code roundingMode} is applied.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @param roundingMode
@@ -1297,7 +1254,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @throws ArithmeticException
      *             if {@code roundingMode == RoundingMode.UNNECESSARY} and
      *             rounding is necessary according to the scale of this.
-     * @since Android 1.0
      */
     public BigDecimal divide(BigDecimal divisor, RoundingMode roundingMode) {
         return divide(divisor, scale, roundingMode);
@@ -1309,7 +1265,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * and {@code divisor}. If the exact result requires more digits, then the
      * scale is adjusted accordingly. For example, {@code 1/128 = 0.0078125}
      * which has a scale of {@code 7} and precision {@code 5}.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @return {@code this / divisor}.
@@ -1319,7 +1275,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code divisor == 0}.
      * @throws ArithmeticException
      *             if the result cannot be represented exactly.
-     * @since Android 1.0
      */
     public BigDecimal divide(BigDecimal divisor) {
         BigInteger p = this.getUnscaledValue();
@@ -1376,7 +1331,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         newScale = toIntScale(diffScale + Math.max(k, l));
         // k >= 0  and  l >= 0  implies that  k - l  is in the 32-bit range
         i = k - l;
-        
+
         p = (i > 0) ? Multiplication.multiplyByFivePow(p, i)
         : p.shiftLeft(-i);
         return new BigDecimal(p, newScale);
@@ -1387,7 +1342,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * The result is rounded according to the passed context {@code mc}. If the
      * passed math context specifies precision {@code 0}, then this call is
      * equivalent to {@code this.divide(divisor)}.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @param mc
@@ -1400,7 +1355,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @throws ArithmeticException
      *             if {@code mc.getRoundingMode() == UNNECESSARY} and rounding
      *             is necessary according {@code mc.getPrecision()}.
-     * @since Android 1.0
      */
     public BigDecimal divide(BigDecimal divisor, MathContext mc) {
         /* Calculating how many zeros must be append to 'dividend'
@@ -1410,7 +1364,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         long diffScale = (long)scale - divisor.scale;
         long newScale = diffScale; // scale of the final quotient
         int compRem; // to compare the remainder
-        int i = 1; // index   
+        int i = 1; // index
         int lastPow = TEN_POW.length - 1; // last power of ten
         BigInteger integerQuot; // for temporal results
         BigInteger quotAndRem[] = {getUnscaledValue()};
@@ -1429,7 +1383,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         // Calculating the exact quotient with at least 'mc.precision()' digits
         if (quotAndRem[1].signum() != 0) {
             // Checking if:   2 * remainder >= divisor ?
-            compRem = quotAndRem[1].shiftLeft(1).compareTo( divisor.getUnscaledValue() );
+            compRem = quotAndRem[1].shiftLeftOneBit().compareTo( divisor.getUnscaledValue() );
             // quot := quot * 10 + r;     with 'r' in {-6,-5,-4, 0,+4,+5,+6}
             integerQuot = integerQuot.multiply(BigInteger.TEN)
             .add(BigInteger.valueOf(quotAndRem[0].signum() * (5 + compRem)));
@@ -1461,7 +1415,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns a new {@code BigDecimal} whose value is the integral part of
      * {@code this / divisor}. The quotient is rounded down towards zero to the
      * next integer. For example, {@code 0.5/0.2 = 2}.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @return integral part of {@code this / divisor}.
@@ -1469,7 +1423,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code divisor == null}.
      * @throws ArithmeticException
      *             if {@code divisor == 0}.
-     * @since Android 1.0
      */
     public BigDecimal divideToIntegralValue(BigDecimal divisor) {
         BigInteger integralValue; // the integer of result
@@ -1528,7 +1481,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * next integer. The rounding mode passed with the parameter {@code mc} is
      * not considered. But if the precision of {@code mc > 0} and the integral
      * part requires more digits, then an {@code ArithmeticException} is thrown.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @param mc
@@ -1542,7 +1495,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @throws ArithmeticException
      *             if {@code mc.getPrecision() > 0} and the result requires more
      *             digits to be represented.
-     * @since Android 1.0
      */
     public BigDecimal divideToIntegralValue(BigDecimal divisor, MathContext mc) {
         int mcPrecision = mc.getPrecision();
@@ -1560,22 +1512,22 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         if (quotPrecision <= 0) {
             quotAndRem[0] = BigInteger.ZERO;
         } else if (diffScale == 0) {
-            // CASE s1 == s2:  to calculate   u1 / u2 
+            // CASE s1 == s2:  to calculate   u1 / u2
             quotAndRem[0] = this.getUnscaledValue().divide( divisor.getUnscaledValue() );
         } else if (diffScale > 0) {
-            // CASE s1 >= s2:  to calculate   u1 / (u2 * 10^(s1-s2)  
+            // CASE s1 >= s2:  to calculate   u1 / (u2 * 10^(s1-s2)
             quotAndRem[0] = this.getUnscaledValue().divide(
                     divisor.getUnscaledValue().multiply(Multiplication.powerOf10(diffScale)) );
             // To chose  10^newScale  to get a quotient with at least 'mc.precision()' digits
             newScale = Math.min(diffScale, Math.max(mcPrecision - quotPrecision + 1, 0));
             // To calculate: (u1 / (u2 * 10^(s1-s2)) * 10^newScale
             quotAndRem[0] = quotAndRem[0].multiply(Multiplication.powerOf10(newScale));
-        } else {// CASE s2 > s1:   
-            /* To calculate the minimum power of ten, such that the quotient 
+        } else {// CASE s2 > s1:
+            /* To calculate the minimum power of ten, such that the quotient
              *   (u1 * 10^exp) / u2   has at least 'mc.precision()' digits. */
             long exp = Math.min(-diffScale, Math.max((long)mcPrecision - diffPrecision, 0));
             long compRemDiv;
-            // Let be:   (u1 * 10^exp) / u2 = [q,r]  
+            // Let be:   (u1 * 10^exp) / u2 = [q,r]
             quotAndRem = this.getUnscaledValue().multiply(Multiplication.powerOf10(exp)).
                     divideAndRemainder(divisor.getUnscaledValue());
             newScale += exp; // To fix the scale
@@ -1640,7 +1592,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * The remainder is defined as {@code this -
      * this.divideToIntegralValue(divisor) * divisor}.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @return {@code this % divisor}.
@@ -1648,7 +1600,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code divisor == null}.
      * @throws ArithmeticException
      *             if {@code divisor == 0}.
-     * @since Android 1.0
      */
     public BigDecimal remainder(BigDecimal divisor) {
         return divideAndRemainder(divisor)[1];
@@ -1661,7 +1612,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * this.divideToIntegralValue(divisor) * divisor}.
      * <p>
      * The specified rounding mode {@code mc} is used for the division only.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @param mc
@@ -1675,7 +1626,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code mc.getPrecision() > 0} and the result of {@code
      *             this.divideToIntegralValue(divisor, mc)} requires more digits
      *             to be represented.
-     * @since Android 1.0
      */
     public BigDecimal remainder(BigDecimal divisor, MathContext mc) {
         return divideAndRemainder(divisor, mc)[1];
@@ -1686,7 +1636,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * {@code this / divisor} at index 0 and the remainder {@code this %
      * divisor} at index 1. The quotient is rounded down towards zero to the
      * next integer.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @return {@code [this.divideToIntegralValue(divisor),
@@ -1697,7 +1647,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code divisor == 0}.
      * @see #divideToIntegralValue
      * @see #remainder
-     * @since Android 1.0
      */
     public BigDecimal[] divideAndRemainder(BigDecimal divisor) {
         BigDecimal quotAndRem[] = new BigDecimal[2];
@@ -1714,7 +1663,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * next integer. The rounding mode passed with the parameter {@code mc} is
      * not considered. But if the precision of {@code mc > 0} and the integral
      * part requires more digits, then an {@code ArithmeticException} is thrown.
-     * 
+     *
      * @param divisor
      *            value by which {@code this} is divided.
      * @param mc
@@ -1728,7 +1677,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code divisor == 0}.
      * @see #divideToIntegralValue
      * @see #remainder
-     * @since Android 1.0
      */
     public BigDecimal[] divideAndRemainder(BigDecimal divisor, MathContext mc) {
         BigDecimal quotAndRem[] = new BigDecimal[2];
@@ -1746,13 +1694,12 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * Implementation Note: The implementation is based on the ANSI standard
      * X3.274-1996 algorithm.
-     * 
+     *
      * @param n
      *            exponent to which {@code this} is raised.
      * @return {@code this ^ n}.
      * @throws ArithmeticException
      *             if {@code n < 0} or {@code n > 999999999}.
-     * @since Android 1.0
      */
     public BigDecimal pow(int n) {
         if (n == 0) {
@@ -1775,7 +1722,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * Implementation Note: The implementation is based on the ANSI standard
      * X3.274-1996 algorithm.
-     * 
+     *
      * @param n
      *            exponent to which {@code this} is raised.
      * @param mc
@@ -1783,7 +1730,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @return {@code this ^ n}.
      * @throws ArithmeticException
      *             if {@code n < 0} or {@code n > 999999999}.
-     * @since Android 1.0
      */
     public BigDecimal pow(int n, MathContext mc) {
         // The ANSI standard X3.274-1996 algorithm
@@ -1807,7 +1753,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             newPrecision = new MathContext( mcPrecision + elength + 1,
                     mc.getRoundingMode());
         }
-        // The result is calculated as if 'n' were positive        
+        // The result is calculated as if 'n' were positive
         accum = round(newPrecision);
         oneBitMask = Integer.highestOneBit(m) >> 1;
 
@@ -1830,9 +1776,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Returns a new {@code BigDecimal} whose value is the absolute value of
      * {@code this}. The scale of the result is the same as the scale of this.
-     * 
+     *
      * @return {@code abs(this)}
-     * @since Android 1.0
      */
     public BigDecimal abs() {
         return ((signum() < 0) ? negate() : this);
@@ -1842,11 +1787,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns a new {@code BigDecimal} whose value is the absolute value of
      * {@code this}. The result is rounded according to the passed context
      * {@code mc}.
-     * 
+     *
      * @param mc
      *            rounding mode and precision for the result of this operation.
      * @return {@code abs(this)}
-     * @since Android 1.0
      */
     public BigDecimal abs(MathContext mc) {
         // BEGIN android-changed
@@ -1859,9 +1803,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Returns a new {@code BigDecimal} whose value is the {@code -this}. The
      * scale of the result is the same as the scale of this.
-     * 
+     *
      * @return {@code -this}
-     * @since Android 1.0
      */
     public BigDecimal negate() {
         if(bitLength < 63 || (bitLength == 63 && smallValue!=Long.MIN_VALUE)) {
@@ -1873,11 +1816,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Returns a new {@code BigDecimal} whose value is the {@code -this}. The
      * result is rounded according to the passed context {@code mc}.
-     * 
+     *
      * @param mc
      *            rounding mode and precision for the result of this operation.
      * @return {@code -this}
-     * @since Android 1.0
      */
     public BigDecimal negate(MathContext mc) {
         // BEGIN android-changed
@@ -1890,9 +1832,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Returns a new {@code BigDecimal} whose value is {@code +this}. The scale
      * of the result is the same as the scale of this.
-     * 
+     *
      * @return {@code this}
-     * @since Android 1.0
      */
     public BigDecimal plus() {
         return this;
@@ -1901,11 +1842,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Returns a new {@code BigDecimal} whose value is {@code +this}. The result
      * is rounded according to the passed context {@code mc}.
-     * 
+     *
      * @param mc
      *            rounding mode and precision for the result of this operation.
-     * @return {@code this}
-     * @since Android 1.0
+     * @return {@code this}, rounded
      */
     public BigDecimal plus(MathContext mc) {
         return round(mc);
@@ -1913,19 +1853,17 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
 
     /**
      * Returns the sign of this {@code BigDecimal}.
-     * 
-     * @return {@code -1} if {@code this < 0}, 
+     *
+     * @return {@code -1} if {@code this < 0},
      *         {@code 0} if {@code this == 0},
-     *         {@code 1} if {@code this > 0}.
-     * @since Android 1.0
-     */
+     *         {@code 1} if {@code this > 0}.     */
     public int signum() {
         if( bitLength < 64) {
             return Long.signum( this.smallValue );
         }
         return getUnscaledValue().signum();
     }
-    
+
     private boolean isZero() {
         //Watch out: -1 has a bitLength=0
         return bitLength == 0 && this.smallValue != -1;
@@ -1936,9 +1874,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * digits behind the decimal point. The value of this {@code BigDecimal} is
      * the unsignedValue * 10^(-scale). If the scale is negative, then this
      * {@code BigDecimal} represents a big integer.
-     * 
+     *
      * @return the scale of this {@code BigDecimal}.
-     * @since Android 1.0
      */
     public int scale() {
         return scale;
@@ -1949,9 +1886,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * number of decimal digits used to represent this decimal. It is equivalent
      * to the number of digits of the unscaled value. The precision of {@code 0}
      * is {@code 1} (independent of the scale).
-     * 
+     *
      * @return the precision of this {@code BigDecimal}.
-     * @since Android 1.0
      */
     public int precision() {
         // Checking if the precision already was calculated
@@ -1987,9 +1923,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns the unscaled value (mantissa) of this {@code BigDecimal} instance
      * as a {@code BigInteger}. The unscaled value can be computed as {@code
      * this} 10^(scale).
-     * 
+     *
      * @return unscaled value (this * 10^(scale)).
-     * @since Android 1.0
      */
     public BigInteger unscaledValue() {
         return getUnscaledValue();
@@ -2004,7 +1939,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * If {@code mc.precision > 0} and {@code mc.roundingMode == UNNECESSARY},
      * then an {@code ArithmeticException} is thrown if the result cannot be
      * represented exactly within the given precision.
-     * 
+     *
      * @param mc
      *            rounding mode and precision for the result of this operation.
      * @return {@code this} rounded according to the passed context.
@@ -2012,7 +1947,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      *             if {@code mc.precision > 0} and {@code mc.roundingMode ==
      *             UNNECESSARY} and this cannot be represented within the given
      *             precision.
-     * @since Android 1.0
      */
     public BigDecimal round(MathContext mc) {
         BigDecimal thisBD = new BigDecimal(getUnscaledValue(), scale);
@@ -2031,7 +1965,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * removed. If these trailing digits are not zero, then the remaining
      * unscaled value has to be rounded. For this rounding operation the
      * specified rounding mode is used.
-     * 
+     *
      * @param newScale
      *            scale of the result returned.
      * @param roundingMode
@@ -2042,14 +1976,13 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @throws ArithmeticException
      *             if {@code roundingMode == ROUND_UNNECESSARY} and rounding is
      *             necessary according to the given scale.
-     * @since Android 1.0
      */
     public BigDecimal setScale(int newScale, RoundingMode roundingMode) {
         if (roundingMode == null) {
             throw new NullPointerException();
         }
         long diffScale = newScale - (long)scale;
-        // Let be:  'this' = [u,s]        
+        // Let be:  'this' = [u,s]
         if(diffScale == 0) {
             return this;
         }
@@ -2079,7 +2012,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * removed. If these trailing digits are not zero, then the remaining
      * unscaled value has to be rounded. For this rounding operation the
      * specified rounding mode is used.
-     * 
+     *
      * @param newScale
      *            scale of the result returned.
      * @param roundingMode
@@ -2090,7 +2023,6 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * @throws ArithmeticException
      *             if {@code roundingMode == ROUND_UNNECESSARY} and rounding is
      *             necessary according to the given scale.
-     * @since Android 1.0
      */
     public BigDecimal setScale(int newScale, int roundingMode) {
         return setScale(newScale, RoundingMode.valueOf(roundingMode));
@@ -2105,13 +2037,12 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * If no exception is thrown, then the following equation holds: {@code
      * x.setScale(s).compareTo(x) == 0}.
-     * 
+     *
      * @param newScale
      *            scale of the result returned.
      * @return a new {@code BigDecimal} instance with the specified scale.
      * @throws ArithmeticException
      *             if rounding would be necessary.
-     * @since Android 1.0
      */
     public BigDecimal setScale(int newScale) {
         return setScale(newScale, RoundingMode.UNNECESSARY);
@@ -2128,11 +2059,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * Note, that {@code movePointLeft(0)} returns a result which is
      * mathematically equivalent, but which has {@code scale >= 0}.
-     * 
+     *
      * @param n
      *            number of placed the decimal point has to be moved.
-     * @return {@code this} 10^({@code -n}).
-     * @since Android 1.0
+     * @return {@code this * 10^(-n}).
      */
     public BigDecimal movePointLeft(int n) {
         return movePoint(scale + (long)n);
@@ -2170,11 +2100,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * Note, that {@code movePointRight(0)} returns a result which is
      * mathematically equivalent, but which has scale >= 0.
-     * 
+     *
      * @param n
      *            number of placed the decimal point has to be moved.
-     * @return {@code this} 10^{@code n}.
-     * @since Android 1.0
+     * @return {@code this * 10^n}.
      */
     public BigDecimal movePointRight(int n) {
         return movePoint(scale - (long)n);
@@ -2182,16 +2111,15 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
 
     /**
      * Returns a new {@code BigDecimal} whose value is {@code this} 10^{@code n}.
-     * The scale of the result is {@code this.scale()} - {@code n}. 
+     * The scale of the result is {@code this.scale()} - {@code n}.
      * The precision of the result is the precision of {@code this}.
      * <p>
      * This method has the same effect as {@link #movePointRight}, except that
      * the precision is not changed.
-     * 
+     *
      * @param n
      *            number of places the decimal point has to be moved.
-     * @return {@code this} 10^{@code n}
-     * @since Android 1.0
+     * @return {@code this * 10^n}
      */
     public BigDecimal scaleByPowerOfTen(int n) {
         long newScale = scale - (long)n;
@@ -2210,10 +2138,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * this} but with a unscaled value where the trailing zeros have been
      * removed. If the unscaled value of {@code this} has n trailing zeros, then
      * the scale and the precision of the result has been reduced by n.
-     * 
+     *
      * @return a new {@code BigDecimal} instance equivalent to this where the
      *         trailing zeros of the unscaled value have been removed.
-     * @since Android 1.0
      */
     public BigDecimal stripTrailingZeros() {
         int i = 1; // 1 <= i <= 18
@@ -2221,13 +2148,11 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         long newScale = scale;
 
         if (isZero()) {
-            // BEGIN android-changed
             return new BigDecimal("0");
-            // END android-changed
         }
         BigInteger strippedBI = getUnscaledValue();
         BigInteger[] quotAndRem;
-        
+
         // while the number is even...
         while (!strippedBI.testBit(0)) {
             // To divide by 10^i
@@ -2261,14 +2186,13 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * difference is 0 then 0 is returned. This means, that if two decimal
      * instances are compared which are equal in value but differ in scale, then
      * these two instances are considered as equal.
-     * 
+     *
      * @param val
      *            value to be compared with {@code this}.
      * @return {@code 1} if {@code this > val}, {@code -1} if {@code this < val},
      *         {@code 0} if {@code this == val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * @since Android 1.0
      */
     public int compareTo(BigDecimal val) {
         int thisSign = signum();
@@ -2308,37 +2232,35 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * their unscaled value and their scale is equal. For example, 1.0
      * (10*10^(-1)) is not equal to 1.00 (100*10^(-2)). Similarly, zero
      * instances are not equal if their scale differs.
-     * 
+     *
      * @param x
      *            object to be compared with {@code this}.
      * @return true if {@code x} is a {@code BigDecimal} and {@code this == x}.
-     * @since Android 1.0
      */
     @Override
-    public boolean equals(Object x) {        
+    public boolean equals(Object x) {
         if (this == x) {
             return true;
         }
         if (x instanceof BigDecimal) {
-            BigDecimal x1 = (BigDecimal) x;            
-            return x1.scale == scale                   
+            BigDecimal x1 = (BigDecimal) x;
+            return x1.scale == scale
                    && (bitLength < 64 ? (x1.smallValue == smallValue)
                     : intVal.equals(x1.intVal));
-                        
-             
-        } 
-        return false;       
-    }   
+
+
+        }
+        return false;
+    }
 
     /**
      * Returns the minimum of this {@code BigDecimal} and {@code val}.
-     * 
+     *
      * @param val
      *            value to be used to compute the minimum with this.
      * @return {@code min(this, val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * @since Android 1.0
      */
     public BigDecimal min(BigDecimal val) {
         return ((compareTo(val) <= 0) ? this : val);
@@ -2346,13 +2268,12 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
 
     /**
      * Returns the maximum of this {@code BigDecimal} and {@code val}.
-     * 
+     *
      * @param val
      *            value to be used to compute the maximum with this.
      * @return {@code max(this, val}.
      * @throws NullPointerException
      *             if {@code val == null}.
-     * @since Android 1.0
      */
     public BigDecimal max(BigDecimal val) {
         return ((compareTo(val) >= 0) ? this : val);
@@ -2360,23 +2281,22 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
 
     /**
      * Returns a hash code for this {@code BigDecimal}.
-     * 
+     *
      * @return hash code for {@code this}.
-     * @since Android 1.0
      */
     @Override
-    public int hashCode() {        
+    public int hashCode() {
         if (hashCode != 0) {
             return hashCode;
         }
         if (bitLength < 64) {
             hashCode = (int)(smallValue & 0xffffffff);
             hashCode = 33 * hashCode +  (int)((smallValue >> 32) & 0xffffffff);
-            hashCode = 17 * hashCode + scale;           
+            hashCode = 17 * hashCode + scale;
             return hashCode;
         }
-        hashCode = 17 * intVal.hashCode() + scale;        
-        return hashCode;        
+        hashCode = 17 * intVal.hashCode() + scale;
+        return hashCode;
     }
 
     /**
@@ -2386,10 +2306,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * If the scale is negative or if {@code scale - precision >= 6} then
      * scientific notation is used.
-     * 
+     *
      * @return a string representation of {@code this} in scientific notation if
      *         necessary.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -2440,10 +2359,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * engineering notation is used. Engineering notation is similar to the
      * scientific notation except that the exponent is made to be a multiple of
      * 3 such that the integer part is >= 1 and < 1000.
-     * 
+     *
      * @return a string representation of {@code this} in engineering notation
      *         if necessary.
-     * @since Android 1.0
      */
     public String toEngineeringString() {
         String intString = getUnscaledValue().toString();
@@ -2511,9 +2429,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * {@code false}.
      * <p>
      * {@code x.compareTo(new BigDecimal(x.toPlainString())} returns {@code 0}.
-     * 
+     *
      * @return a string representation of {@code this} without exponent part.
-     * @since Android 1.0
      */
     public String toPlainString() {
         String intStr = getUnscaledValue().toString();
@@ -2526,7 +2443,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         StringBuffer result = new StringBuffer(intStr.length() + 1 + Math.abs(scale));
 
         if (begin == 1) {
-            // If the number is negative, we insert a '-' character at front 
+            // If the number is negative, we insert a '-' character at front
             result.append('-');
         }
         if (scale > 0) {
@@ -2559,9 +2476,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Returns this {@code BigDecimal} as a big integer instance. A fractional
      * part is discarded.
-     * 
+     *
      * @return this {@code BigDecimal} as a big integer instance.
-     * @since Android 1.0
      */
     public BigInteger toBigInteger() {
         if ((scale == 0) || (isZero())) {
@@ -2577,11 +2493,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns this {@code BigDecimal} as a big integer instance if it has no
      * fractional part. If this {@code BigDecimal} has a fractional part, i.e.
      * if rounding would be necessary, an {@code ArithmeticException} is thrown.
-     * 
+     *
      * @return this {@code BigDecimal} as a big integer value.
      * @throws ArithmeticException
      *             if rounding is necessary.
-     * @since Android 1.0
      */
     public BigInteger toBigIntegerExact() {
         if ((scale == 0) || (isZero())) {
@@ -2597,7 +2512,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             }
             integerAndFraction = getUnscaledValue().divideAndRemainder(Multiplication.powerOf10(scale));
             if (integerAndFraction[1].signum() != 0) {
-                // It exists a non-zero fractional part 
+                // It exists a non-zero fractional part
                 // math.08=Rounding necessary
                 throw new ArithmeticException(Messages.getString("math.08")); //$NON-NLS-1$
             }
@@ -2609,9 +2524,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns this {@code BigDecimal} as an long value. Any fractional part is
      * discarded. If the integral part of {@code this} is too big to be
      * represented as an long, then {@code this} % 2^64 is returned.
-     * 
+     *
      * @return this {@code BigDecimal} as a long value.
-     * @since Android 1.0
      */
     @Override
     public long longValue() {
@@ -2628,11 +2542,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns this {@code BigDecimal} as a long value if it has no fractional
      * part and if its value fits to the int range ([-2^{63}..2^{63}-1]). If
      * these conditions are not met, an {@code ArithmeticException} is thrown.
-     * 
+     *
      * @return this {@code BigDecimal} as a long value.
      * @throws ArithmeticException
      *             if rounding is necessary or the number doesn't fit in a long.
-     * @since Android 1.0
      */
     public long longValueExact() {
         return valueExact(64);
@@ -2642,9 +2555,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns this {@code BigDecimal} as an int value. Any fractional part is
      * discarded. If the integral part of {@code this} is too big to be
      * represented as an int, then {@code this} % 2^32 is returned.
-     * 
+     *
      * @return this {@code BigDecimal} as a int value.
-     * @since Android 1.0
      */
     @Override
     public int intValue() {
@@ -2662,11 +2574,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns this {@code BigDecimal} as a int value if it has no fractional
      * part and if its value fits to the int range ([-2^{31}..2^{31}-1]). If
      * these conditions are not met, an {@code ArithmeticException} is thrown.
-     * 
+     *
      * @return this {@code BigDecimal} as a int value.
      * @throws ArithmeticException
      *             if rounding is necessary or the number doesn't fit in a int.
-     * @since Android 1.0
      */
     public int intValueExact() {
         return (int)valueExact(32);
@@ -2676,12 +2587,11 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns this {@code BigDecimal} as a short value if it has no fractional
      * part and if its value fits to the short range ([-2^{15}..2^{15}-1]). If
      * these conditions are not met, an {@code ArithmeticException} is thrown.
-     * 
+     *
      * @return this {@code BigDecimal} as a short value.
      * @throws ArithmeticException
      *             if rounding is necessary of the number doesn't fit in a
      *             short.
-     * @since Android 1.0
      */
     public short shortValueExact() {
         return (short)valueExact(16);
@@ -2691,11 +2601,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Returns this {@code BigDecimal} as a byte value if it has no fractional
      * part and if its value fits to the byte range ([-128..127]). If these
      * conditions are not met, an {@code ArithmeticException} is thrown.
-     * 
+     *
      * @return this {@code BigDecimal} as a byte value.
      * @throws ArithmeticException
      *             if rounding is necessary or the number doesn't fit in a byte.
-     * @since Android 1.0
      */
     public byte byteValueExact() {
         return (byte)valueExact(8);
@@ -2716,9 +2625,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * <p>
      * Similarly, if the instance {@code new BigDecimal(16777217)} is converted
      * to a float, the result is {@code 1.6777216E}7.
-     * 
+     *
      * @return this {@code BigDecimal} as a float value.
-     * @since Android 1.0
      */
     @Override
     public float floatValue() {
@@ -2754,9 +2662,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * Similarly, if the instance {@code new BigDecimal(9007199254740993L)} is
      * converted to a double, the result is {@code 9.007199254740992E15}.
      * <p>
-     * 
+     *
      * @return this {@code BigDecimal} as a double value.
-     * @since Android 1.0
      */
     @Override
     public double doubleValue() {
@@ -2766,14 +2673,14 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         int discardedSize;
         long powerOfTwo = this.bitLength - (long)(scale / LOG10_2);
         long bits; // IEEE-754 Standard
-        long tempBits; // for temporal calculations     
+        long tempBits; // for temporal calculations
         BigInteger mantisa;
 
         if ((powerOfTwo < -1074) || (sign == 0)) {
-            // Cases which 'this' is very small            
+            // Cases which 'this' is very small
             return (sign * 0.0d);
         } else if (powerOfTwo > 1025) {
-            // Cases which 'this' is very large            
+            // Cases which 'this' is very large
             return (sign * Double.POSITIVE_INFINITY);
         }
         mantisa = getUnscaledValue().abs();
@@ -2796,7 +2703,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             // Computing (mantisa * 2^k) / 10^s
             quotAndRem = mantisa.divideAndRemainder(powerOfTen);
             // To check if the fractional part >= 0.5
-            compRem = quotAndRem[1].shiftLeft(1).compareTo(powerOfTen);
+            compRem = quotAndRem[1].shiftLeftOneBit().compareTo(powerOfTen);
             // To add two rounded bits at end of mantisa
             mantisa = quotAndRem[0].shiftLeft(2).add(
                     BigInteger.valueOf((compRem * (compRem + 3)) / 2 + 1));
@@ -2808,13 +2715,13 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             // mantisa = (abs(u) * 10^s) >> (n - 54)
             bits = mantisa.shiftRight(discardedSize).longValue();
             tempBits = bits;
-            // #bits = 54, to check if the discarded fraction produces a carry             
+            // #bits = 54, to check if the discarded fraction produces a carry
             if ((((bits & 1) == 1) && (lowestSetBit < discardedSize))
                     || ((bits & 3) == 3)) {
                 bits += 2;
             }
         } else {// (n <= 54)
-            // mantisa = (abs(u) * 10^s) << (54 - n)                
+            // mantisa = (abs(u) * 10^s) << (54 - n)
             bits = mantisa.longValue() << -discardedSize;
             tempBits = bits;
             // #bits = 54, to check if the discarded fraction produces a carry:
@@ -2832,7 +2739,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             bits >>= 2;
             exponent += discardedSize + 1;
         }
-        // To test if the 53-bits number fits in 'double'            
+        // To test if the 53-bits number fits in 'double'
         if (exponent > 2046) {// (exponent - bias > 1023)
             return (sign * Double.POSITIVE_INFINITY);
         } else if (exponent <= 0) {// (exponent - bias <= -1023)
@@ -2840,7 +2747,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             if (exponent < -53) {// exponent - bias < -1076
                 return (sign * 0.0d);
             }
-            // -1076 <= exponent - bias <= -1023 
+            // -1076 <= exponent - bias <= -1023
             // To discard '- exponent + 1' bits
             bits = tempBits >> 1;
             tempBits = bits & (-1L >>> (63 + exponent));
@@ -2871,9 +2778,8 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * For class {@code BigDecimal}, the ULP of a number is simply 10^(-scale).
      * <p>
      * For example, {@code new BigDecimal(0.1).ulp()} returns {@code 1E-55}.
-     * 
+     *
      * @return unit in the last place (ULP) of this {@code BigDecimal} instance.
-     * @since Android 1.0
      */
     public BigDecimal ulp() {
         return valueOf(1, scale);
@@ -2885,7 +2791,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * It does all rounding work of the public method
      * {@code round(MathContext)}, performing an inplace rounding
      * without creating a new object.
-     * 
+     *
      * @param mc
      *            the {@code MathContext} for perform the rounding.
      * @see #round(MathContext)
@@ -2916,7 +2822,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         // If the discarded fraction is non-zero, perform rounding
         if (integerAndFraction[1].signum() != 0) {
             // To check if the discarded fraction >= 0.5
-            compRem = (integerAndFraction[1].abs().shiftLeft(1).compareTo(sizeOfFraction));
+            compRem = (integerAndFraction[1].abs().shiftLeftOneBit().compareTo(sizeOfFraction));
             // To look if there is a carry
             compRem =  roundingBehavior( integerAndFraction[0].testBit(0) ? 1 : 0,
                     integerAndFraction[1].signum() * (5 + compRem),
@@ -2943,7 +2849,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * This method implements an efficient rounding for numbers which unscaled
      * value fits in the type {@code long}.
-     * 
+     *
      * @param mc
      *            the context to use
      * @param discardedPrecision
@@ -2983,7 +2889,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
     /**
      * Return an increment that can be -1,0 or 1, depending of
      * {@code roundingMode}.
-     * 
+     *
      * @param parityBit
      *            can be 0 or 1, it's only used in the case
      *            {@code HALF_EVEN}
@@ -3039,7 +2945,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * the range of the primitive type. If the number fits in the primitive type
      * returns this number as {@code long}, otherwise throws an
      * exception.
-     * 
+     *
      * @param bitLengthOfType
      *            number of bits of the type whose value will be calculated
      *            exactly
@@ -3064,7 +2970,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * it calculates a very good approximation efficiently . Note that this
      * value will be {@code precision()} or {@code precision()-1}
      * in the worst case.
-     * 
+     *
      * @return an approximation of {@code precision()} value
      */
     private int aproxPrecision() {
@@ -3079,7 +2985,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * It tests if a scale of type {@code long} fits in 32 bits. It
      * returns the same scale being casted to {@code int} type when is
      * possible, otherwise throws an exception.
-     * 
+     *
      * @param longScale
      *            a 64 bit scale
      * @return a 32 bit scale when is possible
@@ -3106,7 +3012,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      * {@code longScale < Integer.MIN_VALUE} the scale will be
      * {@code Integer.MIN_VALUE}; otherwise {@code longScale} is
      * casted to the type {@code int}.
-     * 
+     *
      * @param longScale
      *            the scale to which the value 0 will be scaled.
      * @return the value 0 scaled by the closer scale of type {@code int}.
@@ -3152,7 +3058,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         }
         return intVal;
     }
-    
+
     private void setUnscaledValue(BigInteger unscaledValue) {
         this.intVal = unscaledValue;
         this.bitLength = unscaledValue.bitLength();
@@ -3160,19 +3066,19 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             this.smallValue = unscaledValue.longValue();
         }
     }
-    
+
     private static int bitLength(long smallValue) {
         if(smallValue < 0) {
             smallValue = ~smallValue;
         }
         return 64 - Long.numberOfLeadingZeros(smallValue);
     }
-    
+
     private static int bitLength(int smallValue) {
         if(smallValue < 0) {
             smallValue = ~smallValue;
         }
         return 32 - Integer.numberOfLeadingZeros(smallValue);
     }
-    
+
 }

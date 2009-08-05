@@ -14,21 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 // BEGIN android-note
 // Since the original Harmony Code of the BigInteger class was strongly modified,
@@ -40,12 +25,13 @@ package java.math;
 
 import java.util.Arrays;
 
+/**
+ * Provides primality probabilistic methods.
+ */
 class Primality {
 
     /** Just to denote that this class can't be instantiated. */
     private Primality() {}
-
-    /* Private Fields */
 
     /** All prime numbers with bit length lesser than 10 bits. */
     private static final int primes[] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
@@ -94,14 +80,12 @@ class Primality {
         }
     }
 
-    /* Package Methods */
-
     /**
      * It uses the sieve of Eratosthenes to discard several composite numbers in
      * some appropriate range (at the moment {@code [this, this + 1024]}). After
      * this process it applies the Miller-Rabin test to the numbers that were
      * not discarded in the sieve.
-     * 
+     *
      * @see BigInteger#nextProbablePrime()
      * @see #millerRabin(BigInteger, int)
      */
