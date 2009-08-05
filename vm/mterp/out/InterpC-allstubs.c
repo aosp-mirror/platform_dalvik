@@ -531,7 +531,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
             ADJUST_PC(_pcadj);                                              \
             glue->entryPoint = _entryPoint;                                 \
             LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
-                glue->self->threadId, (_entryPoint), (_pcadj));             \
+                self->threadId, (_entryPoint), (_pcadj));                   \
             GOTO_bail_switch();                                             \
         }                                                                   \
     }
