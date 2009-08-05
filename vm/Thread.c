@@ -27,6 +27,7 @@
 #include <sys/resource.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #if defined(HAVE_PRCTL)
 #include <sys/prctl.h>
@@ -2889,35 +2890,40 @@ static const int kNiceValues[10] = {
 };
 
 /*
- * Change the scheduler cgroup of a pid
+ * Change the scheduler cgroup of the current thread.
+ *
+ * Returns 0 on success.
  */
 int dvmChangeThreadSchedulerGroup(const char *cgroup)
 {
 #ifdef HAVE_ANDROID_OS
-    FILE *fp;
+    int fd;
     char path[255];
-    int rc;
 
-    sprintf(path, "/dev/cpuctl/%s/tasks", (cgroup ? cgroup : ""));
+    snprintf(path, sizeof(path), "/dev/cpuctl/%s/tasks", (cgroup ? cgroup :""));
 
-    if (!(fp = fopen(path, "w"))) {
+    if ((fd = open(path, O_WRONLY)) < 0) {
+        int err = errno;
 #if ENABLE_CGROUP_ERR_LOGGING
-        LOGW("Unable to open %s (%s)\n", path, strerror(errno));
+        LOGW("Unable to open %s (%s)\n", path, strerror(err));
 #endif
-        return -errno;
+        return -err;
     }
 
-    rc = fprintf(fp, "0");
-    fclose(fp);
-
-    if (rc < 0) {
+    if (write(fd, "0", 1) < 0) {
+        int err = errno;
 #if ENABLE_CGROUP_ERR_LOGGING
-        LOGW("Unable to move pid %d to cgroup %s (%s)\n", getpid(),
-             (cgroup ? cgroup : "<default>"), strerror(errno));
+        LOGW("Unable to move tid %d to cgroup %s (%s)\n",
+            dvmThreadSelf()->systemTid,
+            (cgroup ? cgroup : "<default>"), strerror(err));
 #endif
+        close(fd);
+        return -err;
     }
+    close(fd);
 
-    return (rc < 0) ? errno : 0;
+    return 0;
+
 #else // HAVE_ANDROID_OS
     return 0;
 #endif
@@ -2940,7 +2946,7 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
     }
     newNice = kNiceValues[newPriority-1];
 
-    if (newPriority >= ANDROID_PRIORITY_BACKGROUND) {
+    if (newNice >= ANDROID_PRIORITY_BACKGROUND) {
         dvmChangeThreadSchedulerGroup("bg_non_interactive");
     } else if (getpriority(PRIO_PROCESS, pid) >= ANDROID_PRIORITY_BACKGROUND) {
         dvmChangeThreadSchedulerGroup(NULL);
@@ -3019,6 +3025,56 @@ void dvmDumpThread(Thread* thread, bool isRunning)
 }
 
 /*
+ * Try to get the scheduler group.
+ *
+ * The data from /proc/<pid>/cgroup looks like:
+ *  2:cpu:/bg_non_interactive
+ *
+ * We return the part after the "/", which will be an empty string for
+ * the default cgroup.  If the string is longer than "bufLen", the string
+ * will be truncated.
+ */
+static bool getSchedulerGroup(Thread* thread, char* buf, size_t bufLen)
+{
+#ifdef HAVE_ANDROID_OS
+    char pathBuf[32];
+    char readBuf[256];
+    ssize_t count;
+    int fd;
+
+    snprintf(pathBuf, sizeof(pathBuf), "/proc/%d/cgroup", thread->systemTid);
+    if ((fd = open(pathBuf, O_RDONLY)) < 0) {
+        LOGV("open(%s) failed: %s\n", pathBuf, strerror(errno));
+        return false;
+    }
+
+    count = read(fd, readBuf, sizeof(readBuf));
+    if (count <= 0) {
+        LOGV("read(%s) failed (%d): %s\n",
+            pathBuf, (int) count, strerror(errno));
+        close(fd);
+        return false;
+    }
+    close(fd);
+
+    readBuf[--count] = '\0';    /* remove the '\n', now count==strlen */
+
+    char* cp = strchr(readBuf, '/');
+    if (cp == NULL) {
+        readBuf[sizeof(readBuf)-1] = '\0';
+        LOGV("no '/' in '%s' (file=%s count=%d)\n",
+            readBuf, pathBuf, (int) count);
+        return false;
+    }
+
+    memcpy(buf, cp+1, count);   /* count-1 for cp+1, count+1 for NUL */
+    return true;
+#else
+    return false;
+#endif
+}
+
+/*
  * Print information about the specified thread.
  *
  * Works best when the thread in question is "self" or has been suspended.
@@ -3038,6 +3094,7 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     StringObject* nameStr;
     char* threadName = NULL;
     char* groupName = NULL;
+    char schedulerGroupBuf[32];
     bool isDaemon;
     int priority;               // java.lang.Thread priority
     int policy;                 // pthread policy
@@ -3059,6 +3116,12 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         LOGW("Warning: pthread_getschedparam failed\n");
         policy = -1;
         sp.sched_priority = -1;
+    }
+    if (!getSchedulerGroup(thread, schedulerGroupBuf,sizeof(schedulerGroupBuf)))
+    {
+        strcpy(schedulerGroupBuf, "unknown");
+    } else if (schedulerGroupBuf[0] == '\0') {
+        strcpy(schedulerGroupBuf, "default");
     }
 
     /* a null value for group is not expected, but deal with it anyway */
@@ -3087,9 +3150,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         groupName, thread->suspendCount, thread->dbgSuspendCount,
         thread->isSuspended ? 'Y' : 'N', thread->threadObj, thread);
     dvmPrintDebugMessage(target,
-        "  | sysTid=%d nice=%d sched=%d/%d handle=%d\n",
+        "  | sysTid=%d nice=%d sched=%d/%d cgrp=%s handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),
-        policy, sp.sched_priority, (int)thread->handle);
+        policy, sp.sched_priority, schedulerGroupBuf, (int)thread->handle);
 
 #ifdef WITH_MONITOR_TRACKING
     if (!isRunning) {
