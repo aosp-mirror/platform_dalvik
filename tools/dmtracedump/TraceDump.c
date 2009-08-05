@@ -14,6 +14,7 @@
 ** See the License for the specific language governing permissions and 
 ** limitations under the License.
 */
+
 /*
  * Process dmtrace output.
  *
@@ -127,6 +128,7 @@ typedef struct DataHeader {
 typedef struct ThreadEntry {
     int         threadId;
     const char* threadName;
+    uint64_t    elapsedTime;
 } ThreadEntry;
 
 struct MethodEntry;
@@ -178,7 +180,7 @@ typedef struct MethodEntry {
  * The parsed contents of the key file.
  */
 typedef struct DataKeys {
-    char*        fileData;        /* contents of the entire file */
+    char*        fileData;      /* contents of the entire file */
     long         fileLen;
     int          numThreads;
     ThreadEntry* threads;
@@ -393,6 +395,37 @@ int compareElapsedInclusive(const void *a, const void *b) {
         if (result == 0)
             result = strcmp(methodA->signature, methodB->signature);
     }
+    return result;
+}
+
+/*
+ * This comparison function is called from qsort() to sort
+ * threads into decreasing order of elapsed time.
+ */
+int compareElapsed(const void *a, const void *b) {
+    const ThreadEntry *threadA, *threadB;
+    uint64_t elapsed1, elapsed2;
+    int result = 0;
+
+    threadA = (ThreadEntry const *)a;
+    threadB = (ThreadEntry const *)b;
+    elapsed1 = threadA->elapsedTime;
+    elapsed2 = threadB->elapsedTime;
+    if (elapsed1 < elapsed2)
+        return 1;
+    if (elapsed1 > elapsed2)
+        return -1;
+
+    /* If the elapsed times of two threads are equal, then sort them
+     * by thread id.
+     */
+    int idA = threadA->threadId;
+    int idB = threadB->threadId;
+    if (idA < idB)
+        result = -1;
+    if (idA > idB)
+        result = 1;
+
     return result;
 }
 
@@ -1078,7 +1111,7 @@ int parseDataHeader(FILE *fp, DataHeader* pHeader)
 }
 
 /*
- * Look up a method by it's method ID.
+ * Look up a method by its method ID (using binary search).
  *
  * Returns NULL if no matching method was found.
  */
@@ -1096,7 +1129,7 @@ MethodEntry* lookupMethod(DataKeys* pKeys, unsigned int methodId)
         id = pKeys->methods[mid].methodId;
         if (id == methodId)           /* match */
             return &pKeys->methods[mid];
-        else if (id < methodId)       /* too low */
+	else if (id < methodId)       /* too low */
             lo = mid + 1;
         else                          /* too high */
             hi = mid - 1;
@@ -1490,6 +1523,7 @@ void outputTableOfContents()
     printf("<ul>\n");
     printf("  <li><a href=\"#exclusive\">Exclusive profile</a></li>\n");
     printf("  <li><a href=\"#inclusive\">Inclusive profile</a></li>\n");
+    printf("  <li><a href=\"#thread\">Thread profile</a></li>\n");
     printf("  <li><a href=\"#class\">Class/method profile</a></li>\n");
     printf("  <li><a href=\"#method\">Method/class profile</a></li>\n");
     printf("</ul>\n\n");
@@ -1500,6 +1534,7 @@ void outputNavigationBar()
     printf("<a href=\"#contents\">[Top]</a>\n");
     printf("<a href=\"#exclusive\">[Exclusive]</a>\n");
     printf("<a href=\"#inclusive\">[Inclusive]</a>\n");
+    printf("<a href=\"#thread\">[Thread]</a>\n");
     printf("<a href=\"#class\">[Class]</a>\n");
     printf("<a href=\"#method\">[Method]</a>\n");
     printf("<br><br>\n");
@@ -1763,6 +1798,65 @@ void printInclusiveProfile(MethodEntry **pMethods, int numMethods,
     if (gOptions.outputHtml) {
         printf("</pre>\n");
     }
+}
+
+void printThreadProfile(ThreadEntry *pThreads, int numThreads, uint64_t sumThreadTime)
+{
+    int ii;
+    ThreadEntry thread;
+    double total, per, sum_per;
+    uint64_t sum;
+    char threadBuf[HTML_BUFSIZE];
+    char anchor_buf[80];
+    char *anchor_close = "";
+
+    total = sumThreadTime;
+    anchor_buf[0] = 0;
+    if (gOptions.outputHtml) {
+        anchor_close = "</a>";
+        printf("<a name=\"thread\"></a>\n");
+        printf("<hr>\n");
+        outputNavigationBar();
+    } else {
+        printf("\n%s\n", profileSeparator);
+    }
+
+    /* Sort the threads into decreasing order of elapsed time. */
+    qsort(pThreads, numThreads, sizeof(ThreadEntry), compareElapsed);
+
+    printf("\nElapsed times for each thread, sorted by elapsed time.\n\n");
+
+    if (gOptions.outputHtml) {
+        printf("<br><br>\n<pre>\n");
+    }
+
+    printf("    Usecs   self %%  sum %% tid   ThreadName\n");
+    sum = 0;
+
+    for (ii = 0; ii < numThreads; ++ii) {
+        int threadId;
+        char *threadName;
+        uint64_t time;
+
+        thread = pThreads[ii];
+
+        threadId = thread.threadId;
+        threadName = (char*)(thread.threadName);
+        time = thread.elapsedTime;
+
+        sum += time;
+        per = 100.0 * time / total;
+        sum_per = 100.0 * sum / total;
+
+        if (gOptions.outputHtml) {
+	    threadName = htmlEscape(threadName, threadBuf, HTML_BUFSIZE);
+        }
+	printf("%9llu  %6.2f %6.2f  %3d   %s\n", time, per, sum_per, threadId, threadName);
+    }
+
+    if (gOptions.outputHtml)
+        printf("</pre>\n");
+
 }
 
 void createClassList(TraceData* traceData, MethodEntry **pMethods, int numMethods)
@@ -2416,16 +2510,25 @@ DataKeys* parseDataKeys(TraceData* traceData, const char* traceFileName, uint64_
      */
     CallStack *pStack;
     int threadId;
+    uint64_t elapsedTime = 0;
     uint64_t sumThreadTime = 0;
     for (threadId = 0; threadId < MAX_THREADS; ++threadId) {
+
         pStack = traceData->stacks[threadId];
 
         /* If this thread never existed, then continue with next thread */
         if (pStack == NULL)
             continue;
 
-        /* Also, add up the time taken by all of the threads */
-        sumThreadTime += pStack->lastEventTime - pStack->threadStartTime;
+        /* Calculate time spent in thread, and add it to total time */
+        elapsedTime = pStack->lastEventTime - pStack->threadStartTime;
+        sumThreadTime += elapsedTime;
+
+	/* Save the per-thread elapsed time in the DataKeys struct */
+	for (ii = 0; ii < dataKeys->numThreads; ++ii) {
+	    if (dataKeys->threads[ii].threadId == threadId)
+	        dataKeys->threads[ii].elapsedTime = elapsedTime;
+	}
 
         for (ii = 0; ii < pStack->top; ++ii) {
             if (ii == 0)
@@ -2479,7 +2582,8 @@ MethodEntry** parseMethodEntries(DataKeys* dataKeys)
 /*
  * Produce a function profile from the following methods
  */
-void profileTrace(TraceData* traceData, MethodEntry **pMethods, int numMethods, uint64_t sumThreadTime)
+void profileTrace(TraceData* traceData, MethodEntry **pMethods, int numMethods, uint64_t sumThreadTime,
+                  ThreadEntry *pThreads, int numThreads)
 {
     /* Print the html header, if necessary */
     if (gOptions.outputHtml) {
@@ -2489,6 +2593,8 @@ void profileTrace(TraceData* traceData, MethodEntry **pMethods, int numMethods, 
 
     printExclusiveProfile(pMethods, numMethods, sumThreadTime);
     printInclusiveProfile(pMethods, numMethods, sumThreadTime);
+
+    printThreadProfile(pThreads, numThreads, sumThreadTime);
 
     createClassList(traceData, pMethods, numMethods);
     printClassProfiles(traceData, sumThreadTime);
@@ -2844,7 +2950,7 @@ int main(int argc, char** argv)
     if (gOptions.threshold < 0 || 100 <= gOptions.threshold) {
         gOptions.threshold = 20;
     }
-    
+
     if (gOptions.dump) {
         dumpTrace();
         return 0;
@@ -2870,7 +2976,8 @@ int main(int argc, char** argv)
         freeDataKeys(d2);
     } else {
         MethodEntry** methods = parseMethodEntries(dataKeys);
-        profileTrace(&data1, methods, dataKeys->numMethods, sumThreadTime);
+        profileTrace(&data1, methods, dataKeys->numMethods, sumThreadTime,
+                     dataKeys->threads, dataKeys->numThreads);
         if (gOptions.graphFileName != NULL) {
             createInclusiveProfileGraphNew(dataKeys);
         }
