@@ -498,9 +498,12 @@ struct DvmGlobals {
 
     /*
      * JDWP debugger support.
+     *
+     * Note "debuggerActive" is accessed from mterp, so its storage size and
+     * meaning must not be changed without updating the assembly sources.
      */
     bool        debuggerConnected;      /* debugger or DDMS is connected */
-    bool        debuggerActive;         /* debugger is making requests */
+    u1          debuggerActive;         /* debugger is making requests */
     JdwpState*  jdwpState;
 
     /*

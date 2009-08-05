@@ -97,11 +97,15 @@ typedef union JValue {
 } JValue;
 
 /*
- * Some systems might have this in <stdbool.h>.
+ * The <stdbool.h> definition uses _Bool, a type known to the compiler.
  */
-#ifndef __bool_true_false_are_defined
+#ifdef HAVE_STDBOOL_H
+# include <stdbool.h>   /* C99 */
+#else
+# ifndef __bool_true_false_are_defined
 typedef enum { false=0, true=!false } bool;
-#define __bool_true_false_are_defined 1
+# define __bool_true_false_are_defined 1
+# endif
 #endif
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))

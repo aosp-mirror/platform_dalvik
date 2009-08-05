@@ -82,7 +82,7 @@
  */
 
 /* globals (sanity check for LDR vs LDRB) */
-MTERP_SIZEOF(sizeofGlobal_debuggerActive, gDvm.debuggerActive, MTERP_SMALL_ENUM)
+MTERP_SIZEOF(sizeofGlobal_debuggerActive, gDvm.debuggerActive, 1)
 #if defined(WITH_PROFILER)
 MTERP_SIZEOF(sizeofGlobal_activeProfilers, gDvm.activeProfilers, 4)
 #endif
