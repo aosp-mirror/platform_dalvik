@@ -116,6 +116,6 @@ void dvmLinearAllocDump(Object* classLoader);
  * Determine if [start, start+length) is contained in the in-use area of
  * a single LinearAlloc.  The full set of linear allocators is scanned.
  */
-bool dvmLinearAllocContains(void* start, size_t length);
+bool dvmLinearAllocContains(const void* start, size_t length);
 
 #endif /*_DALVIK_LINEARALLOC*/
