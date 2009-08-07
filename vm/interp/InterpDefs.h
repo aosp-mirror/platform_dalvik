@@ -109,7 +109,7 @@ typedef struct InterpState {
     const u1*       interpStackEnd;
     volatile int*   pSelfSuspendCount;
 #if defined(WITH_DEBUGGER)
-    volatile bool*  pDebuggerActive;
+    volatile u1*    pDebuggerActive;
 #endif
 #if defined(WITH_PROFILER)
     volatile int*   pActiveProfilers;
