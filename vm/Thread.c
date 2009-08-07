@@ -2455,14 +2455,50 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
     const int kMaxRetries = 10;
     int spinSleepTime = FIRST_SLEEP;
     bool complained = false;
+    bool needPriorityReset = false;
+    int savedThreadPrio = -500;
 
     int sleepIter = 0;
     int retryCount = 0;
     u8 startWhen = 0;       // init req'd to placate gcc
+    u8 firstStartWhen = 0;
 
     while (thread->status == THREAD_RUNNING && !thread->isSuspended) {
-        if (sleepIter == 0)         // get current time on first iteration
+        if (sleepIter == 0) {           // get current time on first iteration
             startWhen = dvmGetRelativeTimeUsec();
+            if (firstStartWhen == 0)    // first iteration of first attempt
+                firstStartWhen = startWhen;
+
+            /*
+             * After waiting for a bit, check to see if the target thread is
+             * running at a reduced priority.  If so, bump it up temporarily
+             * to give it more CPU time.
+             *
+             * getpriority() returns the "nice" value, so larger numbers
+             * indicate lower priority.
+             *
+             * (Not currently changing the cgroup.  Wasn't necessary in some
+             * simple experiments.)
+             */
+            if (retryCount == 2) {
+                assert(thread->systemTid != 0);
+                errno = 0;
+                int threadPrio = getpriority(PRIO_PROCESS, thread->systemTid);
+                if (errno == 0 && threadPrio > 0) {
+                    const int kHigher = 0;
+                    if (setpriority(PRIO_PROCESS, thread->systemTid, kHigher) < 0)
+                    {
+                        LOGW("Couldn't raise priority on tid %d to %d\n",
+                            thread->systemTid, kHigher);
+                    } else {
+                        savedThreadPrio = threadPrio;
+                        needPriorityReset = true;
+                        LOGD("Temporarily raising priority on tid %d (%d -> %d)\n",
+                            thread->systemTid, threadPrio, kHigher);
+                    }
+                }
+            }
+        }
 
 #if defined (WITH_JIT)
         /*
@@ -2475,9 +2511,13 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
         }
 #endif
 
+        /*
+         * Sleep briefly.  This returns false if we've exceeded the total
+         * time limit for this round of sleeping.
+         */
         if (!dvmIterativeSleep(sleepIter++, spinSleepTime, startWhen)) {
-            LOGW("threadid=%d (h=%d): spin on suspend threadid=%d (handle=%d)\n",
-                self->threadId, (int)self->handle,
+            LOGW("threadid=%d: spin on suspend #%d threadid=%d (h=%d)\n",
+                self->threadId, retryCount,
                 thread->threadId, (int)thread->handle);
             dumpWedgedThread(thread);
             complained = true;
@@ -2496,8 +2536,19 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
     }
 
     if (complained) {
-        LOGW("threadid=%d: spin on suspend resolved\n", self->threadId);
+        LOGW("threadid=%d: spin on suspend resolved in %lld msec\n",
+            self->threadId,
+            (dvmGetRelativeTimeUsec() - firstStartWhen) / 1000);
         //dvmDumpThread(thread, false);   /* suspended, so dump is safe */
+    }
+    if (needPriorityReset) {
+        if (setpriority(PRIO_PROCESS, thread->systemTid, savedThreadPrio) < 0) {
+            LOGW("NOTE: couldn't reset priority on thread %d to %d\n",
+                thread->systemTid, savedThreadPrio);
+        } else {
+            LOGV("Restored priority on %d to %d\n",
+                thread->systemTid, savedThreadPrio);
+        }
     }
 }
 
