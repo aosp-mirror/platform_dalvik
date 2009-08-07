@@ -464,6 +464,11 @@ static inline void unlockThreadSuspendCount(void)
  * We don't have to check to see if we should be suspended once we have
  * the lock.  Nobody can suspend all threads without holding the thread list
  * lock while they do it, so by definition there isn't a GC in progress.
+ *
+ * TODO: consider checking for suspend after acquiring the lock, and
+ * backing off if set.  As stated above, it can't happen during normal
+ * execution, but it *can* happen during shutdown when daemon threads
+ * are being suspended.
  */
 void dvmLockThreadList(Thread* self)
 {
@@ -476,7 +481,7 @@ void dvmLockThreadList(Thread* self)
         oldStatus = self->status;
         self->status = THREAD_VMWAIT;
     } else {
-        /* happens for JNI AttachCurrentThread [not anymore?] */
+        /* happens during VM shutdown */
         //LOGW("NULL self in dvmLockThreadList\n");
         oldStatus = -1;         // shut up gcc
     }
@@ -596,18 +601,23 @@ static inline void unlockThreadSuspend(void)
  *
  * It's possible for this function to get called after a failed
  * initialization, so be careful with assumptions about the environment.
+ *
+ * This will be called from whatever thread calls DestroyJavaVM, usually
+ * but not necessarily the main thread.  It's likely, but not guaranteed,
+ * that the current thread has already been cleaned up.
  */
 void dvmSlayDaemons(void)
 {
-    Thread* self = dvmThreadSelf();
+    Thread* self = dvmThreadSelf();     // may be null
     Thread* target;
-    Thread* nextTarget;
-
-    if (self == NULL)
-        return;
+    int threadId = 0;
+    bool doWait = false;
 
     //dvmEnterCritical(self);
     dvmLockThreadList(self);
+
+    if (self != NULL)
+        threadId = self->threadId;
 
     target = gDvm.threadList;
     while (target != NULL) {
@@ -619,28 +629,95 @@ void dvmSlayDaemons(void)
         if (!dvmGetFieldBoolean(target->threadObj,
                 gDvm.offJavaLangThread_daemon))
         {
+            /* should never happen; suspend it with the rest */
             LOGW("threadid=%d: non-daemon id=%d still running at shutdown?!\n",
-                self->threadId, target->threadId);
-            target = target->next;
-            continue;
+                threadId, target->threadId);
         }
 
-        LOGI("threadid=%d: killing leftover daemon threadid=%d [TODO]\n",
-            self->threadId, target->threadId);
-        LOGI("             name='%s'\n", dvmGetThreadName(target));
-        // TODO: suspend and/or kill the thread
-        // (at the very least, we can "rescind their JNI privileges")
+        char* threadName = dvmGetThreadName(target);
+        LOGD("threadid=%d: suspending daemon id=%d name='%s'\n",
+            threadId, target->threadId, threadName);
+        free(threadName);
 
-        /* remove from list */
-        nextTarget = target->next;
+        /* mark as suspended */
+        lockThreadSuspendCount();
+        dvmAddToThreadSuspendCount(&target->suspendCount, 1);
+        unlockThreadSuspendCount();
+        doWait = true;
+
+        target = target->next;
+    }
+
+    //dvmDumpAllThreads(false);
+
+    /*
+     * Unlock the thread list, relocking it later if necessary.  It's
+     * possible a thread is in VMWAIT after calling dvmLockThreadList,
+     * and that function *doesn't* check for pending suspend after
+     * acquiring the lock.  We want to let them finish their business
+     * and see the pending suspend before we continue here.
+     *
+     * There's no guarantee of mutex fairness, so this might not work.
+     * (The alternative is to have dvmLockThreadList check for suspend
+     * after acquiring the lock and back off, something we should consider.)
+     */
+    dvmUnlockThreadList();
+
+    if (doWait) {
+        usleep(200 * 1000);
+
+        dvmLockThreadList(self);
+
+        /*
+         * Sleep for a bit until the threads have suspended.  We're trying
+         * to exit, so don't wait for too long.
+         */
+        int i;
+        for (i = 0; i < 10; i++) {
+            bool allSuspended = true;
+
+            target = gDvm.threadList;
+            while (target != NULL) {
+                if (target == self) {
+                    target = target->next;
+                    continue;
+                }
+
+                if (target->status == THREAD_RUNNING && !target->isSuspended) {
+                    LOGD("threadid=%d not ready yet\n", target->threadId);
+                    allSuspended = false;
+                    break;
+                }
+
+                target = target->next;
+            }
+
+            if (allSuspended) {
+                LOGD("threadid=%d: all daemons have suspended\n", threadId);
+                break;
+            } else {
+                LOGD("threadid=%d: waiting for daemons to suspend\n", threadId);
+            }
+
+            usleep(200 * 1000);
+        }
+        dvmUnlockThreadList();
+    }
+
+#if 0   /* bad things happen if they come out of JNI or "spuriously" wake up */
+    /*
+     * Abandon the threads and recover their resources.
+     */
+    target = gDvm.threadList;
+    while (target != NULL) {
+        Thread* nextTarget = target->next;
         unlinkThread(target);
-
         freeThread(target);
         target = nextTarget;
     }
+#endif
 
-    dvmUnlockThreadList();
-    //dvmExitCritical(self);
+    //dvmDumpAllThreads(true);
 }
 
 
@@ -2870,6 +2947,23 @@ Thread* dvmGetThreadFromThreadObject(Object* vmThreadObj)
     int vmData;
 
     vmData = dvmGetFieldInt(vmThreadObj, gDvm.offJavaLangVMThread_vmData);
+
+    if (false) {
+        Thread* thread = gDvm.threadList;
+        while (thread != NULL) {
+            if ((Thread*)vmData == thread)
+                break;
+
+            thread = thread->next;
+        }
+
+        if (thread == NULL) {
+            LOGW("WARNING: vmThreadObj=%p has thread=%p, not in thread list\n",
+                vmThreadObj, (Thread*)vmData);
+            vmData = 0;
+        }
+    }
+
     return (Thread*) vmData;
 }
 
