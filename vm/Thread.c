@@ -1569,7 +1569,7 @@ static void* interpThreadStart(void* arg)
      * setPriority(), and then starts the thread.  We could manage this with
      * a "needs priority update" flag to avoid the redundant call.
      */
-    int priority = dvmGetFieldBoolean(self->threadObj,
+    int priority = dvmGetFieldInt(self->threadObj,
                         gDvm.offJavaLangThread_priority);
     dvmChangeThreadPriority(self, priority);
 
