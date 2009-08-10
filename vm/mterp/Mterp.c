@@ -27,12 +27,14 @@
  */
 bool dvmCheckAsmConstants(void)
 {
+    bool failed = false;
+
+#ifndef DVM_NO_ASM_INTERP
+
     extern char dvmAsmInstructionStart[];
     extern char dvmAsmInstructionEnd[];
     extern char dvmAsmSisterStart[];
     extern char dvmAsmSisterEnd[];
-
-    bool failed = false;
 
 #define ASM_DEF_VERIFY
 #include "mterp/common/asm-constants.h"
@@ -56,6 +58,8 @@ bool dvmCheckAsmConstants(void)
     int sisterSize = dvmAsmSisterEnd - dvmAsmSisterStart;
     LOGV("mterp: interp is %d bytes, sisters are %d bytes\n",
         interpSize, sisterSize);
+
+#endif // ndef DVM_NO_ASM_INTERP
 
     return !failed;
 }
