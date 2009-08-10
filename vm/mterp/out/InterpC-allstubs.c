@@ -3547,7 +3547,7 @@ GOTO_TARGET(returnFromMethod)
 
         ILOGV("> retval=0x%llx (leaving %s.%s %s)",
             retval.j, curMethod->clazz->descriptor, curMethod->name,
-            curMethod->signature);
+            curMethod->shorty);
         //DUMP_REGS(curMethod, fp);
 
         saveArea = SAVEAREA_FROM_FP(fp);
@@ -3575,7 +3575,7 @@ GOTO_TARGET(returnFromMethod)
         methodClassDex = curMethod->clazz->pDvmDex;
         pc = saveArea->savedPc;
         ILOGD("> (return to %s.%s %s)", curMethod->clazz->descriptor,
-            curMethod->name, curMethod->signature);
+            curMethod->name, curMethod->shorty);
 
         /* use FINISH on the caller's invoke instruction */
         //u2 invokeInstr = INST_INST(FETCH(0));
@@ -3710,7 +3710,7 @@ GOTO_TARGET(exceptionThrown)
         methodClassDex = curMethod->clazz->pDvmDex;
         pc = curMethod->insns + catchRelPc;
         ILOGV("> pc <-- %s.%s %s", curMethod->clazz->descriptor,
-            curMethod->name, curMethod->signature);
+            curMethod->name, curMethod->shorty);
         DUMP_REGS(curMethod, fp, false);            // show all regs
 
         /*
@@ -3759,7 +3759,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
         //printf("range=%d call=%p count=%d regs=0x%04x\n",
         //    methodCallRange, methodToCall, count, regs);
         //printf(" --> %s.%s %s\n", methodToCall->clazz->descriptor,
-        //    methodToCall->name, methodToCall->signature);
+        //    methodToCall->name, methodToCall->shorty);
 
         u4* outs;
         int i;
@@ -3829,7 +3829,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
         ILOGV("> %s%s.%s %s",
             dvmIsNativeMethod(methodToCall) ? "(NATIVE) " : "",
             methodToCall->clazz->descriptor, methodToCall->name,
-            methodToCall->signature);
+            methodToCall->shorty);
 
         newFp = (u4*) SAVEAREA_FROM_FP(fp) - methodToCall->registersSize;
         newSaveArea = SAVEAREA_FROM_FP(newFp);
@@ -3890,7 +3890,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             debugIsMethodEntry = true;              // profiling, debugging
 #endif
             ILOGD("> pc <-- %s.%s %s", curMethod->clazz->descriptor,
-                curMethod->name, curMethod->signature);
+                curMethod->name, curMethod->shorty);
             DUMP_REGS(curMethod, fp, true);         // show input args
             FINISH(0);                              // jump to method start
         } else {
@@ -3912,7 +3912,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
 
             ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
-                methodToCall->name, methodToCall->signature);
+                methodToCall->name, methodToCall->shorty);
 
             /*
              * Jump through native call bridge.  Because we leave no
@@ -3949,7 +3949,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             ILOGD("> (return from native %s.%s to %s.%s %s)",
                 methodToCall->clazz->descriptor, methodToCall->name,
                 curMethod->clazz->descriptor, curMethod->name,
-                curMethod->signature);
+                curMethod->shorty);
 
             //u2 invokeInstr = INST_INST(FETCH(0));
             if (true /*invokeInstr >= OP_INVOKE_VIRTUAL &&

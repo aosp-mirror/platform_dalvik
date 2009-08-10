@@ -29,7 +29,7 @@ void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
     const Method* method = glue->method;
     printf("    + self is %p\n", dvmThreadSelf());
     //printf("    + currently in %s.%s %s\n",
-    //    method->clazz->descriptor, method->name, method->signature);
+    //    method->clazz->descriptor, method->name, method->shorty);
     //printf("    + dvmAsmInstructionStart = %p\n", dvmAsmInstructionStart);
     //printf("    + next handler for 0x%02x = %p\n",
     //    rINST & 0xff, dvmAsmInstructionStart + (rINST & 0xff) * 64);
