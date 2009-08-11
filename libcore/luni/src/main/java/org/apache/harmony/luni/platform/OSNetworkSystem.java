@@ -546,8 +546,8 @@ final class OSNetworkSystem implements INetworkSystem {
      *            all sockets interested in write and connect
      * @param timeout
      *            timeout in milliseconds
-     * @returns each element describes the corresponding state of the descriptor
-     *          in the read and write arrays.
+     * @return each element describes the corresponding state of the descriptor
+     *         in the read and write arrays.
      * @throws SocketException
      */
     public int[] select(FileDescriptor[] readFDs, FileDescriptor[] writeFDs,

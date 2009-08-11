@@ -1009,7 +1009,7 @@ public class Vector<E> extends AbstractList<E> implements List<E>,
             return "[]"; //$NON-NLS-1$
         }
         int length = elementCount - 1;
-        StringBuffer buffer = new StringBuffer(elementCount * 16);
+        StringBuilder buffer = new StringBuilder(elementCount * 16);
         buffer.append('[');
         for (int i = 0; i < length; i++) {
             if (elementData[i] == this) {

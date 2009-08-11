@@ -390,7 +390,7 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
         int hour = -1, minute = -1, second = -1, zoneOffset = 0, minutesOffset = 0;
         boolean zone = false;
         final int PAD = 0, LETTERS = 1, NUMBERS = 2;
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         while (offset <= length) {
             char next = offset < length ? string.charAt(offset) : '\r';

@@ -547,10 +547,15 @@ public class Hashtable<K, V> extends Dictionary<K, V> implements Map<K, V>,
         while (it.hasNext()) {
             Map.Entry<K, V> entry = it.next();
             Object key = entry.getKey();
+            if (key == this) {
+                continue;
+            }
             Object value = entry.getValue();
-            int hash = (key != this ? key.hashCode() : 0)
-                    ^ (value != this ? (value != null ? value.hashCode() : 0)
-                            : 0);
+            if (value == this) {
+                continue;
+            }
+            int hash = (key != null ? key.hashCode() : 0)
+                    ^ (value != null ? value.hashCode() : 0);
             result += hash;
         }
         return result;

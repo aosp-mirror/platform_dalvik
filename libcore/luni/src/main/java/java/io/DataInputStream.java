@@ -303,7 +303,7 @@ public class DataInputStream extends FilterInputStream implements DataInput {
      */
     @Deprecated
     public final String readLine() throws IOException {
-        StringBuffer line = new StringBuffer(80); // Typical line length
+        StringBuilder line = new StringBuilder(80); // Typical line length
         boolean foundTerminator = false;
         while (true) {
             int nextByte = in.read();

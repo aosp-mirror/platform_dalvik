@@ -336,7 +336,7 @@ public class ServerSocket {
      */
     @Override
     public String toString() {
-        StringBuffer result = new StringBuffer(64);
+        StringBuilder result = new StringBuilder(64);
         result.append("ServerSocket["); //$NON-NLS-1$
         if (!isBound()) {
             return result.append("unbound]").toString(); //$NON-NLS-1$

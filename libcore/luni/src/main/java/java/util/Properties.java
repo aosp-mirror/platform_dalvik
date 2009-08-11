@@ -198,7 +198,7 @@ public class Properties extends Hashtable<Object, Object> {
         if (out == null) {
             throw new NullPointerException();
         }
-        StringBuffer buffer = new StringBuffer(80);
+        StringBuilder buffer = new StringBuilder(80);
         Enumeration<?> keys = propertyNames();
         while (keys.hasMoreElements()) {
             String key = (String) keys.nextElement();
@@ -234,7 +234,7 @@ public class Properties extends Hashtable<Object, Object> {
         if (writer == null) {
             throw new NullPointerException();
         }
-        StringBuffer buffer = new StringBuffer(80);
+        StringBuilder buffer = new StringBuilder(80);
         Enumeration<?> keys = propertyNames();
         while (keys.hasMoreElements()) {
             String key = (String) keys.nextElement();
@@ -392,7 +392,7 @@ public class Properties extends Hashtable<Object, Object> {
                 case '\r':
                     mode = NONE;
                     firstChar = true;
-                    if (offset > 0) {
+                    if (offset > 0 || (offset == 0 && keyLength == 0)) {
                         if (keyLength == -1) {
                             keyLength = offset;
                         }

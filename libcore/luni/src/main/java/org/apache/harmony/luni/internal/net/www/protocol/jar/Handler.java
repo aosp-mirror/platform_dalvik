@@ -99,7 +99,7 @@ public class Handler extends URLStreamHandler {
      */
     @Override
     protected String toExternalForm(URL url) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("jar:"); //$NON-NLS-1$
         sb.append(url.getFile());
         String ref = url.getRef();

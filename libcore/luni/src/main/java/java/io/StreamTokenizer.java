@@ -336,7 +336,7 @@ public class StreamTokenizer {
         }
         // Check for words
         if ((currentType & TOKEN_WORD) != 0) {
-            StringBuffer word = new StringBuffer(20);
+            StringBuilder word = new StringBuilder(20);
             while (true) {
                 word.append((char) currentChar);
                 currentChar = read();
@@ -353,7 +353,7 @@ public class StreamTokenizer {
         // Check for quoted character
         if (currentType == TOKEN_QUOTE) {
             int matchQuote = currentChar;
-            StringBuffer quoteString = new StringBuffer();
+            StringBuilder quoteString = new StringBuilder();
             int peekOne = read();
             while (peekOne >= 0 && peekOne != matchQuote && peekOne != '\r'
                     && peekOne != '\n') {

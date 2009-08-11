@@ -211,7 +211,7 @@ public final class SocketPermission extends Permission implements Serializable {
         }
         boolean parsing = true;
         String action;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int pos = 0, length = actions.length();
         while (parsing) {
             char c;
@@ -360,7 +360,7 @@ public final class SocketPermission extends Permission implements Serializable {
             return actionNames[SP_RESOLVE]; // If none specified return the
         }
         // implied action resolve
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if ((actionsMask & SP_CONNECT) == SP_CONNECT) {
             sb.append(',');
             sb.append(actionNames[SP_CONNECT]);

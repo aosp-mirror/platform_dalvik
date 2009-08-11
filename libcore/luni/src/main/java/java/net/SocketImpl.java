@@ -259,7 +259,7 @@ public abstract class SocketImpl implements SocketOptions {
     @SuppressWarnings("nls")
     @Override
     public String toString() {
-        return new StringBuffer(100).append("Socket[addr=").append(
+        return new StringBuilder(100).append("Socket[addr=").append(
                 getInetAddress()).append(",port=").append(port).append(
                 ",localport=").append(getLocalPort()).append("]").toString();
     }

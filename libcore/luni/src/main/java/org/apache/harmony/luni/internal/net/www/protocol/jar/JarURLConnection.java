@@ -138,9 +138,9 @@ public class JarURLConnection extends java.net.JarURLConnection {
     JarFile openJarFile() throws IOException {
         JarFile jar = null;
         if (jarFileURL.getProtocol().equals("file")) { //$NON-NLS-1$
-            jar = new JarFile(new File(Util.decode(jarFileURL.getFile(), false)),
-                        true, ZipFile.OPEN_READ);
-        } else{
+            jar = new JarFile(new File(Util.decode(jarFileURL.getFile(), false,
+                    "UTF-8")), true, ZipFile.OPEN_READ);
+        } else {
             final InputStream is = jarFileURL.openConnection().getInputStream();
             try {
                 jar = AccessController

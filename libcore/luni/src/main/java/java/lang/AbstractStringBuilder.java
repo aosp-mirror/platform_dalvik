@@ -231,7 +231,7 @@ abstract class AbstractStringBuilder {
             }
             if (end > start) {
                 int length = count - end;
-                if (length > 0) {
+                if (length >= 0) {
                     if (!shared) {
                         System.arraycopy(value, end, value, start, length);
                     } else {

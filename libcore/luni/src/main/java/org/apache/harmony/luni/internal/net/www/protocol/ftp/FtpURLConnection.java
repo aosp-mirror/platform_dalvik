@@ -399,7 +399,7 @@ public class FtpURLConnection extends URLConnection {
      * Read a line of text and return it for possible parsing
      */
     private String readLine() throws IOException {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int c;
         while ((c = ctrlInput.read()) != '\n') {
             sb.append((char) c);

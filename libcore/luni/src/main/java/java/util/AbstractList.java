@@ -360,7 +360,10 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
 
         @Override
         public int size() {
-            return size;
+            if (modCount == fullList.modCount) {
+                return size;
+            }
+            throw new ConcurrentModificationException();
         }
 
         void sizeChanged(boolean increment) {

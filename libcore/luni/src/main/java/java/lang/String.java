@@ -77,7 +77,7 @@ public final class String implements Serializable, Comparable<String>,
         /**
          * Create a ConsolePrintStream on the specified OutputStream, usually
          * System.out.
-         *
+         * 
          * @param out
          *            the console OutputStream
          */
@@ -168,6 +168,9 @@ public final class String implements Serializable, Comparable<String>,
         count = 0;
     }
 
+    /*
+     * Private constructor used for JIT optimization.
+     */
     @SuppressWarnings("unused")
     private String(String s, char c) {
         offset = 0;
@@ -182,7 +185,7 @@ public final class String implements Serializable, Comparable<String>,
      * specified by the file.encoding system property. If the system property is
      * not defined, the default encoding is ISO8859_1 (ISO-Latin-1). If 8859-1
      * is not available, an ASCII encoding is used.
-     *
+     * 
      * @param data
      *            the byte array to convert to a string.
      */
@@ -193,7 +196,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Converts the byte array to a string, setting the high byte of every
      * character to the specified value.
-     *
+     * 
      * @param data
      *            the byte array to convert to a string.
      * @param high
@@ -213,7 +216,7 @@ public final class String implements Serializable, Comparable<String>,
      * specified by the file.encoding system property. If the system property is
      * not defined, the default encoding is ISO8859_1 (ISO-Latin-1). If 8859-1
      * is not available, an ASCII encoding is used.
-     *
+     * 
      * @param data
      *            the byte array to convert to a string.
      * @param start
@@ -288,7 +291,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the byte array to a string using the specified encoding.
-     *
+     * 
      * @param data
      *            the byte array to convert to a string.
      * @param start
@@ -457,7 +460,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the byte array to a string using the specified encoding.
-     *
+     * 
      * @param data
      *            the byte array to convert to a string.
      * @param encoding
@@ -475,7 +478,7 @@ public final class String implements Serializable, Comparable<String>,
      * Initializes this string to contain the characters in the specified
      * character array. Modifying the character array after creating the string
      * has no effect on the string.
-     *
+     * 
      * @param data
      *            the array of characters.
      * @throws NullPointerException
@@ -489,7 +492,7 @@ public final class String implements Serializable, Comparable<String>,
      * Initializes this string to contain the specified characters in the
      * character array. Modifying the character array after creating the string
      * has no effect on the string.
-     *
+     * 
      * @param data
      *            the array of characters.
      * @param start
@@ -527,7 +530,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Creates a {@code String} that is a copy of the specified string.
-     *
+     * 
      * @param string
      *            the string to copy.
      */
@@ -537,10 +540,51 @@ public final class String implements Serializable, Comparable<String>,
         count = string.count;
     }
 
+    /*
+     * Private constructor useful for JIT optimization.
+     */
+    @SuppressWarnings( { "unused", "nls" })
+    private String(String s1, String s2) {
+        if (s1 == null) {
+            s1 = "null";
+        }
+        if (s2 == null) {
+            s2 = "null";
+        }
+        count = s1.count + s2.count;
+        value = new char[count];
+        offset = 0;
+        System.arraycopy(s1.value, s1.offset, value, 0, s1.count);
+        System.arraycopy(s2.value, s2.offset, value, s1.count, s2.count);
+    }
+
+    /*
+     * Private constructor useful for JIT optimization.
+     */
+    @SuppressWarnings( { "unused", "nls" })
+    private String(String s1, String s2, String s3) {
+        if (s1 == null) {
+            s1 = "null";
+        }
+        if (s2 == null) {
+            s2 = "null";
+        }
+        if (s3 == null) {
+            s3 = "null";
+        }
+        count = s1.count + s2.count + s3.count;
+        value = new char[count];
+        offset = 0;
+        System.arraycopy(s1.value, s1.offset, value, 0, s1.count);
+        System.arraycopy(s2.value, s2.offset, value, s1.count, s2.count);
+        System.arraycopy(s3.value, s3.offset, value, s1.count + s2.count,
+                s3.count);
+    }
+
     /**
      * Creates a {@code String} from the contents of the specified
      * {@code StringBuffer}.
-     *
+     * 
      * @param stringbuffer
      *            the buffer to get the contents from.
      */
@@ -594,7 +638,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Creates a {@code String} from the contents of the specified {@code
      * StringBuilder}.
-     *
+     * 
      * @param sb
      *            the {@code StringBuilder} to copy the contents from.
      * @throws NullPointerException
@@ -630,7 +674,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Returns the character at the specified offset in this string.
-     *
+     * 
      * @param index
      *            the zero-based index in this string.
      * @return the character at the index.
@@ -688,7 +732,7 @@ public final class String implements Serializable, Comparable<String>,
      * Unicode value which is greater than the Unicode value of the character at
      * the same position in the specified string, or if the specified string is
      * a prefix of this string.
-     *
+     * 
      * @param string
      *            the string to compare.
      * @return 0 if the strings are equal, a negative integer if this string is
@@ -721,7 +765,7 @@ public final class String implements Serializable, Comparable<String>,
      * this string has a Unicode value which is greater than the Unicode value
      * of the character at the same position in the specified string, or if the
      * specified string is a prefix of this string.
-     *
+     * 
      * @param string
      *            the string to compare.
      * @return 0 if the strings are equal, a negative integer if this string is
@@ -750,7 +794,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Concatenates this string and the specified string.
-     *
+     * 
      * @param string
      *            the string to concatenate
      * @return a new string which is the concatenation of this string and the
@@ -771,7 +815,7 @@ public final class String implements Serializable, Comparable<String>,
      * Creates a new string containing the characters in the specified character
      * array. Modifying the character array after creating the string has no
      * effect on the string.
-     *
+     * 
      * @param data
      *            the array of characters.
      * @return the new string.
@@ -786,7 +830,7 @@ public final class String implements Serializable, Comparable<String>,
      * Creates a new string containing the specified characters in the character
      * array. Modifying the character array after creating the string has no
      * effect on the string.
-     *
+     * 
      * @param data
      *            the array of characters.
      * @param start
@@ -829,7 +873,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Compares the specified string to this string to determine if the
      * specified string is a suffix.
-     *
+     * 
      * @param suffix
      *            the suffix to look for.
      * @return {@code true} if the specified string is a suffix of this string,
@@ -845,7 +889,7 @@ public final class String implements Serializable, Comparable<String>,
      * Compares the specified object to this string and returns true if they are
      * equal. The object must be an instance of string with the same characters
      * in the same order.
-     *
+     * 
      * @param object
      *            the object to compare.
      * @return {@code true} if the specified object is equal to this string,
@@ -885,7 +929,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Compares the specified string to this string ignoring the case of the
      * characters and returns true if they are equal.
-     *
+     * 
      * @param string
      *            the string to compare.
      * @return {@code true} if the specified string is equal to this string,
@@ -919,7 +963,7 @@ public final class String implements Serializable, Comparable<String>,
      * specified by the file.encoding system property. If the system property is
      * not defined, the default encoding is ISO8859_1 (ISO-Latin-1). If 8859-1
      * is not available, an ASCII encoding is used.
-     *
+     * 
      * @return the byte array encoding of this string.
      */
     public byte[] getBytes() {
@@ -933,7 +977,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Converts this string to a byte array, ignoring the high order bits of
      * each character.
-     *
+     * 
      * @param start
      *            the starting offset of characters to copy.
      * @param end
@@ -967,7 +1011,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts this string to a byte array using the specified encoding.
-     *
+     * 
      * @param encoding
      *            the encoding to use.
      * @return the encoded byte array of this string.
@@ -1003,7 +1047,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Copies the specified characters in this string to the character array
      * starting at the specified offset in the character array.
-     *
+     * 
      * @param start
      *            the starting offset of characters to copy.
      * @param end
@@ -1065,7 +1109,7 @@ public final class String implements Serializable, Comparable<String>,
      * Searches in this string for the first index of the specified character.
      * The search for the character starts at the beginning and moves towards
      * the end of this string.
-     *
+     * 
      * @param c
      *            the character to find.
      * @return the index in this string of the specified character, -1 if the
@@ -1092,7 +1136,7 @@ public final class String implements Serializable, Comparable<String>,
      * Searches in this string for the index of the specified character. The
      * search for the character starts at the specified offset and moves towards
      * the end of this string.
-     *
+     * 
      * @param c
      *            the character to find.
      * @param start
@@ -1124,7 +1168,7 @@ public final class String implements Serializable, Comparable<String>,
      * Searches in this string for the first index of the specified string. The
      * search for the string starts at the beginning and moves towards the end
      * of this string.
-     *
+     * 
      * @param string
      *            the string to find.
      * @return the index of the first character of the specified string in this
@@ -1169,7 +1213,7 @@ public final class String implements Serializable, Comparable<String>,
      * Searches in this string for the index of the specified string. The search
      * for the string starts at the specified offset and moves towards the end
      * of this string.
-     *
+     * 
      * @param subString
      *            the string to find.
      * @param start
@@ -1219,17 +1263,16 @@ public final class String implements Serializable, Comparable<String>,
      * If the string is not in the table, it is added. Returns the string
      * contained in the table which is equal to this string. The same string
      * object is always returned for strings which are equal.
-     *
+     * 
      * @return the interned string equal to this string.
      */
     native public String intern();
-
 
     /**
      * Searches in this string for the last index of the specified character.
      * The search for the character starts at the end and moves towards the
      * beginning of this string.
-     *
+     * 
      * @param c
      *            the character to find.
      * @return the index in this string of the specified character, -1 if the
@@ -1253,7 +1296,7 @@ public final class String implements Serializable, Comparable<String>,
      * Searches in this string for the index of the specified character. The
      * search for the character starts at the specified offset and moves towards
      * the beginning of this string.
-     *
+     * 
      * @param c
      *            the character to find.
      * @param start
@@ -1284,7 +1327,7 @@ public final class String implements Serializable, Comparable<String>,
      * Searches in this string for the last index of the specified string. The
      * search for the string starts at the end and moves towards the beginning
      * of this string.
-     *
+     * 
      * @param string
      *            the string to find.
      * @return the index of the first character of the specified string in this
@@ -1301,7 +1344,7 @@ public final class String implements Serializable, Comparable<String>,
      * Searches in this string for the index of the specified string. The search
      * for the string starts at the specified offset and moves towards the
      * beginning of this string.
-     *
+     * 
      * @param subString
      *            the string to find.
      * @param start
@@ -1345,7 +1388,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Returns the size of this string.
-     *
+     * 
      * @return the number of characters in this string.
      */
     public int length() {
@@ -1355,7 +1398,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Compares the specified string to this string and compares the specified
      * range of characters to determine if they are the same.
-     *
+     * 
      * @param thisStart
      *            the starting offset in this string.
      * @param string
@@ -1400,7 +1443,7 @@ public final class String implements Serializable, Comparable<String>,
      * Compares the specified string to this string and compares the specified
      * range of characters to determine if they are the same. When ignoreCase is
      * true, the case of the characters is ignored during the comparison.
-     *
+     * 
      * @param ignoreCase
      *            specifies if case should be ignored.
      * @param thisStart
@@ -1451,7 +1494,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Copies this string replacing occurrences of the specified character with
      * another character.
-     *
+     * 
      * @param oldChar
      *            the character to replace.
      * @param newChar
@@ -1485,12 +1528,12 @@ public final class String implements Serializable, Comparable<String>,
         return copied ? new String(0, count, buffer) : this;
         // END android-changed
     }
-
+    
     /**
      * Copies this string replacing occurrences of the specified target sequence
      * with another sequence. The string is processed from the beginning to the
      * end.
-     *
+     * 
      * @param target
      *            the sequence to replace.
      * @param replacement
@@ -1530,7 +1573,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Compares the specified string to this string to determine if the
      * specified string is a prefix.
-     *
+     * 
      * @param prefix
      *            the string to look for.
      * @return {@code true} if the specified string is a prefix of this string,
@@ -1545,7 +1588,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Compares the specified string to this string, starting at the specified
      * offset, to determine if the specified string is a prefix.
-     *
+     * 
      * @param prefix
      *            the string to look for.
      * @param start
@@ -1561,7 +1604,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Copies a range of characters into a new string.
-     *
+     * 
      * @param start
      *            the offset of the first character.
      * @return a new string containing the characters from start to the end of
@@ -1581,7 +1624,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Copies a range of characters into a new string.
-     *
+     * 
      * @param start
      *            the offset of the first character.
      * @param end
@@ -1605,7 +1648,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Copies the characters in this string to a character array.
-     *
+     * 
      * @return a character array containing the characters of this string.
      */
     public char[] toCharArray() {
@@ -1617,7 +1660,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Converts the characters in this string to lowercase, using the default
      * Locale.
-     *
+     * 
      * @return a new string containing the lowercase characters equivalent to
      *         the characters in this string.
      */
@@ -1628,7 +1671,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Converts the characters in this string to lowercase, using the specified
      * Locale.
-     *
+     * 
      * @param locale
      *            the Locale to use.
      * @return a new string containing the lowercase characters equivalent to
@@ -1672,7 +1715,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Converts the characters in this string to uppercase, using the default
      * Locale.
-     *
+     * 
      * @return a new string containing the uppercase characters equivalent to
      *         the characters in this string.
      */
@@ -1746,7 +1789,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Converts the characters in this string to uppercase, using the specified
      * Locale.
-     *
+     * 
      * @param locale
      *            the Locale to use.
      * @return a new string containing the uppercase characters equivalent to
@@ -1811,7 +1854,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Copies this string removing white space characters from the beginning and
      * end of the string.
-     *
+     * 
      * @return a new string with characters <code><= \\u0020</code> removed from
      *         the beginning and the end.
      */
@@ -1834,7 +1877,7 @@ public final class String implements Serializable, Comparable<String>,
      * Creates a new string containing the characters in the specified character
      * array. Modifying the character array after creating the string has no
      * effect on the string.
-     *
+     * 
      * @param data
      *            the array of characters.
      * @return the new string.
@@ -1849,7 +1892,7 @@ public final class String implements Serializable, Comparable<String>,
      * Creates a new string containing the specified characters in the character
      * array. Modifying the character array after creating the string has no
      * effect on the string.
-     *
+     * 
      * @param data
      *            the array of characters.
      * @param start
@@ -1869,7 +1912,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified character to its string representation.
-     *
+     * 
      * @param value
      *            the character.
      * @return the character converted to a string.
@@ -1887,7 +1930,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified double to its string representation.
-     *
+     * 
      * @param value
      *            the double.
      * @return the double converted to a string.
@@ -1898,7 +1941,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified float to its string representation.
-     *
+     * 
      * @param value
      *            the float.
      * @return the float converted to a string.
@@ -1909,7 +1952,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified integer to its string representation.
-     *
+     * 
      * @param value
      *            the integer.
      * @return the integer converted to a string.
@@ -1920,7 +1963,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified long to its string representation.
-     *
+     * 
      * @param value
      *            the long.
      * @return the long converted to a string.
@@ -1933,7 +1976,7 @@ public final class String implements Serializable, Comparable<String>,
      * Converts the specified object to its string representation. If the object
      * is null return the string {@code "null"}, otherwise use {@code
      * toString()} to get the string representation.
-     *
+     * 
      * @param value
      *            the object.
      * @return the object converted to a string, or the string {@code "null"}.
@@ -1946,7 +1989,7 @@ public final class String implements Serializable, Comparable<String>,
      * Converts the specified boolean to its string representation. When the
      * boolean is {@code true} return {@code "true"}, otherwise return {@code
      * "false"}.
-     *
+     * 
      * @param value
      *            the boolean.
      * @return the boolean converted to a string.
@@ -1958,7 +2001,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Returns whether the characters in the StringBuffer {@code strbuf} are the
      * same as those in this string.
-     *
+     * 
      * @param strbuf
      *            the StringBuffer to compare this string to.
      * @return {@code true} if the characters in {@code strbuf} are identical to
@@ -2008,7 +2051,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Determines whether this string matches a given regular expression.
-     *
+     * 
      * @param expr
      *            the regular expression to be matched.
      * @return {@code true} if the expression matches, otherwise {@code false}.
@@ -2026,7 +2069,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Replace any substrings within this string that match the supplied regular
      * expression {@code expr}, with the string {@code substitute}.
-     *
+     * 
      * @param expr
      *            the regular expression to match.
      * @param substitute
@@ -2045,7 +2088,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Replace the first substring within this string that matches the supplied
      * regular expression {@code expr}, with the string {@code substitute}.
-     *
+     * 
      * @param expr
      *            the regular expression to match.
      * @param substitute
@@ -2065,7 +2108,7 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Splits this string using the supplied regular expression {@code expr}.
-     *
+     * 
      * @param expr
      *            the regular expression used to divide the string.
      * @return an array of Strings created by separating the string along
@@ -2086,7 +2129,7 @@ public final class String implements Serializable, Comparable<String>,
      * Splits this string using the supplied regular expression {@code expr}.
      * The parameter {@code max} controls the behavior how many times the
      * pattern is applied to the string.
-     *
+     * 
      * @param expr
      *            the regular expression used to divide the string.
      * @param max
@@ -2108,7 +2151,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Has the same result as the substring function, but is present so that
      * string may implement the CharSequence interface.
-     *
+     * 
      * @param start
      *            the offset the first character.
      * @param end
@@ -2127,7 +2170,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Retrieves the Unicode code point (character) value at the specified
      * {@code index}.
-     *
+     * 
      * @param index
      *            the index to the {@code char} code unit within this string.
      * @return the Unicode code point value.
@@ -2148,7 +2191,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Retrieves the Unicode code point value that precedes the specified
      * {@code index}.
-     *
+     * 
      * @param index
      *            the index to the {@code char} code unit within this string.
      * @return the Unicode code point value.
@@ -2169,7 +2212,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Calculates the number of Unicode code points between {@code beginIndex}
      * and {@code endIndex}.
-     *
+     * 
      * @param beginIndex
      *            the inclusive beginning index of the subsequence.
      * @param endIndex
@@ -2232,7 +2275,7 @@ public final class String implements Serializable, Comparable<String>,
     /**
      * Returns a formatted string, using the supplied format and arguments,
      * using the default locale.
-     *
+     * 
      * @param format
      *            a format string.
      * @param args

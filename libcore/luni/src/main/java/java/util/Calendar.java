@@ -1322,7 +1322,7 @@ public abstract class Calendar implements Serializable, Cloneable,
     @Override
     @SuppressWarnings("nls")
     public String toString() {
-        StringBuffer result = new StringBuffer(getClass().getName() + "[time="
+        StringBuilder result = new StringBuilder(getClass().getName() + "[time="
                 + (isTimeSet ? String.valueOf(time) : "?")
                 + ",areFieldsSet="
                 + areFieldsSet

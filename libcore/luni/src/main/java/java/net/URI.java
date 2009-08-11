@@ -106,7 +106,7 @@ public final class URI implements Comparable<URI>, Serializable {
      */
     public URI(String scheme, String ssp, String frag)
             throws URISyntaxException {
-        StringBuffer uri = new StringBuffer();
+        StringBuilder uri = new StringBuilder();
         if (scheme != null) {
             uri.append(scheme);
             uri.append(':');
@@ -166,7 +166,7 @@ public final class URI implements Comparable<URI>, Serializable {
             throw new URISyntaxException(path, Msg.getString("K0302")); //$NON-NLS-1$
         }
 
-        StringBuffer uri = new StringBuffer();
+        StringBuilder uri = new StringBuilder();
         if (scheme != null) {
             uri.append(scheme);
             uri.append(':');
@@ -270,7 +270,7 @@ public final class URI implements Comparable<URI>, Serializable {
             throw new URISyntaxException(path, Msg.getString("K0302")); //$NON-NLS-1$
         }
 
-        StringBuffer uri = new StringBuffer();
+        StringBuilder uri = new StringBuilder();
         if (scheme != null) {
             uri.append(scheme);
             uri.append(':');
@@ -994,7 +994,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * converts the hex values following the '%' to lowercase
      */
     private String convertHexToLowerCase(String s) {
-        StringBuffer result = new StringBuffer(""); //$NON-NLS-1$
+        StringBuilder result = new StringBuilder(""); //$NON-NLS-1$
         if (s.indexOf('%') == -1) {
             return s;
         }
@@ -1357,7 +1357,7 @@ public final class URI implements Comparable<URI>, Serializable {
         }
 
         // put the path back together
-        StringBuffer newpath = new StringBuffer();
+        StringBuilder newpath = new StringBuilder();
         if (path.startsWith("/")) { //$NON-NLS-1$
             newpath.append('/');
         }
@@ -1548,7 +1548,7 @@ public final class URI implements Comparable<URI>, Serializable {
      */
     private void setSchemeSpecificPart() {
         // ssp = [//authority][path][?query]
-        StringBuffer ssp = new StringBuffer();
+        StringBuilder ssp = new StringBuilder();
         if (authority != null) {
             ssp.append("//" + authority); //$NON-NLS-1$
         }
@@ -1631,7 +1631,7 @@ public final class URI implements Comparable<URI>, Serializable {
     @Override
     public String toString() {
         if (string == null) {
-            StringBuffer result = new StringBuffer();
+            StringBuilder result = new StringBuilder();
             if (scheme != null) {
                 result.append(scheme);
                 result.append(':');
@@ -1670,7 +1670,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * and converts escaped octets to lowercase.
      */
     private String getHashString() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         if (scheme != null) {
             result.append(scheme.toLowerCase());
             result.append(':');

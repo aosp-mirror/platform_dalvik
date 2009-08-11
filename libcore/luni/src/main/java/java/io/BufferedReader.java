@@ -30,13 +30,13 @@ import java.util.logging.Logger;
  * some extra space is required to hold the buffer and that copying takes place
  * when filling that buffer, but this is usually outweighed by the performance
  * benefits.
- *
+ * 
  * <p/>A typical application pattern for the class looks like this:<p/>
  *
  * <pre>
  * BufferedReader buf = new BufferedReader(new FileReader(&quot;file.java&quot;));
  * </pre>
- *
+ * 
  * @see BufferedWriter
  * @since 1.1
  */
@@ -57,7 +57,7 @@ public class BufferedReader extends Reader {
     /**
      * Constructs a new BufferedReader on the Reader {@code in}. The
      * buffer gets the default size (8 KB).
-     *
+     * 
      * @param in
      *            the Reader that is buffered.
      */
@@ -85,7 +85,7 @@ public class BufferedReader extends Reader {
     /**
      * Constructs a new BufferedReader on the Reader {@code in}. The buffer
      * size is specified by the parameter {@code size}.
-     *
+     * 
      * @param in
      *            the Reader that is buffered.
      * @param size
@@ -106,7 +106,7 @@ public class BufferedReader extends Reader {
      * Closes this reader. This implementation closes the buffered source reader
      * and releases the buffer. Nothing is done if this reader has already been
      * closed.
-     *
+     * 
      * @throws IOException
      *             if an error occurs while closing this reader.
      */
@@ -154,7 +154,7 @@ public class BufferedReader extends Reader {
 
     /**
      * Indicates whether or not this reader is closed.
-     *
+     * 
      * @return {@code true} if this reader is closed, {@code false}
      *         otherwise.
      */
@@ -167,7 +167,7 @@ public class BufferedReader extends Reader {
      * indicates how many characters can be read before the mark is invalidated.
      * Calling {@code reset()} will reposition the reader back to the marked
      * position if {@code readlimit} has not been surpassed.
-     *
+     * 
      * @param readlimit
      *            the number of characters that can be read before the mark is
      *            invalidated.
@@ -195,7 +195,7 @@ public class BufferedReader extends Reader {
     /**
      * Indicates whether this reader supports the {@code mark()} and
      * {@code reset()} methods. This implementation returns {@code true}.
-     *
+     * 
      * @return {@code true} for {@code BufferedReader}.
      * @see #mark(int)
      * @see #reset()
@@ -240,7 +240,7 @@ public class BufferedReader extends Reader {
      * has not been set and the requested number of characters is larger than
      * this readers buffer size, BufferedReader bypasses the buffer and simply
      * places the results directly into {@code buffer}.
-     *
+     * 
      * @param buffer
      *            the character array to store the characters read.
      * @param offset
@@ -329,9 +329,8 @@ public class BufferedReader extends Reader {
      * Returns the next line of text available from this reader. A line is
      * represented by zero or more characters followed by {@code '\n'},
      * {@code '\r'}, {@code "\r\n"} or the end of the reader. The string does
-     * not include the newline sequence. In EBCDIC systems, a new line can also
-     * be represented by the {@code &#92;u0085} (NEL) character.
-     *
+     * not include the newline sequence.
+     * 
      * @return the contents of the line or {@code null} if no characters were
      *         read before the end of the reader has been reached.
      * @throws IOException
@@ -351,7 +350,7 @@ public class BufferedReader extends Reader {
                 // BEGIN android-note
                 // a switch statement may be more efficient
                 // END android-note
-                if ((ch > '\r') && (ch != '\u0085')) {
+                if (ch > '\r') {
                     continue;
                 }
                 if (ch == '\n') {
@@ -365,11 +364,6 @@ public class BufferedReader extends Reader {
                             && (buf[pos] == '\n')) {
                         pos++;
                     }
-                    return res;
-                } else if (ch == '\u0085') {
-                    /* Also handle the EBCDIC NEL character */
-                    String res = new String(buf, pos, charPos - pos);
-                    pos = charPos + 1;
                     return res;
                 }
             }
@@ -398,7 +392,7 @@ public class BufferedReader extends Reader {
                     // use a local variable for buf[charPos] and a switch statement
                     // END android-note
                     if (eol == '\0') {
-                        if ((buf[charPos] == '\n' || buf[charPos] == '\r') || (buf[charPos] == '\u0085')) {
+                        if ((buf[charPos] == '\n' || buf[charPos] == '\r')) {
                             eol = buf[charPos];
                         }
                     } else if (eol == '\r' && (buf[charPos] == '\n')) {
@@ -407,7 +401,7 @@ public class BufferedReader extends Reader {
                         }
                         pos = charPos + 1;
                         return result.toString();
-                    } else if (eol != '\0') {
+                    } else {
                         if (charPos > pos) {
                             result.append(buf, pos, charPos - pos - 1);
                         }
@@ -451,7 +445,7 @@ public class BufferedReader extends Reader {
      * Resets this reader's position to the last {@code mark()} location.
      * Invocations of {@code read()} and {@code skip()} will occur from this new
      * location.
-     *
+     * 
      * @throws IOException
      *             if this reader is closed or no mark has been set.
      * @see #mark(int)
@@ -475,7 +469,7 @@ public class BufferedReader extends Reader {
      * {@code read()}s will not return these characters unless {@code reset()}
      * is used. Skipping characters may invalidate a mark if {@code readlimit}
      * is surpassed.
-     *
+     * 
      * @param amount
      *            the maximum number of characters to skip.
      * @return the number of characters actually skipped.

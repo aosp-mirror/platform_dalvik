@@ -818,7 +818,7 @@ public class BitSet implements Serializable, Cloneable {
      */
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer(bits.length / 2);
+        StringBuilder sb = new StringBuilder(bits.length / 2);
         int bitCount = 0;
         sb.append('{');
         boolean comma = false;

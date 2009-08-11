@@ -852,11 +852,11 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
 }
 
     static boolean areEqualKeys(Object key1, Object key2) {
-        return key1.equals(key2);
+        return (key1 == key2) || key1.equals(key2);
     }
 
     static boolean areEqualValues(Object value1, Object value2) {
-        return value1.equals(value2);
+        return (value1 == value2) || value1.equals(value2);
     }
 
 

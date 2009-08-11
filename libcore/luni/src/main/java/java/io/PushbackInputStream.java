@@ -314,9 +314,11 @@ public class PushbackInputStream extends FilterInputStream {
         }
         // END android-changed
 
-        for (int i = offset + length - 1; i >= offset; i--) {
-            unread(buffer[i]);
+        if (buf == null) {
+            throw new IOException();
         }
+        System.arraycopy(buffer, offset, buf, pos - length, length);
+        pos = pos - length;
     }
 
     /**

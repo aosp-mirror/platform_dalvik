@@ -24,6 +24,7 @@ package org.apache.harmony.luni.platform;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * This is the portable implementation of the file system interface.
@@ -239,7 +240,14 @@ class OSFileSystem implements IFileSystem {
         }
         int handler = openImpl(fileName, mode);
         if (handler < 0) {
-            throw new FileNotFoundException(new String(fileName));
+            try {
+                throw new FileNotFoundException(new String(fileName, "UTF-8"));
+            } catch (java.io.UnsupportedEncodingException e) {
+                // UTF-8 should always be supported, so throw an assertion
+                FileNotFoundException fnfe = new FileNotFoundException(new String(fileName));
+                e.initCause(fnfe);
+                throw new AssertionError(e);
+            }
         }
         return handler;
     }

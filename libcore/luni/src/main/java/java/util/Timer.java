@@ -187,14 +187,10 @@ public class Timer {
 
         /**
          * Starts a new timer.
-         *
-         * @param isDaemon
+         * 
+         * @param name thread's name
+         * @param isDaemon daemon thread or not
          */
-        TimerImpl(boolean isDaemon) {
-            this.setDaemon(isDaemon);
-            this.start();
-        }
-
         TimerImpl(String name, boolean isDaemon) {
             this.setName(name);
             this.setDaemon(isDaemon);
@@ -324,72 +320,78 @@ public class Timer {
         }
 
     }
+    
+	private static final class FinalizerHelper {
+		private final TimerImpl impl;
+		
+		FinalizerHelper(TimerImpl impl) {
+			super();
+			this.impl = impl;
+		}
+		
+		@Override
+		protected void finalize() {
+			synchronized (impl) {
+				impl.finished = true;
+				impl.notify();
+			}
+		}
+	}
+	
+	private static long timerId;
+	
+	private synchronized static long nextId() {
+		return timerId++;
+	}
 
     /* This object will be used in synchronization purposes */
-    private TimerImpl impl;
+    private final TimerImpl impl;
 
     // Used to finalize thread
     @SuppressWarnings("unused")
-    private final Object finalizer;
+    private final FinalizerHelper finalizer;
 
+    /**
+     * Creates a new named {@code Timer} which may be specified to be run as a
+     * daemon thread.
+     *
+     * @param name the name of the {@code Timer}.
+     * @param isDaemon true if {@code Timer}'s thread should be a daemon thread.
+     * @throws NullPointerException is {@code name} is {@code null}
+     */
+    public Timer(String name, boolean isDaemon) {
+    	super();
+    	if (name == null){
+    		throw new NullPointerException("name is null");
+    	}
+        this.impl = new TimerImpl(name, isDaemon);
+        this.finalizer = new FinalizerHelper(impl);
+    }
+    
+    /**
+     * Creates a new named {@code Timer} which does not run as a daemon thread.
+     *
+     * @param name the name of the Timer.
+     * @throws NullPointerException is {@code name} is {@code null}
+     */
+    public Timer(String name) {
+        this(name, false);
+    }
+    
     /**
      * Creates a new {@code Timer} which may be specified to be run as a daemon thread.
      *
-     * @param isDaemon
-     *            {@code true} if the {@code Timer}'s thread should be a daemon thread.
+     * @param isDaemon {@code true} if the {@code Timer}'s thread should be a daemon thread.
      */
     public Timer(boolean isDaemon) {
-        // BEGIN android-changed
-        impl = new TimerImpl("java.util.Timer", isDaemon);
-        // END android-changed
-        finalizer = newFinalizer();
+        this("Timer-" + Timer.nextId(), isDaemon);
     }
 
     /**
      * Creates a new non-daemon {@code Timer}.
      */
     public Timer() {
-        // BEGIN android-changed
-        impl = new TimerImpl("java.util.Timer", false);
-        // END android-changed
-        finalizer = newFinalizer();
-    }
-
-    /**
-     * Creates a new named {@code Timer} which may be specified to be run as a
-     * daemon thread.
-     *
-     * @param name
-     *            the name of the {@code Timer}.
-     * @param isDaemon
-     *            true if {@code Timer}'s thread should be a daemon thread.
-     */
-    public Timer(String name, boolean isDaemon) {
-        impl = new TimerImpl(name, isDaemon);
-        finalizer = newFinalizer();
-    }
-
-    /**
-     * Creates a new named {@code Timer} which does not run as a daemon thread.
-     *
-     * @param name
-     *            the name of the Timer.
-     */
-    public Timer(String name) {
-        impl = new TimerImpl(name, false);
-        finalizer = newFinalizer();
-    }
-
-    private Object newFinalizer() {
-        return new Object() { // $NON-LOCK-1$
-            @Override
-            protected void finalize() {
-                synchronized (impl) {
-                    impl.finished = true;
-                    impl.notify();
-                }
-            }
-        };
+        this(false);
     }
 
     /**
@@ -443,7 +445,7 @@ public class Timer {
      * @param task
      *            the task to schedule.
      * @param delay
-     *            amount of time before execution.
+     *            amount of time in milliseconds before execution.
      * @throws IllegalArgumentException
      *                if {@code delay < 0}.
      * @throws IllegalStateException
@@ -463,9 +465,9 @@ public class Timer {
      * @param task
      *            the task to schedule.
      * @param delay
-     *            amount of time before first execution.
+     *            amount of time in milliseconds before first execution.
      * @param period
-     *            amount of time between subsequent executions.
+     *            amount of time in milliseconds between subsequent executions.
      * @throws IllegalArgumentException
      *                if {@code delay < 0} or {@code period < 0}.
      * @throws IllegalStateException
@@ -488,7 +490,7 @@ public class Timer {
      * @param when
      *            time of first execution.
      * @param period
-     *            amount of time between subsequent executions.
+     *            amount of time in milliseconds between subsequent executions.
      * @throws IllegalArgumentException
      *                if {@code when.getTime() < 0} or {@code period < 0}.
      * @throws IllegalStateException
@@ -510,9 +512,9 @@ public class Timer {
      * @param task
      *            the task to schedule.
      * @param delay
-     *            amount of time before first execution.
+     *            amount of time in milliseconds before first execution.
      * @param period
-     *            amount of time between subsequent executions.
+     *            amount of time in milliseconds between subsequent executions.
      * @throws IllegalArgumentException
      *                if {@code delay < 0} or {@code period < 0}.
      * @throws IllegalStateException
@@ -535,7 +537,7 @@ public class Timer {
      * @param when
      *            time of first execution.
      * @param period
-     *            amount of time between subsequent executions.
+     *            amount of time in milliseconds between subsequent executions.
      * @throws IllegalArgumentException
      *                if {@code when.getTime() < 0} or {@code period < 0}.
      * @throws IllegalStateException

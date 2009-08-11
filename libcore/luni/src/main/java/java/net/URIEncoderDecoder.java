@@ -112,7 +112,7 @@ class URIEncoderDecoder {
      */
     static String quoteIllegal(String s, String legal)
             throws UnsupportedEncodingException {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
             if ((ch >= 'a' && ch <= 'z')
@@ -148,7 +148,7 @@ class URIEncoderDecoder {
      * @return java.lang.String the converted string
      */
     static String encodeOthers(String s) throws UnsupportedEncodingException {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
             if (ch <= 127) {
@@ -183,7 +183,7 @@ class URIEncoderDecoder {
      */
     static String decode(String s) throws UnsupportedEncodingException {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         for (int i = 0; i < s.length();) {
             char c = s.charAt(i);

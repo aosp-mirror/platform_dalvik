@@ -1174,7 +1174,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
      */
     String readln() throws IOException {
         boolean lastCr = false;
-        StringBuffer result = new StringBuffer(80);
+        StringBuilder result = new StringBuilder(80);
         int c = is.read();
         if (c < 0) {
             return null;

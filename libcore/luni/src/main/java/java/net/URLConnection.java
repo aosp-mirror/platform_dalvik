@@ -758,7 +758,7 @@ public abstract class URLConnection {
      * @return the string to be parsed
      */
     private String parseTypeString(String typeString) {
-        StringBuffer typeStringBuffer = new StringBuffer(typeString);
+        StringBuilder typeStringBuffer = new StringBuilder(typeString);
         for (int i = 0; i < typeStringBuffer.length(); i++) {
             // if non-alphanumeric, replace it with '_'
             char c = typeStringBuffer.charAt(i);

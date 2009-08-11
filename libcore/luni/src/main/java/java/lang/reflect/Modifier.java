@@ -279,9 +279,7 @@ public class Modifier {
      */
     @SuppressWarnings("nls")
     public static java.lang.String toString(int modifiers) {
-        StringBuffer buf;
-
-        buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         if (isPublic(modifiers)) {
             buf.append("public ");

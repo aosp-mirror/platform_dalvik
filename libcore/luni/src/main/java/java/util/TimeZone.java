@@ -446,7 +446,7 @@ public abstract class TimeZone implements Serializable, Cloneable {
     }
 
     private static String formatTimeZoneName(String name, int offset) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         int index = offset, length = name.length();
         buf.append(name.substring(0, offset));
 

@@ -564,7 +564,7 @@ public final class Locale implements Cloneable, Serializable {
      */
     public String getDisplayName(Locale locale) {
         int count = 0;
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         if (languageCode.length() > 0) {
             buffer.append(getDisplayLanguage(locale));
             count++;

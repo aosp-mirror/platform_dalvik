@@ -81,10 +81,11 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>,
      *            the collection of elements to add.
      */
     public ArrayList(Collection<? extends E> collection) {
-        int size = collection.size();
         firstIndex = 0;
+        Object[] objects = collection.toArray();
+        int size = objects.length;
         array = newElementArray(size + (size / 10));
-        collection.toArray(array);
+        System.arraycopy(objects, 0, array, 0, size);
         lastIndex = size;
         modCount = 1;
     }
@@ -187,7 +188,12 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>,
         if (this == collection) {
             collection = (ArrayList)clone();
         }
-        int growSize = collection.size();
+        Object[] dumparray = collection.toArray();
+        int growSize = dumparray.length;
+        if (growSize == 0) {
+            return false;
+        }
+
         if (0 < location && location < size) {
             if (array.length - size < growSize) {
                 growForInsert(location, growSize);
@@ -219,15 +225,10 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>,
             lastIndex += growSize;
         }
 
-        if (growSize > 0) {
-            Object[] dumparray = new Object[growSize];
-            collection.toArray(dumparray);
-            System.arraycopy(dumparray, 0, this.array, location + firstIndex,
-                    growSize);
-            modCount++;
-            return true;
-        }
-        return false;
+        System.arraycopy(dumparray, 0, this.array, location + firstIndex,
+                growSize);
+        modCount++;
+        return true;
     }
 
     /**

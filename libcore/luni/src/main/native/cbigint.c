@@ -18,7 +18,7 @@
 #include <string.h>
 #include "cbigint.h"
 
-#if defined(LINUX) || defined(FREEBSD) || defined(ZOS)
+#if defined(LINUX) || defined(FREEBSD) || defined(ZOS) || defined(MACOSX) || defined(AIX)
 #define USE_LL
 #endif
 
@@ -665,7 +665,7 @@ tenToTheEHighPrecision (U_64 * result, IDATA length, jint e)
      do {
      overflow = simpleAppendDecimalDigitHighPrecision(result, length, 0);
      if (overflow)
-     result[length++] = overflow; 
+     result[length++] = overflow;
      } while (--e);
    */
   return length;
@@ -686,7 +686,7 @@ timesTenToTheEHighPrecision (U_64 * result, IDATA length, jint e)
      do {
      overflow = simpleAppendDecimalDigitHighPrecision(result, length, 0);
      if (overflow)
-     result[length++] = overflow; 
+     result[length++] = overflow;
      } while (--e);
    */
   /* Replace the current implementaion which performs a
