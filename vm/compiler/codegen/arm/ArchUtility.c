@@ -37,6 +37,26 @@ static char * decodeRegList(int vector, char *buf)
     return buf;
 }
 
+static int expandImmediate(int value)
+{
+    int mode = (value & 0xf00) >> 8;
+    u4 bits = value & 0xff;
+    switch(mode) {
+        case 0:
+            return bits;
+       case 1:
+            return (bits << 16) | bits;
+       case 2:
+            return (bits << 24) | (bits << 8);
+       case 3:
+            return (bits << 24) | (bits << 16) | (bits << 8) | bits;
+      default:
+            break;
+    }
+    bits = (bits | 0x80) << 24;
+    return bits >> (((value & 0xf80) >> 7) - 8);
+}
+
 /*
  * Interpret a format string and build a string no longer than size
  * See format key in Assemble.c.
@@ -62,6 +82,10 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                assert((unsigned)(nc-'0') < 3);
                operand = lir->operands[nc-'0'];
                switch(*fmt++) {
+                   case 'm':
+                       operand = expandImmediate(operand);
+                       sprintf(tbuf,"%d [0x%x]", operand, operand);
+                       break;
                    case 's':
                        sprintf(tbuf,"s%d",operand & FP_REG_MASK);
                        break;
@@ -71,6 +95,7 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                    case 'h':
                        sprintf(tbuf,"%04x", operand);
                        break;
+                   case 'M':
                    case 'd':
                        sprintf(tbuf,"%d", operand);
                        break;
@@ -105,6 +130,9 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                                break;
                            case ARM_COND_CS:
                                strcpy(tbuf, "bcs");
+                               break;
+                           case ARM_COND_MI:
+                               strcpy(tbuf, "bmi");
                                break;
                            default:
                                strcpy(tbuf, "");

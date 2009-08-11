@@ -54,12 +54,18 @@
 
 /* Offset to distingish FP regs */
 #define FP_REG_OFFSET 32
-/* Is reg fp? */
-#define IS_FP_REG(x) (x & FP_REG_OFFSET)
+/* Offset to distinguish DP FP regs */
+#define FP_DOUBLE 64
+/* Reg types */
+#define FPREG(x) ((x & FP_REG_OFFSET) == FP_REG_OFFSET)
+#define LOWREG(x) ((x & 0x7) == x)
+#define DOUBLEREG(x) ((x & FP_DOUBLE) == FP_DOUBLE)
+#define SINGLEREG(x) (FPREG(x) && !DOUBLEREG(x))
 /* Mask to strip off fp flags */
 #define FP_REG_MASK (FP_REG_OFFSET-1)
 /* Mask to convert high reg to low for Thumb */
 #define THUMB_REG_MASK 0x7
+
 
 typedef enum NativeRegisterPool {
     r0 = 0,
@@ -110,6 +116,22 @@ typedef enum NativeRegisterPool {
     fr29 = 29 + FP_REG_OFFSET,
     fr30 = 30 + FP_REG_OFFSET,
     fr31 = 31 + FP_REG_OFFSET,
+    dr0 = fr0 + FP_DOUBLE,
+    dr1 = fr2 + FP_DOUBLE,
+    dr2 = fr4 + FP_DOUBLE,
+    dr3 = fr6 + FP_DOUBLE,
+    dr4 = fr8 + FP_DOUBLE,
+    dr5 = fr10 + FP_DOUBLE,
+    dr6 = fr12 + FP_DOUBLE,
+    dr7 = fr14 + FP_DOUBLE,
+    dr8 = fr16 + FP_DOUBLE,
+    dr9 = fr18 + FP_DOUBLE,
+    dr10 = fr20 + FP_DOUBLE,
+    dr11 = fr22 + FP_DOUBLE,
+    dr12 = fr24 + FP_DOUBLE,
+    dr13 = fr26 + FP_DOUBLE,
+    dr14 = fr28 + FP_DOUBLE,
+    dr15 = fr30 + FP_DOUBLE,
 } NativeRegisterPool;
 
 /* Thumb condition encodings */
@@ -217,7 +239,6 @@ typedef enum ArmOpCode {
     THUMB_SUB_SPI7,       /* sub(4)  [101100001] imm_7[6..0] */
     THUMB_SWI,            /* swi     [11011111] imm_8[7..0] */
     THUMB_TST,            /* tst     [0100001000] rm[5..3] rn[2..0] */
-// FIXME: Enhance assembly encoding. Only low fp regs supported here
     THUMB2_VLDRS,         /* vldr low  sx [111011011001] rn[19..16] rd[15-12]
                                        [1010] imm_8[7..0] */
     THUMB2_VLDRD,         /* vldr low  dx [111011011001] rn[19..16] rd[15-12]
@@ -258,6 +279,30 @@ typedef enum ArmOpCode {
                                        [10101100] vm[3..0] */
     THUMB2_VSQRTD,        /* vsqrt.f64 vd, vm [1110111010110001] vd[15..12]
                                        [10111100] vm[3..0] */
+    THUMB2_MOV_IMM_SHIFT, /* mov(T2) rd, #<const> [11110] i [00001001111]
+                                       imm3 rd[11..8] imm8 */
+    THUMB2_MOV_IMM16,     /* mov(T3) rd, #<const> [11110] i [0010100] imm4 [0]
+                                       imm3 rd[11..8] imm8 */
+    THUMB2_STR_RRI12,     /* str(Imm,T3) rd,[rn,#imm12] [111110001100]
+                                       rn[19..16] rt[15..12] imm12[11..0] */
+    THUMB2_LDR_RRI12,     /* str(Imm,T3) rd,[rn,#imm12] [111110001100]
+                                       rn[19..16] rt[15..12] imm12[11..0] */
+    THUMB2_STR_RRI8_PREDEC, /* str(Imm,T4) rd,[rn,#-imm8] [111110000100]
+                                       rn[19..16] rt[15..12] [1100] imm[7..0]*/
+    THUMB2_LDR_RRI8_PREDEC, /* ldr(Imm,T4) rd,[rn,#-imm8] [111110000101]
+                                       rn[19..16] rt[15..12] [1100] imm[7..0]*/
+    THUMB2_CBNZ,            /* cbnz rd,<label> [101110] i [1] imm5[7..3]
+                                       rn[2..0] */
+    THUMB2_CBZ,             /* cbn rd,<label> [101100] i [1] imm5[7..3]
+                                       rn[2..0] */
+    THUMB2_ADD_RRI12,       /* add rd, rn, #imm12 [11110] i [100000] rn[19..16]
+                                       [0] imm3[14..12] rd[11..8] imm8[7..0] */
+    THUMB2_MOV_RR,          /* mov rd, rm [11101010010011110000] rd[11..8]
+                                       [0000] rm[3..0] */
+    THUMB2_VMOVS,           /* vmov.f32 vd, vm [111011101] D [110000]
+                                       vd[15..12] 101001] M [0] vm[3..0] */
+    THUMB2_VMOVD,           /* vmov.f64 vd, vm [111011101] D [110000]
+                                       vd[15..12] 101101] M [0] vm[3..0] */
     ARM_LAST,
 } ArmOpCode;
 
@@ -278,8 +323,10 @@ typedef enum ArmEncodingKind {
     BITBLT,        /* Bit string using end/start */
     DFP,           /* Double FP reg */
     SFP,           /* Single FP reg */
-    IMMSHIFT8,     /* Shifted 8-bit immed field using [26,14..12,7..0] */
-    IMM12,         /* Zero-extended 12-bit immediate using [26,14..12,7..0] */
+    MODIMM,        /* Shifted 8-bit immediate using [26,14..12,7..0] */
+    IMM16,         /* Zero-extended immediate using [26,19..16,14..12,7..0] */
+    IMM6,          /* Encoded branch target using [9,7..3]0 */
+    IMM12,         /* Zero-extended immediate using [26,14..12,7..0] */
 } ArmEncodingKind;
 
 /* Struct used to define the snippet positions for each Thumb opcode */

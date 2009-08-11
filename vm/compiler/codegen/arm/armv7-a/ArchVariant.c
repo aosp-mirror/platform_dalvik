@@ -119,11 +119,11 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
     int offset = offsetof(InterpState, retval);
     int vSrc = mir->dalvikInsn.vA;
-    loadDouble(cUnit, vSrc, fr2);
-    newLIR2(cUnit, THUMB2_VSQRTD, fr0, fr2);
+    loadDouble(cUnit, vSrc, dr1);
+    newLIR2(cUnit, THUMB2_VSQRTD, dr0, dr1);
     assert(offset & 0x3 == 0);  /* Must be word aligned */
     assert(offset < 1024);
-    newLIR3(cUnit, THUMB2_VSTRD, fr0, rGLUE, offset >> 2);
+    newLIR3(cUnit, THUMB2_VSTRD, dr0, rGLUE, offset >> 2);
     return true;
 }
 
@@ -212,10 +212,10 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
         default:
             return true;
     }
-    loadDouble(cUnit, vSrc1, fr2);
-    loadDouble(cUnit, vSrc2, fr4);
-    newLIR3(cUnit, op, fr0, fr2, fr4);
-    storeDouble(cUnit, fr0, vDest, 0);
+    loadDouble(cUnit, vSrc1, dr1);
+    loadDouble(cUnit, vSrc2, dr2);
+    newLIR3(cUnit, op, dr0, dr1, dr2);
+    storeDouble(cUnit, dr0, vDest, 0);
     return false;
 }
 
@@ -227,6 +227,8 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
     int op = THUMB_BKPT;
     bool longSrc = false;
     bool longDest = false;
+    int srcReg;
+    int tgtReg;
 
     switch (opCode) {
         case OP_INT_TO_FLOAT:
@@ -267,15 +269,20 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
         default:
             return true;
     }
-    if (longSrc)
-        loadDouble(cUnit, vSrc2, fr2);
-    else
-        loadFloat(cUnit, vSrc2, fr2);
-    newLIR2(cUnit, op, fr0, fr2);
-    if (longDest)
-        storeDouble(cUnit, fr0, vSrc1Dest, 0);
-    else
+    if (longSrc) {
+        srcReg = dr1;
+        loadDouble(cUnit, vSrc2, srcReg);
+    } else {
+        srcReg = fr2;
+        loadFloat(cUnit, vSrc2, srcReg);
+    }
+    if (longDest) {
+        newLIR2(cUnit, op, dr0, srcReg);
+        storeDouble(cUnit, dr0, vSrc1Dest, 0);
+    } else {
+        newLIR2(cUnit, op, fr0, srcReg);
         storeFloat(cUnit, fr0, vSrc1Dest, 0);
+    }
     return false;
 }
 

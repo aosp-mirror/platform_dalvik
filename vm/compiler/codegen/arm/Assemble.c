@@ -65,6 +65,8 @@
  *     R -> register list
  *     s -> single precision floating point register
  *     S -> double precision floating point register
+ *     m -> Thumb2 modified immediate
+ *     M -> Thumb2 16-bit zero-extended immediate
  *
  *  [!] escape.  To insert "!", use "!!"
  */
@@ -365,19 +367,19 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
                  "tst", "r!0d, r!1d", 1),
     ENCODING_MAP(THUMB2_VLDRS,       0xed900a00,
                  SFP, 22, 12, BITBLT, 19, 16, BITBLT, 7, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vldr", "!0s, [r!1d, #!2E]", 2),
     ENCODING_MAP(THUMB2_VLDRD,       0xed900b00,
                  DFP, 22, 12, BITBLT, 19, 16, BITBLT, 7, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vldr", "!0S, [r!1d, #!2E]", 2),
     ENCODING_MAP(THUMB2_VMULS,        0xee200a00,
                  SFP, 22, 12, SFP, 7, 16, SFP, 5, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vmuls", "!0s, !1s, !2s", 2),
     ENCODING_MAP(THUMB2_VMULD,        0xee200b00,
                  DFP, 22, 12, DFP, 7, 16, DFP, 5, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vmuld", "!0S, !1S, !2S", 2),
     ENCODING_MAP(THUMB2_VSTRS,       0xed800a00,
                  SFP, 22, 12, BITBLT, 19, 16, BITBLT, 7, 0,
@@ -389,60 +391,108 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
                  "vstr", "!0S, [r!1d, #!2E]", 2),
     ENCODING_MAP(THUMB2_VSUBS,        0xee300a40,
                  SFP, 22, 12, SFP, 7, 16, SFP, 5, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vsub", "!0s, !1s, !2s", 2),
     ENCODING_MAP(THUMB2_VSUBD,        0xee300b40,
                  DFP, 22, 12, DFP, 7, 16, DFP, 5, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vsub", "!0S, !1S, !2S", 2),
     ENCODING_MAP(THUMB2_VADDS,        0xee300a00,
                  SFP, 22, 12, SFP, 7, 16, SFP, 5, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vadd", "!0s, !1s, !2s", 2),
     ENCODING_MAP(THUMB2_VADDD,        0xee300b00,
                  DFP, 22, 12, DFP, 7, 16, DFP, 5, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vadd", "!0S, !1S, !2S", 2),
     ENCODING_MAP(THUMB2_VDIVS,        0xee800a00,
                  SFP, 22, 12, SFP, 7, 16, SFP, 5, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vdivs", "!0s, !1s, !2s", 2),
     ENCODING_MAP(THUMB2_VDIVD,        0xee800b00,
                  DFP, 22, 12, DFP, 7, 16, DFP, 5, 0,
-                 IS_TERTIARY_OP,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
                  "vdivs", "!0S, !1S, !2S", 2),
     ENCODING_MAP(THUMB2_VCVTIF,       0xeeb80ac0,
                  SFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1,
-                 IS_BINARY_OP,
+                 IS_BINARY_OP | CLOBBER_DEST,
                  "vcvt.f32", "!0s, !1s", 2),
     ENCODING_MAP(THUMB2_VCVTID,       0xeeb80bc0,
                  DFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1,
-                 IS_BINARY_OP,
+                 IS_BINARY_OP | CLOBBER_DEST,
                  "vcvt.f64", "!0S, !1s", 2),
     ENCODING_MAP(THUMB2_VCVTFI,       0xeebd0ac0,
                  SFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1,
-                 IS_BINARY_OP,
+                 IS_BINARY_OP | CLOBBER_DEST,
                  "vcvt.s32.f32 ", "!0s, !1s", 2),
     ENCODING_MAP(THUMB2_VCVTDI,       0xeebd0bc0,
                  SFP, 22, 12, DFP, 5, 0, UNUSED, -1, -1,
-                 IS_BINARY_OP,
+                 IS_BINARY_OP | CLOBBER_DEST,
                  "vcvt.s32.f64 ", "!0s, !1S", 2),
     ENCODING_MAP(THUMB2_VCVTFD,       0xeeb70ac0,
                  DFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1,
-                 IS_BINARY_OP,
+                 IS_BINARY_OP | CLOBBER_DEST,
                  "vcvt.f64.f32 ", "!0S, !1s", 2),
     ENCODING_MAP(THUMB2_VCVTDF,       0xeeb70bc0,
                  SFP, 22, 12, DFP, 5, 0, UNUSED, -1, -1,
-                 IS_BINARY_OP,
+                 IS_BINARY_OP | CLOBBER_DEST,
                  "vcvt.f32.f64 ", "!0s, !1S", 2),
     ENCODING_MAP(THUMB2_VSQRTS,       0xeeb10ac0,
                  SFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1,
-                 IS_BINARY_OP,
+                 IS_BINARY_OP | CLOBBER_DEST,
                  "vsqrt.f32 ", "!0s, !1s", 2),
     ENCODING_MAP(THUMB2_VSQRTD,       0xeeb10bc0,
                  DFP, 22, 12, DFP, 5, 0, UNUSED, -1, -1,
-                 IS_BINARY_OP,
+                 IS_BINARY_OP | CLOBBER_DEST,
                  "vsqrt.f64 ", "!0S, !1S", 2),
+    ENCODING_MAP(THUMB2_MOV_IMM_SHIFT,       0xf04f0000,
+                 BITBLT, 11, 8, MODIMM, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "mov", "r!0d, #!1m", 2),
+    ENCODING_MAP(THUMB2_MOV_IMM16,       0xf2400000,
+                 BITBLT, 11, 8, IMM16, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "mov", "r!0d, #!1M", 2),
+    ENCODING_MAP(THUMB2_STR_RRI12,       0xf8c00000,
+                 BITBLT, 15, 12, BITBLT, 19, 16, BITBLT, 11, 0,
+                 IS_TERTIARY_OP,
+                 "str", "r!0d,[r!1d, #!2d", 2),
+    ENCODING_MAP(THUMB2_LDR_RRI12,       0xf8d00000,
+                 BITBLT, 15, 12, BITBLT, 19, 16, BITBLT, 11, 0,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
+                 "ldr", "r!0d,[r!1d, #!2d", 2),
+    ENCODING_MAP(THUMB2_STR_RRI8_PREDEC,       0xf8400c00,
+                 BITBLT, 15, 12, BITBLT, 19, 16, BITBLT, 8, 0,
+                 IS_TERTIARY_OP,
+                 "str", "r!0d,[r!1d, #-!2d]", 2),
+    ENCODING_MAP(THUMB2_LDR_RRI8_PREDEC,       0xf8500c00,
+                 BITBLT, 15, 12, BITBLT, 19, 16, BITBLT, 8, 0,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
+                 "ldr", "r!0d,[r!1d, #-!2d]", 2),
+    ENCODING_MAP(THUMB2_CBNZ,       0xb900,
+                 BITBLT, 2, 0, IMM6, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP,
+                 "cbnz", "r!0d,!1t", 1),
+    ENCODING_MAP(THUMB2_CBZ,       0xb100,
+                 BITBLT, 2, 0, IMM6, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP,
+                 "cbz", "r!0d,!1t", 1),
+    ENCODING_MAP(THUMB2_ADD_RRI12,       0xf1000000,
+                 BITBLT, 11, 8, BITBLT, 19, 16, IMM12, -1, -1,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
+                 "add", "r!0d,r!1d,#!2d", 2),
+    ENCODING_MAP(THUMB2_MOV_RR,       0xea4f0000,
+                 BITBLT, 11, 8, BITBLT, 3, 0, UNUSED, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "mov", "r!0d, r!1d", 2),
+    ENCODING_MAP(THUMB2_VMOVS,       0xeeb00a40,
+                 SFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "vmov.f32 ", "!0s, !1s", 2),
+    ENCODING_MAP(THUMB2_VMOVD,       0xeeb00b40,
+                 DFP, 22, 12, DFP, 5, 0, UNUSED, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "vmov.f64 ", "!0s, !1s", 2),
 };
 
 #define PADDING_MOV_R0_R0               0x1C00
@@ -508,6 +558,15 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                 return true;
             }
             lir->operands[1] = delta >> 2;
+        } else if (lir->opCode == THUMB2_CBNZ || lir->opCode == THUMB2_CBZ) {
+            ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
+            intptr_t pc = lir->generic.offset + 4;
+            intptr_t target = targetLIR->generic.offset;
+            int delta = target - pc;
+            if (delta > 126 || delta < 0) {
+                return true;
+            }
+            lir->operands[1] = delta >> 1;
         } else if (lir->opCode == THUMB_B_COND) {
             ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
             intptr_t pc = lir->generic.offset + 4;
@@ -552,6 +611,11 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             switch(encoder->fieldLoc[i].kind) {
                 case UNUSED:
                     break;
+                case IMM6:
+                    value = ((lir->operands[i] & 0x20) >> 5) << 9;
+                    value |= (lir->operands[i] & 0x1f) << 3;
+                    bits |= value;
+                    break;
                 case BITBLT:
                     value = (lir->operands[i] << encoder->fieldLoc[i].start) &
                             ((1 << (encoder->fieldLoc[i].end + 1)) - 1);
@@ -575,11 +639,19 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                             encoder->fieldLoc[i].start;
                     bits |= value;
                     break;
-                case IMMSHIFT8:
                 case IMM12:
+                case MODIMM:
                     value = ((lir->operands[i] & 0x800) >> 11) << 26;
                     value |= ((lir->operands[i] & 0x700) >> 8) << 12;
                     value |= lir->operands[i] & 0x0ff;
+                    bits |= value;
+                    break;
+                case IMM16:
+                    value = ((lir->operands[i] & 0x0800) >> 11) << 26;
+                    value |= ((lir->operands[i] & 0xf000) >> 12) << 16;
+                    value |= ((lir->operands[i] & 0x0700) >> 8) << 12;
+                    value |= lir->operands[i] & 0x0ff;
+                    bits |= value;
                     break;
                 default:
                     assert(0);

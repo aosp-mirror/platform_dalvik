@@ -45,6 +45,7 @@ static inline ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
                                          ArmConditionCode cond, int reg,
                                          int checkValue, int dOffset,
                                          ArmLIR *pcrLabel);
+ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc);
 
 /*****************************************************************************/
 
@@ -131,6 +132,19 @@ static inline int selectFirstRegister(CompilationUnit *cUnit, int vSrc,
 }
 
 /*****************************************************************************/
+
+ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
+{
+    ArmLIR* res = dvmCompilerNew(sizeof(ArmLIR), true);
+    assert(LOWREG(rDest) && LOWREG(rSrc));
+    res->operands[0] = rDest;
+    res->operands[1] = rSrc;
+    res->opCode = THUMB_MOV_RR;
+    if (rDest == rSrc) {
+        res->isNop = true;
+    }
+    return res;
+}
 
 /*
  * Load a immediate using a shortcut if possible; otherwise
