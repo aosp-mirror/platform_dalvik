@@ -31,6 +31,456 @@ static intptr_t templateEntryOffsets[TEMPLATE_LAST_MARK];
 /* Track exercised opcodes */
 static int opcodeCoverage[256];
 
+#if defined(WITH_SELF_VERIFICATION)
+/* Prevent certain opcodes from being jitted */
+static inline bool selfVerificationPuntOps(OpCode op)
+{
+  return (op == OP_MONITOR_ENTER || op == OP_MONITOR_EXIT ||
+          op == OP_NEW_INSTANCE  || op == OP_NEW_ARRAY);
+}
+
+/*
+ * The following are used to keep compiled loads and stores from modifying
+ * memory during self verification mode.
+ *
+ * Stores do not modify memory. Instead, the address and value pair are stored
+ * into heapSpace. Addresses within heapSpace are unique. For accesses smaller
+ * than a word, the word containing the address is loaded first before being
+ * updated.
+ *
+ * Loads check heapSpace first and return data from there if an entry exists.
+ * Otherwise, data is loaded from memory as usual.
+ */
+
+/* Decode contents of heapArgSpace to determine addr to load from */
+static void selfVerificationLoadDecode(HeapArgSpace* heapArgSpace, int* addr)
+{
+    int reg = heapArgSpace->regMap & 0xF;
+
+    switch (reg) {
+        case 0:
+            *addr = heapArgSpace->r0;
+            break;
+        case 1:
+            *addr = heapArgSpace->r1;
+            break;
+        case 2:
+            *addr = heapArgSpace->r2;
+            break;
+        case 3:
+            *addr = heapArgSpace->r3;
+            break;
+        default:
+            LOGE("ERROR: bad reg used in selfVerificationLoadDecode: %d", reg);
+            break;
+    }
+}
+
+/* Decode contents of heapArgSpace to determine reg to load into */
+static void selfVerificationLoadDecodeData(HeapArgSpace* heapArgSpace,
+                                           int data, int reg)
+{
+    switch (reg) {
+        case 0:
+            heapArgSpace->r0 = data;
+            break;
+        case 1:
+            heapArgSpace->r1 = data;
+            break;
+        case 2:
+            heapArgSpace->r2 = data;
+            break;
+        case 3:
+            heapArgSpace->r3 = data;
+            break;
+        default:
+            LOGE("ERROR: bad reg passed to selfVerificationLoadDecodeData: %d",
+                reg);
+            break;
+    }
+}
+
+static void selfVerificationLoad(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap *heapSpacePtr;
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr, data;
+    selfVerificationLoadDecode(heapArgSpace, &addr);
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) {
+            data = heapSpacePtr->data;
+            break;
+        }
+    }
+
+    if (heapSpacePtr == shadowSpace->heapSpaceTail)
+        data = *((unsigned int*) addr);
+
+    //LOGD("*** HEAP LOAD: Addr: 0x%x Data: 0x%x", addr, data);
+
+    int reg = (heapArgSpace->regMap >> 4) & 0xF;
+    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
+}
+
+static void selfVerificationLoadByte(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap *heapSpacePtr;
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr, data;
+    selfVerificationLoadDecode(heapArgSpace, &addr);
+
+    int maskedAddr = addr & 0xFFFFFFFC;
+    int alignment = addr & 0x3;
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == maskedAddr) {
+            addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
+            data = *((unsigned char*) addr);
+            break;
+        }
+    }
+
+    if (heapSpacePtr == shadowSpace->heapSpaceTail)
+        data = *((unsigned char*) addr);
+
+    //LOGD("*** HEAP LOAD BYTE: Addr: 0x%x Data: 0x%x", addr, data);
+
+    int reg = (heapArgSpace->regMap >> 4) & 0xF;
+    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
+}
+
+static void selfVerificationLoadHalfword(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap *heapSpacePtr;
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr, data;
+    selfVerificationLoadDecode(heapArgSpace, &addr);
+
+    int maskedAddr = addr & 0xFFFFFFFC;
+    int alignment = addr & 0x2;
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == maskedAddr) {
+            addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
+            data = *((unsigned short*) addr);
+            break;
+        }
+    }
+
+    if (heapSpacePtr == shadowSpace->heapSpaceTail)
+        data = *((unsigned short*) addr);
+
+    //LOGD("*** HEAP LOAD HALFWORD: Addr: 0x%x Data: 0x%x", addr, data);
+
+    int reg = (heapArgSpace->regMap >> 4) & 0xF;
+    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
+}
+
+static void selfVerificationLoadSignedByte(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap* heapSpacePtr;
+    ShadowSpace* shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr, data;
+    selfVerificationLoadDecode(heapArgSpace, &addr);
+
+    int maskedAddr = addr & 0xFFFFFFFC;
+    int alignment = addr & 0x3;
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == maskedAddr) {
+            addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
+            data = *((signed char*) addr);
+            break;
+        }
+    }
+
+    if (heapSpacePtr == shadowSpace->heapSpaceTail)
+        data = *((signed char*) addr);
+
+    //LOGD("*** HEAP LOAD SIGNED BYTE: Addr: 0x%x Data: 0x%x", addr, data);
+
+    int reg = (heapArgSpace->regMap >> 4) & 0xF;
+    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
+}
+
+static void selfVerificationLoadSignedHalfword(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap* heapSpacePtr;
+    ShadowSpace* shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr, data;
+    selfVerificationLoadDecode(heapArgSpace, &addr);
+
+    int maskedAddr = addr & 0xFFFFFFFC;
+    int alignment = addr & 0x2;
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == maskedAddr) {
+            addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
+            data = *((signed short*) addr);
+            break;
+        }
+    }
+
+    if (heapSpacePtr == shadowSpace->heapSpaceTail)
+        data = *((signed short*) addr);
+
+    //LOGD("*** HEAP LOAD SIGNED HALFWORD: Addr: 0x%x Data: 0x%x", addr, data);
+
+    int reg = (heapArgSpace->regMap >> 4) & 0xF;
+    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
+}
+
+static void selfVerificationLoadDoubleword(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap* heapSpacePtr;
+    ShadowSpace* shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr;
+    selfVerificationLoadDecode(heapArgSpace, &addr);
+
+    int addr2 = addr+4;
+    unsigned int data = *((unsigned int*) addr);
+    unsigned int data2 = *((unsigned int*) addr2);
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) {
+            data = heapSpacePtr->data;
+        } else if (heapSpacePtr->addr == addr2) {
+            data2 = heapSpacePtr->data;
+        }
+    }
+
+    //LOGD("*** HEAP LOAD DOUBLEWORD: Addr: 0x%x Data: 0x%x Data2: 0x%x",
+    //    addr, data, data2);
+
+    int reg = (heapArgSpace->regMap >> 4) & 0xF;
+    int reg2 = (heapArgSpace->regMap >> 8) & 0xF;
+    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
+    selfVerificationLoadDecodeData(heapArgSpace, data2, reg2);
+}
+
+/* Decode contents of heapArgSpace to determine arguments to store. */
+static void selfVerificationStoreDecode(HeapArgSpace* heapArgSpace,
+                                        int* value, int reg)
+{
+    switch (reg) {
+        case 0:
+            *value = heapArgSpace->r0;
+            break;
+        case 1:
+            *value = heapArgSpace->r1;
+            break;
+        case 2:
+            *value = heapArgSpace->r2;
+            break;
+        case 3:
+            *value = heapArgSpace->r3;
+            break;
+        default:
+            LOGE("ERROR: bad reg passed to selfVerificationStoreDecode: %d",
+                reg);
+            break;
+    }
+}
+
+static void selfVerificationStore(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap *heapSpacePtr;
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr, data;
+    int reg0 = heapArgSpace->regMap & 0xF;
+    int reg1 = (heapArgSpace->regMap >> 4) & 0xF;
+    selfVerificationStoreDecode(heapArgSpace, &addr, reg0);
+    selfVerificationStoreDecode(heapArgSpace, &data, reg1);
+
+    //LOGD("*** HEAP STORE: Addr: 0x%x Data: 0x%x", addr, data);
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) break;
+    }
+
+    if (heapSpacePtr == shadowSpace->heapSpaceTail) {
+        heapSpacePtr->addr = addr;
+        shadowSpace->heapSpaceTail++;
+    }
+
+    heapSpacePtr->data = data;
+}
+
+static void selfVerificationStoreByte(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap *heapSpacePtr;
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr, data;
+    int reg0 = heapArgSpace->regMap & 0xF;
+    int reg1 = (heapArgSpace->regMap >> 4) & 0xF;
+    selfVerificationStoreDecode(heapArgSpace, &addr, reg0);
+    selfVerificationStoreDecode(heapArgSpace, &data, reg1);
+
+    int maskedAddr = addr & 0xFFFFFFFC;
+    int alignment = addr & 0x3;
+
+    //LOGD("*** HEAP STORE BYTE: Addr: 0x%x Data: 0x%x", addr, data);
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == maskedAddr) break;
+    }
+
+    if (heapSpacePtr == shadowSpace->heapSpaceTail)  {
+        heapSpacePtr->addr = maskedAddr;
+        heapSpacePtr->data = *((unsigned int*) maskedAddr);
+        shadowSpace->heapSpaceTail++;
+    }
+
+    addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
+    *((unsigned char*) addr) = (char) data;
+
+    //LOGD("*** HEAP STORE BYTE: Addr: 0x%x Final Data: 0x%x",
+    //    addr, heapSpacePtr->data);
+}
+
+static void selfVerificationStoreHalfword(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap *heapSpacePtr;
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr, data;
+    int reg0 = heapArgSpace->regMap & 0xF;
+    int reg1 = (heapArgSpace->regMap >> 4) & 0xF;
+    selfVerificationStoreDecode(heapArgSpace, &addr, reg0);
+    selfVerificationStoreDecode(heapArgSpace, &data, reg1);
+
+    int maskedAddr = addr & 0xFFFFFFFC;
+    int alignment = addr & 0x2;
+
+    //LOGD("*** HEAP STORE HALFWORD: Addr: 0x%x Data: 0x%x", addr, data);
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == maskedAddr) break;
+    }
+
+    if (heapSpacePtr == shadowSpace->heapSpaceTail)  {
+        heapSpacePtr->addr = maskedAddr;
+        heapSpacePtr->data = *((unsigned int*) maskedAddr);
+        shadowSpace->heapSpaceTail++;
+    }
+
+    addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
+    *((unsigned short*) addr) = (short) data;
+
+    //LOGD("*** HEAP STORE HALFWORD: Addr: 0x%x Final Data: 0x%x",
+    //    addr, heapSpacePtr->data);
+}
+
+static void selfVerificationStoreDoubleword(InterpState* interpState)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowHeap *heapSpacePtr;
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
+
+    int addr, data, data2;
+    int reg0 = heapArgSpace->regMap & 0xF;
+    int reg1 = (heapArgSpace->regMap >> 4) & 0xF;
+    int reg2 = (heapArgSpace->regMap >> 8) & 0xF;
+    selfVerificationStoreDecode(heapArgSpace, &addr, reg0);
+    selfVerificationStoreDecode(heapArgSpace, &data, reg1);
+    selfVerificationStoreDecode(heapArgSpace, &data2, reg2);
+
+    int addr2 = addr+4;
+    bool store1 = false, store2 = false;
+
+    //LOGD("*** HEAP STORE DOUBLEWORD: Addr: 0x%x Data: 0x%x, Data2: 0x%x",
+    //    addr, data, data2);
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) {
+            heapSpacePtr->data = data;
+            store1 = true;
+        } else if (heapSpacePtr->addr == addr2) {
+            heapSpacePtr->data = data2;
+            store2 = true;
+        }
+    }
+
+    if (!store1) {
+        shadowSpace->heapSpaceTail->addr = addr;
+        shadowSpace->heapSpaceTail->data = data;
+        shadowSpace->heapSpaceTail++;
+    }
+    if (!store2) {
+        shadowSpace->heapSpaceTail->addr = addr2;
+        shadowSpace->heapSpaceTail->data = data2;
+        shadowSpace->heapSpaceTail++;
+    }
+}
+
+/* Common wrapper function for all memory operations */
+static void selfVerificationMemOpWrapper(CompilationUnit *cUnit, int regMap,
+                                         void* funct)
+{
+    int regMask = (1 << r4PC) | (1 << r3) | (1 << r2) | (1 << r1) | (1 << r0);
+
+    /* r7 <- InterpState->heapArgSpace */
+    loadConstant(cUnit, r4PC, offsetof(InterpState, heapArgSpace));
+    newLIR3(cUnit, THUMB_ADD_RRR, r7, rGLUE, r4PC);
+
+    /* Save out values to heapArgSpace */
+    loadConstant(cUnit, r4PC, regMap);
+    newLIR2(cUnit, THUMB_STMIA, r7, regMask);
+
+    /* Pass interpState pointer to function */
+    newLIR2(cUnit, THUMB_MOV_RR, r0, rGLUE);
+
+    /* Set function pointer and branch */
+    loadConstant(cUnit, r1, (int) funct);
+    newLIR1(cUnit, THUMB_BLX_R, r1);
+
+    /* r7 <- InterpState->heapArgSpace */
+    loadConstant(cUnit, r4PC, offsetof(InterpState, heapArgSpace));
+    newLIR3(cUnit, THUMB_ADD_RRR, r7, rGLUE, r4PC);
+
+    /* Restore register state */
+    newLIR2(cUnit, THUMB_LDMIA, r7, regMask);
+}
+#endif
+
 /*****************************************************************************/
 
 /*
@@ -284,8 +734,16 @@ static void genIGetWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
     loadConstant(cUnit, reg3, fieldOffset);
     genNullCheck(cUnit, dInsn->vB, reg2, mir->offset, NULL); /* null object? */
     newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+#if !defined(WITH_SELF_VERIFICATION)
     newLIR2(cUnit, THUMB_LDMIA, reg2, (1<<reg0 | 1<<reg1));
     storeValuePair(cUnit, reg0, reg1, dInsn->vA, reg3);
+#else
+    int regMap = reg1 << 8 | reg0 << 4 | reg2;
+    selfVerificationMemOpWrapper(cUnit, regMap,
+        &selfVerificationLoadDoubleword);
+
+    storeValuePair(cUnit, reg0, reg1, dInsn->vA, reg3);
+#endif
 }
 
 /* Store a wide field to an object instance */
@@ -313,7 +771,13 @@ static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
     loadConstant(cUnit, reg3, fieldOffset);
     genNullCheck(cUnit, dInsn->vB, reg2, mir->offset, NULL); /* null object? */
     newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+#if !defined(WITH_SELF_VERIFICATION)
     newLIR2(cUnit, THUMB_STMIA, reg2, (1<<reg0 | 1<<reg1));
+#else
+    int regMap = reg1 << 8 | reg0 << 4 | reg2;
+    selfVerificationMemOpWrapper(cUnit, regMap,
+        &selfVerificationStoreDoubleword);
+#endif
 }
 
 /*
@@ -338,8 +802,18 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
     loadValue(cUnit, dInsn->vB, reg0);
     loadConstant(cUnit, reg1, fieldOffset);
     genNullCheck(cUnit, dInsn->vB, reg0, mir->offset, NULL); /* null object? */
+#if !defined(WITH_SELF_VERIFICATION)
     newLIR3(cUnit, inst, reg0, reg0, reg1);
     storeValue(cUnit, reg0, dInsn->vA, reg1);
+#else
+    /* Combine address and offset */
+    newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, reg1);
+
+    int regMap = reg0 << 4 | reg0;
+    selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationLoad);
+
+    storeValue(cUnit, reg0, dInsn->vA, reg1);
+#endif
 }
 
 /*
@@ -366,7 +840,17 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
     loadValue(cUnit, dInsn->vA, reg2);
     updateLiveRegister(cUnit, dInsn->vA, reg2);
     genNullCheck(cUnit, dInsn->vB, reg0, mir->offset, NULL); /* null object? */
+#if !defined(WITH_SELF_VERIFICATION)
     newLIR3(cUnit, inst, reg2, reg0, reg1);
+#else
+    /* Combine address and offset */
+    newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, reg1);
+
+    int regMap = reg2 << 4 | reg0;
+    selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationStore);
+
+    newLIR3(cUnit, THUMB_SUB_RRR, reg0, reg0, reg1);
+#endif
 }
 
 
@@ -406,6 +890,7 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
     if (scale) {
         newLIR3(cUnit, THUMB_LSL, reg3, reg3, scale);
     }
+#if !defined(WITH_SELF_VERIFICATION)
     if (scale==3) {
         newLIR3(cUnit, inst, reg0, reg2, reg3);
         newLIR2(cUnit, THUMB_ADD_RI8, reg2, 4);
@@ -415,6 +900,46 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
         newLIR3(cUnit, inst, reg0, reg2, reg3);
         storeValue(cUnit, reg0, vDest, reg3);
     }
+#else
+    void* funct;
+    switch (scale) {
+        case 0:
+            if (inst == THUMB_LDRSB_RRR)
+                funct = (void*) &selfVerificationLoadSignedByte;
+            else
+                funct = (void*) &selfVerificationLoadByte;
+            break;
+        case 1:
+            if (inst == THUMB_LDRSH_RRR)
+                funct = (void*) &selfVerificationLoadSignedHalfword;
+            else
+                funct = (void*) &selfVerificationLoadHalfword;
+            break;
+        case 2:
+            funct = (void*) &selfVerificationLoad;
+            break;
+        case 3:
+            funct = (void*) &selfVerificationLoadDoubleword;
+            break;
+        default:
+            LOGE("ERROR: bad scale value in genArrayGet: %d", scale);
+            funct = (void*) &selfVerificationLoad;
+            break;
+    }
+
+    /* Combine address and offset */
+    newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+
+    int regMap = reg1 << 8 | reg0 << 4 | reg2;
+    selfVerificationMemOpWrapper(cUnit, regMap, funct);
+
+    newLIR3(cUnit, THUMB_SUB_RRR, reg2, reg2, reg3);
+
+    if (scale==3)
+        storeValuePair(cUnit, reg0, reg1, vDest, reg3);
+    else
+        storeValue(cUnit, reg0, vDest, reg3);
+#endif
 }
 
 /* TODO: This should probably be done as an out-of-line instruction handler. */
@@ -463,6 +988,7 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
      * at this point, reg2 points to array, reg3 is scaled index, and
      * reg0[reg1] is data
      */
+#if !defined(WITH_SELF_VERIFICATION)
     if (scale==3) {
         newLIR3(cUnit, inst, reg0, reg2, reg3);
         newLIR2(cUnit, THUMB_ADD_RI8, reg2, 4);
@@ -470,6 +996,35 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
     } else {
         newLIR3(cUnit, inst, reg0, reg2, reg3);
     }
+#else
+    void *funct;
+    switch (scale) {
+        case 0:
+            funct = (void*) &selfVerificationStoreByte;
+            break;
+        case 1:
+            funct = (void*) &selfVerificationStoreHalfword;
+            break;
+        case 2:
+            funct = (void*) &selfVerificationStore;
+            break;
+        case 3:
+            funct = (void*) &selfVerificationStoreDoubleword;
+            break;
+        default:
+            LOGE("ERROR: bad scale value in genArrayPut: %d", scale);
+            funct = (void*) &selfVerificationStore;
+            break;
+    }
+
+    /* Combine address and offset */
+    newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+
+    int regMap = reg1 << 8 | reg0 << 4 | reg2;
+    selfVerificationMemOpWrapper(cUnit, regMap, funct);
+
+    newLIR3(cUnit, THUMB_SUB_RRR, reg2, reg2, reg3);
+#endif
 }
 
 static bool genShiftOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
@@ -1545,8 +2100,15 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
             assert(fieldPtr != NULL);
             loadConstant(cUnit, regvNone,  (int) fieldPtr + valOffset);
+#if !defined(WITH_SELF_VERIFICATION)
             newLIR3(cUnit, THUMB_LDR_RRI5, regvNone, regvNone, 0);
             storeValue(cUnit, regvNone, mir->dalvikInsn.vA, NEXT_REG(regvNone));
+#else
+            int regMap = regvNone << 4 | regvNone;
+            selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationLoad);
+
+            storeValue(cUnit, regvNone, mir->dalvikInsn.vA, NEXT_REG(regvNone));
+#endif
             break;
         }
         case OP_SGET_WIDE: {
@@ -1560,8 +2122,16 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             reg1 = NEXT_REG(reg0);
             reg2 = NEXT_REG(reg1);
             loadConstant(cUnit, reg2,  (int) fieldPtr + valOffset);
+#if !defined(WITH_SELF_VERIFICATION)
             newLIR2(cUnit, THUMB_LDMIA, reg2, (1<<reg0 | 1<<reg1));
             storeValuePair(cUnit, reg0, reg1, mir->dalvikInsn.vA, reg2);
+#else
+            int regMap = reg1 << 8 | reg0 << 4 | reg2;
+            selfVerificationMemOpWrapper(cUnit, regMap,
+                &selfVerificationLoadDoubleword);
+
+            storeValuePair(cUnit, reg0, reg1, mir->dalvikInsn.vA, reg2);
+#endif
             break;
         }
         case OP_SPUT_OBJECT:
@@ -1578,7 +2148,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadValue(cUnit, mir->dalvikInsn.vA, regvA);
             updateLiveRegister(cUnit, mir->dalvikInsn.vA, regvA);
             loadConstant(cUnit, NEXT_REG(regvA),  (int) fieldPtr + valOffset);
+#if !defined(WITH_SELF_VERIFICATION)
             newLIR3(cUnit, THUMB_STR_RRI5, regvA, NEXT_REG(regvA), 0);
+#else
+            int regMap = regvA << 4 | NEXT_REG(regvA);
+            selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationStore);
+#endif
             break;
         }
         case OP_SPUT_WIDE: {
@@ -1594,7 +2169,13 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadValuePair(cUnit, mir->dalvikInsn.vA, reg0, reg1);
             updateLiveRegisterPair(cUnit, mir->dalvikInsn.vA, reg0, reg1);
             loadConstant(cUnit, reg2,  (int) fieldPtr + valOffset);
+#if !defined(WITH_SELF_VERIFICATION)
             newLIR2(cUnit, THUMB_STMIA, reg2, (1<<reg0 | 1<<reg1));
+#else
+            int regMap = reg1 << 8 | reg0 << 4 | reg2;
+            selfVerificationMemOpWrapper(cUnit, regMap,
+                &selfVerificationStoreDoubleword);
+#endif
             break;
         }
         case OP_NEW_INSTANCE: {
@@ -2909,6 +3490,18 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
+#if defined(WITH_SELF_VERIFICATION)
+/* Chaining cell for branches that branch back into the same basic block */
+static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
+                                             unsigned int offset)
+{
+    newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE,
+        offsetof(InterpState, jitToInterpEntries.dvmJitToBackwardBranch) >> 2);
+    newLIR1(cUnit, THUMB_BLX_R, r0);
+    addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
+}
+
+#endif
 /* Chaining cell for monomorphic method invocations. */
 static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
                                               const Method *callee)
@@ -3073,6 +3666,16 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         newLIR1(cUnit, THUMB_BLX_R, r1);
                     }
                     break;
+#if defined(WITH_SELF_VERIFICATION)
+                case CHAINING_CELL_BACKWARD_BRANCH:
+                    labelList[i].opCode =
+                        ARM_PSEUDO_CHAINING_CELL_BACKWARD_BRANCH;
+                    /* handle the codegen later */
+                    dvmInsertGrowableList(
+                        &chainingListByType[CHAINING_CELL_BACKWARD_BRANCH],
+                        (void *) i);
+                    break;
+#endif
                 default:
                     break;
             }
@@ -3102,6 +3705,11 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 ((gDvmJit.opList[dalvikOpCode >> 3] &
                   (1 << (dalvikOpCode & 0x7))) !=
                  0);
+#if defined(WITH_SELF_VERIFICATION)
+            /* Punt on opcodes we can't replay */
+            if (selfVerificationPuntOps(dalvikOpCode))
+                singleStepMe = true;
+#endif
             if (singleStepMe || cUnit->allSingleStep) {
                 notHandled = false;
                 genInterpSingleStep(cUnit, mir);
@@ -3252,6 +3860,12 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     handleHotChainingCell(cUnit,
                         blockList[blockId]->startOffset);
                     break;
+#if defined(WITH_SELF_VERIFICATION)
+                case CHAINING_CELL_BACKWARD_BRANCH:
+                    handleBackwardBranchChainingCell(cUnit,
+                        blockList[blockId]->startOffset);
+                    break;
+#endif
                 default:
                     dvmAbort();
                     break;

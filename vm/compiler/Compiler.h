@@ -62,7 +62,22 @@ typedef enum JitState {
     kJitTSelectEnd = 5,        // Done with the trace - wrap it up
     kJitSingleStep = 6,        // Single step interpretation
     kJitSingleStepEnd = 7,     // Done with single step, return to mterp
+    kJitSelfVerification = 8,  // Self Verification Mode
 } JitState;
+
+#if defined(WITH_SELF_VERIFICATION)
+typedef enum SelfVerificationState {
+    kSVSIdle = 0,           // Idle
+    kSVSStart = 1,          // Shadow space set up, running compiled code
+    kSVSPunt = 2,           // Exiting compiled code by punting
+    kSVSSingleStep = 3,     // Exiting compiled code by single stepping
+    kSVSTraceSelect = 4,    // Exiting compiled code by trace select
+    kSVSNormal = 5,         // Exiting compiled code normally
+    kSVSNoChain = 6,        // Exiting compiled code by no chain
+    kSVSBackwardBranch = 7, // Exiting compiled code with backward branch trace
+    kSVSDebugInterp = 8,    // Normal state restored, running debug interpreter
+} SelfVerificationState;
+#endif
 
 typedef enum JitHint {
    kJitHintNone = 0,

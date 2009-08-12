@@ -22,7 +22,11 @@
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
     cmp     r8, #0                      @ suspendCount != 0
     ldr     r8, [r0, #offMethod_nativeFunc] @ r8<- method->nativeFunc
+#if !defined(WITH_SELF_VERIFICATION)
     bxne    lr                          @ bail to the interpreter
+#else
+    bx      lr                          @ bail to interpreter unconditionally
+#endif
 
     @ go ahead and transfer control to the native code
     ldr     r9, [r3, #offThread_jniLocal_nextEntry] @ r9<- thread->refNext

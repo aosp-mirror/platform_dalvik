@@ -868,6 +868,9 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     extern void dvmJitToInterpSingleStep();
     extern void dvmJitToTraceSelect();
     extern void dvmJitToPatchPredictedChain();
+#if defined(WITH_SELF_VERIFICATION)
+    extern void dvmJitToBackwardBranch();
+#endif
 
     /*
      * Reserve a static entity here to quickly setup runtime contents as
@@ -880,6 +883,9 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
         dvmJitToInterpSingleStep,
         dvmJitToTraceSelect,
         dvmJitToPatchPredictedChain,
+#if defined(WITH_SELF_VERIFICATION)
+        dvmJitToBackwardBranch,
+#endif
     };
 #endif
 

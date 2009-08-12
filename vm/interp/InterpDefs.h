@@ -38,6 +38,16 @@ typedef enum InterpEntry {
 } InterpEntry;
 
 #if defined(WITH_JIT)
+#if defined(WITH_SELF_VERIFICATION)
+typedef struct HeapArgSpace {
+    int r0;
+    int r1;
+    int r2;
+    int r3;
+    int regMap;
+} HeapArgSpace;
+#endif
+
 /*
  * There are six entry points from the compiled code to the interpreter:
  * 1) dvmJitToInterpNormal: find if there is a corresponding compilation for
@@ -64,6 +74,9 @@ typedef enum InterpEntry {
  *    just been reached).
  * 6) dvmJitToPredictedChain: patch the chaining cell for a virtual call site
  *    to a predicted callee.
+ * 7) dvmJitToBackwardBranch: (WITH_SELF_VERIFICATION ONLY) special case of 1)
+ *    and 5). This is used instead if the ending branch of the trace jumps back
+ *    into the same basic block.
  */
 struct JitToInterpEntries {
     void *dvmJitToInterpNormal;
@@ -72,6 +85,9 @@ struct JitToInterpEntries {
     void *dvmJitToInterpSingleStep;
     void *dvmJitToTraceSelect;
     void *dvmJitToPatchPredictedChain;
+#if defined(WITH_SELF_VERIFICATION)
+    void *dvmJitToBackwardBranch;
+#endif
 };
 
 #define JIT_TRACE_THRESH_FILTER_SIZE  16
@@ -149,6 +165,9 @@ typedef struct InterpState {
     const u2* currRunHead;          // Start of run we're building
     int currRunLen;           // Length of run in 16-bit words
     int lastThreshFilter;
+#if defined(WITH_SELF_VERIFICATION)
+    struct HeapArgSpace heapArgSpace;
+#endif
     const u2* threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
     JitTraceRun trace[MAX_JIT_RUN_LEN];
 #endif

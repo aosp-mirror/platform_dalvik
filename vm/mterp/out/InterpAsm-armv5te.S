@@ -9477,6 +9477,41 @@ dvmAsmSisterEnd:
     .align  2
 
 #if defined(WITH_JIT)
+#if defined(WITH_SELF_VERIFICATION)
+    .global dvmJitToInterpPunt
+dvmJitToInterpPunt:
+    mov    r2,#kSVSPunt                 @ r2<- interpreter entry point
+    b      dvmJitSelfVerificationEnd    @ doesn't return
+
+    .global dvmJitToInterpSingleStep
+dvmJitToInterpSingleStep:
+    mov    r2,#kSVSSingleStep           @ r2<- interpreter entry point
+    b      dvmJitSelfVerificationEnd    @ doesn't return
+
+    .global dvmJitToTraceSelect
+dvmJitToTraceSelect:
+    ldr    r0,[r14, #-1]                @ pass our target PC
+    mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
+    b      dvmJitSelfVerificationEnd    @ doesn't return
+
+    .global dvmJitToBackwardBranch
+dvmJitToBackwardBranch:
+    ldr    r0,[r14, #-1]                @ pass our target PC
+    mov    r2,#kSVSBackwardBranch       @ r2<- interpreter entry point
+    b      dvmJitSelfVerificationEnd    @ doesn't return
+
+    .global dvmJitToInterpNormal
+dvmJitToInterpNormal:
+    ldr    r0,[r14, #-1]                @ pass our target PC
+    mov    r2,#kSVSNormal               @ r2<- interpreter entry point
+    b      dvmJitSelfVerificationEnd    @ doesn't return
+
+    .global dvmJitToInterpNoChain
+dvmJitToInterpNoChain:
+    mov    r0,rPC                       @ pass our target PC
+    mov    r2,#kSVSNoChain              @ r2<- interpreter entry point
+    b      dvmJitSelfVerificationEnd    @ doesn't return
+#else
 /*
  * Return from the translation cache to the interpreter when the compiler is
  * having issues translating/executing a Dalvik instruction. We have to skip
@@ -9593,6 +9628,7 @@ dvmJitToInterpNoChain:
     bl     dvmJitGetCodeAddr        @ Is there a translation?
     cmp    r0,#0
     bxne   r0                       @ continue native execution if so
+#endif
 
 /*
  * No translation, restore interpreter regs and start interpreting.
@@ -9640,12 +9676,60 @@ common_updateProfile:
     bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
     cmp     r0,#0
     beq     common_selectTrace
+#if !defined(WITH_SELF_VERIFICATION)
     bxne    r0                          @ jump to the translation
+#else
+    bne     dvmJitSelfVerificationStart @ set up self verification
+#endif
 common_selectTrace:
     mov     r2,#kJitTSelectRequest      @ ask for trace selection
     str     r2,[rGLUE,#offGlue_jitState]
     mov     r1,#1                       @ set changeInterp
     b       common_gotoBail
+
+#if defined(WITH_SELF_VERIFICATION)
+/*
+ * Save PC and registers to shadow memory for self verification mode
+ * before jumping to native translation.
+ */
+dvmJitSelfVerificationStart:
+    sub     sp,sp,#4                    @ allocate stack space
+    str     r0,[sp,#0]                  @ save out dvmJitGetCodeAddr(rPC)
+    mov     r0,rPC                      @ r0<- program counter
+    mov     r1,rFP                      @ r1<- frame pointer
+    mov     r2,rGLUE                    @ r2<- InterpState pointer
+    bl      dvmSelfVerificationSaveState @ save registers to shadow space
+    ldr     rFP,[r0,#20]                @ rFP<- fp in shadow space
+    add     rGLUE,r0,#24                @ rGLUE<- pointer in shadow space
+    ldr     r0,[sp,#0]                  @ r0<- dvmJitGetCodeAddr(rPC)
+    add     sp,sp,#4                    @ restore stack
+    bx      r0                          @ jump to the translation
+
+/*
+ * Restore PC, registers, and interpState to original values
+ * before jumping back to the interpreter.
+ */
+dvmJitSelfVerificationEnd:
+    mov    r1,rFP                        @ pass ending fp
+    bl     dvmSelfVerificationRestoreState @ restore pc and fp values
+    ldr    rPC,[r0,#0]                   @ restore PC
+    ldr    rFP,[r0,#4]                   @ restore FP
+    ldr    rGLUE,[r0,#8]                 @ restore InterpState
+    ldr    r1,[r0,#12]                   @ get exitPoint
+    cmp    r1,#0                         @ check for punt condition
+    beq    1f
+    mov    r2,#kJitSelfVerification      @ ask for self verification
+    str    r2,[rGLUE,#offGlue_jitState]
+    mov    r1,#1                         @ set changeInterp
+    b      common_gotoBail
+
+1:                                       @ exit to interpreter without check
+    EXPORT_PC()
+    adrl   rIBASE, dvmAsmInstructionStart
+    FETCH_INST()
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+#endif
 
 #endif
 

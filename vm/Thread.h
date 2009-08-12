@@ -209,6 +209,11 @@ typedef struct Thread {
     /* PC, saved on every instruction; redundant with StackSaveArea */
     const u2*   currentPc2;
 #endif
+
+#if defined(WITH_SELF_VERIFICATION)
+    /* Buffer for register state during self verification */
+    struct ShadowSpace* shadowSpace;
+#endif
 } Thread;
 
 /* start point for an internal thread; mimics pthread args */
@@ -398,7 +403,7 @@ char* dvmGetThreadName(Thread* thread);
  * thread is part of the GC's root set.
  */
 bool dvmIsOnThreadList(const Thread* thread);
- 
+
 /*
  * Get/set the JNIEnv field.
  */

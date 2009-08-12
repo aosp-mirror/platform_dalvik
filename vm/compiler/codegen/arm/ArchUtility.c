@@ -209,6 +209,9 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
                  ((Method *)dest)->name,
                  ((Method *)dest)->insns);
             break;
+        case ARM_PSEUDO_CHAINING_CELL_BACKWARD_BRANCH:
+            LOGD("-------- chaining cell (backward branch): 0x%04x\n", dest);
+            break;
         case ARM_PSEUDO_DALVIK_BYTECODE_BOUNDARY:
             LOGD("-------- dalvik offset: 0x%04x @ %s\n", dest,
                    getOpcodeName(lir->operands[1]));

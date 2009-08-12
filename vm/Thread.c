@@ -19,6 +19,7 @@
  */
 #include "Dalvik.h"
 
+#include "interp/Jit.h"         // need for self verification
 #include "utils/threads.h"      // need Android thread priorities
 
 #include <stdlib.h>
@@ -531,7 +532,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
     u8 startWhen = 0;       // init req'd to placate gcc
     int sleepIter = 0;
     int cc;
-    
+
     do {
         cc = pthread_mutex_trylock(&gDvm._threadSuspendLock);
         if (cc != 0) {
@@ -892,6 +893,11 @@ static Thread* allocThread(int interpStackSize)
     if (thread == NULL)
         return NULL;
 
+#if defined(WITH_SELF_VERIFICATION)
+    if (dvmSelfVerificationShadowSpaceAlloc(thread) == NULL)
+        return NULL;
+#endif
+
     assert(interpStackSize >= kMinStackSize && interpStackSize <=kMaxStackSize);
 
     thread->status = THREAD_INITIALIZING;
@@ -911,6 +917,9 @@ static Thread* allocThread(int interpStackSize)
 #ifdef MALLOC_INTERP_STACK
     stackBottom = (u1*) malloc(interpStackSize);
     if (stackBottom == NULL) {
+#if defined(WITH_SELF_VERIFICATION)
+        dvmSelfVerificationShadowSpaceFree(thread);
+#endif
         free(thread);
         return NULL;
     }
@@ -919,6 +928,9 @@ static Thread* allocThread(int interpStackSize)
     stackBottom = mmap(NULL, interpStackSize, PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANON, -1, 0);
     if (stackBottom == MAP_FAILED) {
+#if defined(WITH_SELF_VERIFICATION)
+        dvmSelfVerificationShadowSpaceFree(thread);
+#endif
         free(thread);
         return NULL;
     }
@@ -1047,6 +1059,9 @@ static void freeThread(Thread* thread)
     if (&thread->jniMonitorRefTable.table != NULL)
         dvmClearReferenceTable(&thread->jniMonitorRefTable);
 
+#if defined(WITH_SELF_VERIFICATION)
+    dvmSelfVerificationShadowSpaceFree(thread);
+#endif
     free(thread);
 }
 
@@ -2405,7 +2420,7 @@ static void dumpWedgedThread(Thread* thread)
         char proc[100];
         sprintf(proc, "/proc/%d/exe", getpid());
         int len;
-        
+
         len = readlink(proc, exePath, sizeof(exePath)-1);
         exePath[len] = '\0';
     }
@@ -2646,7 +2661,7 @@ void dvmSuspendAllThreads(SuspendCause why)
         /* wait for the other thread to see the pending suspend */
         waitForThreadSuspend(self, thread);
 
-        LOG_THREAD("threadid=%d:   threadid=%d status=%d c=%d dc=%d isSusp=%d\n", 
+        LOG_THREAD("threadid=%d:   threadid=%d status=%d c=%d dc=%d isSusp=%d\n",
             self->threadId,
             thread->threadId, thread->status, thread->suspendCount,
             thread->dbgSuspendCount, thread->isSuspended);
@@ -3814,7 +3829,7 @@ void dvmGcScanRootThreadGroups()
      * through the actual ThreadGroups, but it should be
      * equivalent.
      *
-     * This assumes that the ThreadGroup class object is in 
+     * This assumes that the ThreadGroup class object is in
      * the root set, which should always be true;  it's
      * loaded by the built-in class loader, which is part
      * of the root set.

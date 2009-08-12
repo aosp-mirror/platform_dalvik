@@ -212,6 +212,12 @@ ifeq ($(strip $(WITH_JIT_TUNING)),true)
   LOCAL_CFLAGS += -DWITH_JIT_TUNING
 endif
 
+# Enable JIT self verification tool. Runs compiled traces natively, then replays
+# them with the interpreter, and ensures memory and register state are the same.
+ifeq ($(WITH_SELF_VERIFICATION),true)
+  LOCAL_CFLAGS += -DWITH_SELF_VERIFICATION
+endif
+
 WITH_HPROF := $(strip $(WITH_HPROF))
 ifeq ($(WITH_HPROF),)
   WITH_HPROF := true

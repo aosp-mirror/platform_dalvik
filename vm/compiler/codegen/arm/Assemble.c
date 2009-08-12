@@ -902,6 +902,12 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
                                           PredictedChainingCell *cell,
                                           const ClassObject *clazz)
 {
+#if defined(WITH_SELF_VERIFICATION)
+    /* Disable chaining and prevent this from triggering again for a while */
+    cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
+    cacheflush((long) cell, (long) (cell+1), 0);
+    goto done;
+#else
     /* Don't come back here for a long time if the method is native */
     if (dvmIsNativeMethod(method)) {
         cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
@@ -951,6 +957,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
 
     /* All done - resume all other threads */
     dvmResumeAllThreads(SUSPEND_FOR_JIT);
+#endif
 
 done:
     return method;
@@ -1018,6 +1025,12 @@ u4* dvmJitUnchain(void* codeAddr)
                     predChainCell->method = PREDICTED_CHAIN_METHOD_INIT;
                     predChainCell->counter = PREDICTED_CHAIN_COUNTER_INIT;
                     break;
+#if defined(WITH_SELF_VERIFICATION)
+                case CHAINING_CELL_BACKWARD_BRANCH:
+                    targetOffset = offsetof(InterpState,
+                          jitToInterpEntries.dvmJitToBackwardBranch);
+                    break;
+#endif
                 default:
                     dvmAbort();
             }

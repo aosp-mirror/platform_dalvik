@@ -239,6 +239,19 @@ MTERP_CONSTANT(kJitTSelectAbort,    4)
 MTERP_CONSTANT(kJitTSelectEnd,      5)
 MTERP_CONSTANT(kJitSingleStep,      6)
 MTERP_CONSTANT(kJitSingleStepEnd,   7)
+MTERP_CONSTANT(kJitSelfVerification, 8)
+
+#if defined(WITH_SELF_VERIFICATION)
+MTERP_CONSTANT(kSVSIdle, 0)
+MTERP_CONSTANT(kSVSStart, 1)
+MTERP_CONSTANT(kSVSPunt, 2)
+MTERP_CONSTANT(kSVSSingleStep, 3)
+MTERP_CONSTANT(kSVSTraceSelect, 4)
+MTERP_CONSTANT(kSVSNormal, 5)
+MTERP_CONSTANT(kSVSNoChain, 6)
+MTERP_CONSTANT(kSVSBackwardBranch, 7)
+MTERP_CONSTANT(kSVSDebugInterp, 8)
+#endif
 #endif
 
 /* ClassStatus enumeration */

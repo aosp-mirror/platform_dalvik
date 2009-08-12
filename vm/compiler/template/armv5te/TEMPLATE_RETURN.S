@@ -9,12 +9,20 @@
     ldr     r10, [r0, #offStackSaveArea_prevFrame] @ r10<- saveArea->prevFrame
     ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
     ldr     rPC, [r0, #offStackSaveArea_savedPc] @ rPC<- saveArea->savedPc
+#if !defined(WITH_SELF_VERIFICATION)
     ldr     r9,  [r0, #offStackSaveArea_returnAddr] @ r9<- chaining cell ret
+#else
+    mov     r9, #0                      @ disable chaining
+#endif
     ldr     r2, [r10, #(offStackSaveArea_method - sizeofStackSaveArea)]
                                         @ r2<- method we're returning to
     ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
     cmp     r2, #0                      @ break frame?
+#if !defined(WITH_SELF_VERIFICATION)
     beq     1f                          @ bail to interpreter
+#else
+    blxeq   lr                          @ punt to interpreter and compare state
+#endif
     ldr     r0, .LdvmJitToInterpNoChain @ defined in footer.S
     mov     rFP, r10                    @ publish new FP
     ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz

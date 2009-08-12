@@ -180,12 +180,20 @@ dvmCompiler_TEMPLATE_RETURN:
     ldr     r10, [r0, #offStackSaveArea_prevFrame] @ r10<- saveArea->prevFrame
     ldr     r8, [rGLUE, #offGlue_pSelfSuspendCount] @ r8<- &suspendCount
     ldr     rPC, [r0, #offStackSaveArea_savedPc] @ rPC<- saveArea->savedPc
+#if !defined(WITH_SELF_VERIFICATION)
     ldr     r9,  [r0, #offStackSaveArea_returnAddr] @ r9<- chaining cell ret
+#else
+    mov     r9, #0                      @ disable chaining
+#endif
     ldr     r2, [r10, #(offStackSaveArea_method - sizeofStackSaveArea)]
                                         @ r2<- method we're returning to
     ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
     cmp     r2, #0                      @ break frame?
+#if !defined(WITH_SELF_VERIFICATION)
     beq     1f                          @ bail to interpreter
+#else
+    blxeq   lr                          @ punt to interpreter and compare state
+#endif
     ldr     r0, .LdvmJitToInterpNoChain @ defined in footer.S
     mov     rFP, r10                    @ publish new FP
     ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
@@ -246,7 +254,11 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     cmp     r8, #0                      @ suspendCount != 0
     bxne    lr                          @ bail to the interpreter
     tst     r10, #ACC_NATIVE
+#if !defined(WITH_SELF_VERIFICATION)
     bne     .LinvokeNative
+#else
+    bxne    lr                          @ bail to the interpreter
+#endif
 
     ldr     r10, .LdvmJitToInterpNoChain
     ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
@@ -391,7 +403,11 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     str     r0, [r1, #(offStackSaveArea_method - sizeofStackSaveArea)]
     cmp     r8, #0                      @ suspendCount != 0
     ldr     r8, [r0, #offMethod_nativeFunc] @ r8<- method->nativeFunc
+#if !defined(WITH_SELF_VERIFICATION)
     bxne    lr                          @ bail to the interpreter
+#else
+    bx      lr                          @ bail to interpreter unconditionally
+#endif
 
     @ go ahead and transfer control to the native code
     ldr     r9, [r3, #offThread_jniLocal_nextEntry] @ r9<- thread->refNext

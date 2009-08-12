@@ -31,7 +31,11 @@
     cmp     r8, #0                      @ suspendCount != 0
     bxne    lr                          @ bail to the interpreter
     tst     r10, #ACC_NATIVE
+#if !defined(WITH_SELF_VERIFICATION)
     bne     .LinvokeNative
+#else
+    bxne    lr                          @ bail to the interpreter
+#endif
 
     ldr     r10, .LdvmJitToInterpNoChain
     ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex

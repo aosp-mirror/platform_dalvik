@@ -25,6 +25,49 @@
 
 #define JIT_MAX_TRACE_LEN 100
 
+#if defined (WITH_SELF_VERIFICATION)
+
+#define REG_SPACE 256                /* default size of shadow space */
+#define HEAP_SPACE JIT_MAX_TRACE_LEN /* default size of heap space */
+
+typedef struct ShadowHeap {
+    int addr;
+    int data;
+} ShadowHeap;
+
+typedef struct InstructionTrace {
+    int addr;
+    int opcode;
+} InstructionTrace;
+
+typedef struct ShadowSpace {
+    const u2* startPC;          /* starting pc of jitted region */
+    const void* fp;             /* starting fp of jitted region */
+    void* glue;                 /* starting glue ptr of jitted region */
+    SelfVerificationState selfVerificationState;  /* self verification state */
+    const u2* endPC;            /* ending pc of jitted region */
+    void* shadowFP;       /* pointer to fp in shadow space */
+    InterpState interpState;    /* copy of interpState */
+    int* registerSpace;         /* copy of register state */
+    int registerSpaceSize;      /* current size of register space */
+    ShadowHeap heapSpace[HEAP_SPACE]; /* copy of heap space */
+    ShadowHeap* heapSpaceTail;        /* tail pointer to heapSpace */
+    const void* endShadowFP;    /* ending fp in shadow space */
+    InstructionTrace trace[JIT_MAX_TRACE_LEN]; /* opcode trace for debugging */
+    int traceLength;            /* counter for current trace length */
+} ShadowSpace;
+
+/*
+ * Self verification functions.
+ */
+void* dvmSelfVerificationShadowSpaceAlloc(Thread* self);
+void dvmSelfVerificationShadowSpaceFree(Thread* self);
+void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
+                                   void* interpStatePtr);
+void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
+                                      SelfVerificationState exitPoint);
+#endif
+
 /*
  * JitTable hash function.
  */

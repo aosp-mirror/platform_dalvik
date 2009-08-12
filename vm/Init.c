@@ -185,7 +185,10 @@ static void dvmUsage(const char* progName)
         " resolver_cache_disabled"
 #endif
 #if defined(WITH_JIT)
-        " with_jit"
+        " jit"
+#endif
+#if defined(WITH_SELF_VERIFICATION)
+        " self_verification"
 #endif
     );
 #ifdef DVM_SHOW_EXCEPTION

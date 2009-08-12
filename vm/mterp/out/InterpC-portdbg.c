@@ -1498,13 +1498,22 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
     /* Check to see if we've got a trace selection request.  If we do,
      * but something is amiss, revert to the fast interpreter.
      */
+#if !defined(WITH_SELF_VERIFICATION)
     if (dvmJitCheckTraceRequest(self,interpState)) {
         interpState->nextMode = INTERP_STD;
         //LOGD("** something wrong, exiting\n");
         return true;
     }
-#endif
-#endif
+#else
+    if (interpState->jitState != kJitSelfVerification &&
+        dvmJitCheckTraceRequest(self,interpState)) {
+        interpState->nextMode = INTERP_STD;
+        //LOGD("** something wrong, exiting\n");
+        return true;
+    }
+#endif /* WITH_SELF_VERIFICATION */
+#endif /* INTERP_TYPE == INTERP_DBG */
+#endif /* WITH_JIT */
 
     /* copy state in */
     curMethod = interpState->method;
