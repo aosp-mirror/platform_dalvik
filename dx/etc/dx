@@ -63,7 +63,7 @@ defaultMx="-Xmx1024M"
 javaOpts=""
 
 while expr "x$1" : 'x-J' >/dev/null; do
-    opt=`expr "$1" : '-J\(.*\)'`
+    opt=`expr "x$1" : 'x-J\(.*\)'`
     javaOpts="${javaOpts} -${opt}"
     if expr "x${opt}" : "xXmx[0-9]" >/dev/null; then
         defaultMx="no"
