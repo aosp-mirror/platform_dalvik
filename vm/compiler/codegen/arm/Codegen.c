@@ -481,10 +481,8 @@ static void selfVerificationMemOpWrapper(CompilationUnit *cUnit, int regMap,
 }
 #endif
 
-/*****************************************************************************/
-
 /*
- * The following are building blocks to construct low-level IRs with 0 - 3
+ * The following are building blocks to construct low-level IRs with 0 - 4
  * operands.
  */
 static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpCode opCode)
@@ -534,17 +532,20 @@ static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpCode opCode,
     return insn;
 }
 
-static ArmLIR *newLIR23(CompilationUnit *cUnit, ArmOpCode opCode,
-                            int srcdest, int src2)
+static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpCode opCode,
+                           int dest, int src1, int src2, int info)
 {
-    assert(!isPseudoOpCode(opCode));
-    if (EncodingMap[opCode].flags & IS_BINARY_OP)
-        return newLIR2(cUnit, opCode, srcdest, src2);
-    else
-        return newLIR3(cUnit, opCode, srcdest, srcdest, src2);
+    ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+    assert(isPseudoOpCode(opCode) ||
+           (EncodingMap[opCode].flags & IS_QUAD_OP));
+    insn->opCode = opCode;
+    insn->operands[0] = dest;
+    insn->operands[1] = src1;
+    insn->operands[2] = src2;
+    insn->operands[3] = info;
+    dvmCompilerAppendLIR(cUnit, (LIR *) insn);
+    return insn;
 }
-
-/*****************************************************************************/
 
 /*
  * The following are building blocks to insert constants into the pool or
@@ -607,34 +608,6 @@ static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
     branch->generic.target = (LIR *) pcrLabel;
 }
 
-/*
- * Perform a binary operation on 64-bit operands and leave the results in the
- * r0/r1 pair.
- */
-static void genBinaryOpWide(CompilationUnit *cUnit, int vDest,
-                            ArmOpCode preinst, ArmOpCode inst,
-                            int reg0, int reg2)
-{
-    int reg1 = NEXT_REG(reg0);
-    int reg3 = NEXT_REG(reg2);
-    newLIR23(cUnit, preinst, reg0, reg2);
-    newLIR23(cUnit, inst, reg1, reg3);
-    storeValuePair(cUnit, reg0, reg1, vDest, reg2);
-}
-
-/* Perform a binary operation on 32-bit operands and leave the results in r0. */
-static void genBinaryOp(CompilationUnit *cUnit, int vDest, ArmOpCode inst,
-                        int reg0, int reg1, int regDest)
-{
-    if (EncodingMap[inst].flags & IS_BINARY_OP) {
-        newLIR2(cUnit, inst, reg0, reg1);
-        storeValue(cUnit, reg0, vDest, reg1);
-    } else {
-        newLIR3(cUnit, inst, regDest, reg0, reg1);
-        storeValue(cUnit, regDest, vDest, reg1);
-    }
-}
-
 /* Create the PC reconstruction slot if not already done */
 static inline ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
                                          ArmLIR *branch,
@@ -660,14 +633,16 @@ static inline ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
  * Perform a "reg cmp reg" operation and jump to the PCR region if condition
  * satisfies.
  */
-static inline ArmLIR *inertRegRegCheck(CompilationUnit *cUnit,
+static inline ArmLIR *insertRegRegCheck(CompilationUnit *cUnit,
                                            ArmConditionCode cond,
                                            int reg1, int reg2, int dOffset,
                                            ArmLIR *pcrLabel)
 {
-    newLIR2(cUnit, THUMB_CMP_RR, reg1, reg2);
-    ArmLIR *branch = newLIR2(cUnit, THUMB_B_COND, 0, cond);
-    return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
+    ArmLIR *res;
+    res = opRegReg(cUnit, OP_CMP, reg1, reg2);
+    ArmLIR *branch = opImmImm(cUnit, OP_COND_BR, 0, cond);
+    genCheckCommon(cUnit, dOffset, branch, pcrLabel);
+    return res;
 }
 
 /*
@@ -700,7 +675,7 @@ static ArmLIR *genZeroCheck(CompilationUnit *cUnit, int mReg,
 static ArmLIR *genBoundsCheck(CompilationUnit *cUnit, int rIndex,
                                   int rBound, int dOffset, ArmLIR *pcrLabel)
 {
-    return inertRegRegCheck(cUnit, ARM_COND_CS, rIndex, rBound, dOffset,
+    return insertRegRegCheck(cUnit, ARM_COND_CS, rIndex, rBound, dOffset,
                             pcrLabel);
 }
 
@@ -708,7 +683,7 @@ static ArmLIR *genBoundsCheck(CompilationUnit *cUnit, int rIndex,
 static inline ArmLIR *genTrap(CompilationUnit *cUnit, int dOffset,
                                   ArmLIR *pcrLabel)
 {
-    ArmLIR *branch = newLIR0(cUnit, THUMB_B_UNCOND);
+    ArmLIR *branch = opNone(cUnit, OP_UNCOND_BR);
     return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
 }
 
@@ -727,23 +702,21 @@ static void genIGetWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
     /*
      * Ping reg0 to the first register of the alternate register pair
      */
-    reg0 = (reg2 + 2) & 0x2;
+    reg0 = (reg2 + 2) & 0xa;
     reg1 = NEXT_REG(reg0);
 
     loadValue(cUnit, dInsn->vB, reg2);
     loadConstant(cUnit, reg3, fieldOffset);
     genNullCheck(cUnit, dInsn->vB, reg2, mir->offset, NULL); /* null object? */
-    newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+    opRegReg(cUnit, OP_ADD, reg2, reg3);
 #if !defined(WITH_SELF_VERIFICATION)
-    newLIR2(cUnit, THUMB_LDMIA, reg2, (1<<reg0 | 1<<reg1));
-    storeValuePair(cUnit, reg0, reg1, dInsn->vA, reg3);
+    loadMultiple(cUnit, reg2, (1<<reg0 | 1<<reg1));
 #else
     int regMap = reg1 << 8 | reg0 << 4 | reg2;
     selfVerificationMemOpWrapper(cUnit, regMap,
         &selfVerificationLoadDoubleword);
-
-    storeValuePair(cUnit, reg0, reg1, dInsn->vA, reg3);
 #endif
+    storeValuePair(cUnit, reg0, reg1, dInsn->vA, reg3);
 }
 
 /* Store a wide field to an object instance */
@@ -761,7 +734,7 @@ static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
     /*
      * Ping reg0 to the first register of the alternate register pair
      */
-    reg0 = (reg2 + 2) & 0x2;
+    reg0 = (reg2 + 2) & 0xa;
     reg1 = NEXT_REG(reg0);
 
 
@@ -770,9 +743,9 @@ static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
     updateLiveRegisterPair(cUnit, dInsn->vA, reg0, reg1);
     loadConstant(cUnit, reg3, fieldOffset);
     genNullCheck(cUnit, dInsn->vB, reg2, mir->offset, NULL); /* null object? */
-    newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+    opRegReg(cUnit, OP_ADD, reg2, reg3);
 #if !defined(WITH_SELF_VERIFICATION)
-    newLIR2(cUnit, THUMB_STMIA, reg2, (1<<reg0 | 1<<reg1));
+    storeMultiple(cUnit, reg2, (1<<reg0 | 1<<reg1));
 #else
     int regMap = reg1 << 8 | reg0 << 4 | reg2;
     selfVerificationMemOpWrapper(cUnit, regMap,
@@ -783,14 +756,8 @@ static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
 /*
  * Load a field from an object instance
  *
- * Inst should be one of:
- *      THUMB_LDR_RRR
- *      THUMB_LDRB_RRR
- *      THUMB_LDRH_RRR
- *      THUMB_LDRSB_RRR
- *      THUMB_LDRSH_RRR
  */
-static void genIGet(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
+static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
                     int fieldOffset)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
@@ -798,33 +765,26 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
 
     reg0 = selectFirstRegister(cUnit, dInsn->vB, false);
     reg1 = NEXT_REG(reg0);
-    /* TUNING: write a utility routine to load via base + constant offset */
     loadValue(cUnit, dInsn->vB, reg0);
-    loadConstant(cUnit, reg1, fieldOffset);
-    genNullCheck(cUnit, dInsn->vB, reg0, mir->offset, NULL); /* null object? */
 #if !defined(WITH_SELF_VERIFICATION)
-    newLIR3(cUnit, inst, reg0, reg0, reg1);
-    storeValue(cUnit, reg0, dInsn->vA, reg1);
+    loadBaseDisp(cUnit, mir, reg0, fieldOffset, reg1, size, true, dInsn->vB);
 #else
+    genNullCheck(cUnit, dInsn->vB, reg0, mir->offset, NULL); /* null object? */
     /* Combine address and offset */
-    newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, reg1);
+    loadConstant(cUnit, reg1, fieldOffset);
+    opRegReg(cUnit, OP_ADD, reg0, reg1);
 
-    int regMap = reg0 << 4 | reg0;
+    int regMap = reg1 << 4 | reg0;
     selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationLoad);
-
-    storeValue(cUnit, reg0, dInsn->vA, reg1);
 #endif
+    storeValue(cUnit, reg1, dInsn->vA, reg0);
 }
 
 /*
  * Store a field to an object instance
  *
- * Inst should be one of:
- *      THUMB_STR_RRR
- *      THUMB_STRB_RRR
- *      THUMB_STRH_RRR
  */
-static void genIPut(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
+static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                     int fieldOffset)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
@@ -834,39 +794,30 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
     reg1 = NEXT_REG(reg0);
     reg2 = NEXT_REG(reg1);
 
-    /* TUNING: write a utility routine to load via base + constant offset */
     loadValue(cUnit, dInsn->vB, reg0);
-    loadConstant(cUnit, reg1, fieldOffset);
     loadValue(cUnit, dInsn->vA, reg2);
     updateLiveRegister(cUnit, dInsn->vA, reg2);
     genNullCheck(cUnit, dInsn->vB, reg0, mir->offset, NULL); /* null object? */
 #if !defined(WITH_SELF_VERIFICATION)
-    newLIR3(cUnit, inst, reg2, reg0, reg1);
+    storeBaseDisp(cUnit, reg0, fieldOffset, reg2, size, reg1);
 #else
     /* Combine address and offset */
-    newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, reg1);
+    loadConstant(cUnit, reg1, fieldOffset);
+    opRegReg(cUnit, OP_ADD, reg0, reg1);
 
     int regMap = reg2 << 4 | reg0;
     selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationStore);
 
-    newLIR3(cUnit, THUMB_SUB_RRR, reg0, reg0, reg1);
+    opRegReg(cUnit, OP_SUB, reg0, reg1);
 #endif
 }
 
 
-/* TODO: This should probably be done as an out-of-line instruction handler. */
-
 /*
  * Generate array load
  *
- * Inst should be one of:
- *      THUMB_LDR_RRR
- *      THUMB_LDRB_RRR
- *      THUMB_LDRH_RRR
- *      THUMB_LDRSB_RRR
- *      THUMB_LDRSH_RRR
  */
-static void genArrayGet(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
+static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
                         int vArray, int vIndex, int vDest, int scale)
 {
     int lenOffset = offsetof(ArrayObject, length);
@@ -882,77 +833,71 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
     loadValue(cUnit, vIndex, reg3);
 
     /* null object? */
-    ArmLIR * pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset,
-                                         NULL);
-    newLIR3(cUnit, THUMB_LDR_RRI5, reg0, reg2, lenOffset >> 2);  /* Get len */
-    newLIR2(cUnit, THUMB_ADD_RI8, reg2, dataOffset); /* reg2 -> array data */
+    ArmLIR * pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset, NULL);
+    loadWordDisp(cUnit, reg2, lenOffset, reg0);  /* Get len */
+    opRegImm(cUnit, OP_ADD, reg2, dataOffset, rNone); /* reg2 -> array data */
     genBoundsCheck(cUnit, reg3, reg0, mir->offset, pcrLabel);
-    if (scale) {
-        newLIR3(cUnit, THUMB_LSL, reg3, reg3, scale);
-    }
 #if !defined(WITH_SELF_VERIFICATION)
-    if (scale==3) {
-        newLIR3(cUnit, inst, reg0, reg2, reg3);
-        newLIR2(cUnit, THUMB_ADD_RI8, reg2, 4);
-        newLIR3(cUnit, inst, reg1, reg2, reg3);
+    if ((size == LONG) || (size == DOUBLE)) {
+        //TUNING: redo.  Make specific wide routine, perhaps use ldmia/fp regs
+        opRegRegImm(cUnit, OP_LSL, reg3, reg3, scale, rNone);
+        loadBaseIndexed(cUnit, reg2, reg3, reg0, 0, WORD);
+        opRegImm(cUnit, OP_ADD, reg2, 4, rNone);
+        loadBaseIndexed(cUnit, reg2, reg3, reg1, 0, WORD);
         storeValuePair(cUnit, reg0, reg1, vDest, reg3);
     } else {
-        newLIR3(cUnit, inst, reg0, reg2, reg3);
+        loadBaseIndexed(cUnit, reg2, reg3, reg0, scale, size);
         storeValue(cUnit, reg0, vDest, reg3);
     }
 #else
-    void* funct;
-    switch (scale) {
-        case 0:
-            if (inst == THUMB_LDRSB_RRR)
-                funct = (void*) &selfVerificationLoadSignedByte;
-            else
-                funct = (void*) &selfVerificationLoadByte;
-            break;
-        case 1:
-            if (inst == THUMB_LDRSH_RRR)
-                funct = (void*) &selfVerificationLoadSignedHalfword;
-            else
-                funct = (void*) &selfVerificationLoadHalfword;
-            break;
-        case 2:
-            funct = (void*) &selfVerificationLoad;
-            break;
-        case 3:
+    //TODO: probably want to move this into loadBaseIndexed
+    void *funct = NULL;
+    switch(size) {
+        case LONG:
+        case DOUBLE:
             funct = (void*) &selfVerificationLoadDoubleword;
             break;
-        default:
-            LOGE("ERROR: bad scale value in genArrayGet: %d", scale);
+        case WORD:
             funct = (void*) &selfVerificationLoad;
             break;
+        case UNSIGNED_HALF:
+            funct = (void*) &selfVerificationLoadHalfword;
+            break;
+        case SIGNED_HALF:
+            funct = (void*) &selfVerificationLoadSignedHalfword;
+            break;
+        case UNSIGNED_BYTE:
+            funct = (void*) &selfVerificationLoadByte;
+            break;
+        case SIGNED_BYTE:
+            funct = (void*) &selfVerificationLoadSignedByte;
+            break;
+        default:
+            assert(0);
+            dvmAbort();
     }
-
-    /* Combine address and offset */
-    newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+    /* Combine address and index */
+    if (scale)
+        opRegRegImm(cUnit, OP_LSL, reg3, reg3, scale, rNone);
+    opRegReg(cUnit, OP_ADD, reg2, reg3);
 
     int regMap = reg1 << 8 | reg0 << 4 | reg2;
     selfVerificationMemOpWrapper(cUnit, regMap, funct);
 
-    newLIR3(cUnit, THUMB_SUB_RRR, reg2, reg2, reg3);
+    opRegReg(cUnit, OP_SUB, reg2, reg3);
 
-    if (scale==3)
+    if ((size == LONG) || (size == DOUBLE))
         storeValuePair(cUnit, reg0, reg1, vDest, reg3);
     else
         storeValue(cUnit, reg0, vDest, reg3);
 #endif
 }
 
-/* TODO: This should probably be done as an out-of-line instruction handler. */
-
 /*
  * Generate array store
  *
- * Inst should be one of:
- *      THUMB_STR_RRR
- *      THUMB_STRB_RRR
- *      THUMB_STRH_RRR
  */
-static void genArrayPut(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
+static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                         int vArray, int vIndex, int vSrc, int scale)
 {
     int lenOffset = offsetof(ArrayObject, length);
@@ -970,60 +915,65 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, ArmOpCode inst,
     /* null object? */
     ArmLIR * pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset,
                                          NULL);
-    newLIR3(cUnit, THUMB_LDR_RRI5, reg0, reg2, lenOffset >> 2);  /* Get len */
-    newLIR2(cUnit, THUMB_ADD_RI8, reg2, dataOffset); /* reg2 -> array data */
+    loadWordDisp(cUnit, reg2, lenOffset, reg0);  /* Get len */
+    opRegImm(cUnit, OP_ADD, reg2, dataOffset, rNone); /* reg2 -> array data */
     genBoundsCheck(cUnit, reg3, reg0, mir->offset, pcrLabel);
     /* at this point, reg2 points to array, reg3 is unscaled index */
-    if (scale==3) {
+#if !defined(WITH_SELF_VERIFICATION)
+    if ((size == LONG) || (size == DOUBLE)) {
+        //TUNING: redo.  Make specific wide routine, perhaps use ldmia/fp regs
+        loadValuePair(cUnit, vSrc, reg0, reg1);
+        updateLiveRegisterPair(cUnit, vSrc, reg0, reg1);
+        if (scale)
+            opRegRegImm(cUnit, OP_LSL, reg3, reg3, scale, rNone);
+        storeBaseIndexed(cUnit, reg2, reg3, reg0, 0, WORD);
+        opRegImm(cUnit, OP_ADD, reg2, 4, rNone);
+        storeBaseIndexed(cUnit, reg2, reg3, reg1, 0, WORD);
+    } else {
+        loadValue(cUnit, vSrc, reg0);
+        updateLiveRegister(cUnit, vSrc, reg0);
+        storeBaseIndexed(cUnit, reg2, reg3, reg0, scale, size);
+    }
+#else
+    //TODO: probably want to move this into storeBaseIndexed
+    void *funct = NULL;
+    switch(size) {
+        case LONG:
+        case DOUBLE:
+            funct = (void*) &selfVerificationStoreDoubleword;
+            break;
+        case WORD:
+            funct = (void*) &selfVerificationStore;
+            break;
+        case SIGNED_HALF:
+        case UNSIGNED_HALF:
+            funct = (void*) &selfVerificationStoreHalfword;
+            break;
+        case SIGNED_BYTE:
+        case UNSIGNED_BYTE:
+            funct = (void*) &selfVerificationStoreByte;
+            break;
+        default:
+            assert(0);
+            dvmAbort();
+    }
+
+    /* Combine address and index */
+    if ((size == LONG) || (size == DOUBLE)) {
         loadValuePair(cUnit, vSrc, reg0, reg1);
         updateLiveRegisterPair(cUnit, vSrc, reg0, reg1);
     } else {
         loadValue(cUnit, vSrc, reg0);
         updateLiveRegister(cUnit, vSrc, reg0);
     }
-    if (scale) {
-        newLIR3(cUnit, THUMB_LSL, reg3, reg3, scale);
-    }
-    /*
-     * at this point, reg2 points to array, reg3 is scaled index, and
-     * reg0[reg1] is data
-     */
-#if !defined(WITH_SELF_VERIFICATION)
-    if (scale==3) {
-        newLIR3(cUnit, inst, reg0, reg2, reg3);
-        newLIR2(cUnit, THUMB_ADD_RI8, reg2, 4);
-        newLIR3(cUnit, inst, reg1, reg2, reg3);
-    } else {
-        newLIR3(cUnit, inst, reg0, reg2, reg3);
-    }
-#else
-    void *funct;
-    switch (scale) {
-        case 0:
-            funct = (void*) &selfVerificationStoreByte;
-            break;
-        case 1:
-            funct = (void*) &selfVerificationStoreHalfword;
-            break;
-        case 2:
-            funct = (void*) &selfVerificationStore;
-            break;
-        case 3:
-            funct = (void*) &selfVerificationStoreDoubleword;
-            break;
-        default:
-            LOGE("ERROR: bad scale value in genArrayPut: %d", scale);
-            funct = (void*) &selfVerificationStore;
-            break;
-    }
-
-    /* Combine address and offset */
-    newLIR3(cUnit, THUMB_ADD_RRR, reg2, reg2, reg3);
+    if (scale)
+        opRegRegImm(cUnit, OP_LSL, reg3, reg3, scale, rNone);
+    opRegReg(cUnit, OP_ADD, reg2, reg3);
 
     int regMap = reg1 << 8 | reg0 << 4 | reg2;
     selfVerificationMemOpWrapper(cUnit, regMap, funct);
 
-    newLIR3(cUnit, THUMB_SUB_RRR, reg2, reg2, reg3);
+    opRegReg(cUnit, OP_SUB, reg2, reg3);
 #endif
 }
 
@@ -1098,8 +1048,7 @@ bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
             break;
         case OP_NEG_FLOAT: {
             loadValue(cUnit, vSrc2, reg0);
-            loadConstant(cUnit, reg1, 0x80000000);
-            newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, reg1);
+            opRegImm(cUnit, OP_ADD, reg0, 0x80000000, reg1);
             storeValue(cUnit, reg0, vDest, reg1);
             return false;
         }
@@ -1109,7 +1058,7 @@ bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
     loadConstant(cUnit, r2, (int)funct);
     loadValue(cUnit, vSrc1, r0);
     loadValue(cUnit, vSrc2, r1);
-    newLIR1(cUnit, THUMB_BLX_R, r2);
+    opReg(cUnit, OP_BLX, r2);
     storeValue(cUnit, r0, vDest, r1);
     return false;
 }
@@ -1154,8 +1103,7 @@ bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
             break;
         case OP_NEG_DOUBLE: {
             loadValuePair(cUnit, vSrc2, reg0, reg1);
-            loadConstant(cUnit, reg2, 0x80000000);
-            newLIR3(cUnit, THUMB_ADD_RRR, reg1, reg1, reg2);
+            opRegImm(cUnit, OP_ADD, reg1, 0x80000000, reg2);
             storeValuePair(cUnit, reg0, reg1, vDest, reg2);
             return false;
         }
@@ -1169,7 +1117,7 @@ bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
     loadConstant(cUnit, r4PC, (int)funct);
     loadValuePair(cUnit, vSrc1, r0, r1);
     loadValuePair(cUnit, vSrc2, r2, r3);
-    newLIR1(cUnit, THUMB_BLX_R, r4PC);
+    opReg(cUnit, OP_BLX, r4PC);
     storeValuePair(cUnit, r0, r1, vDest, r2);
     return false;
 }
@@ -1177,8 +1125,8 @@ bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
 static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
                            int vSrc1, int vSrc2)
 {
-    int firstOp = THUMB_BKPT;
-    int secondOp = THUMB_BKPT;
+    OpKind firstOp = OP_BKPT;
+    OpKind secondOp = OP_BKPT;
     bool callOut = false;
     void *callTgt;
     int retReg = r0;
@@ -1188,18 +1136,18 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
 
     switch (mir->dalvikInsn.opCode) {
         case OP_NOT_LONG:
-            firstOp = THUMB_MVN;
-            secondOp = THUMB_MVN;
+            firstOp = OP_MVN;
+            secondOp = OP_MVN;
             break;
         case OP_ADD_LONG:
         case OP_ADD_LONG_2ADDR:
-            firstOp = THUMB_ADD_RRR;
-            secondOp = THUMB_ADC;
+            firstOp = OP_ADD;
+            secondOp = OP_ADC;
             break;
         case OP_SUB_LONG:
         case OP_SUB_LONG_2ADDR:
-            firstOp = THUMB_SUB_RRR;
-            secondOp = THUMB_SBC;
+            firstOp = OP_SUB;
+            secondOp = OP_SBC;
             break;
         case OP_MUL_LONG:
         case OP_MUL_LONG_2ADDR:
@@ -1224,18 +1172,18 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
             break;
         case OP_AND_LONG:
         case OP_AND_LONG_2ADDR:
-            firstOp = THUMB_AND_RR;
-            secondOp = THUMB_AND_RR;
+            firstOp = OP_AND;
+            secondOp = OP_AND;
             break;
         case OP_OR_LONG:
         case OP_OR_LONG_2ADDR:
-            firstOp = THUMB_ORR;
-            secondOp = THUMB_ORR;
+            firstOp = OP_OR;
+            secondOp = OP_OR;
             break;
         case OP_XOR_LONG:
         case OP_XOR_LONG_2ADDR:
-            firstOp = THUMB_EOR;
-            secondOp = THUMB_EOR;
+            firstOp = OP_XOR;
+            secondOp = OP_XOR;
             break;
         case OP_NEG_LONG: {
             reg0 = selectFirstRegister(cUnit, vSrc2, true);
@@ -1245,8 +1193,8 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
 
             loadValuePair(cUnit, vSrc2, reg0, reg1);
             loadConstant(cUnit, reg3, 0);
-            newLIR3(cUnit, THUMB_SUB_RRR, reg2, reg3, reg0);
-            newLIR2(cUnit, THUMB_SBC, reg3, reg1);
+            opRegRegReg(cUnit, OP_SUB, reg2, reg3, reg0);
+            opRegReg(cUnit, OP_SBC, reg3, reg1);
             storeValuePair(cUnit, reg2, reg3, vDest, reg0);
             return false;
         }
@@ -1262,16 +1210,18 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
 
         loadValuePair(cUnit, vSrc1, reg0, reg1);
         loadValuePair(cUnit, vSrc2, reg2, reg3);
-        genBinaryOpWide(cUnit, vDest, firstOp, secondOp, reg0, reg2);
+        opRegReg(cUnit, firstOp, reg0, reg2);
+        opRegReg(cUnit, secondOp, reg1, reg3);
+        storeValuePair(cUnit, reg0, reg1, vDest, reg2);
     /*
-     * Don't optimize the regsiter usage here as they are governed by the EABI
+     * Don't optimize the register usage here as they are governed by the EABI
      * calling convention.
      */
     } else {
         loadValuePair(cUnit, vSrc2, r2, r3);
         loadConstant(cUnit, r4PC, (int) callTgt);
         loadValuePair(cUnit, vSrc1, r0, r1);
-        newLIR1(cUnit, THUMB_BLX_R, r4PC);
+        opReg(cUnit, OP_BLX, r4PC);
         storeValuePair(cUnit, retReg, retReg+1, vDest, r4PC);
     }
     return false;
@@ -1280,9 +1230,10 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir, int vDest,
 static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
                           int vSrc1, int vSrc2)
 {
-    int armOp = THUMB_BKPT;
+    OpKind op = OP_BKPT;
     bool callOut = false;
     bool checkZero = false;
+    bool threeOperand = false;
     int retReg = r0;
     void *callTgt;
     int reg0, reg1, regDest;
@@ -1293,22 +1244,24 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
 
     switch (mir->dalvikInsn.opCode) {
         case OP_NEG_INT:
-            armOp = THUMB_NEG;
+            op = OP_NEG;
             break;
         case OP_NOT_INT:
-            armOp = THUMB_MVN;
+            op = OP_MVN;
             break;
         case OP_ADD_INT:
         case OP_ADD_INT_2ADDR:
-            armOp = THUMB_ADD_RRR;
+            op = OP_ADD;
+            threeOperand = true;
             break;
         case OP_SUB_INT:
         case OP_SUB_INT_2ADDR:
-            armOp = THUMB_SUB_RRR;
+            op = OP_SUB;
+            threeOperand = true;
             break;
         case OP_MUL_INT:
         case OP_MUL_INT_2ADDR:
-            armOp = THUMB_MUL;
+            op = OP_MUL;
             break;
         case OP_DIV_INT:
         case OP_DIV_INT_2ADDR:
@@ -1327,27 +1280,27 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
             break;
         case OP_AND_INT:
         case OP_AND_INT_2ADDR:
-            armOp = THUMB_AND_RR;
+            op = OP_AND;
             break;
         case OP_OR_INT:
         case OP_OR_INT_2ADDR:
-            armOp = THUMB_ORR;
+            op = OP_OR;
             break;
         case OP_XOR_INT:
         case OP_XOR_INT_2ADDR:
-            armOp = THUMB_EOR;
+            op = OP_XOR;
             break;
         case OP_SHL_INT:
         case OP_SHL_INT_2ADDR:
-            armOp = THUMB_LSLV;
+            op = OP_LSL;
             break;
         case OP_SHR_INT:
         case OP_SHR_INT_2ADDR:
-            armOp = THUMB_ASRV;
+            op = OP_ASR;
             break;
         case OP_USHR_INT:
         case OP_USHR_INT_2ADDR:
-            armOp = THUMB_LSRV;
+            op = OP_LSR;
             break;
         default:
             LOGE("Invalid word arith op: 0x%x(%d)",
@@ -1363,7 +1316,13 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
 
             loadValue(cUnit, vSrc1, reg0); /* Should be optimized away */
             loadValue(cUnit, vSrc2, reg1);
-            genBinaryOp(cUnit, vDest, armOp, reg0, reg1, regDest);
+            if (threeOperand) {
+                opRegRegReg(cUnit, op, regDest, reg0, reg1);
+                storeValue(cUnit, regDest, vDest, reg1);
+            } else {
+                opRegReg(cUnit, op, reg0, reg1);
+                storeValue(cUnit, reg0, vDest, reg1);
+            }
         } else {
             reg0 = selectFirstRegister(cUnit, vSrc2, false);
             reg1 = NEXT_REG(reg0);
@@ -1371,7 +1330,13 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
 
             loadValue(cUnit, vSrc1, reg1); /* Load this value first */
             loadValue(cUnit, vSrc2, reg0); /* May be optimized away */
-            genBinaryOp(cUnit, vDest, armOp, reg1, reg0, regDest);
+            if (threeOperand) {
+                opRegRegReg(cUnit, op, regDest, reg1, reg0);
+                storeValue(cUnit, regDest, vDest, reg1);
+            } else {
+                opRegReg(cUnit, op, reg1, reg0);
+                storeValue(cUnit, reg1, vDest, reg0);
+            }
         }
     } else {
         /*
@@ -1396,7 +1361,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir, int vDest,
         if (checkZero) {
             genNullCheck(cUnit, vSrc2, r1, mir->offset, NULL);
         }
-        newLIR1(cUnit, THUMB_BLX_R, r2);
+        opReg(cUnit, OP_BLX, r2);
         storeValue(cUnit, retReg, vDest, r2);
     }
     return false;
@@ -1455,142 +1420,12 @@ static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
     } else {
         loadValuePair(cUnit, mir->dalvikInsn.vB, r0, r1);
     }
-    newLIR1(cUnit, THUMB_BLX_R, r2);
+    opReg(cUnit, OP_BLX, r2);
     if (tgtSize == 1) {
         storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
     } else {
         storeValuePair(cUnit, r0, r1, mir->dalvikInsn.vA, r2);
     }
-    return false;
-}
-
-static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
-{
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int offset = offsetof(InterpState, retval);
-    int regObj = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int reg1 = NEXT_REG(regObj);
-    loadValue(cUnit, dInsn->arg[0], regObj);
-    genNullCheck(cUnit, dInsn->arg[0], regObj, mir->offset, NULL);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, reg1);
-    newLIR3(cUnit, THUMB_STR_RRI5, reg1, rGLUE, offset >> 2);
-    return false;
-}
-
-/*
- * NOTE: The amount of code for this body suggests it ought to
- * be handled in a template (and could also be coded quite a bit
- * more efficiently in ARM).  However, the code is dependent on the
- * internal structure layout of string objects which are most safely
- * known at run time.
- * TUNING:  One possibility (which could also be used for StringCompareTo
- * and StringEquals) is to generate string access helper subroutines on
- * Jit startup, and then call them from the translated inline-executes.
- */
-static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
-{
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int offset = offsetof(InterpState, retval);
-    int contents = offsetof(ArrayObject, contents);
-    int regObj = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int regIdx = NEXT_REG(regObj);
-    int regMax = NEXT_REG(regIdx);
-    int regOff = NEXT_REG(regMax);
-    loadValue(cUnit, dInsn->arg[0], regObj);
-    loadValue(cUnit, dInsn->arg[1], regIdx);
-    ArmLIR * pcrLabel = genNullCheck(cUnit, dInsn->arg[0], regObj,
-                                         mir->offset, NULL);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, regMax);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_offset, regOff);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_value, regObj);
-    genBoundsCheck(cUnit, regIdx, regMax, mir->offset, pcrLabel);
-
-    newLIR2(cUnit, THUMB_ADD_RI8, regObj, contents);
-    newLIR3(cUnit, THUMB_ADD_RRR, regIdx, regIdx, regOff);
-    newLIR3(cUnit, THUMB_ADD_RRR, regIdx, regIdx, regIdx);
-    newLIR3(cUnit, THUMB_LDRH_RRR, regMax, regObj, regIdx);
-    newLIR3(cUnit, THUMB_STR_RRI5, regMax, rGLUE, offset >> 2);
-    return false;
-}
-
-static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
-{
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int sign = NEXT_REG(reg0);
-    /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
-    loadValue(cUnit, dInsn->arg[0], reg0);
-    newLIR3(cUnit, THUMB_ASR, sign, reg0, 31);
-    newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, sign);
-    newLIR2(cUnit, THUMB_EOR, reg0, sign);
-    newLIR3(cUnit, THUMB_STR_RRI5, reg0, rGLUE, offset >> 2);
-    return false;
-}
-
-static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
-{
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int signMask = NEXT_REG(reg0);
-    loadValue(cUnit, dInsn->arg[0], reg0);
-    loadConstant(cUnit, signMask, 0x7fffffff);
-    newLIR2(cUnit, THUMB_AND_RR, reg0, signMask);
-    newLIR3(cUnit, THUMB_STR_RRI5, reg0, rGLUE, offset >> 2);
-    return false;
-}
-
-static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
-{
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int oplo = selectFirstRegister(cUnit, dInsn->arg[0], true);
-    int ophi = NEXT_REG(oplo);
-    int signMask = NEXT_REG(ophi);
-    loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
-    loadConstant(cUnit, signMask, 0x7fffffff);
-    newLIR3(cUnit, THUMB_STR_RRI5, oplo, rGLUE, offset >> 2);
-    newLIR2(cUnit, THUMB_AND_RR, ophi, signMask);
-    newLIR3(cUnit, THUMB_STR_RRI5, ophi, rGLUE, (offset >> 2)+1);
-    return false;
-}
-
- /* No select in thumb, so we need to branch.  Thumb2 will do better */
-static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
-{
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int reg1 = NEXT_REG(reg0);
-    loadValue(cUnit, dInsn->arg[0], reg0);
-    loadValue(cUnit, dInsn->arg[1], reg1);
-    newLIR2(cUnit, THUMB_CMP_RR, reg0, reg1);
-    ArmLIR *branch1 = newLIR2(cUnit, THUMB_B_COND, 2,
-           isMin ? ARM_COND_LT : ARM_COND_GT);
-    newLIR2(cUnit, THUMB_MOV_RR, reg0, reg1);
-    ArmLIR *target =
-        newLIR3(cUnit, THUMB_STR_RRI5, reg0, rGLUE, offset >> 2);
-    branch1->generic.target = (LIR *)target;
-    return false;
-}
-
-static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
-{
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int oplo = selectFirstRegister(cUnit, dInsn->arg[0], true);
-    int ophi = NEXT_REG(oplo);
-    int sign = NEXT_REG(ophi);
-    /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
-    loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
-    newLIR3(cUnit, THUMB_ASR, sign, ophi, 31);
-    newLIR3(cUnit, THUMB_ADD_RRR, oplo, oplo, sign);
-    newLIR2(cUnit, THUMB_ADC, ophi, sign);
-    newLIR2(cUnit, THUMB_EOR, oplo, sign);
-    newLIR2(cUnit, THUMB_EOR, ophi, sign);
-    newLIR3(cUnit, THUMB_STR_RRI5, oplo, rGLUE, offset >> 2);
-    newLIR3(cUnit, THUMB_STR_RRI5, ophi, rGLUE, (offset >> 2)+1);
     return false;
 }
 
@@ -1608,15 +1443,14 @@ static void genProcessArgsNoRange(CompilationUnit *cUnit, MIR *mir,
     }
     if (regMask) {
         /* Up to 5 args are pushed on top of FP - sizeofStackSaveArea */
-        newLIR2(cUnit, THUMB_MOV_RR, r7, rFP);
-        newLIR2(cUnit, THUMB_SUB_RI8, r7,
-                sizeof(StackSaveArea) + (dInsn->vA << 2));
+        opRegRegImm(cUnit, OP_SUB, r7, rFP,
+                    sizeof(StackSaveArea) + (dInsn->vA << 2), rNone);
         /* generate null check */
         if (pcrLabel) {
             *pcrLabel = genNullCheck(cUnit, dInsn->arg[0], r0, mir->offset,
                                      NULL);
         }
-        newLIR2(cUnit, THUMB_STMIA, r7, regMask);
+        storeMultiple(cUnit, r7, regMask);
     }
 }
 
@@ -1631,25 +1465,13 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
      * r4PC     : &rFP[vC]
      * r7: &newFP[0]
      */
-    if (srcOffset < 8) {
-        newLIR3(cUnit, THUMB_ADD_RRI3, r4PC, rFP, srcOffset);
-    } else {
-        loadConstant(cUnit, r4PC, srcOffset);
-        newLIR3(cUnit, THUMB_ADD_RRR, r4PC, rFP, r4PC);
-    }
+    opRegRegImm(cUnit, OP_ADD, r4PC, rFP, srcOffset, rNone);
     /* load [r0 .. min(numArgs,4)] */
     regMask = (1 << ((numArgs < 4) ? numArgs : 4)) - 1;
-    newLIR2(cUnit, THUMB_LDMIA, r4PC, regMask);
+    loadMultiple(cUnit, r4PC, regMask);
 
-    if (sizeof(StackSaveArea) + (numArgs << 2) < 256) {
-        newLIR2(cUnit, THUMB_MOV_RR, r7, rFP);
-        newLIR2(cUnit, THUMB_SUB_RI8, r7,
-                sizeof(StackSaveArea) + (numArgs << 2));
-    } else {
-        loadConstant(cUnit, r7, sizeof(StackSaveArea) + (numArgs << 2));
-        newLIR3(cUnit, THUMB_SUB_RRR, r7, rFP, r7);
-    }
-
+    opRegRegImm(cUnit, OP_SUB, r7, rFP,
+                sizeof(StackSaveArea) + (numArgs << 2), rNone);
     /* generate null check */
     if (pcrLabel) {
         *pcrLabel = genNullCheck(cUnit, dInsn->vC, r0, mir->offset, NULL);
@@ -1663,37 +1485,37 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
         ArmLIR *loopLabel = NULL;
         /*
          * r0 contains "this" and it will be used later, so push it to the stack
-         * first. Pushing r5 is just for stack alignment purposes.
+         * first. Pushing r5 (rFP) is just for stack alignment purposes.
          */
-        newLIR1(cUnit, THUMB_PUSH, 1 << r0 | 1 << 5);
+        opImm(cUnit, OP_PUSH, (1 << r0 | 1 << rFP));
         /* No need to generate the loop structure if numArgs <= 11 */
         if (numArgs > 11) {
             loadConstant(cUnit, 5, ((numArgs - 4) >> 2) << 2);
             loopLabel = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
         }
-        newLIR2(cUnit, THUMB_STMIA, r7, regMask);
-        newLIR2(cUnit, THUMB_LDMIA, r4PC, regMask);
+        storeMultiple(cUnit, r7, regMask);
+        loadMultiple(cUnit, r4PC, regMask);
         /* No need to generate the loop structure if numArgs <= 11 */
         if (numArgs > 11) {
-            newLIR2(cUnit, THUMB_SUB_RI8, 5, 4);
+            opRegImm(cUnit, OP_SUB, rFP, 4, rNone);
             genConditionalBranch(cUnit, ARM_COND_NE, loopLabel);
         }
     }
 
     /* Save the last batch of loaded values */
-    newLIR2(cUnit, THUMB_STMIA, r7, regMask);
+    storeMultiple(cUnit, r7, regMask);
 
     /* Generate the loop epilogue - don't use r0 */
     if ((numArgs > 4) && (numArgs % 4)) {
         regMask = ((1 << (numArgs & 0x3)) - 1) << 1;
-        newLIR2(cUnit, THUMB_LDMIA, r4PC, regMask);
+        loadMultiple(cUnit, r4PC, regMask);
     }
     if (numArgs >= 8)
-        newLIR1(cUnit, THUMB_POP, 1 << r0 | 1 << 5);
+        opImm(cUnit, OP_POP, (1 << r0 | 1 << rFP));
 
     /* Save the modulo 4 arguments */
     if ((numArgs > 4) && (numArgs % 4)) {
-        newLIR2(cUnit, THUMB_STMIA, r7, regMask);
+        storeMultiple(cUnit, r7, regMask);
     }
 }
 
@@ -1709,7 +1531,7 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
     ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
 
     /* r1 = &retChainingCell */
-    ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL, r1, 0, 0);
+    ArmLIR *addrRetChain = opRegRegImm(cUnit, OP_ADD, r1, rpc, 0, rNone);
     /* r4PC = dalvikCallsite */
     loadConstant(cUnit, r4PC,
                  (int) (cUnit->method->insns + mir->offset));
@@ -1769,11 +1591,12 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
                  (int) (cUnit->method->insns + mir->offset));
 
     /* r1 = &retChainingCell */
-    ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL, r1, 0, 0);
+    ArmLIR *addrRetChain = opRegRegImm(cUnit, OP_ADD, r1, rpc, 0, rNone);
     addrRetChain->generic.target = (LIR *) retChainingCell;
 
     /* r2 = &predictedChainingCell */
-    ArmLIR *predictedChainingCell = newLIR3(cUnit, THUMB_ADD_PC_REL, r2, 0, 0);
+    ArmLIR *predictedChainingCell = opRegRegImm(cUnit, OP_ADD, r2, rpc, 0,
+                                                rNone);
     predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
     genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
@@ -1808,23 +1631,16 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      */
 
     /* r0 <- calleeMethod */
-    if (methodIndex < 32) {
-        newLIR3(cUnit, THUMB_LDR_RRI5, r0, r7, methodIndex);
-    } else {
-        loadConstant(cUnit, r0, methodIndex<<2);
-        newLIR3(cUnit, THUMB_LDR_RRR, r0, r7, r0);
-    }
+    loadWordDisp(cUnit, r7, methodIndex * 4, r0);
 
     /* Check if rechain limit is reached */
-    newLIR2(cUnit, THUMB_CMP_RI8, r1, 0);
+    opRegImm(cUnit, OP_CMP, r1, 0, rNone);
 
     ArmLIR *bypassRechaining =
-        newLIR2(cUnit, THUMB_B_COND, 0, ARM_COND_GT);
+        opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_GT);
 
-    newLIR3(cUnit, THUMB_LDR_RRI5, r7, rGLUE,
-            offsetof(InterpState,
-                     jitToInterpEntries.dvmJitToPatchPredictedChain)
-            >> 2);
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                 jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
 
     /*
      * r0 = calleeMethod
@@ -1835,10 +1651,10 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      * when patching the chaining cell and will be clobbered upon
      * returning so it will be reconstructed again.
      */
-    newLIR1(cUnit, THUMB_BLX_R, r7);
+    opReg(cUnit, OP_BLX, r7);
 
     /* r1 = &retChainingCell */
-    addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL, r1, 0, 0);
+    addrRetChain = opRegRegImm(cUnit, OP_ADD, r1, rpc, 0, rNone);
     addrRetChain->generic.target = (LIR *) retChainingCell;
 
     bypassRechaining->generic.target = (LIR *) addrRetChain;
@@ -1870,16 +1686,14 @@ static ArmLIR *genCheckPredictedChain(CompilationUnit *cUnit,
                                           MIR *mir)
 {
     /* r3 now contains this->clazz */
-    newLIR3(cUnit, THUMB_LDR_RRI5, r3, r0,
-            offsetof(Object, clazz) >> 2);
+    loadWordDisp(cUnit, r0, offsetof(Object, clazz), r3);
 
     /*
      * r2 now contains predicted class. The starting offset of the
      * cached value is 4 bytes into the chaining cell.
      */
     ArmLIR *getPredictedClass =
-        newLIR3(cUnit, THUMB_LDR_PC_REL, r2, 0,
-                offsetof(PredictedChainingCell, clazz));
+         loadWordDisp(cUnit, rpc, offsetof(PredictedChainingCell, clazz), r2);
     getPredictedClass->generic.target = (LIR *) predChainingCell;
 
     /*
@@ -1887,14 +1701,12 @@ static ArmLIR *genCheckPredictedChain(CompilationUnit *cUnit,
      * cached value is 8 bytes into the chaining cell.
      */
     ArmLIR *getPredictedMethod =
-        newLIR3(cUnit, THUMB_LDR_PC_REL, r0, 0,
-                offsetof(PredictedChainingCell, method));
+        loadWordDisp(cUnit, rpc, offsetof(PredictedChainingCell, method), r0);
     getPredictedMethod->generic.target = (LIR *) predChainingCell;
 
     /* Load the stats counter to see if it is time to unchain and refresh */
     ArmLIR *getRechainingRequestCount =
-        newLIR3(cUnit, THUMB_LDR_PC_REL, r7, 0,
-                offsetof(PredictedChainingCell, counter));
+        loadWordDisp(cUnit, rpc, offsetof(PredictedChainingCell, counter), r7);
     getRechainingRequestCount->generic.target =
         (LIR *) predChainingCell;
 
@@ -1903,14 +1715,13 @@ static ArmLIR *genCheckPredictedChain(CompilationUnit *cUnit,
                  (int) (cUnit->method->insns + mir->offset));
 
     /* r1 = &retChainingCell */
-    ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL,
-                                       r1, 0, 0);
+    ArmLIR *addrRetChain = opRegRegImm(cUnit, OP_ADD, r1, rpc, 0, rNone);
     addrRetChain->generic.target = (LIR *) retChainingCell;
 
     /* Check if r2 (predicted class) == r3 (actual class) */
-    newLIR2(cUnit, THUMB_CMP_RR, r2, r3);
+    opRegReg(cUnit, OP_CMP, r2, r3);
 
-    return newLIR2(cUnit, THUMB_B_COND, 0, ARM_COND_EQ);
+    return opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_EQ);
 }
 
 /* Geneate a branch to go back to the interpreter */
@@ -1918,9 +1729,10 @@ static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
 {
     /* r0 = dalvik pc */
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + offset));
-    newLIR3(cUnit, THUMB_LDR_RRI5, r1, rGLUE,
-            offsetof(InterpState, jitToInterpEntries.dvmJitToInterpPunt) >> 2);
-    newLIR1(cUnit, THUMB_BLX_R, r1);
+    loadWordDisp(cUnit, r0, offsetof(Object, clazz), r3);
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                 jitToInterpEntries.dvmJitToInterpPunt), r1);
+    opReg(cUnit, OP_BLX, r1);
 }
 
 /*
@@ -1938,16 +1750,117 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     }
     int entryAddr = offsetof(InterpState,
                              jitToInterpEntries.dvmJitToInterpSingleStep);
-    newLIR3(cUnit, THUMB_LDR_RRI5, r2, rGLUE, entryAddr >> 2);
+    loadWordDisp(cUnit, rGLUE, entryAddr, r2);
     /* r0 = dalvik pc */
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + mir->offset));
     /* r1 = dalvik pc of following instruction */
     loadConstant(cUnit, r1, (int) (cUnit->method->insns + mir->next->offset));
-    newLIR1(cUnit, THUMB_BLX_R, r2);
+    opReg(cUnit, OP_BLX, r2);
 }
 
+/* Generate conditional branch instructions */
+static ArmLIR *genConditionalBranch(CompilationUnit *cUnit,
+                                    ArmConditionCode cond,
+                                    ArmLIR *target)
+{
+    ArmLIR *branch = opImmImm(cUnit, OP_COND_BR, 0, cond);
+    branch->generic.target = (LIR *) target;
+    return branch;
+}
 
-/*****************************************************************************/
+/* Generate unconditional branch instructions */
+static ArmLIR *genUnconditionalBranch(CompilationUnit *cUnit, ArmLIR *target)
+{
+    ArmLIR *branch = opNone(cUnit, OP_UNCOND_BR);
+    branch->generic.target = (LIR *) target;
+    return branch;
+}
+
+/* Load the address of a Dalvik register on the frame */
+static ArmLIR *loadValueAddress(CompilationUnit *cUnit, int vSrc, int rDest)
+{
+    return opRegRegImm(cUnit, OP_ADD, rDest, rFP, vSrc*4, rNone);
+}
+
+/* Load a single value from rFP[src] and store them into rDest */
+static ArmLIR *loadValue(CompilationUnit *cUnit, int vSrc, int rDest)
+{
+    return loadBaseDisp(cUnit, NULL, rFP, vSrc * 4, rDest, WORD, false, -1);
+}
+
+/* Load a word at base + displacement.  Displacement must be word multiple */
+static ArmLIR *loadWordDisp(CompilationUnit *cUnit, int rBase, int displacement,
+                            int rDest)
+{
+    return loadBaseDisp(cUnit, NULL, rBase, displacement, rDest, WORD, false,
+                        -1);
+}
+
+static ArmLIR *storeWordDisp(CompilationUnit *cUnit, int rBase,
+                             int displacement, int rSrc, int rScratch)
+{
+    return storeBaseDisp(cUnit, rBase, displacement, rSrc, WORD, rScratch);
+}
+
+/* Store a value from rSrc to vDest */
+static ArmLIR *storeValue(CompilationUnit *cUnit, int rSrc, int vDest,
+                          int rScratch)
+{
+    killNullCheckedRegister(cUnit, vDest);
+    updateLiveRegister(cUnit, vDest, rSrc);
+    return storeBaseDisp(cUnit, rFP, vDest * 4, rSrc, WORD, rScratch);
+}
+/*
+ * Load a pair of values of rFP[src..src+1] and store them into rDestLo and
+ * rDestHi
+ */
+static ArmLIR *loadValuePair(CompilationUnit *cUnit, int vSrc, int rDestLo,
+                             int rDestHi)
+{
+    ArmLIR *res;
+    /* Use reg + imm5*4 to load the values if possible */
+    if (vSrc <= 30) {
+        res = loadWordDisp(cUnit, rFP, vSrc*4, rDestLo);
+        loadWordDisp(cUnit, rFP, (vSrc+1)*4, rDestHi);
+    } else {
+        assert(rDestLo < rDestHi);
+        res = loadValueAddress(cUnit, vSrc, rDestLo);
+        loadMultiple(cUnit, rDestLo, (1<<rDestLo) | (1<<rDestHi));
+    }
+    return res;
+}
+
+/*
+ * Store a pair of values of rSrc and rSrc+1 and store them into vDest and
+ * vDest+1
+ */
+static ArmLIR *storeValuePair(CompilationUnit *cUnit, int rSrcLo, int rSrcHi,
+                              int vDest, int rScratch)
+{
+    ArmLIR *res;
+    killNullCheckedRegister(cUnit, vDest);
+    killNullCheckedRegister(cUnit, vDest+1);
+    updateLiveRegisterPair(cUnit, vDest, rSrcLo, rSrcHi);
+
+    /* Use reg + imm5*4 to store the values if possible */
+    if (vDest <= 30) {
+        res = storeWordDisp(cUnit, rFP, vDest*4, rSrcLo, rScratch);
+        storeWordDisp(cUnit, rFP, (vDest+1)*4, rSrcHi, rScratch);
+    } else {
+        assert(rSrcLo < rSrcHi);
+        res = loadValueAddress(cUnit, vDest, rScratch);
+        storeMultiple(cUnit, rScratch, (1<<rSrcLo) | (1 << rSrcHi));
+    }
+    return res;
+}
+
+static ArmLIR *genRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
+{
+    ArmLIR *res = dvmCompilerRegCopy(cUnit, rDest, rSrc);
+    dvmCompilerAppendLIR(cUnit, (LIR*)res);
+    return res;
+}
+
 /*
  * The following are the first-level codegen routines that analyze the format
  * of each bytecode then either dispatch special purpose codegen routines
@@ -2007,7 +1920,7 @@ static bool handleFmt11n_Fmt31i(CompilationUnit *cUnit, MIR *mir)
             reg1 = NEXT_REG(reg0);
             reg2 = NEXT_REG(reg1);
             loadConstant(cUnit, reg0, mir->dalvikInsn.vB);
-            newLIR3(cUnit, THUMB_ASR, reg1, reg0, 31);
+            opRegRegImm(cUnit, OP_ASR, reg1, reg0, 31, rNone);
             storeValuePair(cUnit, reg0, reg1, mir->dalvikInsn.vA, reg2);
             break;
         }
@@ -2064,10 +1977,6 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
     int regvNoneWide = selectFirstRegister(cUnit, vNone, true);
 
     switch (mir->dalvikInsn.opCode) {
-        /*
-         * TODO: Verify that we can ignore the resolution check here because
-         * it will have already successfully been interpreted once
-         */
         case OP_CONST_STRING_JUMBO:
         case OP_CONST_STRING: {
             void *strPtr = (void*)
@@ -2077,10 +1986,6 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             storeValue(cUnit, regvNone, mir->dalvikInsn.vA, NEXT_REG(regvNone));
             break;
         }
-        /*
-         * TODO: Verify that we can ignore the resolution check here because
-         * it will have already successfully been interpreted once
-         */
         case OP_CONST_CLASS: {
             void *classPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
@@ -2101,14 +2006,13 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             assert(fieldPtr != NULL);
             loadConstant(cUnit, regvNone,  (int) fieldPtr + valOffset);
 #if !defined(WITH_SELF_VERIFICATION)
-            newLIR3(cUnit, THUMB_LDR_RRI5, regvNone, regvNone, 0);
-            storeValue(cUnit, regvNone, mir->dalvikInsn.vA, NEXT_REG(regvNone));
+            loadWordDisp(cUnit, regvNone, 0, regvNone);
 #else
             int regMap = regvNone << 4 | regvNone;
             selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationLoad);
 
-            storeValue(cUnit, regvNone, mir->dalvikInsn.vA, NEXT_REG(regvNone));
 #endif
+            storeValue(cUnit, regvNone, mir->dalvikInsn.vA, NEXT_REG(regvNone));
             break;
         }
         case OP_SGET_WIDE: {
@@ -2123,15 +2027,14 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             reg2 = NEXT_REG(reg1);
             loadConstant(cUnit, reg2,  (int) fieldPtr + valOffset);
 #if !defined(WITH_SELF_VERIFICATION)
-            newLIR2(cUnit, THUMB_LDMIA, reg2, (1<<reg0 | 1<<reg1));
-            storeValuePair(cUnit, reg0, reg1, mir->dalvikInsn.vA, reg2);
+            loadMultiple(cUnit, reg2, (1<<reg0 | 1<<reg1));
 #else
             int regMap = reg1 << 8 | reg0 << 4 | reg2;
             selfVerificationMemOpWrapper(cUnit, regMap,
                 &selfVerificationLoadDoubleword);
 
-            storeValuePair(cUnit, reg0, reg1, mir->dalvikInsn.vA, reg2);
 #endif
+            storeValuePair(cUnit, reg0, reg1, mir->dalvikInsn.vA, reg2);
             break;
         }
         case OP_SPUT_OBJECT:
@@ -2149,7 +2052,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             updateLiveRegister(cUnit, mir->dalvikInsn.vA, regvA);
             loadConstant(cUnit, NEXT_REG(regvA),  (int) fieldPtr + valOffset);
 #if !defined(WITH_SELF_VERIFICATION)
-            newLIR3(cUnit, THUMB_STR_RRI5, regvA, NEXT_REG(regvA), 0);
+            storeWordDisp(cUnit, NEXT_REG(regvA), 0 , regvA, -1);
 #else
             int regMap = regvA << 4 | NEXT_REG(regvA);
             selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationStore);
@@ -2170,7 +2073,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             updateLiveRegisterPair(cUnit, mir->dalvikInsn.vA, reg0, reg1);
             loadConstant(cUnit, reg2,  (int) fieldPtr + valOffset);
 #if !defined(WITH_SELF_VERIFICATION)
-            newLIR2(cUnit, THUMB_STMIA, reg2, (1<<reg0 | 1<<reg1));
+            storeMultiple(cUnit, reg2, (1<<reg0 | 1<<reg1));
 #else
             int regMap = reg1 << 8 | reg0 << 4 | reg2;
             selfVerificationMemOpWrapper(cUnit, regMap,
@@ -2196,11 +2099,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r0, (int) classPtr);
             genExportPC(cUnit, mir, r2, r3 );
             loadConstant(cUnit, r1, ALLOC_DONT_TRACK);
-            newLIR1(cUnit, THUMB_BLX_R, r4PC);
-            /*
-             * TODO: As coded, we'll bail and reinterpret on alloc failure.
-             * Need a general mechanism to bail to thrown exception code.
-             */
+            opReg(cUnit, OP_BLX, r4PC);
             genZeroCheck(cUnit, r0, mir->offset, NULL);
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
             break;
@@ -2214,25 +2113,18 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
             loadConstant(cUnit, r1, (int) classPtr );
             loadValue(cUnit, mir->dalvikInsn.vA, r0);  /* Ref */
-            /*
-             * TODO - in theory classPtr should be resoved by the time this
-             * instruction made into a trace, but we are seeing NULL at runtime
-             * so this check is temporarily used as a workaround.
-             */
-            ArmLIR * pcrLabel = genZeroCheck(cUnit, r1, mir->offset, NULL);
-            newLIR2(cUnit, THUMB_CMP_RI8, r0, 0);    /* Null? */
+            opRegImm(cUnit, OP_CMP, r0, 0, rNone);   /* Null? */
             ArmLIR *branch1 =
-                newLIR2(cUnit, THUMB_B_COND, 4, ARM_COND_EQ);
+                opImmImm(cUnit, OP_COND_BR, 4, ARM_COND_EQ);
             /* r0 now contains object->clazz */
-            newLIR3(cUnit, THUMB_LDR_RRI5, r0, r0,
-                    offsetof(Object, clazz) >> 2);
+            loadWordDisp(cUnit, r0, offsetof(Object, clazz), r0);
             loadConstant(cUnit, r4PC, (int)dvmInstanceofNonTrivial);
-            newLIR2(cUnit, THUMB_CMP_RR, r0, r1);
+            opRegReg(cUnit, OP_CMP, r0, r1);
             ArmLIR *branch2 =
-                newLIR2(cUnit, THUMB_B_COND, 2, ARM_COND_EQ);
-            newLIR1(cUnit, THUMB_BLX_R, r4PC);
+                opImmImm(cUnit, OP_COND_BR, 2, ARM_COND_EQ);
+            opReg(cUnit, OP_BLX, r4PC);
             /* check cast failed - punt to the interpreter */
-            genZeroCheck(cUnit, r0, mir->offset, pcrLabel);
+            genZeroCheck(cUnit, r0, mir->offset, NULL);
             /* check cast passed - branch target here */
             ArmLIR *target = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
             branch1->generic.target = (LIR *)target;
@@ -2252,65 +2144,61 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
         case OP_MOVE_EXCEPTION: {
             int offset = offsetof(InterpState, self);
             int exOffset = offsetof(Thread, exception);
-            newLIR3(cUnit, THUMB_LDR_RRI5, r1, rGLUE, offset >> 2);
-            newLIR3(cUnit, THUMB_LDR_RRI5, r0, r1, exOffset >> 2);
+            loadWordDisp(cUnit, rGLUE, offset, r1);
+            loadWordDisp(cUnit, r1, exOffset, r0);
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
            break;
         }
         case OP_MOVE_RESULT:
         case OP_MOVE_RESULT_OBJECT: {
             int offset = offsetof(InterpState, retval);
-            newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE, offset >> 2);
+            loadWordDisp(cUnit, rGLUE, offset, r0);
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
             break;
         }
         case OP_MOVE_RESULT_WIDE: {
             int offset = offsetof(InterpState, retval);
-            newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE, offset >> 2);
-            newLIR3(cUnit, THUMB_LDR_RRI5, r1, rGLUE, (offset >> 2)+1);
+            loadWordDisp(cUnit, rGLUE, offset, r0);
+            loadWordDisp(cUnit, rGLUE, offset+4, r1);
             storeValuePair(cUnit, r0, r1, mir->dalvikInsn.vA, r2);
             break;
         }
         case OP_RETURN_WIDE: {
-            loadValuePair(cUnit, mir->dalvikInsn.vA, r0, r1);
+            int vSrc = mir->dalvikInsn.vA;
+            int reg0 = selectFirstRegister(cUnit, vSrc, true);
+            int reg1 = NEXT_REG(reg0);
+            int rScratch = NEXT_REG(reg1);
             int offset = offsetof(InterpState, retval);
-            newLIR3(cUnit, THUMB_STR_RRI5, r0, rGLUE, offset >> 2);
-            newLIR3(cUnit, THUMB_STR_RRI5, r1, rGLUE, (offset >> 2)+1);
+            loadValuePair(cUnit, vSrc, reg0, reg1);
+            storeWordDisp(cUnit, rGLUE, offset, reg0, rScratch);
+            storeWordDisp(cUnit, rGLUE, offset + 4, reg1, rScratch);
             genReturnCommon(cUnit,mir);
             break;
         }
         case OP_RETURN:
         case OP_RETURN_OBJECT: {
-            loadValue(cUnit, mir->dalvikInsn.vA, r0);
-            int offset = offsetof(InterpState, retval);
-            newLIR3(cUnit, THUMB_STR_RRI5, r0, rGLUE, offset >> 2);
+            int vSrc = mir->dalvikInsn.vA;
+            int reg0 = selectFirstRegister(cUnit, vSrc, false);
+            int rScratch = NEXT_REG(reg0);
+            loadValue(cUnit, vSrc, reg0);
+            storeWordDisp(cUnit, rGLUE, offsetof(InterpState, retval),
+                          reg0, rScratch);
             genReturnCommon(cUnit,mir);
             break;
         }
-        /*
-         * TODO-VERIFY: May be playing a bit fast and loose here.  As coded,
-         * a failure on lock/unlock will cause us to revert to the interpeter
-         * to try again. This means we essentially ignore the first failure on
-         * the assumption that the interpreter will correctly handle the 2nd.
-         */
         case OP_MONITOR_ENTER:
         case OP_MONITOR_EXIT: {
             int offset = offsetof(InterpState, self);
             loadValue(cUnit, mir->dalvikInsn.vA, r1);
-            newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE, offset >> 2);
+            loadWordDisp(cUnit, rGLUE, offset, r0);
             if (dalvikOpCode == OP_MONITOR_ENTER) {
                 loadConstant(cUnit, r2, (int)dvmLockObject);
             } else {
                 loadConstant(cUnit, r2, (int)dvmUnlockObject);
             }
-          /*
-           * TODO-VERIFY: Note that we're not doing an EXPORT_PC, as
-           * Lock/unlock won't throw, and this code does not support
-           * DEADLOCK_PREDICTION or MONITOR_TRACKING.  Should it?
-           */
             genNullCheck(cUnit, mir->dalvikInsn.vA, r1, mir->offset, NULL);
             /* Do the call */
-            newLIR1(cUnit, THUMB_BLX_R, r2);
+            opReg(cUnit, OP_BLX, r2);
             break;
         }
         case OP_THROW: {
@@ -2335,6 +2223,8 @@ static bool genConversionPortable(CompilationUnit *cUnit, MIR *mir)
     int    __aeabi_d2iz( double op1 );
     float  __aeabi_l2f(  long op1 );
     double __aeabi_l2d(  long op1 );
+    s8 dvmJitf2l( float op1 );
+    s8 dvmJitd2l( double op1 );
 
     switch (opCode) {
         case OP_INT_TO_FLOAT:
@@ -2369,8 +2259,6 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
     int vSrc1Dest = mir->dalvikInsn.vA;
     int vSrc2 = mir->dalvikInsn.vB;
     int reg0, reg1, reg2;
-
-    /* TODO - find the proper include file to declare these */
 
     if ( (opCode >= OP_ADD_INT_2ADDR) && (opCode <= OP_REM_DOUBLE_2ADDR)) {
         return genArithOp( cUnit, mir );
@@ -2421,7 +2309,7 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             reg2 = NEXT_REG(reg1);
 
             loadValue(cUnit, vSrc2, reg0);
-            newLIR3(cUnit, THUMB_ASR, reg1, reg0, 31);
+            opRegRegImm(cUnit, OP_ASR, reg1, reg0, 31, rNone);
             storeValuePair(cUnit, reg0, reg1, vSrc1Dest, reg2);
             break;
         }
@@ -2433,27 +2321,24 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             break;
         case OP_INT_TO_BYTE:
             loadValue(cUnit, vSrc2, reg0);
-            newLIR3(cUnit, THUMB_LSL, reg0, reg0, 24);
-            newLIR3(cUnit, THUMB_ASR, reg0, reg0, 24);
-            storeValue(cUnit, reg0, vSrc1Dest, reg1);
+            opRegReg(cUnit, OP_2BYTE, reg1, reg0);
+            storeValue(cUnit, reg1, vSrc1Dest, reg2);
             break;
         case OP_INT_TO_SHORT:
             loadValue(cUnit, vSrc2, reg0);
-            newLIR3(cUnit, THUMB_LSL, reg0, reg0, 16);
-            newLIR3(cUnit, THUMB_ASR, reg0, reg0, 16);
-            storeValue(cUnit, reg0, vSrc1Dest, reg1);
+            opRegReg(cUnit, OP_2SHORT, reg1, reg0);
+            storeValue(cUnit, reg1, vSrc1Dest, reg2);
             break;
         case OP_INT_TO_CHAR:
             loadValue(cUnit, vSrc2, reg0);
-            newLIR3(cUnit, THUMB_LSL, reg0, reg0, 16);
-            newLIR3(cUnit, THUMB_LSR, reg0, reg0, 16);
-            storeValue(cUnit, reg0, vSrc1Dest, reg1);
+            opRegReg(cUnit, OP_2CHAR, reg1, reg0);
+            storeValue(cUnit, reg1, vSrc1Dest, reg2);
             break;
         case OP_ARRAY_LENGTH: {
             int lenOffset = offsetof(ArrayObject, length);
-            loadValue(cUnit, vSrc2, reg0);
-            genNullCheck(cUnit, vSrc2, reg0, mir->offset, NULL);
-            newLIR3(cUnit, THUMB_LDR_RRI5, reg0, reg0, lenOffset >> 2);
+            loadValue(cUnit, vSrc2, reg1);
+            genNullCheck(cUnit, vSrc2, reg1, mir->offset, NULL);
+            loadWordDisp(cUnit, reg1, lenOffset, reg0);
             storeValue(cUnit, reg0, vSrc1Dest, reg1);
             break;
         }
@@ -2478,7 +2363,7 @@ static bool handleFmt21s(CompilationUnit *cUnit, MIR *mir)
         reg2 = NEXT_REG(reg1);
 
         loadConstant(cUnit, reg0, BBBB);
-        newLIR3(cUnit, THUMB_ASR, reg1, reg0, 31);
+        opRegRegImm(cUnit, OP_ASR, reg1, reg0, 31, rNone);
 
         /* Save the long values to the specified Dalvik register pair */
         storeValuePair(cUnit, reg0, reg1, vDest, reg2);
@@ -2506,8 +2391,9 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
     int reg0 = selectFirstRegister(cUnit, mir->dalvikInsn.vA, false);
 
     loadValue(cUnit, mir->dalvikInsn.vA, reg0);
-    newLIR2(cUnit, THUMB_CMP_RI8, reg0, 0);
+    opRegImm(cUnit, OP_CMP, reg0, 0, rNone);
 
+//TUNING: break this out to allow use of Thumb2 CB[N]Z
     switch (dalvikOpCode) {
         case OP_IF_EQZ:
             cond = ARM_COND_EQ;
@@ -2544,14 +2430,13 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
     int vSrc = mir->dalvikInsn.vB;
     int vDest = mir->dalvikInsn.vA;
     int lit = mir->dalvikInsn.vC;
-    int armOp;
+    OpKind op;
     int reg0, reg1, regDest;
 
     reg0 = selectFirstRegister(cUnit, vSrc, false);
     reg1 = NEXT_REG(reg0);
     regDest = NEXT_REG(reg1);
 
-    /* TODO: find the proper .h file to declare these */
     int __aeabi_idivmod(int op1, int op2);
     int __aeabi_idiv(int op1, int op2);
 
@@ -2559,31 +2444,16 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
         case OP_ADD_INT_LIT8:
         case OP_ADD_INT_LIT16:
             loadValue(cUnit, vSrc, reg0);
-            if (lit <= 7 && lit >= 0) {
-                newLIR3(cUnit, THUMB_ADD_RRI3, regDest, reg0, lit);
-                storeValue(cUnit, regDest, vDest, reg1);
-            } else if (lit <= 255 && lit >= 0) {
-                newLIR2(cUnit, THUMB_ADD_RI8, reg0, lit);
-                storeValue(cUnit, reg0, vDest, reg1);
-            } else if (lit >= -7 && lit <= 0) {
-                /* Convert to a small constant subtraction */
-                newLIR3(cUnit, THUMB_SUB_RRI3, regDest, reg0, -lit);
-                storeValue(cUnit, regDest, vDest, reg1);
-            } else if (lit >= -255 && lit <= 0) {
-                /* Convert to a small constant subtraction */
-                newLIR2(cUnit, THUMB_SUB_RI8, reg0, -lit);
-                storeValue(cUnit, reg0, vDest, reg1);
-            } else {
-                loadConstant(cUnit, reg1, lit);
-                genBinaryOp(cUnit, vDest, THUMB_ADD_RRR, reg0, reg1, regDest);
-            }
+            opRegImm(cUnit, OP_ADD, reg0, lit, reg1);
+            storeValue(cUnit, reg0, vDest, reg1);
             break;
 
         case OP_RSUB_INT_LIT8:
         case OP_RSUB_INT:
             loadValue(cUnit, vSrc, reg1);
             loadConstant(cUnit, reg0, lit);
-            genBinaryOp(cUnit, vDest, THUMB_SUB_RRR, reg0, reg1, regDest);
+            opRegRegReg(cUnit, OP_SUB, regDest, reg0, reg1);
+            storeValue(cUnit, regDest, vDest, reg1);
             break;
 
         case OP_MUL_INT_LIT8:
@@ -2595,28 +2465,28 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
         case OP_XOR_INT_LIT8:
         case OP_XOR_INT_LIT16:
             loadValue(cUnit, vSrc, reg0);
-            loadConstant(cUnit, reg1, lit);
             switch (dalvikOpCode) {
                 case OP_MUL_INT_LIT8:
                 case OP_MUL_INT_LIT16:
-                    armOp = THUMB_MUL;
+                    op = OP_MUL;
                     break;
                 case OP_AND_INT_LIT8:
                 case OP_AND_INT_LIT16:
-                    armOp = THUMB_AND_RR;
+                    op = OP_AND;
                     break;
                 case OP_OR_INT_LIT8:
                 case OP_OR_INT_LIT16:
-                    armOp = THUMB_ORR;
+                    op = OP_OR;
                     break;
                 case OP_XOR_INT_LIT8:
                 case OP_XOR_INT_LIT16:
-                    armOp = THUMB_EOR;
+                    op = OP_XOR;
                     break;
                 default:
                     dvmAbort();
             }
-            genBinaryOp(cUnit, vDest, armOp, reg0, reg1, regDest);
+            opRegRegImm(cUnit, op, regDest, reg0, lit, reg1);
+            storeValue(cUnit, regDest, vDest, reg1);
             break;
 
         case OP_SHL_INT_LIT8:
@@ -2625,18 +2495,18 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             loadValue(cUnit, vSrc, reg0);
             switch (dalvikOpCode) {
                 case OP_SHL_INT_LIT8:
-                    armOp = THUMB_LSL;
+                    op = OP_LSL;
                     break;
                 case OP_SHR_INT_LIT8:
-                    armOp = THUMB_ASR;
+                    op = OP_ASR;
                     break;
                 case OP_USHR_INT_LIT8:
-                    armOp = THUMB_LSR;
+                    op = OP_LSR;
                     break;
                 default: dvmAbort();
             }
-            newLIR3(cUnit, armOp, reg0, reg0, lit);
-            storeValue(cUnit, reg0, vDest, reg1);
+            opRegRegImm(cUnit, op, regDest, reg0, lit, reg1);
+            storeValue(cUnit, regDest, vDest, reg1);
             break;
 
         case OP_DIV_INT_LIT8:
@@ -2650,7 +2520,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r2, (int)__aeabi_idiv);
             loadConstant(cUnit, r1, lit);
             loadValue(cUnit, vSrc, r0);
-            newLIR1(cUnit, THUMB_BLX_R, r2);
+            opReg(cUnit, OP_BLX, r2);
             storeValue(cUnit, r0, vDest, r2);
             break;
 
@@ -2665,7 +2535,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r2, (int)__aeabi_idivmod);
             loadConstant(cUnit, r1, lit);
             loadValue(cUnit, vSrc, r0);
-            newLIR1(cUnit, THUMB_BLX_R, r2);
+            opReg(cUnit, OP_BLX, r2);
             storeValue(cUnit, r1, vDest, r2);
             break;
         default:
@@ -2691,10 +2561,6 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
         fieldOffset = 0;
     }
     switch (dalvikOpCode) {
-        /*
-         * TODO: I may be assuming too much here.
-         * Verify what is known at JIT time.
-         */
         case OP_NEW_ARRAY: {
             void *classPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vC]);
@@ -2705,41 +2571,32 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             ArmLIR *pcrLabel =
                 genRegImmCheck(cUnit, ARM_COND_MI, r1, 0, mir->offset, NULL);
             genExportPC(cUnit, mir, r2, r3 );
-            newLIR2(cUnit, THUMB_MOV_IMM,r2,ALLOC_DONT_TRACK);
-            newLIR1(cUnit, THUMB_BLX_R, r4PC);
-            /*
-             * TODO: As coded, we'll bail and reinterpret on alloc failure.
-             * Need a general mechanism to bail to thrown exception code.
-             */
+            loadConstant(cUnit, r2, ALLOC_DONT_TRACK);
+            opReg(cUnit, OP_BLX, r4PC);
+            /* Note: on failure, we'll bail and reinterpret */
             genZeroCheck(cUnit, r0, mir->offset, pcrLabel);
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
             break;
         }
-        /*
-         * TODO: I may be assuming too much here.
-         * Verify what is known at JIT time.
-         */
         case OP_INSTANCE_OF: {
             ClassObject *classPtr =
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vC]);
             assert(classPtr != NULL);
             loadValue(cUnit, mir->dalvikInsn.vB, r0);  /* Ref */
             loadConstant(cUnit, r2, (int) classPtr );
-            newLIR2(cUnit, THUMB_CMP_RI8, r0, 0);    /* Null? */
+//TUNING: compare to 0 primative to allow use of CB[N]Z
+            opRegImm(cUnit, OP_CMP, r0, 0, rNone); /* NULL? */
             /* When taken r0 has NULL which can be used for store directly */
-            ArmLIR *branch1 = newLIR2(cUnit, THUMB_B_COND, 4,
-                                          ARM_COND_EQ);
+            ArmLIR *branch1 = opImmImm(cUnit, OP_COND_BR, 4, ARM_COND_EQ);
             /* r1 now contains object->clazz */
-            newLIR3(cUnit, THUMB_LDR_RRI5, r1, r0,
-                    offsetof(Object, clazz) >> 2);
+            loadWordDisp(cUnit, r0, offsetof(Object, clazz), r1);
             loadConstant(cUnit, r4PC, (int)dvmInstanceofNonTrivial);
             loadConstant(cUnit, r0, 1);                /* Assume true */
-            newLIR2(cUnit, THUMB_CMP_RR, r1, r2);
-            ArmLIR *branch2 = newLIR2(cUnit, THUMB_B_COND, 2,
-                                          ARM_COND_EQ);
-            newLIR2(cUnit, THUMB_MOV_RR, r0, r1);
-            newLIR2(cUnit, THUMB_MOV_RR, r1, r2);
-            newLIR1(cUnit, THUMB_BLX_R, r4PC);
+            opRegReg(cUnit, OP_CMP, r1, r2);
+            ArmLIR *branch2 = opImmImm(cUnit, OP_COND_BR, 2, ARM_COND_EQ);
+            opRegReg(cUnit, OP_MOV, r0, r1);
+            opRegReg(cUnit, OP_MOV, r1, r2);
+            opReg(cUnit, OP_BLX, r4PC);
             /* branch target here */
             ArmLIR *target = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
@@ -2752,34 +2609,34 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             break;
         case OP_IGET:
         case OP_IGET_OBJECT:
-            genIGet(cUnit, mir, THUMB_LDR_RRR, fieldOffset);
+            genIGet(cUnit, mir, WORD, fieldOffset);
             break;
         case OP_IGET_BOOLEAN:
-            genIGet(cUnit, mir, THUMB_LDRB_RRR, fieldOffset);
+            genIGet(cUnit, mir, UNSIGNED_BYTE, fieldOffset);
             break;
         case OP_IGET_BYTE:
-            genIGet(cUnit, mir, THUMB_LDRSB_RRR, fieldOffset);
+            genIGet(cUnit, mir, SIGNED_BYTE, fieldOffset);
             break;
         case OP_IGET_CHAR:
-            genIGet(cUnit, mir, THUMB_LDRH_RRR, fieldOffset);
+            genIGet(cUnit, mir, UNSIGNED_HALF, fieldOffset);
             break;
         case OP_IGET_SHORT:
-            genIGet(cUnit, mir, THUMB_LDRSH_RRR, fieldOffset);
+            genIGet(cUnit, mir, SIGNED_HALF, fieldOffset);
             break;
         case OP_IPUT_WIDE:
             genIPutWide(cUnit, mir, fieldOffset);
             break;
         case OP_IPUT:
         case OP_IPUT_OBJECT:
-            genIPut(cUnit, mir, THUMB_STR_RRR, fieldOffset);
+            genIPut(cUnit, mir, WORD, fieldOffset);
             break;
         case OP_IPUT_SHORT:
         case OP_IPUT_CHAR:
-            genIPut(cUnit, mir, THUMB_STRH_RRR, fieldOffset);
+            genIPut(cUnit, mir, UNSIGNED_HALF, fieldOffset);
             break;
         case OP_IPUT_BYTE:
         case OP_IPUT_BOOLEAN:
-            genIPut(cUnit, mir, THUMB_STRB_RRR, fieldOffset);
+            genIPut(cUnit, mir, UNSIGNED_BYTE, fieldOffset);
             break;
         default:
             return true;
@@ -2794,11 +2651,11 @@ static bool handleFmt22cs(CompilationUnit *cUnit, MIR *mir)
     switch (dalvikOpCode) {
         case OP_IGET_QUICK:
         case OP_IGET_OBJECT_QUICK:
-            genIGet(cUnit, mir, THUMB_LDR_RRR, fieldOffset);
+            genIGet(cUnit, mir, WORD, fieldOffset);
             break;
         case OP_IPUT_QUICK:
         case OP_IPUT_OBJECT_QUICK:
-            genIPut(cUnit, mir, THUMB_STR_RRR, fieldOffset);
+            genIPut(cUnit, mir, WORD, fieldOffset);
             break;
         case OP_IGET_WIDE_QUICK:
             genIGetWide(cUnit, mir, fieldOffset);
@@ -2834,7 +2691,7 @@ static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
         loadValue(cUnit, mir->dalvikInsn.vA, reg0);
         loadValue(cUnit, mir->dalvikInsn.vB, reg1);
     }
-    newLIR2(cUnit, THUMB_CMP_RR, reg0, reg1);
+    opRegReg(cUnit, OP_CMP, reg0, reg1);
 
     switch (dalvikOpCode) {
         case OP_IF_EQ:
@@ -2924,38 +2781,38 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
             storeValue(cUnit, r0, vA, r1);
             break;
         case OP_AGET_WIDE:
-            genArrayGet(cUnit, mir, THUMB_LDR_RRR, vB, vC, vA, 3);
+            genArrayGet(cUnit, mir, LONG, vB, vC, vA, 3);
             break;
         case OP_AGET:
         case OP_AGET_OBJECT:
-            genArrayGet(cUnit, mir, THUMB_LDR_RRR, vB, vC, vA, 2);
+            genArrayGet(cUnit, mir, WORD, vB, vC, vA, 2);
             break;
         case OP_AGET_BOOLEAN:
-            genArrayGet(cUnit, mir, THUMB_LDRB_RRR, vB, vC, vA, 0);
+            genArrayGet(cUnit, mir, UNSIGNED_BYTE, vB, vC, vA, 0);
             break;
         case OP_AGET_BYTE:
-            genArrayGet(cUnit, mir, THUMB_LDRSB_RRR, vB, vC, vA, 0);
+            genArrayGet(cUnit, mir, SIGNED_BYTE, vB, vC, vA, 0);
             break;
         case OP_AGET_CHAR:
-            genArrayGet(cUnit, mir, THUMB_LDRH_RRR, vB, vC, vA, 1);
+            genArrayGet(cUnit, mir, UNSIGNED_HALF, vB, vC, vA, 1);
             break;
         case OP_AGET_SHORT:
-            genArrayGet(cUnit, mir, THUMB_LDRSH_RRR, vB, vC, vA, 1);
+            genArrayGet(cUnit, mir, SIGNED_HALF, vB, vC, vA, 1);
             break;
         case OP_APUT_WIDE:
-            genArrayPut(cUnit, mir, THUMB_STR_RRR, vB, vC, vA, 3);
+            genArrayPut(cUnit, mir, LONG, vB, vC, vA, 3);
             break;
         case OP_APUT:
         case OP_APUT_OBJECT:
-            genArrayPut(cUnit, mir, THUMB_STR_RRR, vB, vC, vA, 2);
+            genArrayPut(cUnit, mir, WORD, vB, vC, vA, 2);
             break;
         case OP_APUT_SHORT:
         case OP_APUT_CHAR:
-            genArrayPut(cUnit, mir, THUMB_STRH_RRR, vB, vC, vA, 1);
+            genArrayPut(cUnit, mir, UNSIGNED_HALF, vB, vC, vA, 1);
             break;
         case OP_APUT_BYTE:
         case OP_APUT_BOOLEAN:
-            genArrayPut(cUnit, mir, THUMB_STRB_RRR, vB, vC, vA, 0);
+            genArrayPut(cUnit, mir, UNSIGNED_BYTE, vB, vC, vA, 0);
             break;
         default:
             return true;
@@ -2973,7 +2830,7 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r1, (mir->dalvikInsn.vB << 1) +
                  (int) (cUnit->method->insns + mir->offset));
             genExportPC(cUnit, mir, r2, r3 );
-            newLIR1(cUnit, THUMB_BLX_R, r4PC);
+            opReg(cUnit, OP_BLX, r4PC);
             genZeroCheck(cUnit, r0, mir->offset, NULL);
             break;
         }
@@ -2993,14 +2850,13 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             loadValue(cUnit, mir->dalvikInsn.vA, r1);
             loadConstant(cUnit, r0, (mir->dalvikInsn.vB << 1) +
                  (int) (cUnit->method->insns + mir->offset));
-            newLIR1(cUnit, THUMB_BLX_R, r4PC);
+            opReg(cUnit, OP_BLX, r4PC);
             loadConstant(cUnit, r1, (int)(cUnit->method->insns + mir->offset));
-            newLIR3(cUnit, THUMB_LDR_RRI5, r2, rGLUE,
-                offsetof(InterpState, jitToInterpEntries.dvmJitToInterpNoChain)
-                    >> 2);
-            newLIR3(cUnit, THUMB_ADD_RRR, r0, r0, r0);
-            newLIR3(cUnit, THUMB_ADD_RRR, r4PC, r0, r1);
-            newLIR1(cUnit, THUMB_BLX_R, r2);
+            loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                         jitToInterpEntries.dvmJitToInterpNoChain), r2);
+            opRegReg(cUnit, OP_ADD, r0, r0);
+            opRegRegReg(cUnit, OP_ADD, r4PC, r0, r1);
+            opReg(cUnit, OP_BLX, r2);
             break;
         }
         default:
@@ -3105,6 +2961,11 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
                                      calleeMethod);
             break;
         }
+/*
+ * TODO:  When we move to using upper registers in Thumb2, make sure
+ *        the register allocater is told that r9, r10, & r12 are killed
+ *        here.
+ */
         /*
          * calleeMethod = dvmFindInterfaceMethodInCache(this->clazz,
          *                    BBBB, method, method->clazz->pDvmDex)
@@ -3186,12 +3047,13 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
                          (int) (cUnit->method->insns + mir->offset));
 
             /* r1 = &retChainingCell */
-            ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL, r1, 0, 0);
+            ArmLIR *addrRetChain =
+                opRegRegImm(cUnit, OP_ADD, r1, rpc, 0, rNone);
             addrRetChain->generic.target = (LIR *) retChainingCell;
 
             /* r2 = &predictedChainingCell */
             ArmLIR *predictedChainingCell =
-                newLIR3(cUnit, THUMB_ADD_PC_REL, r2, 0, 0);
+                opRegRegImm(cUnit, OP_ADD, r2, rpc, 0, rNone);
             predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
             genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
@@ -3226,12 +3088,12 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              */
 
             /* Save count, &predictedChainCell, and class to high regs first */
-            newLIR2(cUnit, THUMB_MOV_RR_L2H, r9 & THUMB_REG_MASK, r1);
-            newLIR2(cUnit, THUMB_MOV_RR_L2H, r10 & THUMB_REG_MASK, r2);
-            newLIR2(cUnit, THUMB_MOV_RR_L2H, r12 & THUMB_REG_MASK, r3);
+            opRegReg(cUnit, OP_MOV, r9, r1);
+            opRegReg(cUnit, OP_MOV, r10, r2);
+            opRegReg(cUnit, OP_MOV, r12, r3);
 
             /* r0 now contains this->clazz */
-            newLIR2(cUnit, THUMB_MOV_RR, r0, r3);
+            opRegReg(cUnit, OP_MOV, r0, r3);
 
             /* r1 = BBBB */
             loadConstant(cUnit, r1, dInsn->vB);
@@ -3244,25 +3106,23 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 
             loadConstant(cUnit, r7,
                          (intptr_t) dvmFindInterfaceMethodInCache);
-            newLIR1(cUnit, THUMB_BLX_R, r7);
+            opReg(cUnit, OP_BLX, r7);
 
             /* r0 = calleeMethod (returned from dvmFindInterfaceMethodInCache */
 
-            newLIR2(cUnit, THUMB_MOV_RR_H2L, r1, r9 & THUMB_REG_MASK);
+            opRegReg(cUnit, OP_MOV, r1, r9);
 
             /* Check if rechain limit is reached */
-            newLIR2(cUnit, THUMB_CMP_RI8, r1, 0);
+            opRegImm(cUnit, OP_CMP, r1, 0, rNone);
 
             ArmLIR *bypassRechaining =
-                newLIR2(cUnit, THUMB_B_COND, 0, ARM_COND_GT);
+                opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_GT);
 
-            newLIR3(cUnit, THUMB_LDR_RRI5, r7, rGLUE,
-                    offsetof(InterpState,
-                             jitToInterpEntries.dvmJitToPatchPredictedChain)
-                    >> 2);
+            loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                         jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
 
-            newLIR2(cUnit, THUMB_MOV_RR_H2L, r2, r10 & THUMB_REG_MASK);
-            newLIR2(cUnit, THUMB_MOV_RR_H2L, r3, r12 & THUMB_REG_MASK);
+            opRegReg(cUnit, OP_MOV, r2, r10);
+            opRegReg(cUnit, OP_MOV, r3, r12);
 
             /*
              * r0 = calleeMethod
@@ -3273,11 +3133,10 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              * when patching the chaining cell and will be clobbered upon
              * returning so it will be reconstructed again.
              */
-            newLIR1(cUnit, THUMB_BLX_R, r7);
+            opReg(cUnit, OP_BLX, r7);
 
             /* r1 = &retChainingCell */
-            addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL,
-                                               r1, 0, 0);
+            addrRetChain = opRegRegImm(cUnit, OP_ADD, r1, rpc, 0, rNone);
             addrRetChain->generic.target = (LIR *) retChainingCell;
 
             bypassRechaining->generic.target = (LIR *) addrRetChain;
@@ -3419,10 +3278,11 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
             }
 
             /* Materialize pointer to retval & push */
-            newLIR2(cUnit, THUMB_MOV_RR, r4PC, rGLUE);
-            newLIR2(cUnit, THUMB_ADD_RI8, r4PC, offset);
+            opRegReg(cUnit, OP_MOV, r4PC, rGLUE);
+            opRegImm(cUnit, OP_ADD, r4PC, offset, rNone);
+
             /* Push r4 and (just to take up space) r5) */
-            newLIR1(cUnit, THUMB_PUSH, (1<<r4PC | 1<<rFP));
+            opImm(cUnit, OP_PUSH, (1 << r4PC | 1 << rFP));
 
             /* Get code pointer to inline routine */
             loadConstant(cUnit, r4PC, (int)inLineTable[operation].func);
@@ -3435,10 +3295,10 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
                 loadValue(cUnit, dInsn->arg[i], i);
             }
             /* Call inline routine */
-            newLIR1(cUnit, THUMB_BLX_R, r4PC);
+            opReg(cUnit, OP_BLX, r4PC);
 
             /* Strip frame */
-            newLIR1(cUnit, THUMB_ADD_SPI7, 2);
+            opRegImm(cUnit, OP_ADD, r13, 8, rNone);
 
             /* Did we throw? If so, redo under interpreter*/
             genZeroCheck(cUnit, r0, mir->offset, NULL);
@@ -3460,7 +3320,6 @@ static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)
     return false;
 }
 
-/*****************************************************************************/
 /*
  * The following are special processing routines that handle transfer of
  * controls between compiled code and the interpreter. Certain VM states like
@@ -3471,9 +3330,9 @@ static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)
 static void handleNormalChainingCell(CompilationUnit *cUnit,
                                      unsigned int offset)
 {
-    newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE,
-        offsetof(InterpState, jitToInterpEntries.dvmJitToInterpNormal) >> 2);
-    newLIR1(cUnit, THUMB_BLX_R, r0);
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                 jitToInterpEntries.dvmJitToInterpNormal), r0);
+    opReg(cUnit, OP_BLX, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
@@ -3484,9 +3343,9 @@ static void handleNormalChainingCell(CompilationUnit *cUnit,
 static void handleHotChainingCell(CompilationUnit *cUnit,
                                   unsigned int offset)
 {
-    newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE,
-        offsetof(InterpState, jitToInterpEntries.dvmJitToTraceSelect) >> 2);
-    newLIR1(cUnit, THUMB_BLX_R, r0);
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                 jitToInterpEntries.dvmJitToTraceSelect), r0);
+    opReg(cUnit, OP_BLX, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
@@ -3506,9 +3365,9 @@ static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
 static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
                                               const Method *callee)
 {
-    newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE,
-        offsetof(InterpState, jitToInterpEntries.dvmJitToTraceSelect) >> 2);
-    newLIR1(cUnit, THUMB_BLX_R, r0);
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                 jitToInterpEntries.dvmJitToTraceSelect), r0);
+    opReg(cUnit, OP_BLX, r0);
     addWordData(cUnit, (int) (callee->insns), true);
 }
 
@@ -3584,6 +3443,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         cUnit->chainCellOffsetLIR =
             (LIR *) newLIR1(cUnit, ARM_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
         cUnit->headerSize = 6;
+        /* Thumb instruction used directly here to ensure correct size */
         newLIR2(cUnit, THUMB_MOV_RR_H2L, r0, rpc & THUMB_REG_MASK);
         newLIR2(cUnit, THUMB_SUB_RI8, r0, 10);
         newLIR3(cUnit, THUMB_LDR_RRI5, r1, r0, 0);
@@ -3659,11 +3519,10 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 case EXCEPTION_HANDLING:
                     labelList[i].opCode = ARM_PSEUDO_EH_BLOCK_LABEL;
                     if (cUnit->pcReconstructionList.numUsed) {
-                        newLIR3(cUnit, THUMB_LDR_RRI5, r1, rGLUE,
-                            offsetof(InterpState,
-                                     jitToInterpEntries.dvmJitToInterpPunt)
-                            >> 2);
-                        newLIR1(cUnit, THUMB_BLX_R, r1);
+                        loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                                     jitToInterpEntries.dvmJitToInterpPunt),
+                                     r1);
+                        opReg(cUnit, OP_BLX, r1);
                     }
                     break;
 #if defined(WITH_SELF_VERIFICATION)

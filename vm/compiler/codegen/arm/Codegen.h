@@ -29,8 +29,8 @@ static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpCode opCode,
                            int dest, int src1);
 static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpCode opCode,
                            int dest, int src1, int src2);
-static ArmLIR *newLIR23(CompilationUnit *cUnit, ArmOpCode opCode,
-                            int srcdest, int src2);
+static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpCode opCode,
+                            int dest, int src1, int src2, int info);
 static ArmLIR *scanLiteralPool(CompilationUnit *cUnit, int value,
                                    unsigned int delta);
 static ArmLIR *addWordData(CompilationUnit *cUnit, int value, bool inPlace);
