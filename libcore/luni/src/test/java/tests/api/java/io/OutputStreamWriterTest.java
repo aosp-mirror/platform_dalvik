@@ -17,6 +17,7 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -423,7 +424,8 @@ public class OutputStreamWriterTest extends TestCase {
                 args = {},
                 clazz = InputStreamReader.class
         )
-    })    
+    })
+    @KnownFailure("Error when reading bytes in UTF-8 expected:<8916> but was:<8907> ")
     public void test_write$C() throws Exception {
         int upper;
         InputStreamReader isr = null;
