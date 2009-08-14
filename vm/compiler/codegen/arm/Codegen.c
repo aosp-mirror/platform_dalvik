@@ -1154,8 +1154,7 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
     ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
 
     /* r1 = &retChainingCell */
-    ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL,
-                                           r1, 0, 0);
+    ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL, r1, 0, 0);
     /* r4PC = dalvikCallsite */
     loadConstant(cUnit, r4PC,
                  (int) (cUnit->method->insns + mir->offset));
@@ -1215,13 +1214,11 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
                  (int) (cUnit->method->insns + mir->offset));
 
     /* r1 = &retChainingCell */
-    ArmLIR *addrRetChain = newLIR2(cUnit, THUMB_ADD_PC_REL,
-                                       r1, 0);
+    ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL, r1, 0, 0);
     addrRetChain->generic.target = (LIR *) retChainingCell;
 
     /* r2 = &predictedChainingCell */
-    ArmLIR *predictedChainingCell =
-        newLIR2(cUnit, THUMB_ADD_PC_REL, r2, 0);
+    ArmLIR *predictedChainingCell = newLIR3(cUnit, THUMB_ADD_PC_REL, r2, 0, 0);
     predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
     genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);
@@ -2608,13 +2605,12 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
                          (int) (cUnit->method->insns + mir->offset));
 
             /* r1 = &retChainingCell */
-            ArmLIR *addrRetChain = newLIR2(cUnit, THUMB_ADD_PC_REL,
-                                               r1, 0);
+            ArmLIR *addrRetChain = newLIR3(cUnit, THUMB_ADD_PC_REL, r1, 0, 0);
             addrRetChain->generic.target = (LIR *) retChainingCell;
 
             /* r2 = &predictedChainingCell */
             ArmLIR *predictedChainingCell =
-                newLIR2(cUnit, THUMB_ADD_PC_REL, r2, 0);
+                newLIR3(cUnit, THUMB_ADD_PC_REL, r2, 0, 0);
             predictedChainingCell->generic.target = (LIR *) predChainingCell;
 
             genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN);

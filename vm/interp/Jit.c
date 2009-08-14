@@ -45,8 +45,9 @@ int dvmJitStartup(void)
     if (res && gDvm.executionMode == kExecutionModeJit) {
         JitEntry *pJitTable = NULL;
         unsigned char *pJitProfTable = NULL;
-        assert(gDvm.jitTableSize &&
-            !(gDvm.jitTableSize & (gDvmJit.jitTableSize - 1))); // Power of 2?
+        // Power of 2?
+        assert(gDvmJit.jitTableSize &&
+               !(gDvmJit.jitTableSize & (gDvmJit.jitTableSize - 1)));
         dvmLockMutex(&gDvmJit.tableLock);
         pJitTable = (JitEntry*)
                     calloc(gDvmJit.jitTableSize, sizeof(*pJitTable));
@@ -74,7 +75,7 @@ int dvmJitStartup(void)
            pJitTable[i].u.info.chain = gDvmJit.jitTableSize;
         }
         /* Is chain field wide enough for termination pattern? */
-        assert(pJitTable[0].u.info.chain == gDvm.maxJitTableEntries);
+        assert(pJitTable[0].u.info.chain == gDvmJit.jitTableSize);
 
 done:
         gDvmJit.pJitEntryTable = pJitTable;
@@ -603,7 +604,7 @@ bool dvmJitResizeJitTable( unsigned int size )
     unsigned int oldSize;
     unsigned int i;
 
-    assert(gDvm.pJitEntryTable != NULL);
+    assert(gDvmJit.pJitEntryTable != NULL);
     assert(size && !(size & (size - 1)));   /* Is power of 2? */
 
     LOGD("Jit: resizing JitTable from %d to %d", gDvmJit.jitTableSize, size);

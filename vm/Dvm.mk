@@ -193,16 +193,13 @@ LOCAL_SRC_FILES := \
 	test/TestHash.c \
 	test/TestIndirectRefTable.c
 
-ifeq ($(WITH_JIT_TUNING),true)
-  LOCAL_CFLAGS += -DWITH_JIT_TUNING
-endif
+WITH_JIT := $(strip $(WITH_JIT))
 
 ifeq ($(WITH_JIT),true)
-  # NOTE: Turn on assertion for JIT for now
-  LOCAL_CFLAGS += -DWITH_DALVIK_ASSERT
-  # NOTE: Also turn on tuning when JIT is enabled for now
-  LOCAL_CFLAGS += -DWITH_JIT_TUNING
   LOCAL_CFLAGS += -DWITH_JIT
+  # Enable assert and JIT_TUNING for now
+  LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT
+  WITH_JIT_TUNING := true
   LOCAL_SRC_FILES += \
 	../dexdump/OpCodeNames.c \
 	compiler/Compiler.c \
@@ -210,6 +207,10 @@ ifeq ($(WITH_JIT),true)
 	compiler/Utility.c \
 	compiler/IntermediateRep.c \
 	interp/Jit.c
+endif
+
+ifeq ($(strip $(WITH_JIT_TUNING)),true)
+  LOCAL_CFLAGS += -DWITH_JIT_TUNING
 endif
 
 WITH_HPROF := $(strip $(WITH_HPROF))
