@@ -1708,8 +1708,8 @@ static jmethodID GetMethodID(JNIEnv* env, jclass jclazz, const char* name,
             meth = NULL;
         }
         if (meth == NULL) {
-            LOGI("Method not found: '%s' '%s' in %s\n",
-                name, sig, clazz->descriptor);
+            LOGD("GetMethodID: method not found: %s.%s:%s\n",
+                clazz->descriptor, name, sig);
             dvmThrowException("Ljava/lang/NoSuchMethodError;", name);
         }
 
@@ -1744,8 +1744,11 @@ static jfieldID GetFieldID(JNIEnv* env, jclass jclazz,
         id = NULL;
     } else {
         id = (jfieldID) dvmFindInstanceFieldHier(clazz, name, sig);
-        if (id == NULL)
+        if (id == NULL) {
+            LOGD("GetFieldID: unable to find field %s.%s:%s\n",
+                clazz->descriptor, name, sig);
             dvmThrowException("Ljava/lang/NoSuchFieldError;", name);
+        }
     }
     JNI_EXIT();
     return id;
