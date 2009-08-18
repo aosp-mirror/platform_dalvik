@@ -3639,12 +3639,9 @@ static void gcScanInterpStackReferences(Thread *thread)
                  * if it's present -- but if it's enabled it means we're
                  * unexpectedly falling back on a conservative scan, so it's
                  * worth yelling a little.
-                 *
-                 * TODO: we should be able to remove this for production --
-                 * no need to keep banging on the global.
                  */
                 if (gDvm.preciseGc) {
-                    LOGV("PGC: no map for %s.%s\n",
+                    LOGVV("PGC: no map for %s.%s\n",
                         method->clazz->descriptor, method->name);
                 }
                 regVector = NULL;

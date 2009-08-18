@@ -932,7 +932,7 @@ static int dvmProcessOptions(int argc, const char* const argv[],
 
         } else if (strcmp(argv[i], "-Xgenregmap") == 0) {
             gDvm.generateRegisterMaps = true;
-            LOGD("Register maps will be generated during verification\n");
+            LOGV("Register maps will be generated during verification\n");
 
         } else if (strncmp(argv[i], "-Xgc:", 5) == 0) {
             if (strcmp(argv[i] + 5, "precise") == 0)
