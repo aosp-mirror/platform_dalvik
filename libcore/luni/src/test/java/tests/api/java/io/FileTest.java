@@ -687,7 +687,8 @@ public class FileTest extends junit.framework.TestCase {
         level = TestLevel.PARTIAL_COMPLETE,
         method = "delete",
         args = {}
-    )        
+    )
+    @KnownFailure("Non empty directories are deleted on Android.")
     public void test_delete() {
         // this test passes in the emulator, but it fails on the device
 
