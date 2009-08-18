@@ -165,6 +165,8 @@ void dvmCreateDefaultProperties(Object* propObj)
     setProperty(propObj, put, "java.io.tmpdir", "/tmp");
     setProperty(propObj, put, "java.library.path", getenv("LD_LIBRARY_PATH"));
 
+    setProperty(propObj, put, "java.net.preferIPv6Addresses", "true");
+
     setProperty(propObj, put, "java.vendor", projectName);
     setProperty(propObj, put, "java.vendor.url", projectUrl);
     setProperty(propObj, put, "java.version", "0");
@@ -287,4 +289,3 @@ bail:
     dvmReleaseTrackedAlloc((Object*)keyObj, NULL);
     return result;
 }
-
