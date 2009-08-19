@@ -52,9 +52,7 @@ public final class Unsafe {
          * Only code on the bootclasspath is allowed to get at the
          * Unsafe instance.
          */
-        ClassLoader calling = VMStack.getCallingClassLoader2();
-        ClassLoader current = Unsafe.class.getClassLoader();
-
+        ClassLoader calling = VMStack.getCallingClassLoader();
         if ((calling != null) && (calling != Unsafe.class.getClassLoader())) {
             throw new SecurityException("Unsafe access denied");
         }
