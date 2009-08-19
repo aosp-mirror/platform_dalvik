@@ -280,6 +280,7 @@ bool dvmSetBit(BitVector* pBits, int num)
         pBits->storage = realloc(pBits->storage, newSize * sizeof(u4));
         memset(&pBits->storage[pBits->storageSize], 0x00,
             (newSize - pBits->storageSize) * sizeof(u4));
+        pBits->storageSize = newSize;
     }
 
     pBits->storage[num >> 5] |= 1 << (num & 0x1f);
