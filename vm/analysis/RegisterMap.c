@@ -30,7 +30,7 @@
 #include <stddef.h>
 
 /* double-check the compression */
-#define REGISTER_MAP_VERIFY     true
+#define REGISTER_MAP_VERIFY     false
 
 /* verbose logging */
 #define REGISTER_MAP_VERBOSE    false
@@ -270,10 +270,8 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
     LOGV("mapData=%p pMap=%p bufSize=%d\n", mapData, pMap, bufSize);
     assert(mapData - (const u1*) pMap == bufSize);
 
-#if 1
-    if (!verifyMap(vdata, pMap))
+    if (REGISTER_MAP_VERIFY && !verifyMap(vdata, pMap))
         goto bail;
-#endif
 #ifdef REGISTER_MAP_STATS
     computeMapStats(pMap, vdata->method);
 #endif

@@ -86,7 +86,6 @@ else  # !dvm_make_debug_vm
   # "-O2" is redundant for device (release) but useful for sim (debug)
   #LOCAL_CFLAGS += -O2 -Winline
   #LOCAL_CFLAGS += -DWITH_EXTRA_OBJECT_VALIDATION
-  LOCAL_CFLAGS += -DWITH_EXTRA_GC_CHECKS=1
   LOCAL_CFLAGS += -DDVM_SHOW_EXCEPTION=1
   # if you want to try with assertions on the device, add:
   #LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT
