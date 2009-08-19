@@ -139,6 +139,16 @@ typedef enum IndirectRefKind {
  * store it internally in a public structure, but the local JNI refs are
  * logically tied to interpreted stack frames anyway.)
  *
+ * Common alternative implementation: make IndirectRef a pointer to the
+ * actual reference slot.  Instead of getting a table and doing a lookup,
+ * the lookup can be done instantly.  Operations like determining the
+ * type and deleting the reference are more expensive because the table
+ * must be hunted for (i.e. you have to do a pointer comparison to see
+ * which table it's in), you can't move the table when expanding it (so
+ * realloc() is out), and tricks like serial number checking to detect
+ * stale references aren't possible (though we may be able to get similar
+ * benefits with other approaches).
+ *
  * TODO: consider a "lastDeleteIndex" for quick hole-filling when an
  * add immediately follows a delete; must invalidate after segment pop
  * (which could increase the cost/complexity of method call/return).
@@ -147,6 +157,12 @@ typedef enum IndirectRefKind {
  * TODO: may want completely different add/remove algorithms for global
  * and local refs to improve performance.  A large circular buffer might
  * reduce the amortized cost of adding global references.
+ *
+ * TODO: if we can guarantee that the underlying storage doesn't move,
+ * e.g. by using oversized mmap regions to handle expanding tables, we may
+ * be able to avoid having to synchronize lookups.  Might make sense to
+ * add a "synchronized lookup" call that takes the mutex as an argument,
+ * and either locks or doesn't lock based on internal details.
  */
 typedef union IRTSegmentState {
     u4          all;
@@ -171,8 +187,8 @@ typedef struct IndirectRefTable {
     //       for performance evaluation.
 } IndirectRefTable;
 
-/* initial value to use for the "cookie" */
-#define IRT_SEGMENT_INIT    0
+/* use as initial value for "cookie", and when table has only one segment */
+#define IRT_FIRST_SEGMENT   0
 
 /*
  * (This is PRIVATE, but we want it inside other inlines in this header.)
@@ -200,6 +216,14 @@ INLINE u4 dvmIndirectRefToIndex(IndirectRef iref)
 {
     u4 uref = (u4) iref;
     return (uref >> 2) & 0xffff;
+}
+
+/*
+ * Determine what kind of indirect reference this is.
+ */
+INLINE IndirectRefKind dvmGetIndirectRefType(IndirectRef iref)
+{
+    return (u4) iref & 0x03;
 }
 
 /*

@@ -35,7 +35,7 @@ bool dvmInitIndirectRefTable(IndirectRefTable* pRef, int initialCount,
 #ifndef NDEBUG
     memset(pRef->table, 0xd1, initialCount * sizeof(Object*));
 #endif
-    pRef->segmentState.all = IRT_SEGMENT_INIT;
+    pRef->segmentState.all = IRT_FIRST_SEGMENT;
     pRef->allocEntries = initialCount;
     pRef->maxEntries = maxCount;
     pRef->kind = kind;
@@ -181,6 +181,11 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
  */
 bool dvmGetFromIndirectRefTableCheck(IndirectRefTable* pRef, IndirectRef iref)
 {
+    if (dvmGetIndirectRefType(iref) == kIndirectKindInvalid) {
+        LOGW("Invalid indirect reference 0x%08x\n", (u4) iref);
+        return false;
+    }
+
     int topIndex = pRef->segmentState.parts.topIndex;
     int idx = dvmIndirectRefToIndex(iref);
 
