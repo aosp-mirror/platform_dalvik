@@ -316,7 +316,7 @@ static bool isNormalClassName(const char* clazzName, int length) {
  * Heurtistically guesses whether or not 'method' actually points to a Method
  * struct.
  */
-static bool isValidMethod(Method* method) {
+static bool isValidMethod(const Method* method) {
     if (!dvmLinearAllocContains(method, sizeof(Method))) {
         LOGW("Method* is not in linear allocation table.");
         return false;
@@ -526,7 +526,7 @@ static void Dalvik_dalvik_system_SamplingProfiler_snapshot(const u4* args,
             setIndex >= 0 && wrapperIndex < set->size;
             setIndex--) {
         MethodCount* mc = &set->entries[setIndex];
-        Method* method = mc->method;
+        const Method* method = mc->method;
         if (method != NULL && isValidMethod(method)) {
             MethodCountWrapper* wrapper = &wrappers[wrapperIndex];
             wrapper->methodCount = mc;
