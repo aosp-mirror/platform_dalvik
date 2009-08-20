@@ -4446,7 +4446,7 @@ noverify:
              * f->byteOffset is the offset from the beginning of
              * obj, not the offset into obj->instanceData.
              */
-            assert(f->byteOffset >= CLASS_SMALLEST_OFFSET);
+            assert(f->byteOffset >= (int) CLASS_SMALLEST_OFFSET);
             assert((f->byteOffset & (CLASS_OFFSET_ALIGNMENT - 1)) == 0);
             u4 newBit = CLASS_BIT_FROM_OFFSET(f->byteOffset);
             if (newBit != 0) {
