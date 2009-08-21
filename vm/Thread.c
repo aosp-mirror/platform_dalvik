@@ -19,7 +19,6 @@
  */
 #include "Dalvik.h"
 
-#include "interp/Jit.h"         // need for self verification
 #include "utils/threads.h"      // need Android thread priorities
 
 #include <stdlib.h>
@@ -33,6 +32,11 @@
 #if defined(HAVE_PRCTL)
 #include <sys/prctl.h>
 #endif
+
+#if defined(WITH_SELF_VERIFICATION)
+#include "interp/Jit.h"         // need for self verification
+#endif
+
 
 /* desktop Linux needs a little help with gettid() */
 #if defined(HAVE_GETTID) && !defined(HAVE_ANDROID_OS)
