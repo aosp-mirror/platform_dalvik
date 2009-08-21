@@ -146,10 +146,15 @@ void dvmUseCheckedJniVm(JavaVMExt* pVm);
 void dvmLateEnableCheckedJni(void);
 
 /*
+ * Decode a local, global, or weak-global reference.
+ */
+Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj);
+
+/*
  * Verify that a reference passed in from native code is valid.  Returns
  * an indication of local/global/invalid.
  */
-jobjectRefType dvmGetJNIRefType(Object* obj);
+jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj);
 
 /*
  * Get the last method called on the interp stack.  This is the method
