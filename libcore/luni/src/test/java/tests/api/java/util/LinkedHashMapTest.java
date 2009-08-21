@@ -209,6 +209,26 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
                 new Integer(0)));
     }
 
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "test that put on an already present key causes entry to move to tail.",
+        method = "put",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
+    public void test_putPresent() {
+        Map<String, String> m = new LinkedHashMap<String, String>(8, .75f, true);
+        m.put("KEY", "VALUE");
+        m.put("WOMBAT", "COMBAT");
+        m.put("KEY", "VALUE");
+        Map.Entry newest = null;
+        for (Map.Entry<String, String> e : m.entrySet()) {
+            newest = e;
+        }
+        assertEquals("KEY", newest.getKey());
+        assertEquals("VALUE", newest.getValue());
+    }
+
     /**
      * @tests java.util.LinkedHashMap#putAll(java.util.Map)
      */
@@ -273,6 +293,26 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
                     .getKey())
                     && hm.containsValue(m.getValue()));
         }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test that remove removes the entry from the linked list",
+        method = "entrySet",
+        args = {}
+    )
+    public void test_entrySetRemove() {
+        entrySetRemoveHelper("military", "intelligence");
+        entrySetRemoveHelper(null, "hypothesis");  
+    }
+    private void entrySetRemoveHelper(String key, String value) {
+        Map<String, String> m1 = new LinkedHashMap<String, String>();
+        m1.put(key, value);
+        m1.put("jumbo", "shrimp");
+        LinkedHashMap<String, String> m2 = new LinkedHashMap<String, String>(m1);
+        Set<Map.Entry<String, String>> s1 = m1.entrySet();
+        s1.remove(m2.entrySet().iterator().next());
+        assertEquals("jumbo", s1.iterator().next().getKey());
     }
 
     /**
