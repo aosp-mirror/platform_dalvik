@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * VM thread support.
  */
@@ -22,7 +23,7 @@
 #include "jni.h"
 
 #if defined(CHECK_MUTEX) && !defined(__USE_UNIX98)
-/* Linux lacks this unless you #define __USE_UNIX98 */
+/* glibc lacks this unless you #define __USE_UNIX98 */
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
 enum { PTHREAD_MUTEX_ERRORCHECK = PTHREAD_MUTEX_ERRORCHECK_NP };
 #endif
@@ -151,7 +152,6 @@ typedef struct Thread {
     ReferenceTable  internalLocalRefTable;
 
     /* JNI local reference tracking */
-    // TODO: move this to JNIEnvExt to avoid an indirection?
     ReferenceTable  jniLocalRefTable;
 
     /* JNI native monitor reference tracking (initialized on first use) */

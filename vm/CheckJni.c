@@ -112,31 +112,60 @@ static void checkCallCommon(const u4* args, JValue* pResult,
 }
 
 /*
- * Check a call into native code.
+ * Determine if we need to check the return type coming out of the call.
+ *
+ * (We don't do this at the top of checkCallCommon() because this is on
+ * the critical path for native method calls.)
  */
-void dvmCheckCallJNIMethod(const u4* args, JValue* pResult,
+static inline bool callNeedsCheck(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
 {
-    dvmCallJNIMethod(args, pResult, method, self);
-    if (method->shorty[0] == 'L' && !dvmCheckException(self) &&
-        pResult->l != NULL)
-    {
+    return (method->shorty[0] == 'L' && !dvmCheckException(self) &&
+            pResult->l != NULL);
+}
+
+/*
+ * Check a call into native code.
+ */
+void dvmCheckCallJNIMethod_general(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    dvmCallJNIMethod_general(args, pResult, method, self);
+    if (callNeedsCheck(args, pResult, method, self))
         checkCallCommon(args, pResult, method, self);
-    }
 }
 
 /*
  * Check a synchronized call into native code.
  */
-void dvmCheckCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
+void dvmCheckCallJNIMethod_synchronized(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
 {
-    dvmCallSynchronizedJNIMethod(args, pResult, method, self);
-    if (method->shorty[0] == 'L' && !dvmCheckException(self) &&
-        pResult->l != NULL)
-    {
+    dvmCallJNIMethod_synchronized(args, pResult, method, self);
+    if (callNeedsCheck(args, pResult, method, self))
         checkCallCommon(args, pResult, method, self);
-    }
+}
+
+/*
+ * Check a virtual call with no reference arguments (other than "this").
+ */
+void dvmCheckCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    dvmCallJNIMethod_virtualNoRef(args, pResult, method, self);
+    if (callNeedsCheck(args, pResult, method, self))
+        checkCallCommon(args, pResult, method, self);
+}
+
+/*
+ * Check a static call with no reference arguments (other than "clazz").
+ */
+void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    dvmCallJNIMethod_staticNoRef(args, pResult, method, self);
+    if (callNeedsCheck(args, pResult, method, self))
+        checkCallCommon(args, pResult, method, self);
 }
 
 

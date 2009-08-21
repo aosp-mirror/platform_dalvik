@@ -48,19 +48,19 @@ checked at runtime, such as array bounds checks, we do the tests here.
 
 General notes on local/global reference tracking
 
-JNI provides explicit control over natively-held references that the VM GC
+JNI provides explicit control over natively-held references that the GC
 needs to know about.  These can be local, in which case they're released
-when the native method returns, or global, which are held until explicitly
-released.
+when the native method returns into the VM, or global, which are held
+until explicitly released.
 
-The references can be created and deleted with JNI NewLocalRef /
-NewGlobalRef calls, but this is unusual except perhaps for holding on
-to a Class reference.  Most often they are created transparently by the
-JNI functions.  For example, the paired Get/Release calls guarantee that
-objects survive until explicitly released, so a simple way to implement
-this is to create a global reference on "Get" and delete it on "Release".
-The AllocObject/NewObject functions must create local references, because
-nothing else in the GC root set has a reference to the new objects.
+The references can be created with explicit JNI NewLocalRef / NewGlobalRef
+calls.  The former is very unusual, the latter is reasonably common
+(e.g. for caching references to class objects).
+
+Local references are most often created as a side-effect of JNI functions.
+For example, the AllocObject/NewObject functions must create local
+references to the objects returned, because nothing else in the GC root
+set has a reference to the new objects.
 
 The most common mode of operation is for a method to create zero or
 more local references and return.  Explicit "local delete" operations
@@ -79,9 +79,7 @@ to move any).
 
 The spec says, "Local references are only valid in the thread in which
 they are created.  The native code must not pass local references from
-one thread to another."  It should also be noted that, while some calls
-will *create* global references as a side-effect, only the NewGlobalRef
-and NewWeakGlobalRef calls actually *return* global references.
+one thread to another."
 
 
 Global reference tracking
@@ -220,6 +218,7 @@ Compared to #1, approach #2:
 
 /* fwd */
 static const struct JNINativeInterface gNativeInterface;
+static jobject addLocalReference(JNIEnv* env, Object* obj);
 static jobject addGlobalReference(Object* obj);
 
 
@@ -241,37 +240,112 @@ static void checkStackSum(Thread* self);
  */
 
 /*
- * Bridge to calling a JNI function.  This ideally gets some help from
- * assembly language code in dvmPlatformInvoke, because the arguments
- * must be pushed into the native stack as if we were calling a <stdarg.h>
- * function.
+ * The functions here form a bridge between interpreted code and JNI native
+ * functions.  The basic task is to convert an array of primitives and
+ * references into C-style function arguments.  This is architecture-specific
+ * and usually requires help from assembly code.
  *
- * The number of values in "args" must match method->insSize.
+ * The bridge takes four arguments: the array of parameters, a place to
+ * store the function result (if any), the method to call, and a pointer
+ * to the current thread.
  *
- * This is generally just set up by the resolver and then called through.
- * We don't call here explicitly.  This takes the same arguments as all
- * of the "internal native" methods.
+ * These functions aren't called directly from elsewhere in the VM.
+ * A pointer in the Method struct points to one of these, and when a native
+ * method is invoked the interpreter jumps to it.
+ *
+ * (The "internal native" methods are invoked the same way, but instead
+ * of calling through a bridge, the target method is called directly.)
+ *
+ * The "args" array should not be modified, but we do so anyway for
+ * performance reasons.  We know that it points to the "outs" area on
+ * the current method's interpreted stack.  This area is ignored by the
+ * precise GC, because there is no register map for a native method (for
+ * an interpreted method the args would be listed in the argument set).
+ * We know all of the values exist elsewhere on the interpreted stack,
+ * because the method call setup copies them right before making the call,
+ * so we don't have to worry about concealing stuff from the GC.
+ *
+ * If we don't want to modify "args", we either have to create a local
+ * copy and modify it before calling dvmPlatformInvoke, or we have to do
+ * the local reference replacement within dvmPlatformInvoke.  The latter
+ * has some performance advantages, though if we can inline the local
+ * reference adds we may win when there's a lot of reference args (unless
+ * we want to code up some local ref table manipulation in assembly.
  */
-void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method,
-    Thread* self)
+
+/*
+ * General form, handles all cases.
+ */
+void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
 {
     int oldStatus;
+    u4* modArgs = (u4*) args;
 
     assert(method->insns != NULL);
 
-    //int i;
-    //LOGI("JNI calling %p (%s.%s %s):\n", method->insns,
-    //    method->clazz->descriptor, method->name, method->signature);
-    //for (i = 0; i < method->insSize; i++)
-    //    LOGI("  %d: 0x%08x\n", i, args[i]);
+    //LOGI("JNI calling %p (%s.%s:%s):\n", method->insns,
+    //    method->clazz->descriptor, method->name, method->shorty);
+
+    /*
+     * Walk the argument list, creating local references for appropriate
+     * arguments.
+     */
+    JNIEnv* env = self->jniEnv;
+    jclass staticMethodClass;
+    int idx = 0;
+    if (dvmIsStaticMethod(method)) {
+        /* add the class object we pass in */
+        staticMethodClass = addLocalReference(env, (Object*) method->clazz);
+        if (staticMethodClass == NULL) {
+            assert(dvmCheckException(self));
+            return;
+        }
+    } else {
+        /* add "this" */
+        staticMethodClass = NULL;
+        jobject thisObj = addLocalReference(env, (Object*) modArgs[0]);
+        if (thisObj == NULL) {
+            assert(dvmCheckException(self));
+            return;
+        }
+        modArgs[idx] = (u4) thisObj;
+        idx = 1;
+    }
+
+    const char* shorty = &method->shorty[1];        /* skip return type */
+    while (*shorty != '\0') {
+        switch (*shorty++) {
+        case 'L':
+            //LOGI("  local %d: 0x%08x\n", idx, modArgs[idx]);
+            if (modArgs[idx] != 0) {
+                //if (!dvmIsValidObject((Object*) modArgs[idx]))
+                //    dvmAbort();
+                jobject argObj = addLocalReference(env, (Object*) modArgs[idx]);
+                if (argObj == NULL) {
+                    assert(dvmCheckException(self));
+                    return;
+                }
+                modArgs[idx] = (u4) argObj;
+            }
+            break;
+        case 'D':
+        case 'J':
+            idx++;
+            break;
+        default:
+            /* Z B C S I -- do nothing */
+            break;
+        }
+
+        idx++;
+    }
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
     COMPUTE_STACK_SUM(self);
-    // TODO: should we be converting 'this' to a local ref?
-    dvmPlatformInvoke(self->jniEnv,
-        dvmIsStaticMethod(method) ? method->clazz : NULL,
-        method->jniArgInfo, method->insSize, args, method->shorty,
+    dvmPlatformInvoke(self->jniEnv, staticMethodClass,
+        method->jniArgInfo, method->insSize, modArgs, method->shorty,
         (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
 
@@ -279,11 +353,11 @@ void dvmCallJNIMethod(const u4* args, JValue* pResult, const Method* method,
 }
 
 /*
- * Alternate call bridge for the unusual case of a synchronized native method.
+ * Handler for the unusual case of a synchronized native method.
  *
- * Lock the object, then call through the usual function.
+ * Lock the object, then call through the general function.
  */
-void dvmCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
+void dvmCallJNIMethod_synchronized(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
 {
     Object* lockObj;
@@ -300,8 +374,65 @@ void dvmCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
         lockObj, lockObj->clazz->descriptor);
 
     dvmLockObject(self, lockObj);
-    dvmCallJNIMethod(args, pResult, method, self);
+    dvmCallJNIMethod_general(args, pResult, method, self);
     dvmUnlockObject(self, lockObj);
+}
+
+/*
+ * Virtual method call, no reference arguments.
+ *
+ * We need to local-ref the "this" argument, found in args[0].
+ */
+void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    u4* modArgs = (u4*) args;
+    int oldStatus;
+
+    jobject thisObj = addLocalReference(self->jniEnv, (Object*) args[0]);
+    if (thisObj == NULL) {
+        assert(dvmCheckException(self));
+        return;
+    }
+    modArgs[0] = (u4) thisObj;
+
+    oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
+
+    COMPUTE_STACK_SUM(self);
+    dvmPlatformInvoke(self->jniEnv, NULL,
+        method->jniArgInfo, method->insSize, modArgs, method->shorty,
+        (void*)method->insns, pResult);
+    CHECK_STACK_SUM(self);
+
+    dvmChangeStatus(self, oldStatus);
+}
+
+/*
+ * Static method call, no reference arguments.
+ *
+ * We need to local-ref the class reference.
+ */
+void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    jclass staticMethodClass;
+    int oldStatus;
+
+    staticMethodClass = addLocalReference(self->jniEnv, (Object*)method->clazz);
+    if (staticMethodClass == NULL) {
+        assert(dvmCheckException(self));
+        return;
+    }
+
+    oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
+
+    COMPUTE_STACK_SUM(self);
+    dvmPlatformInvoke(self->jniEnv, staticMethodClass,
+        method->jniArgInfo, method->insSize, args, method->shorty,
+        (void*)method->insns, pResult);
+    CHECK_STACK_SUM(self);
+
+    dvmChangeStatus(self, oldStatus);
 }
 
 /*
@@ -615,9 +746,10 @@ static jobject addLocalReference(JNIEnv* env, Object* obj)
         dvmDumpThread(dvmThreadSelf(), false);
         dvmAbort();     // spec says call FatalError; this is equivalent
     } else {
-        LOGVV("LREF add %p  (%s.%s)\n", obj,
+        LOGVV("LREF add %p  (%s.%s) (ent=%d)\n", obj,
             dvmGetCurrentJNIMethod()->clazz->descriptor,
-            dvmGetCurrentJNIMethod()->name);
+            dvmGetCurrentJNIMethod()->name,
+            (int) dvmReferenceTableEntries(pRefTable));
     }
 
     return obj;
@@ -901,6 +1033,7 @@ void dvmGcMarkJniGlobalRefs()
 }
 
 
+#if 0
 /*
  * Determine if "obj" appears in the argument list for the native method.
  *
@@ -971,16 +1104,17 @@ static bool findInArgList(Thread* self, Object* obj)
     }
     return false;
 }
+#endif
 
 /*
  * Verify that a reference passed in from native code is one that the
  * code is allowed to have.
  *
  * It's okay for native code to pass us a reference that:
- *  - was just passed in as an argument when invoked by native code
- *  - was returned to it from JNI (and is now in the JNI local refs table)
+ *  - was passed in as an argument when invoked by native code (and hence
+ *    is in the JNI local refs table)
+ *  - was returned to it from JNI (and is now in the local refs table)
  *  - is present in the JNI global refs table
- * The first one is a little awkward.  The latter two are just table lookups.
  *
  * Used by -Xcheck:jni and GetObjectRefType.
  *
@@ -995,11 +1129,13 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
     //Object** top;
     Object** ptr;
 
+#if 0
     /* check args */
     if (findInArgList(self, jobj)) {
         //LOGI("--- REF found %p on stack\n", jobj);
         return JNILocalRefType;
     }
+#endif
 
     /* check locals */
     //top = SAVEAREA_FROM_FP(self->curFrame)->xtra.localRefTop;
@@ -1081,16 +1217,60 @@ static bool dvmIsCheckJNIEnabled(void)
  */
 void dvmUseJNIBridge(Method* method, void* func)
 {
-    if (dvmIsCheckJNIEnabled()) {
-        if (dvmIsSynchronizedMethod(method))
-            dvmSetNativeFunc(method, dvmCheckCallSynchronizedJNIMethod, func);
-        else
-            dvmSetNativeFunc(method, dvmCheckCallJNIMethod, func);
+    enum {
+        kJNIGeneral = 0,
+        kJNISync = 1,
+        kJNIVirtualNoRef = 2,
+        kJNIStaticNoRef = 3,
+    } kind;
+    static const DalvikBridgeFunc stdFunc[] = {
+        dvmCallJNIMethod_general,
+        dvmCallJNIMethod_synchronized,
+        dvmCallJNIMethod_virtualNoRef,
+        dvmCallJNIMethod_staticNoRef
+    };
+    static const DalvikBridgeFunc checkFunc[] = {
+        dvmCheckCallJNIMethod_general,
+        dvmCheckCallJNIMethod_synchronized,
+        dvmCheckCallJNIMethod_virtualNoRef,
+        dvmCheckCallJNIMethod_staticNoRef
+    };
+
+    bool hasRefArg = false;
+
+    if (dvmIsSynchronizedMethod(method)) {
+        /* use version with synchronization; calls into general handler */
+        kind = kJNISync;
     } else {
-        if (dvmIsSynchronizedMethod(method))
-            dvmSetNativeFunc(method, dvmCallSynchronizedJNIMethod, func);
-        else
-            dvmSetNativeFunc(method, dvmCallJNIMethod, func);
+        /*
+         * Do a quick scan through the "shorty" signature to see if the method
+         * takes any reference arguments.
+         */
+        const char* cp = method->shorty;
+        while (*++cp != '\0') {     /* pre-incr to skip return type */
+            if (*cp == 'L') {
+                /* 'L' used for both object and array references */
+                hasRefArg = true;
+                break;
+            }
+        }
+
+        if (hasRefArg) {
+            /* use general handler to slurp up reference args */
+            kind = kJNIGeneral;
+        } else {
+            /* virtual methods have a ref in args[0] (not in signature) */
+            if (dvmIsStaticMethod(method))
+                kind = kJNIStaticNoRef;
+            else
+                kind = kJNIVirtualNoRef;
+        }
+    }
+
+    if (dvmIsCheckJNIEnabled()) {
+        dvmSetNativeFunc(method, checkFunc[kind], func);
+    } else {
+        dvmSetNativeFunc(method, stdFunc[kind], func);
     }
 }
 
