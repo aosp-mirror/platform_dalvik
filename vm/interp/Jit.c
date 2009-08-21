@@ -195,29 +195,40 @@ static void selfVerificationDumpTrace(const u2* pc, Thread* self)
 {
     ShadowSpace* shadowSpace = self->shadowSpace;
     StackSaveArea* stackSave = SAVEAREA_FROM_FP(self->curFrame);
-    int i;
-    u2 *addr, *offset;
-    OpCode opcode;
+    int i, addr, offset;
+    DecodedInstruction *decInsn;
 
     LOGD("********** SHADOW TRACE DUMP **********");
     for (i = 0; i < shadowSpace->traceLength; i++) {
-        addr = (u2*) shadowSpace->trace[i].addr;
-        offset =  (u2*)(addr - stackSave->method->insns);
-        opcode = (OpCode) shadowSpace->trace[i].opcode;
-        LOGD("* 0x%x: (0x%04x) %s", (int)addr, (int)offset,
-            getOpcodeName(opcode));
+        addr = shadowSpace->trace[i].addr;
+        offset =  (int)((u2*)addr - stackSave->method->insns);
+        decInsn = &(shadowSpace->trace[i].decInsn);
+        /* Not properly decoding instruction, some registers may be garbage */
+        LOGD("* 0x%x: (0x%04x) %s v%d, v%d, v%d", addr, offset,
+            getOpcodeName(decInsn->opCode), decInsn->vA, decInsn->vB,
+            decInsn->vC);
     }
+}
+
+/* Code is forced into this spin loop when a divergence is detected */
+static void selfVerificationSpinLoop()
+{
+    gDvmJit.selfVerificationSpin = true;
+    while(gDvmJit.selfVerificationSpin) sleep(10);
 }
 
 /* Manage self verification while in the debug interpreter */
 static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
 {
     ShadowSpace *shadowSpace = self->shadowSpace;
-    OpCode opcode = *pc & 0xff;
     SelfVerificationState state = shadowSpace->selfVerificationState;
+
+    DecodedInstruction decInsn;
+    dexDecodeInstruction(gDvm.instrFormat, pc, &decInsn);
+
     //LOGD("### DbgIntp(%d): PC: 0x%x endPC: 0x%x state: %d len: %d %s",
     //    self->threadId, (int)pc, (int)shadowSpace->endPC, state,
-    //    shadowSpace->traceLength, getOpcodeName(opcode));
+    //    shadowSpace->traceLength, getOpcodeName(decInsn.opCode));
 
     if (state == kSVSIdle || state == kSVSStart) {
         LOGD("~~~ DbgIntrp: INCORRECT PREVIOUS STATE(%d): %d",
@@ -253,6 +264,7 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
                 (int)shadowSpace->shadowFP, frameBytes);
             selfVerificationPrintRegisters((int*)shadowSpace->shadowFP,
                 frameBytes/4);
+            selfVerificationSpinLoop();
         }
         /* Check new frame if it exists (invokes only) */
         if (self->curFrame < shadowSpace->fp) {
@@ -275,22 +287,26 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
                     (int)shadowSpace->endShadowFP, localRegs, frameBytes2);
                 selfVerificationPrintRegisters((int*)shadowSpace->endShadowFP,
                     (frameBytes2+localRegs)/4);
+                selfVerificationSpinLoop();
             }
         }
 
         /* Check memory space */
+        bool memDiff = false;
         ShadowHeap* heapSpacePtr;
         for (heapSpacePtr = shadowSpace->heapSpace;
              heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-            int mem_data = *((unsigned int*) heapSpacePtr->addr);
-            if (heapSpacePtr->data != mem_data) {
+            int memData = *((unsigned int*) heapSpacePtr->addr);
+            if (heapSpacePtr->data != memData) {
                 LOGD("~~~ DbgIntp(%d): MEMORY UNEQUAL!", self->threadId);
                 LOGD("* Addr: 0x%x Intrp Data: 0x%x Jit Data: 0x%x",
-                    heapSpacePtr->addr, mem_data, heapSpacePtr->data);
+                    heapSpacePtr->addr, memData, heapSpacePtr->data);
                 selfVerificationDumpState(pc, self);
                 selfVerificationDumpTrace(pc, self);
+                memDiff = true;
             }
         }
+        if (memDiff) selfVerificationSpinLoop();
         return true;
 
     /* If end not been reached, make sure max length not exceeded */
@@ -300,12 +316,13 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
             (int)shadowSpace->startPC, (int)shadowSpace->endPC, (int)pc);
         selfVerificationDumpState(pc, self);
         selfVerificationDumpTrace(pc, self);
+        selfVerificationSpinLoop();
 
         return true;
     }
-    /* Log the instruction address and opcode for debug */
+    /* Log the instruction address and decoded instruction for debug */
     shadowSpace->trace[shadowSpace->traceLength].addr = (int)pc;
-    shadowSpace->trace[shadowSpace->traceLength].opcode = opcode;
+    shadowSpace->trace[shadowSpace->traceLength].decInsn = decInsn;
     shadowSpace->traceLength++;
 
     return false;

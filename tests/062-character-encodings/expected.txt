@@ -22,19 +22,29 @@ EUC-JP
   ibm-954
   ibm-954_P101-2007
   ujis
-GB2312
-  1383
-  EUC-CN
-  cp1383
-  csGB2312
-  hp15CN
-  ibm-1383
-  ibm-1383_P110-1999
-  ibm-1383_VPUA
-  ibm-eucCN
+EUC-KR
+  5601
+  KSC_5601
+  KS_C_5601-1987
+  KS_C_5601-1989
+  csEUCKR
+  csKSC56011987
+  iso-ir-149
+  korean
+  ms949
+  windows-949
+  windows-949-2000
 GBK
   CP936
+  EUC-CN
+  GB2312
+  GB_2312-80
   MS936
+  chinese
+  csGB2312
+  csISO58GB231280
+  gb2312-1980
+  iso-ir-58
   windows-936
   windows-936-2000
 HZ-GB-2312
@@ -223,12 +233,14 @@ Shift_JIS
   x-ms-cp932
   x-sjis
 TIS-620
+  MS874
   cp874
   eucTH
   ibm-874
-  ibm-874_P100-1995
   ibm-9066
   tis620.2533
+  windows-874
+  windows-874-2000
 US-ASCII
   646
   ANSI_X3.4-1968
@@ -351,16 +363,14 @@ windows-1258
 x-gsm-03.38-2000
   GSM0338
   gsm-03.38-2000
-x-ibm-1373_P100-2002
-  ibm-1373
-  ibm-1373_P100-2002
-  windows-950
-x-ibm-1386_P100-2001
-  cp1386
-  ibm-1386
-  ibm-1386_P100-2001
-  ibm-1386_VSUB_VPUA
-  windows-936
+x-ibm-1383_P110-1999
+  1383
+  cp1383
+  hp15CN
+  ibm-1383
+  ibm-1383_P110-1999
+  ibm-1383_VPUA
+  ibm-eucCN
 x-IMAP-mailbox-name
   IMAP-mailbox-name
 x-iscii-be
