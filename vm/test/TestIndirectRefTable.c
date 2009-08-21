@@ -39,7 +39,7 @@ static bool basicTest(void)
     Object* obj1 = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
     Object* obj2 = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
     Object* obj3 = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
-    const u4 cookie = IRT_SEGMENT_INIT;
+    const u4 cookie = IRT_FIRST_SEGMENT;
     bool result = false;
 
     if (!dvmInitIndirectRefTable(&irt, kTableMax/2, kTableMax,
@@ -329,7 +329,7 @@ static bool segmentTest(void)
     {
         return false;
     }
-    cookie = segmentState[0] = IRT_SEGMENT_INIT;
+    cookie = segmentState[0] = IRT_FIRST_SEGMENT;
     DBUG_MSG("+++ objs %p %p %p %p\n", obj0, obj1, obj2, obj3);
 
     /*
