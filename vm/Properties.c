@@ -187,14 +187,7 @@ void dvmCreateDefaultProperties(Object* propObj)
     setProperty(propObj, put, "java.specification.vendor", projectName);
     setProperty(propObj, put, "java.specification.version", "0.9");
 
-    #define OS_ARCH generic /* TODO: Use an "arch" header. */
-    #define OS_ARCH_QUOTE1(x) #x
-    #define OS_ARCH_QUOTE(x) OS_ARCH_QUOTE1(x)
-    setProperty(propObj, put, "os.arch", OS_ARCH_QUOTE(OS_ARCH));
-    #undef OS_ARCH
-    #undef OS_ARCH_QUOTE1
-    #undef OS_ARCH_QUOTE
-
+    setProperty(propObj, put, "os.arch", info.machine);
     setProperty(propObj, put, "os.name", info.sysname);
     setProperty(propObj, put, "os.version", info.release);
     setProperty(propObj, put, "user.home", getenv("HOME"));
