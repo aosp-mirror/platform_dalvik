@@ -349,8 +349,11 @@ DalvikJniReturnType dvmGetArgInfoReturnType(int jniArgInfo)
 #define kGlobalRefsTableInitialSize 512
 #define kGlobalRefsTableMaxSize     51200       /* arbitrary, must be < 64K */
 #define kGrefWaterInterval          100
-
 #define kTrackGrefUsage             true
+
+#define kPinTableInitialSize        16
+#define kPinTableMaxSize            1024
+#define kPinComplainThreshold       10
 
 /*
  * Allocate the global references table, and look up some classes for
@@ -363,9 +366,14 @@ bool dvmJniStartup(void)
         return false;
 
     dvmInitMutex(&gDvm.jniGlobalRefLock);
-
     gDvm.jniGlobalRefLoMark = 0;
     gDvm.jniGlobalRefHiMark = kGrefWaterInterval * 2;
+
+    if (!dvmInitReferenceTable(&gDvm.jniPinRefTable,
+            kPinTableInitialSize, kPinTableMaxSize))
+        return false;
+
+    dvmInitMutex(&gDvm.jniPinRefLock);
 
     /*
      * Look up and cache pointers to some direct buffer classes, fields,
@@ -799,29 +807,74 @@ bail:
  * Objects don't currently move, so we just need to create a reference
  * that will ensure the array object isn't collected.
  *
- * Currently just using global references.
- *
- * TODO: if the same array gets pinned more than N times, print a warning
- * (but only if CheckJNI is enabled)
+ * We use a separate reference table, which is part of the GC root set.
  */
 static void pinPrimitiveArray(ArrayObject* arrayObj)
 {
-    (void) addGlobalReference((Object*) arrayObj);
+    if (arrayObj == NULL)
+        return;
+
+    dvmLockMutex(&gDvm.jniPinRefLock);
+    if (!dvmAddToReferenceTable(&gDvm.jniPinRefTable, (Object*)arrayObj)) {
+        dvmDumpReferenceTable(&gDvm.jniPinRefTable, "JNI pinned array");
+        LOGE("Failed adding to JNI pinned array ref table (%d entries)\n",
+            (int) dvmReferenceTableEntries(&gDvm.jniPinRefTable));
+        dvmDumpThread(dvmThreadSelf(), false);
+        dvmAbort();
+    }
+
+    /*
+     * If we're watching global ref usage, also keep an eye on these.
+     *
+     * The total number of pinned primitive arrays should be pretty small.
+     * A single array should not be pinned more than once or twice; any
+     * more than that is a strong indicator that a Release function is
+     * not being called.
+     */
+    if (kTrackGrefUsage && gDvm.jniGrefLimit != 0) {
+        int count = 0;
+        Object** ppObj = gDvm.jniPinRefTable.table;
+        while (ppObj < gDvm.jniPinRefTable.nextEntry) {
+            if (*ppObj++ == (Object*) arrayObj)
+                count++;
+        }
+
+        if (count > kPinComplainThreshold) {
+            LOGW("JNI: pin count on array %p (%s) is now %d\n",
+                arrayObj, arrayObj->obj.clazz->descriptor, count);
+            /* keep going */
+        }
+    }
+
+    dvmUnlockMutex(&gDvm.jniPinRefLock);
 }
 
 /*
  * Un-pin the array object.  If an object was pinned twice, it must be
  * unpinned twice before it's free to move.
- *
- * Currently just removing a global reference.
  */
 static void unpinPrimitiveArray(ArrayObject* arrayObj)
 {
-    (void) deleteGlobalReference((jobject) arrayObj);
+    if (arrayObj == NULL)
+        return;
+
+    dvmLockMutex(&gDvm.jniPinRefLock);
+    if (!dvmRemoveFromReferenceTable(&gDvm.jniPinRefTable,
+            gDvm.jniPinRefTable.table, (Object*) arrayObj))
+    {
+        LOGW("JNI: unpinPrimitiveArray(%p) failed to find entry (valid=%d)\n",
+            arrayObj, dvmIsValidObject((Object*) arrayObj));
+        goto bail;
+    }
+
+bail:
+    dvmUnlockMutex(&gDvm.jniPinRefLock);
 }
 
 /*
  * GC helper function to mark all JNI global references.
+ *
+ * We're currently handling the "pin" table here too.
  */
 void dvmGcMarkJniGlobalRefs()
 {
@@ -835,6 +888,16 @@ void dvmGcMarkJniGlobalRefs()
     }
 
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
+
+
+    dvmLockMutex(&gDvm.jniPinRefLock);
+
+    op = gDvm.jniPinRefTable.table;
+    while ((uintptr_t)op < (uintptr_t)gDvm.jniPinRefTable.nextEntry) {
+        dvmMarkObjectNonNull(*(op++));
+    }
+
+    dvmUnlockMutex(&gDvm.jniPinRefLock);
 }
 
 
