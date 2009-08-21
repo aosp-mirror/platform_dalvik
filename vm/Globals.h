@@ -415,6 +415,12 @@ struct DvmGlobals {
     int         jniGlobalRefLoMark;
 
     /*
+     * JNI pinned object table (used for primitive arrays).
+     */
+    ReferenceTable  jniPinRefTable;
+    pthread_mutex_t jniPinRefLock;
+
+    /*
      * Native shared library table.
      */
     HashTable*  nativeLibs;
