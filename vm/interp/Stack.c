@@ -463,6 +463,7 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
         verifyCount++;
     }
 
+    JNIEnv* env = self->jniEnv;
     while (*desc != '\0') {
         switch (*(desc++)) {
             case 'D': case 'J': {
@@ -479,16 +480,15 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
                 verifyCount++;
                 break;
             }
-#ifdef WITH_EXTRA_OBJECT_VALIDATION
             case 'L': {     /* 'shorty' descr uses L for all refs, incl array */
-                Object* argObj = (Object*) va_arg(args, u4);
+                void* argObj = va_arg(args, void*);
                 assert(obj == NULL || dvmIsValidObject(obj));
-                *ins++ = (u4) argObj;
+                *ins++ = (u4) dvmDecodeIndirectRef(env, argObj);
                 verifyCount++;
                 break;
             }
-#endif
             default: {
+                /* Z B C S I -- all passed as 32-bit integers */
                 *ins++ = va_arg(args, u4);
                 verifyCount++;
                 break;
@@ -558,56 +558,47 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
     /* put "this" pointer into in0 if appropriate */
     if (!dvmIsStaticMethod(method)) {
         assert(obj != NULL);
-        *ins++ = (u4) obj;
+        *ins++ = (u4) obj;              /* obj is a "real" ref */
         verifyCount++;
     }
 
+    JNIEnv* env = self->jniEnv;
     while (*desc != '\0') {
-        switch (*(desc++)) {
-            case 'D': case 'J': {
-                memcpy(ins, &args->j, 8);   /* EABI prevents direct store */
-                ins += 2;
-                verifyCount += 2;
-                args++;
-                break;
-            }
-            case 'F': case 'I': case 'L': { /* (no '[' in short signatures) */
-                *ins++ = args->i;           /* get all 32 bits */
-                verifyCount++;
-                args++;
-                break;
-            }
-            case 'S': {
-                *ins++ = args->s;           /* 16 bits, sign-extended */
-                verifyCount++;
-                args++;
-                break;
-            }
-            case 'C': {
-                *ins++ = args->c;           /* 16 bits, unsigned */
-                verifyCount++;
-                args++;
-                break;
-            }
-            case 'B': {
-                *ins++ = args->b;           /* 8 bits, sign-extended */
-                verifyCount++;
-                args++;
-                break;
-            }
-            case 'Z': {
-                *ins++ = args->z;           /* 8 bits, zero or non-zero */
-                verifyCount++;
-                args++;
-                break;
-            }
-            default: {
-                LOGE("Invalid char %c in short signature of %s.%s\n",
-                    *(desc-1), clazz->descriptor, method->name);
-                assert(false);
-                goto bail;
-            }
+        switch (*desc++) {
+        case 'D':                       /* 64-bit quantity; have to use */
+        case 'J':                       /*  memcpy() in case of mis-alignment */
+            memcpy(ins, &args->j, 8);
+            ins += 2;
+            verifyCount++;              /* this needs an extra push */
+            break;
+        case 'L':                       /* includes array refs */
+            *ins++ = (u4) dvmDecodeIndirectRef(env, args->l);
+            break;
+        case 'F':
+        case 'I':
+            *ins++ = args->i;           /* full 32 bits */
+            break;
+        case 'S':
+            *ins++ = args->s;           /* 16 bits, sign-extended */
+            break;
+        case 'C':
+            *ins++ = args->c;           /* 16 bits, unsigned */
+            break;
+        case 'B':
+            *ins++ = args->b;           /* 8 bits, sign-extended */
+            break;
+        case 'Z':
+            *ins++ = args->z;           /* 8 bits, zero or non-zero */
+            break;
+        default:
+            LOGE("Invalid char %c in short signature of %s.%s\n",
+                *(desc-1), clazz->descriptor, method->name);
+            assert(false);
+            goto bail;
         }
+
+        verifyCount++;
+        args++;
     }
 
 #ifndef NDEBUG
@@ -1158,11 +1149,15 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
 
         first = false;
 
-        assert(framePtr != saveArea->prevFrame);
+        if (saveArea->prevFrame != NULL && saveArea->prevFrame <= framePtr) {
+            LOGW("Warning: loop in stack trace at frame %d (%p -> %p)\n",
+                checkCount, framePtr, saveArea->prevFrame);
+            break;
+        }
         framePtr = saveArea->prevFrame;
 
         checkCount++;
-        if (checkCount > 200) {
+        if (checkCount > 300) {
             dvmPrintDebugMessage(target,
                 "  ***** printed %d frames, not showing any more\n",
                 checkCount);

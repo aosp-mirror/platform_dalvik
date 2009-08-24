@@ -114,7 +114,7 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
     if (func != NULL) {
         /* found it, point it at the JNI bridge and then call it */
         dvmUseJNIBridge((Method*) method, func);
-        dvmCallJNIMethod(args, pResult, method, self);
+        (*method->nativeFunc)(args, pResult, method, self);
         return;
     }
 
