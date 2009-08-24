@@ -345,6 +345,39 @@ int dvmCountSetBits(const BitVector* pBits)
 }
 
 /*
+ * Copy a whole vector to the other. Only do that when the both vectors have
+ * the same size and attribute.
+ */
+bool dvmCopyBitVector(BitVector *dest, const BitVector *src)
+{
+    if (dest->storageSize != src->storageSize ||
+        dest->expandable != src->expandable)
+        return false;
+    memcpy(dest->storage, src->storage, sizeof(u4) * dest->storageSize);
+    return true;
+}
+
+/*
+ * Intersect two bit vectores and merge the result on top of the pre-existing
+ * value in the dest vector.
+ */
+bool dvmIntersectBitVectors(BitVector *dest, const BitVector *src1,
+                            const BitVector *src2)
+{
+    if (dest->storageSize != src1->storageSize ||
+        dest->storageSize != src2->storageSize ||
+        dest->expandable != src1->expandable ||
+        dest->expandable != src2->expandable)
+        return false;
+
+    int i;
+    for (i = 0; i < dest->storageSize; i++) {
+        dest->storage[i] |= src1->storage[i] & src2->storage[i];
+    }
+    return true;
+}
+
+/*
  * Return a newly-allocated string in which all occurrences of '.' have
  * been changed to '/'.  If we find a '/' in the original string, NULL
  * is returned to avoid ambiguity.

@@ -24,6 +24,7 @@
  * applicable directory below this one.
  */
 
+#include "compiler/Loop.h"
 
 /* Array holding the entry offset of each template relative to the first one */
 static intptr_t templateEntryOffsets[TEMPLATE_LAST_MARK];
@@ -853,10 +854,22 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
     loadValue(cUnit, vIndex, reg3);
 
     /* null object? */
-    ArmLIR * pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset, NULL);
-    loadWordDisp(cUnit, reg2, lenOffset, reg0);  /* Get len */
-    opRegImm(cUnit, OP_ADD, reg2, dataOffset, rNone); /* reg2 -> array data */
-    genBoundsCheck(cUnit, reg3, reg0, mir->offset, pcrLabel);
+    ArmLIR * pcrLabel = NULL;
+
+    if (!(mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK)) {
+        pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset, NULL);
+    }
+
+    if (!(mir->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
+        /* Get len */
+        loadWordDisp(cUnit, reg2, lenOffset, reg0);
+        /* reg2 -> array data */
+        opRegImm(cUnit, OP_ADD, reg2, dataOffset, rNone);
+        genBoundsCheck(cUnit, reg3, reg0, mir->offset, pcrLabel);
+    } else {
+        /* reg2 -> array data */
+        opRegImm(cUnit, OP_ADD, reg2, dataOffset, rNone);
+    }
 #if !defined(WITH_SELF_VERIFICATION)
     if ((size == LONG) || (size == DOUBLE)) {
         //TUNING: redo.  Make specific wide routine, perhaps use ldmia/fp regs
@@ -933,11 +946,23 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
     loadValue(cUnit, vIndex, reg3);
 
     /* null object? */
-    ArmLIR * pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset,
-                                         NULL);
-    loadWordDisp(cUnit, reg2, lenOffset, reg0);  /* Get len */
-    opRegImm(cUnit, OP_ADD, reg2, dataOffset, rNone); /* reg2 -> array data */
-    genBoundsCheck(cUnit, reg3, reg0, mir->offset, pcrLabel);
+    ArmLIR * pcrLabel = NULL;
+
+    if (!(mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK)) {
+        pcrLabel = genNullCheck(cUnit, vArray, reg2, mir->offset, NULL);
+    }
+
+    if (!(mir->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
+        /* Get len */
+        loadWordDisp(cUnit, reg2, lenOffset, reg0);
+        /* reg2 -> array data */
+        opRegImm(cUnit, OP_ADD, reg2, dataOffset, rNone);
+        genBoundsCheck(cUnit, reg3, reg0, mir->offset, pcrLabel);
+    } else {
+        /* reg2 -> array data */
+        opRegImm(cUnit, OP_ADD, reg2, dataOffset, rNone);
+    }
+
     /* at this point, reg2 points to array, reg3 is unscaled index */
 #if !defined(WITH_SELF_VERIFICATION)
     if ((size == LONG) || (size == DOUBLE)) {
@@ -3414,7 +3439,183 @@ static void handlePCReconstruction(CompilationUnit *cUnit,
     }
 }
 
-/* Entry function to invoke the backend of the JIT compiler */
+static char *extendedMIROpNames[MIR_OP_LAST - MIR_OP_FIRST] = {
+    "MIR_OP_PHI",
+    "MIR_OP_NULL_N_RANGE_UP_CHECK",
+    "MIR_OP_NULL_N_RANGE_DOWN_CHECK",
+    "MIR_OP_LOWER_BOUND_CHECK",
+    "MIR_OP_PUNT",
+};
+
+/*
+ * vA = arrayReg;
+ * vB = idxReg;
+ * vC = endConditionReg;
+ * arg[0] = maxC
+ * arg[1] = minC
+ * arg[2] = loopBranchConditionCode
+ */
+static void genHoistedChecksForCountUpLoop(CompilationUnit *cUnit, MIR *mir)
+{
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    const int lenOffset = offsetof(ArrayObject, length);
+    const int regArray = 0;
+    const int regIdxEnd = NEXT_REG(regArray);
+    const int regLength = regArray;
+    const int maxC = dInsn->arg[0];
+    const int minC = dInsn->arg[1];
+
+    /* regArray <- arrayRef */
+    loadValue(cUnit, mir->dalvikInsn.vA, regArray);
+    loadValue(cUnit, mir->dalvikInsn.vC, regIdxEnd);
+    genRegImmCheck(cUnit, ARM_COND_EQ, regArray, 0, 0,
+                   (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
+
+    /* regLength <- len(arrayRef) */
+    loadWordDisp(cUnit, regArray, lenOffset, regLength);
+
+    int delta = maxC;
+    /*
+     * If the loop end condition is ">=" instead of ">", then the largest value
+     * of the index is "endCondition - 1".
+     */
+    if (dInsn->arg[2] == OP_IF_GE) {
+        delta--;
+    }
+
+    if (delta) {
+        opRegImm(cUnit, OP_ADD, regIdxEnd, delta, regIdxEnd);
+    }
+    /* Punt if "regIdxEnd < len(Array)" is false */
+    insertRegRegCheck(cUnit, ARM_COND_GE, regIdxEnd, regLength, 0,
+                      (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
+}
+
+/*
+ * vA = arrayReg;
+ * vB = idxReg;
+ * vC = endConditionReg;
+ * arg[0] = maxC
+ * arg[1] = minC
+ * arg[2] = loopBranchConditionCode
+ */
+static void genHoistedChecksForCountDownLoop(CompilationUnit *cUnit, MIR *mir)
+{
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    const int lenOffset = offsetof(ArrayObject, length);
+    const int regArray = 0;
+    const int regIdxInit = NEXT_REG(regArray);
+    const int regLength = regArray;
+    const int maxC = dInsn->arg[0];
+    const int minC = dInsn->arg[1];
+
+    /* regArray <- arrayRef */
+    loadValue(cUnit, mir->dalvikInsn.vA, regArray);
+    loadValue(cUnit, mir->dalvikInsn.vB, regIdxInit);
+    genRegImmCheck(cUnit, ARM_COND_EQ, regArray, 0, 0,
+                   (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
+
+    /* regLength <- len(arrayRef) */
+    loadWordDisp(cUnit, regArray, lenOffset, regLength);
+
+    if (maxC) {
+        opRegImm(cUnit, OP_ADD, regIdxInit, maxC, regIdxInit);
+    }
+
+    /* Punt if "regIdxInit < len(Array)" is false */
+    insertRegRegCheck(cUnit, ARM_COND_GE, regIdxInit, regLength, 0,
+                      (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
+}
+
+/*
+ * vA = idxReg;
+ * vB = minC;
+ */
+static void genHoistedLowerBoundCheck(CompilationUnit *cUnit, MIR *mir)
+{
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    const int regIdx = 0;
+    const int minC = dInsn->vB;
+
+    /* regIdx <- initial index value */
+    loadValue(cUnit, mir->dalvikInsn.vA, regIdx);
+
+    /* Punt if "regIdxInit + minC >= 0" is false */
+    genRegImmCheck(cUnit, ARM_COND_LT, regIdx, -minC, 0,
+                   (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
+}
+
+/* Extended MIR instructions like PHI */
+static void handleExtendedMIR(CompilationUnit *cUnit, MIR *mir)
+{
+    int opOffset = mir->dalvikInsn.opCode - MIR_OP_FIRST;
+    char *msg = dvmCompilerNew(strlen(extendedMIROpNames[opOffset]) + 1,
+                               false);
+    strcpy(msg, extendedMIROpNames[opOffset]);
+    newLIR1(cUnit, ARM_PSEUDO_EXTENDED_MIR, (int) msg);
+
+    switch (mir->dalvikInsn.opCode) {
+        case MIR_OP_PHI: {
+            char *ssaString = dvmCompilerGetSSAString(cUnit, mir->ssaRep);
+            newLIR1(cUnit, ARM_PSEUDO_SSA_REP, (int) ssaString);
+            break;
+        }
+        case MIR_OP_NULL_N_RANGE_UP_CHECK: {
+            genHoistedChecksForCountUpLoop(cUnit, mir);
+            break;
+        }
+        case MIR_OP_NULL_N_RANGE_DOWN_CHECK: {
+            genHoistedChecksForCountDownLoop(cUnit, mir);
+            break;
+        }
+        case MIR_OP_LOWER_BOUND_CHECK: {
+            genHoistedLowerBoundCheck(cUnit, mir);
+            break;
+        }
+        case MIR_OP_PUNT: {
+            genUnconditionalBranch(cUnit,
+                                   (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+/*
+ * Create a PC-reconstruction cell for the starting offset of this trace.
+ * Since the PCR cell is placed near the end of the compiled code which is
+ * usually out of range for a conditional branch, we put two branches (one
+ * branch over to the loop body and one layover branch to the actual PCR) at the
+ * end of the entry block.
+ */
+static void setupLoopEntryBlock(CompilationUnit *cUnit, BasicBlock *entry,
+                                ArmLIR *bodyLabel)
+{
+    /* Set up the place holder to reconstruct this Dalvik PC */
+    ArmLIR *pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
+    pcrLabel->opCode = ARM_PSEUDO_PC_RECONSTRUCTION_CELL;
+    pcrLabel->operands[0] =
+        (int) (cUnit->method->insns + entry->startOffset);
+    pcrLabel->operands[1] = entry->startOffset;
+    /* Insert the place holder to the growable list */
+    dvmInsertGrowableList(&cUnit->pcReconstructionList, pcrLabel);
+
+    /*
+     * Next, create two branches - one branch over to the loop body and the
+     * other branch to the PCR cell to punt.
+     */
+    ArmLIR *branchToBody = dvmCompilerNew(sizeof(ArmLIR), true);
+    branchToBody->opCode = THUMB_B_UNCOND;
+    branchToBody->generic.target = (LIR *) bodyLabel;
+    cUnit->loopAnalysis->branchToBody = (LIR *) branchToBody;
+
+    ArmLIR *branchToPCR = dvmCompilerNew(sizeof(ArmLIR), true);
+    branchToPCR->opCode = THUMB_B_UNCOND;
+    branchToPCR->generic.target = (LIR *) pcrLabel;
+    cUnit->loopAnalysis->branchToPCR = (LIR *) branchToPCR;
+}
+
 void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 {
     /* Used to hold the labels of each block */
@@ -3481,7 +3682,18 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             dvmCompilerAppendLIR(cUnit, (LIR *) &labelList[i]);
         }
 
-        if (blockList[i]->blockType == DALVIK_BYTECODE) {
+        if (blockList[i]->blockType == ENTRY_BLOCK) {
+            labelList[i].opCode = ARM_PSEUDO_ENTRY_BLOCK;
+            if (blockList[i]->firstMIRInsn == NULL) {
+                continue;
+            } else {
+              setupLoopEntryBlock(cUnit, blockList[i],
+                                  &labelList[blockList[i]->fallThrough->id]);
+            }
+        } else if (blockList[i]->blockType == EXIT_BLOCK) {
+            labelList[i].opCode = ARM_PSEUDO_EXIT_BLOCK;
+            goto gen_fallthrough;
+        } else if (blockList[i]->blockType == DALVIK_BYTECODE) {
             labelList[i].opCode = ARM_PSEUDO_NORMAL_BLOCK_LABEL;
             /* Reset the register state */
             resetRegisterScoreboard(cUnit);
@@ -3554,16 +3766,27 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         ArmLIR *headLIR = NULL;
 
         for (mir = blockList[i]->firstMIRInsn; mir; mir = mir->next) {
+            if (mir->dalvikInsn.opCode >= MIR_OP_FIRST) {
+                handleExtendedMIR(cUnit, mir);
+                continue;
+            }
+
             OpCode dalvikOpCode = mir->dalvikInsn.opCode;
             InstructionFormat dalvikFormat =
                 dexGetInstrFormat(gDvm.instrFormat, dalvikOpCode);
             ArmLIR *boundaryLIR =
                 newLIR2(cUnit, ARM_PSEUDO_DALVIK_BYTECODE_BOUNDARY,
-                        mir->offset,dalvikOpCode);
+                        mir->offset, dalvikOpCode);
+            if (mir->ssaRep) {
+                char *ssaString = dvmCompilerGetSSAString(cUnit, mir->ssaRep);
+                newLIR1(cUnit, ARM_PSEUDO_SSA_REP, (int) ssaString);
+            }
+
             /* Remember the first LIR for this block */
             if (headLIR == NULL) {
                 headLIR = boundaryLIR;
             }
+
             bool notHandled;
             /*
              * Debugging: screen the opcode first to see if it is in the
@@ -3675,9 +3898,24 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 break;
             }
         }
-        /* Eliminate redundant loads/stores and delay stores into later slots */
-        dvmCompilerApplyLocalOptimizations(cUnit, (LIR *) headLIR,
-                                           cUnit->lastLIRInsn);
+
+        if (blockList[i]->blockType == ENTRY_BLOCK) {
+            dvmCompilerAppendLIR(cUnit,
+                                 (LIR *) cUnit->loopAnalysis->branchToBody);
+            dvmCompilerAppendLIR(cUnit,
+                                 (LIR *) cUnit->loopAnalysis->branchToPCR);
+        }
+
+        if (headLIR) {
+            /*
+             * Eliminate redundant loads/stores and delay stores into later
+             * slots
+             */
+            dvmCompilerApplyLocalOptimizations(cUnit, (LIR *) headLIR,
+                                               cUnit->lastLIRInsn);
+        }
+
+gen_fallthrough:
         /*
          * Check if the block is terminated due to trace length constraint -
          * insert an unconditional branch to the chaining cell.

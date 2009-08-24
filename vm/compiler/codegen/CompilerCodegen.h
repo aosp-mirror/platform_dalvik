@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "../CompilerIR.h"
-
 #ifndef _DALVIK_VM_COMPILERCODEGEN_H_
 #define _DALVIK_VM_COMPILERCODEGEN_H_
+
+#include "compiler/CompilerIR.h"
 
 /* Work unit is architecture dependent */
 bool dvmCompilerDoWork(CompilerWorkOrder *work);

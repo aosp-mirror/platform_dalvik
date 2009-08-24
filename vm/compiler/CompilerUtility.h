@@ -38,7 +38,13 @@ typedef struct GrowableList {
     void **elemList;
 } GrowableList;
 
+#define GET_ELEM_N(LIST, TYPE, N) (((TYPE*) LIST->elemList)[N])
+
 void dvmInitGrowableList(GrowableList *gList, size_t initLength);
 void dvmInsertGrowableList(GrowableList *gList, void *elem);
+
+BitVector* dvmCompilerAllocBitVector(int startBits, bool expandable);
+bool dvmCompilerSetBit(BitVector* pBits, int num);
+void dvmDebugBitVector(char *msg, const BitVector *bv, int length);
 
 #endif /* _DALVIK_COMPILER_UTILITY */

@@ -29,7 +29,7 @@ BasicBlock *dvmCompilerNewBB(BBType blockType)
 void dvmCompilerAppendMIR(BasicBlock *bb, MIR *mir)
 {
     if (bb->firstMIRInsn == NULL) {
-        assert(bb->firstMIRInsn == NULL);
+        assert(bb->lastMIRInsn == NULL);
         bb->lastMIRInsn = bb->firstMIRInsn = mir;
         mir->prev = mir->next = NULL;
     } else {
@@ -37,6 +37,21 @@ void dvmCompilerAppendMIR(BasicBlock *bb, MIR *mir)
         mir->prev = bb->lastMIRInsn;
         mir->next = NULL;
         bb->lastMIRInsn = mir;
+    }
+}
+
+/* Insert an MIR instruction to the head of a basic block */
+void dvmCompilerPrependMIR(BasicBlock *bb, MIR *mir)
+{
+    if (bb->firstMIRInsn == NULL) {
+        assert(bb->lastMIRInsn == NULL);
+        bb->lastMIRInsn = bb->firstMIRInsn = mir;
+        mir->prev = mir->next = NULL;
+    } else {
+        bb->firstMIRInsn->prev = mir;
+        mir->next = bb->firstMIRInsn;
+        mir->prev = NULL;
+        bb->firstMIRInsn = mir;
     }
 }
 

@@ -210,3 +210,71 @@ void dvmCompilerDumpStats(void)
          totalMethodStats.dalvikSize,
          totalMethodStats.nativeSize);
 }
+
+/*
+ * Allocate a bit vector with enough space to hold at least the specified
+ * number of bits.
+ *
+ * NOTE: this is the sister implementation of dvmAllocBitVector. In this version
+ * memory is allocated from the compiler arena.
+ */
+BitVector* dvmCompilerAllocBitVector(int startBits, bool expandable)
+{
+    BitVector* bv;
+    int count;
+
+    assert(sizeof(bv->storage[0]) == 4);        /* assuming 32-bit units */
+    assert(startBits >= 0);
+
+    bv = (BitVector*) dvmCompilerNew(sizeof(BitVector), false);
+
+    count = (startBits + 31) >> 5;
+
+    bv->storageSize = count;
+    bv->expandable = expandable;
+    bv->storage = (u4*) dvmCompilerNew(count * sizeof(u4), true);
+    return bv;
+}
+
+/*
+ * Mark the specified bit as "set".
+ *
+ * Returns "false" if the bit is outside the range of the vector and we're
+ * not allowed to expand.
+ *
+ * NOTE: this is the sister implementation of dvmSetBit. In this version
+ * memory is allocated from the compiler arena.
+ */
+bool dvmCompilerSetBit(BitVector *pBits, int num)
+{
+    assert(num >= 0);
+    if (num >= pBits->storageSize * (int)sizeof(u4) * 8) {
+        if (!pBits->expandable)
+            return false;
+
+        int newSize = (num + 31) >> 5;
+        assert(newSize > pBits->storageSize);
+        u4 *newStorage = dvmCompilerNew(newSize * sizeof(u4), false);
+        memcpy(newStorage, pBits->storage, pBits->storageSize * sizeof(u4));
+        memset(&newStorage[pBits->storageSize], 0,
+               (newSize - pBits->storageSize) * sizeof(u4));
+        pBits->storage = newStorage;
+        pBits->storageSize = newSize;
+    }
+
+    pBits->storage[num >> 5] |= 1 << (num & 0x1f);
+    return true;
+}
+
+/* FIXME */
+void dvmDebugBitVector(char *msg, const BitVector *bv, int length)
+{
+    int i;
+
+    LOGE("%s", msg);
+    for (i = 0; i < length; i++) {
+        if (dvmIsBitSet(bv, i)) {
+            LOGE("Bit %d is set", i);
+        }
+    }
+}

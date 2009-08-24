@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-#include "Dalvik.h"
-#include "compiler/CompilerInternals.h"
-
 #ifndef _DALVIK_VM_COMPILER_OPTIMIZATION_H
 #define _DALVIK_VM_COMPILER_OPTIMIZATION_H
+
+#include "Dalvik.h"
 
 /* Forward declarations */
 struct CompilationUnit;

@@ -1,0 +1,1394 @@
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "Dalvik.h"
+#include "Dataflow.h"
+#include "Loop.h"
+
+/*
+ * Main table containing data flow attributes for each bytecode. The first
+ * 256 entries are for Dalvik bytecode instructions, where extended opcode at
+ * the MIR level are appended afterwards.
+ *
+ * TODO - many optimization flags are incomplete - they will only limit the
+ * scope of optimizations but will not cause mis-optimizations.
+ */
+int dvmCompilerDataFlowAttributes[MIR_OP_LAST] = {
+    // 00 OP_NOP
+    DF_NOP,
+
+    // 01 OP_MOVE vA, vB
+    DF_DA | DF_UB | DF_IS_MOVE,
+
+    // 02 OP_MOVE_FROM16 vAA, vBBBB
+    DF_DA | DF_UB | DF_IS_MOVE,
+
+    // 03 OP_MOVE_16 vAAAA, vBBBB
+    DF_DA | DF_UB | DF_IS_MOVE,
+
+    // 04 OP_MOVE_WIDE vA, vB
+    DF_DA_WIDE | DF_UB_WIDE | DF_IS_MOVE,
+
+    // 05 OP_MOVE_WIDE_FROM16 vAA, vBBBB
+    DF_DA_WIDE | DF_UB_WIDE | DF_IS_MOVE,
+
+    // 06 OP_MOVE_WIDE_16 vAAAA, vBBBB
+    DF_DA_WIDE | DF_UB_WIDE | DF_IS_MOVE,
+
+    // 07 OP_MOVE_OBJECT vA, vB
+    DF_DA | DF_UB | DF_IS_MOVE,
+
+    // 08 OP_MOVE_OBJECT_FROM16 vAA, vBBBB
+    DF_DA | DF_UB | DF_IS_MOVE,
+
+    // 09 OP_MOVE_OBJECT_16 vAAAA, vBBBB
+    DF_DA | DF_UB | DF_IS_MOVE,
+
+    // 0A OP_MOVE_RESULT vAA
+    DF_DA,
+
+    // 0B OP_MOVE_RESULT_WIDE vAA
+    DF_DA_WIDE,
+
+    // 0C OP_MOVE_RESULT_OBJECT vAA
+    DF_DA,
+
+    // 0D OP_MOVE_EXCEPTION vAA
+    DF_DA,
+
+    // 0E OP_RETURN_VOID
+    DF_NOP,
+
+    // 0F OP_RETURN vAA
+    DF_UA,
+
+    // 10 OP_RETURN_WIDE vAA
+    DF_UA_WIDE,
+
+    // 11 OP_RETURN_OBJECT vAA
+    DF_UA,
+
+    // 12 OP_CONST_4 vA, #+B
+    DF_DA | DF_SETS_CONST,
+
+    // 13 OP_CONST_16 vAA, #+BBBB
+    DF_DA | DF_SETS_CONST,
+
+    // 14 OP_CONST vAA, #+BBBBBBBB
+    DF_DA | DF_SETS_CONST,
+
+    // 15 OP_CONST_HIGH16 VAA, #+BBBB0000
+    DF_DA | DF_SETS_CONST,
+
+    // 16 OP_CONST_WIDE_16 vAA, #+BBBB
+    DF_DA_WIDE | DF_SETS_CONST,
+
+    // 17 OP_CONST_WIDE_32 vAA, #+BBBBBBBB
+    DF_DA_WIDE | DF_SETS_CONST,
+
+    // 18 OP_CONST_WIDE vAA, #+BBBBBBBBBBBBBBBB
+    DF_DA_WIDE | DF_SETS_CONST,
+
+    // 19 OP_CONST_WIDE_HIGH16 vAA, #+BBBB000000000000
+    DF_DA_WIDE | DF_SETS_CONST,
+
+    // 1A OP_CONST_STRING vAA, string@BBBB
+    DF_DA,
+
+    // 1B OP_CONST_STRING_JUMBO vAA, string@BBBBBBBB
+    DF_DA,
+
+    // 1C OP_CONST_CLASS vAA, type@BBBB
+    DF_DA,
+
+    // 1D OP_MONITOR_ENTER vAA
+    DF_UA,
+
+    // 1E OP_MONITOR_EXIT vAA
+    DF_UA,
+
+    // 1F OP_CHECK_CAST vAA, type@BBBB
+    DF_UA,
+
+    // 20 OP_INSTANCE_OF vA, vB, type@CCCC
+    DF_DA | DF_UB,
+
+    // 21 OP_ARRAY_LENGTH vA, vB
+    DF_DA | DF_UB,
+
+    // 22 OP_NEW_INSTANCE vAA, type@BBBB
+    DF_DA,
+
+    // 23 OP_NEW_ARRAY vA, vB, type@CCCC
+    DF_DA | DF_UB,
+
+    // 24 OP_FILLED_NEW_ARRAY {vD, vE, vF, vG, vA}
+    DF_FORMAT_35C,
+
+    // 25 OP_FILLED_NEW_ARRAY_RANGE {vCCCC .. vNNNN}, type@BBBB
+    DF_FORMAT_3RC,
+
+    // 26 OP_FILL_ARRAY_DATA vAA, +BBBBBBBB
+    DF_UA,
+
+    // 27 OP_THROW vAA
+    DF_UA,
+
+    // 28 OP_GOTO
+    DF_NOP,
+
+    // 29 OP_GOTO_16
+    DF_NOP,
+
+    // 2A OP_GOTO_32
+    DF_NOP,
+
+    // 2B OP_PACKED_SWITCH vAA, +BBBBBBBB
+    DF_UA,
+
+    // 2C OP_SPARSE_SWITCH vAA, +BBBBBBBB
+    DF_UA,
+
+    // 2D OP_CMPL_FLOAT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 2E OP_CMPG_FLOAT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 2F OP_CMPL_DOUBLE vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // 30 OP_CMPG_DOUBLE vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // 31 OP_CMP_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // 32 OP_IF_EQ vA, vB, +CCCC
+    DF_UA | DF_UB,
+
+    // 33 OP_IF_NE vA, vB, +CCCC
+    DF_UA | DF_UB,
+
+    // 34 OP_IF_LT vA, vB, +CCCC
+    DF_UA | DF_UB,
+
+    // 35 OP_IF_GE vA, vB, +CCCC
+    DF_UA | DF_UB,
+
+    // 36 OP_IF_GT vA, vB, +CCCC
+    DF_UA | DF_UB,
+
+    // 37 OP_IF_LE vA, vB, +CCCC
+    DF_UA | DF_UB,
+
+
+    // 38 OP_IF_EQZ vAA, +BBBB
+    DF_UA,
+
+    // 39 OP_IF_NEZ vAA, +BBBB
+    DF_UA,
+
+    // 3A OP_IF_LTZ vAA, +BBBB
+    DF_UA,
+
+    // 3B OP_IF_GEZ vAA, +BBBB
+    DF_UA,
+
+    // 3C OP_IF_GTZ vAA, +BBBB
+    DF_UA,
+
+    // 3D OP_IF_LEZ vAA, +BBBB
+    DF_UA,
+
+    // 3E OP_UNUSED_3E
+    DF_NOP,
+
+    // 3F OP_UNUSED_3F
+    DF_NOP,
+
+    // 40 OP_UNUSED_40
+    DF_NOP,
+
+    // 41 OP_UNUSED_41
+    DF_NOP,
+
+    // 42 OP_UNUSED_42
+    DF_NOP,
+
+    // 43 OP_UNUSED_43
+    DF_NOP,
+
+    // 44 OP_AGET vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+
+    // 45 OP_AGET_WIDE vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+
+    // 46 OP_AGET_OBJECT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+
+    // 47 OP_AGET_BOOLEAN vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+
+    // 48 OP_AGET_BYTE vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+
+    // 49 OP_AGET_CHAR vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+
+    // 4A OP_AGET_SHORT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+
+    // 4B OP_APUT vAA, vBB, vCC
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+
+    // 4C OP_APUT_WIDE vAA, vBB, vCC
+    DF_UA_WIDE | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_2,
+
+    // 4D OP_APUT_OBJECT vAA, vBB, vCC
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+
+    // 4E OP_APUT_BOOLEAN vAA, vBB, vCC
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+
+    // 4F OP_APUT_BYTE vAA, vBB, vCC
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+
+    // 50 OP_APUT_CHAR vAA, vBB, vCC
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+
+    // 51 OP_APUT_SHORT vAA, vBB, vCC
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+
+    // 52 OP_IGET vA, vB, field@CCCC
+    DF_DA | DF_UB,
+
+    // 53 OP_IGET_WIDE vA, vB, field@CCCC
+    DF_DA_WIDE | DF_UB,
+
+    // 54 OP_IGET_OBJECT vA, vB, field@CCCC
+    DF_DA | DF_UB,
+
+    // 55 OP_IGET_BOOLEAN vA, vB, field@CCCC
+    DF_DA | DF_UB,
+
+    // 56 OP_IGET_BYTE vA, vB, field@CCCC
+    DF_DA | DF_UB,
+
+    // 57 OP_IGET_CHAR vA, vB, field@CCCC
+    DF_DA | DF_UB,
+
+    // 58 OP_IGET_SHORT vA, vB, field@CCCC
+    DF_DA | DF_UB,
+
+    // 59 OP_IPUT vA, vB, field@CCCC
+    DF_UA | DF_UB,
+
+    // 5A OP_IPUT_WIDE vA, vB, field@CCCC
+    DF_UA_WIDE | DF_UB,
+
+    // 5B OP_IPUT_OBJECT vA, vB, field@CCCC
+    DF_UA | DF_UB,
+
+    // 5C OP_IPUT_BOOLEAN vA, vB, field@CCCC
+    DF_UA | DF_UB,
+
+    // 5D OP_IPUT_BYTE vA, vB, field@CCCC
+    DF_UA | DF_UB,
+
+    // 5E OP_IPUT_CHAR vA, vB, field@CCCC
+    DF_UA | DF_UB,
+
+    // 5F OP_IPUT_SHORT vA, vB, field@CCCC
+    DF_UA | DF_UB,
+
+    // 60 OP_SGET vAA, field@BBBB
+    DF_DA,
+
+    // 61 OP_SGET_WIDE vAA, field@BBBB
+    DF_DA_WIDE,
+
+    // 62 OP_SGET_OBJECT vAA, field@BBBB
+    DF_DA,
+
+    // 63 OP_SGET_BOOLEAN vAA, field@BBBB
+    DF_DA,
+
+    // 64 OP_SGET_BYTE vAA, field@BBBB
+    DF_DA,
+
+    // 65 OP_SGET_CHAR vAA, field@BBBB
+    DF_DA,
+
+    // 66 OP_SGET_SHORT vAA, field@BBBB
+    DF_DA,
+
+    // 67 OP_SPUT vAA, field@BBBB
+    DF_UA,
+
+    // 68 OP_SPUT_WIDE vAA, field@BBBB
+    DF_UA_WIDE,
+
+    // 69 OP_SPUT_OBJECT vAA, field@BBBB
+    DF_UA,
+
+    // 6A OP_SPUT_BOOLEAN vAA, field@BBBB
+    DF_UA,
+
+    // 6B OP_SPUT_BYTE vAA, field@BBBB
+    DF_UA,
+
+    // 6C OP_SPUT_CHAR vAA, field@BBBB
+    DF_UA,
+
+    // 6D OP_SPUT_SHORT vAA, field@BBBB
+    DF_UA,
+
+    // 6E OP_INVOKE_VIRTUAL {vD, vE, vF, vG, vA}
+    DF_FORMAT_35C,
+
+    // 6F OP_INVOKE_SUPER {vD, vE, vF, vG, vA}
+    DF_FORMAT_35C,
+
+    // 70 OP_INVOKE_DIRECT {vD, vE, vF, vG, vA}
+    DF_FORMAT_35C,
+
+    // 71 OP_INVOKE_STATIC {vD, vE, vF, vG, vA}
+    DF_FORMAT_35C,
+
+    // 72 OP_INVOKE_INTERFACE {vD, vE, vF, vG, vA}
+    DF_FORMAT_35C,
+
+    // 73 OP_UNUSED_73
+    DF_NOP,
+
+    // 74 OP_INVOKE_VIRTUAL_RANGE {vCCCC .. vNNNN}
+    DF_FORMAT_3RC,
+
+    // 75 OP_INVOKE_SUPER_RANGE {vCCCC .. vNNNN}
+    DF_FORMAT_3RC,
+
+    // 76 OP_INVOKE_DIRECT_RANGE {vCCCC .. vNNNN}
+    DF_FORMAT_3RC,
+
+    // 77 OP_INVOKE_STATIC_RANGE {vCCCC .. vNNNN}
+    DF_FORMAT_3RC,
+
+    // 78 OP_INVOKE_INTERFACE_RANGE {vCCCC .. vNNNN}
+    DF_FORMAT_3RC,
+
+    // 79 OP_UNUSED_79
+    DF_NOP,
+
+    // 7A OP_UNUSED_7A
+    DF_NOP,
+
+    // 7B OP_NEG_INT vA, vB
+    DF_DA | DF_UB,
+
+    // 7C OP_NOT_INT vA, vB
+    DF_DA | DF_UB,
+
+    // 7D OP_NEG_LONG vA, vB
+    DF_DA_WIDE | DF_UB_WIDE,
+
+    // 7E OP_NOT_LONG vA, vB
+    DF_DA_WIDE | DF_UB_WIDE,
+
+    // 7F OP_NEG_FLOAT vA, vB
+    DF_DA | DF_UB,
+
+    // 80 OP_NEG_DOUBLE vA, vB
+    DF_DA_WIDE | DF_UB_WIDE,
+
+    // 81 OP_INT_TO_LONG vA, vB
+    DF_DA_WIDE | DF_UB,
+
+    // 82 OP_INT_TO_FLOAT vA, vB
+    DF_DA | DF_UB,
+
+    // 83 OP_INT_TO_DOUBLE vA, vB
+    DF_DA_WIDE | DF_UB,
+
+    // 84 OP_LONG_TO_INT vA, vB
+    DF_DA | DF_UB_WIDE,
+
+    // 85 OP_LONG_TO_FLOAT vA, vB
+    DF_DA | DF_UB_WIDE,
+
+    // 86 OP_LONG_TO_DOUBLE vA, vB
+    DF_DA_WIDE | DF_UB_WIDE,
+
+    // 87 OP_FLOAT_TO_INT vA, vB
+    DF_DA | DF_UB,
+
+    // 88 OP_FLOAT_TO_LONG vA, vB
+    DF_DA_WIDE | DF_UB,
+
+    // 89 OP_FLOAT_TO_DOUBLE vA, vB
+    DF_DA_WIDE | DF_UB,
+
+    // 8A OP_DOUBLE_TO_INT vA, vB
+    DF_DA | DF_UB_WIDE,
+
+    // 8B OP_DOUBLE_TO_LONG vA, vB
+    DF_DA_WIDE | DF_UB_WIDE,
+
+    // 8C OP_DOUBLE_TO_FLOAT vA, vB
+    DF_DA | DF_UB_WIDE,
+
+    // 8D OP_INT_TO_BYTE vA, vB
+    DF_DA | DF_UB,
+
+    // 8E OP_INT_TO_CHAR vA, vB
+    DF_DA | DF_UB,
+
+    // 8F OP_INT_TO_SHORT vA, vB
+    DF_DA | DF_UB,
+
+    // 90 OP_ADD_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC | DF_IS_LINEAR,
+
+    // 91 OP_SUB_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC | DF_IS_LINEAR,
+
+    // 92 OP_MUL_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 93 OP_DIV_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 94 OP_REM_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 95 OP_AND_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 96 OP_OR_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 97 OP_XOR_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 98 OP_SHL_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 99 OP_SHR_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 9A OP_USHR_INT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // 9B OP_ADD_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // 9C OP_SUB_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // 9D OP_MUL_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // 9E OP_DIV_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // 9F OP_REM_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // A0 OP_AND_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // A1 OP_OR_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // A2 OP_XOR_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // A3 OP_SHL_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // A4 OP_SHR_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // A5 OP_USHR_LONG vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // A6 OP_ADD_FLOAT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // A7 OP_SUB_FLOAT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // A8 OP_MUL_FLOAT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // A9 OP_DIV_FLOAT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // AA OP_REM_FLOAT vAA, vBB, vCC
+    DF_DA | DF_UB | DF_UC,
+
+    // AB OP_ADD_DOUBLE vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // AC OP_SUB_DOUBLE vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // AD OP_MUL_DOUBLE vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // AE OP_DIV_DOUBLE vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // AF OP_REM_DOUBLE vAA, vBB, vCC
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+
+    // B0 OP_ADD_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // B1 OP_SUB_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // B2 OP_MUL_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // B3 OP_DIV_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // B4 OP_REM_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // B5 OP_AND_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // B6 OP_OR_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // B7 OP_XOR_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // B8 OP_SHL_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // B9 OP_SHR_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // BA OP_USHR_INT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // BB OP_ADD_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // BC OP_SUB_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // BD OP_MUL_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // BE OP_DIV_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // BF OP_REM_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // C0 OP_AND_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // C1 OP_OR_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // C2 OP_XOR_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // C3 OP_SHL_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // C4 OP_SHR_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // C5 OP_USHR_LONG_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // C6 OP_ADD_FLOAT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // C7 OP_SUB_FLOAT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // C8 OP_MUL_FLOAT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // C9 OP_DIV_FLOAT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // CA OP_REM_FLOAT_2ADDR vA, vB
+    DF_DA | DF_UA | DF_UB,
+
+    // CB OP_ADD_DOUBLE_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // CC OP_SUB_DOUBLE_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // CD OP_MUL_DOUBLE_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // CE OP_DIV_DOUBLE_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // CF OP_REM_DOUBLE_2ADDR vA, vB
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+
+    // D0 OP_ADD_INT_LIT16 vA, vB, #+CCCC
+    DF_DA | DF_UB,
+
+    // D1 OP_RSUB_INT vA, vB, #+CCCC
+    DF_DA | DF_UB,
+
+    // D2 OP_MUL_INT_LIT16 vA, vB, #+CCCC
+    DF_DA | DF_UB,
+
+    // D3 OP_DIV_INT_LIT16 vA, vB, #+CCCC
+    DF_DA | DF_UB,
+
+    // D4 OP_REM_INT_LIT16 vA, vB, #+CCCC
+    DF_DA | DF_UB,
+
+    // D5 OP_AND_INT_LIT16 vA, vB, #+CCCC
+    DF_DA | DF_UB,
+
+    // D6 OP_OR_INT_LIT16 vA, vB, #+CCCC
+    DF_DA | DF_UB,
+
+    // D7 OP_XOR_INT_LIT16 vA, vB, #+CCCC
+    DF_DA | DF_UB,
+
+    // D8 OP_ADD_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB | DF_IS_LINEAR,
+
+    // D9 OP_RSUB_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // DA OP_MUL_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // DB OP_DIV_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // DC OP_REM_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // DD OP_AND_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // DE OP_OR_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // DF OP_XOR_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // E0 OP_SHL_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // E1 OP_SHR_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // E2 OP_USHR_INT_LIT8 vAA, vBB, #+CC
+    DF_DA | DF_UB,
+
+    // E3 OP_UNUSED_E3
+    DF_NOP,
+
+    // E4 OP_UNUSED_E4
+    DF_NOP,
+
+    // E5 OP_UNUSED_E5
+    DF_NOP,
+
+    // E6 OP_UNUSED_E6
+    DF_NOP,
+
+    // E7 OP_UNUSED_E7
+    DF_NOP,
+
+    // E8 OP_UNUSED_E8
+    DF_NOP,
+
+    // E9 OP_UNUSED_E9
+    DF_NOP,
+
+    // EA OP_UNUSED_EA
+    DF_NOP,
+
+    // EB OP_UNUSED_EB
+    DF_NOP,
+
+    // EC OP_UNUSED_EC
+    DF_NOP,
+
+    // ED OP_THROW_VERIFICATION_ERROR
+    DF_NOP,
+
+    // EE OP_EXECUTE_INLINE
+    DF_FORMAT_35C,
+
+    // EF OP_UNUSED_EF
+    DF_NOP,
+
+    // F0 OP_INVOKE_DIRECT_EMPTY
+    DF_NOP,
+
+    // F1 OP_UNUSED_F1
+    DF_NOP,
+
+    // F2 OP_IGET_QUICK
+    DF_DA | DF_UB,
+
+    // F3 OP_IGET_WIDE_QUICK
+    DF_DA_WIDE | DF_UB,
+
+    // F4 OP_IGET_OBJECT_QUICK
+    DF_DA | DF_UB,
+
+    // F5 OP_IPUT_QUICK
+    DF_UA | DF_UB,
+
+    // F6 OP_IPUT_WIDE_QUICK
+    DF_UA_WIDE | DF_UB,
+
+    // F7 OP_IPUT_OBJECT_QUICK
+    DF_UA | DF_UB,
+
+    // F8 OP_INVOKE_VIRTUAL_QUICK
+    DF_FORMAT_35C,
+
+    // F9 OP_INVOKE_VIRTUAL_QUICK_RANGE
+    DF_FORMAT_3RC,
+
+    // FA OP_INVOKE_SUPER_QUICK
+    DF_FORMAT_35C,
+
+    // FB OP_INVOKE_SUPER_QUICK_RANGE
+    DF_FORMAT_3RC,
+
+    // FC OP_UNUSED_FC
+    DF_NOP,
+
+    // FD OP_UNUSED_FD
+    DF_NOP,
+
+    // FE OP_UNUSED_FE
+    DF_NOP,
+
+    // FF OP_UNUSED_FF
+    DF_NOP,
+
+    // Beginning of extended MIR opcodes
+    // 100 OP_MIR_PHI
+    DF_PHI | DF_DA,
+
+    /*
+     * For extended MIR inserted at the MIR2LIR stage, it is okay to have
+     * undefined values here.
+     */
+};
+
+/* Return the Dalvik register/subscript pair of a given SSA register */
+int dvmConvertSSARegToDalvik(CompilationUnit *cUnit, int ssaReg)
+{
+      return GET_ELEM_N(cUnit->ssaToDalvikMap, int, ssaReg);
+}
+
+/*
+ * Utility function to convert encoded SSA register value into Dalvik register
+ * and subscript pair. Each SSA register can be used to index the
+ * ssaToDalvikMap list to get the subscript[31..16]/dalvik_reg[15..0] mapping.
+ */
+char *dvmCompilerGetSSAString(CompilationUnit *cUnit, SSARepresentation *ssaRep)
+{
+    char buffer[256];
+    char *ret;
+    int i;
+
+    buffer[0] = 0;
+    for (i = 0; i < ssaRep->numDefs; i++) {
+        int ssa2DalvikValue = dvmConvertSSARegToDalvik(cUnit, ssaRep->defs[i]);
+
+        sprintf(buffer + strlen(buffer), "s%d(v%d_%d) ",
+                ssaRep->defs[i], DECODE_REG(ssa2DalvikValue),
+                DECODE_SUB(ssa2DalvikValue));
+    }
+
+    if (ssaRep->numDefs) {
+        strcat(buffer, "<- ");
+    }
+
+    for (i = 0; i < ssaRep->numUses; i++) {
+        int ssa2DalvikValue = dvmConvertSSARegToDalvik(cUnit, ssaRep->uses[i]);
+        int len = strlen(buffer);
+
+        if (snprintf(buffer + len, 250 - len, "s%d(v%d_%d) ",
+                     ssaRep->uses[i], DECODE_REG(ssa2DalvikValue),
+                     DECODE_SUB(ssa2DalvikValue)) >= (250 - len)) {
+            strcat(buffer, "...");
+            break;
+        }
+    }
+
+    int length = strlen(buffer) + 1;
+    ret = dvmCompilerNew(length, false);
+    memcpy(ret, buffer, length);
+    return ret;
+}
+
+/* Any register that is used before being defined is considered live-in */
+static inline void handleLiveInUse(BitVector *useV, BitVector *defV,
+                                   BitVector *liveInV, int dalvikRegId)
+{
+    dvmCompilerSetBit(useV, dalvikRegId);
+    if (!dvmIsBitSet(defV, dalvikRegId)) {
+        dvmCompilerSetBit(liveInV, dalvikRegId);
+    }
+}
+
+/* Mark a reg as being defined */
+static inline void handleLiveInDef(BitVector *defV, int dalvikRegId)
+{
+    dvmCompilerSetBit(defV, dalvikRegId);
+}
+
+/*
+ * Find out live-in variables for natural loops. Variables that are live-in in
+ * the main loop body are considered to be defined in the entry block.
+ */
+void dvmCompilerFindLiveIn(CompilationUnit *cUnit, BasicBlock *bb)
+{
+    MIR *mir;
+    BitVector *useV, *defV, *liveInV;
+
+    if (bb->blockType != DALVIK_BYTECODE &&
+        bb->blockType != ENTRY_BLOCK) {
+        return;
+    }
+
+    useV = bb->dataFlowInfo->useV =
+        dvmCompilerAllocBitVector(cUnit->method->registersSize, false);
+    defV = bb->dataFlowInfo->defV =
+        dvmCompilerAllocBitVector(cUnit->method->registersSize, false);
+    liveInV = bb->dataFlowInfo->liveInV =
+        dvmCompilerAllocBitVector(cUnit->method->registersSize, false);
+
+    for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
+        int dfAttributes =
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+        DecodedInstruction *dInsn = &mir->dalvikInsn;
+
+        if (dfAttributes & DF_HAS_USES) {
+            if (dfAttributes & DF_UA) {
+                handleLiveInUse(useV, defV, liveInV, dInsn->vA);
+            } else if (dfAttributes & DF_UA_WIDE) {
+                handleLiveInUse(useV, defV, liveInV, dInsn->vA);
+                handleLiveInUse(useV, defV, liveInV, dInsn->vA+1);
+            }
+            if (dfAttributes & DF_UB) {
+                handleLiveInUse(useV, defV, liveInV, dInsn->vB);
+            } else if (dfAttributes & DF_UB_WIDE) {
+                handleLiveInUse(useV, defV, liveInV, dInsn->vB);
+                handleLiveInUse(useV, defV, liveInV, dInsn->vB+1);
+            }
+            if (dfAttributes & DF_UC) {
+                handleLiveInUse(useV, defV, liveInV, dInsn->vC);
+            } else if (dfAttributes & DF_UC_WIDE) {
+                handleLiveInUse(useV, defV, liveInV, dInsn->vC);
+                handleLiveInUse(useV, defV, liveInV, dInsn->vC+1);
+            }
+        }
+        if (dfAttributes & DF_HAS_DEFS) {
+            handleLiveInDef(defV, dInsn->vA);
+            if (dfAttributes & DF_DA_WIDE) {
+                handleLiveInDef(defV, dInsn->vA+1);
+            }
+        }
+    }
+}
+
+/* Find out the latest SSA register for a given Dalvik register */
+static void handleSSAUse(CompilationUnit *cUnit, int *uses, int dalvikReg,
+                         int regIndex)
+{
+    int encodedValue = cUnit->dalvikToSSAMap[dalvikReg];
+    int ssaReg = DECODE_REG(encodedValue);
+    uses[regIndex] = ssaReg;
+}
+
+/* Setup a new SSA register for a given Dalvik register */
+static void handleSSADef(CompilationUnit *cUnit, int *defs, int dalvikReg,
+                         int regIndex)
+{
+    int encodedValue = cUnit->dalvikToSSAMap[dalvikReg];
+    int ssaReg = cUnit->numSSARegs++;
+    /* Bump up the subscript */
+    int dalvikSub = DECODE_SUB(encodedValue) + 1;
+    int newD2SMapping = ENCODE_REG_SUB(ssaReg, dalvikSub);
+
+    cUnit->dalvikToSSAMap[dalvikReg] = newD2SMapping;
+
+    int newS2DMapping = ENCODE_REG_SUB(dalvikReg, dalvikSub);
+    dvmInsertGrowableList(cUnit->ssaToDalvikMap, (void *) newS2DMapping);
+
+    defs[regIndex] = ssaReg;
+}
+
+/* Loop up new SSA names for format_35c instructions */
+static void dataFlowSSAFormat35C(CompilationUnit *cUnit, MIR *mir)
+{
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    int numUses = dInsn->vA;
+    int i;
+
+    mir->ssaRep->numUses = numUses;
+    mir->ssaRep->uses = dvmCompilerNew(sizeof(int) * numUses, false);
+
+    for (i = 0; i < numUses; i++) {
+        handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->arg[i], i);
+    }
+}
+
+/* Loop up new SSA names for format_3rc instructions */
+static void dataFlowSSAFormat3RC(CompilationUnit *cUnit, MIR *mir)
+{
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    int numUses = dInsn->vA;
+    int i;
+
+    mir->ssaRep->numUses = numUses;
+    mir->ssaRep->uses = dvmCompilerNew(sizeof(int) * numUses, false);
+
+    for (i = 0; i < numUses; i++) {
+        handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vC+i, i);
+    }
+}
+
+/* Entry function to convert a block into SSA representation */
+void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
+{
+    MIR *mir;
+
+    if (bb->blockType != DALVIK_BYTECODE && bb->blockType != ENTRY_BLOCK) {
+        return;
+    }
+
+    for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
+        mir->ssaRep = dvmCompilerNew(sizeof(SSARepresentation), true);
+
+        int dfAttributes =
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+
+        int numUses = 0;
+
+        if (dfAttributes & DF_FORMAT_35C) {
+            dataFlowSSAFormat35C(cUnit, mir);
+            continue;
+        }
+
+        if (dfAttributes & DF_FORMAT_3RC) {
+            dataFlowSSAFormat3RC(cUnit, mir);
+            continue;
+        }
+
+        if (dfAttributes & DF_HAS_USES) {
+            if (dfAttributes & DF_UA) {
+                numUses++;
+            } else if (dfAttributes & DF_UA_WIDE) {
+                numUses += 2;
+            }
+            if (dfAttributes & DF_UB) {
+                numUses++;
+            } else if (dfAttributes & DF_UB_WIDE) {
+                numUses += 2;
+            }
+            if (dfAttributes & DF_UC) {
+                numUses++;
+            } else if (dfAttributes & DF_UC_WIDE) {
+                numUses += 2;
+            }
+        }
+
+        if (numUses) {
+            mir->ssaRep->numUses = numUses;
+            mir->ssaRep->uses = dvmCompilerNew(sizeof(int) * numUses, false);
+        }
+
+        int numDefs = 0;
+
+        if (dfAttributes & DF_HAS_DEFS) {
+            numDefs++;
+            if (dfAttributes & DF_DA_WIDE) {
+                numDefs++;
+            }
+        }
+
+        if (numDefs) {
+            mir->ssaRep->numDefs = numDefs;
+            mir->ssaRep->defs = dvmCompilerNew(sizeof(int) * numDefs, false);
+        }
+
+        DecodedInstruction *dInsn = &mir->dalvikInsn;
+
+        if (dfAttributes & DF_HAS_USES) {
+            numUses = 0;
+            if (dfAttributes & DF_UA) {
+                handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vA, numUses++);
+            } else if (dfAttributes & DF_UA_WIDE) {
+                handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vA, numUses++);
+                handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vA+1, numUses++);
+            }
+            if (dfAttributes & DF_UB) {
+                handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vB, numUses++);
+            } else if (dfAttributes & DF_UB_WIDE) {
+                handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vB, numUses++);
+                handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vB+1, numUses++);
+            }
+            if (dfAttributes & DF_UC) {
+                handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vC, numUses++);
+            } else if (dfAttributes & DF_UC_WIDE) {
+                handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vC, numUses++);
+                handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vC+1, numUses++);
+            }
+        }
+        if (dfAttributes & DF_HAS_DEFS) {
+            handleSSADef(cUnit, mir->ssaRep->defs, dInsn->vA, 0);
+            if (dfAttributes & DF_DA_WIDE) {
+                handleSSADef(cUnit, mir->ssaRep->defs, dInsn->vA+1, 1);
+            }
+        }
+    }
+
+    bb->dataFlowInfo->dalvikToSSAMap =
+        dvmCompilerNew(sizeof(int) * cUnit->method->registersSize, false);
+
+    /* Take a snapshot of Dalvik->SSA mapping at the end of each block */
+    memcpy(bb->dataFlowInfo->dalvikToSSAMap, cUnit->dalvikToSSAMap,
+           sizeof(int) * cUnit->method->registersSize);
+}
+
+/* Setup a constant value for opcodes thare have the DF_SETS_CONST attribute */
+static void setConstant(CompilationUnit *cUnit, int ssaReg, int value)
+{
+    dvmSetBit(cUnit->isConstantV, ssaReg);
+    cUnit->constantValues[ssaReg] = value;
+}
+
+void dvmCompilerDoConstantPropagation(CompilationUnit *cUnit, BasicBlock *bb)
+{
+    MIR *mir;
+    BitVector *isConstantV = cUnit->isConstantV;
+
+    for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
+        int dfAttributes =
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+
+        int numUses = 0;
+
+        DecodedInstruction *dInsn = &mir->dalvikInsn;
+
+        if (!(dfAttributes & DF_HAS_DEFS)) continue;
+
+        /* Handle instructions that set up constants directly */
+        if (dfAttributes & DF_SETS_CONST) {
+            if (dfAttributes & DF_DA) {
+                switch (dInsn->opCode) {
+                    case OP_CONST_4:
+                    case OP_CONST_16:
+                    case OP_CONST:
+                        setConstant(cUnit, mir->ssaRep->defs[0], dInsn->vB);
+                        break;
+                    case OP_CONST_HIGH16:
+                        setConstant(cUnit, mir->ssaRep->defs[0],
+                                    dInsn->vB << 16);
+                        break;
+                    default:
+                        break;
+                }
+            } else if (dfAttributes & DF_DA_WIDE) {
+                switch (dInsn->opCode) {
+                    case OP_CONST_WIDE_16:
+                    case OP_CONST_WIDE_32:
+                        setConstant(cUnit, mir->ssaRep->defs[0], dInsn->vB);
+                        setConstant(cUnit, mir->ssaRep->defs[1], 0);
+                        break;
+                    case OP_CONST_WIDE:
+                        setConstant(cUnit, mir->ssaRep->defs[0],
+                                    (int) dInsn->vB_wide);
+                        setConstant(cUnit, mir->ssaRep->defs[1],
+                                    (int) (dInsn->vB_wide >> 32));
+                        break;
+                    case OP_CONST_WIDE_HIGH16:
+                        setConstant(cUnit, mir->ssaRep->defs[0], 0);
+                        setConstant(cUnit, mir->ssaRep->defs[1],
+                                    dInsn->vB << 16);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        /* Handle instructions that set up constants directly */
+        } else if (dfAttributes & DF_IS_MOVE) {
+            int i;
+
+            for (i = 0; i < mir->ssaRep->numUses; i++) {
+                if (!dvmIsBitSet(isConstantV, mir->ssaRep->uses[i])) break;
+            }
+            /* Move a register holding a constant to another register */
+            if (i == mir->ssaRep->numUses) {
+                setConstant(cUnit, mir->ssaRep->defs[0],
+                            cUnit->constantValues[mir->ssaRep->uses[0]]);
+                if (dfAttributes & DF_DA_WIDE) {
+                    setConstant(cUnit, mir->ssaRep->defs[1],
+                                cUnit->constantValues[mir->ssaRep->uses[1]]);
+                }
+            }
+        }
+    }
+    /* TODO: implement code to handle arithmetic operations */
+}
+
+void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
+                                       struct BasicBlock *bb)
+{
+    BitVector *isIndVarV = cUnit->loopAnalysis->isIndVarV;
+    BitVector *isConstantV = cUnit->isConstantV;
+    GrowableList *ivList = cUnit->loopAnalysis->ivList;
+    MIR *mir;
+
+    if (bb->blockType != DALVIK_BYTECODE &&
+        bb->blockType != ENTRY_BLOCK) {
+        return;
+    }
+
+    /* If the bb doesn't have a phi it cannot contain an induction variable */
+    if (bb->firstMIRInsn == NULL ||
+        bb->firstMIRInsn->dalvikInsn.opCode != MIR_OP_PHI) {
+        return;
+    }
+
+    /* Find basic induction variable first */
+    for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
+        int dfAttributes =
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+
+        if (!(dfAttributes & DF_IS_LINEAR)) continue;
+
+        /*
+         * For a basic induction variable:
+         *   1) use[0] should belong to the output of a phi node
+         *   2) def[0] should belong to the input of the same phi node
+         *   3) the value added/subtracted is a constant
+         */
+        MIR *phi;
+        for (phi = bb->firstMIRInsn; phi; phi = phi->next) {
+            if (phi->dalvikInsn.opCode != MIR_OP_PHI) break;
+
+            if (phi->ssaRep->defs[0] == mir->ssaRep->uses[0] &&
+                phi->ssaRep->uses[1] == mir->ssaRep->defs[0]) {
+                bool deltaIsConstant = false;
+                int deltaValue;
+
+                switch (mir->dalvikInsn.opCode) {
+                    case OP_ADD_INT:
+                        if (dvmIsBitSet(isConstantV,
+                                        mir->ssaRep->uses[1])) {
+                            deltaValue =
+                                cUnit->constantValues[mir->ssaRep->uses[1]];
+                            deltaIsConstant = true;
+                        }
+                        break;
+                    case OP_SUB_INT:
+                        if (dvmIsBitSet(isConstantV,
+                                        mir->ssaRep->uses[1])) {
+                            deltaValue =
+                                -cUnit->constantValues[mir->ssaRep->uses[1]];
+                            deltaIsConstant = true;
+                        }
+                        break;
+                    case OP_ADD_INT_LIT8:
+                        deltaValue = mir->dalvikInsn.vC;
+                        deltaIsConstant = true;
+                        break;
+                    default:
+                        break;
+                }
+                if (deltaIsConstant) {
+                    dvmSetBit(isIndVarV, mir->ssaRep->uses[0]);
+                    InductionVariableInfo *ivInfo =
+                        dvmCompilerNew(sizeof(InductionVariableInfo),
+                                       false);
+
+                    ivInfo->ssaReg = mir->ssaRep->uses[0];
+                    ivInfo->basicSSAReg = mir->ssaRep->uses[0];
+                    ivInfo->m = 1;         // always 1 to basic iv
+                    ivInfo->c = 0;         // N/A to basic iv
+                    ivInfo->inc = deltaValue;
+                    dvmInsertGrowableList(ivList, (void *) ivInfo);
+                    cUnit->loopAnalysis->numBasicIV++;
+                    break;
+                }
+            }
+        }
+    }
+
+    /* Find dependent induction variable now */
+    for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
+        int dfAttributes =
+            dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
+
+        if (!(dfAttributes & DF_IS_LINEAR)) continue;
+
+        /* Skip already identified induction variables */
+        if (dvmIsBitSet(isIndVarV, mir->ssaRep->defs[0])) continue;
+
+        /*
+         * For a dependent induction variable:
+         *  1) use[0] should be an induction variable (basic/dependent)
+         *  2) operand2 should be a constant
+         */
+        if (dvmIsBitSet(isIndVarV, mir->ssaRep->uses[0])) {
+            int srcDalvikReg = dvmConvertSSARegToDalvik(cUnit,
+                                                        mir->ssaRep->uses[0]);
+            int dstDalvikReg = dvmConvertSSARegToDalvik(cUnit,
+                                                        mir->ssaRep->defs[0]);
+
+            bool cIsConstant = false;
+            int c = 0;
+
+            switch (mir->dalvikInsn.opCode) {
+                case OP_ADD_INT:
+                    if (dvmIsBitSet(isConstantV,
+                                    mir->ssaRep->uses[1])) {
+                        c = cUnit->constantValues[mir->ssaRep->uses[1]];
+                        cIsConstant = true;
+                    }
+                    break;
+                case OP_SUB_INT:
+                    if (dvmIsBitSet(isConstantV,
+                                    mir->ssaRep->uses[1])) {
+                        c = -cUnit->constantValues[mir->ssaRep->uses[1]];
+                        cIsConstant = true;
+                    }
+                    break;
+                case OP_ADD_INT_LIT8:
+                    c = mir->dalvikInsn.vC;
+                    cIsConstant = true;
+                    break;
+                default:
+                    break;
+            }
+
+            /* Ignore the update to the basic induction variable itself */
+            if (DECODE_REG(srcDalvikReg) == DECODE_REG(dstDalvikReg))  {
+                cUnit->loopAnalysis->ssaBIV = mir->ssaRep->defs[0];
+                cIsConstant = false;
+            }
+
+            if (cIsConstant) {
+                unsigned int i;
+                dvmSetBit(isIndVarV, mir->ssaRep->defs[0]);
+                InductionVariableInfo *ivInfo =
+                    dvmCompilerNew(sizeof(InductionVariableInfo),
+                                   false);
+                InductionVariableInfo *ivInfoOld = NULL ;
+
+                for (i = 0; i < ivList->numUsed; i++) {
+                    ivInfoOld = ivList->elemList[i];
+                    if (ivInfoOld->ssaReg == mir->ssaRep->uses[0]) break;
+                }
+
+                /* Guaranteed to find an element */
+                assert(i < ivList->numUsed);
+
+                ivInfo->ssaReg = mir->ssaRep->defs[0];
+                ivInfo->basicSSAReg = ivInfoOld->basicSSAReg;
+                ivInfo->m = ivInfoOld->m;
+                ivInfo->c = c + ivInfoOld->c;
+                ivInfo->inc = ivInfoOld->inc;
+                dvmInsertGrowableList(ivList, (void *) ivInfo);
+            }
+        }
+    }
+}
+
+/* Setup the basic data structures for SSA conversion */
+void dvmInitializeSSAConversion(CompilationUnit *cUnit)
+{
+    int i;
+    int numDalvikReg = cUnit->method->registersSize;
+
+    cUnit->ssaToDalvikMap = dvmCompilerNew(sizeof(GrowableList), false);
+    dvmInitGrowableList(cUnit->ssaToDalvikMap, numDalvikReg);
+
+    /*
+     * Initial number of SSA registers is equal to the number of Dalvik
+     * registers.
+     */
+    cUnit->numSSARegs = numDalvikReg;
+
+    /*
+     * Initialize the SSA2Dalvik map list. For the first numDalvikReg elements,
+     * the subscript is 0 so we use the ENCODE_REG_SUB macro to encode the value
+     * into "(0 << 16) | i"
+     */
+    for (i = 0; i < numDalvikReg; i++) {
+        dvmInsertGrowableList(cUnit->ssaToDalvikMap,
+                              (void *) ENCODE_REG_SUB(i, 0));
+    }
+
+    /*
+     * Initialize the DalvikToSSAMap map. The low 16 bit is the SSA register id,
+     * while the high 16 bit is the current subscript. The original Dalvik
+     * register N is mapped to SSA register N with subscript 0.
+     */
+    cUnit->dalvikToSSAMap = dvmCompilerNew(sizeof(int) * numDalvikReg, false);
+    for (i = 0; i < numDalvikReg; i++) {
+        cUnit->dalvikToSSAMap[i] = i;
+    }
+
+    /*
+     * Allocate the BasicBlockDataFlow structure for the entry and code blocks
+     */
+    for (i = 0; i < cUnit->numBlocks; i++) {
+        BasicBlock *bb = cUnit->blockList[i];
+        if (bb->blockType == DALVIK_BYTECODE ||
+            bb->blockType == ENTRY_BLOCK) {
+            bb->dataFlowInfo = dvmCompilerNew(sizeof(BasicBlockDataFlow), true);
+        }
+    }
+}
+
+void dvmCompilerDataFlowAnalysisDispatcher(CompilationUnit *cUnit,
+                void (*func)(CompilationUnit *, BasicBlock *))
+{
+    int i;
+    for (i = 0; i < cUnit->numBlocks; i++) {
+        BasicBlock *bb = cUnit->blockList[i];
+        (*func)(cUnit, bb);
+    }
+}
+
+/* Main entry point to do SSA conversion for non-loop traces */
+void dvmCompilerNonLoopAnalysis(CompilationUnit *cUnit)
+{
+    dvmCompilerDataFlowAnalysisDispatcher(cUnit, dvmCompilerDoSSAConversion);
+}

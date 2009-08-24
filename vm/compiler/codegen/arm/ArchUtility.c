@@ -204,7 +204,15 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
     u2 *cPtr = (u2*)baseAddr;
     /* Handle pseudo-ops individually, and all regular insns as a group */
     switch(lir->opCode) {
+        case ARM_PSEUDO_EXTENDED_MIR:
+            /* intentional fallthrough */
+        case ARM_PSEUDO_SSA_REP:
+            LOGD("-------- %s\n", (char *) dest);
+            break;
         case ARM_PSEUDO_TARGET_LABEL:
+            break;
+        case ARM_PSEUDO_CHAINING_CELL_BACKWARD_BRANCH:
+            LOGD("-------- chaining cell (backward branch): 0x%04x\n", dest);
             break;
         case ARM_PSEUDO_CHAINING_CELL_NORMAL:
             LOGD("-------- chaining cell (normal): 0x%04x\n", dest);
@@ -220,12 +228,15 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
                  ((Method *)dest)->name,
                  ((Method *)dest)->insns);
             break;
-        case ARM_PSEUDO_CHAINING_CELL_BACKWARD_BRANCH:
-            LOGD("-------- chaining cell (backward branch): 0x%04x\n", dest);
+        case ARM_PSEUDO_ENTRY_BLOCK:
+            LOGD("-------- entry offset: 0x%04x\n", dest);
             break;
         case ARM_PSEUDO_DALVIK_BYTECODE_BOUNDARY:
             LOGD("-------- dalvik offset: 0x%04x @ %s\n", dest,
                    getOpcodeName(lir->operands[1]));
+            break;
+        case ARM_PSEUDO_EXIT_BLOCK:
+            LOGD("-------- exit offset: 0x%04x\n", dest);
             break;
         case ARM_PSEUDO_ALIGN4:
             LOGD("%p (%04x): .align4\n", baseAddr + offset, offset);

@@ -262,7 +262,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     methodStats = analyzeMethodBody(desc->method);
 
     cUnit.registerScoreboard.nullCheckedRegs =
-        dvmAllocBitVector(desc->method->registersSize, false);
+        dvmCompilerAllocBitVector(desc->method->registersSize, false);
 
     /* Initialize the printMe flag */
     cUnit.printMe = gDvmJit.printMe;
@@ -333,10 +333,19 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         }
     }
 
-    /* Allocate the first basic block */
-    lastBB = startBB = curBB = dvmCompilerNewBB(DALVIK_BYTECODE);
+    /* Allocate the entry block */
+    lastBB = startBB = curBB = dvmCompilerNewBB(ENTRY_BLOCK);
     curBB->startOffset = curOffset;
     curBB->id = numBlocks++;
+
+    curBB = dvmCompilerNewBB(DALVIK_BYTECODE);
+    curBB->startOffset = curOffset;
+    curBB->id = numBlocks++;
+
+    /* Make the first real dalvik block the fallthrough of the entry block */
+    startBB->fallThrough = curBB;
+    lastBB->next = curBB;
+    lastBB = curBB;
 
     if (cUnit.printMe) {
         LOGD("--------\nCompiler: Building trace for %s, offset 0x%x\n",
@@ -350,7 +359,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     while (1) {
         MIR *insn;
         int width;
-        insn = dvmCompilerNew(sizeof(MIR),false);
+        insn = dvmCompilerNew(sizeof(MIR), true);
         insn->offset = curOffset;
         width = parseInsn(codePtr, &insn->dalvikInsn, cUnit.printMe);
 
@@ -394,9 +403,9 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
      */
     for (curBB = startBB; curBB; curBB = curBB->next) {
         MIR *lastInsn = curBB->lastMIRInsn;
-        /* Hit a pseudo block - exit the search now */
+        /* Skip empty blocks */
         if (lastInsn == NULL) {
-            break;
+            continue;
         }
         curOffset = lastInsn->offset;
         unsigned int targetOffset = curOffset;
@@ -436,6 +445,36 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                        kInstrInvoke)) == 0) ||
             (lastInsn->dalvikInsn.opCode == OP_INVOKE_DIRECT_EMPTY);
 
+
+        if (curBB->taken == NULL &&
+            curBB->fallThrough == NULL &&
+            flags == (kInstrCanBranch | kInstrCanContinue) &&
+            fallThroughOffset == startBB->startOffset) {
+            BasicBlock *newBB;
+
+            if (cUnit.printMe) {
+                LOGD("Natural loop detected!");
+            }
+            newBB = dvmCompilerNewBB(EXIT_BLOCK);
+            newBB->startOffset = targetOffset;
+            newBB->id = numBlocks++;
+            newBB->needFallThroughBranch = true;
+
+            lastBB->next = newBB;
+            lastBB = newBB;
+            curBB->taken = newBB;
+            curBB->fallThrough = startBB->next;
+
+            /* Create the chaining cell */
+            newBB = dvmCompilerNewBB(CHAINING_CELL_NORMAL);
+            newBB->startOffset = targetOffset;
+            newBB->id = numBlocks++;
+
+            lastBB->fallThrough = newBB;
+            lastBB->next = newBB;
+            lastBB = newBB;
+            cUnit.hasLoop = true;
+        }
 
         /* Target block not included in the trace */
         if (curBB->taken == NULL &&
@@ -537,6 +576,16 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Make sure all blocks are added to the cUnit */
     assert(curBB == NULL);
 
+    /* Preparation for SSA conversion */
+    dvmInitializeSSAConversion(&cUnit);
+
+    if (cUnit.hasLoop) {
+        dvmCompilerLoopOpt(&cUnit);
+    }
+    else {
+        dvmCompilerNonLoopAnalysis(&cUnit);
+    }
+
     if (cUnit.printMe) {
         dvmCompilerDumpCompilationUnit(&cUnit);
     }
@@ -564,11 +613,8 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Reset the compiler resource pool */
     dvmCompilerArenaReset();
 
-    /* Free the bit vector tracking null-checked registers */
-    dvmFreeBitVector(cUnit.registerScoreboard.nullCheckedRegs);
-
-    if (!cUnit.halveInstCount) {
     /* Success */
+    if (!cUnit.halveInstCount) {
         methodStats->nativeSize += cUnit.totalSize;
         return info->codeAddress != NULL;
 
@@ -597,15 +643,16 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
     firstBlock->id = blockID++;
 
     /* Allocate the bit-vector to track the beginning of basic blocks */
-    BitVector *bbStartAddr = dvmAllocBitVector(dexCode->insnsSize+1, false);
-    dvmSetBit(bbStartAddr, 0);
+    BitVector *bbStartAddr = dvmCompilerAllocBitVector(dexCode->insnsSize+1,
+                                                       false);
+    dvmCompilerSetBit(bbStartAddr, 0);
 
     /*
      * Sequentially go through every instruction first and put them in a single
      * basic block. Identify block boundaries at the mean time.
      */
     while (codePtr < codeEnd) {
-        MIR *insn = dvmCompilerNew(sizeof(MIR), false);
+        MIR *insn = dvmCompilerNew(sizeof(MIR), true);
         insn->offset = curOffset;
         int width = parseInsn(codePtr, &insn->dalvikInsn, false);
         bool isInvoke = false;
@@ -629,9 +676,9 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
          */
         if (findBlockBoundary(method, insn, curOffset, &target, &isInvoke,
                               &callee)) {
-            dvmSetBit(bbStartAddr, curOffset + width);
+            dvmCompilerSetBit(bbStartAddr, curOffset + width);
             if (target != curOffset) {
-                dvmSetBit(bbStartAddr, target);
+                dvmCompilerSetBit(bbStartAddr, target);
             }
         }
 
@@ -711,8 +758,6 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
         LOGE("Expect %d vs %d basic blocks\n", numBlocks, cUnit.numBlocks);
         dvmAbort();
     }
-
-    dvmFreeBitVector(bbStartAddr);
 
     /* Connect the basic blocks through the taken links */
     for (i = 0; i < numBlocks; i++) {

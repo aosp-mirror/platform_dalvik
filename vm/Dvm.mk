@@ -206,6 +206,8 @@ ifeq ($(WITH_JIT),true)
 	compiler/Frontend.c \
 	compiler/Utility.c \
 	compiler/IntermediateRep.c \
+	compiler/Dataflow.c \
+	compiler/Loop.c \
 	interp/Jit.c
 endif
 

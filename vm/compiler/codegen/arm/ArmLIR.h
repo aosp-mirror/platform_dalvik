@@ -220,6 +220,10 @@ typedef enum ArmConditionCode {
  * Assemble.c.
  */
 typedef enum ArmOpCode {
+    ARM_PSEUDO_EXTENDED_MIR = -16,
+    ARM_PSEUDO_SSA_REP = -15,
+    ARM_PSEUDO_ENTRY_BLOCK = -14,
+    ARM_PSEUDO_EXIT_BLOCK = -13,
     ARM_PSEUDO_TARGET_LABEL = -12,
     ARM_PSEUDO_CHAINING_CELL_BACKWARD_BRANCH = -11,
     ARM_PSEUDO_CHAINING_CELL_HOT = -10,

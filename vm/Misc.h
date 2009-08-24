@@ -164,6 +164,16 @@ bool dvmIsBitSet(const BitVector* pBits, int num);
 /* count the number of bits that have been set */
 int dvmCountSetBits(const BitVector* pBits);
 
+/* copy one vector to the other compatible one */
+bool dvmCopyBitVector(BitVector *dest, const BitVector *src);
+
+/*
+ * Intersect two bit vectores and merge the result on top of the pre-existing
+ * value in the dest vector.
+ */
+bool dvmIntersectBitVectors(BitVector *dest, const BitVector *src1,
+                            const BitVector *src2);
+
 #define kBitVectorGrowth    4   /* increase by 4 u4s when limit hit */
 
 

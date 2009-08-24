@@ -19,7 +19,6 @@
 
 #include "Dalvik.h"
 #include "CompilerUtility.h"
-#include "CompilerIR.h"
 #include "codegen/CompilerCodegen.h"
 #include "interp/Jit.h"
 

@@ -137,4 +137,26 @@ void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);
 void dvmCompilerSortAndPrintTraceProfiles(void);
 
+struct CompilationUnit;
+struct BasicBlock;
+struct SSARepresentation;
+struct GrowableList;
+
+void dvmInitializeSSAConversion(struct CompilationUnit *cUnit);
+int dvmConvertSSARegToDalvik(struct CompilationUnit *cUnit, int ssaReg);
+void dvmCompilerLoopOpt(struct CompilationUnit *cUnit);
+void dvmCompilerNonLoopAnalysis(struct CompilationUnit *cUnit);
+void dvmCompilerFindLiveIn(struct CompilationUnit *cUnit,
+                           struct BasicBlock *bb);
+void dvmCompilerDoSSAConversion(struct CompilationUnit *cUnit,
+                                struct BasicBlock *bb);
+void dvmCompilerDoConstantPropagation(struct CompilationUnit *cUnit,
+                                      struct BasicBlock *bb);
+void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
+                                       struct BasicBlock *bb);
+char *dvmCompilerGetSSAString(struct CompilationUnit *cUnit,
+                              struct SSARepresentation *ssaRep);
+void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,
+                void (*func)(struct CompilationUnit *, struct BasicBlock *));
+
 #endif /* _DALVIK_VM_COMPILER */
