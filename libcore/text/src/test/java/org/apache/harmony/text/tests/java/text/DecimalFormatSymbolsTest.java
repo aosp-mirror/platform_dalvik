@@ -149,8 +149,8 @@ public class DecimalFormatSymbolsTest extends TestCase {
     @KnownFailure("some locales were removed last minute in cupcake")
     public void test_getCurrency() {
         Currency currency = Currency.getInstance("USD");
-        assertTrue("Returned incorrect currency",
-                dfsUS.getCurrency() == currency);
+        assertEquals("Returned incorrect currency",
+                dfsUS.getCurrency(), currency);
 
         // use cs_CZ instead
         //Currency currK = Currency.getInstance("KRW");
@@ -446,8 +446,8 @@ public class DecimalFormatSymbolsTest extends TestCase {
         dfs.setCurrency(currency);
 
         assertTrue("Returned incorrect currency", currency == dfs.getCurrency());
-        assertTrue("Returned incorrect currency symbol", currency.getSymbol(
-                locale).equals(dfs.getCurrencySymbol()));
+        assertEquals("Returned incorrect currency symbol", currency.getSymbol(
+                locale), dfs.getCurrencySymbol());
         assertTrue("Returned incorrect international currency symbol", currency
                 .getCurrencyCode().equals(dfs.getInternationalCurrencySymbol()));
     }
@@ -551,8 +551,8 @@ public class DecimalFormatSymbolsTest extends TestCase {
 
         assertTrue("Test1: Returned incorrect currency", currency == dfs
                 .getCurrency());
-        assertTrue("Test1: Returned incorrect currency symbol", currency
-                .getSymbol(locale).equals(dfs.getCurrencySymbol()));
+        assertEquals("Test1: Returned incorrect currency symbol", currency
+                .getSymbol(locale), dfs.getCurrencySymbol());
         assertTrue("Test1: Returned incorrect international currency symbol",
                 currency.getCurrencyCode().equals(
                         dfs.getInternationalCurrencySymbol()));
@@ -754,8 +754,43 @@ public class DecimalFormatSymbolsTest extends TestCase {
                     i.close();
                 }
             } catch (Exception e) {
-                // ignore
             }
         }
+        assertDecimalFormatSymbolsRIFrance(dfs);
+    }
+    
+    static void assertDecimalFormatSymbolsRIFrance(DecimalFormatSymbols dfs) {
+        // Values based on Java 1.5 RI DecimalFormatSymbols for Locale.FRANCE
+        /*
+         * currency = [EUR]
+         * currencySymbol = [€][U+20ac]
+         * decimalSeparator = [,][U+002c]
+         * digit = [#][U+0023]
+         * groupingSeparator = [ ][U+00a0]
+         * infinity = [∞][U+221e]
+         * internationalCurrencySymbol = [EUR]
+         * minusSign = [-][U+002d]
+         * monetaryDecimalSeparator = [,][U+002c]
+         * naN = [�][U+fffd]
+         * patternSeparator = [;][U+003b]
+         * perMill = [‰][U+2030]
+         * percent = [%][U+0025]
+         * zeroDigit = [0][U+0030]
+         */
+        assertEquals("EUR", dfs.getCurrency().getCurrencyCode());
+        assertEquals("\u20AC", dfs.getCurrencySymbol());
+        assertEquals(',', dfs.getDecimalSeparator());
+        assertEquals('#', dfs.getDigit());
+        assertEquals('\u00a0', dfs.getGroupingSeparator());
+        assertEquals("\u221e", dfs.getInfinity());
+        assertEquals("EUR", dfs.getInternationalCurrencySymbol());
+        assertEquals('-', dfs.getMinusSign());
+        assertEquals(',', dfs.getMonetaryDecimalSeparator());
+        // RI's default NaN is U+FFFD, Harmony's is based on ICU
+        assertEquals("\uFFFD", dfs.getNaN());
+        assertEquals('\u003b', dfs.getPatternSeparator());
+        assertEquals('\u2030', dfs.getPerMill());
+        assertEquals('%', dfs.getPercent());
+        assertEquals('0', dfs.getZeroDigit());
     }
 }

@@ -18,7 +18,8 @@
 package org.apache.harmony.text;
 
 /**
- * TODO: type description
+ * Dalvik Bidi wrapper. Derived from an old version of Harmony; today they use
+ * straight through to ICU4J.
  */
 
 public final class BidiWrapper {

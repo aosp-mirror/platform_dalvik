@@ -145,22 +145,15 @@ public class MessageFormatTest extends TestCase {
         assertEquals("Simple string", "Test message", new MessageFormat(
                 "Test message").format(new Object[0]));
 
-        try {
-            result = new MessageFormat("Don't").format(new Object[0]);
-            assertTrue("Should not throw IllegalArgumentException: " + result,
+        result = new MessageFormat("Don't").format(new Object[0]);
+        assertTrue("Should not throw IllegalArgumentException: " + result,
                     "Dont".equals(result));
-        } catch (Exception e) {
-            fail("Unexpected exception: " + e);
-        }
 
         try {
             new MessageFormat("Invalid {1,foobar} format descriptor!");
             fail("Expected test_ConstructorLjava_lang_String to throw IAE.");
         } catch (IllegalArgumentException ex) {
             // expected
-        } catch (Throwable ex) {
-            fail("Expected test_ConstructorLjava_lang_String to throw IAE, not a "
-                    + ex.getClass().getName());
         }
 
         try {
@@ -168,9 +161,6 @@ public class MessageFormatTest extends TestCase {
                     "Invalid {1,date,invalid-spec} format descriptor!");
         } catch (IllegalArgumentException ex) {
             // expected
-        } catch (Throwable ex) {
-            fail("Expected test_ConstructorLjava_lang_String to throw IAE, not a "
-                    + ex.getClass().getName());
         }
 
         checkSerialization(new MessageFormat(""));
@@ -1177,10 +1167,10 @@ public class MessageFormatTest extends TestCase {
      *        java.text.MessageFormat#parse(java.lang.String).
      */
     @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "parse",
-        args = {java.lang.String.class}
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "parse",
+            args = {java.lang.String.class}
     )
     public void test_parseLjava_lang_String() throws ParseException {
         String pattern = "A {3, number, currency} B {2, time} C {0, number, percent} D {4}  E {1,choice,0#off|1#on} F {0, date}";
@@ -1242,10 +1232,10 @@ public class MessageFormatTest extends TestCase {
      *        argument ParsePosition as null.
      */
     @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "parseObject",
-        args = {java.lang.String.class, java.text.ParsePosition.class}
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "parseObject",
+            args = {java.lang.String.class, java.text.ParsePosition.class}
     )
     public void test_parseObjectLjava_lang_StringLjavajava_text_ParsePosition() {
         MessageFormat mf = new MessageFormat("{0,number,#.##}, {0,number,#.#}");
@@ -1288,10 +1278,10 @@ public class MessageFormatTest extends TestCase {
         }
     }
     @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "Regression test. Doesn't verifies exception.",
-        method = "format",
-        args = {java.lang.Object.class}
+            level = TestLevel.PARTIAL,
+            notes = "Regression test. Doesn't verifies exception.",
+            method = "format",
+            args = {java.lang.Object.class}
     )
     public void test_format_Object() {
         // Regression for HARMONY-1875
@@ -1304,4 +1294,35 @@ public class MessageFormatTest extends TestCase {
         assertEquals(etalon, obj.format(new Object[] { new Date() }));
     }
 
+    /**
+     * @tests java.text.MessageFormat#parse(java.lang.String)
+     */
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "parse",
+            args = {java.lang.String.class}
+    )
+    public void test_parse() throws ParseException {
+        // Regression for HARMONY-63
+        MessageFormat mf = new MessageFormat("{0,number,#,####}", Locale.US);
+        Object[] res = mf.parse("1,00,00");
+        assertEquals("Assert 0: incorrect size of parsed data ", 1, res.length);
+        assertEquals("Assert 1: parsed value incorrectly", new Long(10000), (Long)res[0]);
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "format",
+            args = {java.lang.String.class, java.lang.Object[].class}
+    )
+    public void testHARMONY5323() {
+        Object []messageArgs = new Object[11];
+        for (int i = 0; i < messageArgs.length; i++)
+            messageArgs[i] = "dumb"+i;
+
+        String res = MessageFormat.format("bgcolor=\"{10}\"", messageArgs);
+        assertEquals(res, "bgcolor=\"dumb10\"");
+    }
 }

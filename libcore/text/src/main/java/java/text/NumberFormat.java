@@ -14,17 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 // BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
+// changed from ICU to resource bundles
 // END android-note
 
 package java.text;
@@ -36,7 +28,9 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
 import java.util.Currency;
 import java.util.Locale;
+// BEGIN android-added
 import java.util.ResourceBundle;
+// END android-added
 
 import org.apache.harmony.text.internal.nls.Messages;
 
@@ -50,53 +44,48 @@ import org.apache.harmony.text.internal.nls.Messages;
  * Your code can be completely independent of the locale conventions for decimal
  * points, thousands-separators, or even the particular decimal digits used, or
  * whether the number format is even decimal.
- * </p>
  * <p>
  * To format a number for the current locale, use one of the factory class
  * methods:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * myString = NumberFormat.getInstance().format(myNumber);
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * If you are formatting multiple numbers, it is more efficient to get the
  * format and use it multiple times so that the system doesn't have to fetch the
  * information about the local language and country conventions multiple times.
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * NumberFormat nf = NumberFormat.getInstance();
  * for (int i = 0; i &lt; a.length; ++i) {
  *     output.println(nf.format(myNumber[i]) + &quot;; &quot;);
  * }
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * To format a number for a different locale, specify it in the call to
  * {@code getInstance}.
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * NumberFormat nf = NumberFormat.getInstance(Locale.FRENCH);
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * You can also use a {@code NumberFormat} to parse numbers:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * myNumber = nf.parse(myString);
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * Use {@code getInstance} or {@code getNumberInstance} to get the normal number
@@ -104,7 +93,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * {@code getCurrencyInstance} to get the currency number format and use
  * {@code getPercentInstance} to get a format for displaying percentages. With
  * this format, a fraction like 0.53 is displayed as 53%.
- * </p>
  * <p>
  * You can also control the display of numbers with methods such as
  * {@code setMinimumFractionDigits}. If you want even more control over the
@@ -113,7 +101,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * {@code DecimalFormat}. This will work for the vast majority of locales; just
  * remember to put it in a {@code try} block in case you encounter an unusual
  * one.
- * </p>
  * <p>
  * {@code NumberFormat} is designed such that some controls work for formatting
  * and others work for parsing. For example, {@code setParseIntegerOnly} only
@@ -121,7 +108,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * leaves the parse position just after '6'); if set to {@code false},
  * "3456.78" is parsed as 3456.78 (and leaves the parse position just after
  * '8'). This is independent of formatting.
- * </p>
  * <p>
  * You can also use forms of the {@code parse} and {@code format} methods with
  * {@code ParsePosition} and {@code FieldPosition} to allow you to:
@@ -155,11 +141,9 @@ import org.apache.harmony.text.internal.nls.Messages;
  * and the {@code NumberFormat} API is essentially an abstraction of
  * {@code DecimalFormat's} API. Refer to {@code DecimalFormat} for more
  * information about this API.
- * </p>
- * 
+ *
  * @see DecimalFormat
  * @see java.text.ChoiceFormat
- * @since Android 1.0
  */
 public abstract class NumberFormat extends Format {
 
@@ -167,15 +151,11 @@ public abstract class NumberFormat extends Format {
 
     /**
      * Field constant identifying the integer part of a number.
-     * 
-     * @since Android 1.0
      */
     public static final int INTEGER_FIELD = 0;
 
     /**
      * Field constant identifying the fractional part of a number.
-     * 
-     * @since Android 1.0
      */
     public static final int FRACTION_FIELD = 1;
 
@@ -186,8 +166,6 @@ public abstract class NumberFormat extends Format {
 
     /**
      * Constructs a new instance of {@code NumberFormat}.
-     * 
-     * @since Android 1.0
      */
     public NumberFormat() {
     }
@@ -198,7 +176,6 @@ public abstract class NumberFormat extends Format {
      * 
      * @return a shallow copy of this {@code NumberFormat}.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -215,7 +192,6 @@ public abstract class NumberFormat extends Format {
      * @return {@code true} if the specified object is equal to this number
      *         format; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -240,7 +216,6 @@ public abstract class NumberFormat extends Format {
      * @param value
      *            the double to format.
      * @return the formatted string.
-     * @since Android 1.0
      */
     public final String format(double value) {
         return format(value, new StringBuffer(), new FieldPosition(0))
@@ -255,8 +230,7 @@ public abstract class NumberFormat extends Format {
      * specifying a format field, then its {@code beginIndex} and
      * {@code endIndex} members will be updated with the position of the first
      * occurrence of this field in the formatted text.
-     * </p>
-     * 
+     *
      * @param value
      *            the double to format.
      * @param buffer
@@ -266,7 +240,6 @@ public abstract class NumberFormat extends Format {
      *            on input: an optional alignment field; on output: the offsets
      *            of the alignment field in the formatted text.
      * @return the string buffer.
-     * @since Android 1.0
      */
     public abstract StringBuffer format(double value, StringBuffer buffer,
             FieldPosition field);
@@ -277,7 +250,6 @@ public abstract class NumberFormat extends Format {
      * @param value
      *            the long to format.
      * @return the formatted string.
-     * @since Android 1.0
      */
     public final String format(long value) {
         return format(value, new StringBuffer(), new FieldPosition(0))
@@ -292,8 +264,7 @@ public abstract class NumberFormat extends Format {
      * specifying a format field, then its {@code beginIndex} and
      * {@code endIndex} members will be updated with the position of the first
      * occurrence of this field in the formatted text.
-     * </p>
-     * 
+     *
      * @param value
      *            the long to format.
      * @param buffer
@@ -303,7 +274,6 @@ public abstract class NumberFormat extends Format {
      *            on input: an optional alignment field; on output: the offsets
      *            of the alignment field in the formatted text.
      * @return the string buffer.
-     * @since Android 1.0
      */
     public abstract StringBuffer format(long value, StringBuffer buffer,
             FieldPosition field);
@@ -316,8 +286,7 @@ public abstract class NumberFormat extends Format {
      * a format field, then its {@code beginIndex} and {@code endIndex} members
      * will be updated with the position of the first occurrence of this field
      * in the formatted text.
-     * </p>
-     * 
+     *
      * @param object
      *            the object to format, must be a {@code Number}.
      * @param buffer
@@ -328,7 +297,6 @@ public abstract class NumberFormat extends Format {
      * @return the string buffer.
      * @throws IllegalArgumentException
      *             if {@code object} is not an instance of {@code Number}.
-     * @since Android 1.0
      */
     @Override
     public StringBuffer format(Object object, StringBuffer buffer,
@@ -348,7 +316,6 @@ public abstract class NumberFormat extends Format {
      * Gets the list of installed locales which support {@code NumberFormat}.
      * 
      * @return an array of locales.
-     * @since Android 1.0
      */
     public static Locale[] getAvailableLocales() {
         return Locale.getAvailableLocales();
@@ -365,7 +332,6 @@ public abstract class NumberFormat extends Format {
      * @return the currency that was set in getInstance() or in setCurrency(),
      *         or {@code null}.
      * @throws UnsupportedOperationException
-     * @since Android 1.0
      */
     public Currency getCurrency() {
         throw new UnsupportedOperationException();
@@ -376,7 +342,6 @@ public abstract class NumberFormat extends Format {
      * for the default locale.
      * 
      * @return a {@code NumberFormat} for handling currency values.
-     * @since Android 1.0
      */
     public final static NumberFormat getCurrencyInstance() {
         return getCurrencyInstance(Locale.getDefault());
@@ -389,10 +354,11 @@ public abstract class NumberFormat extends Format {
      * @param locale
      *            the locale to use.
      * @return a {@code NumberFormat} for handling currency values.
-     * @since Android 1.0
      */
     public static NumberFormat getCurrencyInstance(Locale locale) {
+        // BEGIN android-changed
         return getInstance(locale, "Currency"); //$NON-NLS-1$
+        // END android-changed
     }
 
     /**
@@ -400,7 +366,6 @@ public abstract class NumberFormat extends Format {
      * default locale.
      * 
      * @return a {@code NumberFormat} for handling integers.
-     * @since Android 1.0
      */
     public final static NumberFormat getIntegerInstance() {
         return getIntegerInstance(Locale.getDefault());
@@ -413,12 +378,13 @@ public abstract class NumberFormat extends Format {
      * @param locale
      *            the locale to use.
      * @return a {@code NumberFormat} for handling integers.
-     * @since Android 1.0
      */
     public static NumberFormat getIntegerInstance(Locale locale) {
+        // BEGIN android-changed
         NumberFormat format = getInstance(locale, "Integer"); //$NON-NLS-1$
         format.setParseIntegerOnly(true);
         return format;
+        // END android-changed
     }
 
     /**
@@ -426,7 +392,6 @@ public abstract class NumberFormat extends Format {
      * default locale.
      * 
      * @return a {@code NumberFormat} for handling {@code Number} objects.
-     * @since Android 1.0
      */
     public final static NumberFormat getInstance() {
         return getNumberInstance();
@@ -439,16 +404,17 @@ public abstract class NumberFormat extends Format {
      * @param locale
      *            the locale to use.
      * @return a {@code NumberFormat} for handling {@code Number} objects.
-     * @since Android 1.0
      */
     public static NumberFormat getInstance(Locale locale) {
         return getNumberInstance(locale);
     }
 
+    // BEGIN android-added
     static NumberFormat getInstance(Locale locale, String type) {
         return new DecimalFormat(getPattern(locale, type),
                 new DecimalFormatSymbols(locale));
     }
+    // END android-added
 
     /**
      * Returns the maximum number of fraction digits that are printed when
@@ -456,7 +422,6 @@ public abstract class NumberFormat extends Format {
      * the least significant digits are truncated.
      * 
      * @return the maximum number of fraction digits.
-     * @since Android 1.0
      */
     public int getMaximumFractionDigits() {
         return maximumFractionDigits;
@@ -468,7 +433,6 @@ public abstract class NumberFormat extends Format {
      * most significant digits are truncated.
      * 
      * @return the maximum number of integer digits.
-     * @since Android 1.0
      */
     public int getMaximumIntegerDigits() {
         return maximumIntegerDigits;
@@ -479,7 +443,6 @@ public abstract class NumberFormat extends Format {
      * formatting.
      * 
      * @return the minimum number of fraction digits.
-     * @since Android 1.0
      */
     public int getMinimumFractionDigits() {
         return minimumFractionDigits;
@@ -490,7 +453,6 @@ public abstract class NumberFormat extends Format {
      * formatting.
      * 
      * @return the minimum number of integer digits.
-     * @since Android 1.0
      */
     public int getMinimumIntegerDigits() {
         return minimumIntegerDigits;
@@ -501,7 +463,6 @@ public abstract class NumberFormat extends Format {
      * default locale.
      * 
      * @return a {@code NumberFormat} for handling {@code Number} objects.
-     * @since Android 1.0
      */
     public final static NumberFormat getNumberInstance() {
         return getNumberInstance(Locale.getDefault());
@@ -514,23 +475,25 @@ public abstract class NumberFormat extends Format {
      * @param locale
      *            the locale to use.
      * @return a {@code NumberFormat} for handling {@code Number} objects.
-     * @since Android 1.0
      */
     public static NumberFormat getNumberInstance(Locale locale) {
+        // BEGIN android-changed
         return getInstance(locale, "Number"); //$NON-NLS-1$
+        // END android-changed
     }
 
+    // BEGIN android-added
     static String getPattern(Locale locale, String type) {
         ResourceBundle bundle = getBundle(locale);
         return bundle.getString(type);
     }
+    // END android-added
 
     /**
      * Returns a {@code NumberFormat} for formatting and parsing percentage
      * values for the default locale.
      * 
      * @return a {@code NumberFormat} for handling percentage values.
-     * @since Android 1.0
      */
     public final static NumberFormat getPercentInstance() {
         return getPercentInstance(Locale.getDefault());
@@ -543,10 +506,11 @@ public abstract class NumberFormat extends Format {
      * @param locale
      *            the locale to use.
      * @return a {@code NumberFormat} for handling percentage values.
-     * @since Android 1.0
      */
     public static NumberFormat getPercentInstance(Locale locale) {
+        // BEGIN android-changed
         return getInstance(locale, "Percent"); //$NON-NLS-1$
+        // END android-changed
     }
 
     @Override
@@ -562,7 +526,6 @@ public abstract class NumberFormat extends Format {
      * 
      * @return {@code true} if a grouping separator is used; {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean isGroupingUsed() {
         return groupingUsed;
@@ -574,7 +537,6 @@ public abstract class NumberFormat extends Format {
      * 
      * @return {@code true} if this number format only parses integers,
      *         {@code false} if if parsese integers as well as fractions.
-     * @since Android 1.0
      */
     public boolean isParseIntegerOnly() {
         return parseIntegerOnly;
@@ -587,9 +549,8 @@ public abstract class NumberFormat extends Format {
      * @param string
      *            the string to parse.
      * @return the {@code Number} resulting from the parsing.
-     * @exception ParseException
-     *                if an error occurs during parsing.
-     * @since Android 1.0
+     * @throws ParseException
+     *            if an error occurs during parsing.
      */
     public Number parse(String string) throws ParseException {
         ParsePosition pos = new ParsePosition(0);
@@ -617,7 +578,6 @@ public abstract class NumberFormat extends Format {
      *            set to the index where the error occurred.
      * @return the {@code Number} resulting from the parse or {@code null} if
      *         there is an error.
-     * @since Android 1.0
      */
     public abstract Number parse(String string, ParsePosition position);
 
@@ -642,12 +602,10 @@ public abstract class NumberFormat extends Format {
      * This implementation throws {@code UnsupportedOperationException},
      * concrete subclasses should override this method if they support currency
      * formatting.
-     * </p>
-     * 
+     *
      * @param currency
      *            the new currency.
      * @throws UnsupportedOperationException
-     * @since Android 1.0
      */
     public void setCurrency(Currency currency) {
         throw new UnsupportedOperationException();
@@ -660,7 +618,6 @@ public abstract class NumberFormat extends Format {
      * @param value
      *            {@code true} if a grouping separator is used; {@code false}
      *            otherwise.
-     * @since Android 1.0
      */
     public void setGroupingUsed(boolean value) {
         groupingUsed = value;
@@ -673,7 +630,6 @@ public abstract class NumberFormat extends Format {
      * 
      * @param value
      *            the maximum number of fraction digits.
-     * @since Android 1.0
      */
     public void setMaximumFractionDigits(int value) {
         maximumFractionDigits = value < 0 ? 0 : value;
@@ -689,7 +645,6 @@ public abstract class NumberFormat extends Format {
      * 
      * @param value
      *            the new maximum number of integer numerals for display.
-     * @since Android 1.0
      */
     public void setMaximumIntegerDigits(int value) {
         maximumIntegerDigits = value < 0 ? 0 : value;
@@ -704,7 +659,6 @@ public abstract class NumberFormat extends Format {
      * 
      * @param value
      *            the minimum number of fraction digits.
-     * @since Android 1.0
      */
     public void setMinimumFractionDigits(int value) {
         minimumFractionDigits = value < 0 ? 0 : value;
@@ -719,7 +673,6 @@ public abstract class NumberFormat extends Format {
      * 
      * @param value
      *            the minimum number of integer digits.
-     * @since Android 1.0
      */
     public void setMinimumIntegerDigits(int value) {
         minimumIntegerDigits = value < 0 ? 0 : value;
@@ -737,7 +690,6 @@ public abstract class NumberFormat extends Format {
      * @param value
      *            {@code true} to only parse integers, {@code false} to parse
      *            integers as well as fractions.
-     * @since Android 1.0
      */
     public void setParseIntegerOnly(boolean value) {
         parseIntegerOnly = value;
@@ -824,8 +776,6 @@ public abstract class NumberFormat extends Format {
      * There is no public constructor in this class, the only instances are the
      * constants defined here.
      * <p>
-     * 
-     * @since Android 1.0
      */
     public static class Field extends Format.Field {
 
@@ -833,90 +783,67 @@ public abstract class NumberFormat extends Format {
 
         /**
          * This constant stands for the number sign.
-         * 
-         * @since Android 1.0
          */
         public static final Field SIGN = new Field("sign"); //$NON-NLS-1$
 
         /**
          * This constant stands for the integer part of the number.
-         * 
-         * @since Android 1.0
          */
         public static final Field INTEGER = new Field("integer"); //$NON-NLS-1$
 
         /**
          * This constant stands for the fraction part of the number.
-         * 
-         * @since Android 1.0
          */
         public static final Field FRACTION = new Field("fraction"); //$NON-NLS-1$
 
         /**
          * This constant stands for the exponent part of the number.
-         * 
-         * @since Android 1.0
          */
         public static final Field EXPONENT = new Field("exponent"); //$NON-NLS-1$
 
         /**
          * This constant stands for the exponent sign symbol.
-         * 
-         * @since Android 1.0
          */
         public static final Field EXPONENT_SIGN = new Field("exponent sign"); //$NON-NLS-1$
 
         /**
          * This constant stands for the exponent symbol.
-         * 
-         * @since Android 1.0
          */
         public static final Field EXPONENT_SYMBOL = new Field("exponent symbol"); //$NON-NLS-1$
 
         /**
          * This constant stands for the decimal separator.
-         * 
-         * @since Android 1.0
          */
         public static final Field DECIMAL_SEPARATOR = new Field(
                 "decimal separator"); //$NON-NLS-1$
 
         /**
          * This constant stands for the grouping separator.
-         * 
-         * @since Android 1.0
          */
         public static final Field GROUPING_SEPARATOR = new Field(
                 "grouping separator"); //$NON-NLS-1$
 
         /**
          * This constant stands for the percent symbol.
-         * 
-         * @since Android 1.0
          */
         public static final Field PERCENT = new Field("percent"); //$NON-NLS-1$
 
         /**
          * This constant stands for the permille symbol.
-         * 
-         * @since Android 1.0
          */
         public static final Field PERMILLE = new Field("per mille"); //$NON-NLS-1$
 
         /**
          * This constant stands for the currency symbol.
-         * 
-         * @since Android 1.0
          */
         public static final Field CURRENCY = new Field("currency"); //$NON-NLS-1$
 
         /**
          * Constructs a new instance of {@code NumberFormat.Field} with the
          * given field name.
-         * 
+         *
          * @param fieldName
          *            the field name.
-         * @since Android 1.0
          */
         protected Field(String fieldName) {
             super(fieldName);
@@ -925,7 +852,7 @@ public abstract class NumberFormat extends Format {
         /**
          * Resolves instances that are deserialized to the constant
          * {@code NumberFormat.Field} values.
-         * 
+         *
          * @return the resolved field object.
          * @throws InvalidObjectException
          *             if an error occurs while resolving the field object.
