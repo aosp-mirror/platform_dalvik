@@ -486,7 +486,7 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
             method = "!SerializationSelf",
             args = {}
     )
-[]    public void test_serialization() throws Exception {
+    public void test_serialization() throws Exception {
         DateFormatSymbols symbols = new DateFormatSymbols(Locale.FRANCE);
         String[][] zoneStrings = symbols.getZoneStrings();
         assertNotNull(zoneStrings);
