@@ -316,7 +316,13 @@ endif
 ifeq ($(MTERP_ARCH_KNOWN),false)
   # unknown architecture, try to use FFI
   LOCAL_C_INCLUDES += external/libffi/$(dvm_os)-$(dvm_arch)
-  LOCAL_SHARED_LIBRARIES += libffi
+
+  ifeq ($(dvm_os)-$(dvm_arch),darwin-x86)
+      # OSX includes libffi, so just make the linker aware of it directly.
+      LOCAL_LDLIBS += -lffi
+  else
+      LOCAL_SHARED_LIBRARIES += libffi
+  endif
 
   LOCAL_SRC_FILES += \
 		arch/generic/Call.c \

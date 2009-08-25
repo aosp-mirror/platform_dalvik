@@ -55,8 +55,8 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(src_files)
 LOCAL_C_INCLUDES := $(c_includes)
-LOCAL_SHARED_LIBRARIES := $(shared_libraries)
 LOCAL_STATIC_LIBRARIES := $(static_libraries)
+LOCAL_SHARED_LIBRARIES := $(shared_libraries)
 
 # liblog and libcutils are shared for target.
 LOCAL_SHARED_LIBRARIES += \
@@ -77,8 +77,16 @@ ifeq ($(WITH_HOST_DALVIK),true)
 
     LOCAL_SRC_FILES := $(src_files)
     LOCAL_C_INCLUDES := $(c_includes)
-    LOCAL_SHARED_LIBRARIES := $(shared_libraries)
     LOCAL_STATIC_LIBRARIES := $(static_libraries)
+
+    ifeq ($(HOST_OS)-$(HOST_ARCH),darwin-x86)
+        # OSX has a lot of libraries built in, which we don't have to
+        # bother building; just include them on the ld line.
+        LOCAL_LDLIBS := -lexpat -lssl -lz -lcrypto -licucore -lsqlite3
+	LOCAL_STATIC_LIBRARIES += libutils
+    else
+        LOCAL_SHARED_LIBRARIES := $(shared_libraries)
+    endif
 
     # liblog and libcutils are static for host.
     LOCAL_STATIC_LIBRARIES += \
@@ -86,6 +94,6 @@ ifeq ($(WITH_HOST_DALVIK),true)
 
     LOCAL_MODULE := libnativehelper-host
 
-    include $(BUILD_HOST_SHARED_LIBRARY)
+    include $(BUILD_HOST_STATIC_LIBRARY)
 
 endif
