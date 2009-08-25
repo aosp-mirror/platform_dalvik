@@ -1079,4 +1079,43 @@ public class DateFormatTest extends junit.framework.TestCase {
             fail("Unexpected exception " + e.toString());
         }
     }
+
+    /**
+     * @tests java.text.DateFormat#parse(String)
+     */
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "parse",
+            args = {java.lang.String.class}
+    )
+    public void test_parse_LString() {
+        DateFormat format = DateFormat.getInstance();
+        try {
+            format.parse("not a Date");
+            fail("should throw ParseException first");
+        } catch (ParseException e) {
+            assertNotNull(e.getMessage());
+        }
+    }
+
+    /**
+     * @tests java.text.DateFormat#setLenient(boolean)
+     */
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "setLenient",
+            args = {boolean.class}
+    )
+    public void test_setLenient() {
+        Date d = null;
+        DateFormat output = new SimpleDateFormat("MM/dd/yy");
+        output.setLenient(false);
+        try {
+            d = output.parse("01/01/-1");
+            fail("Should throw ParseException here.");
+        } catch (ParseException e) {}
+    }
+
 }

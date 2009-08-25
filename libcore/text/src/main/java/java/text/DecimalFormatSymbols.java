@@ -14,17 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 // BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
+// changed from ICU to resource bundles
 // END android-note
 
 package java.text;
@@ -37,7 +29,9 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Locale;
+// BEGIN android-added
 import java.util.ResourceBundle;
+// END android-added
 
 /**
  * Encapsulates the set of symbols (such as the decimal separator, the grouping
@@ -46,10 +40,9 @@ import java.util.ResourceBundle;
  * {@code DecimalFormatSymbols} from its locale data. If you need to change any
  * of these symbols, you can get the {@code DecimalFormatSymbols} object from
  * your {@code DecimalFormat} and modify it.
- * 
+ *
  * @see java.util.Locale
  * @see DecimalFormat
- * @since Android 1.0
  */
 public final class DecimalFormatSymbols implements Cloneable, Serializable {
 
@@ -73,8 +66,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * the default locale. Best practice is to create a {@code DecimalFormat}
      * and then to get the {@code DecimalFormatSymbols} from that object by
      * calling {@link DecimalFormat#getDecimalFormatSymbols()}.
-     * 
-     * @since Android 1.0
      */
     public DecimalFormatSymbols() {
         this(Locale.getDefault());
@@ -88,9 +79,9 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param locale
      *            the locale.
-     * @since Android 1.0
      */
     public DecimalFormatSymbols(Locale locale) {
+        // BEGIN android-changed
         ResourceBundle bundle = Format.getBundle(locale);
         patternChars = bundle.getString("DecimalPatternChars").toCharArray(); //$NON-NLS-1$
         infinity = bundle.getString("Infinity"); //$NON-NLS-1$
@@ -105,8 +96,10 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
             currencySymbol = bundle.getString("CurrencySymbol"); //$NON-NLS-1$
             intlCurrencySymbol = bundle.getString("IntCurrencySymbol"); //$NON-NLS-1$
         }
+        // END android-changed
     }
 
+ 
     /**
      * Returns a new {@code DecimalFormatSymbols} with the same symbols as this
      * {@code DecimalFormatSymbols}.
@@ -114,7 +107,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return a shallow copy of this {@code DecimalFormatSymbols}.
      * 
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -137,7 +129,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return {@code true} if the specified object is equal to this
      *         {@code DecimalFormatSymbols}; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -161,13 +152,12 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * been previously called with a value that is not a valid ISO 4217 currency
      * code.
      * <p>
-     * 
+     *
      * @return the currency that was set in the constructor or by calling
      *         {@code setCurrency()} or {@code setInternationalCurrencySymbol()},
      *         or {@code null} if an invalid currency was set.
      * @see #setCurrency(Currency)
      * @see #setInternationalCurrencySymbol(String)
-     * @since Android 1.0
      */
     public Currency getCurrency() {
         return currency;
@@ -177,7 +167,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the international currency symbol.
      * 
      * @return the international currency symbol as string.
-     * @since Android 1.0
      */
     public String getInternationalCurrencySymbol() {
         return intlCurrencySymbol;
@@ -187,7 +176,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the currency symbol.
      * 
      * @return the currency symbol as string.
-     * @since Android 1.0
      */
     public String getCurrencySymbol() {
         return currencySymbol;
@@ -197,7 +185,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the character which represents the decimal point in a number.
      * 
      * @return the decimal separator character.
-     * @since Android 1.0
      */
     public char getDecimalSeparator() {
         return patternChars[DecimalSeparator];
@@ -208,7 +195,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * pattern.
      * 
      * @return the digit pattern character.
-     * @since Android 1.0
      */
     public char getDigit() {
         return patternChars[Digit];
@@ -218,7 +204,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the character used as the thousands separator in a number.
      * 
      * @return the thousands separator character.
-     * @since Android 1.0
      */
     public char getGroupingSeparator() {
         return patternChars[GroupingSeparator];
@@ -228,7 +213,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the string which represents infinity.
      * 
      * @return the infinity symbol as a string.
-     * @since Android 1.0
      */
     public String getInfinity() {
         return infinity;
@@ -238,7 +222,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the minus sign character.
      * 
      * @return the minus sign as a character.
-     * @since Android 1.0
      */
     public char getMinusSign() {
         return patternChars[MinusSign];
@@ -249,7 +232,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * value.
      * 
      * @return the monetary decimal point as a character.
-     * @since Android 1.0
      */
     public char getMonetaryDecimalSeparator() {
         return patternChars[MonetaryDecimalSeparator];
@@ -259,7 +241,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the string which represents NaN.
      * 
      * @return the symbol NaN as a string.
-     * @since Android 1.0
      */
     public String getNaN() {
         return NaN;
@@ -270,7 +251,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * in a format pattern.
      * 
      * @return the pattern separator character.
-     * @since Android 1.0
      */
     public char getPatternSeparator() {
         return patternChars[PatternSeparator];
@@ -280,7 +260,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the percent character.
      * 
      * @return the percent character.
-     * @since Android 1.0
      */
     public char getPercent() {
         return patternChars[Percent];
@@ -290,7 +269,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the per mill sign character.
      * 
      * @return the per mill sign character.
-     * @since Android 1.0
      */
     public char getPerMill() {
         return patternChars[PerMill];
@@ -300,7 +278,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * Returns the character which represents zero.
      * 
      * @return the zero character.
-     * @since Android 1.0
      */
     public char getZeroDigit() {
         return patternChars[ZeroDigit];
@@ -331,7 +308,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the new currency.
      * @throws NullPointerException
      *             if {@code currency} is {@code null}.
-     * @since Android 1.0
      */
     public void setCurrency(Currency currency) {
         if (currency == null) {
@@ -355,7 +331,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the currency code.
-     * @since Android 1.0
      */
     public void setInternationalCurrencySymbol(String value) {
         if (value == null) {
@@ -382,7 +357,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the currency symbol.
-     * @since Android 1.0
      */
     public void setCurrencySymbol(String value) {
         currencySymbol = value;
@@ -393,7 +367,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the decimal separator character.
-     * @since Android 1.0
      */
     public void setDecimalSeparator(char value) {
         patternChars[DecimalSeparator] = value;
@@ -404,7 +377,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the digit character.
-     * @since Android 1.0
      */
     public void setDigit(char value) {
         patternChars[Digit] = value;
@@ -415,7 +387,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the grouping separator character.
-     * @since Android 1.0
      */
     public void setGroupingSeparator(char value) {
         patternChars[GroupingSeparator] = value;
@@ -426,7 +397,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the string representing infinity.
-     * @since Android 1.0
      */
     public void setInfinity(String value) {
         infinity = value;
@@ -437,7 +407,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the minus sign character.
-     * @since Android 1.0
      */
     public void setMinusSign(char value) {
         patternChars[MinusSign] = value;
@@ -449,7 +418,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the monetary decimal separator character.
-     * @since Android 1.0
      */
     public void setMonetaryDecimalSeparator(char value) {
         patternChars[MonetaryDecimalSeparator] = value;
@@ -460,7 +428,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the string representing NaN.
-     * @since Android 1.0
      */
     public void setNaN(String value) {
         NaN = value;
@@ -472,7 +439,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the pattern separator character.
-     * @since Android 1.0
      */
     public void setPatternSeparator(char value) {
         patternChars[PatternSeparator] = value;
@@ -483,7 +449,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the percent character.
-     * @since Android 1.0
      */
     public void setPercent(char value) {
         patternChars[Percent] = value;
@@ -494,7 +459,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the per mill character.
-     * @since Android 1.0
      */
     public void setPerMill(char value) {
         patternChars[PerMill] = value;
@@ -505,7 +469,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * 
      * @param value
      *            the zero digit character.
-     * @since Android 1.0
      */
     public void setZeroDigit(char value) {
         patternChars[ZeroDigit] = value;
@@ -588,4 +551,14 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
             currency = null;
         }
     }
+    
+    Locale getLocale(){
+        return locale;
+    }
+
+    // BEGIN android-removed
+    // com.ibm.icu4jni.text.DecimalFormatSymbols getIcuSymbols() {
+    //     return icuSymbols;
+    // }
+    // END android-removed
 }

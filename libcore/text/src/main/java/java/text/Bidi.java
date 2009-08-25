@@ -15,8 +15,13 @@
  * limitations under the License.
  */
 
+// BEGIN android-note
+// changed from icu.text.Bidi to BidiWrapper
+// END android-note
+
 package java.text;
 
+// BEGIN android-added
 import java.awt.font.NumericShaper;
 import java.awt.font.TextAttribute;
 import java.util.Arrays;
@@ -24,6 +29,7 @@ import java.util.LinkedList;
 
 import org.apache.harmony.text.BidiRun;
 import org.apache.harmony.text.BidiWrapper;
+// END android-added
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
@@ -40,39 +46,50 @@ import org.apache.harmony.text.internal.nls.Messages;
  * obtained from the run index. The level of any particular run indicates the
  * direction of the text as well as the nesting level. Left-to-right runs have
  * even levels while right-to-left runs have odd levels.
- * 
- * @since Android 1.0
  */
 public final class Bidi {
     /**
      * Constant that indicates the default base level. If there is no strong
      * character, then set the paragraph level to 0 (left-to-right).
-     * 
-     * @since Android 1.0
      */
     public static final int DIRECTION_DEFAULT_LEFT_TO_RIGHT = -2;
 
     /**
      * Constant that indicates the default base level. If there is no strong
      * character, then set the paragraph level to 1 (right-to-left).
-     * 
-     * @since Android 1.0
      */
     public static final int DIRECTION_DEFAULT_RIGHT_TO_LEFT = -1;
 
     /**
      * Constant that specifies the default base level as 0 (left-to-right).
-     * 
-     * @since Android 1.0
      */
     public static final int DIRECTION_LEFT_TO_RIGHT = 0;
 
     /**
      * Constant that specifies the default base level as 1 (right-to-left).
-     * 
-     * @since Android 1.0
      */
     public static final int DIRECTION_RIGHT_TO_LEFT = 1;
+
+    // BEGIN android-removed
+    // /*
+    //  * Converts the constant from the value specified in the Java spec, to the
+    //  * value required by the ICU implementation.
+    //  */
+    // private final static int convertDirectionConstant(int javaConst) {
+    //     switch (javaConst) {
+    //     case DIRECTION_DEFAULT_LEFT_TO_RIGHT : return com.ibm.icu.text.Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT;
+    //     case DIRECTION_DEFAULT_RIGHT_TO_LEFT : return com.ibm.icu.text.Bidi.DIRECTION_DEFAULT_RIGHT_TO_LEFT;
+    //     case DIRECTION_LEFT_TO_RIGHT         : return com.ibm.icu.text.Bidi.DIRECTION_LEFT_TO_RIGHT;
+    //     case DIRECTION_RIGHT_TO_LEFT         : return com.ibm.icu.text.Bidi.DIRECTION_RIGHT_TO_LEFT;
+    //     default                              : return com.ibm.icu.text.Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT;
+    //     }
+    // }
+    //
+    // /* 
+    //  * Use an embedded ICU4J Bidi object to do all the work
+    //  */
+    // private com.ibm.icu.text.Bidi icuBidi;
+    // END android-removed
 
     /**
      * Creates a {@code Bidi} object from the {@code
@@ -89,16 +106,15 @@ public final class Bidi {
      * attribute specifies the instance of NumericShaper used to convert
      * European digits to other decimal digits before performing the bidi
      * algorithm.
-     * 
+     *
      * @param paragraph
      *            the String containing the paragraph text to perform the
      *            algorithm.
      * @throws IllegalArgumentException
      *             if {@code paragraph} is {@code null}.
-     * @see TextAttribute#BIDI_EMBEDDING
-     * @see TextAttribute#NUMERIC_SHAPING
-     * @see TextAttribute#RUN_DIRECTION
-     * @since Android 1.0
+     * @see java.awt.font.TextAttribute#BIDI_EMBEDDING
+     * @see java.awt.font.TextAttribute#NUMERIC_SHAPING
+     * @see java.awt.font.TextAttribute#RUN_DIRECTION
      */
     public Bidi(AttributedCharacterIterator paragraph) {
         if (paragraph == null) {
@@ -106,6 +122,7 @@ public final class Bidi {
             throw new IllegalArgumentException(Messages.getString("text.14")); //$NON-NLS-1$
         }
 
+        // BEGIN android-added
         int begin = paragraph.getBeginIndex();
         int end = paragraph.getEndIndex();
         int length = end - begin;
@@ -164,6 +181,7 @@ public final class Bidi {
         long pBidi = createUBiDi(text, 0, embeddings, 0, length, flags);
         readBidiInfo(pBidi);
         BidiWrapper.ubidi_close(pBidi);
+        // END android-added
     }
 
     /**
@@ -191,17 +209,27 @@ public final class Bidi {
      *            DIRECTION_DEFAULT_LEFT_TO_RIGHT.
      * @throws IllegalArgumentException
      *             if {@code textStart}, {@code embStart}, or {@code
-     *             paragraphLength} is negative; if 
-     *             {@code text.length < textStart + paragraphLength} or 
+     *             paragraphLength} is negative; if
+     *             {@code text.length < textStart + paragraphLength} or
      *             {@code embeddings.length < embStart + paragraphLength}.
      * @see #DIRECTION_LEFT_TO_RIGHT
      * @see #DIRECTION_RIGHT_TO_LEFT
      * @see #DIRECTION_DEFAULT_RIGHT_TO_LEFT
      * @see #DIRECTION_DEFAULT_LEFT_TO_RIGHT
-     * @since Android 1.0
      */
     public Bidi(char[] text, int textStart, byte[] embeddings, int embStart,
             int paragraphLength, int flags) {
+
+        if (text == null || text.length - textStart < paragraphLength) {
+            throw new IllegalArgumentException();
+        }
+
+        if (embeddings != null) {
+            if (embeddings.length - embStart < paragraphLength) {
+                throw new IllegalArgumentException();
+            }
+        }
+
         if (textStart < 0) {
             // text.0D=Negative textStart value {0}
             throw new IllegalArgumentException(Messages.getString(
@@ -217,10 +245,13 @@ public final class Bidi {
             throw new IllegalArgumentException(Messages.getString(
                     "text.11", paragraphLength)); //$NON-NLS-1$
         }
+        
+        // BEGIN android-changed
         long pBidi = createUBiDi(text, textStart, embeddings, embStart,
                 paragraphLength, flags);
         readBidiInfo(pBidi);
         BidiWrapper.ubidi_close(pBidi);
+        // END android-changed
     }
 
     /**
@@ -238,13 +269,13 @@ public final class Bidi {
      * @see #DIRECTION_RIGHT_TO_LEFT
      * @see #DIRECTION_DEFAULT_RIGHT_TO_LEFT
      * @see #DIRECTION_DEFAULT_LEFT_TO_RIGHT
-     * @since Android 1.0
      */
     public Bidi(String paragraph, int flags) {
         this((paragraph == null ? null : paragraph.toCharArray()), 0, null, 0,
                 (paragraph == null ? 0 : paragraph.length()), flags);
     }
 
+    // BEGIN android-added
     // create the native UBiDi struct, need to be closed with ubidi_close().
     private static long createUBiDi(char[] text, int textStart,
             byte[] embeddings, int embStart, int paragraphLength, int flags) {
@@ -291,7 +322,7 @@ public final class Bidi {
         return bidi;
     }
 
-    // private constructor, used by createLineBidi()
+    /* private constructor used by createLineBidi() */
     private Bidi(long pBidi) {
         readBidiInfo(pBidi);
     }
@@ -335,15 +366,17 @@ public final class Bidi {
     private int direction;
 
     private boolean unidirectional;
+    // END android-added
 
     /**
      * Returns whether the base level is from left to right.
      * 
      * @return true if the base level is from left to right.
-     * @since Android 1.0
      */
     public boolean baseIsLeftToRight() {
+        // BEGIN android-changed
         return baseLevel % 2 == 0 ? true : false;
+        // END android-changed
     }
 
     /**
@@ -360,15 +393,19 @@ public final class Bidi {
      *             if {@code lineStart < 0}, {@code lineLimit < 0}, {@code
      *             lineStart > lineLimit} or if {@code lineStart} is greater
      *             than the length of this object's paragraph text.
-     * @since Android 1.0
      */
     public Bidi createLineBidi(int lineStart, int lineLimit) {
+        // BEGIN android-removed
+        // int length = icuBidi.getLength();
+        // END android-removed
         if (lineStart < 0 || lineLimit < 0 || lineLimit > length
                 || lineStart > lineLimit) {
             // text.12=Invalid ranges (start={0}, limit={1}, length={2})
             throw new IllegalArgumentException(Messages.getString(
                     "text.12", new Object[] { lineStart, lineLimit, length })); //$NON-NLS-1$
         }
+        
+        // BEGIN android-changed
         char[] text = new char[this.length];
         Arrays.fill(text, 'a');
         byte[] embeddings = new byte[this.length];
@@ -386,26 +423,29 @@ public final class Bidi {
         BidiWrapper.ubidi_close(line);
         BidiWrapper.ubidi_close(parent);
         return result;
+        // END android-changed
     }
 
     /**
      * Returns the base level.
      * 
      * @return the base level.
-     * @since Android 1.0
      */
     public int getBaseLevel() {
+        // BEGIN android-changed
         return baseLevel;
+        // END android-changed
     }
 
     /**
      * Returns the length of the text in the {@code Bidi} object.
      * 
      * @return the length.
-     * @since Android 1.0
      */
     public int getLength() {
+        // BEGIN android-changed
         return length;
+        // END android-changed
     }
 
     /**
@@ -414,24 +454,26 @@ public final class Bidi {
      * @param offset
      *            the offset of the character.
      * @return the level.
-     * @since Android 1.0
      */
     public int getLevelAt(int offset) {
+        // BEGIN android-changed
         try {
             return offsetLevel[offset] & ~BidiWrapper.UBIDI_LEVEL_OVERRIDE;
         } catch (RuntimeException e) {
             return baseLevel;
         }
+        // END android-changed
     }
 
     /**
      * Returns the number of runs in the bidirectional text.
      * 
      * @return the number of runs, at least 1.
-     * @since Android 1.0
      */
     public int getRunCount() {
+        // BEGIN android-changed
         return unidirectional ? 1 : runs.length;
+        // END android-changed
     }
 
     /**
@@ -440,10 +482,11 @@ public final class Bidi {
      * @param run
      *            the index of the run.
      * @return the level of the run.
-     * @since Android 1.0
      */
     public int getRunLevel(int run) {
+        // BEGIN android-changed
         return unidirectional ? baseLevel : runs[run].getLevel();
+        // END android-changed
     }
 
     /**
@@ -452,10 +495,11 @@ public final class Bidi {
      * @param run
      *            the index of the run.
      * @return the limit offset of the run.
-     * @since Android 1.0
      */
     public int getRunLimit(int run) {
+        // BEGIN android-changed
         return unidirectional ? length : runs[run].getLimit();
+        // END android-changed
     }
 
     /**
@@ -464,10 +508,11 @@ public final class Bidi {
      * @param run
      *            the index of the run.
      * @return the start offset of the run.
-     * @since Android 1.0
      */
     public int getRunStart(int run) {
+        // BEGIN android-changed
         return unidirectional ? 0 : runs[run].getStart();
+        // END android-changed
     }
 
     /**
@@ -476,10 +521,11 @@ public final class Bidi {
      * 
      * @return {@code true} if the text is from left to right; {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean isLeftToRight() {
+        // BEGIN android-changed
         return direction == BidiWrapper.UBiDiDirection_UBIDI_LTR;
+        // END android-changed
     }
 
     /**
@@ -487,10 +533,11 @@ public final class Bidi {
      * 
      * @return {@code true} if the text direction is mixed; {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean isMixed() {
+        // BEGIN android-changed
         return direction == BidiWrapper.UBiDiDirection_UBIDI_MIXED;
+        // END android-changed
     }
 
     /**
@@ -499,10 +546,11 @@ public final class Bidi {
      * 
      * @return {@code true} if the text is from right to left; {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean isRightToLeft() {
+        // BEGIN android-changed
         return direction == BidiWrapper.UBiDiDirection_UBIDI_RTL;
+        // END android-changed
     }
 
     /**
@@ -526,7 +574,6 @@ public final class Bidi {
      *             if {@code count}, {@code levelStart} or {@code objectStart}
      *             is negative; if {@code count > levels.length - levelStart} or
      *             if {@code count > objects.length - objectStart}.
-     * @since Android 1.0
      */
     public static void reorderVisually(byte[] levels, int levelStart,
             Object[] objects, int objectStart, int count) {
@@ -539,6 +586,8 @@ public final class Bidi {
                     new Object[] { levels.length, levelStart, objects.length,
                             objectStart, count }));
         }
+        
+        // BEGIN android-changed
         byte[] realLevels = new byte[count];
         System.arraycopy(levels, levelStart, realLevels, 0, count);
 
@@ -550,6 +599,7 @@ public final class Bidi {
         }
 
         System.arraycopy(result.toArray(), 0, objects, objectStart, count);
+        // END android-changed
     }
 
     /**
@@ -568,15 +618,17 @@ public final class Bidi {
      *             if {@code start} or {@code limit} is negative; {@code start >
      *             limit} or {@code limit} is greater than the length of this
      *             object's paragraph text.
-     * @since Android 1.0
      */
     public static boolean requiresBidi(char[] text, int start, int limit) {
-        int length = text.length;
-        if (limit < 0 || start < 0 || start > limit || limit > length) {
+        //int length = text.length;
+        if (limit < 0 || start < 0 || start > limit || limit > text.length) {
             throw new IllegalArgumentException();
         }
+        
+        // BEGIN android-changed
         Bidi bidi = new Bidi(text, start, null, 0, limit - start, 0);
         return !bidi.isLeftToRight();
+        // END android-changed
     }
 
     /**
@@ -584,12 +636,13 @@ public final class Bidi {
      * debugging.
      * 
      * @return a string containing the internal message.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
+        // BEGIN android-changed
         return super.toString()
                 + "[direction: " + direction + " baselevel: " + baseLevel //$NON-NLS-1$ //$NON-NLS-2$
                 + " length: " + length + " runs: " + (unidirectional ? "null" : runs.toString()) + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        // END android-changed
     }
 }

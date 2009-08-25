@@ -14,18 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
-
-// BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
-// END android-note
 
 package java.text;
 
@@ -44,12 +32,11 @@ import org.apache.harmony.text.internal.nls.Messages;
 
 /**
  * Produces concatenated
- * messages in language-neutral way. Use this class to construct messages 
+ * messages in language-neutral way. Use this class to construct messages
  * displayed for end users.
  * <p>
  * {@code MessageFormat} takes a set of objects, formats them and then
  * inserts the formatted strings into the pattern at the appropriate places.
- * </p>
  * <p>
  * <strong>Note:</strong> {@code MessageFormat} differs from the other
  * {@code Format} classes in that you create a {@code MessageFormat}
@@ -58,12 +45,12 @@ import org.apache.harmony.text.internal.nls.Messages;
  * {@code MessageFormat} itself doesn't implement locale specific
  * behavior. Any locale specific behavior is defined by the pattern that you
  * provide as well as the subformats used for inserted arguments.
- * 
+ *
  * <h4><a name="patterns">Patterns and their interpretation</a></h4>
- * 
+ *
  * {@code MessageFormat} uses patterns of the following form:
  * <blockquote>
- * 
+ *
  * <pre>
  * <i>MessageFormatPattern:</i>
  *         <i>String</i>
@@ -97,9 +84,9 @@ import org.apache.harmony.text.internal.nls.Messages;
  *         ' <i>QuotedPattern</i> '
  *         <i>UnquotedPattern</i>
  * </pre>
- * 
+ *
  * </blockquote>
- * 
+ *
  * <p>
  * Within a <i>String</i>, {@code "''"} represents a single quote. A
  * <i>QuotedString</i> can contain arbitrary characters except single quotes;
@@ -118,7 +105,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * {@code "ab {0} de"} and {@code "ab '}' de"} are valid subformat
  * patterns, but {@code "ab {0'}' de"} and {@code "ab } de"} are
  * not.
- * </p>
  * <dl>
  * <dt><b>Warning:</b></dt>
  * <dd>The rules for using quotes within message format patterns unfortunately
@@ -233,11 +219,11 @@ import org.apache.harmony.text.internal.nls.Messages;
  * <td>{@code new ChoiceFormat(subformatPattern)}</td>
  * </tr>
  * </table>
- * 
+ *
  * <h4>Usage Information</h4>
  * <p>
  * Here are some examples of usage: <blockquote>
- * 
+ *
  * <pre>
  * Object[] arguments = {
  *         new Integer(7), new Date(System.currentTimeMillis()),
@@ -250,15 +236,14 @@ import org.apache.harmony.text.internal.nls.Messages;
  * </em>
  * At 12:30 PM on Jul 3, 2053, there was a disturbance in the Force on planet 7.
  * </pre>
- * 
- * </blockquote> 
+ *
+ * </blockquote>
  * <p>
  * Typically, the message format will come from resources, and the
  * arguments will be dynamically set at runtime.
- * </p>
  * <p>
  * Example 2: <blockquote>
- * 
+ *
  * <pre>
  * Object[] testArgs = {new Long(3), "MyDisk"};
  * MessageFormat form = new MessageFormat("The disk \"{1}\" contains {0} file(s).");
@@ -270,15 +255,14 @@ import org.apache.harmony.text.internal.nls.Messages;
  * The disk "MyDisk" contains 1 file(s).
  * The disk "MyDisk" contains 1,273 file(s).
  * </pre>
- * 
+ *
  * </blockquote>
- * 
+ *
  * <p>
  * For more sophisticated patterns, you can use a {@code ChoiceFormat} to
- * get output such as: 
- * </p>
+ * get output such as:
  * <blockquote>
- * 
+ *
  * <pre>
  * MessageFormat form = new MessageFormat("The disk \"{1}\" contains {0}.");
  * double[] filelimits = {0,1,2};
@@ -294,15 +278,15 @@ import org.apache.harmony.text.internal.nls.Messages;
  * The disk "MyDisk" contains one file.
  * The disk "MyDisk" contains 1,273 files.
  * </pre>
- * 
+ *
  * </blockquote> You can either do this programmatically, as in the above
  * example, or by using a pattern (see {@link ChoiceFormat} for more
  * information) as in: <blockquote>
- * 
+ *
  * <pre>
  * form.applyPattern("There {0,choice,0#are no files|1#is one file|1&lt;are {0,number,integer} files}.");
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * <strong>Note:</strong> As we see above, the string produced by a
@@ -312,11 +296,9 @@ import org.apache.harmony.text.internal.nls.Messages;
  * {@code ChoiceFormat} programmatically (instead of using the string
  * patterns), then be careful not to produce a format that recurses on itself,
  * which will cause an infinite loop.
- * </p>
  * <p>
  * When a single argument is parsed more than once in the string, the last match
  * will be the final result of the parsing. For example:
- * </p>
  * <blockquote>
  * <pre>
  * MessageFormat mf = new MessageFormat("{0,number,#.##}, {0,number,#.#}");
@@ -329,10 +311,9 @@ import org.apache.harmony.text.internal.nls.Messages;
  * </pre>
  * </blockquote>
  * <p>
- * Likewise, parsing with a {@code MessageFormat} object using patterns 
- * containing multiple occurrences of the same argument would return the last 
+ * Likewise, parsing with a {@code MessageFormat} object using patterns
+ * containing multiple occurrences of the same argument would return the last
  * match. For example:
- * </p>
  * <blockquote>
  * <pre>
  * MessageFormat mf = new MessageFormat("{0}, {0}, {0}");
@@ -346,14 +327,12 @@ import org.apache.harmony.text.internal.nls.Messages;
  * Message formats are not synchronized. It is recommended to create separate
  * format instances for each thread. If multiple threads access a format
  * concurrently, it must be synchronized externally.
- * </p>
- * 
+ *
  * @see java.util.Locale
  * @see Format
  * @see NumberFormat
  * @see DecimalFormat
  * @see ChoiceFormat
- * @since Android 1.0
  */
 public class MessageFormat extends Format {
 
@@ -379,9 +358,8 @@ public class MessageFormat extends Format {
      *            the pattern.
      * @param locale
      *            the locale.
-     * @exception IllegalArgumentException
-     *                if the pattern cannot be parsed.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the pattern cannot be parsed.
      */
     public MessageFormat(String template, Locale locale) {
         this.locale = locale;
@@ -394,9 +372,8 @@ public class MessageFormat extends Format {
      * 
      * @param template
      *            the pattern.
-     * @exception IllegalArgumentException
-     *                if the pattern cannot be parsed.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the pattern cannot be parsed.
      */
     public MessageFormat(String template) {
         applyPattern(template);
@@ -407,9 +384,8 @@ public class MessageFormat extends Format {
      * 
      * @param template
      *            the new pattern.
-     * @exception IllegalArgumentException
-     *                if the pattern cannot be parsed.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the pattern cannot be parsed.
      */
     public void applyPattern(String template) {
         int length = template.length();
@@ -422,15 +398,31 @@ public class MessageFormat extends Format {
         Vector<Format> localFormats = new Vector<Format>();
         while (position.getIndex() < length) {
             if (Format.upTo(template, position, buffer, '{')) {
-                byte arg;
+                int arg = 0;
                 int offset = position.getIndex();
-                if (offset >= length
-                        || (arg = (byte) Character.digit(template
-                                .charAt(offset++), 10)) == -1) {
+                if (offset >= length) {
                     // text.19=Invalid argument number
                     throw new IllegalArgumentException(Messages
                             .getString("text.19")); //$NON-NLS-1$
                 }
+                // Get argument number
+                char ch;
+                while ((ch = template.charAt(offset++)) != '}' && ch != ',') {
+                    if (ch < '0' && ch > '9') {
+                        // text.19=Invalid argument number
+                        throw new IllegalArgumentException(Messages
+                            .getString("text.19")); //$NON-NLS-1$
+                    }
+                    
+                    arg = arg * 10 + (ch - '0');
+                    
+                    if (arg < 0 || offset >= length) {
+                        // text.19=Invalid argument number
+                        throw new IllegalArgumentException(Messages
+                            .getString("text.19")); //$NON-NLS-1$
+                    }
+                }
+                offset--;
                 position.setIndex(offset);
                 localFormats.addElement(parseVariable(template, position));
                 if (argCount >= args.length) {
@@ -465,7 +457,6 @@ public class MessageFormat extends Format {
      * 
      * @return a shallow copy of this {@code MessageFormat}.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -490,7 +481,6 @@ public class MessageFormat extends Format {
      * @return {@code true} if the specified object is equal to this
      *         {@code MessageFormat}; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -526,10 +516,9 @@ public class MessageFormat extends Format {
      *            the object to format.
      * @return an {@code AttributedCharacterIterator} with the formatted message and
      *         attributes.
-     * @exception IllegalArgumentException
-     *                if the arguments in the object array cannot be formatted
-     *                by this message format.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the arguments in the object array cannot be formatted
+     *            by this message format.
      */
     @Override
     public AttributedCharacterIterator formatToCharacterIterator(Object object) {
@@ -564,8 +553,7 @@ public class MessageFormat extends Format {
      * {@code MessageFormat.Field.ARGUMENT}, then the begin and end index of
      * this field position is set to the location of the first occurrence of a
      * message format argument. Otherwise, the {@code FieldPosition} is ignored.
-     * </p>
-     * 
+     *
      * @param objects
      *            the array of objects to format.
      * @param buffer
@@ -574,7 +562,6 @@ public class MessageFormat extends Format {
      *            on input: an optional alignment field; on output: the offsets
      *            of the alignment field in the formatted text.
      * @return the string buffer.
-     * @since Android 1.0
      */
     public final StringBuffer format(Object[] objects, StringBuffer buffer,
             FieldPosition field) {
@@ -723,18 +710,16 @@ public class MessageFormat extends Format {
      * {@code MessageFormat.Field.ARGUMENT}, then the begin and end index of
      * this field position is set to the location of the first occurrence of a
      * message format argument. Otherwise, the {@code FieldPosition} is ignored.
-     * </p>
      * <p>
      * Calling this method is equivalent to calling
-     * </p>
      * <blockquote>
      * 
      * <pre>
      * format((Object[])object, buffer, field)
      * </pre>
-     * 
+     *
      * </blockquote>
-     * 
+     *
      * @param object
      *            the object to format, must be an array of {@code Object}.
      * @param buffer
@@ -745,7 +730,6 @@ public class MessageFormat extends Format {
      * @return the string buffer.
      * @throws ClassCastException
      *             if {@code object} is not an array of {@code Object}.
-     * @since Android 1.0
      */
     @Override
     public final StringBuffer format(Object object, StringBuffer buffer,
@@ -761,22 +745,26 @@ public class MessageFormat extends Format {
      * @param objects
      *            the array of objects to format.
      * @return the formatted result.
-     * @exception IllegalArgumentException
-     *                if the pattern cannot be parsed.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the pattern cannot be parsed.
      */
     public static String format(String template, Object... objects) {
-        // BEGIN android-note
-        // changed parameter type from array to varargs.
-        // END android-note
+        if (objects != null) {
+            for (int i = 0; i < objects.length; i++) {
+                if (objects[i] == null) {
+                    objects[i] = "null";
+                }
+            }
+        }
+        // BEGIN android-changed
         return new MessageFormat(template).format(objects);
+        // END android-changed
     }
 
     /**
      * Returns the {@code Format} instances used by this message format.
      * 
      * @return an array of {@code Format} instances.
-     * @since Android 1.0
      */
     public Format[] getFormats() {
         return formats.clone();
@@ -788,7 +776,6 @@ public class MessageFormat extends Format {
      * of the last one.
      * 
      * @return an array of formats, ordered by argument index.
-     * @since Android 1.0
      */
     public Format[] getFormatsByArgumentIndex() {
         Format[] answer = new Format[maxArgumentIndex + 1];
@@ -806,7 +793,6 @@ public class MessageFormat extends Format {
      *            the index of the format to set.
      * @param format
      *            the format that will be set at index {@code argIndex}.
-     * @since Android 1.0
      */
     public void setFormatByArgumentIndex(int argIndex, Format format) {
         for (int i = 0; i < maxOffset + 1; i++) {
@@ -822,7 +808,6 @@ public class MessageFormat extends Format {
      * 
      * @param formats
      *            the formats in an array.
-     * @since Android 1.0
      */
     public void setFormatsByArgumentIndex(Format[] formats) {
         for (int j = 0; j < formats.length; j++) {
@@ -838,7 +823,6 @@ public class MessageFormat extends Format {
      * Returns the locale used when creating formats.
      * 
      * @return the locale used to create formats.
-     * @since Android 1.0
      */
     public Locale getLocale() {
         return locale;
@@ -869,9 +853,8 @@ public class MessageFormat extends Format {
      * @param string
      *            the string to parse.
      * @return the array of {@code Object} arguments resulting from the parse.
-     * @exception ParseException
-     *                if an error occurs during parsing.
-     * @since Android 1.0
+     * @throws ParseException
+     *            if an error occurs during parsing.
      */
     public Object[] parse(String string) throws ParseException {
         ParsePosition position = new ParsePosition(0);
@@ -900,7 +883,6 @@ public class MessageFormat extends Format {
      *            set to the index where the error occurred.
      * @return the array of objects resulting from the parse, or {@code null} if
      *         there is an error.
-     * @since Android 1.0
      */
     public Object[] parse(String string, ParsePosition position) {
         if (string == null) {
@@ -972,7 +954,6 @@ public class MessageFormat extends Format {
      *            set to the index where the error occurred.
      * @return the array of objects resulting from the parse, or {@code null} if
      *         there is an error.
-     * @since Android 1.0
      */
     @Override
     public Object parseObject(String string, ParsePosition position) {
@@ -1096,7 +1077,6 @@ public class MessageFormat extends Format {
      *            the index of the format to change.
      * @param format
      *            the {@code Format} that replaces the old format.
-     * @since Android 1.0
      */
     public void setFormat(int offset, Format format) {
         formats[offset] = format;
@@ -1107,7 +1087,6 @@ public class MessageFormat extends Format {
      * 
      * @param formats
      *            an array of {@code Format}.
-     * @since Android 1.0
      */
     public void setFormats(Format[] formats) {
         int min = this.formats.length;
@@ -1126,7 +1105,6 @@ public class MessageFormat extends Format {
      * 
      * @param locale
      *            the new locale.
-     * @since Android 1.0
      */
     public void setLocale(Locale locale) {
         this.locale = locale;
@@ -1216,7 +1194,6 @@ public class MessageFormat extends Format {
      * Returns the pattern of this message format.
      * 
      * @return the pattern.
-     * @since Android 1.0
      */
     public String toPattern() {
         StringBuffer buffer = new StringBuffer();
@@ -1302,7 +1279,7 @@ public class MessageFormat extends Format {
         int offset = 0;
         int offsetsLength = maxOffset + 1;
         int[] offsets = new int[offsetsLength];
-        StringBuffer pattern = new StringBuffer();
+        StringBuilder pattern = new StringBuilder();
         for (int i = 0; i <= maxOffset; i++) {
             offset += strings[i].length();
             offsets[i] = offset;
@@ -1351,32 +1328,22 @@ public class MessageFormat extends Format {
      * <p>
      * There is no public constructor in this class, the only instances are the
      * constants defined here.
-     * </p>
-     * 
-     * @since Android 1.0
      */
     public static class Field extends Format.Field {
 
         private static final long serialVersionUID = 7899943957617360810L;
 
-        // BEGIN android-removed
-        // public static final Field ARGUMENT = new Field("message argument field"); //$NON-NLS-1$
-        // END android-removed
-
         /**
          * This constant stands for the message argument.
-         * 
-         * @since Android 1.0
          */
         public static final Field ARGUMENT = new Field("message argument field"); //$NON-NLS-1$
 
         /**
          * Constructs a new instance of {@code MessageFormat.Field} with the
          * given field name.
-         * 
+         *
          * @param fieldName
          *            the field name.
-         * @since Android 1.0
          */
         protected Field(String fieldName) {
             super(fieldName);
@@ -1385,7 +1352,7 @@ public class MessageFormat extends Format {
         /**
          * Resolves instances that are deserialized to the constant
          * {@code MessageFormat.Field} values.
-         * 
+         *
          * @return the resolved field object.
          * @throws InvalidObjectException
          *             if an error occurs while resolving the field object.

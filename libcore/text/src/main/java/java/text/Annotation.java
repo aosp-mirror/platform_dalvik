@@ -30,13 +30,9 @@ package java.text;
  * By wrapping text attribute values into an {@code Annotation}, these aspects
  * will be taken into account when handling annotation text and the
  * corresponding main text.
- * </p>
  * <p>
  * Note: There is no semantic connection between this annotation class and the
  * {@code java.lang.annotation} package.
- * </p>
- * 
- * @since Android 1.0
  */
 public class Annotation {
 
@@ -44,10 +40,9 @@ public class Annotation {
 
     /**
      * Constructs a new {@code Annotation}.
-     * 
+     *
      * @param attribute the attribute attached to this annotation. This may be
      *        {@code null}.
-     * @since Android 1.0
      */
     public Annotation(Object attribute) {
         value = attribute;
@@ -55,9 +50,8 @@ public class Annotation {
 
     /**
      * Returns the value of this annotation. The value may be {@code null}.
-     * 
+     *
      * @return the value of this annotation or {@code null}.
-     * @since Android 1.0
      */
     public Object getValue() {
         return value;
@@ -65,9 +59,8 @@ public class Annotation {
 
     /**
      * Returns this annotation in string representation.
-     * 
+     *
      * @return the string representation of this annotation.
-     * @since Android 1.0
      */
     @Override
     public String toString() {

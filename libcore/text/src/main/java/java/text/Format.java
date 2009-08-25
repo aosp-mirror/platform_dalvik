@@ -14,26 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
-
-// BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
-// END android-note
 
 package java.text;
 
 import java.io.Serializable;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+// BEGIN android-added
 import java.util.Locale;
 import java.util.ResourceBundle;
+// END android-added
 
 import org.apache.harmony.text.internal.nls.Messages;
 
@@ -49,7 +39,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * A date and time formatter like {@code SimpleDateFormat} may represent a
  * specific date, encoded numerically, as a string such as "Wednesday, February
  * 26, 1997 AD".
- * </p>
  * <p>
  * Many of the concrete subclasses of {@code Format} employ the notion of a
  * pattern. A pattern is a string representation of the rules which govern the
@@ -60,7 +49,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * of a pattern is defined by each subclass. Even though many subclasses use
  * patterns, the notion of a pattern is not inherent to {@code Format} classes
  * in general, and is not part of the explicit base class protocol.
- * </p>
  * <p>
  * Two complex formatting classes are worth mentioning: {@code MessageFormat}
  * and {@code ChoiceFormat}. {@code ChoiceFormat} is a subclass of
@@ -73,9 +61,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * 27, 1997." given the arguments 0, "MyDisk", and the date value of 2/27/97.
  * See the {@link ChoiceFormat} and {@link MessageFormat} descriptions for
  * further information.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class Format implements Serializable, Cloneable {
 
@@ -83,8 +68,6 @@ public abstract class Format implements Serializable, Cloneable {
 
     /**
      * Constructs a new {@code Format} instance.
-     * 
-     * @since Android 1.0
      */
     public Format() {
     }
@@ -95,7 +78,6 @@ public abstract class Format implements Serializable, Cloneable {
      * @return a shallow copy of this format.
      * 
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -106,6 +88,7 @@ public abstract class Format implements Serializable, Cloneable {
         }
     }
 
+    // BEGIN android-added
     static ResourceBundle getBundle(final Locale locale) {
         return AccessController
                 .doPrivileged(new PrivilegedAction<ResourceBundle>() {
@@ -116,6 +99,7 @@ public abstract class Format implements Serializable, Cloneable {
                     }
                 });
     }
+    // END android-added
 
     String convertPattern(String template, String fromChars, String toChars,
             boolean check) {
@@ -156,9 +140,8 @@ public abstract class Format implements Serializable, Cloneable {
      * @param object
      *            the object to format.
      * @return the formatted string.
-     * @exception IllegalArgumentException
-     *                if the object cannot be formatted by this format.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *         if the object cannot be formatted by this format.
      */
     public final String format(Object object) {
         return format(object, new StringBuffer(), new FieldPosition(0))
@@ -173,8 +156,7 @@ public abstract class Format implements Serializable, Cloneable {
      * member contains an enum value specifying a field on input, then its
      * {@code beginIndex} and {@code endIndex} members will be updated with the
      * text offset of the first occurrence of this field in the formatted text.
-     * </p>
-     * 
+     *
      * @param object
      *            the object to format.
      * @param buffer
@@ -183,9 +165,8 @@ public abstract class Format implements Serializable, Cloneable {
      *            on input: an optional alignment field; on output: the offsets
      *            of the alignment field in the formatted text.
      * @return the string buffer.
-     * @exception IllegalArgumentException
-     *                if the object cannot be formatted by this format.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the object cannot be formatted by this format.
      */
     public abstract StringBuffer format(Object object, StringBuffer buffer,
             FieldPosition field);
@@ -197,15 +178,13 @@ public abstract class Format implements Serializable, Cloneable {
      * <p>
      * Subclasses should return an {@code AttributedCharacterIterator} with the
      * appropriate attributes.
-     * </p>
-     * 
+     *
      * @param object
      *            the object to format.
      * @return an {@code AttributedCharacterIterator} with the formatted object
      *         and attributes.
-     * @exception IllegalArgumentException
-     *                if the object cannot be formatted by this format.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the object cannot be formatted by this format.
      */
     public AttributedCharacterIterator formatToCharacterIterator(Object object) {
         return new AttributedString(format(object)).getIterator();
@@ -217,9 +196,8 @@ public abstract class Format implements Serializable, Cloneable {
      * @param string
      *            the string to parse.
      * @return the object resulting from the parse.
-     * @exception ParseException
-     *                if an error occurs during parsing.
-     * @since Android 1.0
+     * @throws ParseException
+     *            if an error occurs during parsing.
      */
     public Object parseObject(String string) throws ParseException {
         ParsePosition position = new ParsePosition(0);
@@ -247,9 +225,34 @@ public abstract class Format implements Serializable, Cloneable {
      *            set to the index where the error occurred.
      * @return the object resulting from the parse or {@code null} if there is
      *         an error.
-     * @since Android 1.0
      */
     public abstract Object parseObject(String string, ParsePosition position);
+
+    /*
+     * Gets private field value by reflection.
+     * 
+     * @param fieldName the field name to be set @param target the object which
+     * field to be gotten
+     */
+    static Object getInternalField(final String fieldName, final Object target) {
+        Object value = AccessController
+                .doPrivileged(new PrivilegedAction<Object>() {
+                    public Object run() {
+                        Object result = null;
+                        java.lang.reflect.Field field = null;
+                        try {
+                            field = target.getClass().getDeclaredField(
+                                    fieldName);
+                            field.setAccessible(true);
+                            result = field.get(target);
+                        } catch (Exception e1) {
+                            return null;
+                        }
+                        return result;
+                    }
+                });
+        return value;
+    }
 
     static boolean upTo(String string, ParsePosition position,
             StringBuffer buffer, char stop) {
@@ -307,8 +310,6 @@ public abstract class Format implements Serializable, Cloneable {
      * {@code AttributedCharacterIterator} that the
      * {@code formatToCharacterIterator()} method returns in {@code Format}
      * subclasses.
-     * 
-     * @since Android 1.0
      */
     public static class Field extends AttributedCharacterIterator.Attribute {
 
@@ -316,10 +317,9 @@ public abstract class Format implements Serializable, Cloneable {
 
         /**
          * Constructs a new instance of {@code Field} with the given field name.
-         * 
+         *
          * @param fieldName
          *            the field name.
-         * @since Android 1.0
          */
         protected Field(String fieldName) {
             super(fieldName);

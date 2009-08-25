@@ -207,7 +207,6 @@ public class DataFormatFieldTest extends TestCase {
         method = "readResolve",
         args = {}
     )
-    @KnownFailure("readResolve does not work properly")
     public void test_readResolve() {
         // test for method java.lang.Object readResolve()
 

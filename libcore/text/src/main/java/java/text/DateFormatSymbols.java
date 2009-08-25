@@ -14,29 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 // BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
+// The icu implementation used was changed from icu4j to icu4jni.
 // END android-note
 
 package java.text;
 
-import java.io.Serializable;
-// BEGIN android-added
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-// END android-added
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Locale;
+// BEGIN android-added
 import java.util.ResourceBundle;
+// END android-added
 
 // BEGIN android-added
 import com.ibm.icu4jni.util.Resources;
@@ -55,17 +47,15 @@ import com.ibm.icu4jni.util.Resources;
  * the formatter is created, you may modify its format pattern using the
  * {@code setPattern} method. For more information about creating formatters
  * using {@code DateFormat}'s factory methods, see {@link DateFormat}.
- * </p>
  * <p>
  * If you decide to create a date/time formatter with a specific format pattern
  * for a specific locale, you can do so with:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * new SimpleDateFormat(aPattern, new DateFormatSymbols(aLocale)).
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * {@code DateFormatSymbols} objects can be cloned. When you obtain a
@@ -73,15 +63,12 @@ import com.ibm.icu4jni.util.Resources;
  * formatting data. For instance, you can replace the localized date/time format
  * pattern characters with the ones that you feel easy to remember or you can
  * change the representative cities to your favorite ones.
- * </p>
  * <p>
  * New {@code DateFormatSymbols} subclasses may be added to support
  * {@code SimpleDateFormat} for date/time formatting for additional locales.
- * </p>
- * 
+ *
  * @see DateFormat
  * @see SimpleDateFormat
- * @since Android 1.0
  */
 public class DateFormatSymbols implements Serializable, Cloneable {
 
@@ -92,6 +79,10 @@ public class DateFormatSymbols implements Serializable, Cloneable {
     String[] ampms, eras, months, shortMonths, shortWeekdays, weekdays;
 
     String[][] zoneStrings;
+
+    // BEGIN android-removed
+    // transient private com.ibm.icu4jni.text.DateFormatSymbols icuSymbols;
+    // END android-removed
 
 // BEGIN android-added
     /**
@@ -110,15 +101,13 @@ public class DateFormatSymbols implements Serializable, Cloneable {
         if (zoneStrings == null) {
             zoneStrings = Resources.getDisplayTimeZones(locale.toString());
         }
-        return zoneStrings;       
+        return zoneStrings;
     }
 // END android-added
 
     /**
      * Constructs a new {@code DateFormatSymbols} instance containing the
      * symbols for the default locale.
-     * 
-     * @since Android 1.0
      */
     public DateFormatSymbols() {
         this(Locale.getDefault());
@@ -130,9 +119,9 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * 
      * @param locale
      *            the locale.
-     * @since Android 1.0
      */
     public DateFormatSymbols(Locale locale) {
+        // BEGIN android-changed
         ResourceBundle bundle = Format.getBundle(locale);
         localPatternChars = bundle.getString("LocalPatternChars"); //$NON-NLS-1$
         ampms = bundle.getStringArray("ampm"); //$NON-NLS-1$
@@ -141,11 +130,32 @@ public class DateFormatSymbols implements Serializable, Cloneable {
         shortMonths = bundle.getStringArray("shortMonths"); //$NON-NLS-1$
         shortWeekdays = bundle.getStringArray("shortWeekdays"); //$NON-NLS-1$
         weekdays = bundle.getStringArray("weekdays"); //$NON-NLS-1$
-        // BEGIN android-changed
-        // zoneStrings = (String[][]) bundle.getObject("timezones"); //$NON-NLS-1$
         this.locale = locale;
         // END android-changed
     }
+
+
+    private void writeObject(ObjectOutputStream oos) throws IOException {
+        // BEGIN android-changed
+        internalZoneStrings();
+        // END android-changed
+        oos.defaultWriteObject();
+    }
+
+    // BEGIN android-removed
+    // DateFormatSymbols(Locale locale,
+    //         com.ibm.icu4jni.text.DateFormatSymbols icuSymbols) {
+    //
+    //     this.icuSymbols = icuSymbols;
+    //     localPatternChars = icuSymbols.getLocalPatternChars();
+    //     ampms = icuSymbols.getAmPmStrings();
+    //     eras = icuSymbols.getEras();
+    //     months = icuSymbols.getMonths();
+    //     shortMonths = icuSymbols.getShortMonths();
+    //     shortWeekdays = icuSymbols.getShortWeekdays();
+    //     weekdays = icuSymbols.getWeekdays();
+    // }
+    // END android-removed
 
     @Override
     public Object clone() {
@@ -168,7 +178,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      *         {@code DateFormatSymbols} and has the same symbols as this
      *         object, {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -178,7 +187,18 @@ public class DateFormatSymbols implements Serializable, Cloneable {
         if (!(object instanceof DateFormatSymbols)) {
             return false;
         }
+
+        // BEGIN android-removed
+        // if (zoneStrings == null) {
+        //     zoneStrings = icuSymbols.getZoneStrings();
+        // }
+        // END android-removed
         DateFormatSymbols obj = (DateFormatSymbols) object;
+        // BEGIN android-removed
+        // if (obj.zoneStrings == null) {
+        //     obj.zoneStrings = obj.icuSymbols.getZoneStrings();
+        // }
+        // END android-removed
         if (!localPatternChars.equals(obj.localPatternChars)) {
             return false;
         }
@@ -233,7 +253,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * {@code Calendar.PM} as indices for the array.
      * 
      * @return an array of strings.
-     * @since Android 1.0
      */
     public String[] getAmPmStrings() {
         return ampms.clone();
@@ -245,7 +264,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * {@code GregorianCalendar.AD} as indices for the array.
      * 
      * @return an array of strings.
-     * @since Android 1.0
      */
     public String[] getEras() {
         return eras.clone();
@@ -256,7 +274,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * specify date and time fields.
      * 
      * @return a string containing the pattern characters.
-     * @since Android 1.0
      */
     public String getLocalPatternChars() {
         return localPatternChars;
@@ -268,7 +285,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * indices for the array.
      * 
      * @return an array of strings.
-     * @since Android 1.0
      */
     public String[] getMonths() {
         return months.clone();
@@ -280,7 +296,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * {@code Calendar.JANUARY} etc. as indices for the array.
      * 
      * @return an array of strings.
-     * @since Android 1.0
      */
     public String[] getShortMonths() {
         return shortMonths.clone();
@@ -292,7 +307,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * {@code Calendar.SUNDAY} etc. as indices for the array.
      * 
      * @return an array of strings.
-     * @since Android 1.0
      */
     public String[] getShortWeekdays() {
         return shortWeekdays.clone();
@@ -304,7 +318,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * {@code Calendar.SUNDAY} etc. as indices for the array.
      * 
      * @return an array of strings.
-     * @since Android 1.0
      */
     public String[] getWeekdays() {
         return weekdays.clone();
@@ -318,12 +331,11 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * and abbreviated names for daylight time.
      * 
      * @return a two-dimensional array of strings.
-     * @since Android 1.0
      */
     public String[][] getZoneStrings() {
-        // BEGIN android-added
+        // BEGIN android-changed
         String[][] zoneStrings = internalZoneStrings();
-        // END android-added
+        // END android-changed
         String[][] clone = new String[zoneStrings.length][];
         for (int i = zoneStrings.length; --i >= 0;) {
             clone[i] = zoneStrings[i].clone();
@@ -333,6 +345,9 @@ public class DateFormatSymbols implements Serializable, Cloneable {
 
     @Override
     public int hashCode() {
+        // BEGIN android-changed
+        String[][] zoneStrings = internalZoneStrings();
+        // END android-changed
         int hashCode;
         hashCode = localPatternChars.hashCode();
         for (String element : ampms) {
@@ -353,12 +368,11 @@ public class DateFormatSymbols implements Serializable, Cloneable {
         for (String element : weekdays) {
             hashCode += element.hashCode();
         }
-        // BEGIN android-added
-        String[][] zoneStrings = internalZoneStrings();
-        // END android-added
         for (String[] element : zoneStrings) {
             for (int j = 0; j < element.length; j++) {
-                hashCode += element[j].hashCode();
+                if (element[j] != null) {
+                    hashCode += element[j].hashCode();
+                }
             }
         }
         return hashCode;
@@ -371,7 +385,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * 
      * @param data
      *            the array of strings for AM and PM.
-     * @since Android 1.0
      */
     public void setAmPmStrings(String[] data) {
         ampms = data.clone();
@@ -384,7 +397,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * 
      * @param data
      *            the array of strings for BC and AD.
-     * @since Android 1.0
      */
     public void setEras(String[] data) {
         eras = data.clone();
@@ -396,7 +408,8 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * 
      * @param data
      *            the string containing the pattern characters.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *            if {@code data} is null
      */
     public void setLocalPatternChars(String data) {
         if (data == null) {
@@ -412,7 +425,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * 
      * @param data
      *            the array of strings.
-     * @since Android 1.0
      */
     public void setMonths(String[] data) {
         months = data.clone();
@@ -425,7 +437,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * 
      * @param data
      *            the array of strings.
-     * @since Android 1.0
      */
     public void setShortMonths(String[] data) {
         shortMonths = data.clone();
@@ -438,7 +449,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * 
      * @param data
      *            the array of strings.
-     * @since Android 1.0
      */
     public void setShortWeekdays(String[] data) {
         shortWeekdays = data.clone();
@@ -451,7 +461,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * 
      * @param data
      *            the array of strings.
-     * @since Android 1.0
      */
     public void setWeekdays(String[] data) {
         weekdays = data.clone();
@@ -466,20 +475,8 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * 
      * @param data
      *            the two-dimensional array of strings.
-     * @since Android 1.0
      */
     public void setZoneStrings(String[][] data) {
         zoneStrings = data.clone();
     }
-
-    // BEGIN android-added
-    private void writeObject(ObjectOutputStream out)
-                  throws IOException {
-        // Ensure internal zone strings are initialized to ensure backward
-        // compatibility.
-        internalZoneStrings();
-
-        out.defaultWriteObject();
-    }
-    // END android-added
 }
