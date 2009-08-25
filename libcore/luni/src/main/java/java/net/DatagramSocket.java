@@ -81,7 +81,7 @@ public class DatagramSocket {
     public DatagramSocket(int aPort) throws SocketException {
         super();
         checkListen(aPort);
-        createSocket(aPort, InetAddress.ANY);
+        createSocket(aPort, Inet4Address.ANY);
     }
 
     /**
@@ -99,7 +99,7 @@ public class DatagramSocket {
     public DatagramSocket(int aPort, InetAddress addr) throws SocketException {
         super();
         checkListen(aPort);
-        createSocket(aPort, null == addr ? InetAddress.ANY : addr);
+        createSocket(aPort, null == addr ? Inet4Address.ANY : addr);
     }
 
     /**
@@ -228,7 +228,7 @@ public class DatagramSocket {
             return null;
         }
         if (!isBound()) {
-            return InetAddress.ANY;
+            return Inet4Address.ANY;
         }
         InetAddress anAddr = impl.getLocalAddress();
         try {
@@ -237,7 +237,7 @@ public class DatagramSocket {
                 security.checkConnect(anAddr.getHostName(), -1);
             }
         } catch (SecurityException e) {
-            return InetAddress.ANY;
+            return Inet4Address.ANY;
         }
         return anAddr;
     }
@@ -603,7 +603,7 @@ public class DatagramSocket {
         }
         if (bind && !isBound()) {
             checkListen(0);
-            impl.bind(0, InetAddress.ANY);
+            impl.bind(0, Inet4Address.ANY);
             isBound = true;
         }
     }
@@ -624,7 +624,7 @@ public class DatagramSocket {
     public void bind(SocketAddress localAddr) throws SocketException {
         checkClosedAndBind(false);
         int localPort = 0;
-        InetAddress addr = InetAddress.ANY;
+        InetAddress addr = Inet4Address.ANY;
         if (localAddr != null) {
             if (!(localAddr instanceof InetSocketAddress)) {
                 throw new IllegalArgumentException(Msg.getString(

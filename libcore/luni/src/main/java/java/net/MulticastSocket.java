@@ -146,7 +146,7 @@ public class MulticastSocket extends DatagramSocket {
                     && (InetAddress.preferIPv6Addresses() == true)) {
                 theAddresses[0] = Inet6Address.ANY;
             } else {
-                theAddresses[0] = InetAddress.ANY;
+                theAddresses[0] = Inet4Address.ANY;
             }
             return new NetworkInterface(null, null, theAddresses,
                     NetworkInterface.UNSET_INTERFACE_INDEX);
@@ -385,7 +385,7 @@ public class MulticastSocket extends DatagramSocket {
             throw new NullPointerException();
         }
         if (addr.isAnyLocalAddress()) {
-            impl.setOption(SocketOptions.IP_MULTICAST_IF, InetAddress.ANY);
+            impl.setOption(SocketOptions.IP_MULTICAST_IF, Inet4Address.ANY);
         } else if (addr instanceof Inet4Address) {
             impl.setOption(SocketOptions.IP_MULTICAST_IF, addr);
             // keep the address used to do the set as we must return the same
@@ -449,7 +449,7 @@ public class MulticastSocket extends DatagramSocket {
         if (netInterface.getIndex() == NetworkInterface.UNSET_INTERFACE_INDEX) {
             // set the address using IP_MULTICAST_IF to make sure this
             // works for both IPV4 and IPV6
-            impl.setOption(SocketOptions.IP_MULTICAST_IF, InetAddress.ANY);
+            impl.setOption(SocketOptions.IP_MULTICAST_IF, Inet4Address.ANY);
 
             try {
                 // we have the index so now we pass set the interface

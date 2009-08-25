@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
-import java.util.Arrays;
 import java.util.Enumeration;
 
 import org.apache.harmony.luni.util.Inet6Util;
@@ -34,16 +33,10 @@ public final class Inet6Address extends InetAddress {
 
     private static final long serialVersionUID = 6880410070516793377L;
 
-    static final byte[] any_bytes = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0 };
-
-    static final byte[] localhost_bytes = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 1 };
-
-    static final InetAddress ANY = new Inet6Address(any_bytes);
-
-    static final InetAddress LOOPBACK = new Inet6Address(localhost_bytes,
-            "localhost"); //$NON-NLS-1$
+    static final InetAddress ANY = new Inet6Address(new byte[]
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+    static final InetAddress LOOPBACK = new Inet6Address(new byte[]
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }, "localhost"); //$NON-NLS-1$
 
     int scope_id;
 
@@ -59,11 +52,13 @@ public final class Inet6Address extends InetAddress {
     transient NetworkInterface scopedIf;
 
     Inet6Address(byte address[]) {
+        family = AF_INET6;
         ipaddress = address;
         scope_id = 0;
     }
 
     Inet6Address(byte address[], String name) {
+        family = AF_INET6;
         hostName = name;
         ipaddress = address;
         scope_id = 0;
@@ -81,6 +76,7 @@ public final class Inet6Address extends InetAddress {
      *            the scope id for link- or site-local addresses.
      */
     Inet6Address(byte address[], String name, int scope_id) {
+        family = AF_INET6;
         hostName = name;
         ipaddress = address;
         this.scope_id = scope_id;
@@ -403,30 +399,13 @@ public final class Inet6Address extends InetAddress {
         return null;
     }
 
-    /**
-     * Gets the hashcode of the represented IP address.
-     * 
-     * @return the appropriate hashcode value.
-     */
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(ipaddress);
-    }
+    // BEGIN android-removed
+    // public int hashCode() {}
+    // END android-removed
 
-    /**
-     * Compares this instance with the IP address in the object {@code obj} and
-     * returns {@code true} if they are of the same type and represent the same
-     * IP address, {@code false} otherwise. The scope id does not seem to be
-     * part of the comparison.
-     * 
-     * @param obj
-     *            the object to be tested for equality.
-     * @return {@code true} if the addresses are equal, {@code false} otherwise.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
-    }
+    // BEGIN android-removed
+    // public boolean equals(Object obj) {}
+    // END android-removed
 
     /**
      * Returns whether this address is IPv4 compatible or not. An IPv4

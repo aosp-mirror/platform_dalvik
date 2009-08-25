@@ -479,7 +479,7 @@ public class Socket {
      */
     public InetAddress getLocalAddress() {
         if (!isBound()) {
-            return InetAddress.ANY;
+            return Inet4Address.ANY;
         }
         return Platform.getNetworkSystem().getSocketLocalAddress(impl.fd,
                 InetAddress.preferIPv6Addresses());
@@ -767,7 +767,7 @@ public class Socket {
             throw new IllegalArgumentException(Msg.getString("K0046")); //$NON-NLS-1$
         }
 
-        InetAddress addr = localAddress == null ? InetAddress.ANY
+        InetAddress addr = localAddress == null ? Inet4Address.ANY
                 : localAddress;
         synchronized (this) {
             impl.create(streaming);
@@ -955,7 +955,7 @@ public class Socket {
         }
 
         int port = 0;
-        InetAddress addr = InetAddress.ANY;
+        InetAddress addr = Inet4Address.ANY;
         if (localAddr != null) {
             if (!(localAddr instanceof InetSocketAddress)) {
                 throw new IllegalArgumentException(Msg.getString(
@@ -1047,7 +1047,7 @@ public class Socket {
                     // options on create
                     // impl.create(true);
                     if (!NetUtil.usingSocks(proxy)) {
-                        impl.bind(InetAddress.ANY, 0);
+                        impl.bind(Inet4Address.ANY, 0);
                     }
                     isBound = true;
                 }
