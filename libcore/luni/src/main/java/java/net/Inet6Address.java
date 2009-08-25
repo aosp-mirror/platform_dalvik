@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
+import java.util.Arrays;
 import java.util.Enumeration;
 
 import org.apache.harmony.luni.util.Inet6Util;
@@ -409,8 +410,7 @@ public final class Inet6Address extends InetAddress {
      */
     @Override
     public int hashCode() {
-        /* Returns the low order int as the hash code */
-        return bytesToInt(ipaddress, 12);
+        return Arrays.hashCode(ipaddress);
     }
 
     /**
