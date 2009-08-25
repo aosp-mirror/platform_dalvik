@@ -206,7 +206,7 @@ public class NumberFormatTest extends TestCase {
                 "#,##0;#,##0-", format.toPattern());
         assertEquals(
                 "Test8: NumberFormat.getIntegerInstance(new Locale(\"ar\", \"AE\")).format(-35.76) returned wrong value",
-                "36-", format.format(-35.76));
+                "\u0666-", format.format(-6));
         assertEquals(
                 "Test9: NumberFormat.getIntegerInstance(new Locale(\"ar\", \"AE\")).parse(\"-36-\") returned wrong number",
                 new Long(-36), format.parse("36-"));

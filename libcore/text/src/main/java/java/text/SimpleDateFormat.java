@@ -15,17 +15,8 @@
  * limitations under the License.
  */
 
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
-
 // BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
+// changed from ICU to resource bundles and Java parsing/formatting
 // END android-note
 
 package java.text;
@@ -38,9 +29,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
+// BEGIN android-added
 import java.util.ResourceBundle;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
+// END android-added
 import java.util.Vector;
 
 import org.apache.harmony.text.internal.nls.Messages;
@@ -58,13 +51,11 @@ import org.apache.harmony.text.internal.nls.Messages;
  * default format pattern. You may modify the format pattern using the {@code
  * applyPattern} methods as desired. For more information on using these
  * methods, see {@link DateFormat}.
- * </p>
  * <h4>Time Format Syntax</h4>
  * <p>
  * To specify the time format, use a <em>time pattern</em> string. In this
  * pattern, all ASCII letters are reserved as pattern letters, which are defined
  * as follows:
- * </p>
  * <table border=0 cellspacing=3 cellpadding=0>
  * <tr bgcolor="#ccccff">
  * <th>Symbol</th>
@@ -217,7 +208,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * <strong>(Text)</strong>: 4 or more pattern letters &rarr; use the full form,
  * less than 4 pattern letters &rarr; use a short or abbreviated form if one
  * exists.
- * </p>
  * <p>
  * <strong>(Number)</strong>: the minimum number of digits. Shorter numbers are
  * zero-padded to this amount. Year is handled specially; that is, if the count
@@ -225,18 +215,15 @@ import org.apache.harmony.text.internal.nls.Messages;
  * "1997", "yy" produces "97".) Unlike other fields, fractional seconds are
  * padded on the right with zero.
  * <p>
- * </p>
  * <strong>(Text & Number)</strong>: 3 or over, use text, otherwise use number.
  * <p>
  * Any characters in the pattern that are not in the ranges of ['a'..'z'] and
  * ['A'..'Z'] will be treated as quoted text. For instance, characters like ':',
  * '.', ' ', '#' and '@' will appear in the resulting time text even they are
  * not embraced within single quotes.
- * </p>
  * <p>
  * A pattern containing any invalid pattern letter will result in an exception
  * thrown during formatting or parsing.
- * </p>
  * <h4>Examples Using the US Locale</h4> <blockquote>
  * 
  * <pre>
@@ -275,7 +262,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * am/pm marker 'a' is left out from the format pattern while the
  * "hour in am/pm" pattern symbol is used. This information loss can happen when
  * formatting the time in PM.
- * </p>
  * <p>
  * When parsing a date string using the abbreviated year pattern ("yy"), {@code
  * SimpleDateFormat} must interpret the abbreviated year relative to some
@@ -291,12 +277,10 @@ import org.apache.harmony.text.internal.nls.Messages;
  * example, "-1"), is interpreted literally. So "01/02/3" or "01/02/003" are
  * parsed, using the same pattern, as Jan 2, 3 AD. Likewise, "01/02/-3" is
  * parsed as Jan 2, 4 BC.
- * </p>
  * <p>
  * If the year pattern does not have exactly two 'y' characters, the year is
  * interpreted literally, regardless of the number of digits. So using the
  * pattern "MM/dd/yyyy", "01/11/12" parses to Jan 11, 12 A.D.
- * </p>
  * <p>
  * When numeric fields are adjacent directly, with no intervening delimiter
  * characters, they constitute a run of adjacent numeric fields. Such runs are
@@ -308,11 +292,9 @@ import org.apache.harmony.text.internal.nls.Messages;
  * parsed again. This is repeated until either the parse succeeds or the
  * leftmost field is one character in length. If the parse still fails at that
  * point, the parse of the run fails.
- * </p>
  * <p>
  * For time zones that have no names, use the strings "GMT+hours:minutes" or
  * "GMT-hours:minutes".
- * </p>
  * <p>
  * The calendar defines the first day of the week, the first week of the year,
  * whether hours are zero based or not (0 vs. 12 or 24) and the time zone. There
@@ -324,17 +306,19 @@ import org.apache.harmony.text.internal.nls.Messages;
  * 
  * @see Calendar
  * @see GregorianCalendar
- * @see TimeZone
+ * @see java.util.TimeZone
  * @see DateFormat
  * @see DateFormatSymbols
  * @see DecimalFormat
- * @since Android 1.0
  */
 public class SimpleDateFormat extends DateFormat {
 
     private static final long serialVersionUID = 4774881970558875024L;
 
+    // BEGIN android-changed
+    // private static final String patternChars = "GyMdkHmsSEDFwWahKzYeugAZvcLQqV"; //$NON-NLS-1$
     private static final String patternChars = "GyMdkHmsSEDFwWahKzZ"; //$NON-NLS-1$
+    // END android-changed
 
     private String pattern;
 
@@ -344,15 +328,21 @@ public class SimpleDateFormat extends DateFormat {
 
     private Date defaultCenturyStart;
 
+    // BEGIN android-removed
+    // private transient String tzId;
+    //
+    // private transient com.ibm.icu.text.SimpleDateFormat icuFormat;
+    // END android-removed
+
     /**
      * Constructs a new {@code SimpleDateFormat} for formatting and parsing
      * dates and times in the {@code SHORT} style for the default locale.
-     * 
-     * @since Android 1.0
      */
     public SimpleDateFormat() {
         this(Locale.getDefault());
+        // BEGIN android-changed
         pattern = defaultPattern();
+        // END android-changed
         formatData = new DateFormatSymbols(Locale.getDefault());
     }
 
@@ -363,34 +353,132 @@ public class SimpleDateFormat extends DateFormat {
      * 
      * @param pattern
      *            the pattern.
-     * @exception IllegalArgumentException
-     *                if {@code pattern} is not considered to be usable by this
-     *                formatter.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *            if the pattern is {@code null}.
+     * @throws IllegalArgumentException
+     *            if {@code pattern} is not considered to be usable by this
+     *            formatter.
      */
     public SimpleDateFormat(String pattern) {
         this(pattern, Locale.getDefault());
     }
+    
+    /**
+     * Validates the format character.
+     *
+     * @param format
+     *            the format character
+     *
+     * @throws IllegalArgumentException
+     *             when the format character is invalid
+     */
+    private void validateFormat(char format) {
+        int index = patternChars.indexOf(format);
+        if (index == -1) {
+            // text.03=Unknown pattern character - '{0}'
+            throw new IllegalArgumentException(Messages.getString(
+                    "text.03", format)); //$NON-NLS-1$
+        }
+    }
 
+    /**
+     * Validates the pattern.
+     *
+     * @param template
+     *            the pattern to validate.
+     *
+     * @throws NullPointerException
+     *             if the pattern is null
+     * @throws IllegalArgumentException
+     *             if the pattern is invalid
+     */
+    private void validatePattern(String template) {
+        boolean quote = false;
+        int next, last = -1, count = 0;
+
+        final int patternLength = template.length();
+        for (int i = 0; i < patternLength; i++) {
+            next = (template.charAt(i));
+            if (next == '\'') {
+                if (count > 0) {
+                    validateFormat((char) last);
+                    count = 0;
+                }
+                if (last == next) {
+                    last = -1;
+                } else {
+                    last = next;
+                }
+                quote = !quote;
+                continue;
+            }
+            if (!quote
+                    && (last == next || (next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z'))) {
+                if (last == next) {
+                    count++;
+                } else {
+                    if (count > 0) {
+                        validateFormat((char) last);
+                    }
+                    last = next;
+                    count = 1;
+                }
+            } else {
+                if (count > 0) {
+                    validateFormat((char) last);
+                    count = 0;
+                }
+                last = -1;
+            }
+        }
+        if (count > 0) {
+            validateFormat((char) last);
+        }
+
+        if (quote) {
+            // text.04=Unterminated quote {0}
+            throw new IllegalArgumentException(Messages.getString("text.04")); //$NON-NLS-1$
+        }
+
+    }
+    
     /**
      * Constructs a new {@code SimpleDateFormat} using the specified
      * non-localized pattern and {@code DateFormatSymbols} and the {@code
      * Calendar} for the default locale.
-     * 
+     *
      * @param template
      *            the pattern.
      * @param value
      *            the DateFormatSymbols.
-     * @exception IllegalArgumentException
-     *                if the pattern is invalid.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *            if the pattern is {@code null}.
+     * @throws IllegalArgumentException
+     *            if the pattern is invalid.
      */
     public SimpleDateFormat(String template, DateFormatSymbols value) {
         this(Locale.getDefault());
         validatePattern(template);
+        // BEGIN android-removed
+        // icuFormat = new com.ibm.icu.text.SimpleDateFormat(template, Locale.getDefault());
+        // icuFormat.setTimeZone(com.ibm.icu.util.TimeZone.getTimeZone(tzId));
+        // END android-removed
         pattern = template;
         formatData = (DateFormatSymbols) value.clone();
     }
+
+    // BEGIN android-removed
+    // private void copySymbols(DateFormatSymbols value, com.ibm.icu.text.DateFormatSymbols icuSymbols) {
+    //     icuSymbols.setAmPmStrings(value.getAmPmStrings());
+    //     icuSymbols.setEras(value.getEras());
+    //     icuSymbols.setLocalPatternChars(value.getLocalPatternChars());
+    //     icuSymbols.setMonths(value.getMonths());
+    //     icuSymbols.setShortMonths(value.getShortMonths());
+    //     icuSymbols.setShortWeekdays(value.getShortWeekdays());
+    //     icuSymbols.setWeekdays(value.getWeekdays());
+    //     icuSymbols.setZoneStrings(value.getZoneStrings());
+    // }
+    // END android-removed
 
     /**
      * Constructs a new {@code SimpleDateFormat} using the specified
@@ -401,27 +489,299 @@ public class SimpleDateFormat extends DateFormat {
      *            the pattern.
      * @param locale
      *            the locale.
-     * @exception IllegalArgumentException
-     *                if the pattern is invalid.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *            if the pattern is {@code null}.
+     * @throws IllegalArgumentException
+     *            if the pattern is invalid.
      */
     public SimpleDateFormat(String template, Locale locale) {
         this(locale);
         validatePattern(template);
+        // BEGIN android-removed
+        // icuFormat = new com.ibm.icu.text.SimpleDateFormat(template, locale);
+        // icuFormat.setTimeZone(com.ibm.icu.util.TimeZone.getTimeZone(tzId));
+        // END android-removed
         pattern = template;
+        // BEGIN android-changed
         formatData = new DateFormatSymbols(locale);
+        // END android-changed
     }
 
+    // BEGIN android-removed
+    // SimpleDateFormat(Locale locale, com.ibm.icu.text.SimpleDateFormat icuFormat){
+    //     this(locale);
+    //     this.icuFormat = icuFormat;
+    //     this.icuFormat.setTimeZone(com.ibm.icu.util.TimeZone.getTimeZone(tzId));
+    //     pattern = (String)Format.getInternalField("pattern", icuFormat); //$NON-NLS-1$
+    //     formatData = new DateFormatSymbols(locale);
+    // }
+    // END android-removed
+    
     private SimpleDateFormat(Locale locale) {
         numberFormat = NumberFormat.getInstance(locale);
         numberFormat.setParseIntegerOnly(true);
         numberFormat.setGroupingUsed(false);
         calendar = new GregorianCalendar(locale);
         calendar.add(Calendar.YEAR, -80);
+        // BEGIN android-removed
+        // tzId = calendar.getTimeZone().getID();
+        // END android-removed
         creationYear = calendar.get(Calendar.YEAR);
         defaultCenturyStart = calendar.getTime();
     }
 
+    /**
+     * Changes the pattern of this simple date format to the specified pattern
+     * which uses localized pattern characters.
+     * 
+     * @param template
+     *            the localized pattern.
+     */
+    public void applyLocalizedPattern(String template) {
+        // BEGIN android-changed
+        pattern = convertPattern(template, formatData.getLocalPatternChars(),
+                patternChars, true);
+        // END android-changed
+    }
+
+    /**
+     * Changes the pattern of this simple date format to the specified pattern
+     * which uses non-localized pattern characters.
+     * 
+     * @param template
+     *            the non-localized pattern.
+     * @throws NullPointerException
+     *                if the pattern is {@code null}.
+     * @throws IllegalArgumentException
+     *                if the pattern is invalid.
+     */
+    public void applyPattern(String template) {
+        validatePattern(template);
+        // BEGIN android-removed
+        // /*
+        //  * ICU spec explicitly mentions that "ICU interprets a single 'y'
+        //  * differently than Java." We need to do a trick here to follow Java
+        //  * spec.
+        //  */
+        // String templateForICU = patternForICU(template);
+        // icuFormat.applyPattern(templateForICU);
+        // END android-removed
+        pattern = template;
+    }
+
+    /**
+     * Converts the Java-spec pattern into an equivalent pattern used by ICU.
+     * 
+     * @param p
+     *            the Java-spec style pattern.
+     * @return the ICU-style pattern.
+     */
+    @SuppressWarnings("nls")
+    private String patternForICU(String p) {
+        String[] subPatterns = p.split("'");
+        boolean quote = false;
+        boolean first = true;
+        StringBuilder result = new StringBuilder();
+        for (String subPattern : subPatterns) {
+            if (!quote) {
+                // replace 'y' with 'yy' for ICU to follow Java spec
+                result.append((first ? "" : "'")
+                        + subPattern.replaceAll("(?<!y)y(?!y)", "yy"));
+                first = false;
+            } else {
+                result.append("'" + subPattern);
+            }
+            quote = !quote;
+        }
+        if (p.endsWith("'")) {
+            result.append("'");
+        }
+        return result.toString();
+    }
+
+    /**
+     * Returns a new {@code SimpleDateFormat} with the same pattern and
+     * properties as this simple date format.
+     * 
+     * @return a shallow copy of this simple date format.
+     * @see java.lang.Cloneable
+     */
+    @Override
+    public Object clone() {
+        SimpleDateFormat clone = (SimpleDateFormat) super.clone();
+        clone.formatData = (DateFormatSymbols) formatData.clone();
+        clone.defaultCenturyStart = new Date(defaultCenturyStart.getTime());
+        // BEGIN android-removed
+        // clone.tzId = tzId;
+        // END android-removed
+        return clone;
+    }
+
+    // BEGIN android-added
+    private static String defaultPattern() {
+        ResourceBundle bundle = getBundle(Locale.getDefault());
+        String styleName = getStyleName(SHORT);
+        return bundle.getString("Date_" + styleName) + " " //$NON-NLS-1$ //$NON-NLS-2$
+                + bundle.getString("Time_" + styleName); //$NON-NLS-1$
+    }
+    // END android-added
+
+    /**
+     * Compares the specified object with this simple date format and indicates
+     * if they are equal. In order to be equal, {@code object} must be an
+     * instance of {@code SimpleDateFormat} and have the same {@code DateFormat}
+     * properties, pattern, {@code DateFormatSymbols} and creation year.
+     * 
+     * @param object
+     *            the object to compare with this object.
+     * @return {@code true} if the specified object is equal to this simple date
+     *         format; {@code false} otherwise.
+     * @see #hashCode
+     */
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof SimpleDateFormat)) {
+            return false;
+        }
+        SimpleDateFormat simple = (SimpleDateFormat) object;
+        return super.equals(object) && pattern.equals(simple.pattern)
+                && formatData.equals(simple.formatData);
+    }
+
+    /**
+     * Formats the specified object using the rules of this simple date format
+     * and returns an {@code AttributedCharacterIterator} with the formatted
+     * date and attributes.
+     * 
+     * @param object
+     *            the object to format.
+     * @return an {@code AttributedCharacterIterator} with the formatted date
+     *         and attributes.
+     * @throws NullPointerException
+     *            if the object is {@code null}.
+     * @throws IllegalArgumentException
+     *            if the object cannot be formatted by this simple date
+     *            format.
+     */
+    @Override
+    public AttributedCharacterIterator formatToCharacterIterator(Object object) {
+        if (object == null) {
+            throw new NullPointerException();
+        }
+        if (object instanceof Date) {
+            return formatToCharacterIteratorImpl((Date) object);
+        }
+        if (object instanceof Number) {
+            return formatToCharacterIteratorImpl(new Date(((Number) object)
+                    .longValue()));
+        }
+        throw new IllegalArgumentException();
+        
+    }
+    
+    private AttributedCharacterIterator formatToCharacterIteratorImpl(Date date) {
+        StringBuffer buffer = new StringBuffer();
+        Vector<FieldPosition> fields = new Vector<FieldPosition>();
+
+        // format the date, and find fields
+        formatImpl(date, buffer, null, fields);
+
+        // create and AttributedString with the formatted buffer
+        AttributedString as = new AttributedString(buffer.toString());
+
+        // add DateFormat field attributes to the AttributedString
+        for (int i = 0; i < fields.size(); i++) {
+            FieldPosition pos = fields.elementAt(i);
+            Format.Field attribute = pos.getFieldAttribute();
+            as.addAttribute(attribute, attribute, pos.getBeginIndex(), pos
+                    .getEndIndex());
+        }
+
+        // return the CharacterIterator from AttributedString
+        return as.getIterator();
+    }
+
+    /**
+     * Formats the date.
+     * <p>
+     * If the FieldPosition {@code field} is not null, and the field
+     * specified by this FieldPosition is formatted, set the begin and end index
+     * of the formatted field in the FieldPosition.
+     * <p>
+     * If the Vector {@code fields} is not null, find fields of this
+     * date, set FieldPositions with these fields, and add them to the fields
+     * vector.
+     * 
+     * @param date
+     *            Date to Format
+     * @param buffer
+     *            StringBuffer to store the resulting formatted String
+     * @param field
+     *            FieldPosition to set begin and end index of the field
+     *            specified, if it is part of the format for this date
+     * @param fields
+     *            Vector used to store the FieldPositions for each field in this
+     *            date
+     * @return the formatted Date
+     * @throws IllegalArgumentException
+     *            if the object cannot be formatted by this Format.
+     */
+    private StringBuffer formatImpl(Date date, StringBuffer buffer,
+            FieldPosition field, Vector<FieldPosition> fields) {
+
+        boolean quote = false;
+        int next, last = -1, count = 0;
+        calendar.setTime(date);
+        if (field != null) {
+            field.clear();
+        }
+
+        final int patternLength = pattern.length();
+        for (int i = 0; i < patternLength; i++) {
+            next = (pattern.charAt(i));
+            if (next == '\'') {
+                if (count > 0) {
+                    append(buffer, field, fields, (char) last, count);
+                    count = 0;
+                }
+                if (last == next) {
+                    buffer.append('\'');
+                    last = -1;
+                } else {
+                    last = next;
+                }
+                quote = !quote;
+                continue;
+            }
+            if (!quote
+                    && (last == next || (next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z'))) {
+                if (last == next) {
+                    count++;
+                } else {
+                    if (count > 0) {
+                        append(buffer, field, fields, (char) last, count);
+                    }
+                    last = next;
+                    count = 1;
+                }
+            } else {
+                if (count > 0) {
+                    append(buffer, field, fields, (char) last, count);
+                    count = 0;
+                }
+                last = -1;
+                buffer.append((char) next);
+            }
+        }
+        if (count > 0) {
+            append(buffer, field, fields, (char) last, count);
+        }
+        return buffer;
+    }
+    
     private void append(StringBuffer buffer, FieldPosition position,
             Vector<FieldPosition> fields, char format, int count) {
         int field = -1;
@@ -434,7 +794,6 @@ public class SimpleDateFormat extends DateFormat {
 
         int beginPosition = buffer.length();
         Field dateFormatField = null;
-
         switch (index) {
             case ERA_FIELD:
                 dateFormatField = Field.ERA;
@@ -528,10 +887,12 @@ public class SimpleDateFormat extends DateFormat {
                 dateFormatField = Field.TIME_ZONE;
                 appendTimeZone(buffer, count, true);
                 break;
+            // BEGIN android-changed
             case (TIMEZONE_FIELD + 1): // Z
                 dateFormatField = Field.TIME_ZONE;
                 appendTimeZone(buffer, count, false);
                 break;
+            // END android-changed
         }
         if (field != -1) {
             appendNumber(buffer, count, calendar.get(field));
@@ -552,7 +913,7 @@ public class SimpleDateFormat extends DateFormat {
             }
         }
     }
-
+    
     private void appendTimeZone(StringBuffer buffer, int count,
             boolean generalTimezone) {
         // cannot call TimeZone.getDisplayName() because it would not use
@@ -612,139 +973,13 @@ public class SimpleDateFormat extends DateFormat {
         numberFormat.setMinimumIntegerDigits(minimumIntegerDigits);
     }
 
-    /**
-     * Changes the pattern of this simple date format to the specified pattern
-     * which uses localized pattern characters.
-     * 
-     * @param template
-     *            the localized pattern.
-     * @since Android 1.0
-     */
-    public void applyLocalizedPattern(String template) {
-        pattern = convertPattern(template, formatData.getLocalPatternChars(),
-                patternChars, true);
-    }
-
-    /**
-     * Changes the pattern of this simple date format to the specified pattern
-     * which uses non-localized pattern characters.
-     * 
-     * @param template
-     *            the non-localized pattern.
-     * @exception IllegalArgumentException
-     *                if the pattern is invalid.
-     * @since Android 1.0
-     */
-    public void applyPattern(String template) {
-        validatePattern(template);
-        pattern = template;
-    }
-
-    /**
-     * Returns a new {@code SimpleDateFormat} with the same pattern and
-     * properties as this simple date format.
-     * 
-     * @return a shallow copy of this simple date format.
-     * @see java.lang.Cloneable
-     * @since Android 1.0
-     */
-    @Override
-    public Object clone() {
-        SimpleDateFormat clone = (SimpleDateFormat) super.clone();
-        clone.formatData = (DateFormatSymbols) formatData.clone();
-        clone.defaultCenturyStart = new Date(defaultCenturyStart.getTime());
-        return clone;
-    }
-
-    private static String defaultPattern() {
-        ResourceBundle bundle = getBundle(Locale.getDefault());
-        String styleName = getStyleName(SHORT);
-        return bundle.getString("Date_" + styleName) + " " //$NON-NLS-1$ //$NON-NLS-2$
-                + bundle.getString("Time_" + styleName); //$NON-NLS-1$
-    }
-
-    /**
-     * Compares the specified object with this simple date format and indicates
-     * if they are equal. In order to be equal, {@code object} must be an
-     * instance of {@code SimpleDateFormat} and have the same {@code DateFormat}
-     * properties, pattern, {@code DateFormatSymbols} and creation year.
-     * 
-     * @param object
-     *            the object to compare with this object.
-     * @return {@code true} if the specified object is equal to this simple date
-     *         format; {@code false} otherwise.
-     * @see #hashCode
-     * @since Android 1.0
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) {
-            return true;
-        }
-        if (!(object instanceof SimpleDateFormat)) {
-            return false;
-        }
-        SimpleDateFormat simple = (SimpleDateFormat) object;
-        return super.equals(object) && pattern.equals(simple.pattern)
-                && formatData.equals(simple.formatData);
-    }
-
+    // BEGIN android-added
     private Date error(ParsePosition position, int offset, TimeZone zone) {
         position.setErrorIndex(offset);
         calendar.setTimeZone(zone);
         return null;
     }
-
-    /**
-     * Formats the specified object using the rules of this simple date format
-     * and returns an {@code AttributedCharacterIterator} with the formatted
-     * date and attributes.
-     * 
-     * @param object
-     *            the object to format.
-     * @return an {@code AttributedCharacterIterator} with the formatted date
-     *         and attributes.
-     * @exception IllegalArgumentException
-     *                when the object cannot be formatted by this simple date
-     *                format.
-     * @since Android 1.0
-     */
-    @Override
-    public AttributedCharacterIterator formatToCharacterIterator(Object object) {
-        if (object == null) {
-            throw new NullPointerException();
-        }
-        if (object instanceof Date) {
-            return formatToCharacterIteratorImpl((Date) object);
-        }
-        if (object instanceof Number) {
-            return formatToCharacterIteratorImpl(new Date(((Number) object)
-                    .longValue()));
-        }
-        throw new IllegalArgumentException();
-    }
-
-    private AttributedCharacterIterator formatToCharacterIteratorImpl(Date date) {
-        StringBuffer buffer = new StringBuffer();
-        Vector<FieldPosition> fields = new Vector<FieldPosition>();
-
-        // format the date, and find fields
-        formatImpl(date, buffer, null, fields);
-
-        // create and AttributedString with the formatted buffer
-        AttributedString as = new AttributedString(buffer.toString());
-
-        // add DateFormat field attributes to the AttributedString
-        for (int i = 0; i < fields.size(); i++) {
-            FieldPosition pos = fields.elementAt(i);
-            Format.Field attribute = pos.getFieldAttribute();
-            as.addAttribute(attribute, attribute, pos.getBeginIndex(), pos
-                    .getEndIndex());
-        }
-
-        // return the CharacterIterator from AttributedString
-        return as.getIterator();
-    }
+    // END android-added
 
     /**
      * Formats the specified date as a string using the pattern of this date
@@ -754,191 +989,39 @@ public class SimpleDateFormat extends DateFormat {
      * a format field, then its {@code beginIndex} and {@code endIndex} members
      * will be updated with the position of the first occurrence of this field
      * in the formatted text.
-     * </p>
-     * 
+     *
      * @param date
      *            the date to format.
      * @param buffer
      *            the target string buffer to append the formatted date/time to.
-     * @param field
+     * @param fieldPos
      *            on input: an optional alignment field; on output: the offsets
      *            of the alignment field in the formatted text.
      * @return the string buffer.
      * @throws IllegalArgumentException
      *             if there are invalid characters in the pattern.
-     * @since Android 1.0
      */
     @Override
     public StringBuffer format(Date date, StringBuffer buffer,
-            FieldPosition field) {
-        return formatImpl(date, buffer, field, null);
+            FieldPosition fieldPos) {
+        // BEGIN android-changed
+        // Harmony delegates to ICU's SimpleDateFormat, we implement it directly
+        return formatImpl(date, buffer, fieldPos, null);
+        // END android-changed
     }
 
-    /**
-     * Validates the format character.
-     * 
-     * @param format
-     *            the format character
-     * 
-     * @throws IllegalArgumentException
-     *             when the format character is invalid
-     */
-    private void validateFormat(char format) {
-        int index = patternChars.indexOf(format);
-        if (index == -1) {
-            // text.03=Unknown pattern character - '{0}'
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.03", format)); //$NON-NLS-1$
-        }
-    }
+    // BEGIN android-removed
+    // private com.ibm.icu.text.DateFormat.Field toICUField(
+    //         DateFormat.Field attribute) {
+    //     ...
+    // }
+    // END android-removed
 
     /**
-     * Validates the pattern.
-     * 
-     * @param template
-     *            the pattern to validate.
-     * 
-     * @throws NullPointerException
-     *             if the pattern is null
-     * @throws IllegalArgumentException
-     *             if the pattern is invalid
-     */
-    private void validatePattern(String template) {
-        boolean quote = false;
-        int next, last = -1, count = 0;
-
-        final int patternLength = template.length();
-        for (int i = 0; i < patternLength; i++) {
-            next = (template.charAt(i));
-            if (next == '\'') {
-                if (count > 0) {
-                    validateFormat((char) last);
-                    count = 0;
-                }
-                if (last == next) {
-                    last = -1;
-                } else {
-                    last = next;
-                }
-                quote = !quote;
-                continue;
-            }
-            if (!quote
-                    && (last == next || (next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z'))) {
-                if (last == next) {
-                    count++;
-                } else {
-                    if (count > 0) {
-                        validateFormat((char) last);
-                    }
-                    last = next;
-                    count = 1;
-                }
-            } else {
-                if (count > 0) {
-                    validateFormat((char) last);
-                    count = 0;
-                }
-                last = -1;
-            }
-        }
-        if (count > 0) {
-            validateFormat((char) last);
-        }
-
-        if (quote) {
-            // text.04=Unterminated quote {0}
-            throw new IllegalArgumentException(Messages.getString("text.04")); //$NON-NLS-1$
-        }
-
-    }
-
-    /**
-     * Formats the date.
-     * <p>
-     * If the FieldPosition {@code field} is not null, and the field
-     * specified by this FieldPosition is formatted, set the begin and end index
-     * of the formatted field in the FieldPosition.
-     * <p>
-     * If the Vector {@code fields} is not null, find fields of this
-     * date, set FieldPositions with these fields, and add them to the fields
-     * vector.
-     * 
-     * @param date
-     *            Date to Format
-     * @param buffer
-     *            StringBuffer to store the resulting formatted String
-     * @param field
-     *            FieldPosition to set begin and end index of the field
-     *            specified, if it is part of the format for this date
-     * @param fields
-     *            Vector used to store the FieldPositions for each field in this
-     *            date
-     * 
-     * @return the formatted Date
-     * 
-     * @exception IllegalArgumentException
-     *                when the object cannot be formatted by this Format
-     */
-    private StringBuffer formatImpl(Date date, StringBuffer buffer,
-            FieldPosition field, Vector<FieldPosition> fields) {
-
-        boolean quote = false;
-        int next, last = -1, count = 0;
-        calendar.setTime(date);
-        if (field != null) {
-            field.clear();
-        }
-
-        final int patternLength = pattern.length();
-        for (int i = 0; i < patternLength; i++) {
-            next = (pattern.charAt(i));
-            if (next == '\'') {
-                if (count > 0) {
-                    append(buffer, field, fields, (char) last, count);
-                    count = 0;
-                }
-                if (last == next) {
-                    buffer.append('\'');
-                    last = -1;
-                } else {
-                    last = next;
-                }
-                quote = !quote;
-                continue;
-            }
-            if (!quote
-                    && (last == next || (next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z'))) {
-                if (last == next) {
-                    count++;
-                } else {
-                    if (count > 0) {
-                        append(buffer, field, fields, (char) last, count);
-                    }
-                    last = next;
-                    count = 1;
-                }
-            } else {
-                if (count > 0) {
-                    append(buffer, field, fields, (char) last, count);
-                    count = 0;
-                }
-                last = -1;
-                buffer.append((char) next);
-            }
-        }
-        if (count > 0) {
-            append(buffer, field, fields, (char) last, count);
-        }
-        return buffer;
-    }
-
-    /**
-     * Returns the date which is the start of the one hundred year period for
+     * Answers the Date which is the start of the one hundred year period for
      * two digits year values.
      * 
-     * @return a date.
-     * @since Android 1.0
+     * @return a Date
      */
     public Date get2DigitYearStart() {
         return defaultCenturyStart;
@@ -946,9 +1029,8 @@ public class SimpleDateFormat extends DateFormat {
 
     /**
      * Returns the {@code DateFormatSymbols} used by this simple date format.
-     * 
+     *
      * @return the {@code DateFormatSymbols} object.
-     * @since Android 1.0
      */
     public DateFormatSymbols getDateFormatSymbols() {
         // Return a clone so the arrays in the ResourceBundle are not modified
@@ -961,6 +1043,7 @@ public class SimpleDateFormat extends DateFormat {
                 + creationYear;
     }
 
+    // BEGIN android-added
     private int parse(String string, int offset, char format, int count) {
         int index = patternChars.indexOf(format);
         if (index == -1) {
@@ -1085,6 +1168,7 @@ public class SimpleDateFormat extends DateFormat {
         }
         return offset;
     }
+    // END android-added
 
     /**
      * Parses a date from the specified string starting at the index specified
@@ -1092,7 +1176,7 @@ public class SimpleDateFormat extends DateFormat {
      * of the {@code ParsePosition} is updated to the index following the parsed
      * text. On error, the index is unchanged and the error index of {@code
      * ParsePosition} is set to the index where the error occurred.
-     * 
+     *
      * @param string
      *            the string to parse using the pattern of this simple date
      *            format.
@@ -1106,10 +1190,11 @@ public class SimpleDateFormat extends DateFormat {
      *         error.
      * @throws IllegalArgumentException
      *             if there are invalid characters in the pattern.
-     * @since Android 1.0
      */
     @Override
     public Date parse(String string, ParsePosition position) {
+        // BEGIN android-changed
+        // Harmony delegates to ICU's SimpleDateFormat, we implement it directly
         boolean quote = false;
         int next, last = -1, count = 0, offset = position.getIndex();
         int length = string.length();
@@ -1178,8 +1263,10 @@ public class SimpleDateFormat extends DateFormat {
         position.setIndex(offset);
         calendar.setTimeZone(zone);
         return date;
+        // END android-changed
     }
 
+    // BEGIN android-added
     private Number parseNumber(int max, String string, ParsePosition position) {
         int digit, length = string.length(), result = 0;
         int index = position.getIndex();
@@ -1299,6 +1386,7 @@ public class SimpleDateFormat extends DateFormat {
         }
         return -offset - 1;
     }
+    // END android-added
 
     /**
      * Sets the date which is the start of the one hundred year period for two
@@ -1306,9 +1394,11 @@ public class SimpleDateFormat extends DateFormat {
      * 
      * @param date
      *            the new date.
-     * @since Android 1.0
      */
     public void set2DigitYearStart(Date date) {
+        // BEGIN android-removed
+        // icuFormat.set2DigitYearStart(date);
+        // END android-removed
         defaultCenturyStart = date;
         Calendar cal = new GregorianCalendar();
         cal.setTime(date);
@@ -1320,9 +1410,13 @@ public class SimpleDateFormat extends DateFormat {
      * 
      * @param value
      *            the new {@code DateFormatSymbols} object.
-     * @since Android 1.0
      */
     public void setDateFormatSymbols(DateFormatSymbols value) {
+        // BEGIN android-removed
+        // com.ibm.icu.text.DateFormatSymbols icuSymbols = new com.ibm.icu.text.DateFormatSymbols();
+        // copySymbols(value, icuSymbols);
+        // icuFormat.setDateFormatSymbols(icuSymbols);
+        // END android-removed
         formatData = (DateFormatSymbols) value.clone();
     }
 
@@ -1331,11 +1425,12 @@ public class SimpleDateFormat extends DateFormat {
      * characters.
      * 
      * @return the localized pattern.
-     * @since Android 1.0
      */
     public String toLocalizedPattern() {
+        // BEGIN android-changed
         return convertPattern(pattern, patternChars, formatData
                 .getLocalPatternChars(), false);
+        // END android-changed
     }
 
     /**
@@ -1343,7 +1438,6 @@ public class SimpleDateFormat extends DateFormat {
      * pattern characters.
      * 
      * @return the non-localized pattern.
-     * @since Android 1.0
      */
     public String toPattern() {
         return pattern;

@@ -28,31 +28,23 @@ package java.text;
  * source string.
  * <p>
  * For illustration, consider the following in Spanish:
- * </p>
  * <p>
  * "ca": the first collation element is collation_element('c') and second
  * collation element is collation_element('a').
- * </p>
  * <p>
  * Since "ch" in Spanish sorts as one entity, the example below returns one
  * collation element for the two characters 'c' and 'h':
- * </p>
  * <p>
  * "cha": the first collation element is collation_element('ch') and the second
  * one is collation_element('a').
- * </p>
  * <p>
  * In German, since the character '&#92;u0086' is a composed character of 'a'
  * and 'e', the iterator returns two collation elements for the single character
  * '&#92;u0086':
- * </p>
  * <p>
  * "&#92;u0086b": the first collation element is collation_element('a'), the
  * second one is collation_element('e'), and the third collation element is
  * collation_element('b').
- * </p>
- * 
- * @since Android 1.0
  */
 public final class CollationElementIterator {
 
@@ -61,8 +53,6 @@ public final class CollationElementIterator {
      * {@code next()} and {@code previous()} when the end or the
      * beginning of the source string has been reached, and there are no more
      * valid collation elements to return.
-     * 
-     * @since Android 1.0
      */
     public static final int NULLORDER = -1;
 
@@ -83,7 +73,6 @@ public final class CollationElementIterator {
      *            method.
      * @return the maximum length of any expansion sequence ending with the
      *         specified collation element.
-     * @since Android 1.0
      */
     public int getMaxExpansion(int order) {
         return this.icuIterator.getMaxExpansion(order);
@@ -111,7 +100,6 @@ public final class CollationElementIterator {
      * @return The position of the collation element in the source string that
      *         will be returned by the next invocation of the {@link #next()}
      *         method.
-     * @since Android 1.0
      */
     public int getOffset() {
         return this.icuIterator.getOffset();
@@ -122,7 +110,6 @@ public final class CollationElementIterator {
      * 
      * @return the next collation element or {@code NULLORDER} if the end
      *         of the iteration has been reached.
-     * @since Android 1.0
      */
     public int next() {
         return this.icuIterator.next();
@@ -133,7 +120,6 @@ public final class CollationElementIterator {
      * 
      * @return the previous collation element, or {@code NULLORDER} when
      *         the start of the iteration has been reached.
-     * @since Android 1.0
      */
     public int previous() {
         return this.icuIterator.previous();
@@ -146,7 +132,6 @@ public final class CollationElementIterator {
      * @param order
      *            the element of the collation.
      * @return the element's 16 bit primary order.
-     * @since Android 1.0
      */
     public static final int primaryOrder(int order) {
         return com.ibm.icu4jni.text.CollationElementIterator.primaryOrder(order);
@@ -160,9 +145,6 @@ public final class CollationElementIterator {
      * If the {@code RuleBasedCollator} used by this iterator has had its
      * attributes changed, calling {@code reset()} reinitializes the iterator to
      * use the new attributes.
-     * </p>
-     * 
-     * @since Android 1.0
      */
     public void reset() {
         this.icuIterator.reset();
@@ -175,7 +157,6 @@ public final class CollationElementIterator {
      * @param order
      *            the element of the collator.
      * @return the 8 bit secondary order of the element.
-     * @since Android 1.0
      */
     public static final short secondaryOrder(int order) {
         return (short) com.ibm.icu4jni.text.CollationElementIterator
@@ -193,19 +174,16 @@ public final class CollationElementIterator {
      * adjusted to the start of that sequence. As a result of this, any
      * subsequent call made to {@code getOffset()} may not return the same value
      * set by this method.
-     * </p>
      * <p>
      * If the decomposition mode is on, and offset is in the middle of a
      * decomposable range of source text, the iterator may not return a correct
      * result for the next forwards or backwards iteration. The user must ensure
      * that the offset is not in the middle of a decomposable range.
-     * </p>
      * 
      * @param newOffset
      *            the character offset into the original source string to set.
      *            Note that this is not an offset into the corresponding
      *            sequence of collation elements.
-     * @since Android 1.0
      */
     public void setOffset(int newOffset) {
         this.icuIterator.setOffset(newOffset);
@@ -217,7 +195,6 @@ public final class CollationElementIterator {
      * 
      * @param source
      *            the new source string iterator for iteration.
-     * @since Android 1.0
      */
     public void setText(CharacterIterator source) {
         this.icuIterator.setText(source);
@@ -229,7 +206,6 @@ public final class CollationElementIterator {
      * 
      * @param source
      *            the new source string for iteration.
-     * @since Android 1.0
      */
     public void setText(String source) {
         this.icuIterator.setText(source);
@@ -242,7 +218,6 @@ public final class CollationElementIterator {
      * @param order
      *            the element of the collation.
      * @return the 8 bit tertiary order of the element.
-     * @since Android 1.0
      */
     public static final short tertiaryOrder(int order) {
         return (short) com.ibm.icu4jni.text.CollationElementIterator
