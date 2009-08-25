@@ -20,19 +20,16 @@ package javax.net.ssl;
 /**
  * The exception that is thrown when a handshake could not be completed
  * successfully.
- * 
- * @since Android 1.0
  */
 public class SSLHandshakeException extends SSLException {
-    
+
     private static final long serialVersionUID = -5045881315018326890L;
 
     /**
      * Creates a new {@code SSLHandshakeException} with the specified message.
-     * 
+     *
      * @param reason
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public SSLHandshakeException(String reason) {
         super(reason);

@@ -23,18 +23,15 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivilegedAction;
 import java.security.Provider;
 import java.security.Security;
 
 import org.apache.harmony.security.fortress.Engine;
 
-
-
 /**
  * The factory for {@code TrustManager}s based on {@code KeyStore} or provider
  * specific implementation.
- * 
- * @since Android 1.0
  */
 public class TrustManagerFactory {
     // Store TrustManager service name
@@ -46,49 +43,25 @@ public class TrustManagerFactory {
     // Store default property name
     private static final String PROPERTYNAME = "ssl.TrustManagerFactory.algorithm";
 
-    // Store used provider
-    private final Provider provider;
-
-    // Storeused TrustManagerFactorySpi implementation
-    private final TrustManagerFactorySpi spiImpl;
-
-    // Store used algorithm
-    private final String algorithm;
-
     /**
-     * Creates a new {@code TrustManagerFactory} instance.
-     * 
-     * @param factorySpi
-     *            the implementation delegate.
-     * @param provider
-     *            the provider
-     * @param algorithm
-     *            the algorithm name.
-     * @since Android 1.0
+     * Returns the default algorithm name for the {@code TrustManagerFactory}. The
+     * default algorithm name is specified by the security property
+     * {@code 'ssl.TrustManagerFactory.algorithm'}.
+     *
+     * @return the default algorithm name.
      */
-    protected TrustManagerFactory(TrustManagerFactorySpi factorySpi,
-            Provider provider, String algorithm) {
-        this.provider = provider;
-        this.algorithm = algorithm;
-        this.spiImpl = factorySpi;
-    }
-
-    /**
-     * Returns the name of this {@code TrustManagerFactory} algorithm
-     * implementation.
-     * 
-     * @return the name of this {@code TrustManagerFactory} algorithm
-     *         implementation.
-     * @since Android 1.0
-     */
-    public final String getAlgorithm() {
-        return algorithm;
+    public static final String getDefaultAlgorithm() {
+        return AccessController.doPrivileged(new PrivilegedAction<String>() {
+            public String run() {
+                return Security.getProperty(PROPERTYNAME);
+            }
+        });
     }
 
     /**
      * Creates a new {@code TrustManagerFactory} instance for the specified
      * trust management algorithm.
-     * 
+     *
      * @param algorithm
      *            the name of the requested trust management algorithm.
      * @return a trust manager factory for the requested algorithm.
@@ -97,7 +70,6 @@ public class TrustManagerFactory {
      * @throws NullPointerException
      *             if {@code algorithm} is {@code null} (instead of
      *             NoSuchAlgorithmException as in 1.4 release)
-     * @since Android 1.0
      */
     public static final TrustManagerFactory getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -106,15 +78,15 @@ public class TrustManagerFactory {
         }
         synchronized (engine) {
             engine.getInstance(algorithm, null);
-            return new TrustManagerFactory((TrustManagerFactorySpi) engine.spi,
-                    engine.provider, algorithm);
+            return new TrustManagerFactory((TrustManagerFactorySpi) engine.spi, engine.provider,
+                    algorithm);
         }
     }
 
     /**
      * Creates a new {@code TrustManagerFactory} instance for the specified
      * trust management algorithm from the specified provider.
-     * 
+     *
      * @param algorithm
      *            the name of the requested trust management algorithm name.
      * @param provider
@@ -129,11 +101,9 @@ public class TrustManagerFactory {
      * @throws NullPointerException
      *             if {@code algorithm} is {@code null} (instead of
      *             NoSuchAlgorithmException as in 1.4 release)
-     * @since Android 1.0
      */
-    public static final TrustManagerFactory getInstance(String algorithm,
-            String provider) throws NoSuchAlgorithmException,
-            NoSuchProviderException {
+    public static final TrustManagerFactory getInstance(String algorithm, String provider)
+            throws NoSuchAlgorithmException, NoSuchProviderException {
         if ((provider == null) || (provider.length() == 0)) {
             throw new IllegalArgumentException("Provider is null oe empty");
         }
@@ -147,7 +117,7 @@ public class TrustManagerFactory {
     /**
      * Creates a new {@code TrustManagerFactory} instance for the specified
      * trust management algorithm from the specified provider.
-     * 
+     *
      * @param algorithm
      *            the name of the requested key management algorithm name.
      * @param provider
@@ -159,10 +129,9 @@ public class TrustManagerFactory {
      * @throws NullPointerException
      *             if {@code algorithm} is {@code null} (instead of
      *             NoSuchAlgorithmException as in 1.4 release)
-     * @since Android 1.0
      */
-    public static final TrustManagerFactory getInstance(String algorithm,
-            Provider provider) throws NoSuchAlgorithmException {
+    public static final TrustManagerFactory getInstance(String algorithm, Provider provider)
+            throws NoSuchAlgorithmException {
         if (provider == null) {
             throw new IllegalArgumentException("Provider is null");
         }
@@ -171,16 +140,51 @@ public class TrustManagerFactory {
         }
         synchronized (engine) {
             engine.getInstance(algorithm, provider, null);
-            return new TrustManagerFactory((TrustManagerFactorySpi) engine.spi,
-                    provider, algorithm);
+            return new TrustManagerFactory((TrustManagerFactorySpi) engine.spi, provider, algorithm);
         }
+    }
+
+    // Store used provider
+    private final Provider provider;
+
+    // Store used TrustManagerFactorySpi implementation
+    private final TrustManagerFactorySpi spiImpl;
+
+    // Store used algorithm
+    private final String algorithm;
+
+    /**
+     * Creates a new {@code TrustManagerFactory} instance.
+     *
+     * @param factorySpi
+     *            the implementation delegate.
+     * @param provider
+     *            the provider
+     * @param algorithm
+     *            the algorithm name.
+     */
+    protected TrustManagerFactory(TrustManagerFactorySpi factorySpi, Provider provider,
+            String algorithm) {
+        this.provider = provider;
+        this.algorithm = algorithm;
+        this.spiImpl = factorySpi;
+    }
+
+    /**
+     * Returns the name of this {@code TrustManagerFactory} algorithm
+     * implementation.
+     *
+     * @return the name of this {@code TrustManagerFactory} algorithm
+     *         implementation.
+     */
+    public final String getAlgorithm() {
+        return algorithm;
     }
 
     /**
      * Returns the provider for this {@code TrustManagerFactory} instance.
-     * 
+     *
      * @return the provider for this {@code TrustManagerFactory} instance.
-     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
@@ -189,12 +193,11 @@ public class TrustManagerFactory {
     /**
      * Initializes this factory instance with the specified keystore as source
      * of certificate authorities and trust material.
-     * 
+     *
      * @param ks
      *            the keystore or {@code null}.
      * @throws KeyStoreException
      *             if the initialization fails.
-     * @since Android 1.0
      */
     public final void init(KeyStore ks) throws KeyStoreException {
         spiImpl.engineInit(ks);
@@ -203,43 +206,24 @@ public class TrustManagerFactory {
     /**
      * Initializes this factory instance with the specified provider-specific
      * parameters for a source of trust material.
-     * 
+     *
      * @param spec
      *            the provider-specific parameters.
      * @throws InvalidAlgorithmParameterException
      *             if the initialization fails.
-     * @since Android 1.0
      */
-    public final void init(ManagerFactoryParameters spec)
-            throws InvalidAlgorithmParameterException {
+    public final void init(ManagerFactoryParameters spec) throws InvalidAlgorithmParameterException {
         spiImpl.engineInit(spec);
     }
 
     /**
      * Returns the list of {@code TrustManager}s with one entry for each type
      * of trust material.
-     * 
+     *
      * @return the list of {@code TrustManager}s
-     * @since Android 1.0
      */
     public final TrustManager[] getTrustManagers() {
         return spiImpl.engineGetTrustManagers();
     }
 
-    /**
-     * Returns the default algorithm name for the {@code TrustManagerFactory}. The
-     * default algorithm name is specified by the security property
-     * {@code 'ssl.TrustManagerFactory.algorithm'}.
-     * 
-     * @return the default algorithm name.
-     * @since Android 1.0
-     */
-    public static final String getDefaultAlgorithm() {
-        return AccessController
-                .doPrivileged(new java.security.PrivilegedAction<String>() {
-                    public String run() {
-                        return Security.getProperty(PROPERTYNAME);
-                    }
-                });
-    }
 }

@@ -24,15 +24,13 @@ import java.security.cert.X509Certificate;
 
 /**
  * A Key Manager for X509 certificate-based key pairs.
- * 
- * @since Android 1.0
  */
 public interface X509KeyManager extends KeyManager {
 
     /**
      * Chooses an alias for the client side of an SSL connection to authenticate
      * it with the specified public key type and certificate issuers.
-     * 
+     *
      * @param keyType
      *            the list of public key algorithm names.
      * @param issuers
@@ -43,7 +41,6 @@ public interface X509KeyManager extends KeyManager {
      *            the alias selected does not depend on a specific socket.
      * @return the alias name of a matching key or {@code null} if there are no
      *         matches.
-     * @since Android 1.0
      */
     public String chooseClientAlias(String[] keyType, Principal[] issuers,
             Socket socket);
@@ -51,7 +48,7 @@ public interface X509KeyManager extends KeyManager {
     /**
      * Chooses an alias for the server side of an SSL connection to authenticate
      * it with the specified public key type and certificate issuers.
-     * 
+     *
      * @param keyType
      *            the list of public key algorithm type names.
      * @param issuers
@@ -62,26 +59,24 @@ public interface X509KeyManager extends KeyManager {
      *            the alias selected does not depend on a specific socket.
      * @return the alias name of a matching key or {@code null} if there are no
      *         matches.
-     * @since Android 1.0
      */
     public String chooseServerAlias(String keyType, Principal[] issuers,
             Socket socket);
 
     /**
      * Returns the certificate chain for the specified alias.
-     * 
+     *
      * @param alias
      *            the alias to get the certificate chain for.
      * @return the certificate chain for the specified alias, or {@code null} if
      *         the alias cannot be found.
-     * @since Android 1.0
      */
     public X509Certificate[] getCertificateChain(String alias);
 
     /**
      * Returns the client aliases for the specified public key type and list of
      * certificate issuers.
-     * 
+     *
      * @param keyType
      *            the public key algorithm type name.
      * @param issuers
@@ -89,14 +84,13 @@ public interface X509KeyManager extends KeyManager {
      *            will do.
      * @return the client aliases for the specified public key type, or
      *         {@code null} if there are no matching aliases.
-     * @since Android 1.0
      */
     public String[] getClientAliases(String keyType, Principal[] issuers);
 
     /**
      * Returns the server aliases for the specified public key type and list of
      * certificate issuers.
-     * 
+     *
      * @param keyType
      *            the public key algorithm type name.
      * @param issuers
@@ -104,18 +98,16 @@ public interface X509KeyManager extends KeyManager {
      *            will do.
      * @return the client aliases for the specified public key type, or
      *         {@code null} if there are no matching aliases.
-     * @since Android 1.0
      */
     public String[] getServerAliases(String keyType, Principal[] issuers);
 
     /**
      * Returns the private key for the specified alias.
-     * 
+     *
      * @param alias
      *            the alias to get the private key for.
      * @return the private key for the specified alias, or {@code null} if the
      *         alias cannot be found.
-     * @since Android 1.0
      */
     public PrivateKey getPrivateKey(String alias);
 }

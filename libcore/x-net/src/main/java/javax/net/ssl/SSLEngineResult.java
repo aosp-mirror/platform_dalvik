@@ -20,11 +20,64 @@ package javax.net.ssl;
 /**
  * The result object describing the state of the {@code SSLEngine} produced
  * by the {@code wrap()} and {@code unwrap()} operations.
- * 
- * @since Android 1.0
  */
 public class SSLEngineResult {
-    
+
+    /**
+     * The {@code enum} describing the state of the current handshake.
+     */
+    public enum HandshakeStatus {
+        /**
+         * No handshake in progress.
+         */
+        NOT_HANDSHAKING,
+        /**
+         * The handshake is finished.
+         */
+        FINISHED,
+        /**
+         * The results of one (or more) delegated tasks are needed to continue
+         * the handshake.
+         */
+        NEED_TASK,
+        /**
+         * The engine must send data to the remote side to continue the
+         * handshake.
+         */
+        NEED_WRAP,
+        /**
+         * The engine needs to receive data from the remote side to continue the
+         * handshake.
+         */
+        NEED_UNWRAP
+    }
+
+    /**
+     * The {@code enum} describing the result of the {@code SSLEngine}
+     * operation.
+     */
+    public static enum Status {
+        /**
+         * The size of the destination buffer is too small to hold the result of
+         * the current operation.
+         */
+        BUFFER_OVERFLOW,
+        /**
+         * There were not enough bytes available in the source buffer to
+         * complete the current operation.
+         */
+        BUFFER_UNDERFLOW,
+        /**
+         * The operation closed this side of the communication or was already
+         * closed.
+         */
+        CLOSED,
+        /**
+         * The operation completed successfully.
+         */
+        OK
+    }
+
     // Store Status object
     private final SSLEngineResult.Status status;
 
@@ -40,7 +93,7 @@ public class SSLEngineResult {
     /**
      * Creates a new {@code SSLEngineResult} instance with the specified state
      * values.
-     * 
+     *
      * @param status
      *            the return value of the {@code SSLEngine} operation.
      * @param handshakeStatus
@@ -53,11 +106,9 @@ public class SSLEngineResult {
      *             if {@code status} or {@code handshakeStatus} is {@code null},
      *             or if {@code bytesConsumed} or {@code bytesProduces} are
      *             negative.
-     * @since Android 1.0
      */
     public SSLEngineResult(SSLEngineResult.Status status,
-            SSLEngineResult.HandshakeStatus handshakeStatus, int bytesConsumed,
-            int bytesProduced) {
+            SSLEngineResult.HandshakeStatus handshakeStatus, int bytesConsumed, int bytesProduced) {
         if (status == null) {
             throw new IllegalArgumentException("status is null");
         }
@@ -78,9 +129,8 @@ public class SSLEngineResult {
 
     /**
      * Returns the return value of the {@code SSLEngine} operation.
-     * 
+     *
      * @return the return value of the {@code SSLEngine} operation.
-     * @since Android 1.0
      */
     public final Status getStatus() {
         return status;
@@ -88,9 +138,8 @@ public class SSLEngineResult {
 
     /**
      * Returns the status of the current handshake.
-     * 
+     *
      * @return the status of the current handshake.
-     * @since Android 1.0
      */
     public final HandshakeStatus getHandshakeStatus() {
         return handshakeStatus;
@@ -98,9 +147,8 @@ public class SSLEngineResult {
 
     /**
      * Returns the number of bytes retrieved from the source buffer(s).
-     * 
+     *
      * @return the number of bytes retrieved from the source buffer(s).
-     * @since Android 1.0
      */
     public final int bytesConsumed() {
         return bytesConsumed;
@@ -108,106 +156,17 @@ public class SSLEngineResult {
 
     /**
      * Returns the number of bytes transferred to the destination buffer(s).
-     * 
+     *
      * @return the number of bytes transferred to the destination buffer(s).
-     * @since Android 1.0
      */
     public final int bytesProduced() {
         return bytesProduced;
     }
 
-    /**
-     * Returns a string representation of this instance.
-     * 
-     * @return a string representation of this instance.
-     * @since Android 1.0
-     */
+    @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer("SSLEngineReport: Status = ");
-        sb.append(status.toString());
-        sb.append("  HandshakeStatus = ");
-        sb.append(handshakeStatus.toString());
-        sb.append("\n                 bytesConsumed = ");
-        sb.append(Integer.toString(bytesConsumed));
-        sb.append(" bytesProduced = ");
-        sb.append(Integer.toString(bytesProduced));
-        return sb.toString();
-    }
-
-    /**
-     * The {@code enum} describing the state of the current handshake.
-     * 
-     * @since Android 1.0
-     */
-    public enum HandshakeStatus {
-        /**
-         * No handshake in progress.
-         * 
-         * @since Android 1.0
-         */
-        NOT_HANDSHAKING,
-        /**
-         * The handshake is finished.
-         * 
-         * @since Android 1.0
-         */
-        FINISHED,
-        /**
-         * The results of one (or more) delegated tasks are needed to continue
-         * the handshake.
-         * 
-         * @since Android 1.0
-         */
-        NEED_TASK,
-        /**
-         * The engine must send data to the remote side to continue the
-         * handshake.
-         * 
-         * @since Android 1.0
-         */
-        NEED_WRAP,
-        /**
-         * The engine needs to receive data from the remote side to continue the
-         * handshake.
-         * 
-         * @since Android 1.0
-         */
-        NEED_UNWRAP
-    }
-
-    /**
-     * The {@code enum} describing the result of the {@code SSLEngine}
-     * operation.
-     * 
-     * @since Android 1.0
-     */
-    public static enum Status {
-        /**
-         * The size of the destination buffer is too small to hold the result of
-         * the current operation.
-         * 
-         * @since Android 1.0
-         */
-        BUFFER_OVERFLOW,
-        /**
-         * There were not enough bytes available in the source buffer to
-         * complete the current operation.
-         * 
-         * @since Android 1.0
-         */
-        BUFFER_UNDERFLOW,
-        /**
-         * The operation closed this side of the communication or was already
-         * closed.
-         * 
-         * @since Android 1.0
-         */
-        CLOSED,
-        /**
-         * The operation completed successfully.
-         * 
-         * @since Android 1.0
-         */
-        OK
+        return "SSLEngineReport: Status = " + status + "  HandshakeStatus = " + handshakeStatus
+                + "\n                 bytesConsumed = " + bytesConsumed + " bytesProduced = "
+                + bytesProduced;
     }
 }

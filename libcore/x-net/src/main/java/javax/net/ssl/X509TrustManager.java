@@ -22,9 +22,7 @@ import java.security.cert.X509Certificate;
 
 /**
  * The trust manager for X509 certificates to be used to perform authentication
- * for secure sockets. 
- * 
- * @since Android 1.0
+ * for secure sockets.
  */
 public interface X509TrustManager extends TrustManager {
 
@@ -32,7 +30,7 @@ public interface X509TrustManager extends TrustManager {
      * Checks whether the specified certificate chain (partial or complete) can
      * be validated and is trusted for client authentication for the specified
      * authentication type.
-     * 
+     *
      * @param chain
      *            the certificate chain to validate.
      * @param authType
@@ -43,7 +41,6 @@ public interface X509TrustManager extends TrustManager {
      *             if the specified certificate chain is empty or {@code null},
      *             or if the specified authentication type is {@code null} or an
      *             empty string.
-     * @since Android 1.0
      */
     public void checkClientTrusted(X509Certificate[] chain, String authType)
             throws CertificateException;
@@ -53,7 +50,7 @@ public interface X509TrustManager extends TrustManager {
      * Checks whether the specified certificate chain (partial or complete) can
      * be validated and is trusted for server authentication for the specified
      * key exchange algorithm.
-     * 
+     *
      * @param chain
      *            the certificate chain to validate.
      * @param authType
@@ -64,7 +61,6 @@ public interface X509TrustManager extends TrustManager {
      *             if the specified certificate chain is empty or {@code null},
      *             or if the specified authentication type is {@code null} or an
      *             empty string.
-     * @since Android 1.0
      */
     public void checkServerTrusted(X509Certificate[] chain, String authType)
             throws CertificateException;
@@ -72,10 +68,9 @@ public interface X509TrustManager extends TrustManager {
     /**
      * Returns the list of certificate issuer authorities which are trusted for
      * authentication of peers.
-     * 
+     *
      * @return the list of certificate issuer authorities which are trusted for
      *         authentication of peers.
-     * @since Android 1.0
      */
     public X509Certificate[] getAcceptedIssuers();
 }

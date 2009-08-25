@@ -26,23 +26,19 @@ import java.security.UnrecoverableKeyException;
 /**
  * The <i>Service Provider Interface</i> (SPI) for the
  * {@code KeyManagerFactory} class.
- * 
- * @since Android 1.0
  */
-
 public abstract class KeyManagerFactorySpi {
-
+    
     /**
      * Creates a new {@code KeyManagerFactorySpi} instance.
-     * 
-     * @since Android 1.0
      */
     public KeyManagerFactorySpi() {
+        super();
     }
 
     /**
      * Initializes this instance with the specified key store and password.
-     * 
+     *
      * @param ks
      *            the key store or {@code null} to use the default key store.
      * @param password
@@ -53,20 +49,17 @@ public abstract class KeyManagerFactorySpi {
      *             if a required algorithm is not available.
      * @throws UnrecoverableKeyException
      *             if a key cannot be recovered.
-     * @since Android 1.0
      */
-    protected abstract void engineInit(KeyStore ks, char[] password)
-            throws KeyStoreException, NoSuchAlgorithmException,
-            UnrecoverableKeyException;
+    protected abstract void engineInit(KeyStore ks, char[] password) throws KeyStoreException,
+            NoSuchAlgorithmException, UnrecoverableKeyException;
 
     /**
      * Initializes this instance with the specified factory parameters.
-     * 
+     *
      * @param spec
      *            the factory parameters.
      * @throws InvalidAlgorithmParameterException
      *             if an error occurs.
-     * @since Android 1.0
      */
     protected abstract void engineInit(ManagerFactoryParameters spec)
             throws InvalidAlgorithmParameterException;
@@ -74,9 +67,8 @@ public abstract class KeyManagerFactorySpi {
     /**
      * Returns a list of key managers, one instance for each type of key in the
      * key store.
-     * 
+     *
      * @return a list of key managers.
-     * @since Android 1.0
      */
     protected abstract KeyManager[] engineGetKeyManagers();
 }

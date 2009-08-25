@@ -21,27 +21,22 @@ import java.security.Principal;
 
 /**
  * The abstract extension for the {@code X509KeyManager} interface.
- * 
- * @since Android 1.0
  */
 public abstract class X509ExtendedKeyManager implements X509KeyManager {
-   
+
     /**
      * To be used by subclasses only.
      * <p>
      * Creates a new {@code X509ExtendedKeyManager} instance.
-     * </p>
-     * 
-     * @since Android 1.0
      */
     protected X509ExtendedKeyManager() {
         super();
     }
 
     /**
-     * Chooses a alias for the client side of an SSL connection to authenticate
+     * Chooses an alias for the client side of an SSL connection to authenticate
      * it with the specified public key type and certificate issuers.
-     * 
+     *
      * @param keyType
      *            the list of public key algorithm names.
      * @param issuers
@@ -52,7 +47,6 @@ public abstract class X509ExtendedKeyManager implements X509KeyManager {
      *            no engine is predefined.
      * @return the alias name of a matching key or {@code null} if there are no
      *         matches.
-     * @since Android 1.0
      */
     public String chooseEngineClientAlias(String[] keyType,
             Principal[] issuers, SSLEngine engine) {
@@ -60,9 +54,9 @@ public abstract class X509ExtendedKeyManager implements X509KeyManager {
     }
 
     /**
-     * Chooses a alias for the server side of an SSL connection to authenticate
+     * Chooses an alias for the server side of an SSL connection to authenticate
      * it with the specified public key type and certificate issuers.
-     * 
+     *
      * @param keyType
      *            the list of public key algorithm names.
      * @param issuers
@@ -73,7 +67,6 @@ public abstract class X509ExtendedKeyManager implements X509KeyManager {
      *            no engine is predefined.
      * @return the alias name of a matching key or {@code null} if there are no
      *         matches.
-     * @since Android 1.0
      */
     public String chooseEngineServerAlias(String keyType, Principal[] issuers,
             SSLEngine engine) {
