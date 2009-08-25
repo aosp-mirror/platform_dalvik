@@ -980,15 +980,22 @@ static bool prepareThread(Thread* thread)
     /*
      * Initialize our reference tracking tables.
      *
-     * The JNI local ref table *must* be fixed-size because we keep pointers
-     * into the table in our stack frames.
-     *
      * Most threads won't use jniMonitorRefTable, so we clear out the
      * structure but don't call the init function (which allocs storage).
+     */
+#ifdef USE_INDIRECT_REF
+    if (!dvmInitIndirectRefTable(&thread->jniLocalRefTable,
+            kJniLocalRefMin, kJniLocalRefMax, kIndirectKindLocal))
+        return false;
+#else
+    /*
+     * The JNI local ref table *must* be fixed-size because we keep pointers
+     * into the table in our stack frames.
      */
     if (!dvmInitReferenceTable(&thread->jniLocalRefTable,
             kJniLocalRefMax, kJniLocalRefMax))
         return false;
+#endif
     if (!dvmInitReferenceTable(&thread->internalLocalRefTable,
             kInternalRefDefault, kInternalRefMax))
         return false;
@@ -1042,7 +1049,11 @@ static void freeThread(Thread* thread)
 #endif
     }
 
+#ifdef USE_INDIRECT_REF
+    dvmClearIndirectRefTable(&thread->jniLocalRefTable);
+#else
     dvmClearReferenceTable(&thread->jniLocalRefTable);
+#endif
     dvmClearReferenceTable(&thread->internalLocalRefTable);
     if (&thread->jniMonitorRefTable.table != NULL)
         dvmClearReferenceTable(&thread->jniMonitorRefTable);
@@ -3742,6 +3753,20 @@ static void gcScanReferenceTable(ReferenceTable *refTable)
     }
 }
 
+static void gcScanIndirectRefTable(IndirectRefTable* pRefTable)
+{
+    Object** op = pRefTable->table;
+    int numEntries = dvmIndirectRefTableEntries(pRefTable);
+    int i;
+
+    for (i = 0; i < numEntries; i++) {
+        Object* obj = *op;
+        if (obj != NULL)
+            dvmMarkObjectNonNull(obj);
+        op++;
+    }
+}
+
 /*
  * Scan a Thread and mark any objects it references.
  */
@@ -3772,7 +3797,11 @@ static void gcScanThread(Thread *thread)
 
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_JNI_LOCAL, thread->threadId);
 
+#ifdef USE_INDIRECT_REF
+    gcScanIndirectRefTable(&thread->jniLocalRefTable);
+#else
     gcScanReferenceTable(&thread->jniLocalRefTable);
+#endif
 
     if (thread->jniMonitorRefTable.table != NULL) {
         HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_JNI_MONITOR, thread->threadId);

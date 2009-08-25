@@ -105,7 +105,7 @@ static bool dvmPushInterpFrame(Thread* self, const Method* method)
 
     breakSaveBlock->prevFrame = self->curFrame;
     breakSaveBlock->savedPc = NULL;             // not required
-    breakSaveBlock->xtra.localRefTop = NULL;    // not required
+    breakSaveBlock->xtra.localRefCookie = 0;    // not required
     breakSaveBlock->method = NULL;
     saveBlock->prevFrame = FP_FROM_SAVEAREA(breakSaveBlock);
     saveBlock->savedPc = NULL;                  // not required
@@ -182,11 +182,15 @@ bool dvmPushJNIFrame(Thread* self, const Method* method)
 
     breakSaveBlock->prevFrame = self->curFrame;
     breakSaveBlock->savedPc = NULL;             // not required
-    breakSaveBlock->xtra.localRefTop = NULL;    // not required
+    breakSaveBlock->xtra.localRefCookie = 0;    // not required
     breakSaveBlock->method = NULL;
     saveBlock->prevFrame = FP_FROM_SAVEAREA(breakSaveBlock);
     saveBlock->savedPc = NULL;                  // not required
-    saveBlock->xtra.localRefTop = self->jniLocalRefTable.nextEntry;
+#ifdef USE_INDIRECT_REF
+    saveBlock->xtra.localRefCookie = self->jniLocalRefTable.segmentState.all;
+#else
+    saveBlock->xtra.localRefCookie = self->jniLocalRefTable.nextEntry;
+#endif
     saveBlock->method = method;
 
     LOGVV("PUSH JNI frame: old=%p new=%p (size=%d)\n",
@@ -245,7 +249,11 @@ bool dvmPushLocalFrame(Thread* self, const Method* method)
 
     saveBlock->prevFrame = self->curFrame;
     saveBlock->savedPc = NULL;                  // not required
-    saveBlock->xtra.localRefTop = self->jniLocalRefTable.nextEntry;
+#ifdef USE_INDIRECT_REF
+    saveBlock->xtra.localRefCookie = self->jniLocalRefTable.segmentState.all;
+#else
+    saveBlock->xtra.localRefCookie = self->jniLocalRefTable.nextEntry;
+#endif
     saveBlock->method = method;
 
     LOGVV("PUSH JNI local frame: old=%p new=%p (size=%d)\n",
@@ -320,9 +328,9 @@ static bool dvmPopFrame(Thread* self)
                 saveBlock->method->name,
                 (SAVEAREA_FROM_FP(saveBlock->prevFrame)->method == NULL) ?
                 "" : " (JNI local)");
-            assert(saveBlock->xtra.localRefTop != NULL);
-            assert(saveBlock->xtra.localRefTop >=self->jniLocalRefTable.table &&
-                saveBlock->xtra.localRefTop <=self->jniLocalRefTable.nextEntry);
+            assert(saveBlock->xtra.localRefCookie != 0);
+            //assert(saveBlock->xtra.localRefCookie >= self->jniLocalRefTable.table &&
+            //    saveBlock->xtra.localRefCookie <=self->jniLocalRefTable.nextEntry);
 
             dvmPopJniLocals(self, saveBlock);
         }
@@ -424,7 +432,7 @@ void dvmCallMethod(Thread* self, const Method* method, Object* obj,
 
     va_list args;
     va_start(args, pResult);
-    dvmCallMethodV(self, method, obj, pResult, args);
+    dvmCallMethodV(self, method, obj, false, pResult, args);
     va_end(args);
 }
 
@@ -438,7 +446,7 @@ void dvmCallMethod(Thread* self, const Method* method, Object* obj,
  * we don't need to worry about static synchronized methods.
  */
 void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, va_list args)
+    bool fromJni, JValue* pResult, va_list args)
 {
     const char* desc = &(method->shorty[1]); // [0] is the return type.
     int verifyCount = 0;
@@ -483,7 +491,10 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
             case 'L': {     /* 'shorty' descr uses L for all refs, incl array */
                 void* argObj = va_arg(args, void*);
                 assert(obj == NULL || dvmIsValidObject(obj));
-                *ins++ = (u4) dvmDecodeIndirectRef(env, argObj);
+                if (fromJni)
+                    *ins++ = (u4) dvmDecodeIndirectRef(env, argObj);
+                else
+                    *ins++ = (u4) argObj;
                 verifyCount++;
                 break;
             }
@@ -541,7 +552,7 @@ bail:
  * "args" may be NULL if the method has no arguments.
  */
 void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, const jvalue* args)
+    bool fromJni, JValue* pResult, const jvalue* args)
 {
     const char* desc = &(method->shorty[1]); // [0] is the return type.
     int verifyCount = 0;
@@ -572,7 +583,10 @@ void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
             verifyCount++;              /* this needs an extra push */
             break;
         case 'L':                       /* includes array refs */
-            *ins++ = (u4) dvmDecodeIndirectRef(env, args->l);
+            if (fromJni)
+                *ins++ = (u4) dvmDecodeIndirectRef(env, args->l);
+            else
+                *ins++ = (u4) args->l;
             break;
         case 'F':
         case 'I':

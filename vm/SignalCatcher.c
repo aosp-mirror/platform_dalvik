@@ -246,7 +246,7 @@ loop:
 
             if (false) {
                 dvmLockMutex(&gDvm.jniGlobalRefLock);
-                dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
+                //dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
                 dvmUnlockMutex(&gDvm.jniGlobalRefLock);
             }
 

@@ -2814,7 +2814,7 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
         free(desc);
     }
 
-    dvmCallMethodA(self, meth, pReq->obj, &pReq->resultValue,
+    dvmCallMethodA(self, meth, pReq->obj, false, &pReq->resultValue,
         (jvalue*)pReq->argArray);
     pReq->exceptObj = objectToObjectId(dvmGetException(self));
     pReq->resultTag = resultTagFromSignature(meth);
