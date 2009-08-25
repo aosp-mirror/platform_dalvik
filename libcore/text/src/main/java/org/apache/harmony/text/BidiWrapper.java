@@ -18,7 +18,7 @@
 package org.apache.harmony.text;
 
 /**
- * Dalvik Bidi wrapper. Derived from an old version of Harmony; today they use
+ * Dalvik Bidi wrapper. Derived from an old version of Harmony; today they call
  * straight through to ICU4J.
  */
 
