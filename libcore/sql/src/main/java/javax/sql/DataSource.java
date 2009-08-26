@@ -29,12 +29,10 @@ import java.io.PrintWriter;
  * A class which implements the {@code DataSource} interface is typically
  * registered with a JNDI naming service directory and is retrieved from there
  * by name.
- * </p>
  * <p>
  * The {@code DataSource} interface is typically implemented by the writer of a
  * JDBC driver. There are three variants of the {@code DataSource} interface,
  * which produce connections with different characteristics:
- * </p>
  * <ol>
  * <li><i>Standard {@code DataSource}</i>: produces standard {@code Connection}
  * objects with no special features.</li>
@@ -51,9 +49,6 @@ import java.io.PrintWriter;
  * Note that a JDBC driver which is accessed via the {@code DataSource}
  * interface is loaded via a JNDI lookup process. A driver loaded in this way
  * does not register itself with the {@code DriverManager}.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface DataSource {
 
@@ -65,7 +60,6 @@ public interface DataSource {
      *         database.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Connection getConnection() throws SQLException;
 
@@ -82,7 +76,6 @@ public interface DataSource {
      *         database.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Connection getConnection(String theUsername, String thePassword)
             throws SQLException;
@@ -97,7 +90,6 @@ public interface DataSource {
      * @return the login timeout value in seconds.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public int getLoginTimeout() throws SQLException;
 
@@ -110,14 +102,12 @@ public interface DataSource {
      * log writer when an {@code DataSource} is created is {@code null}. Note
      * that the log writer for a {@code DataSource} is not the same as the log
      * writer used by a {@code DriverManager}.
-     * </p>
-     * 
+     *
      * @return a {@code PrintWriter} which is the log writer for this {@code
      *         DataSource}. Can be {@code null}, in which case log writing is
      *         disabled for this {@code DataSource}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public PrintWriter getLogWriter() throws SQLException;
 
@@ -132,7 +122,6 @@ public interface DataSource {
      *            the new login timeout value in seconds.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void setLoginTimeout(int theTimeout) throws SQLException;
 
@@ -145,14 +134,12 @@ public interface DataSource {
      * log writer when a {@code DataSource} is created is {@code null}. Note
      * that the log writer for a {@code DataSource} is not the same as the log
      * writer used by a {@code DriverManager}.
-     * </p>
      * 
      * @param theWriter
      *            a {@code PrintWriter} to use as the log writer for this
      *            {@code DataSource}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void setLogWriter(PrintWriter theWriter) throws SQLException;
 }

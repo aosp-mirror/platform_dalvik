@@ -20,58 +20,42 @@ package java.sql;
 /**
  * An interface used to get information about the types and properties of
  * parameters in a {@code PreparedStatement}.
- *  
- * @since Android 1.0
  */
 public interface ParameterMetaData {
 
     /**
      * Indicates that the parameter mode is {@code IN}.
-     * 
-     * @since Android 1.0
      */
     public static final int parameterModeIn = 1;
 
     /**
      * Indicates that the parameter mode is {@code INOUT}.
-     * 
-     * @since Android 1.0
      */
     public static final int parameterModeInOut = 2;
 
     /**
      * Indicates that the parameter mode is {@code OUT}.
-     * 
-     * @since Android 1.0
      */
     public static final int parameterModeOut = 4;
 
     /**
      * Indicates that the parameter mode is not known.
-     * 
-     * @since Android 1.0
      */
     public static final int parameterModeUnknown = 0;
 
     /**
      * Indicates that a parameter is not permitted to be {@code NULL}.
-     * 
-     * @since Android 1.0
      */
     public static final int parameterNoNulls = 0;
 
     /**
      * Indicates that a parameter is permitted to be {@code NULL}.
-     * 
-     * @since Android 1.0
      */
     public static final int parameterNullable = 1;
 
     /**
      * Indicates that whether a parameter is allowed to be {@code null} or not
      * is not known.
-     * 
-     * @since Android 1.0
      */
     public static final int parameterNullableUnknown = 2;
 
@@ -87,7 +71,6 @@ public interface ParameterMetaData {
      *         between SQL types and Java objects.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public String getParameterClassName(int paramIndex) throws SQLException;
 
@@ -98,7 +81,6 @@ public interface ParameterMetaData {
      * @return the number of parameters.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getParameterCount() throws SQLException;
 
@@ -117,7 +99,6 @@ public interface ParameterMetaData {
      * @return the parameter's mode.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getParameterMode(int paramIndex) throws SQLException;
 
@@ -131,7 +112,6 @@ public interface ParameterMetaData {
      *         java.sql.Types}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getParameterType(int paramIndex) throws SQLException;
 
@@ -146,7 +126,6 @@ public interface ParameterMetaData {
      *         Defined Type</i> (UDT).
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public String getParameterTypeName(int paramIndex) throws SQLException;
 
@@ -160,7 +139,6 @@ public interface ParameterMetaData {
      *         {@code 0} if the parameter is not a numeric type.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getPrecision(int paramIndex) throws SQLException;
 
@@ -175,7 +153,6 @@ public interface ParameterMetaData {
      *         the parameter. {@code 0} if the parameter is not a numeric type.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getScale(int paramIndex) throws SQLException;
 
@@ -194,7 +171,6 @@ public interface ParameterMetaData {
      * @return the int code indicating the nullability of the parameter.
      * @throws SQLException
      *             if a database error is encountered.
-     * @since Android 1.0
      */
     public int isNullable(int paramIndex) throws SQLException;
 
@@ -208,7 +184,6 @@ public interface ParameterMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean isSigned(int paramIndex) throws SQLException;
 }

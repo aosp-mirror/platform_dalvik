@@ -36,7 +36,6 @@ import java.io.Reader;
  * name or by a numerical index starting at 1.
  * <p>
  * The correct syntax is:
- * </p>
  * <dd>
  * <dl>
  * { ?= call &lt;procedurename&gt; [( [parameter1,parameter2,...] )] }
@@ -44,7 +43,8 @@ import java.io.Reader;
  * <dl>
  * { call &lt;procedurename&gt; [( [parameter1,parameter2,...] )] }
  * </dl>
- * </code></dd> </p> {@code IN} parameters are set before calling the procedure,
+ * </code></dd>
+ * {@code IN} parameters are set before calling the procedure,
  * using the setter methods which are inherited from {@code PreparedStatement}.
  * For {@code OUT} parameters, their type must be registered before executing
  * the stored procedure. The values are retrieved using the getter methods
@@ -53,9 +53,6 @@ import java.io.Reader;
  * {@code CallableStatement}s can return one or more {@code ResultSets}. In the
  * event that multiple {@code ResultSets} are returned, they are accessed using
  * the methods inherited from the {@code Statement} interface.
- * </p>
- *  
- * @since Android 1.0
  */
 public interface CallableStatement extends PreparedStatement {
 
@@ -69,7 +66,6 @@ public interface CallableStatement extends PreparedStatement {
      * @return a {@code java.sql.Array} containing the parameter value.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public Array getArray(int parameterIndex) throws SQLException;
 
@@ -82,7 +78,6 @@ public interface CallableStatement extends PreparedStatement {
      * @return a {@code java.sql.Array} containing the parameter's value.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Array getArray(String parameterName) throws SQLException;
 
@@ -98,7 +93,6 @@ public interface CallableStatement extends PreparedStatement {
      *         the parameter in question is an SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public BigDecimal getBigDecimal(int parameterIndex) throws SQLException;
 
@@ -119,7 +113,6 @@ public interface CallableStatement extends PreparedStatement {
      *             if a database error occurs.
      * @deprecated Use {@link #getBigDecimal(int)} or
      *             {@link #getBigDecimal(String)}
-     * @since Android 1.0
      */
     @Deprecated
     public BigDecimal getBigDecimal(int parameterIndex, int scale)
@@ -136,7 +129,6 @@ public interface CallableStatement extends PreparedStatement {
      *         the parameter in question is an SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public BigDecimal getBigDecimal(String parameterName) throws SQLException;
 
@@ -152,7 +144,6 @@ public interface CallableStatement extends PreparedStatement {
      *         the parameter in question is an SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public Blob getBlob(int parameterIndex) throws SQLException;
 
@@ -167,7 +158,6 @@ public interface CallableStatement extends PreparedStatement {
      *         the parameter in question is an SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public Blob getBlob(String parameterName) throws SQLException;
 
@@ -181,7 +171,6 @@ public interface CallableStatement extends PreparedStatement {
      *            is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public boolean getBoolean(int parameterIndex) throws SQLException;
 
@@ -195,7 +184,6 @@ public interface CallableStatement extends PreparedStatement {
      *         {@code false} is returned if the SQL value is {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public boolean getBoolean(String parameterName) throws SQLException;
 
@@ -210,7 +198,6 @@ public interface CallableStatement extends PreparedStatement {
      *            {@code 0} is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public byte getByte(int parameterIndex) throws SQLException;
 
@@ -224,7 +211,6 @@ public interface CallableStatement extends PreparedStatement {
      *         {@code 0} is returned if the SQL value is {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public byte getByte(String parameterName) throws SQLException;
 
@@ -239,7 +225,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public byte[] getBytes(int parameterIndex) throws SQLException;
 
@@ -253,7 +238,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public byte[] getBytes(String parameterName) throws SQLException;
 
@@ -270,7 +254,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Clob
-     * @since Android 1.0
      */
     public Clob getClob(int parameterIndex) throws SQLException;
 
@@ -285,7 +268,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Clob
-     * @since Android 1.0
      */
     public Clob getClob(String parameterName) throws SQLException;
 
@@ -301,7 +283,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Date
-     * @since Android 1.0
      */
     public Date getDate(int parameterIndex) throws SQLException;
 
@@ -312,8 +293,7 @@ public interface CallableStatement extends PreparedStatement {
      * The JDBC driver uses the calendar to create the Date using a particular
      * timezone and locale. The default behavior of the driver is to use the Java
      * virtual machine default settings.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1.
@@ -324,7 +304,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Date
-     * @since Android 1.0
      */
     public Date getDate(int parameterIndex, Calendar cal) throws SQLException;
 
@@ -339,7 +318,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Date
-     * @since Android 1.0
      */
     public Date getDate(String parameterName) throws SQLException;
 
@@ -350,8 +328,7 @@ public interface CallableStatement extends PreparedStatement {
      * The JDBC driver uses the calendar to create the date using a particular
      * timezone and locale. The default behavior of the driver is to use the Java
      * virtual machine default settings.
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the name of the desired parameter.
      * @param cal
@@ -361,7 +338,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Date
-     * @since Android 1.0
      */
     public Date getDate(String parameterName, Calendar cal) throws SQLException;
 
@@ -376,7 +352,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public double getDouble(int parameterIndex) throws SQLException;
 
@@ -390,7 +365,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public double getDouble(String parameterName) throws SQLException;
 
@@ -405,7 +379,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public float getFloat(int parameterIndex) throws SQLException;
 
@@ -419,7 +392,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public float getFloat(String parameterName) throws SQLException;
 
@@ -434,7 +406,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public int getInt(int parameterIndex) throws SQLException;
 
@@ -448,7 +419,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public int getInt(String parameterName) throws SQLException;
 
@@ -463,7 +433,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public long getLong(int parameterIndex) throws SQLException;
 
@@ -477,7 +446,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public long getLong(String parameterName) throws SQLException;
 
@@ -488,15 +456,13 @@ public interface CallableStatement extends PreparedStatement {
      * with a {@code registerOutParameter} call. If a parameter was registered
      * as a {@code java.sql.Types.OTHER} then it may hold abstract types that
      * are particular to the connected database.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1.
      * @return an Object holding the value of the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public Object getObject(int parameterIndex) throws SQLException;
 
@@ -513,7 +479,6 @@ public interface CallableStatement extends PreparedStatement {
      * @return an Object holding the value of the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public Object getObject(int parameterIndex, Map<String, Class<?>> map)
             throws SQLException;
@@ -526,15 +491,13 @@ public interface CallableStatement extends PreparedStatement {
      * If a parameter was registered as a {@code java.sql.Types.OTHER} 
      * then it may hold abstract types that are particular to the 
      * connected database.
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the parameter name.
      * @return the Java {@code Object} representation of the value of the
      *         parameter.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Object getObject(String parameterName) throws SQLException;
 
@@ -550,7 +513,6 @@ public interface CallableStatement extends PreparedStatement {
      * @return an {@code Object} holding the value of the parameter.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Object getObject(String parameterName, Map<String, Class<?>> map)
             throws SQLException;
@@ -566,7 +528,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public Ref getRef(int parameterIndex) throws SQLException;
 
@@ -582,7 +543,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if there is a problem accessing the database.
      * @see Ref
-     * @since Android 1.0
      */
     public Ref getRef(String parameterName) throws SQLException;
 
@@ -597,7 +557,6 @@ public interface CallableStatement extends PreparedStatement {
      *         if the parameter's value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public short getShort(int parameterIndex) throws SQLException;
 
@@ -611,7 +570,6 @@ public interface CallableStatement extends PreparedStatement {
      *         if the parameter's value is SQL {@code NULL}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public short getShort(String parameterName) throws SQLException;
 
@@ -623,8 +581,7 @@ public interface CallableStatement extends PreparedStatement {
      * The {@code String} corresponding to a {@code CHAR} of fixed length 
      * will be of identical length to the value in the database inclusive 
      * of padding characters.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1.
@@ -632,7 +589,6 @@ public interface CallableStatement extends PreparedStatement {
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public String getString(int parameterIndex) throws SQLException;
 
@@ -644,15 +600,13 @@ public interface CallableStatement extends PreparedStatement {
      * The string corresponding to a {@code CHAR} of fixed length will be of
      * identical length to the value in the database inclusive of padding
      * characters.
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the desired parameter's name.
      * @return the parameter's value as a {@code String}. {@code null} 
      *         is returned if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public String getString(String parameterName) throws SQLException;
 
@@ -668,7 +622,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Time
-     * @since Android 1.0
      */
     public Time getTime(int parameterIndex) throws SQLException;
 
@@ -689,7 +642,6 @@ public interface CallableStatement extends PreparedStatement {
      *             if a database error occurs.
      * @see Time
      * @see java.util.Calendar
-     * @since Android 1.0
      */
     public Time getTime(int parameterIndex, Calendar cal) throws SQLException;
 
@@ -704,7 +656,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Time
-     * @since Android 1.0
      */
     public Time getTime(String parameterName) throws SQLException;
 
@@ -724,7 +675,6 @@ public interface CallableStatement extends PreparedStatement {
      *             if a database error occurs.
      * @see Time
      * @see java.util.Calendar
-     * @since Android 1.0
      */
     public Time getTime(String parameterName, Calendar cal) throws SQLException;
 
@@ -741,7 +691,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Timestamp
-     * @since Android 1.0
      */
     public Timestamp getTimestamp(int parameterIndex) throws SQLException;
 
@@ -761,7 +710,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Timestamp
-     * @since Android 1.0
      */
     public Timestamp getTimestamp(int parameterIndex, Calendar cal)
             throws SQLException;
@@ -778,7 +726,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Timestamp
-     * @since Android 1.0
      */
     public Timestamp getTimestamp(String parameterName) throws SQLException;
 
@@ -797,7 +744,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Timestamp
-     * @since Android 1.0
      */
     public Timestamp getTimestamp(String parameterName, Calendar cal)
             throws SQLException;
@@ -814,7 +760,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see java.net.URL
-     * @since Android 1.0
      */
     public URL getURL(int parameterIndex) throws SQLException;
 
@@ -830,7 +775,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see java.net.URL
-     * @since Android 1.0
      */
     public URL getURL(String parameterName) throws SQLException;
 
@@ -845,8 +789,7 @@ public interface CallableStatement extends PreparedStatement {
      * If a database specific type is expected for a parameter, the Type {@code
      * java.sql.Types.OTHER} should be used. Note that there is another variant
      * of this method for User Defined Types or a {@code REF} type.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1
@@ -857,7 +800,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Types
-     * @since Android 1.0
      */
     public void registerOutParameter(int parameterIndex, int sqlType)
             throws SQLException;
@@ -873,8 +815,7 @@ public interface CallableStatement extends PreparedStatement {
      * The type supplied in the {@code sqlType} parameter fixes the  
      * type that will be returned by the getter methods of 
      * {@code CallableStatement}. 
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1
@@ -886,7 +827,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Types
-     * @since Android 1.0
      */
     public void registerOutParameter(int parameterIndex, int sqlType, int scale)
             throws SQLException;
@@ -908,7 +848,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Ref
-     * @since Android 1.0
      */
     public void registerOutParameter(int paramIndex, int sqlType,
             String typeName) throws SQLException;
@@ -923,8 +862,7 @@ public interface CallableStatement extends PreparedStatement {
      * If a database-specific type is expected for a parameter, the Type {@code
      * java.sql.Types.OTHER} should be used. Note that there is another variant
      * of this method for User Defined Types or a {@code REF} type.
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the parameter name.
      * @param sqlType
@@ -934,7 +872,6 @@ public interface CallableStatement extends PreparedStatement {
      *            parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void registerOutParameter(String parameterName, int sqlType)
             throws SQLException;
@@ -950,8 +887,7 @@ public interface CallableStatement extends PreparedStatement {
      * The type supplied in the {@code sqlType} parameter fixes the  
      * type that will be returned by the getter methods of 
      * {@code CallableStatement}. 
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the parameter name.
      * @param sqlType
@@ -961,7 +897,6 @@ public interface CallableStatement extends PreparedStatement {
      *            than or equal to 0.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void registerOutParameter(String parameterName, int sqlType,
             int scale) throws SQLException;
@@ -982,7 +917,6 @@ public interface CallableStatement extends PreparedStatement {
      *            of the referenced type.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void registerOutParameter(String parameterName, int sqlType,
             String typeName) throws SQLException;
@@ -991,12 +925,11 @@ public interface CallableStatement extends PreparedStatement {
      * Sets the value of a specified parameter to the content of a supplied
      * {@code InputStream}, which has a specified number of bytes.
      * <p>
-     * This is a good method for setting an SQL {@code LONVARCHAR} parameter
+     * This is a good method for setting an SQL {@code LONGVARCHAR} parameter
      * where the length of the data is large. Data is read from the {@code
      * InputStream} until end-of-file is reached or the specified number of
      * bytes is copied.
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the parameter name
      * @param theInputStream
@@ -1007,7 +940,6 @@ public interface CallableStatement extends PreparedStatement {
      *            parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setAsciiStream(String parameterName,
             InputStream theInputStream, int length) throws SQLException;
@@ -1022,7 +954,6 @@ public interface CallableStatement extends PreparedStatement {
      *            the {@code java.math.BigInteger} value to set.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setBigDecimal(String parameterName, BigDecimal theBigDecimal)
             throws SQLException;
@@ -1033,8 +964,7 @@ public interface CallableStatement extends PreparedStatement {
      * <p>
      * Use this method when a large amount of data needs to be set into a
      * {@code LONGVARBINARY} parameter.
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the name of the parameter.
      * @param theInputStream
@@ -1045,7 +975,6 @@ public interface CallableStatement extends PreparedStatement {
      *            parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setBinaryStream(String parameterName,
             InputStream theInputStream, int length) throws SQLException;
@@ -1060,7 +989,6 @@ public interface CallableStatement extends PreparedStatement {
      *            the new value with which to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setBoolean(String parameterName, boolean theBoolean)
             throws SQLException;
@@ -1074,7 +1002,6 @@ public interface CallableStatement extends PreparedStatement {
      *            the new value with which to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setByte(String parameterName, byte theByte) throws SQLException;
 
@@ -1089,7 +1016,6 @@ public interface CallableStatement extends PreparedStatement {
      *            the new value with which to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setBytes(String parameterName, byte[] theBytes)
             throws SQLException;
@@ -1106,7 +1032,6 @@ public interface CallableStatement extends PreparedStatement {
      *            a count of the characters contained in {@code reader}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setCharacterStream(String parameterName, Reader reader,
             int length) throws SQLException;
@@ -1121,7 +1046,6 @@ public interface CallableStatement extends PreparedStatement {
      *            the new value with which to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setDate(String parameterName, Date theDate) throws SQLException;
 
@@ -1144,7 +1068,6 @@ public interface CallableStatement extends PreparedStatement {
      *             if a database error occurs.
      * @see java.util.Calendar
      * @see Date
-     * @since Android 1.0
      */
     public void setDate(String parameterName, Date theDate, Calendar cal)
             throws SQLException;
@@ -1159,7 +1082,6 @@ public interface CallableStatement extends PreparedStatement {
      *            the new value with which to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setDouble(String parameterName, double theDouble)
             throws SQLException;
@@ -1174,7 +1096,6 @@ public interface CallableStatement extends PreparedStatement {
      *            the new value with which to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setFloat(String parameterName, float theFloat)
             throws SQLException;
@@ -1188,7 +1109,6 @@ public interface CallableStatement extends PreparedStatement {
      *            the new value with which to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setInt(String parameterName, int theInt) throws SQLException;
 
@@ -1201,7 +1121,6 @@ public interface CallableStatement extends PreparedStatement {
      *            the new value with which to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     *             @since Android 1.0
      */
     public void setLong(String parameterName, long theLong) throws SQLException;
 
@@ -1216,7 +1135,6 @@ public interface CallableStatement extends PreparedStatement {
      *            a JDBC type expressed as a constant from {@link Types}.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setNull(String parameterName, int sqlType) throws SQLException;
 
@@ -1229,8 +1147,7 @@ public interface CallableStatement extends PreparedStatement {
      * type code and type name (which is just the parameter name if the type is
      * user defined, referred to as a {@code UDT}, or the name of the referenced
      * type in case of a {@code REF} type).
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the parameter name.
      * @param sqlType
@@ -1243,7 +1160,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Types
-     * @since Android 1.0
      */
     public void setNull(String parameterName, int sqlType, String typeName)
             throws SQLException;
@@ -1263,8 +1179,7 @@ public interface CallableStatement extends PreparedStatement {
      * <li>{@link Array}</li>
      * <li>{@link Clob}</li>
      * <li>{@link Blob}</li> </ul>
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the parameter name
      * @param theObject
@@ -1272,7 +1187,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see SQLData
-     * @since Android 1.0
      */
     public void setObject(String parameterName, Object theObject)
             throws SQLException;
@@ -1295,8 +1209,7 @@ public interface CallableStatement extends PreparedStatement {
      * </ul>
      * then the driver is in charge of mapping the value to the appropriate 
      * SQL type and deliver it to the database.
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the parameter name.
      * @param theObject
@@ -1306,7 +1219,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see SQLData
-     * @since Android 1.0
      */
     public void setObject(String parameterName, Object theObject,
             int targetSqlType) throws SQLException;
@@ -1328,8 +1240,7 @@ public interface CallableStatement extends PreparedStatement {
      * </ul>
      * then the driver is charge of mapping the value to the appropriate 
      * SQL type.
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the parameter name.
      * @param theObject
@@ -1342,7 +1253,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see SQLData
-     * @since Android 1.0
      */
     public void setObject(String parameterName, Object theObject,
             int targetSqlType, int scale) throws SQLException;
@@ -1357,7 +1267,6 @@ public interface CallableStatement extends PreparedStatement {
      *            a short value to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setShort(String parameterName, short theShort)
             throws SQLException;
@@ -1371,7 +1280,6 @@ public interface CallableStatement extends PreparedStatement {
      *            a {@code String} value to update the parameter.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public void setString(String parameterName, String theString)
             throws SQLException;
@@ -1387,7 +1295,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Time
-     * @since Android 1.0
      */
     public void setTime(String parameterName, Time theTime) throws SQLException;
 
@@ -1409,7 +1316,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Time
-     * @since Android 1.0
      */
     public void setTime(String parameterName, Time theTime, Calendar cal)
             throws SQLException;
@@ -1425,7 +1331,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see Timestamp
-     * @since Android 1.0
      */
     public void setTimestamp(String parameterName, Timestamp theTimestamp)
             throws SQLException;
@@ -1437,8 +1342,7 @@ public interface CallableStatement extends PreparedStatement {
      * The driver uses the supplied calendar to create the SQL {@code TIMESTAMP}
      * value, which allows it to use a custom timezone - otherwise the driver
      * uses the default timezone of the Java virtual machine.
-     * </p>
-     * 
+     *
      * @param parameterName
      *            the parameter name.
      * @param theTimestamp
@@ -1449,7 +1353,6 @@ public interface CallableStatement extends PreparedStatement {
      *             if a database error occurs.
      * @see Timestamp
      * @see java.util.Calendar
-     * @since Android 1.0
      */
     public void setTimestamp(String parameterName, Timestamp theTimestamp,
             Calendar cal) throws SQLException;
@@ -1465,7 +1368,6 @@ public interface CallableStatement extends PreparedStatement {
      * @throws SQLException
      *             if a database error occurs.
      * @see java.net.URL
-     * @since Android 1.0
      */
     public void setURL(String parameterName, URL theURL) throws SQLException;
 
@@ -1477,7 +1379,6 @@ public interface CallableStatement extends PreparedStatement {
      *         otherwise.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public boolean wasNull() throws SQLException;
 }

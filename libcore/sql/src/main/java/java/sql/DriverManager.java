@@ -17,14 +17,16 @@
 
 package java.sql;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Enumeration;
 import java.util.Iterator;
-import java.util.Set;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.HashSet;
 import java.util.Vector;
+import java.security.AccessController;
+import org.apache.harmony.luni.util.PriviAction;
 import org.apache.harmony.sql.internal.nls.Messages;
 // BEGIN android-changed
 import dalvik.system.VMStack;
@@ -36,9 +38,6 @@ import dalvik.system.VMStack;
  * The {@code DriverManager} class loads JDBC drivers during its initialization,
  * from the list of drivers referenced by the system property {@code
  * "jdbc.drivers"}.
- * </p>
- *  
- * @since Android 1.0
  */
 public class DriverManager {
 
@@ -57,10 +56,11 @@ public class DriverManager {
      * Set to hold Registered Drivers - initial capacity 10 drivers (will expand
      * automatically if necessary.
      */
-    private static final Set<Driver> theDriverSet = new HashSet<Driver>(10);
+    private static final List<Driver> theDrivers = new ArrayList<Driver>(10);
 
     // Permission for setting log
-    private static final SQLPermission logPermission = new SQLPermission("setLog"); //$NON-NLS-1$
+    private static final SQLPermission logPermission = new SQLPermission(
+            "setLog"); //$NON-NLS-1$
 
     /*
      * Load drivers on initialization
@@ -74,7 +74,9 @@ public class DriverManager {
      * it is defined.
      */
     private static void loadInitialDrivers() {
-        String theDriverList = System.getProperty("jdbc.drivers", null); //$NON-NLS-1$
+        String theDriverList = AccessController
+                .doPrivileged(new PriviAction<String>("jdbc.drivers", null)); //$NON-NLS-1$
+
         if (theDriverList == null) {
             return;
         }
@@ -112,14 +114,12 @@ public class DriverManager {
      * <p>
      * If the removal succeeds, the {@code DriverManager} will not use this
      * driver in the future when asked to get a {@code Connection}.
-     * </p>
-     * 
+     *
      * @param driver
      *            the JDBC driver to remove.
      * @throws SQLException
      *             if there is a problem interfering with accessing the
      *             database.
-     * @since Android 1.0
      */
     public static void deregisterDriver(Driver driver) throws SQLException {
         if (driver == null) {
@@ -130,11 +130,12 @@ public class DriverManager {
         // END android-changed
 
         if (!DriverManager.isClassFromClassLoader(driver, callerClassLoader)) {
-            // sql.1=DriverManager: calling class not authorized to deregister JDBC driver
+            // sql.1=DriverManager: calling class not authorized to deregister
+            // JDBC driver
             throw new SecurityException(Messages.getString("sql.1")); //$NON-NLS-1$
         } // end if
-        synchronized (theDriverSet) {
-            theDriverSet.remove(driver);
+        synchronized (theDrivers) {
+            theDrivers.remove(driver);
         }
     }
 
@@ -148,7 +149,6 @@ public class DriverManager {
      * @throws SQLException
      *             if there is an error while attempting to connect to the
      *             database identified by the URL.
-     * @since Android 1.0
      */
     public static Connection getConnection(String url) throws SQLException {
         return getConnection(url, new Properties());
@@ -171,7 +171,6 @@ public class DriverManager {
      * @throws SQLException
      *             if there is an error while attempting to connect to the
      *             database identified by the URL.
-     * @since Android 1.0
      */
     public static Connection getConnection(String url, Properties info)
             throws SQLException {
@@ -182,13 +181,13 @@ public class DriverManager {
             // sql.5=The url cannot be null
             throw new SQLException(Messages.getString("sql.5"), sqlState); //$NON-NLS-1$
         }
-        synchronized (theDriverSet) {
+        synchronized (theDrivers) {
             /*
              * Loop over the drivers in the DriverSet checking to see if one can
              * open a connection to the supplied URL - return the first
              * connection which is returned
              */
-            for (Driver theDriver : theDriverSet) {
+            for (Driver theDriver : theDrivers) {
                 Connection theConnection = theDriver.connect(url, info);
                 if (theConnection != null) {
                     return theConnection;
@@ -214,15 +213,14 @@ public class DriverManager {
      * @throws SQLException
      *             if there is an error while attempting to connect to the
      *             database identified by the URL.
-     * @since Android 1.0
      */
     public static Connection getConnection(String url, String user,
             String password) throws SQLException {
         Properties theProperties = new Properties();
-        if(null != user){
+        if (null != user) {
             theProperties.setProperty("user", user); //$NON-NLS-1$
         }
-        if(null != password){
+        if (null != password) {
             theProperties.setProperty("password", password); //$NON-NLS-1$
         }
         return getConnection(url, theProperties);
@@ -243,13 +241,13 @@ public class DriverManager {
         ClassLoader callerClassLoader = VMStack.getCallingClassLoader();
         // END android-changed
 
-        synchronized (theDriverSet) {
+        synchronized (theDrivers) {
             /*
              * Loop over the drivers in the DriverSet checking to see if one
              * does understand the supplied URL - return the first driver which
              * does understand the URL
              */
-            Iterator<Driver> theIterator = theDriverSet.iterator();
+            Iterator<Driver> theIterator = theDrivers.iterator();
             while (theIterator.hasNext()) {
                 Driver theDriver = theIterator.next();
                 if (theDriver.acceptsURL(url)
@@ -261,8 +259,8 @@ public class DriverManager {
         }
         // If no drivers understand the URL, throw an SQLException
         // sql.6=No suitable driver
-        //SQLState: 08 - connection exception
-        //001 - SQL-client unable to establish SQL-connection
+        // SQLState: 08 - connection exception
+        // 001 - SQL-client unable to establish SQL-connection
         throw new SQLException(Messages.getString("sql.6"), "08001"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -272,7 +270,6 @@ public class DriverManager {
      * 
      * @return An {@code Enumeration} containing all the currently loaded JDBC
      *         {@code Drivers}.
-     * @since Android 1.0
      */
     public static Enumeration<Driver> getDrivers() {
         // BEGIN android-changed
@@ -282,13 +279,13 @@ public class DriverManager {
          * Synchronize to avoid clashes with additions and removals of drivers
          * in the DriverSet
          */
-        synchronized (theDriverSet) {
+        synchronized (theDrivers) {
             /*
              * Create the Enumeration by building a Vector from the elements of
              * the DriverSet
              */
             Vector<Driver> theVector = new Vector<Driver>();
-            Iterator<Driver> theIterator = theDriverSet.iterator();
+            Iterator<Driver> theIterator = theDrivers.iterator();
             while (theIterator.hasNext()) {
                 Driver theDriver = theIterator.next();
                 if (DriverManager.isClassFromClassLoader(theDriver,
@@ -304,7 +301,6 @@ public class DriverManager {
      * Returns the login timeout when connecting to a database in seconds.
      * 
      * @return the login timeout in seconds.
-     * @since Android 1.0
      */
     public static int getLoginTimeout() {
         return loginTimeout;
@@ -313,10 +309,9 @@ public class DriverManager {
     /**
      * Gets the log {@code PrintStream} used by the {@code DriverManager} and
      * all the JDBC Drivers.
-     * 
+     *
      * @deprecated use {@link #getLogWriter()} instead.
      * @return the {@code PrintStream} used for logging activities.
-     * @since Android 1.0
      */
     @Deprecated
     public static PrintStream getLogStream() {
@@ -328,7 +323,6 @@ public class DriverManager {
      * 
      * @return A {@code PrintWriter} object used as the log writer. {@code null}
      *         if no log writer is set.
-     * @since Android 1.0
      */
     public static PrintWriter getLogWriter() {
         return thePrintWriter;
@@ -340,7 +334,6 @@ public class DriverManager {
      * 
      * @param message
      *            the message to print to the JDBC log stream.
-     * @since Android 1.0
      */
     public static void println(String message) {
         if (thePrintWriter != null) {
@@ -362,8 +355,7 @@ public class DriverManager {
      * <p>
      * A newly loaded JDBC driver class should register itself with the
      * {@code DriverManager} by calling this method.
-     * </p>
-     * 
+     *
      * @param driver
      *            the {@code Driver} to register with the {@code DriverManager}.
      * @throws SQLException
@@ -373,8 +365,8 @@ public class DriverManager {
         if (driver == null) {
             throw new NullPointerException();
         }
-        synchronized (theDriverSet) {
-            theDriverSet.add(driver);
+        synchronized (theDrivers) {
+            theDrivers.add(driver);
         }
     }
 
@@ -383,7 +375,6 @@ public class DriverManager {
      * 
      * @param seconds
      *            seconds until timeout. 0 indicates wait forever.
-     * @since Android 1.0
      */
     public static void setLoginTimeout(int seconds) {
         loginTimeout = seconds;
@@ -393,11 +384,10 @@ public class DriverManager {
     /**
      * Sets the print stream to use for logging data from the {@code
      * DriverManager} and the JDBC drivers.
-     * 
+     *
      * @deprecated Use {@link #setLogWriter} instead.
      * @param out
      *            the {@code PrintStream} to use for logging.
-     * @since Android 1.0
      */
     @Deprecated
     public static void setLogStream(PrintStream out) {
@@ -411,7 +401,6 @@ public class DriverManager {
      * 
      * @param out
      *            the {@code PrintWriter} to be used.
-     * @since Android 1.0
      */
     public static void setLogWriter(PrintWriter out) {
         checkLogSecurity();
@@ -442,13 +431,13 @@ public class DriverManager {
      */
     private static boolean isClassFromClassLoader(Object theObject,
             ClassLoader theClassLoader) {
-    
+
         if ((theObject == null) || (theClassLoader == null)) {
             return false;
         }
-    
+
         Class<?> objectClass = theObject.getClass();
-    
+
         try {
             Class<?> checkClass = Class.forName(objectClass.getName(), true,
                     theClassLoader);

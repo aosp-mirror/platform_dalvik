@@ -30,13 +30,11 @@ import java.sql.Connection;
  * process both to establish a connection to a database and to destroy the
  * connection. Reusing connections through a pool is a way of improving system
  * performance and reducing overhead.
- * </p>
  * <p>
  * It is not intended that an application uses the {@code PooledConnection}
  * interface directly. The {@code PooledConnection} interface is intended for
  * use by a component called a connection pool manager, typically part of the
  * infrastructure that supports use of the database by applications.
- * </p>
  * <p>
  * Applications obtain connections to the database by calling the
  * {@link DataSource#getConnection} method. Behind the scenes, the connection
@@ -44,7 +42,6 @@ import java.sql.Connection;
  * pool and passes back a connection object that wraps or references the {@code
  * PooledConnection} object. A new {@code PooledConnection} object will only be
  * created if the pool is empty.
- * </p>
  * <p>
  * When the application is finished using a {@code PooledConnection}, the
  * application calls the {@link Connection#close} method. The connection pool
@@ -54,7 +51,6 @@ import java.sql.Connection;
  * the underlying {@code PooledConnection} object from the connection and
  * returns it to the pool for reuse - the {@code PooledConnection} is thus
  * recycled rather than being destroyed.
- * </p>
  * <p>
  * The connection to the database represented by the {@code PooledConnection} is
  * kept open until the {@code PooledConnection} object itself is deactivated by
@@ -62,9 +58,6 @@ import java.sql.Connection;
  * This is typically done if there are too many inactive connections in the
  * pool, if the {@code PooledConnection} encounters a problem that makes it
  * unusable or if the whole system is being shut down.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface PooledConnection {
 
@@ -77,7 +70,6 @@ public interface PooledConnection {
      * @param theListener
      *            an object which implements the {@code ConnectionEventListener}
      *            interface.
-     * @since Android 1.0
      */
     public void addConnectionEventListener(ConnectionEventListener theListener);
 
@@ -89,7 +81,6 @@ public interface PooledConnection {
      * 
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void close() throws SQLException;
 
@@ -102,7 +93,6 @@ public interface PooledConnection {
      * @return a {@code Connection} object.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Connection getConnection() throws SQLException;
 
@@ -116,7 +106,6 @@ public interface PooledConnection {
      *            interface. This object should have previously been registered
      *            with the {@code PooledConnection} using the {@code
      *            addConnectionEventListener} method.
-     * @since Android 1.0
      */
     public void removeConnectionEventListener(
             ConnectionEventListener theListener);

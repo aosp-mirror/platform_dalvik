@@ -24,7 +24,6 @@ package java.sql;
  * This interface is implemented by JDBC driver vendors in order to provide
  * information about the underlying database capabilities in association with
  * the JDBC driver.
- * </p>
  * <p>
  * Some of the methods in this interface take string parameters which are
  * patterns. Within these string patterns, {@code '%'} and {@code '_'}
@@ -33,144 +32,105 @@ package java.sql;
  * "match any character". Only metadata entries that match the pattern are
  * returned. If such a search pattern string is set to {@code null}, that
  * argument's criteria are dropped from the search.
- * </p>
- *  
- * @since Android 1.0
  */
 public interface DatabaseMetaData {
 
     /**
      * States that it may not be permitted to store {@code NULL} values.
-     * 
-     * @since Android 1.0
      */
     public static final short attributeNoNulls = 0;
 
     /**
      * States that {@code NULL} values are definitely permitted.
-     *
-     * @since Android 1.0
      */
     public static final short attributeNullable = 1;
 
     /**
      * States that whether {@code NULL} values are permitted is unknown.
-     * 
-     * @since Android 1.0
      */
     public static final short attributeNullableUnknown = 2;
 
     /**
      * States the best row identifier is <em>NOT</em> a pseudo column.
-     * 
-     * @since Android 1.0
      */
     public static final int bestRowNotPseudo = 1;
 
     /**
      * States that the best row identifier is a pseudo column.
-     * 
-     * @since Android 1.0
      */
     public static final int bestRowPseudo = 2;
 
     /**
      * States that the remainder of the current session is used as the scope for
      * the best row identifier.
-     * 
-     * @since Android 1.0
      */
     public static final int bestRowSession = 2;
 
     /**
      * States that best row identifier scope lasts only while the row is being
      * used.
-     * 
-     * @since Android 1.0
      */
     public static final int bestRowTemporary = 0;
 
     /**
      * States that the remainder of the current transaction is used as the scope
      * for the best row identifier.
-     * 
-     * @since Android 1.0
      */
     public static final int bestRowTransaction = 1;
 
     /**
      * States that the best row identifier may or may not be a pseudo column.
-     * 
-     * @since Android 1.0
      */
     public static final int bestRowUnknown = 0;
 
     /**
      * States that the column must not allow {@code NULL} values.
-     * 
-     * @since Android 1.0
      */
     public static final int columnNoNulls = 0;
 
     /**
      * States that the column definitely allows {@code NULL} values.
-     * 
-     * @since Android 1.0
      */
     public static final int columnNullable = 1;
 
     /**
      * States that it is unknown whether the columns may be nulled.
-     * 
-     * @since Android 1.0
      */
     public static final int columnNullableUnknown = 2;
 
     /**
      * For the column {@code UPDATE_RULE}, states that when the primary key is
      * updated, the foreign key (imported key) is changed accordingly.
-     * 
-     * @since Android 1.0
      */
     public static final int importedKeyCascade = 0;
 
     /**
      * States that the evaluation of foreign key constraints is deferred (delayed
      * until commit).
-     * 
-     * @since Android 1.0
      */
     public static final int importedKeyInitiallyDeferred = 5;
 
     /**
      * States that the evaluation of foreign key constraint is {@code IMMEDIATE}
      * .
-     * 
-     * @since Android 1.0
      */
     public static final int importedKeyInitiallyImmediate = 6;
 
     /**
      * For the columns {@code UPDATE_RULE} and {@code DELETE_RULE}, states that
      * if the primary key has been imported, it cannot be updated or deleted.
-     * 
-     * @since Android 1.0
      */
     public static final int importedKeyNoAction = 3;
 
     /**
      * States that the evaluation of foreign key constraint must not be {@code
      * DEFERRED}.
-     * 
-     * @since Android 1.0
      */
     public static final int importedKeyNotDeferrable = 7;
 
     /**
      * States that a primary key must not be updated when imported as a foreign
      * key by some other table. Used for the column {@code UPDATE_RULE}.
-     * 
-     * @since Android 1.0
      */
     public static final int importedKeyRestrict = 1;
 
@@ -178,8 +138,6 @@ public interface DatabaseMetaData {
      * States that when the primary key is modified (updated or deleted) the
      * foreign (imported) key is changed to its default value. Applies to the
      * {@code UPDATE_RULE} and {@code DELETE_RULE} columns.
-     * 
-     * @since Android 1.0
      */
     public static final int importedKeySetDefault = 4;
 
@@ -187,190 +145,138 @@ public interface DatabaseMetaData {
      * States that when the primary key is modified (updated or deleted) the
      * foreign (imported) key is changed to {@code NULL}. Applies to the {@code
      * UPDATE_RULE} and {@code DELETE_RULE} columns.
-     * 
-     * @since Android 1.0
      */
     public static final int importedKeySetNull = 2;
 
     /**
      * States that the column stores {@code IN} type parameters.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureColumnIn = 1;
 
     /**
      * States that this column stores {@code INOUT} type parameters.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureColumnInOut = 2;
 
     /**
      * States that this column stores {@code OUT} type parameters.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureColumnOut = 4;
 
     /**
      * States that the column stores results.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureColumnResult = 3;
 
     /**
      * States that the column stores return values.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureColumnReturn = 5;
 
     /**
      * States that type of the column is unknown.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureColumnUnknown = 0;
 
     /**
      * States that {@code NULL} values are not permitted.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureNoNulls = 0;
 
     /**
      * States that the procedure does not return a result.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureNoResult = 1;
 
     /**
      * States that {@code NULL} values are permitted.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureNullable = 1;
 
     /**
      * States that it is unknown whether {@code NULL} values are permitted.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureNullableUnknown = 2;
 
     /**
      * States that it is unknown whether or not the procedure returns a result.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureResultUnknown = 0;
 
     /**
      * States that the procedure returns a result.
-     * 
-     * @since Android 1.0
      */
     public static final int procedureReturnsResult = 2;
 
     /**
      * States that the value is an SQL99 {@code SQLSTATE} value.
-     * 
-     * @since Android 1.0
      */
     public static final int sqlStateSQL99 = 2;
 
     /**
      * States that the value is an SQL {@code CLI SQLSTATE} value as defined by
      * the X/Open standard.
-     * 
-     * @since Android 1.0
      */
     public static final int sqlStateXOpen = 1;
 
     /**
      * States that this table index is a clustered index.
-     * 
-     * @since Android 1.0
      */
     public static final short tableIndexClustered = 1;
 
     /**
      * States that this table index is a hashed index.
-     * 
-     * @since Android 1.0
      */
     public static final short tableIndexHashed = 2;
 
     /**
      * States this table's index is neither a clustered index, not a hashed
      * index, and not a table statistics index; i.e. it is something else.
-     * 
-     * @since Android 1.0
      */
     public static final short tableIndexOther = 3;
 
     /**
      * States this column has the table's statistics, and that it is returned in
      * conjunction with the table's index description.
-     * 
-     * @since Android 1.0
      */
     public static final short tableIndexStatistic = 0;
 
     /**
      * States that a {@code NULL} value is <em>NOT</em> permitted for
      * this data type.
-     * 
-     * @since Android 1.0
      */
     public static final int typeNoNulls = 0;
 
     /**
      * States that a {@code NULL} value is permitted for this data type.
-     * 
-     * @since Android 1.0
      */
     public static final int typeNullable = 1;
 
     /**
      * States that it is unknown if a {@code NULL} value is permitted for
      * this data type.
-     * 
-     * @since Android 1.0
      */
     public static final int typeNullableUnknown = 2;
 
     /**
      * States that this column shall not be used for {@code WHERE} statements
      * with a {@code LIKE} clause.
-     * 
-     * @since Android 1.0
      */
     public static final int typePredBasic = 2;
 
     /**
      * States that this column can only be used in a {@code WHERE...LIKE}
      * statement.
-     * 
-     * @since Android 1.0
      */
     public static final int typePredChar = 1;
 
     /**
      * States that this column does not support searches.
-     * 
-     * @since Android 1.0
      */
     public static final int typePredNone = 0;
 
     /**
      * States that the column is searchable.
-     * 
-     * @since Android 1.0
      */
     public static final int typeSearchable = 3;
 
@@ -397,7 +303,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean allProceduresAreCallable() throws SQLException;
 
@@ -409,7 +314,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean allTablesAreSelectable() throws SQLException;
 
@@ -421,7 +325,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean dataDefinitionCausesTransactionCommit() throws SQLException;
 
@@ -433,7 +336,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean dataDefinitionIgnoredInTransactions() throws SQLException;
 
@@ -450,7 +352,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean deletesAreDetected(int type) throws SQLException;
 
@@ -462,7 +363,6 @@ public interface DatabaseMetaData {
      *         and {@code LONGVARCHAR}, otherwise {@code false}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean doesMaxRowSizeIncludeBlobs() throws SQLException;
 
@@ -530,8 +430,7 @@ public interface DatabaseMetaData {
      * generated REF type or for a Distinct type. ({@code NULL} if {@code
      * DATA_TYPE} is not DISTINCT or a user generated REF)</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -551,7 +450,6 @@ public interface DatabaseMetaData {
      * @return a {@code ResultSet}, where each row is an attribute description.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getAttributes(String catalog, String schemaPattern,
             String typeNamePattern, String attributeNamePattern)
@@ -592,8 +490,7 @@ public interface DatabaseMetaData {
      * </ul>
      * </li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -616,7 +513,6 @@ public interface DatabaseMetaData {
      *         and the complete set of rows is the optimal set for this table.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getBestRowIdentifier(String catalog, String schema,
             String table, int scope, boolean nullable) throws SQLException;
@@ -630,7 +526,6 @@ public interface DatabaseMetaData {
      *         single column named {@code TABLE_CAT}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getCatalogs() throws SQLException;
 
@@ -641,7 +536,6 @@ public interface DatabaseMetaData {
      * @return a String containing the separator.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String getCatalogSeparator() throws SQLException;
 
@@ -651,7 +545,6 @@ public interface DatabaseMetaData {
      * @return a String with the vendor's term for "catalog".
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String getCatalogTerm() throws SQLException;
 
@@ -674,8 +567,7 @@ public interface DatabaseMetaData {
      * receiver can grant access to others, {@code "NO"} if the receiver cannot
      * grant access to others, {@code null} if unknown.</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -696,7 +588,6 @@ public interface DatabaseMetaData {
      *         each privilege description.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getColumnPrivileges(String catalog, String schema,
             String table, String columnNamePattern) throws SQLException;
@@ -754,8 +645,7 @@ public interface DatabaseMetaData {
      * generated REF type or for a Distinct type. ({@code NULL} if {@code
      * DATA_TYPE} is not DISTINCT or a user generated REF)</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -776,7 +666,6 @@ public interface DatabaseMetaData {
      *         defined above.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getColumns(String catalog, String schemaPattern,
             String tableNamePattern, String columnNamePattern)
@@ -788,7 +677,6 @@ public interface DatabaseMetaData {
      * @return the connection to the database.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public Connection getConnection() throws SQLException;
 
@@ -857,8 +745,7 @@ public interface DatabaseMetaData {
      * </ul>
      * </li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param primaryCatalog
      *            a catalog name for the primary key table. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -889,7 +776,6 @@ public interface DatabaseMetaData {
      *         foreign keys laid out according to the format defined above.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getCrossReference(String primaryCatalog,
             String primarySchema, String primaryTable, String foreignCatalog,
@@ -901,7 +787,6 @@ public interface DatabaseMetaData {
      * @return the major version number of the database software.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getDatabaseMajorVersion() throws SQLException;
 
@@ -911,7 +796,6 @@ public interface DatabaseMetaData {
      * @return the minor version number of the database software.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getDatabaseMinorVersion() throws SQLException;
 
@@ -921,7 +805,6 @@ public interface DatabaseMetaData {
      * @return a {@code String} with the name of the database software.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getDatabaseProductName() throws SQLException;
 
@@ -932,7 +815,6 @@ public interface DatabaseMetaData {
      *         software.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getDatabaseProductVersion() throws SQLException;
 
@@ -949,7 +831,6 @@ public interface DatabaseMetaData {
      *         </ul>
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getDefaultTransactionIsolation() throws SQLException;
 
@@ -957,7 +838,6 @@ public interface DatabaseMetaData {
      * Returns the JDBC driver's major version number.
      * 
      * @return the driver's major version number.
-     * @since Android 1.0
      */
     public int getDriverMajorVersion();
 
@@ -965,7 +845,6 @@ public interface DatabaseMetaData {
      * Returns the JDBC driver's minor version number.
      * 
      * @return the driver's minor version number.
-     * @since Android 1.0
      */
     public int getDriverMinorVersion();
 
@@ -975,7 +854,6 @@ public interface DatabaseMetaData {
      * @return a {@code String} containing the name of the JDBC driver
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getDriverName() throws SQLException;
 
@@ -986,7 +864,6 @@ public interface DatabaseMetaData {
      *         JDBC driver.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getDriverVersion() throws SQLException;
 
@@ -1056,8 +933,7 @@ public interface DatabaseMetaData {
      * </ul>
      * </li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -1075,7 +951,6 @@ public interface DatabaseMetaData {
      *         columns, as defined above
      * @throws SQLException
      *             a database error occurred
-     * @since Android 1.0
      */
     public ResultSet getExportedKeys(String catalog, String schema, String table)
             throws SQLException;
@@ -1088,7 +963,6 @@ public interface DatabaseMetaData {
      * @return a String containing all the additional permitted characters.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getExtraNameCharacters() throws SQLException;
 
@@ -1099,7 +973,6 @@ public interface DatabaseMetaData {
      * @return the String used to quote SQL identifiers.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getIdentifierQuoteString() throws SQLException;
 
@@ -1169,8 +1042,7 @@ public interface DatabaseMetaData {
      * </ul>
      * </li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -1188,7 +1060,6 @@ public interface DatabaseMetaData {
      *         rows in the format defined above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getImportedKeys(String catalog, String schema, String table)
             throws SQLException;
@@ -1235,8 +1106,7 @@ public interface DatabaseMetaData {
      * <li>{@code FILTER_CONDITION} - String - Filter condition. (possibly null)
      * </li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -1262,7 +1132,6 @@ public interface DatabaseMetaData {
      *         for the table, in the format defined above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getIndexInfo(String catalog, String schema, String table,
             boolean unique, boolean approximate) throws SQLException;
@@ -1273,7 +1142,6 @@ public interface DatabaseMetaData {
      * @return the major JDBC version number.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getJDBCMajorVersion() throws SQLException;
 
@@ -1283,7 +1151,6 @@ public interface DatabaseMetaData {
      * @return the Minor JDBC Version Number.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getJDBCMinorVersion() throws SQLException;
 
@@ -1295,7 +1162,6 @@ public interface DatabaseMetaData {
      *         literal. If the number is unlimited then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxBinaryLiteralLength() throws SQLException;
 
@@ -1306,7 +1172,6 @@ public interface DatabaseMetaData {
      *         is unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxCatalogNameLength() throws SQLException;
 
@@ -1318,7 +1183,6 @@ public interface DatabaseMetaData {
      *         zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxCharLiteralLength() throws SQLException;
 
@@ -1329,7 +1193,6 @@ public interface DatabaseMetaData {
      *         is unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxColumnNameLength() throws SQLException;
 
@@ -1342,7 +1205,6 @@ public interface DatabaseMetaData {
      *         is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxColumnsInGroupBy() throws SQLException;
 
@@ -1353,7 +1215,6 @@ public interface DatabaseMetaData {
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxColumnsInIndex() throws SQLException;
 
@@ -1366,7 +1227,6 @@ public interface DatabaseMetaData {
      *         is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxColumnsInOrderBy() throws SQLException;
 
@@ -1379,7 +1239,6 @@ public interface DatabaseMetaData {
      *         zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxColumnsInSelect() throws SQLException;
 
@@ -1390,7 +1249,6 @@ public interface DatabaseMetaData {
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxColumnsInTable() throws SQLException;
 
@@ -1401,7 +1259,6 @@ public interface DatabaseMetaData {
      *         the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxConnections() throws SQLException;
 
@@ -1412,7 +1269,6 @@ public interface DatabaseMetaData {
      *         is unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxCursorNameLength() throws SQLException;
 
@@ -1424,7 +1280,6 @@ public interface DatabaseMetaData {
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxIndexLength() throws SQLException;
 
@@ -1437,7 +1292,6 @@ public interface DatabaseMetaData {
      *         zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxProcedureNameLength() throws SQLException;
 
@@ -1449,7 +1303,6 @@ public interface DatabaseMetaData {
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxRowSize() throws SQLException;
 
@@ -1461,7 +1314,6 @@ public interface DatabaseMetaData {
      *         is unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxSchemaNameLength() throws SQLException;
 
@@ -1474,7 +1326,6 @@ public interface DatabaseMetaData {
      *         zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxStatementLength() throws SQLException;
 
@@ -1486,7 +1337,6 @@ public interface DatabaseMetaData {
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxStatements() throws SQLException;
 
@@ -1497,7 +1347,6 @@ public interface DatabaseMetaData {
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxTableNameLength() throws SQLException;
 
@@ -1510,7 +1359,6 @@ public interface DatabaseMetaData {
      *         then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxTablesInSelect() throws SQLException;
 
@@ -1521,7 +1369,6 @@ public interface DatabaseMetaData {
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getMaxUserNameLength() throws SQLException;
 
@@ -1534,7 +1381,6 @@ public interface DatabaseMetaData {
      *         separated list.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getNumericFunctions() throws SQLException;
 
@@ -1553,8 +1399,7 @@ public interface DatabaseMetaData {
      * primary key</li>
      * <li>{@code PK_NAME} - String - the primary key name (possibly null)</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -1572,7 +1417,6 @@ public interface DatabaseMetaData {
      *         defined above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getPrimaryKeys(String catalog, String schema, String table)
             throws SQLException;
@@ -1630,8 +1474,7 @@ public interface DatabaseMetaData {
      * <li>{@code REMARKS} - String - an explanatory comment about the data item
      * </li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -1652,7 +1495,6 @@ public interface DatabaseMetaData {
      *         in the format defined above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getProcedureColumns(String catalog, String schemaPattern,
             String procedureNamePattern, String columnNamePattern)
@@ -1702,7 +1544,6 @@ public interface DatabaseMetaData {
      *         procedure in the format defined above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getProcedures(String catalog, String schemaPattern,
             String procedureNamePattern) throws SQLException;
@@ -1713,7 +1554,6 @@ public interface DatabaseMetaData {
      * @return a String with the vendor's preferred name for "procedure".
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getProcedureTerm() throws SQLException;
 
@@ -1724,7 +1564,6 @@ public interface DatabaseMetaData {
      *         ResultSet.CLOSE_CURSORS_AT_COMMIT}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getResultSetHoldability() throws SQLException;
 
@@ -1741,7 +1580,6 @@ public interface DatabaseMetaData {
      *         defined above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getSchemas() throws SQLException;
 
@@ -1751,7 +1589,6 @@ public interface DatabaseMetaData {
      * @return a String which is the vendor's preferred term for schema.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getSchemaTerm() throws SQLException;
 
@@ -1765,7 +1602,6 @@ public interface DatabaseMetaData {
      * @return a String used to escape the wildcard characters.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getSearchStringEscape() throws SQLException;
 
@@ -1777,7 +1613,6 @@ public interface DatabaseMetaData {
      *         format.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getSQLKeywords() throws SQLException;
 
@@ -1791,7 +1626,6 @@ public interface DatabaseMetaData {
      *         DatabaseMetaData.sqlStateXOpen}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public int getSQLStateType() throws SQLException;
 
@@ -1804,7 +1638,6 @@ public interface DatabaseMetaData {
      *         separated format.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getStringFunctions() throws SQLException;
 
@@ -1824,8 +1657,7 @@ public interface DatabaseMetaData {
      * <li>{@code TABLE_NAME} - String - The table name</li>
      * <li>SUPER{@code TABLE_NAME} - String - The super table name</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -1846,7 +1678,6 @@ public interface DatabaseMetaData {
      *         returned if the database does not support table hierarchies.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getSuperTables(String catalog, String schemaPattern,
             String tableNamePattern) throws SQLException;
@@ -1871,8 +1702,7 @@ public interface DatabaseMetaData {
      * (possibly {@code null})</li>
      * <li>SUPER{@code TYPE_NAME} - String - direct supertype's name</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            the catalog name. "" means get the UDTs without a catalog.
      *            {@code null} means don't use the catalog name to restrict the
@@ -1889,7 +1719,6 @@ public interface DatabaseMetaData {
      *         returned for a database that does not support type hierarchies.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getSuperTypes(String catalog, String schemaPattern,
             String typeNamePattern) throws SQLException;
@@ -1903,7 +1732,6 @@ public interface DatabaseMetaData {
      *         separated format.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getSystemFunctions() throws SQLException;
 
@@ -1930,8 +1758,7 @@ public interface DatabaseMetaData {
      * access to others, {@code "NO"} implies guarantee cannot grant access to
      * others, {@code null} means this status is unknown</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -1949,7 +1776,6 @@ public interface DatabaseMetaData {
      *         in the format defined above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getTablePrivileges(String catalog, String schemaPattern,
             String tableNamePattern) throws SQLException;
@@ -1982,8 +1808,7 @@ public interface DatabaseMetaData {
      * "USER" | "DERIVED" - specifies how values in the {@code
      * SELF_REFERENCING_COL_NAME} are created (possibly {@code null})</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -2004,7 +1829,6 @@ public interface DatabaseMetaData {
      *         above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getTables(String catalog, String schemaPattern,
             String tableNamePattern, String[] types) throws SQLException;
@@ -2020,13 +1844,11 @@ public interface DatabaseMetaData {
      * {@code "TABLE"}, {@code "VIEW"}, "{@code SYSTEM TABLE"}, {@code "ALIAS"},
      * {@code "SYNONYM"}, {@code "GLOBAL TEMPORARY"}</li>
      * </ol>
-     * </p>
-     * 
+     *
      * @return a {@code ResultSet} with one row per table type in the format
      *         defined above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getTableTypes() throws SQLException;
 
@@ -2037,7 +1859,6 @@ public interface DatabaseMetaData {
      *         functions.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getTimeDateFunctions() throws SQLException;
 
@@ -2096,7 +1917,6 @@ public interface DatabaseMetaData {
      * @return a {@code ResultSet} which is structured as described above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getTypeInfo() throws SQLException;
 
@@ -2122,11 +1942,9 @@ public interface DatabaseMetaData {
      * This is defined in {@code java.sql.Types}, and will be {@code null} if
      * the {@code DATA_TYPE} does not match these criteria.</li>
      * </ol>
-     * </p>
      * <p>
      * If the driver does not support UDTs, the {@code ResultSet} is empty.
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search by catalog name. Otherwise, the name must match a
@@ -2146,7 +1964,6 @@ public interface DatabaseMetaData {
      * @return a {@code ResultSet} in the format described above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getUDTs(String catalog, String schemaPattern,
             String typeNamePattern, int[] types) throws SQLException;
@@ -2157,7 +1974,6 @@ public interface DatabaseMetaData {
      * @return the URL for the database. {@code null} if it cannot be generated.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getURL() throws SQLException;
 
@@ -2167,7 +1983,6 @@ public interface DatabaseMetaData {
      * @return the user name.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public String getUserName() throws SQLException;
 
@@ -2197,8 +2012,7 @@ public interface DatabaseMetaData {
      * </ul>
      * </li>
      * </ol>
-     * </p>
-     * 
+     *
      * @param catalog
      *            a catalog name. {@code null} is used to imply no narrowing of
      *            the search using catalog name. Otherwise, the name must match
@@ -2216,7 +2030,6 @@ public interface DatabaseMetaData {
      *         column, in the format defined above.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public ResultSet getVersionColumns(String catalog, String schema,
             String table) throws SQLException;
@@ -2235,7 +2048,6 @@ public interface DatabaseMetaData {
      * @throws SQLException
      *             a database error occurred.
      * @see ResultSet#rowInserted()
-     * @since Android 1.0
      */
     public boolean insertsAreDetected(int type) throws SQLException;
 
@@ -2247,7 +2059,6 @@ public interface DatabaseMetaData {
      *         qualified table name, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean isCatalogAtStart() throws SQLException;
 
@@ -2258,7 +2069,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean isReadOnly() throws SQLException;
 
@@ -2270,7 +2080,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean locatorsUpdateCopy() throws SQLException;
 
@@ -2282,7 +2091,6 @@ public interface DatabaseMetaData {
      *         produce a {@code NULL} result, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean nullPlusNonNullIsNull() throws SQLException;
 
@@ -2296,7 +2104,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean nullsAreSortedAtEnd() throws SQLException;
 
@@ -2309,7 +2116,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean nullsAreSortedAtStart() throws SQLException;
 
@@ -2321,7 +2127,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean nullsAreSortedHigh() throws SQLException;
 
@@ -2333,7 +2138,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean nullsAreSortedLow() throws SQLException;
 
@@ -2350,7 +2154,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean othersDeletesAreVisible(int type) throws SQLException;
 
@@ -2367,7 +2170,6 @@ public interface DatabaseMetaData {
      *         false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean othersInsertsAreVisible(int type) throws SQLException;
 
@@ -2384,7 +2186,6 @@ public interface DatabaseMetaData {
      *         false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean othersUpdatesAreVisible(int type) throws SQLException;
 
@@ -2401,7 +2202,6 @@ public interface DatabaseMetaData {
      *         ResultSet} itself, otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean ownDeletesAreVisible(int type) throws SQLException;
 
@@ -2418,7 +2218,6 @@ public interface DatabaseMetaData {
      *         ResultSet} itself, otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean ownInsertsAreVisible(int type) throws SQLException;
 
@@ -2435,7 +2234,6 @@ public interface DatabaseMetaData {
      *         ResultSet} itself, otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean ownUpdatesAreVisible(int type) throws SQLException;
 
@@ -2448,7 +2246,6 @@ public interface DatabaseMetaData {
      *         case, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean storesLowerCaseIdentifiers() throws SQLException;
 
@@ -2460,7 +2257,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean storesLowerCaseQuotedIdentifiers() throws SQLException;
 
@@ -2472,7 +2268,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean storesMixedCaseIdentifiers() throws SQLException;
 
@@ -2485,7 +2280,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean storesMixedCaseQuotedIdentifiers() throws SQLException;
 
@@ -2497,7 +2291,6 @@ public interface DatabaseMetaData {
      *         case, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean storesUpperCaseIdentifiers() throws SQLException;
 
@@ -2509,7 +2302,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean storesUpperCaseQuotedIdentifiers() throws SQLException;
 
@@ -2521,7 +2313,6 @@ public interface DatabaseMetaData {
      *         supported, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsAlterTableWithAddColumn() throws SQLException;
 
@@ -2533,7 +2324,6 @@ public interface DatabaseMetaData {
      *         supported, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsAlterTableWithDropColumn() throws SQLException;
 
@@ -2544,7 +2334,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsANSI92EntryLevelSQL() throws SQLException;
 
@@ -2555,7 +2344,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsANSI92FullSQL() throws SQLException;
 
@@ -2566,7 +2354,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsANSI92IntermediateSQL() throws SQLException;
 
@@ -2577,7 +2364,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsBatchUpdates() throws SQLException;
 
@@ -2589,7 +2375,6 @@ public interface DatabaseMetaData {
      *         statements, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsCatalogsInDataManipulation() throws SQLException;
 
@@ -2600,7 +2385,6 @@ public interface DatabaseMetaData {
      *         statements, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsCatalogsInIndexDefinitions() throws SQLException;
 
@@ -2612,7 +2396,6 @@ public interface DatabaseMetaData {
      *         statements, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException;
 
@@ -2623,7 +2406,6 @@ public interface DatabaseMetaData {
      *         statements.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsCatalogsInProcedureCalls() throws SQLException;
 
@@ -2634,7 +2416,6 @@ public interface DatabaseMetaData {
      *         statements, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsCatalogsInTableDefinitions() throws SQLException;
 
@@ -2643,8 +2424,7 @@ public interface DatabaseMetaData {
      * <p>
      * If aliasing is supported, then the SQL AS clause is used to provide names
      * for computed columns and provide alias names for columns.
-     * </p>
-     * 
+     *
      * @return {@code true} if column aliasing is supported, {@code false}
      *         otherwise.
      * @throws SQLException
@@ -2660,7 +2440,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsConvert() throws SQLException;
 
@@ -2676,7 +2455,6 @@ public interface DatabaseMetaData {
      *         these types, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsConvert(int fromType, int toType)
             throws SQLException;
@@ -2688,7 +2466,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsCoreSQLGrammar() throws SQLException;
 
@@ -2699,7 +2476,6 @@ public interface DatabaseMetaData {
      *         and {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsCorrelatedSubqueries() throws SQLException;
 
@@ -2711,7 +2487,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsDataDefinitionAndDataManipulationTransactions()
             throws SQLException;
@@ -2724,7 +2499,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsDataManipulationTransactionsOnly()
             throws SQLException;
@@ -2737,7 +2511,6 @@ public interface DatabaseMetaData {
      *         names, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsDifferentTableCorrelationNames() throws SQLException;
 
@@ -2748,7 +2521,6 @@ public interface DatabaseMetaData {
      *         supported.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsExpressionsInOrderBy() throws SQLException;
 
@@ -2759,7 +2531,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsExtendedSQLGrammar() throws SQLException;
 
@@ -2770,7 +2541,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsFullOuterJoins() throws SQLException;
 
@@ -2782,7 +2552,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsGetGeneratedKeys() throws SQLException;
 
@@ -2793,7 +2562,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsGroupBy() throws SQLException;
 
@@ -2807,7 +2575,6 @@ public interface DatabaseMetaData {
      *         this way, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsGroupByBeyondSelect() throws SQLException;
 
@@ -2819,7 +2586,6 @@ public interface DatabaseMetaData {
      *         in the {@code SELECT} statement, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsGroupByUnrelated() throws SQLException;
 
@@ -2831,7 +2597,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsIntegrityEnhancementFacility() throws SQLException;
 
@@ -2842,7 +2607,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsLikeEscapeClause() throws SQLException;
 
@@ -2855,7 +2619,6 @@ public interface DatabaseMetaData {
      *         {@code supportsFullOuterJoins} returns {@code true}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsLimitedOuterJoins() throws SQLException;
 
@@ -2866,7 +2629,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsMinimumSQLGrammar() throws SQLException;
 
@@ -2878,7 +2640,6 @@ public interface DatabaseMetaData {
      *         case, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsMixedCaseIdentifiers() throws SQLException;
 
@@ -2890,7 +2651,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsMixedCaseQuotedIdentifiers() throws SQLException;
 
@@ -2903,7 +2663,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsMultipleOpenResults() throws SQLException;
 
@@ -2915,7 +2674,6 @@ public interface DatabaseMetaData {
      *         {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsMultipleResultSets() throws SQLException;
 
@@ -2927,7 +2685,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsMultipleTransactions() throws SQLException;
 
@@ -2938,7 +2695,6 @@ public interface DatabaseMetaData {
      *         statements, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsNamedParameters() throws SQLException;
 
@@ -2949,7 +2705,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsNonNullableColumns() throws SQLException;
 
@@ -2972,7 +2727,6 @@ public interface DatabaseMetaData {
      *         operations, {@code false} if they might get closed.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsOpenCursorsAcrossRollback() throws SQLException;
 
@@ -2984,7 +2738,6 @@ public interface DatabaseMetaData {
      *         they might not.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsOpenStatementsAcrossCommit() throws SQLException;
 
@@ -2996,7 +2749,6 @@ public interface DatabaseMetaData {
      *         they might not.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsOpenStatementsAcrossRollback() throws SQLException;
 
@@ -3008,7 +2760,6 @@ public interface DatabaseMetaData {
      *         not in the {@code SELECT}, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsOrderByUnrelated() throws SQLException;
 
@@ -3019,7 +2770,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsOuterJoins() throws SQLException;
 
@@ -3030,7 +2780,6 @@ public interface DatabaseMetaData {
      *         statements.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsPositionedDelete() throws SQLException;
 
@@ -3041,7 +2790,6 @@ public interface DatabaseMetaData {
      *         statements, {@code false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsPositionedUpdate() throws SQLException;
 
@@ -3065,7 +2813,6 @@ public interface DatabaseMetaData {
      *         pairing is supported otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsResultSetConcurrency(int type, int concurrency)
             throws SQLException;
@@ -3082,7 +2829,6 @@ public interface DatabaseMetaData {
      *         if it isn't then {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsResultSetHoldability(int holdability)
             throws SQLException;
@@ -3099,7 +2845,6 @@ public interface DatabaseMetaData {
      *         false} otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsResultSetType(int type) throws SQLException;
 
@@ -3110,7 +2855,6 @@ public interface DatabaseMetaData {
      *         otherwise.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSavepoints() throws SQLException;
 
@@ -3122,7 +2866,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSchemasInDataManipulation() throws SQLException;
 
@@ -3134,7 +2877,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSchemasInIndexDefinitions() throws SQLException;
 
@@ -3146,7 +2888,6 @@ public interface DatabaseMetaData {
      *         definition, otherwise {@code false}
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSchemasInPrivilegeDefinitions() throws SQLException;
 
@@ -3157,7 +2898,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSchemasInProcedureCalls() throws SQLException;
 
@@ -3168,7 +2908,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSchemasInTableDefinitions() throws SQLException;
 
@@ -3179,7 +2918,6 @@ public interface DatabaseMetaData {
      *         supported, otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSelectForUpdate() throws SQLException;
 
@@ -3190,7 +2928,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsStatementPooling() throws SQLException;
 
@@ -3202,7 +2939,6 @@ public interface DatabaseMetaData {
      *         escape syntax are supported, otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsStoredProcedures() throws SQLException;
 
@@ -3213,7 +2949,6 @@ public interface DatabaseMetaData {
      *         expressions.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSubqueriesInComparisons() throws SQLException;
 
@@ -3224,7 +2959,6 @@ public interface DatabaseMetaData {
      *         expressions, otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSubqueriesInExists() throws SQLException;
 
@@ -3235,7 +2969,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSubqueriesInIns() throws SQLException;
 
@@ -3245,7 +2978,6 @@ public interface DatabaseMetaData {
      * @return {@code true} if subqueries are supported, otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsSubqueriesInQuantifieds() throws SQLException;
 
@@ -3256,7 +2988,6 @@ public interface DatabaseMetaData {
      *         {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsTableCorrelationNames() throws SQLException;
 
@@ -3273,7 +3004,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsTransactionIsolationLevel(int level)
             throws SQLException;
@@ -3284,13 +3014,11 @@ public interface DatabaseMetaData {
      * If transactions are not supported, then the {@code commit} method does
      * nothing and the transaction isolation level is always {@code
      * TRANSACTION_NONE}.
-     * </p>
-     * 
+     *
      * @return {@code true} if transactions are supported, otherwise {@code
      *         false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsTransactions() throws SQLException;
 
@@ -3301,7 +3029,6 @@ public interface DatabaseMetaData {
      *         {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsUnion() throws SQLException;
 
@@ -3312,7 +3039,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean supportsUnionAll() throws SQLException;
 
@@ -3328,7 +3054,6 @@ public interface DatabaseMetaData {
      *         false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean updatesAreDetected(int type) throws SQLException;
 
@@ -3339,7 +3064,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean usesLocalFilePerTable() throws SQLException;
 
@@ -3350,7 +3074,6 @@ public interface DatabaseMetaData {
      *         otherwise {@code false}.
      * @throws SQLException
      *             a database error occurred.
-     * @since Android 1.0
      */
     public boolean usesLocalFiles() throws SQLException;
 }

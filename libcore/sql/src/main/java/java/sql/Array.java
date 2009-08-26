@@ -21,8 +21,6 @@ import java.util.Map;
 
 /**
  * A Java representation of the SQL {@code ARRAY} type.
- *  
- * @since Android 1.0
  */
 public interface Array {
 
@@ -33,7 +31,6 @@ public interface Array {
      * @return A Java array containing the elements of this Array
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public Object getArray() throws SQLException;
 
@@ -50,7 +47,6 @@ public interface Array {
      * @return A Java array containing the desired set of elements from this Array
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public Object getArray(long index, int count) throws SQLException;
 
@@ -70,7 +66,6 @@ public interface Array {
      * @return A Java array containing the desired set of elements from this Array
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public Object getArray(long index, int count, Map<String, Class<?>> map)
             throws SQLException;
@@ -84,7 +79,6 @@ public interface Array {
      * @return A Java array containing the elements of this array
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public Object getArray(Map<String, Class<?>> map) throws SQLException;
 
@@ -95,7 +89,6 @@ public interface Array {
      * @return An integer constant from the {@code java.sql.Types} class
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public int getBaseType() throws SQLException;
 
@@ -106,7 +99,6 @@ public interface Array {
      * @return The database specific name or a fully-qualified SQL type name.
      * @throws SQLException
      *              if there is a database error.
-     * @since Android 1.0
      */
     public String getBaseTypeName() throws SQLException;
 
@@ -117,7 +109,6 @@ public interface Array {
      * @return the elements of the array as a {@code ResultSet}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getResultSet() throws SQLException;
 
@@ -134,7 +125,6 @@ public interface Array {
      * @return the elements of the array as a {@code ResultSet}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getResultSet(long index, int count) throws SQLException;
 
@@ -155,7 +145,6 @@ public interface Array {
      *         database error has occurred.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getResultSet(long index, int count,
             Map<String, Class<?>> map) throws SQLException;
@@ -170,7 +159,6 @@ public interface Array {
      * @return the array as a {@code ResultSet}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSet getResultSet(Map<String, Class<?>> map)
             throws SQLException;

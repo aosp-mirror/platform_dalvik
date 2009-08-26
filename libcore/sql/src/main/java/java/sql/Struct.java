@@ -23,8 +23,6 @@ import java.util.Map;
  * An interface which provides facilities for manipulating an SQL structured type 
  * as a Java object. The {@code Struct} object has a value for each attribute of the SQL structured
  * type.
- * 
- * @since Android 1.0
  */
 public interface Struct {
 
@@ -35,7 +33,6 @@ public interface Struct {
      * @return the fully qualified name of SQL structured type.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public String getSQLTypeName() throws SQLException;
 
@@ -49,7 +46,6 @@ public interface Struct {
      * @return an {@code Object} array containing the ordered attributes.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public Object[] getAttributes() throws SQLException;
 
@@ -66,7 +62,6 @@ public interface Struct {
      * @return an Object array containing the ordered attributes,.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public Object[] getAttributes(Map<String, Class<?>> theMap)
             throws SQLException;

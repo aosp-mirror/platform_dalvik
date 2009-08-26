@@ -34,7 +34,6 @@ import java.net.URL;
  * use the {@code next} method. The {@code next} method returns {@code true} as
  * long as there are more rows in the {@code ResultSet}, otherwise it returns
  * {@code false}.
- * </p>
  * <p>
  * The default type of {@code ResultSet} can not be updated and its cursor can
  * only advance forward through the rows of data. This means that it is only
@@ -42,7 +41,6 @@ import java.net.URL;
  * are implemented: an <i>updatable</i> type and also types where the cursor can
  * be <i>scrolled</i> forward and backward through the rows of data. How such a
  * {@code ResultSet} is created is demonstrated in the following example:
- * </p>
  * <ul>
  * <dd>
  *         {@code Connection con;}</dd>
@@ -63,13 +61,11 @@ import java.net.URL;
  * is better to use column indexes. Ideally the columns should be read
  * left-to-right and read once only, since not all databases are optimized to
  * handle other techniques of reading the data.
- * </p>
  * <p>
  * When reading data via the appropriate getter methods, the JDBC driver maps
  * the SQL data retrieved from the database to the Java type implied by the
  * method invoked by the application. The JDBC specification has a table for the
  * mappings from SQL types to Java types.
- * </p>
  * <p>
  * There are also methods for writing data into the {@code ResultSet}, such as
  * {@code updateInt} and {@code updateString}. The update methods can be used
@@ -80,94 +76,70 @@ import java.net.URL;
  * method. For insertion of new rows, the cursor is first moved to a special row
  * called the <i>Insert Row</i>, data is added using the update methods,
  * followed by calling the {@code ResultSet.insertRow} method.
- * </p>
  * <p>
  * A {@code ResultSet} is closed if the statement which generated it closes, the
  * statement is executed again, or the same statement's next {@code ResultSet} 
  * is retrieved (if the statement returned of multiple results).
- * </p>
- * 
- * @since Android 1.0
  */
 public interface ResultSet {
 
     /**
      * A constant used to indicate that a {@code ResultSet} object must be
      * closed when the method {@code Connection.commit} is invoked.
-     * 
-     * @since Android 1.0
      */
     public static final int CLOSE_CURSORS_AT_COMMIT = 2;
 
     /**
      * A constant used to indicate that a {@code ResultSet} object must not be
      * closed when the method {@code Connection.commit} is invoked.
-     * 
-     * @since Android 1.0
      */
     public static final int HOLD_CURSORS_OVER_COMMIT = 1;
 
     /**
      * A constant used to indicate the concurrency mode for a {@code ResultSet}
      * object that cannot be updated.
-     * 
-     * @since Android 1.0
      */
     public static final int CONCUR_READ_ONLY = 1007;
 
     /**
      * A constant used to indicate the concurrency mode for a {@code ResultSet}
      * object that can be updated.
-     * 
-     * @since Android 1.0
      */
     public static final int CONCUR_UPDATABLE = 1008;
 
     /**
      * A constant used to indicate processing of the rows of a {@code ResultSet}
      * in the forward direction, first to last.
-     * 
-     * @since Android 1.0
      */
     public static final int FETCH_FORWARD = 1000;
 
     /**
      * A constant used to indicate processing of the rows of a {@code ResultSet}
      * in the reverse direction, last to first.
-     * 
-     * @since Android 1.0
      */
     public static final int FETCH_REVERSE = 1001;
 
     /**
      * A constant used to indicate that the order of processing of the rows of a
      * {@code ResultSet} is unknown.
-     * 
-     * @since Android 1.0
      */
     public static final int FETCH_UNKNOWN = 1002;
 
     /**
      * A constant used to indicate a {@code ResultSet} object whose cursor can
      * only move forward.
-     * 
-     * @since Android 1.0
      */
     public static final int TYPE_FORWARD_ONLY = 1003;
 
     /**
      * A constant used to indicate a {@code ResultSet} object which is
      * scrollable but is insensitive to changes made by others.
-     * 
-     * @since Android 1.0
      */
     public static final int TYPE_SCROLL_INSENSITIVE = 1004;
 
     /**
      * A constant used to indicate a {@code ResultSet} object which is
      * scrollable and sensitive to changes made by others.
-     * 
-     * @since Android 1.0
      */
     public static final int TYPE_SCROLL_SENSITIVE = 1005;
 
@@ -181,7 +153,6 @@ public interface ResultSet {
      *         ResultSet}, {@code false} otherwise.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean absolute(int row) throws SQLException;
 
@@ -190,7 +161,6 @@ public interface ResultSet {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void afterLast() throws SQLException;
 
@@ -200,7 +170,6 @@ public interface ResultSet {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void beforeFirst() throws SQLException;
 
@@ -209,7 +178,6 @@ public interface ResultSet {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void cancelRowUpdates() throws SQLException;
 
@@ -218,7 +186,6 @@ public interface ResultSet {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void clearWarnings() throws SQLException;
 
@@ -232,7 +199,6 @@ public interface ResultSet {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void close() throws SQLException;
 
@@ -242,7 +208,6 @@ public interface ResultSet {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void deleteRow() throws SQLException;
 
@@ -256,7 +221,6 @@ public interface ResultSet {
      *         name.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int findColumn(String columnName) throws SQLException;
 
@@ -267,7 +231,6 @@ public interface ResultSet {
      *         false} if the {@code ResultSet} contains no rows.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean first() throws SQLException;
 
@@ -280,7 +243,6 @@ public interface ResultSet {
      * @return a {@code java.sql.Array} with the data from the column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Array getArray(int columnIndex) throws SQLException;
 
@@ -293,7 +255,6 @@ public interface ResultSet {
      * @return a {@code java.sql.Array} with the data from the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Array getArray(String colName) throws SQLException;
 
@@ -306,7 +267,6 @@ public interface ResultSet {
      * @return an {@code InputStream} with the data from the column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public InputStream getAsciiStream(int columnIndex) throws SQLException;
 
@@ -319,7 +279,6 @@ public interface ResultSet {
      * @return an {@code InputStream} with the data from the column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public InputStream getAsciiStream(String columnName) throws SQLException;
 
@@ -332,7 +291,6 @@ public interface ResultSet {
      * @return a {@code BigDecimal} with the value of the column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException;
 
@@ -349,7 +307,6 @@ public interface ResultSet {
      * @return a {@code BigDecimal} with the value of the column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     @Deprecated
     public BigDecimal getBigDecimal(int columnIndex, int scale)
@@ -364,7 +321,6 @@ public interface ResultSet {
      * @return a BigDecimal with value of the column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public BigDecimal getBigDecimal(String columnName) throws SQLException;
 
@@ -381,7 +337,6 @@ public interface ResultSet {
      * @return a BigDecimal with value of the column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     @Deprecated
     public BigDecimal getBigDecimal(String columnName, int scale)
@@ -395,15 +350,13 @@ public interface ResultSet {
      * data in the {@code InputStream} should be read before getting data from
      * any other column. A further call to a getter method will implicitly close
      * the {@code InputStream}.
-     * </p>
-     * 
+     *
      * @param columnIndex
      *            the index of the column to read.
      * @return an {@code InputStream} with the data from the column. If the
      *         column value is SQL {@code NULL}, {@code null} is returned.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public InputStream getBinaryStream(int columnIndex) throws SQLException;
 
@@ -414,15 +367,13 @@ public interface ResultSet {
      * data in the {@code InputStream} should be read before getting data from
      * any other column. A further call to a getter method will implicitly close
      * the {@code InputStream}.
-     * </p>
-     * 
+     *
      * @param columnName
      *            the name of the column to read.
      * @return an {@code InputStream} with the data from the column if the
      *         column value is SQL {@code NULL}, {@code null} is returned.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public InputStream getBinaryStream(String columnName) throws SQLException;
 
@@ -435,7 +386,6 @@ public interface ResultSet {
      * @return a {@code java.sql.Blob} with the value of the column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Blob getBlob(int columnIndex) throws SQLException;
 
@@ -448,7 +398,6 @@ public interface ResultSet {
      * @return a {@code java.sql.Blob} with the value of the column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Blob getBlob(String columnName) throws SQLException;
 
@@ -462,7 +411,6 @@ public interface ResultSet {
      *         {@code NULL}, {@code false} is returned.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean getBoolean(int columnIndex) throws SQLException;
 
@@ -476,7 +424,6 @@ public interface ResultSet {
      *         {@code NULL}, {@code false} is returned.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean getBoolean(String columnName) throws SQLException;
 
@@ -489,7 +436,6 @@ public interface ResultSet {
      *         is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public byte getByte(int columnIndex) throws SQLException;
 
@@ -502,7 +448,6 @@ public interface ResultSet {
      *         is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public byte getByte(String columnName) throws SQLException;
 
@@ -515,7 +460,6 @@ public interface ResultSet {
      *         the column contains SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public byte[] getBytes(int columnIndex) throws SQLException;
 
@@ -528,7 +472,6 @@ public interface ResultSet {
      *         the column contains SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public byte[] getBytes(String columnName) throws SQLException;
 
@@ -543,7 +486,6 @@ public interface ResultSet {
      * @throws SQLException
      *             if a database error happens.
      * @see java.io.Reader
-     * @since Android 1.0
      */
     public Reader getCharacterStream(int columnIndex) throws SQLException;
 
@@ -557,7 +499,6 @@ public interface ResultSet {
      *         the column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Reader getCharacterStream(String columnName) throws SQLException;
 
@@ -571,7 +512,6 @@ public interface ResultSet {
      *         {@code null} if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Clob getClob(int columnIndex) throws SQLException;
 
@@ -585,7 +525,6 @@ public interface ResultSet {
      *         {@code null} if the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Clob getClob(String colName) throws SQLException;
 
@@ -596,7 +535,6 @@ public interface ResultSet {
      *         , {@code ResultSet.CONCUR_UPDATABLE}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getConcurrency() throws SQLException;
 
@@ -606,7 +544,6 @@ public interface ResultSet {
      * @return the SQL cursor name.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public String getCursorName() throws SQLException;
 
@@ -620,7 +557,6 @@ public interface ResultSet {
      *         if the column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Date getDate(int columnIndex) throws SQLException;
 
@@ -636,7 +572,6 @@ public interface ResultSet {
      *         if the column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Date getDate(int columnIndex, Calendar cal) throws SQLException;
 
@@ -650,7 +585,6 @@ public interface ResultSet {
      *         if the column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Date getDate(String columnName) throws SQLException;
 
@@ -666,7 +600,6 @@ public interface ResultSet {
      *         if the column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Date getDate(String columnName, Calendar cal) throws SQLException;
 
@@ -680,7 +613,6 @@ public interface ResultSet {
      *         column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public double getDouble(int columnIndex) throws SQLException;
 
@@ -694,7 +626,6 @@ public interface ResultSet {
      *         column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public double getDouble(String columnName) throws SQLException;
 
@@ -709,7 +640,6 @@ public interface ResultSet {
      *         </ul>
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getFetchDirection() throws SQLException;
 
@@ -719,7 +649,6 @@ public interface ResultSet {
      * @return the fetch size as an int
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getFetchSize() throws SQLException;
 
@@ -733,7 +662,6 @@ public interface ResultSet {
      *         column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public float getFloat(int columnIndex) throws SQLException;
 
@@ -747,7 +675,6 @@ public interface ResultSet {
      *         column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public float getFloat(String columnName) throws SQLException;
 
@@ -761,7 +688,6 @@ public interface ResultSet {
      *         column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getInt(int columnIndex) throws SQLException;
 
@@ -775,7 +701,6 @@ public interface ResultSet {
      *         column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getInt(String columnName) throws SQLException;
 
@@ -789,7 +714,6 @@ public interface ResultSet {
      *         column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public long getLong(int columnIndex) throws SQLException;
 
@@ -803,7 +727,6 @@ public interface ResultSet {
      *         column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public long getLong(String columnName) throws SQLException;
 
@@ -815,7 +738,6 @@ public interface ResultSet {
      *         {@code ResultSet}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public ResultSetMetaData getMetaData() throws SQLException;
 
@@ -827,15 +749,13 @@ public interface ResultSet {
      * For SQL User Defined Types, if a column value is Structured or Distinct,
      * this method behaves the same as a call to: {@code
      * getObject(columnIndex,this.getStatement().getConnection().getTypeMap())}
-     * </p>
-     * 
+     *
      * @param columnIndex
      *            the index of the column to read.
      * @return an {@code Object} containing the value of the column. {@code
      *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Object getObject(int columnIndex) throws SQLException;
 
@@ -846,8 +766,7 @@ public interface ResultSet {
      * The type of the Java object will be determined by the supplied Map to
      * perform the mapping of SQL {@code Struct} or Distinct types into Java
      * objects.
-     * </p>
-     * 
+     *
      * @param columnIndex
      *            the index of the column to read.
      * @param map
@@ -857,7 +776,6 @@ public interface ResultSet {
      *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Object getObject(int columnIndex, Map<String, Class<?>> map)
             throws SQLException;
@@ -870,15 +788,13 @@ public interface ResultSet {
      * For SQL User Defined Types, if a column value is structured or distinct,
      * this method behaves the same as a call to: {@code
      * getObject(columnIndex,this.getStatement().getConnection().getTypeMap())}
-     * </p>
-     * 
+     *
      * @param columnName
      *            the name of the column to read.
      * @return an {@code Object} containing the value of the column. {@code
      *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Object getObject(String columnName) throws SQLException;
 
@@ -888,8 +804,7 @@ public interface ResultSet {
      * <p>
      * The type of the Java object will be determined by the supplied Map to
      * perform the mapping of SQL Struct or Distinct types into Java objects.
-     * </p>
-     * 
+     *
      * @param columnName
      *            the name of the column to read.
      * @param map
@@ -899,7 +814,6 @@ public interface ResultSet {
      *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Object getObject(String columnName, Map<String, Class<?>> map)
             throws SQLException;
@@ -913,7 +827,6 @@ public interface ResultSet {
      * @return a Ref representing the value of the SQL REF in the column
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Ref getRef(int columnIndex) throws SQLException;
 
@@ -926,7 +839,6 @@ public interface ResultSet {
      * @return a Ref representing the value of the SQL {@code REF} in the column
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Ref getRef(String colName) throws SQLException;
 
@@ -938,7 +850,6 @@ public interface ResultSet {
      *         there is no current row.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public int getRow() throws SQLException;
 
@@ -951,7 +862,6 @@ public interface ResultSet {
      *         the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public short getShort(int columnIndex) throws SQLException;
 
@@ -964,7 +874,6 @@ public interface ResultSet {
      *         the value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public short getShort(String columnName) throws SQLException;
 
@@ -978,7 +887,6 @@ public interface ResultSet {
      *         null} if the {@code ResultSet} was not created by a Statement.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Statement getStatement() throws SQLException;
 
@@ -991,7 +899,6 @@ public interface ResultSet {
      *         the column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public String getString(int columnIndex) throws SQLException;
 
@@ -1004,7 +911,6 @@ public interface ResultSet {
      *         the column is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public String getString(String columnName) throws SQLException;
 
@@ -1018,7 +924,6 @@ public interface ResultSet {
      *         value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Time getTime(int columnIndex) throws SQLException;
 
@@ -1035,7 +940,6 @@ public interface ResultSet {
      *         value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Time getTime(int columnIndex, Calendar cal) throws SQLException;
 
@@ -1049,7 +953,6 @@ public interface ResultSet {
      *         NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Time getTime(String columnName) throws SQLException;
 
@@ -1066,7 +969,6 @@ public interface ResultSet {
      *         value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Time getTime(String columnName, Calendar cal) throws SQLException;
 
@@ -1080,7 +982,6 @@ public interface ResultSet {
      *         column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Timestamp getTimestamp(int columnIndex) throws SQLException;
 
@@ -1097,7 +998,6 @@ public interface ResultSet {
      *         column value is SQL NULL.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Timestamp getTimestamp(int columnIndex, Calendar cal)
             throws SQLException;
@@ -1112,7 +1012,6 @@ public interface ResultSet {
      *         column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Timestamp getTimestamp(String columnName) throws SQLException;
 
@@ -1129,7 +1028,6 @@ public interface ResultSet {
      *         column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public Timestamp getTimestamp(String columnName, Calendar cal)
             throws SQLException;
@@ -1145,7 +1043,6 @@ public interface ResultSet {
      *         </ul>
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public int getType() throws SQLException;
 
@@ -1160,7 +1057,6 @@ public interface ResultSet {
      *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     @Deprecated
     public InputStream getUnicodeStream(int columnIndex) throws SQLException;
@@ -1176,7 +1072,6 @@ public interface ResultSet {
      *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     @Deprecated
     public InputStream getUnicodeStream(String columnName) throws SQLException;
@@ -1190,7 +1085,6 @@ public interface ResultSet {
      * @return a URL. {@code null} if the column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public URL getURL(int columnIndex) throws SQLException;
 
@@ -1203,7 +1097,6 @@ public interface ResultSet {
      * @return the column vaule as a URL. {@code null} if the column value is SQL {@code NULL}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public URL getURL(String columnName) throws SQLException;
 
@@ -1217,15 +1110,13 @@ public interface ResultSet {
      * generated by {@code ResultSet} method calls - warnings generated by
      * Statement methods are held by the Statement.
      * <p>
-     * </p>
      * An {@code SQLException} is generated if this method is called on a closed
-     * {@code ResultSet}. </p>
+     * {@code ResultSet}.
      * 
      * @return an SQLWarning which is the first warning for this {@code
      *         ResultSet}. {@code null} if there are no warnings.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public SQLWarning getWarnings() throws SQLException;
 
@@ -1239,7 +1130,6 @@ public interface ResultSet {
      *             cursor not being on the Insert Row or if any columns in the
      *             row do not have a value where the column is declared as
      *             not-nullable.
-     * @since Android 1.0
      */
     public void insertRow() throws SQLException;
 
@@ -1251,7 +1141,6 @@ public interface ResultSet {
      *         in the {@code ResultSet}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean isAfterLast() throws SQLException;
 
@@ -1263,7 +1152,6 @@ public interface ResultSet {
      *         in the {@code ResultSet}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean isBeforeFirst() throws SQLException;
 
@@ -1275,7 +1163,6 @@ public interface ResultSet {
      *         in the {@code ResultSet}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean isFirst() throws SQLException;
 
@@ -1287,7 +1174,6 @@ public interface ResultSet {
      *         in the {@code ResultSet}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean isLast() throws SQLException;
 
@@ -1298,7 +1184,6 @@ public interface ResultSet {
      *         false} if the {@code ResultSet} contains no rows.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean last() throws SQLException;
 
@@ -1309,7 +1194,6 @@ public interface ResultSet {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void moveToCurrentRow() throws SQLException;
 
@@ -1321,7 +1205,6 @@ public interface ResultSet {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void moveToInsertRow() throws SQLException;
 
@@ -1330,14 +1213,12 @@ public interface ResultSet {
      * <p>
      * Any input streams associated with the current row are closed and any
      * warnings are cleared.
-     * </p>
-     * 
+     *
      * @return {@code true} if the updated cursor position is pointing to a
      *         valid row, {@code false} otherwise (i.e. when the cursor is after
      *         the last row in the {@code ResultSet}).
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean next() throws SQLException;
 
@@ -1349,7 +1230,6 @@ public interface ResultSet {
      *         false} if the cursor is now before the first row.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean previous() throws SQLException;
 
@@ -1360,12 +1240,10 @@ public interface ResultSet {
      * If any columns in the current row have been updated but the {@code
      * updateRow} has not been called, then the updates are lost when this
      * method is called.
-     * </p>
-     * 
+     *
      * @throws SQLException
      *             if a database error happens., including if the current row is
      *             the Insert row.
-     * @since Android 1.0
      */
     public void refreshRow() throws SQLException;
 
@@ -1381,7 +1259,6 @@ public interface ResultSet {
      *         false} otherwise
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean relative(int rows) throws SQLException;
 
@@ -1393,7 +1270,6 @@ public interface ResultSet {
      *         detected, {@code false} otherwise.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean rowDeleted() throws SQLException;
 
@@ -1406,7 +1282,6 @@ public interface ResultSet {
      *         detected, {@code false} otherwise.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean rowInserted() throws SQLException;
 
@@ -1418,7 +1293,6 @@ public interface ResultSet {
      *         can be detected, {@code false} otherwise.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean rowUpdated() throws SQLException;
 
@@ -1432,7 +1306,6 @@ public interface ResultSet {
      *            ResultSet.FETCH_REVERSE}, or {@code ResultSet.FETCH_UNKNOWN}
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public void setFetchDirection(int direction) throws SQLException;
 
@@ -1449,7 +1322,6 @@ public interface ResultSet {
      *            ResultSet}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setFetchSize(int rows) throws SQLException;
 
@@ -1463,7 +1335,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateArray(int columnIndex, Array x) throws SQLException;
 
@@ -1477,7 +1348,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateArray(String columnName, Array x) throws SQLException;
 
@@ -1492,7 +1362,6 @@ public interface ResultSet {
      *            the length of the data to write from the stream
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateAsciiStream(int columnIndex, InputStream x, int length)
             throws SQLException;
@@ -1508,7 +1377,6 @@ public interface ResultSet {
      *            the length of the data to write from the stream
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateAsciiStream(String columnName, InputStream x, int length)
             throws SQLException;
@@ -1523,7 +1391,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBigDecimal(int columnIndex, BigDecimal x)
             throws SQLException;
@@ -1538,7 +1405,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBigDecimal(String columnName, BigDecimal x)
             throws SQLException;
@@ -1554,7 +1420,6 @@ public interface ResultSet {
      *            the number of bytes to be read from the the stream.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBinaryStream(int columnIndex, InputStream x, int length)
             throws SQLException;
@@ -1570,7 +1435,6 @@ public interface ResultSet {
      *            he number of bytes to be read from the the stream.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBinaryStream(String columnName, InputStream x, int length)
             throws SQLException;
@@ -1585,7 +1449,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBlob(int columnIndex, Blob x) throws SQLException;
 
@@ -1599,7 +1462,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBlob(String columnName, Blob x) throws SQLException;
 
@@ -1613,7 +1475,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBoolean(int columnIndex, boolean x) throws SQLException;
 
@@ -1626,7 +1487,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBoolean(String columnName, boolean x) throws SQLException;
 
@@ -1639,7 +1499,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateByte(int columnIndex, byte x) throws SQLException;
 
@@ -1652,7 +1511,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateByte(String columnName, byte x) throws SQLException;
 
@@ -1666,7 +1524,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBytes(int columnIndex, byte[] x) throws SQLException;
 
@@ -1679,7 +1536,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateBytes(String columnName, byte[] x) throws SQLException;
 
@@ -1695,7 +1551,6 @@ public interface ResultSet {
      *            the length of data to write from the stream
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateCharacterStream(int columnIndex, Reader x, int length)
             throws SQLException;
@@ -1712,7 +1567,6 @@ public interface ResultSet {
      *            the length of data to write from the Reader
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateCharacterStream(String columnName, Reader reader,
             int length) throws SQLException;
@@ -1727,7 +1581,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateClob(int columnIndex, Clob x) throws SQLException;
 
@@ -1741,7 +1594,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateClob(String columnName, Clob x) throws SQLException;
 
@@ -1755,7 +1607,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateDate(int columnIndex, Date x) throws SQLException;
 
@@ -1769,7 +1620,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateDate(String columnName, Date x) throws SQLException;
 
@@ -1782,7 +1632,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     *             @since Android 1.0
      */
     public void updateDouble(int columnIndex, double x) throws SQLException;
 
@@ -1795,7 +1644,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateDouble(String columnName, double x) throws SQLException;
 
@@ -1808,7 +1656,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateFloat(int columnIndex, float x) throws SQLException;
 
@@ -1821,7 +1668,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateFloat(String columnName, float x) throws SQLException;
 
@@ -1834,7 +1680,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateInt(int columnIndex, int x) throws SQLException;
 
@@ -1847,7 +1692,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateInt(String columnName, int x) throws SQLException;
 
@@ -1860,7 +1704,6 @@ public interface ResultSet {
      *            the new value for the specified column..
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateLong(int columnIndex, long x) throws SQLException;
 
@@ -1873,7 +1716,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateLong(String columnName, long x) throws SQLException;
 
@@ -1884,7 +1726,6 @@ public interface ResultSet {
      *            the index of the column to update.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateNull(int columnIndex) throws SQLException;
 
@@ -1895,7 +1736,6 @@ public interface ResultSet {
      *            the name of the column to update.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateNull(String columnName) throws SQLException;
 
@@ -1909,7 +1749,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateObject(int columnIndex, Object x) throws SQLException;
 
@@ -1927,7 +1766,6 @@ public interface ResultSet {
      *            after the decimal point.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateObject(int columnIndex, Object x, int scale)
             throws SQLException;
@@ -1941,7 +1779,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateObject(String columnName, Object x) throws SQLException;
 
@@ -1958,7 +1795,6 @@ public interface ResultSet {
      *            after the decimal point.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateObject(String columnName, Object x, int scale)
             throws SQLException;
@@ -1973,7 +1809,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateRef(int columnIndex, Ref x) throws SQLException;
 
@@ -1987,7 +1822,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateRef(String columnName, Ref x) throws SQLException;
 
@@ -1997,7 +1831,6 @@ public interface ResultSet {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateRow() throws SQLException;
 
@@ -2010,7 +1843,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateShort(int columnIndex, short x) throws SQLException;
 
@@ -2023,7 +1855,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateShort(String columnName, short x) throws SQLException;
 
@@ -2036,7 +1867,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateString(int columnIndex, String x) throws SQLException;
 
@@ -2049,7 +1879,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateString(String columnName, String x) throws SQLException;
 
@@ -2062,7 +1891,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateTime(int columnIndex, Time x) throws SQLException;
 
@@ -2075,7 +1903,6 @@ public interface ResultSet {
      *            the new value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateTime(String columnName, Time x) throws SQLException;
 
@@ -2089,7 +1916,6 @@ public interface ResultSet {
      *            the new timestamp value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateTimestamp(int columnIndex, Timestamp x)
             throws SQLException;
@@ -2103,7 +1929,6 @@ public interface ResultSet {
      *            the new timestamp value for the specified column.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void updateTimestamp(String columnName, Timestamp x)
             throws SQLException;
@@ -2116,7 +1941,6 @@ public interface ResultSet {
      *         NULL}, {@code false} otherwise
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean wasNull() throws SQLException;
 }

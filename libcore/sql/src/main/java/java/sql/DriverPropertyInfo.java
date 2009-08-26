@@ -22,38 +22,28 @@ package java.sql;
  * This class is returned by the
  * {@link Driver#getPropertyInfo(String, java.util.Properties)} method and
  * allows for the advanced connection handling.
- * 
- * @since Android 1.0
  */
 public class DriverPropertyInfo {
 
     /**
      * If the value member can be chosen from a set of possible values, they are
      * contained here. Otherwise choices is {@code null}.
-     * 
-     * @since Android 1.0
      */
     public String[] choices;
 
     /**
      * A description of the property. May be {@code null}.
-     * 
-     * @since Android 1.0
      */
     public String description;
 
     /**
      * The name of the property.
-     * 
-     * @since Android 1.0
      */
     public String name;
 
     /**
-     * {@code True} when the value member must be provided during {@code
-     * Driver.connect}. {@code False} otherwise.
-     * 
-     * @since Android 1.0
+     * {@code true} when the value member must be provided during {@code
+     * Driver.connect}. {@code false} otherwise.
      */
     public boolean required;
 
@@ -61,8 +51,6 @@ public class DriverPropertyInfo {
      * The current value associated with this property. It is depending on the
      * data gathered by the {@code getPropertyInfo} method, the general Java
      * environment and the driver's default values.
-     * 
-     * @since Android 1.0
      */
     public String value;
 
@@ -74,7 +62,6 @@ public class DriverPropertyInfo {
      *            The property name.
      * @param value
      *            The property value.
-     * @since Android 1.0
      */
     public DriverPropertyInfo(String name, String value) {
         this.name = name;
