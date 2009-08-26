@@ -15,8 +15,6 @@
  */
 
 
-static void loadFloat(CompilationUnit *cUnit, int vSrc, int rDest);
-
 /*
  * This file is included by Codegen-armv5te-vfp.c, and implements architecture
  * variant-specific code.
@@ -121,7 +119,7 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     int vSrc = mir->dalvikInsn.vA;
     loadDouble(cUnit, vSrc, dr1);
     newLIR2(cUnit, THUMB2_VSQRTD, dr0, dr1);
-    assert(offset & 0x3 == 0);  /* Must be word aligned */
+    assert((offset & 0x3) == 0);  /* Must be word aligned */
     assert(offset < 1024);
     newLIR3(cUnit, THUMB2_VSTRD, dr0, rGLUE, offset >> 2);
     return true;

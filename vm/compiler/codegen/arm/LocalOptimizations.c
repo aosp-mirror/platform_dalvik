@@ -39,6 +39,28 @@ static inline bool isDalvikStore(ArmLIR *lir)
              (lir->opCode == THUMB2_VSTRD)));
 }
 
+/* Double regs overlap float regs.  Return true if collision  */
+static bool regClobber(int reg1, int reg2)
+{
+    int reg1a, reg1b;
+    int reg2a, reg2b;
+    if (!FPREG(reg1) || !FPREG(reg2))
+        return (reg1 == reg2);
+    if (DOUBLEREG(reg1)) {
+        reg1a = reg1 & FP_REG_MASK;
+        reg1b = reg1a + 1;
+    } else {
+        reg1a = reg1b = reg1 & FP_REG_MASK;
+    }
+    if (DOUBLEREG(reg2)) {
+        reg2a = reg2 & FP_REG_MASK;
+        reg2b = reg2a + 1;
+    } else {
+        reg2a = reg2b = reg2 & FP_REG_MASK;
+    }
+    return (reg1a == reg2a) || (reg1a == reg2b) ||
+           (reg1b == reg2a) || (reg1b == reg2b);
+}
 /*
  * Perform a pass of top-down walk to
  * 1) Eliminate redundant loads and stores
@@ -110,16 +132,20 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                                 checkLIR->opCode == THUMB_LDMIA ||
                                 checkLIR->opCode == THUMB_STR_RRR ||
                                 checkLIR->opCode == THUMB_LDR_RRR ||
+                                checkLIR->opCode == THUMB2_STR_RRR ||
+                                checkLIR->opCode == THUMB2_LDR_RRR ||
+                                checkLIR->opCode == THUMB2_STMIA ||
+                                checkLIR->opCode == THUMB2_LDMIA ||
                                 checkLIR->opCode == THUMB2_VLDRD ||
                                 checkLIR->opCode == THUMB2_VSTRD;
-;
 
                     if (!isPseudoOpCode(checkLIR->opCode)) {
 
                         /* Store data is clobbered */
                         stopHere |= (EncodingMap[checkLIR->opCode].flags &
                                      CLOBBER_DEST) != 0 &&
-                                    checkLIR->operands[0] == nativeRegId;
+                                     regClobber(checkLIR->operands[0],
+                                               nativeRegId);
 
                         stopHere |= (EncodingMap[checkLIR->opCode].flags &
                                      IS_BRANCH) != 0;

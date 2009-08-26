@@ -79,9 +79,13 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                 strcpy(tbuf, "!");
             } else {
                assert(fmt < fmtEnd);
-               assert((unsigned)(nc-'0') < 3);
+               assert((unsigned)(nc-'0') < 4);
                operand = lir->operands[nc-'0'];
                switch(*fmt++) {
+                   case 'n':
+                       operand = ~expandImmediate(operand);
+                       sprintf(tbuf,"%d [0x%x]", operand, operand);
+                       break;
                    case 'm':
                        operand = expandImmediate(operand);
                        sprintf(tbuf,"%d [0x%x]", operand, operand);
