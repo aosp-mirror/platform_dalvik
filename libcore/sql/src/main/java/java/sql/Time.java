@@ -17,14 +17,11 @@
 
 package java.sql;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
  * Java representation of an SQL {@code TIME} value. Provides utilities to 
  * format and parse the time's representation as a String in JDBC escape format.
- * 
- * @since Android 1.0
  */
 public class Time extends Date {
 
@@ -33,24 +30,22 @@ public class Time extends Date {
     /**
      * Constructs a {@code Time} object using the supplied values for <i>Hour</i>,
      * <i>Minute</i> and <i>Second</i>. The <i>Year</i>, <i>Month</i> and
-     * <i>Day</i> elements of the {@code Time} object are set to the date 
+     * <i>Day</i> elements of the {@code Time} object are set to the date
      * of the Epoch (January 1, 1970).
      * <p>
      * Any attempt to access the <i>Year</i>, <i>Month</i> or <i>Day</i>
      * elements of a {@code Time} object will result in an {@code
      * IllegalArgumentException}.
-     * </p><p>
+     * <p>
      * The result is undefined if any argument is out of bounds.
-     * </p>
-     * 
-     * @deprecated Please use the constructor {@link #Time(long)}.
+     *
+     * @deprecated Use the constructor {@link #Time(long)}.
      * @param theHour
      *            a value in the range {@code [0,23]}.
      * @param theMinute
      *            a value in the range {@code [0,59]}.
      * @param theSecond
      *            a value in the range {@code [0,59]}.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -65,7 +60,6 @@ public class Time extends Date {
      * @param theTime
      *            a {@code Time} specified in milliseconds since the
      *            <i>Epoch</i> (January 1st 1970, 00:00:00.000).
-     * @since Android 1.0
      */
     public Time(long theTime) {
         super(theTime);
@@ -77,7 +71,6 @@ public class Time extends Date {
      * @return does not return anything.
      * @throws IllegalArgumentException
      *             if this method is called.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -92,7 +85,6 @@ public class Time extends Date {
      * @return does not return anything.
      * @throws IllegalArgumentException
      *             if this method is called.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -107,7 +99,6 @@ public class Time extends Date {
      * @return does not return anything.
      * @throws IllegalArgumentException
      *             if this method is called.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -122,7 +113,6 @@ public class Time extends Date {
      * @return does not return anything.
      * @throws IllegalArgumentException
      *             if this method is called.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -136,7 +126,6 @@ public class Time extends Date {
      *             {@code Time} object does not have a {@code Date} component.
      * @throws IllegalArgumentException
      *             if this method is called.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -150,7 +139,6 @@ public class Time extends Date {
      *             {@code Time} object does not have a <i>Month</i> component.
      * @throws IllegalArgumentException
      *             if this method is called.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -180,7 +168,6 @@ public class Time extends Date {
      *            A time value expressed as milliseconds since the <i>Epoch</i>.
      *            Negative values are milliseconds before the Epoch. The Epoch
      *            is January 1 1970, 00:00:00.000.
-     * @since Android 1.0
      */
     @Override
     public void setTime(long time) {
@@ -193,12 +180,31 @@ public class Time extends Date {
      * 
      * @return A String representing the {@code Time} value in JDBC escape
      *         format: {@code HH:mm:ss}
-     * @since Android 1.0
      */
     @Override
     public String toString() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
-        return dateFormat.format(this);
+        StringBuilder sb = new StringBuilder(8);
+
+        format(getHours(), 2, sb);
+        sb.append(':');
+        format(getMinutes(), 2, sb);
+        sb.append(':');
+        format(getSeconds(), 2, sb);
+
+        return sb.toString();
+    }
+
+    private static final String PADDING = "00";  //$NON-NLS-1$
+
+    /* 
+    * Private method to format the time 
+    */ 
+    private void format(int date, int digits, StringBuilder sb) { 
+        String str = String.valueOf(date);
+        if (digits - str.length() > 0) {
+            sb.append(PADDING.substring(0, digits - str.length()));
+        }
+        sb.append(str); 
     }
 
     /**
@@ -206,8 +212,7 @@ public class Time extends Date {
      * JDBC escape format: {@code hh:mm:ss}.
      * <p>
      * An exception occurs if the input string does not comply with this format.
-     * </p>
-     * 
+     *
      * @param timeString
      *            A String representing the time value in JDBC escape format:
      *            {@code hh:mm:ss}.
@@ -215,7 +220,6 @@ public class Time extends Date {
      *         time.
      * @throws IllegalArgumentException
      *             if the supplied time string is not in JDBC escape format.
-     * @since Android 1.0
      */
     public static Time valueOf(String timeString) {
         if (timeString == null) {
@@ -223,18 +227,21 @@ public class Time extends Date {
         }
         int firstIndex = timeString.indexOf(':');
         int secondIndex = timeString.indexOf(':', firstIndex + 1);
-        // secondIndex == -1 means none or only one separator '-' has been found.
+        // secondIndex == -1 means none or only one separator '-' has been
+        // found.
         // The string is separated into three parts by two separator characters,
         // if the first or the third part is null string, we should throw
         // IllegalArgumentException to follow RI
-        if (secondIndex == -1|| firstIndex == 0 || secondIndex + 1 == timeString.length()) {
+        if (secondIndex == -1 || firstIndex == 0
+                || secondIndex + 1 == timeString.length()) {
             throw new IllegalArgumentException();
         }
         // parse each part of the string
         int hour = Integer.parseInt(timeString.substring(0, firstIndex));
-        int minute = Integer.parseInt(timeString.substring(firstIndex + 1, secondIndex));
-        int second = Integer.parseInt(timeString.substring(secondIndex + 1, timeString
-                .length()));
+        int minute = Integer.parseInt(timeString.substring(firstIndex + 1,
+                secondIndex));
+        int second = Integer.parseInt(timeString.substring(secondIndex + 1,
+                timeString.length()));
         return new Time(hour, minute, second);
     }
 }

@@ -293,16 +293,26 @@ public class DateTest extends TestCase {
         args = {}
     )
     public void testToString() {
-        // This test is set up for GMT time zone, so need to set the time zone
-        // to GMT first
-        TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
-
-        for (int i = 0; i < TIME_ARRAY.length; i++) {
-            Date theDate = new Date(TIME_ARRAY[i]);
-            assertEquals(SQL_DATEARRAY[i], theDate.toString());
+		// Loop through the timezones testing the String conversion for each
+		for (int i = 0; i < TIMEZONES.length; i++) {
+			testToString(TIMEZONES[i], TIME_ARRAY, SQL_TZ_DATEARRAYS[i]);
         } // end for
 
     } // end method testToString()
+
+    private void testToString(String timeZone, long[] theDates, String[] theDateStrings) {
+        // Set the timezone
+        TimeZone.setDefault(TimeZone.getTimeZone(timeZone));
+
+        for (int i = 0; i < theDates.length; i++) {
+            // Create the Date object
+            Date theDate = new Date(theDates[i]);
+            // Convert to a date string ... and compare
+            String JDBCString = theDate.toString();
+            assertEquals(theDateStrings[i], JDBCString);
+        } // end for
+
+    } // end testToString( String, long[], String[] )
 
     /*
      * Test of the void setTime(int) method This does depend on the Time Zone
@@ -372,7 +382,7 @@ public class DateTest extends TestCase {
                 theDate = Date.valueOf(element);
                 fail("Should throw IllegalArgumentException.");
             } catch (IllegalArgumentException e) {
-                //expected
+                // expected
             } // end try
         } // end for
 
@@ -388,68 +398,75 @@ public class DateTest extends TestCase {
         args = {java.lang.String.class}
     )
     public void test_valueOf_IllegalArgumentException() {
-        try{
+        try {
             Date.valueOf("1996-10-07-01");
             fail("should throw NumberFormatException");
         } catch (NumberFormatException e) {
-            //expected
+            // expected
         }
         
-        try{
+        try {
             Date.valueOf("-10-07-01");
             fail("should throw IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-            //expected
+            // expected
         }
         
-        try{
+        try {
             Date.valueOf("--01");
             fail("should throw IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-            //expected
+            // expected
         }
         
-        try{
+        try {
             Date.valueOf("1991--");
             fail("should throw IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-            //expected
+            // expected
         }
         
-        try{
+        try {
             Date.valueOf("-01-");
             fail("should throw IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-            //expected
+            // expected
         }
         
-        try{
+        try {
             Date.valueOf("-10-w2-01");
             fail("should throw IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-            //expected
+            // expected
         }
         
-        try{
+        try {
             Date.valueOf("07-w2-");
             fail("should throw IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-            //expected
+            // expected
         }
         
-        try{
+        try {
             Date.valueOf("1997-w2-w2");
             fail("should throw NumberFormatException");
         } catch (NumberFormatException e) {
-            //expected
+            // expected
         }
         
-        try{
+        try {
             Date.valueOf("1996--01");
             fail("should throw NumberFormatException");
         } catch (NumberFormatException e) {
-            //expected
+            // expected
         }
+    }
+
+    // Reset defualt timezone
+    static TimeZone defaultTimeZone = TimeZone.getDefault();
+
+    protected void tearDown(){
+    	TimeZone.setDefault(defaultTimeZone);
     }
 
 } // end class DateTest

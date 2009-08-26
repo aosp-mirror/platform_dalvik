@@ -27,7 +27,6 @@ import java.sql.SQLException;
  * RowSet} for this to work.
  * 
  * @see RowSet
- * @since Android 1.0
  */
 public interface RowSetReader {
 
@@ -44,7 +43,6 @@ public interface RowSetReader {
      * events are sent to listeners - any listeners are informed by the calling
      * {@code RowSet}'s {@code execute} method once the reader returns from the
      * {@code readData} method.
-     * </p>
      * 
      * @param theCaller
      *            must be the calling {@code RowSet} object, which must have
@@ -53,7 +51,6 @@ public interface RowSetReader {
      *             if a problem occurs accessing the database or if the reader
      *             calls the {@link RowSet#execute()} method.
      * @see RowSetInternal
-     * @since Android 1.0
      */
     public void readData(RowSetInternal theCaller) throws SQLException;
 }

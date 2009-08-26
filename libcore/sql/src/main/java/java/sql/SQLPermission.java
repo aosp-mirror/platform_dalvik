@@ -31,11 +31,8 @@ import java.security.Guard;
  * the {@code DriverManager.setLogStream} method. This is a potentially
  * dangerous operation since the logging stream can contain sensitive
  * information such as usernames and passwords.
- * </p>
  * 
  * @see DriverManager
- * 
- * @since Android 1.0
  */
 public final class SQLPermission extends BasicPermission implements Guard,
         Serializable {

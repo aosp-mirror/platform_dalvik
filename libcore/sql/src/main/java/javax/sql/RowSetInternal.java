@@ -22,9 +22,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 
 /**
- * An interface provided by a {@code RowSet} object to let either a {@code RowSetReader} or a
- * {@code RowSetWriter} access its internal state, thereby providing facilities to read and update the state of
- * the {@code RowSet}.
+ * An interface provided by a {@code RowSet} object to let either a {@code
+ * RowSetReader} or a {@code RowSetWriter} access its internal state, thereby
+ * providing facilities to read and update the state of the {@code RowSet}.
  */
 public interface RowSetInternal {
 
@@ -34,7 +34,6 @@ public interface RowSetInternal {
      * @return the connection or {@code null}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Connection getConnection() throws SQLException;
 
@@ -44,13 +43,11 @@ public interface RowSetInternal {
      * <p>
      * The {@code ResultSet}'s cursor is positioned before the first row of
      * data.
-     * </p>
      * 
      * @return the {@code ResultSet} that contained the original data value of
      *         the {@code RowSet}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public ResultSet getOriginal() throws SQLException;
 
@@ -63,7 +60,6 @@ public interface RowSetInternal {
      *             if there is a problem accessing the database, or if the
      *             cursor is not on a valid row (before the first row, after the
      *             last one or pointing to the insert row).
-     * @since Android 1.0
      */
     public ResultSet getOriginalRow() throws SQLException;
 
@@ -74,7 +70,6 @@ public interface RowSetInternal {
      * @return the values of parameters that have been set.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Object[] getParams() throws SQLException;
 
@@ -87,7 +82,6 @@ public interface RowSetInternal {
      *            holds the metadata about the {@code RowSet}'s columns.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void setMetaData(RowSetMetaData theMetaData) throws SQLException;
 }

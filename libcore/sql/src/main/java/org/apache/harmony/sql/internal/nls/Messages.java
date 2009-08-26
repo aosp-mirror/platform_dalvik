@@ -27,7 +27,6 @@
 
 package org.apache.harmony.sql.internal.nls;
 
-
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Locale;

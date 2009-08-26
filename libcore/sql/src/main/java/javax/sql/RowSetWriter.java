@@ -28,16 +28,13 @@ import java.sql.SQLException;
  * The writer must establish a connection to the {@code RowSet}'s database
  * before writing the data. The {@code RowSet} calling this interface must
  * implement the {@code RowSetInternal} interface.
- * </p>
  * <p>
  * The writer may encounter a situation where the updated data needs to be
  * written back to the database, but has already been updated there in the mean
  * time. How a conflict of this kind is handled is determined by the
  * implementation of this writer.
- * </p>
- * 
+ *
  * @see RowSetInternal
- * @since Android 1.0
  */
 public interface RowSetWriter {
 
@@ -56,7 +53,6 @@ public interface RowSetWriter {
      *         otherwise (which typically implies some form of conflict).
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public boolean writeData(RowSetInternal theRowSet) throws SQLException;
 }

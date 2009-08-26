@@ -43,14 +43,12 @@ import java.math.BigDecimal;
  * distinct data values which constitute the row set. The {@code RowSet} class
  * supports JavaBean events so that other components in an application can be
  * informed when changes happen such as changes in data values.
- * </p>
  * <p>
  * {@code RowSet} is a facility implemented on top of the remainder of the JDBC
  * API. It may be <i>connected</i>, maintaining a connection to the database
  * throughout its lifecycle. The changes made on a <i>disconnected</i> {@code
  * RowSet} on the other hand can be persisted only establishing a new connection
  * with the database each time.
- * </p>
  * <p>
  * Disconnected {@code RowSets} make use of {@code RowSetReaders} to populate
  * the {@code RowSet} with data, possibly from a non-relational database source.
@@ -58,11 +56,9 @@ import java.math.BigDecimal;
  * data store. There is considerable freedom in the way that {@code
  * RowSetReaders} and {@code RowSetWriters} may be implemented to retrieve and
  * store data.
- * </p>
- * 
+ *
  * @see RowSetReader
  * @see RowSetWriter
- * @since Android 1.0
  */
 public interface RowSet extends ResultSet {
 
@@ -74,7 +70,6 @@ public interface RowSet extends ResultSet {
      * @param theListener
      *            an object which implements the {@code rowSetListener}
      *            interface.
-     * @since Android 1.0
      */
     public void addRowSetListener(RowSetListener theListener);
 
@@ -85,11 +80,9 @@ public interface RowSet extends ResultSet {
      * a parameter is set or its value is actively reset. {@code
      * clearParameters} provides a facility to clear the values for all
      * parameters with one method call.
-     * </p>
-     * 
+     *
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void clearParameters() throws SQLException;
 
@@ -104,20 +97,17 @@ public interface RowSet extends ResultSet {
      * transaction isolation, type map; plus some or all of the properties:
      * command, read only, maximum field size, maximum rows, escape processing,
      * and query timeout.
-     * </p>
      * <p>
      * The {@code RowSet} may use a {@code RowSetReader} to access the database
      * it will then invoke the {@link RowSetReader#readData} method on the
      * reader to fetch the data. When the new data is fetched all the listeners
      * are notified to take appropriate measures.
-     * </p>
-     * 
+     *
      * @throws SQLException
      *             if a problem occurs accessing the database or if the
      *             properties needed to access the database have not been set.
      * @see RowSetMetaData
      * @see RowSetReader
-     * @since Android 1.0
      */
     public void execute() throws SQLException;
 
@@ -127,7 +117,6 @@ public interface RowSet extends ResultSet {
      * @return a string containing the {@code RowSet}'s command property. A
      *         command is a SQL statement which is executed to fetch required
      *         data into the {@code RowSet}.
-     * @since Android 1.0
      */
     public String getCommand();
 
@@ -138,7 +127,6 @@ public interface RowSet extends ResultSet {
      * can then be used to create a connection to the database.
      * 
      * @return the name of the database.
-     * @since Android 1.0
      */
     public String getDataSourceName();
 
@@ -152,7 +140,6 @@ public interface RowSet extends ResultSet {
      *         false} otherwise.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public boolean getEscapeProcessing() throws SQLException;
 
@@ -166,7 +153,6 @@ public interface RowSet extends ResultSet {
      * @return the current maximum size in bytes. 0 implies no size limit.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public int getMaxFieldSize() throws SQLException;
 
@@ -177,7 +163,6 @@ public interface RowSet extends ResultSet {
      * @return the previous maximum number of rows. 0 implies no row limit.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public int getMaxRows() throws SQLException;
 
@@ -187,7 +172,6 @@ public interface RowSet extends ResultSet {
      * Therefore it should be set prior to invoking the {@link #execute} method.
      * 
      * @return the value of the password property.
-     * @since Android 1.0
      */
     public String getPassword();
 
@@ -199,7 +183,6 @@ public interface RowSet extends ResultSet {
      * @return the timeout value in seconds.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public int getQueryTimeout() throws SQLException;
 
@@ -217,7 +200,6 @@ public interface RowSet extends ResultSet {
      *         <li>{@code Connection.TRANSACTION_SERIALIZABLE}</li>
      *         </ul>
      * @see java.sql.Connection
-     * @since Android 1.0
      */
     public int getTransactionIsolation();
 
@@ -228,7 +210,6 @@ public interface RowSet extends ResultSet {
      * @return the custom mappings of SQL types to Java classes.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public Map<String, Class<?>> getTypeMap() throws SQLException;
 
@@ -241,7 +222,6 @@ public interface RowSet extends ResultSet {
      * @return a String holding the value of the URL property.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public String getUrl() throws SQLException;
 
@@ -252,7 +232,6 @@ public interface RowSet extends ResultSet {
      * 
      * @return a {@code String} holding the value of the {@code username}
      *         property.
-     * @since Android 1.0
      */
     public String getUsername();
 
@@ -261,7 +240,6 @@ public interface RowSet extends ResultSet {
      * 
      * @return {@code true} if this {@code RowSet} is read-only, {@code false}
      *         if it is updatable.
-     * @since Android 1.0
      */
     public boolean isReadOnly();
 
@@ -272,7 +250,6 @@ public interface RowSet extends ResultSet {
      * @param theListener
      *            the {@link RowSetListener} to remove from the set of listeners
      *            for this {@code RowSet}.
-     * @since Android 1.0
      */
     public void removeRowSetListener(RowSetListener theListener);
 
@@ -287,7 +264,6 @@ public interface RowSet extends ResultSet {
      *            the {@code Array} data value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setArray(int parameterIndex, Array theArray)
             throws SQLException;
@@ -306,7 +282,6 @@ public interface RowSet extends ResultSet {
      *            the length of the data in bytes.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setAsciiStream(int parameterIndex, InputStream theInputStream,
             int length) throws SQLException;
@@ -323,7 +298,6 @@ public interface RowSet extends ResultSet {
      *            the big decimal value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setBigDecimal(int parameterIndex, BigDecimal theBigDecimal)
             throws SQLException;
@@ -342,7 +316,6 @@ public interface RowSet extends ResultSet {
      *            the length of the data in bytes.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setBinaryStream(int parameterIndex, InputStream theInputStream,
             int length) throws SQLException;
@@ -358,7 +331,6 @@ public interface RowSet extends ResultSet {
      *            the {@code Blob} value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setBlob(int parameterIndex, Blob theBlob) throws SQLException;
 
@@ -373,7 +345,6 @@ public interface RowSet extends ResultSet {
      *            the {@code boolean} value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setBoolean(int parameterIndex, boolean theBoolean)
             throws SQLException;
@@ -389,7 +360,6 @@ public interface RowSet extends ResultSet {
      *            the {@code byte} value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setByte(int parameterIndex, byte theByte) throws SQLException;
 
@@ -404,7 +374,6 @@ public interface RowSet extends ResultSet {
      *            the {@code Array} of {@code bytes} to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setBytes(int parameterIndex, byte[] theByteArray)
             throws SQLException;
@@ -424,7 +393,6 @@ public interface RowSet extends ResultSet {
      *            the length of the data in the {@code Reader} in characters.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setCharacterStream(int parameterIndex, Reader theReader,
             int length) throws SQLException;
@@ -440,7 +408,6 @@ public interface RowSet extends ResultSet {
      *            the {@code Clob} value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setClob(int parameterIndex, Clob theClob) throws SQLException;
 
@@ -453,7 +420,6 @@ public interface RowSet extends ResultSet {
      *            the SQL query. Can be {@code null}.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setCommand(String cmd) throws SQLException;
 
@@ -470,7 +436,6 @@ public interface RowSet extends ResultSet {
      * @throws SQLException
      *             if an error occurs accessing the database.
      * @see java.sql.ResultSet
-     * @since Android 1.0
      */
     public void setConcurrency(int concurrency) throws SQLException;
 
@@ -480,13 +445,11 @@ public interface RowSet extends ResultSet {
      * The database name can be used to find a {@link DataSource} which has been
      * registered with a naming service - the {@link DataSource} can then be
      * used to create a connection to the database.
-     * </p>
-     * 
+     *
      * @param name
      *            the database name.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setDataSourceName(String name) throws SQLException;
 
@@ -501,7 +464,6 @@ public interface RowSet extends ResultSet {
      *            the date value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setDate(int parameterIndex, Date theDate) throws SQLException;
 
@@ -521,7 +483,6 @@ public interface RowSet extends ResultSet {
      *            {@code DATE} value.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setDate(int parameterIndex, Date theDate, Calendar theCalendar)
             throws SQLException;
@@ -537,7 +498,6 @@ public interface RowSet extends ResultSet {
      *            the {@code double} value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setDouble(int parameterIndex, double theDouble)
             throws SQLException;
@@ -553,7 +513,6 @@ public interface RowSet extends ResultSet {
      *            turn it off.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setEscapeProcessing(boolean enable) throws SQLException;
 
@@ -568,7 +527,6 @@ public interface RowSet extends ResultSet {
      *            the {@code float} value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setFloat(int parameterIndex, float theFloat)
             throws SQLException;
@@ -584,7 +542,6 @@ public interface RowSet extends ResultSet {
      *            the {@code integer} value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setInt(int parameterIndex, int theInteger) throws SQLException;
 
@@ -599,7 +556,6 @@ public interface RowSet extends ResultSet {
      *            the {@code long} value value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setLong(int parameterIndex, long theLong) throws SQLException;
 
@@ -615,7 +571,6 @@ public interface RowSet extends ResultSet {
      *            implies no size limit.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setMaxFieldSize(int max) throws SQLException;
 
@@ -628,7 +583,6 @@ public interface RowSet extends ResultSet {
      *            RowSet}. 0 means no limit.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setMaxRows(int max) throws SQLException;
 
@@ -644,7 +598,6 @@ public interface RowSet extends ResultSet {
      *            java.sql.Types}.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setNull(int parameterIndex, int sqlType) throws SQLException;
 
@@ -665,7 +618,6 @@ public interface RowSet extends ResultSet {
      *            type. Ignored if the sqlType is not a UDT or REF type.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setNull(int parameterIndex, int sqlType, String typeName)
             throws SQLException;
@@ -677,8 +629,7 @@ public interface RowSet extends ResultSet {
      * The JDBC specification provides a standard mapping for Java objects to
      * SQL data types. Database specific types can be mapped by JDBC driver
      * specific Java types.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the index of the parameter to set; the first parameter's index
      *            is 1.
@@ -687,7 +638,6 @@ public interface RowSet extends ResultSet {
      *            parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setObject(int parameterIndex, Object theObject)
             throws SQLException;
@@ -706,7 +656,6 @@ public interface RowSet extends ResultSet {
      *            java.sql.Types}.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setObject(int parameterIndex, Object theObject,
             int targetSqlType) throws SQLException;
@@ -729,7 +678,6 @@ public interface RowSet extends ResultSet {
      *            types. Ignored for all other types.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setObject(int parameterIndex, Object theObject,
             int targetSqlType, int scale) throws SQLException;
@@ -743,7 +691,6 @@ public interface RowSet extends ResultSet {
      *            a {@code String} holding the password.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setPassword(String password) throws SQLException;
 
@@ -755,7 +702,6 @@ public interface RowSet extends ResultSet {
      *            the number of seconds for the timeout.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setQueryTimeout(int seconds) throws SQLException;
 
@@ -767,7 +713,6 @@ public interface RowSet extends ResultSet {
      *            {@code false} to allow updates.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setReadOnly(boolean readOnly) throws SQLException;
 
@@ -784,7 +729,6 @@ public interface RowSet extends ResultSet {
      * @throws SQLException
      *             if an error occurs accessing the database.
      * @see java.sql.Ref
-     * @since Android 1.0
      */
     public void setRef(int parameterIndex, Ref theRef) throws SQLException;
 
@@ -799,7 +743,6 @@ public interface RowSet extends ResultSet {
      *            the value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setShort(int parameterIndex, short theShort)
             throws SQLException;
@@ -817,7 +760,6 @@ public interface RowSet extends ResultSet {
      *            the value to which the parameter is set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setString(int parameterIndex, String theString)
             throws SQLException;
@@ -836,7 +778,6 @@ public interface RowSet extends ResultSet {
      *             if an error occurs accessing the database.
      * @see java.util.Calendar
      * @see java.sql.Time
-     * @since Android 1.0
      */
     public void setTime(int parameterIndex, Time theTime) throws SQLException;
 
@@ -856,7 +797,6 @@ public interface RowSet extends ResultSet {
      *             if an error occurs accessing the database.
      * @see java.util.Calendar
      * @see java.sql.Time
-     * @since Android 1.0
      */
     public void setTime(int parameterIndex, Time theTime, Calendar theCalendar)
             throws SQLException;
@@ -875,7 +815,6 @@ public interface RowSet extends ResultSet {
      *             if an error occurs accessing the database.
      * @see java.util.Calendar
      * @see java.sql.Timestamp
-     * @since Android 1.0
      */
     public void setTimestamp(int parameterIndex, Timestamp theTimestamp)
             throws SQLException;
@@ -896,7 +835,6 @@ public interface RowSet extends ResultSet {
      *             if an error occurs accessing the database.
      * @see java.util.Calendar
      * @see java.sql.Timestamp
-     * @since Android 1.0
      */
     public void setTimestamp(int parameterIndex, Timestamp theTimestamp,
             Calendar theCalendar) throws SQLException;
@@ -909,8 +847,7 @@ public interface RowSet extends ResultSet {
      * <p>
      * Keep in mind that setting a transaction isolation level has no effect
      * unless your driver and DBMS support it.
-     * </p>
-     * 
+     *
      * @param level
      *            the transaction isolation level. One of:
      *            <ul>
@@ -922,7 +859,6 @@ public interface RowSet extends ResultSet {
      * @throws SQLException
      *             if an error occurs accessing the database.
      * @see java.sql.Connection
-     * @since Android 1.0
      */
     public void setTransactionIsolation(int level) throws SQLException;
 
@@ -939,7 +875,6 @@ public interface RowSet extends ResultSet {
      *            </ul>
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setType(int type) throws SQLException;
 
@@ -953,7 +888,6 @@ public interface RowSet extends ResultSet {
      *            mapped.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setTypeMap(Map<String, Class<?>> theTypeMap)
             throws SQLException;
@@ -967,7 +901,6 @@ public interface RowSet extends ResultSet {
      *            the URL for the database. Can be {@code null}.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setUrl(String theURL) throws SQLException;
 
@@ -979,7 +912,6 @@ public interface RowSet extends ResultSet {
      *            the new user name for this row set.
      * @throws SQLException
      *             if an error occurs accessing the database.
-     * @since Android 1.0
      */
     public void setUsername(String theUsername) throws SQLException;
 }

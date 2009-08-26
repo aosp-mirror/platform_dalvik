@@ -22,8 +22,6 @@ package java.sql;
  * by a rollback via the {@link Connection#rollback} command. Rolling back to a
  * particular savepoint means that all changes that occurred after that
  * savepoint are undone.
- * 
- * @since Android 1.0
  */
 public interface Savepoint {
 
@@ -33,7 +31,6 @@ public interface Savepoint {
      * @return the ID for this savepoint.
      * @throws SQLException
      *             if an error occurrs accessing the database.
-     * @since Android 1.0
      */
     public int getSavepointId() throws SQLException;
 
@@ -43,7 +40,6 @@ public interface Savepoint {
      * @return the name of this savepoint.
      * @throws SQLException
      *             if an error occurrs accessing the database.
-     * @since Android 1.0
      */
     public String getSavepointName() throws SQLException;
 }

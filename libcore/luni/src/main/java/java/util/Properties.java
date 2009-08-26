@@ -293,7 +293,10 @@ public class Properties extends Hashtable<Object, Object> {
         char nextChar, buf[] = new char[40];
         int offset = 0, keyLength = -1, intVal;
         boolean firstChar = true;
-        BufferedInputStream bis = new BufferedInputStream(in);
+
+        // BEGIN android-changed
+        BufferedInputStream bis = new BufferedInputStream(in, 8192);
+        // END android-changed
 
         while (true) {
             intVal = bis.read();

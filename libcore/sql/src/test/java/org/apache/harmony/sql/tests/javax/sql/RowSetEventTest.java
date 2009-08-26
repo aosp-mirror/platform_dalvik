@@ -45,7 +45,7 @@ public class RowSetEventTest extends TestCase {
             fail("illegal argument exception expected");
         } catch (IllegalArgumentException e) {
         }
-        
+
         Impl_RowSet irs = new Impl_RowSet();
         RowSetEvent rse = new RowSetEvent(irs);
         assertSame(irs, rse.getSource());

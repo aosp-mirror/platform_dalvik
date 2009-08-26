@@ -27,15 +27,12 @@ import java.util.Properties;
  * {@code xxxx:yyyy}" is referred to as the <i>subprotocol</i> and is normally
  * the same for all of a particular driver. " {@code SpecificData}" is a string
  * which identifies the particular data source that the driver should use.
- * </p>
  * <p>
  * A driver needs to be registered with a {@link DriverManager}. It is
  * registered and instantiated by calling {@code Class.forName("DriverURL")}
  * with the URL string as argument.
- * </p>
+ *
  * @see DriverManager
- *  
- * @since Android 1.0
  */
 public interface Driver {
 
@@ -51,7 +48,6 @@ public interface Driver {
      *         the subprotocol specified by the driver.
      * @throws SQLException
      *          if a database error occurs.
-     * @since Android 1.0
      */
     public boolean acceptsURL(String url) throws SQLException;
 
@@ -70,7 +66,6 @@ public interface Driver {
      * @return the connection to the database.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public Connection connect(String url, Properties info) throws SQLException;
 
@@ -78,7 +73,6 @@ public interface Driver {
      * Gets the driver's major version number.
      * 
      * @return the major version number of the driver - typically starts at 1.
-     * @since Android 1.0
      */
     public int getMajorVersion();
 
@@ -86,7 +80,6 @@ public interface Driver {
      * Gets the driver's minor version number.
      * 
      * @return the minor version number of the driver - typically starts at 0.
-     * @since Android 1.0
      */
     public int getMinorVersion();
 
@@ -97,8 +90,7 @@ public interface Driver {
      * the client of the driver must supply in order to establish a connection
      * to a database. Note that the returned array of properties may change
      * depending on the supplied list of property values.
-     * </p>
-     * 
+     *
      * @param url
      *            the URL of the database. An application may call this method
      *            iteratively as the property list is built up - for example,
@@ -113,7 +105,6 @@ public interface Driver {
      *         connect to the database.
      * @throws SQLException
      *             if a database error occurs.
-     * @since Android 1.0
      */
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info)
             throws SQLException;
@@ -125,11 +116,9 @@ public interface Driver {
      * <p>
      * A driver may not be fully compliant if the underlying database has
      * limited functionality.
-     * </p>
-     * 
+     *
      * @return {@code true} if the driver is fully JDBC compliant, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean jdbcCompliant();
 

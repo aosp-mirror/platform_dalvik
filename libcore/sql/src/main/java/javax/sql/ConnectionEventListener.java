@@ -27,13 +27,9 @@ import java.util.EventListener;
  * to a {@code ConnectionEventListener} either when the application closes a
  * connection it has been using or when a significant error occurs while the
  * connection is being used.
- * </p>
  * <p>
  * The connection pool manager can return closed connections to the pool for
  * later reuse. Connections experiencing an error should be discarded.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface ConnectionEventListener extends EventListener {
 
@@ -44,7 +40,6 @@ public interface ConnectionEventListener extends EventListener {
      * @param theEvent
      *            a {@code ConnectionEvent} containing details about the source
      *            of the event.
-     * @since Android 1.0
      */
     public void connectionClosed(ConnectionEvent theEvent);
 
@@ -57,7 +52,6 @@ public interface ConnectionEventListener extends EventListener {
      * @param theEvent
      *            a {@code ConnectionEvent} containing details about the source
      *            of the event and the {@code SQLException} that has occurred.
-     * @since Android 1.0
      */
     public void connectionErrorOccurred(ConnectionEvent theEvent);
 }

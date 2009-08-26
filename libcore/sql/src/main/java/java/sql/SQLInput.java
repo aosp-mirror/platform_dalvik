@@ -32,7 +32,7 @@ import java.net.URL;
  * application programmers do not normally use the {@code SQLInput} methods
  * directly. Reader methods such as {@code readLong} and {@code readBytes}
  * provide means to read values from an {@code SQLInput} stream.
- * </p><p>
+ * <p>
  * When the {@code getObject} method is called with an object which implements
  * the {@code SQLData} interface, the JDBC driver determines the SQL type of the
  * UDT being mapped by calling the {@code SQLData.getSQLType} method. The driver
@@ -40,11 +40,8 @@ import java.net.URL;
  * the attributes of the UDT. The {@code SQLInput} stream is passed to the
  * {@code SQLData.readSQL} method which then calls the {@code SQLInput} reader
  * methods to read the attributes.
- * </p>
- * 
+ *
  * @see SQLData
- * 
- * @since Android 1.0
  */
 public interface SQLInput {
 
@@ -55,7 +52,6 @@ public interface SQLInput {
      * 
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String readString() throws SQLException;
 
@@ -67,7 +63,6 @@ public interface SQLInput {
      *         value is SQL {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean readBoolean() throws SQLException;
 
@@ -78,7 +73,6 @@ public interface SQLInput {
      *         {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public byte readByte() throws SQLException;
 
@@ -89,7 +83,6 @@ public interface SQLInput {
      *         {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public short readShort() throws SQLException;
 
@@ -100,7 +93,6 @@ public interface SQLInput {
      *         {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public int readInt() throws SQLException;
 
@@ -111,7 +103,6 @@ public interface SQLInput {
      *         {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public long readLong() throws SQLException;
 
@@ -122,7 +113,6 @@ public interface SQLInput {
      *         {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public float readFloat() throws SQLException;
 
@@ -133,7 +123,6 @@ public interface SQLInput {
      *         {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public double readDouble() throws SQLException;
 
@@ -146,7 +135,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see java.math.BigDecimal
-     * @since Android 1.0
      */
     public BigDecimal readBigDecimal() throws SQLException;
 
@@ -157,7 +145,6 @@ public interface SQLInput {
      *         SQL {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public byte[] readBytes() throws SQLException;
 
@@ -170,7 +157,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see Date
-     * @since Android 1.0
      */
     public Date readDate() throws SQLException;
 
@@ -183,7 +169,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see Time
-     * @since Android 1.0
      */
     public Time readTime() throws SQLException;
 
@@ -196,7 +181,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see Timestamp
-     * @since Android 1.0
      */
     public Timestamp readTimestamp() throws SQLException;
 
@@ -209,7 +193,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see java.io.Reader
-     * @since Android 1.0
      */
     public Reader readCharacterStream() throws SQLException;
 
@@ -222,7 +205,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see java.io.InputStream
-     * @since Android 1.0
      */
     public InputStream readAsciiStream() throws SQLException;
 
@@ -235,7 +217,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see java.io.InputStream
-     * @since Android 1.0
      */
     public InputStream readBinaryStream() throws SQLException;
 
@@ -247,20 +228,17 @@ public interface SQLInput {
      * for this JDBC driver, including any customized mappings, if present. A
      * type map is given to the {@code SQLInput} by the JDBC driver before the
      * {@code SQLInput} is given to the application.
-     * </p>
      * <p>
      * If the attribute is an SQL structured or distinct type, its SQL type is
      * determined. If the stream's type map contains an element for that SQL
      * type, the driver creates an object for the relevant type and invokes the
      * method {@code SQLData.readSQL} on it, which reads supplementary data from
      * the stream using whichever protocol is defined for that method.
-     * </p>
      * 
      * @return the next attribute as an Object. {@code null} if the value is SQL
      *         {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public Object readObject() throws SQLException;
 
@@ -273,7 +251,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see Ref
-     * @since Android 1.0
      */
     public Ref readRef() throws SQLException;
 
@@ -285,7 +262,6 @@ public interface SQLInput {
      *         the value is SQL {@code NULL}.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public Blob readBlob() throws SQLException;
 
@@ -298,7 +274,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see Clob
-     * @since Android 1.0
      */
     public Clob readClob() throws SQLException;
 
@@ -311,7 +286,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see Array
-     * @since Android 1.0
      */
     public Array readArray() throws SQLException;
 
@@ -322,7 +296,6 @@ public interface SQLInput {
      *         false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean wasNull() throws SQLException;
 
@@ -335,7 +308,6 @@ public interface SQLInput {
      * @throws SQLException
      *             if there is a database error.
      * @see java.net.URL
-     * @since Android 1.0
      */
     public URL readURL() throws SQLException;
 }
