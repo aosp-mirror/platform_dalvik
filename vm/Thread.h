@@ -68,6 +68,7 @@ void dvmThreadShutdown(void);
 void dvmSlayDaemons(void);
 
 
+#define kJniLocalRefMin         32
 #define kJniLocalRefMax         512     /* arbitrary; should be plenty */
 #define kInternalRefDefault     32      /* equally arbitrary */
 #define kInternalRefMax         4096    /* mainly a sanity check */
@@ -152,7 +153,11 @@ typedef struct Thread {
     ReferenceTable  internalLocalRefTable;
 
     /* JNI local reference tracking */
+#ifdef USE_INDIRECT_REF
+    IndirectRefTable jniLocalRefTable;
+#else
     ReferenceTable  jniLocalRefTable;
+#endif
 
     /* JNI native monitor reference tracking (initialized on first use) */
     ReferenceTable  jniMonitorRefTable;

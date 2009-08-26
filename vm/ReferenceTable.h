@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Maintain a table of references.  Used for internal local references,
  * JNI locals, JNI globals, and GC heap references.
@@ -36,8 +37,8 @@
  * table/nextEntry is allowed.)
  */
 typedef struct ReferenceTable {
-    Object**        table;              /* top of the list */
-    Object**        nextEntry;          /* bottom of the list */
+    Object**        nextEntry;          /* top of the list */
+    Object**        table;              /* bottom of the list */
 
     int             allocEntries;       /* #of entries we have space for */
     int             maxEntries;         /* max #of entries allowed */
@@ -88,23 +89,24 @@ INLINE size_t dvmIsReferenceTableFull(const ReferenceTable* pRef)
 bool dvmAddToReferenceTable(ReferenceTable* pRef, Object* obj);
 
 /*
- * Determine if "obj" is present in "pRef".  Stops searching when we hit "top".
- * To include the entire table, pass in "pRef->table" as the top.
+ * Determine if "obj" is present in "pRef".  Stops searching when we hit
+ * "bottom".  To include the entire table, pass in "pRef->table" as the
+ * bottom.
  *
  * Returns NULL if "obj" was not found.
  */
-Object** dvmFindInReferenceTable(const ReferenceTable* pRef, Object** top,
+Object** dvmFindInReferenceTable(const ReferenceTable* pRef, Object** bottom,
     Object* obj);
 
 /*
  * Remove an existing entry.
  *
- * We stop searching for a match after examining the element at "top".  This
- * is useful when entries are associated with a stack frame.
+ * We stop searching for a match after examining the element at "bottom".
+ * This is useful when entries are associated with a stack frame.
  *
  * Returns "false" if the entry was not found.
  */
-bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** top,
+bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** bottom,
     Object* obj);
 
 /*

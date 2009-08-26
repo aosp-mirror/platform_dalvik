@@ -29,10 +29,10 @@
 #endif
 
     @ go ahead and transfer control to the native code
-    ldr     r9, [r3, #offThread_jniLocal_nextEntry] @ r9<- thread->refNext
+    ldr     r9, [r3, #offThread_jniLocal_topCookie] @ r9<- thread->localRef->...
     str     r1, [r3, #offThread_curFrame]   @ self->curFrame = newFp
-    str     r9, [r1, #(offStackSaveArea_localRefTop - sizeofStackSaveArea)]
-                                        @ newFp->localRefTop=refNext
+    str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
+                                        @ newFp->localRefCookie=top
     mov     r9, r3                      @ r9<- glue->self (preserve)
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- new stack save area
 
@@ -45,11 +45,11 @@
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
-    ldr     r0, [r10, #offStackSaveArea_localRefTop] @ r0<- newSave->localRefTop
+    ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved->top
     ldr     r1, [r9, #offThread_exception] @ check for exception
     str     rFP, [r9, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
-    str     r0, [r9, #offThread_jniLocal_nextEntry] @ self->refNext<- r0
+    str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
     bne     .LhandleException             @ no, handle exception
     bx      r2
 

@@ -514,9 +514,9 @@ common_invokeMethodNoRange:
     @ Prep for the native call
     @ r0=methodToCall, r1=newFp, r10=newSaveArea
     ldr     r3, [rGLUE, #offGlue_self]      @ r3<- glue->self
-    ldr     r9, [r3, #offThread_jniLocal_nextEntry] @ r9<- thread->refNext
+    ldr     r9, [r3, #offThread_jniLocal_topCookie] @ r9<- thread->localRef->...
     str     r1, [r3, #offThread_curFrame]   @ self->curFrame = newFp
-    str     r9, [r10, #offStackSaveArea_localRefTop] @newFp->localRefTop=refNext
+    str     r9, [r10, #offStackSaveArea_localRefCookie] @newFp->localRefCookie=top
     mov     r9, r3                      @ r9<- glue->self (preserve)
 
     mov     r2, r0                      @ r2<- methodToCall
@@ -540,11 +540,11 @@ dalvik_mterp:
 
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals
-    ldr     r0, [r10, #offStackSaveArea_localRefTop] @ r0<- newSave->localRefTop
+    ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved top
     ldr     r1, [r9, #offThread_exception] @ check for exception
     str     rFP, [r9, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
-    str     r0, [r9, #offThread_jniLocal_nextEntry] @ self->refNext<- r0
+    str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
     bne     common_exceptionThrown      @ no, handle exception
 
     FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST

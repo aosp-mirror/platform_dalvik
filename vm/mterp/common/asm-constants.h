@@ -154,7 +154,8 @@ MTERP_OFFSET(offStackSaveArea_prevFrame, StackSaveArea, prevFrame, 4)
 MTERP_OFFSET(offStackSaveArea_savedPc,  StackSaveArea, savedPc, 8)
 MTERP_OFFSET(offStackSaveArea_method,   StackSaveArea, method, 12)
 MTERP_OFFSET(offStackSaveArea_currentPc, StackSaveArea, xtra.currentPc, 16)
-MTERP_OFFSET(offStackSaveArea_localRefTop, StackSaveArea, xtra.localRefTop, 16)
+MTERP_OFFSET(offStackSaveArea_localRefCookie, \
+                                        StackSaveArea, xtra.localRefCookie, 16)
 MTERP_OFFSET(offStackSaveArea_returnAddr, StackSaveArea, returnAddr, 20)
 MTERP_SIZEOF(sizeofStackSaveArea,       StackSaveArea, 24)
 #else
@@ -162,7 +163,8 @@ MTERP_OFFSET(offStackSaveArea_prevFrame, StackSaveArea, prevFrame, 0)
 MTERP_OFFSET(offStackSaveArea_savedPc,  StackSaveArea, savedPc, 4)
 MTERP_OFFSET(offStackSaveArea_method,   StackSaveArea, method, 8)
 MTERP_OFFSET(offStackSaveArea_currentPc, StackSaveArea, xtra.currentPc, 12)
-MTERP_OFFSET(offStackSaveArea_localRefTop, StackSaveArea, xtra.localRefTop, 12)
+MTERP_OFFSET(offStackSaveArea_localRefCookie, \
+                                        StackSaveArea, xtra.localRefCookie, 12)
 MTERP_OFFSET(offStackSaveArea_returnAddr, StackSaveArea, returnAddr, 16)
 MTERP_SIZEOF(sizeofStackSaveArea,       StackSaveArea, 20)
 #endif
@@ -198,8 +200,13 @@ MTERP_OFFSET(offInlineOperation_func,   InlineOperation, func, 0)
 MTERP_OFFSET(offThread_stackOverflowed, Thread, stackOverflowed, 40)
 MTERP_OFFSET(offThread_curFrame,        Thread, curFrame, 44)
 MTERP_OFFSET(offThread_exception,       Thread, exception, 48)
-MTERP_OFFSET(offThread_jniLocal_nextEntry, \
-                                        Thread, jniLocalRefTable.nextEntry, 80)
+#ifdef USE_INDIRECT_REF
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.segmentState.all, 76)
+#else
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.nextEntry, 76)
+#endif
 
 /* Object fields */
 MTERP_OFFSET(offObject_clazz,           Object, clazz, 0)

@@ -194,6 +194,7 @@ struct DvmGlobals {
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
     ClassObject* classOrgApacheHarmonyNioInternalDirectBuffer;
+    jclass      jclassOrgApacheHarmonyNioInternalDirectBuffer;
 
     /* synthetic classes for arrays of primitives */
     ClassObject* classArrayBoolean;
@@ -409,7 +410,11 @@ struct DvmGlobals {
     /*
      * JNI global reference table.
      */
+#ifdef USE_INDIRECT_REF
+    IndirectRefTable jniGlobalRefTable;
+#else
     ReferenceTable  jniGlobalRefTable;
+#endif
     pthread_mutex_t jniGlobalRefLock;
     int         jniGlobalRefHiMark;
     int         jniGlobalRefLoMark;

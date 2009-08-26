@@ -24,6 +24,7 @@
 # Compiler defines.
 #
 LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps
+#LOCAL_CFLAGS += -DUSE_INDIRECT_REF
 
 #
 # Optional features.  These may impact the size or performance of the VM.

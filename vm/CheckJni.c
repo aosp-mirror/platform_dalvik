@@ -1735,6 +1735,7 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string,
     const jchar* result;
     result = BASE_ENV(env)->GetStringChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
+        // TODO: fix for indirect
         int len = dvmStringLen(string) * 2;
         result = (const jchar*) createGuardedCopy(result, len, false);
         if (isCopy != NULL)
@@ -1790,6 +1791,7 @@ static const char* Check_GetStringUTFChars(JNIEnv* env, jstring string,
     const char* result;
     result = BASE_ENV(env)->GetStringUTFChars(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
+        // TODO: fix for indirect
         int len = dvmStringUtf8ByteLen(string) + 1;
         result = (const char*) createGuardedCopy(result, len, false);
         if (isCopy != NULL)
@@ -2056,6 +2058,7 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string,
     const jchar* result;
     result = BASE_ENV(env)->GetStringCritical(env, string, isCopy);
     if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
+        // TODO: fix for indirect
         int len = dvmStringLen(string) * 2;
         result = (const jchar*) createGuardedCopy(result, len, false);
         if (isCopy != NULL)
@@ -2153,7 +2156,7 @@ static void* Check_GetDirectBufferAddress(JNIEnv* env, jobject buf)
          * interfaces.  Note this does not guarantee that it's a direct buffer.
          */
         if (JNI_FALSE == (*env)->IsInstanceOf(env, buf,
-                (jclass) gDvm.classOrgApacheHarmonyNioInternalDirectBuffer))
+                gDvm.jclassOrgApacheHarmonyNioInternalDirectBuffer))
         {
             goto bail;
         }
