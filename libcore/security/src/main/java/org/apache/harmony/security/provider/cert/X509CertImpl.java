@@ -95,7 +95,9 @@ public class X509CertImpl extends X509Certificate {
     private PublicKey publicKey;
 
     // encoding of the certificate
-    private byte[] encoding;
+// BEGIN android-changed
+    private volatile byte[] encoding;
+// END android-changed
 
     //
     // ---------------------- Constructors -------------------------------
