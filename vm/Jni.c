@@ -1107,9 +1107,17 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
 #ifdef USE_INDIRECT_REF
     /*
      * IndirectRefKind is currently defined as an exact match of
-     * jobjectRefType, so this is easy.
+     * jobjectRefType, so this is easy.  We have to decode it to determine
+     * if it's a valid reference and not merely valid-looking.
      */
-    return (jobjectRefType) dvmIndirectRefToIndex(jobj);
+    Object* obj = dvmDecodeIndirectRef(env, jobj);
+
+    if (obj == NULL) {
+        /* invalid ref, or jobj was NULL */
+        return JNIInvalidRefType;
+    } else {
+        return (jobjectRefType) dvmGetIndirectRefType(jobj);
+    }
 #else
     ReferenceTable* pRefTable = getLocalRefTable(env);
     Thread* self = dvmThreadSelf();
@@ -1447,6 +1455,20 @@ static void checkStackSum(Thread* self)
  */
 
 /*
+ * If necessary, convert the value in pResult from a local/global reference
+ * to an object pointer.
+ */
+static inline void convertReferenceResult(JNIEnv* env, JValue* pResult,
+    const Method* method, Thread* self)
+{
+    if (method->shorty[0] == 'L' && !dvmCheckException(self) &&
+            pResult->l != NULL)
+    {
+        pResult->l = dvmDecodeIndirectRef(env, pResult->l);
+    }
+}
+
+/*
  * General form, handles all cases.
  */
 void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
@@ -1523,6 +1545,8 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);
+
+    convertReferenceResult(env, pResult, method, self);
 }
 
 /*
@@ -1578,6 +1602,8 @@ void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);
+
+    convertReferenceResult(self->jniEnv, pResult, method, self);
 }
 
 /*
@@ -1606,6 +1632,8 @@ void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     CHECK_STACK_SUM(self);
 
     dvmChangeStatus(self, oldStatus);
+
+    convertReferenceResult(self->jniEnv, pResult, method, self);
 }
 
 /*
@@ -2666,7 +2694,7 @@ static jstring NewString(JNIEnv* env, const jchar* unicodeChars, jsize len)
     }
 
     JNI_EXIT();
-    return jstr;
+    return retval;
 }
 
 /*
@@ -2917,11 +2945,7 @@ static void SetObjectArrayElement(JNIEnv* env, jobjectArray jarr,
 
     //LOGV("JNI: set element %d in array %p to %p\n", index, array, value);
 
-    Object* obj;
-    if (jobj == NULL)
-        obj = NULL;
-    else
-        obj = dvmDecodeIndirectRef(env, jobj);
+    Object* obj = dvmDecodeIndirectRef(env, jobj);
     ((Object**) arrayObj->contents)[index] = obj;
 
 bail:
@@ -3257,7 +3281,7 @@ static void ReleaseStringCritical(JNIEnv* env, jstring jstr,
 {
     JNI_ENTER();
     StringObject* strObj = (StringObject*) dvmDecodeIndirectRef(env, jstr);
-    ArrayObject* strChars = dvmStringCharArray(jstr);
+    ArrayObject* strChars = dvmStringCharArray(strObj);
     unpinPrimitiveArray(strChars);
     JNI_EXIT();
 }
@@ -3312,12 +3336,7 @@ static jboolean ExceptionCheck(JNIEnv* env)
 static jobjectRefType GetObjectRefType(JNIEnv* env, jobject jobj)
 {
     JNI_ENTER();
-    jobjectRefType type;
-
-    if (jobj == NULL)
-        type = JNIInvalidRefType;
-    else
-        type = dvmGetJNIRefType(env, jobj);
+    jobjectRefType type = dvmGetJNIRefType(env, jobj);
     JNI_EXIT();
     return type;
 }

@@ -119,7 +119,7 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
     if (topIndex == pRef->allocEntries) {
         /* reached end of allocated space; did we hit buffer max? */
         if (topIndex == pRef->maxEntries) {
-            LOGW("ReferenceTable overflow (max=%d)\n", pRef->maxEntries);
+            LOGW("IndirectRefTable overflow (max=%d)\n", pRef->maxEntries);
             return NULL;
         }
 
@@ -133,11 +133,12 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
 
         newTable = (Object**) realloc(pRef->table, newSize * sizeof(Object*));
         if (newTable == NULL) {
-            LOGE("Unable to expand iref table (from %d to %d entries)\n",
-                pRef->allocEntries, newSize);
+            LOGE("Unable to expand iref table (from %d to %d, max=%d)\n",
+                pRef->allocEntries, newSize, pRef->maxEntries);
             return false;
         }
-        LOGI("Growing %p from %d to %d\n", pRef, pRef->allocEntries, newSize);
+        LOGI("Growing ireftab %p from %d to %d (max=%d)\n",
+            pRef, pRef->allocEntries, newSize, pRef->maxEntries);
 
         /* update entries; adjust "nextEntry" in case memory moved */
         pRef->table = newTable;
