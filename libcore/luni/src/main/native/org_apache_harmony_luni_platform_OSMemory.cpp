@@ -172,12 +172,10 @@ static void harmony_nio_putBytesImpl(JNIEnv *_env, jobject _this,
 }
 
 static void
-swapShorts(jshort *shorts, int numBytes) {
+swapShorts(jshort *shorts, int count) {
     jbyte *src = (jbyte *) shorts;
     jbyte *dst = src;
-    int i;
-    
-    for (i = 0; i < numBytes; i+=2) {
+    for (int i = 0; i < count; ++i) {
         jbyte b0 = *src++;
         jbyte b1 = *src++;
         *dst++ = b1;
@@ -186,11 +184,10 @@ swapShorts(jshort *shorts, int numBytes) {
 }
 
 static void
-swapInts(jint *ints, int numBytes) {
+swapInts(jint *ints, int count) {
     jbyte *src = (jbyte *) ints;
     jbyte *dst = src;
-    int i;   
-    for (i = 0; i < numBytes; i+=4) {
+    for (int i = 0; i < count; ++i) {
         jbyte b0 = *src++;
         jbyte b1 = *src++;
         jbyte b2 = *src++;
@@ -204,48 +201,30 @@ swapInts(jint *ints, int numBytes) {
 
 /*
  * Class:     org_apache_harmony_luni_platform_OSMemory
- * Method:    putShortsImpl
+ * Method:    setShortArrayImpl
  * Signature: (I[SIIZ)V
  */
-static void harmony_nio_putShortsImpl(JNIEnv *_env, jobject _this,
+static void harmony_nio_setShortArrayImpl(JNIEnv *_env, jobject _this,
        jint pointer, jshortArray src, jint offset, jint length, jboolean swap) {
-       
-    offset = offset << 1;
-    length = length << 1;
-       
-    jshort *src_ =
-        (jshort *)_env->GetPrimitiveArrayCritical(src, (jboolean *)0);
+    jshort* dst = reinterpret_cast<jshort*>(static_cast<uintptr_t>(pointer));
+    _env->GetShortArrayRegion(src, offset, length, dst);
     if (swap) {
-        swapShorts(src_ + offset, length);
+        swapShorts(dst, length);
     }
-    memcpy((jbyte *)pointer, (jbyte *)src_ + offset, length);
-    if (swap) {
-        swapShorts(src_ + offset, length);
-    }
-    _env->ReleasePrimitiveArrayCritical(src, src_, JNI_ABORT);
 }
 
 /*
  * Class:     org_apache_harmony_luni_platform_OSMemory
- * Method:    putIntsImpl
+ * Method:    setIntArrayImpl
  * Signature: (I[IIIZ)V
  */
-static void harmony_nio_putIntsImpl(JNIEnv *_env, jobject _this,
+static void harmony_nio_setIntArrayImpl(JNIEnv *_env, jobject _this,
        jint pointer, jintArray src, jint offset, jint length, jboolean swap) {
-
-    offset = offset << 2;
-    length = length << 2;
-       
-    jint *src_ =
-        (jint *)_env->GetPrimitiveArrayCritical(src, (jboolean *)0);
+    jint* dst = reinterpret_cast<jint*>(static_cast<uintptr_t>(pointer));
+    _env->GetIntArrayRegion(src, offset, length, dst);
     if (swap) {
-        swapInts(src_ + offset, length);
+        swapInts(dst, length);
     }
-    memcpy((jbyte *)pointer, (jbyte *)src_ + offset, length);
-    if (swap) {
-        swapInts(src_ + offset, length);
-    }
-    _env->ReleasePrimitiveArrayCritical(src, src_, JNI_ABORT);
 }
 
 /*
@@ -588,8 +567,8 @@ static JNINativeMethod gMethods[] = {
     { "memmove",            "(IIJ)V",  (void*) harmony_nio_memmove },
     { "getByteArray",       "(I[BII)V",(void*) harmony_nio_getBytesImpl },
     { "setByteArray",       "(I[BII)V",(void*) harmony_nio_putBytesImpl },
-    { "setShortArray",     "(I[SIIZ)V",(void*) harmony_nio_putShortsImpl },
-    { "setIntArray",       "(I[IIIZ)V",(void*) harmony_nio_putIntsImpl },
+    { "setShortArray",     "(I[SIIZ)V",(void*) harmony_nio_setShortArrayImpl },
+    { "setIntArray",       "(I[IIIZ)V",(void*) harmony_nio_setIntArrayImpl },
     { "getByte",            "(I)B",    (void*) harmony_nio_getByteImpl },
     { "setByte",            "(IB)V",   (void*) harmony_nio_putByteImpl },
     { "getShort",           "(I)S",    (void*) harmony_nio_getShortImpl },
@@ -653,4 +632,3 @@ int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv *_env) {
                 "org/apache/harmony/luni/platform/OSMemory",
                 gMethods, NELEM(gMethods));
 }
-
