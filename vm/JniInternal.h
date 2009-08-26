@@ -98,15 +98,17 @@ typedef enum DalvikJniReturnType {
 /*
  * Pop the JNI local stack when we return from a native method.  "saveArea"
  * points to the StackSaveArea for the method we're leaving.
+ *
+ * (This may be implemented directly in assembly in mterp, so changes here
+ * may only affect the portable interpreter.)
  */
 INLINE void dvmPopJniLocals(Thread* self, StackSaveArea* saveArea)
 {
-    if (saveArea->xtra.localRefTop != self->jniLocalRefTable.nextEntry) {
-        LOGVV("LREF: popped %d entries (%d remain)\n",
-            (int)(self->jniLocalRefTable.nextEntry-saveArea->xtra.localRefTop),
-            (int)(saveArea->xtra.localRefTop - self->jniLocalRefTable.table));
-    }
-    self->jniLocalRefTable.nextEntry = saveArea->xtra.localRefTop;
+#ifdef USE_INDIRECT_REF
+    self->jniLocalRefTable.segmentState.all = saveArea->xtra.localRefCookie;
+#else
+    self->jniLocalRefTable.nextEntry = saveArea->xtra.localRefCookie;
+#endif
 }
 
 /*

@@ -3895,7 +3895,11 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             FINISH(0);                              // jump to method start
         } else {
             /* set this up for JNI locals, even if not a JNI native */
-            newSaveArea->xtra.localRefTop = self->jniLocalRefTable.nextEntry;
+#ifdef USE_INDIRECT_REF
+            newSaveArea->xtra.localRefCookie = self->jniLocalRefTable.segmentState.all;
+#else
+            newSaveArea->xtra.localRefCookie = self->jniLocalRefTable.nextEntry;
+#endif
 
             self->curFrame = newFp;
 
