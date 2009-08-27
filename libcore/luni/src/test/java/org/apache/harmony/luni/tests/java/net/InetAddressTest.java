@@ -228,11 +228,14 @@ public class InetAddressTest extends junit.framework.TestCase {
             System.setSecurityManager(oldman);
         }
         
-        //Regression for HARMONY-56
-        InetAddress[] ia = InetAddress.getAllByName(null);
-        assertEquals("Assert 0: No loopback address", 1, ia.length);
-        assertTrue("Assert 1: getAllByName(null) not loopback",
-                ia[0].isLoopbackAddress());
+        // Regression for HARMONY-56
+        InetAddress[] addresses = InetAddress.getAllByName(null);
+        assertTrue("getAllByName(null): no results", addresses.length > 0);
+        for (int i = 0; i < addresses.length; i++) {
+            InetAddress address = addresses[i];
+            assertTrue("Assert 1: getAllByName(null): " + address +
+                    " is not loopback", address.isLoopbackAddress());
+        }
         
         try {
             InetAddress.getAllByName("unknown.host");
@@ -251,6 +254,11 @@ public class InetAddressTest extends junit.framework.TestCase {
         method = "getByName",
         args = {java.lang.String.class}
     )
+    @BrokenTest("1.2.3 and 1.2 are not valid IP addresses and throw " +
+            "exceptions. These form of IP address has been the cause of " +
+            "various security vulnerabilities in the past, and all modern " +
+            "implementations refuse them. The test should be modified to " +
+            "require that they not function.")
     public void test_getByNameLjava_lang_String() throws Exception {
         // Test for method java.net.InetAddress
         // java.net.InetAddress.getByName(java.lang.String)
@@ -469,6 +477,10 @@ public class InetAddressTest extends junit.framework.TestCase {
         }
     }
 
+    static final int TEST_IP_HASHCODE = 2130706433;
+    static final int TEST_IP6_HASHCODE = -1022939537;
+    static final int TEST_IP6_LO_HASHCODE = 1353309698;
+
     /**
      * @tests java.net.InetAddress#hashCode()
      */
@@ -478,17 +490,28 @@ public class InetAddressTest extends junit.framework.TestCase {
         method = "hashCode",
         args = {}
     )
+    void assertHashCode(String literal, int expectedHashCode) {
+        InetAddress host = null;
+        try {
+            host = InetAddress.getByName(literal);
+        } catch(UnknownHostException e) {
+            fail("Exception during hashCode test : " + e.getMessage());
+        }
+        int hashCode = host.hashCode();
+        assertEquals("incorrect hashCode for " + host, expectedHashCode,
+                hashCode);
+    }
+
     public void test_hashCode() {
         // Test for method int java.net.InetAddress.hashCode()
-        try {
-            InetAddress host = InetAddress
-                    .getByName(Support_Configuration.InetTestAddress);
-            int hashcode = host.hashCode();
-            assertTrue("Incorrect hash returned: " + hashcode + " from host: "
-                    + host, hashcode == Support_Configuration.InetTestHashcode);
-        } catch (java.net.UnknownHostException e) {
-            fail("Exception during test : " + e.getMessage());
-        }
+        // Create InetAddresses from string literals instead of from hostnames
+        // because we are only testing hashCode, not getByName. That way the
+        // test does not depend on name resolution and we can test many
+        // different addresses, not just localhost.
+        assertHashCode(Support_Configuration.InetTestIP, TEST_IP_HASHCODE);
+        assertHashCode(Support_Configuration.InetTestIP6, TEST_IP6_HASHCODE);
+        assertHashCode(Support_Configuration.InetTestIP6LO,
+                TEST_IP6_LO_HASHCODE);
     }
 
     /**
@@ -503,8 +526,17 @@ public class InetAddressTest extends junit.framework.TestCase {
     public void test_isMulticastAddress() {
         // Test for method boolean java.net.InetAddress.isMulticastAddress()
         try {
+            InetAddress ia1 = InetAddress.getByName("ff02::1");
+            assertTrue("isMulticastAddress returned incorrect result", ia1
+                    .isMulticastAddress());
             InetAddress ia2 = InetAddress.getByName("239.255.255.255");
             assertTrue("isMulticastAddress returned incorrect result", ia2
+                    .isMulticastAddress());
+            InetAddress ia3 = InetAddress.getByName("fefb::");
+            assertFalse("isMulticastAddress returned incorrect result", ia3
+                    .isMulticastAddress());
+            InetAddress ia4 = InetAddress.getByName("10.0.0.1");
+            assertFalse("isMulticastAddress returned incorrect result", ia4
                     .isMulticastAddress());
         } catch (Exception e) {
             fail("Exception during isMulticastAddress test : " + e.getMessage());
