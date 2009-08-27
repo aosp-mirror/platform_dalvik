@@ -45,6 +45,7 @@ static ArmLIR *storeValuePair(CompilationUnit *cUnit, int rSrcLo, int rSrcHi,
 static ArmLIR *genBoundsCheck(CompilationUnit *cUnit, int rIndex,
                               int rBound, int dOffset, ArmLIR *pcrLabel);
 static ArmLIR *genRegCopy(CompilationUnit *cUnit, int rDest, int rSrc);
+static int inlinedTarget(MIR *mir);
 
 
 /* Routines which must be supplied here */
@@ -80,6 +81,8 @@ static ArmLIR *opRegRegReg(CompilationUnit *cUnit, OpKind op, int rDest,
                            int rSrc1, int rSrc2);
 static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
                                int rIndex, int rDest, int scale, OpSize size);
+static void genCmpLong(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
+                       int vSrc2);
 
 static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir);
 static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir);
@@ -755,6 +758,15 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
         }
     }
     return res;
+}
+
+static void genCmpLong(CompilationUnit *cUnit, MIR *mir,
+                               int vDest, int vSrc1, int vSrc2)
+{
+    loadValuePair(cUnit, vSrc1, r0, r1);
+    loadValuePair(cUnit, vSrc2, r2, r3);
+    genDispatchToHandler(cUnit, TEMPLATE_CMP_LONG);
+    storeValue(cUnit, r0, vDest, r1);
 }
 
 static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)

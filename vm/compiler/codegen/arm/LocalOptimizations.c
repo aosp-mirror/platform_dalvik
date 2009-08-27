@@ -139,6 +139,9 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                                 checkLIR->opCode == THUMB2_VLDRD ||
                                 checkLIR->opCode == THUMB2_VSTRD;
 
+                    /* Don't migrate into an IF region */
+                    stopHere |= checkLIR->opCode == THUMB2_IT;
+
                     if (!isPseudoOpCode(checkLIR->opCode)) {
 
                         /* Store data is clobbered */

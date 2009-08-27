@@ -82,6 +82,13 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                assert((unsigned)(nc-'0') < 4);
                operand = lir->operands[nc-'0'];
                switch(*fmt++) {
+                   case 'b':
+                       strcpy(tbuf,"0000");
+                       for (i=3; i>= 0; i--) {
+                           tbuf[i] += operand & 1;
+                           operand >>= 1;
+                       }
+                       break;
                    case 'n':
                        operand = ~expandImmediate(operand);
                        sprintf(tbuf,"%d [0x%x]", operand, operand);
@@ -115,28 +122,28 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                    case 'c':
                        switch (operand) {
                            case ARM_COND_EQ:
-                               strcpy(tbuf, "beq");
+                               strcpy(tbuf, "eq");
                                break;
                            case ARM_COND_NE:
-                               strcpy(tbuf, "bne");
+                               strcpy(tbuf, "ne");
                                break;
                            case ARM_COND_LT:
-                               strcpy(tbuf, "blt");
+                               strcpy(tbuf, "lt");
                                break;
                            case ARM_COND_GE:
-                               strcpy(tbuf, "bge");
+                               strcpy(tbuf, "ge");
                                break;
                            case ARM_COND_GT:
-                               strcpy(tbuf, "bgt");
+                               strcpy(tbuf, "gt");
                                break;
                            case ARM_COND_LE:
-                               strcpy(tbuf, "ble");
+                               strcpy(tbuf, "le");
                                break;
                            case ARM_COND_CS:
-                               strcpy(tbuf, "bcs");
+                               strcpy(tbuf, "cs");
                                break;
                            case ARM_COND_MI:
-                               strcpy(tbuf, "bmi");
+                               strcpy(tbuf, "mi");
                                break;
                            default:
                                strcpy(tbuf, "");

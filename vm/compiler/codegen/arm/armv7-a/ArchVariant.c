@@ -117,22 +117,14 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
     int offset = offsetof(InterpState, retval);
     int vSrc = mir->dalvikInsn.vA;
+    int vDest = inlinedTarget(mir);
     loadDouble(cUnit, vSrc, dr1);
     newLIR2(cUnit, THUMB2_VSQRTD, dr0, dr1);
-    assert((offset & 0x3) == 0);  /* Must be word aligned */
-    assert(offset < 1024);
-    newLIR3(cUnit, THUMB2_VSTRD, dr0, rGLUE, offset >> 2);
+    if (vDest >= 0)
+        storeDouble(cUnit, dr0, vDest, rNone);
+    else
+        newLIR3(cUnit, THUMB2_VSTRD, dr0, rGLUE, offset >> 2);
     return true;
-}
-
-static bool genInlineCos(CompilationUnit *cUnit, MIR *mir)
-{
-    return false;
-}
-
-static bool genInlineSin(CompilationUnit *cUnit, MIR *mir)
-{
-    return false;
 }
 
 static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
@@ -181,10 +173,6 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
 {
     int op = THUMB_BKPT;
 
-    /*
-     * Don't attempt to optimize register usage since these opcodes call out to
-     * the handlers.
-     */
     switch (mir->dalvikInsn.opCode) {
         case OP_ADD_DOUBLE_2ADDR:
         case OP_ADD_DOUBLE:
@@ -213,7 +201,7 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
     loadDouble(cUnit, vSrc1, dr1);
     loadDouble(cUnit, vSrc2, dr2);
     newLIR3(cUnit, op, dr0, dr1, dr2);
-    storeDouble(cUnit, dr0, vDest, 0);
+    storeDouble(cUnit, dr0, vDest, rNone);
     return false;
 }
 
@@ -276,7 +264,7 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
     }
     if (longDest) {
         newLIR2(cUnit, op, dr0, srcReg);
-        storeDouble(cUnit, dr0, vSrc1Dest, 0);
+        storeDouble(cUnit, dr0, vSrc1Dest, rNone);
     } else {
         newLIR2(cUnit, op, fr0, srcReg);
         storeFloat(cUnit, fr0, vSrc1Dest, 0);
@@ -287,31 +275,50 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
 static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
                     int vSrc2)
 {
-    TemplateOpCode template;
+    bool isDouble;
+    int defaultResult;
+    bool ltNaNBias;
 
-    /*
-     * Don't attempt to optimize register usage since these opcodes call out to
-     * the handlers.
-     */
     switch(mir->dalvikInsn.opCode) {
         case OP_CMPL_FLOAT:
-            template = TEMPLATE_CMPL_FLOAT_VFP;
+            isDouble = false;
+            defaultResult = -1;
             break;
         case OP_CMPG_FLOAT:
-            template = TEMPLATE_CMPG_FLOAT_VFP;
+            isDouble = false;
+            defaultResult = 1;
             break;
         case OP_CMPL_DOUBLE:
-            template = TEMPLATE_CMPL_DOUBLE_VFP;
+            isDouble = true;
+            defaultResult = -1;
             break;
         case OP_CMPG_DOUBLE:
-            template = TEMPLATE_CMPG_DOUBLE_VFP;
+            isDouble = true;
+            defaultResult = 1;
             break;
         default:
             return true;
     }
-    loadValueAddress(cUnit, vSrc1, r0);
-    loadValueAddress(cUnit, vSrc2, r1);
-    genDispatchToHandler(cUnit, template);
-    storeValue(cUnit, r0, vDest, r1);
+    if (isDouble) {
+        loadDouble(cUnit, vSrc1, dr0);
+        loadDouble(cUnit, vSrc2, dr1);
+        // Hard-coded use of r7 as temp.  Revisit
+        loadConstant(cUnit,r7, defaultResult);
+        newLIR2(cUnit, THUMB2_VCMPED, dr0, dr1);
+    } else {
+        loadFloat(cUnit, vSrc1, fr0);
+        loadFloat(cUnit, vSrc2, fr2);
+        // Hard-coded use of r7 as temp.  Revisit
+        loadConstant(cUnit,r7, defaultResult);
+        newLIR2(cUnit, THUMB2_VCMPES, fr0, fr2);
+    }
+    newLIR0(cUnit, THUMB2_FMSTAT);
+    genIT(cUnit, (defaultResult == -1) ? ARM_COND_GT : ARM_COND_MI, "");
+    newLIR2(cUnit, THUMB2_MOV_IMM_SHIFT, r7,
+            modifiedImmediate(-defaultResult)); // Must not alter ccodes
+    genIT(cUnit, ARM_COND_EQ, "");
+    loadConstant(cUnit, r7, 0);
+    // Hard-coded use of r4PC as temp.  Revisit
+    storeValue(cUnit, r7, vDest, r4PC);
     return false;
 }

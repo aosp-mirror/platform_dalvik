@@ -548,6 +548,26 @@ static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpCode opCode,
 }
 
 /*
+ * If the next instruction is a move-result or move-result-long,
+ * return the target Dalvik instruction and convert the next to a
+ * nop.  Otherwise, return -1.  Used to optimize method inlining.
+ */
+static int inlinedTarget(MIR *mir)
+{
+    if (mir->next &&
+        ((mir->next->dalvikInsn.opCode == OP_MOVE_RESULT) ||
+         (mir->next->dalvikInsn.opCode == OP_MOVE_RESULT_OBJECT) ||
+         (mir->next->dalvikInsn.opCode == OP_MOVE_RESULT_WIDE))) {
+        mir->next->dalvikInsn.opCode = OP_NOP;
+        return mir->next->dalvikInsn.vA;
+    } else {
+        return -1;
+    }
+}
+
+
+
+/*
  * The following are building blocks to insert constants into the pool or
  * instruction streams.
  */
@@ -2775,10 +2795,7 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
         case OP_CMPG_DOUBLE:
             return genCmpX(cUnit, mir, vA, vB, vC);
         case OP_CMP_LONG:
-            loadValuePair(cUnit,vB, r0, r1);
-            loadValuePair(cUnit, vC, r2, r3);
-            genDispatchToHandler(cUnit, TEMPLATE_CMP_LONG);
-            storeValue(cUnit, r0, vA, r1);
+            genCmpLong(cUnit, mir, vA, vB, vC);
             break;
         case OP_AGET_WIDE:
             genArrayGet(cUnit, mir, LONG, vB, vC, vA, 3);
@@ -3257,14 +3274,7 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
                     else
                         break;   /* Handle with C routine */
                 case INLINE_MATH_COS:
-                    if (genInlineCos(cUnit, mir))
-                        return false;
-                    else
-                        break;   /* Handle with C routine */
                 case INLINE_MATH_SIN:
-                    if (genInlineSin(cUnit, mir))
-                        return false;
-                    else
                         break;   /* Handle with C routine */
                 case INLINE_MATH_ABS_FLOAT:
                     return genInlinedAbsFloat(cUnit, mir);

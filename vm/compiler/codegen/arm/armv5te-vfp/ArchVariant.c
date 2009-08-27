@@ -124,16 +124,6 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     return false;
 }
 
-static bool genInlineCos(CompilationUnit *cUnit, MIR *mir)
-{
-    return false;
-}
-
-static bool genInlineSin(CompilationUnit *cUnit, MIR *mir)
-{
-    return false;
-}
-
 static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
                                 int vSrc1, int vSrc2)
 {

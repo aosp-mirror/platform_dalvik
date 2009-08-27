@@ -45,6 +45,7 @@ static ArmLIR *storeValuePair(CompilationUnit *cUnit, int rSrcLo, int rSrcHi,
 static ArmLIR *genBoundsCheck(CompilationUnit *cUnit, int rIndex,
                               int rBound, int dOffset, ArmLIR *pcrLabel);
 static ArmLIR *genRegCopy(CompilationUnit *cUnit, int rDest, int rSrc);
+static int inlinedTarget(MIR *mir);
 
 
 /* Routines which must be supplied here */
@@ -80,6 +81,8 @@ static ArmLIR *opRegRegReg(CompilationUnit *cUnit, OpKind op, int rDest,
                            int rSrc1, int rSrc2);
 static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
                                int rIndex, int rDest, int scale, OpSize size);
+static void genCmpLong(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
+                       int vSrc2);
 
 static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir);
 static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir);
@@ -167,6 +170,46 @@ static inline int selectFirstRegister(CompilationUnit *cUnit, int vSrc,
     }
 
 }
+
+/*
+ * Generate a Thumb2 IT instruction, which can nullify up to
+ * four subsequent instructions based on a condition and its
+ * inverse.  The condition applies to the first instruction, which
+ * is executed if the condition is met.  The string "guide" consists
+ * of 0 to 3 chars, and applies to the 2nd through 4th instruction.
+ * A "T" means the instruction is executed if the condition is
+ * met, and an "E" means the instruction is executed if the condition
+ * is not met.
+ */
+static ArmLIR *genIT(CompilationUnit *cUnit, ArmConditionCode code,
+                     char *guide)
+{
+    int mask;
+    int condBit = code & 1;
+    int altBit = condBit ^ 1;
+    int mask3 = 0;
+    int mask2 = 0;
+    int mask1 = 0;
+    //Note: case fallthroughs intentional
+    switch(strlen(guide)) {
+        case 3:
+            mask1 = (guide[2] == 'T') ? condBit : altBit;
+        case 2:
+            mask2 = (guide[1] == 'T') ? condBit : altBit;
+        case 1:
+            mask3 = (guide[0] == 'T') ? condBit : altBit;
+            break;
+        case 0:
+            break;
+        default:
+            assert(0);
+            dvmAbort();
+    }
+    mask = (mask3 << 3) | (mask2 << 2) | (mask1 << 1) |
+           (1 << (3 - strlen(guide)));
+    return newLIR2(cUnit, THUMB2_IT, code, mask);
+}
+
 
 static ArmLIR *fpRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
 {
@@ -279,10 +322,6 @@ static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
     /* See if the value can be constructed cheaply */
     if ((value >= 0) && (value <= 255)) {
         return newLIR2(cUnit, THUMB_MOV_IMM, rDest, value);
-    } else if ((value & 0xFFFFFF00) == 0xFFFFFF00) {
-        res = newLIR2(cUnit, THUMB_MOV_IMM, rDest, ~value);
-        newLIR2(cUnit, THUMB_MVN, rDest, rDest);
-        return res;
     }
     /* Check Modified immediate special cases */
     modImm = modifiedImmediate(value);
@@ -599,7 +638,13 @@ static ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
 {
     ArmLIR *branch;
     int modImm;
-    if ((LOWREG(reg)) && (checkValue == 0) &&
+    /*
+     * TODO: re-enable usage of THUMB2_CBZ & THUMB2_CBNZ once assembler is enhanced
+     * to allow us to replace code patterns when instructions don't reach.  Currently,
+     * CB[N]Z is causing too many assembler aborts.  What we want to do is emit
+     * the short forms, and then replace them with longer versions when needed.
+     */
+    if (0 && (LOWREG(reg)) && (checkValue == 0) &&
        ((cond == ARM_COND_EQ) || (cond == ARM_COND_NE))) {
         branch = newLIR2(cUnit,
                          (cond == ARM_COND_EQ) ? THUMB2_CBZ : THUMB2_CBNZ,
@@ -974,12 +1019,10 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
         case OP_ROR:
             return newLIR3(cUnit, THUMB2_ROR_RRI5, rDest, rSrc1, value);
         case OP_ADD:
-            if (LOWREG(rDest) && (rSrc1 == 13) && (value <= 1020)) { /* sp */
-                assert((value & 0x3) == 0);
+            if (LOWREG(rDest) && (rSrc1 == 13) && (value <= 1020) && ((value & 0x3)==0)) {
                 return newLIR3(cUnit, THUMB_ADD_SP_REL, rDest, rSrc1,
                                value >> 2);
-            } else if (LOWREG(rDest) && (rSrc1 == rpc) && (value <= 1020)) {
-                assert((value & 0x3) == 0);
+            } else if (LOWREG(rDest) && (rSrc1 == rpc) && (value <= 1020) && ((value & 0x3)==0)) {
                 return newLIR3(cUnit, THUMB_ADD_PC_REL, rDest, rSrc1,
                                value >> 2);
             }
@@ -1042,24 +1085,69 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
         return newLIR3(cUnit, opCode, rDest, rSrc1, modImm);
     } else {
         loadConstant(cUnit, rScratch, value);
-        if (EncodingMap[opCode].flags & IS_QUAD_OP)
+        if (EncodingMap[altOpCode].flags & IS_QUAD_OP)
             return newLIR4(cUnit, altOpCode, rDest, rSrc1, rScratch, 0);
         else
             return newLIR3(cUnit, altOpCode, rDest, rSrc1, rScratch);
     }
 }
 
-//TODO: specialize the inlined routines for Thumb2
+/*
+ * 64-bit 3way compare function.
+ *     mov   r7, #-1
+ *     cmp   op1hi, op2hi
+ *     blt   done
+ *     bgt   flip
+ *     sub   r7, op1lo, op2lo (treat as unsigned)
+ *     beq   done
+ *     ite   hi
+ *     mov(hi)   r7, #-1
+ *     mov(!hi)  r7, #1
+ * flip:
+ *     neg   r7
+ * done:
+ */
+static void genCmpLong(CompilationUnit *cUnit, MIR *mir,
+                               int vDest, int vSrc1, int vSrc2)
+{
+    int op1lo = selectFirstRegister(cUnit, vSrc1, true);
+    int op1hi = NEXT_REG(op1lo);
+    int op2lo = NEXT_REG(op1hi);
+    int op2hi = NEXT_REG(op2lo);
+    loadValuePair(cUnit, vSrc1, op1lo, op1hi);
+    loadValuePair(cUnit, vSrc2, op2lo, op2hi);
+    /* Note: using hardcoded r7 & r4PC for now.  revisit */
+    loadConstant(cUnit, r7, -1);
+    opRegReg(cUnit, OP_CMP, op1hi, op2hi);
+    ArmLIR *branch1 = opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_LT);
+    ArmLIR *branch2 = opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_GT);
+    opRegRegReg(cUnit, OP_SUB, r7, op1lo, op2lo);
+    ArmLIR *branch3 = opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_EQ);
+
+    // TODO: need assert mechanism to verify IT block size
+    branch1->generic.target = (LIR *) genIT(cUnit, ARM_COND_HI, "E");
+    newLIR2(cUnit, THUMB2_MOV_IMM_SHIFT, r7, modifiedImmediate(-1));
+    newLIR2(cUnit, THUMB_MOV_IMM, r7, 1);
+
+    branch2->generic.target = (LIR *) opRegReg(cUnit, OP_NEG, r7, r7);
+    branch1->generic.target = (LIR *) storeValue(cUnit, r7, vDest, r4PC);
+    branch3->generic.target = branch1->generic.target;
+}
+
 static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
     int offset = offsetof(InterpState, retval);
     int regObj = selectFirstRegister(cUnit, dInsn->arg[0], false);
     int reg1 = NEXT_REG(regObj);
+    int vDest = inlinedTarget(mir);
     loadValue(cUnit, dInsn->arg[0], regObj);
     genNullCheck(cUnit, dInsn->arg[0], regObj, mir->offset, NULL);
     loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, reg1);
-    storeWordDisp(cUnit, rGLUE, offset, reg1, regObj);
+    if (vDest >= 0)
+        storeValue(cUnit, reg1, vDest, regObj);
+    else
+        storeWordDisp(cUnit, rGLUE, offset, reg1, rNone);
     return false;
 }
 
@@ -1072,6 +1160,7 @@ static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
     int regIdx = NEXT_REG(regObj);
     int regMax = NEXT_REG(regIdx);
     int regOff = NEXT_REG(regMax);
+    int vDest = inlinedTarget(mir);
     loadValue(cUnit, dInsn->arg[0], regObj);
     loadValue(cUnit, dInsn->arg[1], regIdx);
     ArmLIR * pcrLabel = genNullCheck(cUnit, dInsn->arg[0], regObj,
@@ -1080,12 +1169,13 @@ static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
     loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_offset, regOff);
     loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_value, regObj);
     genBoundsCheck(cUnit, regIdx, regMax, mir->offset, pcrLabel);
-
-    newLIR2(cUnit, THUMB_ADD_RI8, regObj, contents);
-    newLIR3(cUnit, THUMB_ADD_RRR, regIdx, regIdx, regOff);
-    newLIR3(cUnit, THUMB_ADD_RRR, regIdx, regIdx, regIdx);
-    newLIR3(cUnit, THUMB_LDRH_RRR, regMax, regObj, regIdx);
-    storeWordDisp(cUnit, rGLUE, offset, regMax, regObj);
+    opRegImm(cUnit, OP_ADD, regObj, contents, rNone);
+    opRegReg(cUnit, OP_ADD, regIdx, regOff);
+    loadBaseIndexed(cUnit, regObj, regIdx, regMax, 1, UNSIGNED_HALF);
+    if (vDest >= 0)
+        storeValue(cUnit, regMax, vDest, regObj);
+    else
+        storeWordDisp(cUnit, rGLUE, offset, regMax, rNone);
     return false;
 }
 
@@ -1095,12 +1185,20 @@ static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
     DecodedInstruction *dInsn = &mir->dalvikInsn;
     int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
     int sign = NEXT_REG(reg0);
-    /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
+    int vDest = inlinedTarget(mir);
+    /* abs(x) = y<=x>>31, (x+y)^y.  */
     loadValue(cUnit, dInsn->arg[0], reg0);
-    newLIR3(cUnit, THUMB_ASR, sign, reg0, 31);
-    newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, sign);
-    newLIR2(cUnit, THUMB_EOR, reg0, sign);
-    storeWordDisp(cUnit, rGLUE, offset, reg0, sign);
+    /*
+     * Thumb2's IT block also yields 3 instructions, but imposes
+     * scheduling constraints.
+     */
+    opRegRegImm(cUnit, OP_ASR, sign, reg0, 31, rNone);
+    opRegReg(cUnit, OP_ADD, reg0, sign);
+    opRegReg(cUnit, OP_XOR, reg0, sign);
+    if (vDest >= 0)
+        storeValue(cUnit, reg0, vDest, sign);
+    else
+        storeWordDisp(cUnit, rGLUE, offset, reg0, rNone);
     return false;
 }
 
@@ -1110,10 +1208,15 @@ static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
     DecodedInstruction *dInsn = &mir->dalvikInsn;
     int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
     int signMask = NEXT_REG(reg0);
+    int vDest = inlinedTarget(mir);
+    // TUNING: handle case of src already in FP reg
     loadValue(cUnit, dInsn->arg[0], reg0);
     loadConstant(cUnit, signMask, 0x7fffffff);
     newLIR2(cUnit, THUMB_AND_RR, reg0, signMask);
-    storeWordDisp(cUnit, rGLUE, offset, reg0, signMask);
+    if (vDest >= 0)
+        storeValue(cUnit, reg0, vDest, signMask);
+    else
+        storeWordDisp(cUnit, rGLUE, offset, reg0, rNone);
     return false;
 }
 
@@ -1124,30 +1227,46 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
     int oplo = selectFirstRegister(cUnit, dInsn->arg[0], true);
     int ophi = NEXT_REG(oplo);
     int signMask = NEXT_REG(ophi);
-    loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
-    loadConstant(cUnit, signMask, 0x7fffffff);
-    storeWordDisp(cUnit, rGLUE, offset, oplo, ophi);
-    newLIR2(cUnit, THUMB_AND_RR, ophi, signMask);
-    storeWordDisp(cUnit, rGLUE, offset + 4, ophi, oplo);
+    int vSrc = dInsn->arg[0];
+    int vDest = inlinedTarget(mir);
+    // TUNING: handle case of src already in FP reg
+    if (vDest >= 0) {
+        if (vDest == vSrc) {
+            loadValue(cUnit, vSrc+1, ophi);
+            opRegRegImm(cUnit, OP_AND, ophi, ophi, 0x7fffffff, signMask);
+            storeValue(cUnit, ophi, vDest + 1, signMask);
+        } else {
+            loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
+            opRegRegImm(cUnit, OP_AND, ophi, ophi, 0x7fffffff, signMask);
+            storeValuePair(cUnit, oplo, ophi, vDest, signMask);
+        }
+    } else {
+        loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
+        loadConstant(cUnit, signMask, 0x7fffffff);
+        storeWordDisp(cUnit, rGLUE, offset, oplo, rNone);
+        opRegReg(cUnit, OP_AND, ophi, signMask);
+        storeWordDisp(cUnit, rGLUE, offset + 4, ophi, rNone);
+    }
     return false;
 }
 
- /* No select in thumb, so we need to branch.  Thumb2 will do better */
 static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
 {
     int offset = offsetof(InterpState, retval);
     DecodedInstruction *dInsn = &mir->dalvikInsn;
     int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
     int reg1 = NEXT_REG(reg0);
+    int vDest = inlinedTarget(mir);
     loadValue(cUnit, dInsn->arg[0], reg0);
     loadValue(cUnit, dInsn->arg[1], reg1);
-    newLIR2(cUnit, THUMB_CMP_RR, reg0, reg1);
-    ArmLIR *branch1 = newLIR2(cUnit, THUMB_B_COND, 2,
-           isMin ? ARM_COND_LT : ARM_COND_GT);
-    newLIR2(cUnit, THUMB_MOV_RR, reg0, reg1);
-    ArmLIR *target =
-        newLIR3(cUnit, THUMB_STR_RRI5, reg0, rGLUE, offset >> 2);
-    branch1->generic.target = (LIR *)target;
+    opRegReg(cUnit, OP_CMP, reg0, reg1);
+    //TODO: need assertion mechanism to validate IT region size
+    genIT(cUnit, (isMin) ? ARM_COND_GT : ARM_COND_LT, "");
+    opRegReg(cUnit, OP_MOV, reg0, reg1);
+    if (vDest >= 0)
+        storeValue(cUnit, reg0, vDest, reg1);
+    else
+        storeWordDisp(cUnit, rGLUE, offset, reg0, rNone);
     return false;
 }
 
@@ -1158,14 +1277,24 @@ static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
     int oplo = selectFirstRegister(cUnit, dInsn->arg[0], true);
     int ophi = NEXT_REG(oplo);
     int sign = NEXT_REG(ophi);
-    /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
+    int vDest = inlinedTarget(mir);
+    /* abs(x) = y<=x>>31, (x+y)^y. */
     loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
-    newLIR3(cUnit, THUMB_ASR, sign, ophi, 31);
-    newLIR3(cUnit, THUMB_ADD_RRR, oplo, oplo, sign);
-    newLIR2(cUnit, THUMB_ADC, ophi, sign);
-    newLIR2(cUnit, THUMB_EOR, oplo, sign);
-    newLIR2(cUnit, THUMB_EOR, ophi, sign);
-    storeWordDisp(cUnit, rGLUE, offset, oplo, sign);
-    storeWordDisp(cUnit, rGLUE, offset + 4, ophi, sign);
+    /*
+     * Thumb2 IT block allows slightly shorter sequence,
+     * but introduces a scheduling barrier.  Stick with this
+     * mechanism for now.
+     */
+    opRegRegImm(cUnit, OP_ASR, sign, ophi, 31, rNone);
+    opRegReg(cUnit, OP_ADD, oplo, sign);
+    opRegReg(cUnit, OP_ADC, ophi, sign);
+    opRegReg(cUnit, OP_XOR, oplo, sign);
+    opRegReg(cUnit, OP_XOR, ophi, sign);
+    if (vDest >= 0) {
+        storeValuePair(cUnit, oplo, ophi, vDest, sign);
+    } else {
+        storeWordDisp(cUnit, rGLUE, offset, oplo, rNone);
+        storeWordDisp(cUnit, rGLUE, offset + 4, ophi, rNone);
+    }
     return false;
 }
