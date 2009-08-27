@@ -133,7 +133,7 @@ INLINE int dvmValidateObject(Object* obj)
     }
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
     if (!dvmIsValidObject(obj)) {
-        //dvmAbort();
+        dvmAbort();
         dvmThrowException("Ljava/lang/InternalError;",
             "VM detected invalid object ptr");
         return false;
