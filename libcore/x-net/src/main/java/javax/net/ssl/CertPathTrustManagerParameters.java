@@ -22,11 +22,12 @@ import java.security.cert.CertPathParameters;
 /**
  * Certification path parameters to provide to certification path
  * based {@link TrustManager}.
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public class CertPathTrustManagerParameters implements ManagerFactoryParameters {
 
-    private CertPathParameters param;
+    private final CertPathParameters param;
 
     /**
      * Creates a new {@code CertPathTrustManagerParameters} with the specified
@@ -34,7 +35,6 @@ public class CertPathTrustManagerParameters implements ManagerFactoryParameters 
      * 
      * @param parameters
      *            the certification path parameters.
-     * @since Android 1.0
      */
     public CertPathTrustManagerParameters(CertPathParameters parameters) {
         param = (CertPathParameters) parameters.clone();
@@ -44,7 +44,6 @@ public class CertPathTrustManagerParameters implements ManagerFactoryParameters 
      * Returns a copy of the certification path parameters.
      * 
      * @return a copy of the certification path parameters.
-     * @since Android 1.0
      */
     public CertPathParameters getParameters() {
         return (CertPathParameters) param.clone();

@@ -21,19 +21,15 @@ import java.io.IOException;
 
 /**
  * The base class for all SSL related exceptions.
- * 
- * @since Android 1.0
  */
 public class SSLException extends IOException {
-
     private static final long serialVersionUID = 4511006460650708967L;
 
     /**
      * Creates a new {@code SSLException} with the specified reason.
-     * 
+     *
      * @param reason
      *            the reason for the exception.
-     * @since Android 1.0
      */
     public SSLException(String reason) {
         super(reason);
@@ -41,12 +37,11 @@ public class SSLException extends IOException {
 
     /**
      * Creates a new {@code SSLException} with the specified message and cause.
-     * 
+     *
      * @param message
      *            the detail message for the exception.
      * @param cause
      *            the cause.
-     * @since Android 1.0
      */
     public SSLException(String message, Throwable cause) {
         super(message);
@@ -55,10 +50,9 @@ public class SSLException extends IOException {
 
     /**
      * Creates a new {@code SSLException} with the specified cause.
-     * 
+     *
      * @param cause
      *            the cause
-     * @since Android 1.0
      */
     public SSLException(Throwable cause) {
         super(cause == null ? null : cause.toString());

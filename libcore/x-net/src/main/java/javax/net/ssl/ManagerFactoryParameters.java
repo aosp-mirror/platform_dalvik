@@ -20,8 +20,8 @@ package javax.net.ssl;
 /**
  * The marker interface for key manager factory parameters. Its purpose is to
  * group key manager factory parameters objects.
- * 
- * @since Android 1.0
+ *
+ * @since 1.4
  */
 public interface ManagerFactoryParameters {
 }

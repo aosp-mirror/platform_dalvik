@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net;
 
 import java.io.IOException;
@@ -27,24 +22,27 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 
 /**
- * Default implementation of javax.net.ServerSocketFactory.
- * 
- * @since Android 1.0
- * 
+ * Default implementation of {@link javax.net.ServerSocketFactory}
  */
-class DefaultServerSocketFactory extends ServerSocketFactory {
+final class DefaultServerSocketFactory extends ServerSocketFactory {
 
+    DefaultServerSocketFactory() {
+        super();
+    }
+
+    @Override
     public ServerSocket createServerSocket(int port) throws IOException {
         return new ServerSocket(port);
     }
 
-    public ServerSocket createServerSocket(int port, int backlog)
-            throws IOException {
+    @Override
+    public ServerSocket createServerSocket(int port, int backlog) throws IOException {
         return new ServerSocket(port, backlog);
     }
 
-    public ServerSocket createServerSocket(int port, int backlog,
-            InetAddress iAddress) throws IOException {
+    @Override
+    public ServerSocket createServerSocket(int port, int backlog, InetAddress iAddress)
+            throws IOException {
         return new ServerSocket(port, backlog, iAddress);
     }
 

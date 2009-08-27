@@ -23,23 +23,18 @@ package javax.net.ssl;
  * This is an extended verification option that implementers can provide. It is to be used
  * during a handshake if the URL's hostname does not match the peer's
  * identification hostname.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface HostnameVerifier {
-
     /**
      * Verifies that the specified hostname is allowed within the specified SSL
      * session.
-     * 
+     *
      * @param hostname
      *            the hostname.
      * @param session
      *            the SSL session of the connection.
      * @return {@code true} if the specified hostname is allowed, otherwise
      *         {@code false}.
-     * @since Android 1.0
      */
-    public boolean verify(String hostname, SSLSession session);
+    boolean verify(String hostname, SSLSession session);
 }

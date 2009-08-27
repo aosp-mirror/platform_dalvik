@@ -18,59 +18,46 @@
 package javax.net.ssl;
 
 import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.security.Security;
 
 import javax.net.ServerSocketFactory;
 
 /**
  * The factory for SSL server sockets.
- * 
- * @since Android 1.0
  */
 public abstract class SSLServerSocketFactory extends ServerSocketFactory {
-// TODO EXPORT CONTROL
-    
+    // TODO EXPORT CONTROL
+
     // The default SSL socket factory
     private static ServerSocketFactory defaultServerSocketFactory;
 
     private static String defaultName;
-    
-    /**
-     * Creates a new {@code SSLServerSocketFactory} instance.
-     * 
-     * @since Android 1.0
-     */
-    protected SSLServerSocketFactory() {
-        super();
-    }
 
     /**
      * Returns the default {@code SSLServerSocketFactory} instance. The default
      * implementation is defined by the security property
      * "ssl.ServerSocketFactory.provider".
-     * 
+     *
      * @return the default {@code SSLServerSocketFactory} instance.
-     * @since Android 1.0
      */
-    public static ServerSocketFactory getDefault() {
+    public static synchronized ServerSocketFactory getDefault() {
         if (defaultServerSocketFactory != null) {
             return defaultServerSocketFactory;
         }
         if (defaultName == null) {
-            AccessController.doPrivileged(new java.security.PrivilegedAction(){
-                public Object run() {
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                public Void run() {
                     defaultName = Security.getProperty("ssl.ServerSocketFactory.provider");
-                    if (defaultName != null) {    
+                    if (defaultName != null) {
                         ClassLoader cl = Thread.currentThread().getContextClassLoader();
                         if (cl == null) {
                             cl = ClassLoader.getSystemClassLoader();
                         }
                         try {
-                            defaultServerSocketFactory = (ServerSocketFactory) Class
-                                    .forName(defaultName, true, cl)
-                                    .newInstance();
+                            final Class<?> ssfc = Class.forName(defaultName, true, cl);
+                            defaultServerSocketFactory = (ServerSocketFactory) ssfc.newInstance();
                         } catch (Exception e) {
-                            return e;
                         }
                     }
                     return null;
@@ -81,31 +68,36 @@ public abstract class SSLServerSocketFactory extends ServerSocketFactory {
             // Try to find in providers
             SSLContext context = DefaultSSLContext.getContext();
             if (context != null) {
-                defaultServerSocketFactory = context.getServerSocketFactory();    
+                defaultServerSocketFactory = context.getServerSocketFactory();
             }
         }
         if (defaultServerSocketFactory == null) {
             // Use internal dummy implementation
-            defaultServerSocketFactory = new DefaultSSLServerSocketFactory("No ServerSocketFactory installed");
-        }    
+            defaultServerSocketFactory = new DefaultSSLServerSocketFactory(
+                    "No ServerSocketFactory installed");
+        }
         return defaultServerSocketFactory;
     }
-    
+
+    /**
+     * Creates a new {@code SSLServerSocketFactory} instance.
+     */
+    protected SSLServerSocketFactory() {
+        super();
+    }
+
     /**
      * Returns the names of the cipher suites that are enabled by default.
-     * 
+     *
      * @return the names of the cipher suites that are enabled by default
-     * @since Android 1.0
      */
     public abstract String[] getDefaultCipherSuites();
-    
+
     /**
      * Returns the list of supported cipher suites that could be enabled for an
      * SSL connection created by this factory.
-     * 
+     *
      * @return the list of supported cipher suites
-     * @since Android 1.0
      */
     public abstract String[] getSupportedCipherSuites();
-
 }
