@@ -57,12 +57,14 @@ static void abortMaybe(void);       // fwd
  * match.  This will allow some false-positives when a class is redefined
  * by a class loader, but that's rare enough that it doesn't seem worth
  * testing for.
+ *
+ * At this point, pResult->l has already been converted to an object pointer.
  */
 static void checkCallCommon(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
 {
     assert(pResult->l != NULL);
-    Object* resultObj = dvmDecodeIndirectRef(self->jniEnv, pResult->l);
+    Object* resultObj = (Object*) pResult->l;
     ClassObject* objClazz = resultObj->clazz;
 
     /*
@@ -181,7 +183,7 @@ void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
 #define BASE_ENV(_env)  (((JNIEnvExt*)_env)->baseFuncTable)
 #define BASE_VM(_vm)    (((JavaVMExt*)_vm)->baseFuncTable)
 
-#define kRedundantDirectBufferTest true
+#define kRedundantDirectBufferTest false
 
 /*
  * Flags passed into checkThread().
@@ -413,14 +415,13 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
     Field* field = (Field*) fieldID;
     bool printWarn = false;
 
-    Object* obj = dvmDecodeIndirectRef(env, jobj);
-
     if (fieldID == NULL) {
         LOGE("JNI ERROR: null field ID\n");
         abortMaybe();
     }
 
     if (field->signature[0] == 'L' || field->signature[0] == '[') {
+        Object* obj = dvmDecodeIndirectRef(env, jobj);
         if (obj != NULL) {
             ClassObject* fieldClass =
                 dvmFindLoadedClass(field->signature);
@@ -469,16 +470,19 @@ static void checkObject(JNIEnv* env, jobject jobj, const char* func)
     if (jobj == NULL)
         return;
 
-    Object* obj = dvmDecodeIndirectRef(env, jobj);
-
     JNI_ENTER();
-    if (obj == NULL || !dvmIsValidObject(obj)) {
-        LOGW("JNI WARNING: native code passing in bad object %p %p (%s)\n",
-            jobj, obj, func);
-        printWarn = true;
-    } else if (dvmGetJNIRefType(env, obj) == JNIInvalidRefType) {
+
+    if (dvmGetJNIRefType(env, jobj) == JNIInvalidRefType) {
         LOGW("JNI WARNING: %p is not a valid JNI reference\n", jobj);
         printWarn = true;
+    } else {
+        Object* obj = dvmDecodeIndirectRef(env, jobj);
+
+        if (obj == NULL || !dvmIsValidObject(obj)) {
+            LOGW("JNI WARNING: native code passing in bad object %p %p (%s)\n",
+                jobj, obj, func);
+            printWarn = true;
+        }
     }
 
     if (printWarn) {
@@ -1296,11 +1300,22 @@ static jobject Check_NewGlobalRef(JNIEnv* env, jobject obj)
     return result;
 }
 
-static void Check_DeleteGlobalRef(JNIEnv* env, jobject localRef)
+static void Check_DeleteGlobalRef(JNIEnv* env, jobject globalRef)
 {
     CHECK_ENTER(env, kFlag_Default | kFlag_ExcepOkay);
-    CHECK_OBJECT(env, localRef);
-    BASE_ENV(env)->DeleteGlobalRef(env, localRef);
+    CHECK_OBJECT(env, globalRef);
+#ifdef USE_INDIRECT_REF
+    if (globalRef != NULL &&
+        dvmGetJNIRefType(env, globalRef) != JNIGlobalRefType)
+    {
+        LOGW("JNI WARNING: DeleteGlobalRef on non-global %p (type=%d)\n",
+            globalRef, dvmGetJNIRefType(env, globalRef));
+        abortMaybe();
+    } else
+#endif
+    {
+        BASE_ENV(env)->DeleteGlobalRef(env, globalRef);
+    }
     CHECK_EXIT(env);
 }
 
@@ -1314,11 +1329,22 @@ static jobject Check_NewLocalRef(JNIEnv* env, jobject ref)
     return result;
 }
 
-static void Check_DeleteLocalRef(JNIEnv* env, jobject globalRef)
+static void Check_DeleteLocalRef(JNIEnv* env, jobject localRef)
 {
     CHECK_ENTER(env, kFlag_Default | kFlag_ExcepOkay);
-    CHECK_OBJECT(env, globalRef);
-    BASE_ENV(env)->DeleteLocalRef(env, globalRef);
+    CHECK_OBJECT(env, localRef);
+#ifdef USE_INDIRECT_REF
+    if (localRef != NULL &&
+        dvmGetJNIRefType(env, localRef) != JNILocalRefType)
+    {
+        LOGW("JNI WARNING: DeleteLocalRef on non-local %p (type=%d)\n",
+            localRef, dvmGetJNIRefType(env, localRef));
+        abortMaybe();
+    } else
+#endif
+    {
+        BASE_ENV(env)->DeleteLocalRef(env, localRef);
+    }
     CHECK_EXIT(env);
 }
 
@@ -1491,6 +1517,7 @@ GET_STATIC_TYPE_FIELD(jdouble, Double);
         CHECK_ENTER(env, kFlag_Default);                                    \
         CHECK_CLASS(env, clazz);                                            \
         checkStaticFieldID(env, clazz, fieldID);                            \
+        /* "value" arg only used when type == ref */                        \
         CHECK_FIELD_TYPE(env, (jobject)(u4)value, fieldID, _ftype, true);   \
         BASE_ENV(env)->SetStatic##_jname##Field(env, clazz, fieldID,        \
             value);                                                         \
@@ -1535,6 +1562,7 @@ GET_TYPE_FIELD(jdouble, Double);
         CHECK_ENTER(env, kFlag_Default);                                    \
         CHECK_OBJECT(env, obj);                                             \
         CHECK_INST_FIELD_ID(env, obj, fieldID);                             \
+        /* "value" arg only used when type == ref */                        \
         CHECK_FIELD_TYPE(env, (jobject)(u4) value, fieldID, _ftype, false); \
         BASE_ENV(env)->Set##_jname##Field(env, obj, fieldID, value);        \
         CHECK_EXIT(env);                                                    \
@@ -2179,6 +2207,7 @@ static void* Check_GetDirectBufferAddress(JNIEnv* env, jobject buf)
             goto bail;
         }
 
+        // TODO: this should not be using internal structures
         Method* toLong = ((Object*)platformAddr)->clazz->vtable[
                 gDvm.voffOrgApacheHarmonyLuniPlatformPlatformAddress_toLong];
         checkResult = (void*)(u4)(*env)->CallLongMethod(env, platformAddr,
