@@ -138,7 +138,11 @@ public class PKIXCertPathValidatorSpi extends CertPathValidatorSpi
         // (d)
         // 
         X509Certificate lastCert = (X509Certificate)certs.get(certs.size() - 1);
-        TrustAnchor trust = CertPathValidatorUtilities.findTrustAnchor(lastCert, certPath, certs.size() - 1, paramsPKIX.getTrustAnchors());
+
+// BEGIN android-changed
+        TrustAnchor trust = CertPathValidatorUtilities.findTrustAnchor(lastCert,
+                certPath, certs.size() - 1, paramsPKIX);
+// END android-changed
 
         if (trust == null)
         {

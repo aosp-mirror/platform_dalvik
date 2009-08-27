@@ -542,23 +542,25 @@ public class X509CertificateObject
         return JDKKeyFactory.createPublicKeyFromPublicKeyInfo(c.getSubjectPublicKeyInfo());
     }
 
+// BEGIN android-changed
+    private ByteArrayOutputStream encodedOut;
     public byte[] getEncoded()
-        throws CertificateEncodingException
-    {
-        ByteArrayOutputStream   bOut = new ByteArrayOutputStream();
-        DEROutputStream         dOut = new DEROutputStream(bOut);
-
-        try
-        {
-            dOut.writeObject(c);
-
-            return bOut.toByteArray();
+            throws CertificateEncodingException {
+        synchronized (this) {
+            if (encodedOut == null) {
+                ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+                DEROutputStream dOut = new DEROutputStream(bOut);
+                try {
+                    dOut.writeObject(c);
+                    encodedOut = bOut;
+                } catch (IOException e) {
+                    throw new CertificateEncodingException(e.toString());
+                }
+            }
         }
-        catch (IOException e)
-        {
-            throw new CertificateEncodingException(e.toString());
-        }
+        return encodedOut.toByteArray();
     }
+// END android-changed
 
     public boolean equals(
         Object o)

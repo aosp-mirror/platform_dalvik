@@ -139,6 +139,16 @@ public final class X500Principal implements Serializable, Principal {
         }
     }
 
+// BEGIN android-added
+    private transient String canonicalName;
+    private synchronized String getCanonicalName() {
+        if (canonicalName == null) {
+            canonicalName = dn.getName(CANONICAL);
+        }
+        return canonicalName;
+    }
+// END android-added
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -148,7 +158,9 @@ public final class X500Principal implements Serializable, Principal {
             return false;
         }
         X500Principal principal = (X500Principal) o;
-        return dn.getName(CANONICAL).equals(principal.dn.getName(CANONICAL));
+// BEGIN android-changed
+        return getCanonicalName().equals(principal.getCanonicalName());
+// END android-changed
     }
 
     /**
@@ -194,13 +206,19 @@ public final class X500Principal implements Serializable, Principal {
      *             mentioned above
      */
     public String getName(String format) {
+// BEGIN android-changed
+        if (CANONICAL.equals(format)) {
+            return getCanonicalName();
+        }
+
         return dn.getName(format);
     }
 
     @Override
     public int hashCode() {
-        return dn.getName(CANONICAL).hashCode();
+        return getCanonicalName().hashCode();
     }
+// END android-changed
 
     @Override
     public String toString() {
