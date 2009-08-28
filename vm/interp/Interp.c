@@ -698,10 +698,22 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
  * Each returns a newly-allocated string.
  */
 #define kThrowShow_accessFromClass     1
-static char* classNameFromIndex(const Method* method, int ref, int flags)
+static char* classNameFromIndex(const Method* method, int ref,
+    VerifyErrorRefType refType, int flags)
 {
     static const int kBufLen = 256;
     const DvmDex* pDvmDex = method->clazz->pDvmDex;
+
+    if (refType == VERIFY_ERROR_REF_FIELD) {
+        /* get class ID from field ID */
+        const DexFieldId* pFieldId = dexGetFieldId(pDvmDex->pDexFile, ref);
+        ref = pFieldId->classIdx;
+    } else if (refType == VERIFY_ERROR_REF_METHOD) {
+        /* get class ID from method ID */
+        const DexMethodId* pMethodId = dexGetMethodId(pDvmDex->pDexFile, ref);
+        ref = pMethodId->classIdx;
+    }
+
     const char* className = dexStringByTypeIdx(pDvmDex->pDexFile, ref);
     char* dotClassName = dvmDescriptorToDot(className);
     if (flags == 0)
@@ -722,13 +734,19 @@ static char* classNameFromIndex(const Method* method, int ref, int flags)
     free(dotClassName);
     return result;
 }
-static char* fieldNameFromIndex(const Method* method, int ref, int flags)
+static char* fieldNameFromIndex(const Method* method, int ref,
+    VerifyErrorRefType refType, int flags)
 {
     static const int kBufLen = 256;
     const DvmDex* pDvmDex = method->clazz->pDvmDex;
     const DexFieldId* pFieldId;
     const char* className;
     const char* fieldName;
+
+    if (refType != VERIFY_ERROR_REF_FIELD) {
+        LOGW("Expected ref type %d, got %d\n", VERIFY_ERROR_REF_FIELD, refType);
+        return NULL;    /* no message */
+    }
 
     pFieldId = dexGetFieldId(pDvmDex->pDexFile, ref);
     className = dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->classIdx);
@@ -749,13 +767,19 @@ static char* fieldNameFromIndex(const Method* method, int ref, int flags)
     free(dotName);
     return result;
 }
-static char* methodNameFromIndex(const Method* method, int ref, int flags)
+static char* methodNameFromIndex(const Method* method, int ref,
+    VerifyErrorRefType refType, int flags)
 {
     static const int kBufLen = 384;
     const DvmDex* pDvmDex = method->clazz->pDvmDex;
     const DexMethodId* pMethodId;
     const char* className;
     const char* methodName;
+
+    if (refType != VERIFY_ERROR_REF_METHOD) {
+        LOGW("Expected ref type %d, got %d\n", VERIFY_ERROR_REF_METHOD,refType);
+        return NULL;    /* no message */
+    }
 
     pMethodId = dexGetMethodId(pDvmDex->pDexFile, ref);
     className = dexStringByTypeIdx(pDvmDex->pDexFile, pMethodId->classIdx);
@@ -786,47 +810,52 @@ static char* methodNameFromIndex(const Method* method, int ref, int flags)
  * This is used by the invoke-verification-error instruction.  It always
  * throws an exception.
  *
- * "kind" indicates the kind of failure encountered by the verifier.  The
- * meaning of "ref" is kind-specific; it's usually an index to a
- * class, field, or method reference.
+ * "kind" indicates the kind of failure encountered by the verifier.  It
+ * has two parts, an error code and an indication of the reference type.
  */
 void dvmThrowVerificationError(const Method* method, int kind, int ref)
 {
+    const int typeMask = 0xff << kVerifyErrorRefTypeShift;
+    VerifyError errorKind = kind & ~typeMask;
+    VerifyErrorRefType refType = kind >> kVerifyErrorRefTypeShift;
     const char* exceptionName = "Ljava/lang/VerifyError;";
     char* msg = NULL;
 
-    switch ((VerifyError) kind) {
+    switch ((VerifyError) errorKind) {
     case VERIFY_ERROR_NO_CLASS:
         exceptionName = "Ljava/lang/NoClassDefFoundError;";
-        msg = classNameFromIndex(method, ref, 0);
+        msg = classNameFromIndex(method, ref, refType, 0);
         break;
     case VERIFY_ERROR_NO_FIELD:
         exceptionName = "Ljava/lang/NoSuchFieldError;";
-        msg = fieldNameFromIndex(method, ref, 0);
+        msg = fieldNameFromIndex(method, ref, refType, 0);
         break;
     case VERIFY_ERROR_NO_METHOD:
         exceptionName = "Ljava/lang/NoSuchMethodError;";
-        msg = methodNameFromIndex(method, ref, 0);
+        msg = methodNameFromIndex(method, ref, refType, 0);
         break;
     case VERIFY_ERROR_ACCESS_CLASS:
         exceptionName = "Ljava/lang/IllegalAccessError;";
-        msg = classNameFromIndex(method, ref, kThrowShow_accessFromClass);
+        msg = classNameFromIndex(method, ref, refType,
+            kThrowShow_accessFromClass);
         break;
     case VERIFY_ERROR_ACCESS_FIELD:
         exceptionName = "Ljava/lang/IllegalAccessError;";
-        msg = fieldNameFromIndex(method, ref, kThrowShow_accessFromClass);
+        msg = fieldNameFromIndex(method, ref, refType,
+            kThrowShow_accessFromClass);
         break;
     case VERIFY_ERROR_ACCESS_METHOD:
         exceptionName = "Ljava/lang/IllegalAccessError;";
-        msg = methodNameFromIndex(method, ref, kThrowShow_accessFromClass);
+        msg = methodNameFromIndex(method, ref, refType,
+            kThrowShow_accessFromClass);
         break;
     case VERIFY_ERROR_CLASS_CHANGE:
         exceptionName = "Ljava/lang/IncompatibleClassChangeError;";
-        msg = classNameFromIndex(method, ref, 0);
+        msg = classNameFromIndex(method, ref, refType, 0);
         break;
     case VERIFY_ERROR_INSTANTIATION:
         exceptionName = "Ljava/lang/InstantiationError;";
-        msg = classNameFromIndex(method, ref, 0);
+        msg = classNameFromIndex(method, ref, refType, 0);
         break;
 
     case VERIFY_ERROR_GENERIC:
