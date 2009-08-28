@@ -43,15 +43,30 @@ typedef enum VerifyError {
     VERIFY_ERROR_NONE = 0,      /* no error; must be zero */
     VERIFY_ERROR_GENERIC,       /* VerifyError */
 
-    VERIFY_ERROR_NO_CLASS,      /* NoClassDefFoundError (ref=class) */
-    VERIFY_ERROR_NO_FIELD,      /* NoSuchFieldError (ref=field) */
-    VERIFY_ERROR_NO_METHOD,     /* NoSuchMethodError (ref=method) */
-    VERIFY_ERROR_ACCESS_CLASS,  /* IllegalAccessError (ref=class) */
-    VERIFY_ERROR_ACCESS_FIELD,  /* IllegalAccessError (ref=field) */
-    VERIFY_ERROR_ACCESS_METHOD, /* IllegalAccessError (ref=method) */
-    VERIFY_ERROR_CLASS_CHANGE,  /* IncompatibleClassChangeError (ref=class) */
-    VERIFY_ERROR_INSTANTIATION, /* InstantiationError (ref=class) */
+    VERIFY_ERROR_NO_CLASS,      /* NoClassDefFoundError */
+    VERIFY_ERROR_NO_FIELD,      /* NoSuchFieldError */
+    VERIFY_ERROR_NO_METHOD,     /* NoSuchMethodError */
+    VERIFY_ERROR_ACCESS_CLASS,  /* IllegalAccessError */
+    VERIFY_ERROR_ACCESS_FIELD,  /* IllegalAccessError */
+    VERIFY_ERROR_ACCESS_METHOD, /* IllegalAccessError */
+    VERIFY_ERROR_CLASS_CHANGE,  /* IncompatibleClassChangeError */
+    VERIFY_ERROR_INSTANTIATION, /* InstantiationError */
 } VerifyError;
+
+/*
+ * Identifies the type of reference in the instruction that generated the
+ * verify error (e.g. VERIFY_ERROR_ACCESS_CLASS could come from a method,
+ * field, or class reference).
+ *
+ * This must fit in two bits.
+ */
+typedef enum VerifyErrorRefType {
+    VERIFY_ERROR_REF_CLASS  = 0,
+    VERIFY_ERROR_REF_FIELD  = 1,
+    VERIFY_ERROR_REF_METHOD = 2,
+} VerifyErrorRefType;
+
+#define kVerifyErrorRefTypeShift 6
 
 #define VERIFY_OK(_failure) ((_failure) == VERIFY_ERROR_NONE)
 

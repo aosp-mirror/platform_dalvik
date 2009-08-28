@@ -121,9 +121,18 @@ public class Main {
         try {
             /* accessible static method in an inaccessible class */
             InaccessibleClass.test();
-            System.err.println("ERROR: bad access succeeded\n");
+            System.err.println("ERROR: bad meth-class access succeeded\n");
         } catch (IllegalAccessError iae) {
             System.out.println("Got expected IllegalAccessError (meth-class)");
+            if (VERBOSE) System.out.println("--- " + iae);
+        }
+
+        try {
+            /* accessible static field in an inaccessible class */
+            int blah = InaccessibleClass.blah;
+            System.err.println("ERROR: bad field-class access succeeded\n");
+        } catch (IllegalAccessError iae) {
+            System.out.println("Got expected IllegalAccessError (field-class)");
             if (VERBOSE) System.out.println("--- " + iae);
         }
 

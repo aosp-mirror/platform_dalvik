@@ -2934,6 +2934,7 @@ static void verifyFilledNewArrayRegs(const Method* meth,
 static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
     int insnIdx, VerifyError failure)
 {
+    VerifyErrorRefType refType;
     const u2* oldInsns = meth->insns + insnIdx;
     u2 oldInsn = *oldInsns;
     bool result = false;
@@ -2954,9 +2955,10 @@ static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
     case OP_INSTANCE_OF:
     case OP_NEW_INSTANCE:
     case OP_NEW_ARRAY:
-
     case OP_FILLED_NEW_ARRAY:           // insn[1] == class ref, 3 bytes
     case OP_FILLED_NEW_ARRAY_RANGE:
+        refType = VERIFY_ERROR_REF_CLASS;
+        break;
 
     case OP_IGET:                       // insn[1] == field ref, 2 bytes
     case OP_IGET_BOOLEAN:
@@ -2986,6 +2988,8 @@ static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
     case OP_SPUT_SHORT:
     case OP_SPUT_WIDE:
     case OP_SPUT_OBJECT:
+        refType = VERIFY_ERROR_REF_FIELD;
+        break;
 
     case OP_INVOKE_VIRTUAL:             // insn[1] == method ref, 3 bytes
     case OP_INVOKE_VIRTUAL_RANGE:
@@ -2997,7 +3001,9 @@ static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
     case OP_INVOKE_STATIC_RANGE:
     case OP_INVOKE_INTERFACE:
     case OP_INVOKE_INTERFACE_RANGE:
+        refType = VERIFY_ERROR_REF_METHOD;
         break;
+
     default:
         /* could handle this in a generic way, but this is probably safer */
         LOG_VFY("GLITCH: verifier asked to replace opcode 0x%02x\n",
@@ -3022,7 +3028,8 @@ static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
     }
 
     /* encode the opcode, with the failure code in the high byte */
-    newInsns[0] = OP_THROW_VERIFICATION_ERROR | (failure << 8);
+    newInsns[0] = OP_THROW_VERIFICATION_ERROR |
+        (failure << 8) | (refType << (8 + kVerifyErrorRefTypeShift));
 
     result = true;
 
