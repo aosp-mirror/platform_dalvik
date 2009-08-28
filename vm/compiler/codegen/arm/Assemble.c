@@ -69,6 +69,7 @@
  *     m -> Thumb2 modified immediate
  *     n -> complimented Thumb2 modified immediate
  *     M -> Thumb2 16-bit zero-extended immediate
+ *     b -> 4-digit binary
  *
  *  [!] escape.  To insert "!", use "!!"
  */
@@ -111,9 +112,9 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "add", "r!0d, pc, #!1E", 1),
     ENCODING_MAP(THUMB_ADD_SP_REL,    0xa800,
-                 BITBLT, 10, 8, BITBLT, 7, 0, UNUSED, -1, -1, UNUSED, -1, -1,
-                 IS_BINARY_OP | CLOBBER_DEST,
-                 "add", "r!0d, sp, #!1E", 1),
+                 BITBLT, 10, 8, UNUSED, -1, -1, BITBLT, 7, 0, UNUSED, -1, -1,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
+                 "add", "r!0d, sp, #!2E", 1),
     ENCODING_MAP(THUMB_ADD_SPI7,      0xb000,
                  BITBLT, 6, 0, UNUSED, -1, -1, UNUSED, -1, -1, UNUSED, -1, -1,
                  IS_UNARY_OP | CLOBBER_DEST,
@@ -133,7 +134,7 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
     ENCODING_MAP(THUMB_B_COND,        0xd000,
                  BITBLT, 7, 0, BITBLT, 11, 8, UNUSED, -1, -1, UNUSED, -1, -1,
                  IS_BINARY_OP | IS_BRANCH | USES_CCODES,
-                 "!1c", "!0t", 1),
+                 "b!1c", "!0t", 1),
     ENCODING_MAP(THUMB_B_UNCOND,      0xe000,
                  BITBLT, 10, 0, UNUSED, -1, -1, UNUSED, -1, -1, UNUSED, -1, -1,
                  NO_OPERAND | IS_BRANCH,
@@ -215,9 +216,9 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldr", "r!0d, [pc, #!1E]", 1),
     ENCODING_MAP(THUMB_LDR_SP_REL,    0x9800,
-                 BITBLT, 10, 8, BITBLT, 7, 0, UNUSED, -1, -1, UNUSED, -1, -1,
+                 BITBLT, 10, 8, UNUSED, -1, -1, BITBLT, 7, 0, UNUSED, -1, -1,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "ldr", "r!0d, [sp, #!1E]", 1),
+                 "ldr", "r!0d, [sp, #!2E]", 1),
     ENCODING_MAP(THUMB_LDRB_RRI5,     0x7800,
                  BITBLT, 2, 0, BITBLT, 5, 3, BITBLT, 10, 6, UNUSED, -1, -1,
                  IS_TERTIARY_OP | CLOBBER_DEST,
@@ -323,9 +324,9 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
                  IS_TERTIARY_OP,
                  "str", "r!0d, [r!1d, r!2d]", 1),
     ENCODING_MAP(THUMB_STR_SP_REL,    0x9000,
-                 BITBLT, 10, 8, BITBLT, 7, 0, UNUSED, -1, -1, UNUSED, -1, -1,
-                 IS_BINARY_OP,
-                 "str", "r!0d, [sp, #!1E]", 1),
+                 BITBLT, 10, 8, UNUSED, -1, -1, BITBLT, 7, 0, UNUSED, -1, -1,
+                 IS_TERTIARY_OP,
+                 "str", "r!0d, [sp, #!2E]", 1),
     ENCODING_MAP(THUMB_STRB_RRI5,     0x7000,
                  BITBLT, 2, 0, BITBLT, 5, 3, BITBLT, 10, 6, UNUSED, -1, -1,
                  IS_TERTIARY_OP,
@@ -714,6 +715,30 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
                  BITBLT, 11, 8, BITBLT, 19, 16, MODIMM, -1, -1, UNUSED, -1, -1,
                  IS_TERTIARY_OP | CLOBBER_DEST | SETS_CCODES | USES_CCODES,
                  "sbcs", "r!0d, r!1d, #!2m", 2),
+    ENCODING_MAP(THUMB2_IT,  0xbf00,
+                 BITBLT, 7, 4, BITBLT, 3, 0, MODIMM, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP | USES_CCODES,
+                 "it:!1b", "!0c", 1),
+    ENCODING_MAP(THUMB2_FMSTAT,  0xeef1fa10,
+                 UNUSED, -1, -1, UNUSED, -1, -1, UNUSED, -1, -1, UNUSED, -1, -1,
+                 NO_OPERAND | SETS_CCODES,
+                 "fmstat", "", 2),
+    ENCODING_MAP(THUMB2_VCMPED,        0xeeb40bc0,
+                 DFP, 22, 12, DFP, 5, 0, UNUSED, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP,
+                 "vcmpe.f64", "!0S, !1S", 2),
+    ENCODING_MAP(THUMB2_VCMPES,        0xeeb40ac0,
+                 SFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP,
+                 "vcmpe.f32", "!0s, !1s", 2),
+    ENCODING_MAP(THUMB2_LDR_PC_REL12,       0xf8df0000,
+                 BITBLT, 15, 12, BITBLT, 11, 0, UNUSED, -1, -1, UNUSED, -1, -1,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
+                 "ldr", "r!0d,[rpc, #!1d", 2),
+    ENCODING_MAP(THUMB2_B_COND,        0xf0008000,
+                 BROFFSET, -1, -1, BITBLT, 25, 22, UNUSED, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP | IS_BRANCH | USES_CCODES,
+                 "b!1c", "!0t", 2),
 };
 
 
@@ -762,6 +787,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
         }
 
         if (lir->opCode == THUMB_LDR_PC_REL ||
+            lir->opCode == THUMB2_LDR_PC_REL12 ||
             lir->opCode == THUMB_ADD_PC_REL) {
             ArmLIR *lirTarget = (ArmLIR *) lir->generic.target;
             intptr_t pc = (lir->generic.offset + 4) & ~3;
@@ -776,25 +802,33 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                 LOGE("PC-rel distance is not multiples of 4: %d\n", delta);
                 dvmAbort();
             }
-            if (delta > 1023) {
+            if ((lir->opCode == THUMB2_LDR_PC_REL12) && (delta > 4091)) {
+                return true;
+            } else if (delta > 1020) {
                 return true;
             }
-            lir->operands[1] = delta >> 2;
+            lir->operands[1] = (lir->opCode == THUMB2_LDR_PC_REL12) ? delta : delta >> 2;
         } else if (lir->opCode == THUMB2_CBNZ || lir->opCode == THUMB2_CBZ) {
             ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
             intptr_t pc = lir->generic.offset + 4;
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
             if (delta > 126 || delta < 0) {
+                /*
+                 * TODO: allow multiple kinds of assembler failure to allow us to
+                 * change code patterns when things don't fit.
+                 */
                 return true;
+            } else {
+                lir->operands[1] = delta >> 1;
             }
-            lir->operands[1] = delta >> 1;
-        } else if (lir->opCode == THUMB_B_COND) {
+        } else if (lir->opCode == THUMB_B_COND ||
+                   lir->opCode == THUMB2_B_COND) {
             ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
             intptr_t pc = lir->generic.offset + 4;
             intptr_t target = targetLIR->generic.offset;
             int delta = target - pc;
-            if (delta > 254 || delta < -256) {
+            if ((lir->opCode == THUMB_B_COND) && (delta > 254 || delta < -256)) {
                 return true;
             }
             lir->operands[0] = delta >> 1;
@@ -829,69 +863,78 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
         u4 bits = encoder->skeleton;
         int i;
         for (i = 0; i < 4; i++) {
+            u4 operand;
             u4 value;
+            operand = lir->operands[i];
             switch(encoder->fieldLoc[i].kind) {
                 case UNUSED:
                     break;
+                case BROFFSET:
+                    value = ((operand  & 0x80000) >> 19) << 26;
+                    value |= ((operand & 0x40000) >> 18) << 11;
+                    value |= ((operand & 0x20000) >> 17) << 13;
+                    value |= ((operand & 0x1f800) >> 11) << 16;
+                    value |= (operand  & 0x007ff);
+                    break;
                 case SHIFT5:
-                    value = ((lir->operands[i] & 0x1c) >> 2) << 12;
-                    value |= (lir->operands[i] & 0x03) << 6;
+                    value = ((operand & 0x1c) >> 2) << 12;
+                    value |= (operand & 0x03) << 6;
                     bits |= value;
                     break;
                 case SHIFT:
-                    value = ((lir->operands[i] & 0x70) >> 4) << 12;
-                    value |= (lir->operands[i] & 0x0f) << 4;
+                    value = ((operand & 0x70) >> 4) << 12;
+                    value |= (operand & 0x0f) << 4;
                     bits |= value;
                     break;
                 case BWIDTH:
-                    value = lir->operands[i] - 1;
+                    value = operand - 1;
                     bits |= value;
                     break;
                 case LSB:
-                    value = ((lir->operands[i] & 0x1c) >> 2) << 12;
-                    value |= (lir->operands[i] & 0x03) << 6;
+                    value = ((operand & 0x1c) >> 2) << 12;
+                    value |= (operand & 0x03) << 6;
                     bits |= value;
                     break;
                 case IMM6:
-                    value = ((lir->operands[i] & 0x20) >> 5) << 9;
-                    value |= (lir->operands[i] & 0x1f) << 3;
+                    value = ((operand & 0x20) >> 5) << 9;
+                    value |= (operand & 0x1f) << 3;
                     bits |= value;
                     break;
                 case BITBLT:
-                    value = (lir->operands[i] << encoder->fieldLoc[i].start) &
+                    value = (operand << encoder->fieldLoc[i].start) &
                             ((1 << (encoder->fieldLoc[i].end + 1)) - 1);
                     bits |= value;
                     break;
                 case DFP:
                     /* Snag the 1-bit slice and position it */
-                    value = ((lir->operands[i] & 0x10) >> 4) <<
+                    value = ((operand & 0x10) >> 4) <<
                             encoder->fieldLoc[i].end;
                     /* Extract and position the 4-bit slice */
-                    value |= (lir->operands[i] & 0x0f) <<
+                    value |= (operand & 0x0f) <<
                             encoder->fieldLoc[i].start;
                     bits |= value;
                     break;
                 case SFP:
                     /* Snag the 1-bit slice and position it */
-                    value = (lir->operands[i] & 0x1) <<
+                    value = (operand & 0x1) <<
                             encoder->fieldLoc[i].end;
                     /* Extract and position the 4-bit slice */
-                    value |= ((lir->operands[i] & 0x1e) >> 1) <<
+                    value |= ((operand & 0x1e) >> 1) <<
                             encoder->fieldLoc[i].start;
                     bits |= value;
                     break;
                 case IMM12:
                 case MODIMM:
-                    value = ((lir->operands[i] & 0x800) >> 11) << 26;
-                    value |= ((lir->operands[i] & 0x700) >> 8) << 12;
-                    value |= lir->operands[i] & 0x0ff;
+                    value = ((operand & 0x800) >> 11) << 26;
+                    value |= ((operand & 0x700) >> 8) << 12;
+                    value |= operand & 0x0ff;
                     bits |= value;
                     break;
                 case IMM16:
-                    value = ((lir->operands[i] & 0x0800) >> 11) << 26;
-                    value |= ((lir->operands[i] & 0xf000) >> 12) << 16;
-                    value |= ((lir->operands[i] & 0x0700) >> 8) << 12;
-                    value |= lir->operands[i] & 0x0ff;
+                    value = ((operand & 0x0800) >> 11) << 26;
+                    value |= ((operand & 0xf000) >> 12) << 16;
+                    value |= ((operand & 0x0700) >> 8) << 12;
+                    value |= operand & 0x0ff;
                     bits |= value;
                     break;
                 default:

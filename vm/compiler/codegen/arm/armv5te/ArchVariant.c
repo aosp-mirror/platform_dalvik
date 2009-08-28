@@ -117,16 +117,6 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     return false;   /* punt to C handler */
 }
 
-static bool genInlineCos(CompilationUnit *cUnit, MIR *mir)
-{
-    return false;   /* punt to C handler */
-}
-
-static bool genInlineSin(CompilationUnit *cUnit, MIR *mir)
-{
-    return false;   /* punt to C handler */
-}
-
 static bool genConversion(CompilationUnit *cUnit, MIR *mir)
 {
     return genConversionPortable(cUnit, mir);

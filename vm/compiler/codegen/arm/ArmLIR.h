@@ -196,12 +196,20 @@ typedef enum NativeRegisterPool {
 typedef enum ArmConditionCode {
     ARM_COND_EQ = 0x0,    /* 0000 */
     ARM_COND_NE = 0x1,    /* 0001 */
-    ARM_COND_LT = 0xb,    /* 1011 */
+    ARM_COND_CS = 0x2,    /* 0010 */
+    ARM_COND_CC = 0x3,    /* 0011 */
+    ARM_COND_MI = 0x4,    /* 0100 */
+    ARM_COND_PL = 0x5,    /* 0101 */
+    ARM_COND_VS = 0x6,    /* 0110 */
+    ARM_COND_VC = 0x7,    /* 0111 */
+    ARM_COND_HI = 0x8,    /* 1000 */
+    ARM_COND_LS = 0x9,    /* 1001 */
     ARM_COND_GE = 0xa,    /* 1010 */
+    ARM_COND_LT = 0xb,    /* 1011 */
     ARM_COND_GT = 0xc,    /* 1100 */
     ARM_COND_LE = 0xd,    /* 1101 */
-    ARM_COND_CS = 0x2,    /* 0010 */
-    ARM_COND_MI = 0x4,    /* 0100 */
+    ARM_COND_AL = 0xe,    /* 1110 */
+    ARM_COND_NV = 0xf,    /* 1111 */
 } ArmConditionCode;
 
 #define isPseudoOpCode(opCode) ((int)(opCode) < 0)
@@ -467,6 +475,16 @@ typedef enum ArmOpCode {
                                    rd[11..8] imm8 */
     THUMB2_SBC_RRI8,      /* sbc [111100010111] rn[19..16] [0] imm3
                                    rd[11..8] imm8 */
+    THUMB2_IT,            /* it [10111111] firstcond[7-4] mask[3-0] */
+    THUMB2_FMSTAT,        /* fmstat [11101110111100011111101000010000] */
+    THUMB2_VCMPED,        /* vcmpe [111011101] D [11011] rd[15-12] [1011]
+                                   E [1] M [0] rm[3-0] */
+    THUMB2_VCMPES,        /* vcmpe [111011101] D [11010] rd[15-12] [1011]
+                                   E [1] M [0] rm[3-0] */
+    THUMB2_LDR_PC_REL12,  /* ldr rd,[pc,#imm12] [1111100011011111] rt[15-12]
+                                     imm12[11-0] */
+    THUMB2_B_COND,        /* b<c> [1110] S cond[25-22] imm6[21-16] [10]
+                                  J1 [0] J2 imm11[10..0] */
     ARM_LAST,
 } ArmOpCode;
 
@@ -498,6 +516,7 @@ typedef enum ArmEncodingKind {
     LSB,           /* least significant bit using [14..12][7..6] */
     BWIDTH,        /* bit-field width, encoded as width-1 */
     SHIFT5,        /* Shift count, [14..12,7..6] */
+    BROFFSET,      /* Signed extended [26,11,13,21-16,10-0]:0 */
 } ArmEncodingKind;
 
 /* Struct used to define the snippet positions for each Thumb opcode */
