@@ -14,20 +14,61 @@
 
 
 LOCAL_PATH:= $(call my-dir)
-include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES:= \
+#
+# Common definitions.
+#
+
+dalvikvm_src_files := \
     Main.c
 
-LOCAL_C_INCLUDES := \
-	$(JNI_H_INCLUDE) \
-	dalvik/include
+dalvikvm_c_includes := \
+    $(JNI_H_INCLUDE) \
+    dalvik/include
+
+
+#
+# Build for the target (device).
+#
+
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := $(dalvikvm_src_files)
+LOCAL_C_INCLUDES := $(dalvikvm_c_includes)
 
 LOCAL_SHARED_LIBRARIES := \
-	libdvm \
-	libssl \
-	libz
+    libdvm \
+    libssl \
+    libz
 
-LOCAL_MODULE:= dalvikvm
+LOCAL_MODULE := dalvikvm
 
 include $(BUILD_EXECUTABLE)
+
+
+#
+# Build for the host.
+#
+
+ifeq ($(WITH_HOST_DALVIK),true)
+
+    include $(CLEAR_VARS)
+
+    LOCAL_SRC_FILES := $(dalvikvm_src_files)
+    LOCAL_C_INCLUDES := $(dalvikvm_c_includes)
+
+    LOCAL_STATIC_LIBRARIES := \
+        libdvm-host
+
+    ifeq ($(HOST_OS)-$(HOST_ARCH),darwin-x86)
+        # OSX comes with libz and libssl, so there is no need to build them.
+        LOCAL_LDLIBS := -lssl -lz
+    else
+        LOCAL_STATIC_LIBRARIES += libssl libz
+    endif
+
+    LOCAL_MODULE := dalvikvm-host
+
+    include $(BUILD_HOST_EXECUTABLE)
+
+endif

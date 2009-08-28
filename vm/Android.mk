@@ -69,14 +69,21 @@ ifeq ($(WITH_HOST_DALVIK),true)
     LOCAL_STATIC_LIBRARIES += \
         liblog libcutils
 
-    # libffi is called libffi-host on the host. Similarly libnativehelper.
-    LOCAL_SHARED_LIBRARIES := \
-        $(patsubst libffi,libffi-host,$(LOCAL_SHARED_LIBRARIES))
-    LOCAL_SHARED_LIBRARIES := \
-        $(patsubst libnativehelper,libnativehelper-host,$(LOCAL_SHARED_LIBRARIES))
+    # libffi is called libffi-host on the host and should be staticly
+    # linked. Similarly libnativehelper.
+    ifneq (,$(findstring libffi,$(LOCAL_SHARED_LIBRARIES)))
+        LOCAL_SHARED_LIBRARIES := \
+            $(patsubst libffi, ,$(LOCAL_SHARED_LIBRARIES))
+        LOCAL_STATIC_LIBRARIES += libffi-host
+    endif
+    ifneq (,$(findstring libnativehelper,$(LOCAL_SHARED_LIBRARIES)))
+        LOCAL_SHARED_LIBRARIES := \
+            $(patsubst libnativehelper, ,$(LOCAL_SHARED_LIBRARIES))
+        LOCAL_STATIC_LIBRARIES += libnativehelper-host
+    endif
 
     LOCAL_MODULE := libdvm-host
 
-    include $(BUILD_HOST_SHARED_LIBRARY)
+    include $(BUILD_HOST_STATIC_LIBRARY)
 
 endif
