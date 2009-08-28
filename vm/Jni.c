@@ -533,17 +533,15 @@ void dvmDestroyJNIEnv(JNIEnv* env)
  */
 #ifdef USE_INDIRECT_REF
 static inline IndirectRefTable* getLocalRefTable(JNIEnv* env)
-{
-    return &((JNIEnvExt*)env)->self->jniLocalRefTable;
-}
 #else
 static inline ReferenceTable* getLocalRefTable(JNIEnv* env)
+#endif
 {
     //return &dvmThreadSelf()->jniLocalRefTable;
     return &((JNIEnvExt*)env)->self->jniLocalRefTable;
 }
-#endif
 
+#ifdef USE_INDIRECT_REF
 /*
  * Convert an indirect reference to an Object reference.  The indirect
  * reference may be local, global, or weak-global.
@@ -552,7 +550,6 @@ static inline ReferenceTable* getLocalRefTable(JNIEnv* env)
  */
 Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj)
 {
-#ifdef USE_INDIRECT_REF
     if (jobj == NULL)
         return NULL;
 
@@ -590,10 +587,10 @@ Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj)
     }
 
     return result;
-#else
-    return (Object*) jobj;
-#endif
 }
+#else
+    /* use trivial inline in JniInternal.h for performance */
+#endif
 
 /*
  * Add a local reference for an object to the current stack frame.  When
@@ -1013,7 +1010,7 @@ void dvmGcMarkJniGlobalRefs()
 }
 
 
-#if 0
+#ifndef USE_INDIRECT_REF
 /*
  * Determine if "obj" appears in the argument list for the native method.
  *
@@ -1124,13 +1121,11 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
     //Object** top;
     Object** ptr;
 
-#if 0
     /* check args */
     if (findInArgList(self, jobj)) {
         //LOGI("--- REF found %p on stack\n", jobj);
         return JNILocalRefType;
     }
-#endif
 
     /* check locals */
     if (dvmFindInReferenceTable(pRefTable, pRefTable->table, jobj) != NULL) {
@@ -1461,11 +1456,13 @@ static void checkStackSum(Thread* self)
 static inline void convertReferenceResult(JNIEnv* env, JValue* pResult,
     const Method* method, Thread* self)
 {
+#ifdef USE_INDIRECT_REF
     if (method->shorty[0] == 'L' && !dvmCheckException(self) &&
             pResult->l != NULL)
     {
         pResult->l = dvmDecodeIndirectRef(env, pResult->l);
     }
+#endif
 }
 
 /*
@@ -1476,18 +1473,19 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
 {
     int oldStatus;
     u4* modArgs = (u4*) args;
+    jclass staticMethodClass;
+    JNIEnv* env = self->jniEnv;
 
     assert(method->insns != NULL);
 
     //LOGI("JNI calling %p (%s.%s:%s):\n", method->insns,
     //    method->clazz->descriptor, method->name, method->shorty);
 
+#ifdef USE_INDIRECT_REF
     /*
      * Walk the argument list, creating local references for appropriate
      * arguments.
      */
-    JNIEnv* env = self->jniEnv;
-    jclass staticMethodClass;
     int idx = 0;
     if (dvmIsStaticMethod(method)) {
         /* add the class object we pass in */
@@ -1535,11 +1533,15 @@ void dvmCallJNIMethod_general(const u4* args, JValue* pResult,
 
         idx++;
     }
+#else
+    staticMethodClass = dvmIsStaticMethod(method) ?
+        (jclass) method->clazz : NULL;
+#endif
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
     COMPUTE_STACK_SUM(self);
-    dvmPlatformInvoke(self->jniEnv, staticMethodClass,
+    dvmPlatformInvoke(env, staticMethodClass,
         method->jniArgInfo, method->insSize, modArgs, method->shorty,
         (void*)method->insns, pResult);
     CHECK_STACK_SUM(self);
@@ -1586,12 +1588,14 @@ void dvmCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
     u4* modArgs = (u4*) args;
     int oldStatus;
 
+#ifdef USE_INDIRECT_REF
     jobject thisObj = addLocalReference(self->jniEnv, (Object*) args[0]);
     if (thisObj == NULL) {
         assert(dvmCheckException(self));
         return;
     }
     modArgs[0] = (u4) thisObj;
+#endif
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
@@ -1617,11 +1621,15 @@ void dvmCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     jclass staticMethodClass;
     int oldStatus;
 
+#ifdef USE_INDIRECT_REF
     staticMethodClass = addLocalReference(self->jniEnv, (Object*)method->clazz);
     if (staticMethodClass == NULL) {
         assert(dvmCheckException(self));
         return;
     }
+#else
+    staticMethodClass = (jobject) method->clazz;
+#endif
 
     oldStatus = dvmChangeStatus(self, THREAD_NATIVE);
 
@@ -1749,12 +1757,10 @@ bail:
 static jclass GetSuperclass(JNIEnv* env, jclass jclazz)
 {
     JNI_ENTER();
-    jclass jsuper;
+    jclass jsuper = NULL;
 
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
-    if (clazz == NULL)
-        jsuper = NULL;
-    else
+    if (clazz != NULL)
         jsuper = addLocalReference(env, (Object*)clazz->super);
     JNI_EXIT();
     return jsuper;
