@@ -2207,11 +2207,12 @@ static void* Check_GetDirectBufferAddress(JNIEnv* env, jobject buf)
             goto bail;
         }
 
-        // TODO: this should not be using internal structures
-        Method* toLong = ((Object*)platformAddr)->clazz->vtable[
-                gDvm.voffOrgApacheHarmonyLuniPlatformPlatformAddress_toLong];
+        jclass platformAddrClass = (*env)->FindClass(env,
+            "org/apache/harmony/luni/platform/PlatformAddress");
+        jmethodID toLongMethod = (*env)->GetMethodID(env, platformAddrClass,
+            "toLong", "()J");
         checkResult = (void*)(u4)(*env)->CallLongMethod(env, platformAddr,
-                (jmethodID)toLong);
+                toLongMethod);
 
     bail:
         if (platformAddr != NULL)
