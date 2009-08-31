@@ -1232,7 +1232,11 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
     int vDest = inlinedTarget(mir);
     // TUNING: handle case of src already in FP reg
     if (vDest >= 0) {
-        if (vDest == vSrc) {
+        /*
+         * FIXME: disable this case to to work around bug until after
+         * new schedule/ralloc mechanisms are done.
+         */
+        if (0 && (vDest == vSrc)) {
             loadValue(cUnit, vSrc+1, ophi);
             opRegRegImm(cUnit, OP_AND, ophi, ophi, 0x7fffffff, signMask);
             storeValue(cUnit, ophi, vDest + 1, signMask);

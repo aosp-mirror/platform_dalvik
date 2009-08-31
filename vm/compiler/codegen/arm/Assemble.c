@@ -414,7 +414,7 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
     ENCODING_MAP(THUMB2_VDIVD,        0xee800b00,
                  DFP, 22, 12, DFP, 7, 16, DFP, 5, 0, UNUSED, -1, -1,
                  IS_TERTIARY_OP | CLOBBER_DEST,
-                 "vdivs", "!0S, !1S, !2S", 2),
+                 "vdivd", "!0S, !1S, !2S", 2),
     ENCODING_MAP(THUMB2_VCVTIF,       0xeeb80ac0,
                  SFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1, UNUSED, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
@@ -490,11 +490,11 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
     ENCODING_MAP(THUMB2_VMOVS,       0xeeb00a40,
                  SFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1, UNUSED, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "vmov.f32 ", "!0s, !1s", 2),
+                 "vmov.f32 ", " !0s, !1s", 2),
     ENCODING_MAP(THUMB2_VMOVD,       0xeeb00b40,
                  DFP, 22, 12, DFP, 5, 0, UNUSED, -1, -1, UNUSED, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST,
-                 "vmov.f64 ", "!0s, !1s", 2),
+                 "vmov.f64 ", " !0S, !1S", 2),
     ENCODING_MAP(THUMB2_LDMIA,         0xe8900000,
                  BITBLT, 19, 16, BITBLT, 15, 0, UNUSED, -1, -1, UNUSED, -1, -1,
                  IS_BINARY_OP | CLOBBER_DEST | CLOBBER_SRC1,
@@ -723,22 +723,47 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
                  UNUSED, -1, -1, UNUSED, -1, -1, UNUSED, -1, -1, UNUSED, -1, -1,
                  NO_OPERAND | SETS_CCODES,
                  "fmstat", "", 2),
-    ENCODING_MAP(THUMB2_VCMPED,        0xeeb40bc0,
+    ENCODING_MAP(THUMB2_VCMPD,        0xeeb40b40,
                  DFP, 22, 12, DFP, 5, 0, UNUSED, -1, -1, UNUSED, -1, -1,
                  IS_BINARY_OP,
-                 "vcmpe.f64", "!0S, !1S", 2),
-    ENCODING_MAP(THUMB2_VCMPES,        0xeeb40ac0,
+                 "vcmp.f64", "!0S, !1S", 2),
+    ENCODING_MAP(THUMB2_VCMPS,        0xeeb40a40,
                  SFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1, UNUSED, -1, -1,
                  IS_BINARY_OP,
-                 "vcmpe.f32", "!0s, !1s", 2),
+                 "vcmp.f32", "!0s, !1s", 2),
     ENCODING_MAP(THUMB2_LDR_PC_REL12,       0xf8df0000,
                  BITBLT, 15, 12, BITBLT, 11, 0, UNUSED, -1, -1, UNUSED, -1, -1,
                  IS_TERTIARY_OP | CLOBBER_DEST,
                  "ldr", "r!0d,[rpc, #!1d", 2),
     ENCODING_MAP(THUMB2_B_COND,        0xf0008000,
-                 BROFFSET, -1, -1, BITBLT, 25, 22, UNUSED, -1, -1, UNUSED, -1, -1,
+                 BROFFSET, -1, -1, BITBLT, 25, 22, UNUSED, -1, -1,
+                 UNUSED, -1, -1,
                  IS_BINARY_OP | IS_BRANCH | USES_CCODES,
                  "b!1c", "!0t", 2),
+    ENCODING_MAP(THUMB2_VMOVD_RR,       0xeeb00b40,
+                 DFP, 22, 12, DFP, 5, 0, UNUSED, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "vmov.f64", "!0S, !1S", 2),
+    ENCODING_MAP(THUMB2_VMOVD_RR,       0xeeb00a40,
+                 SFP, 22, 12, SFP, 5, 0, UNUSED, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "vmov.f32", "!0S, !1S", 2),
+    ENCODING_MAP(THUMB2_FMRS,       0xee100a10,
+                 BITBLT, 15, 12, SFP, 8, 16, UNUSED, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "fmrs", "r!0d, !1s", 2),
+    ENCODING_MAP(THUMB2_FMSR,       0xee000a10,
+                 SFP, 8, 16, BITBLT, 15, 12, UNUSED, -1, -1, UNUSED, -1, -1,
+                 IS_BINARY_OP | CLOBBER_DEST,
+                 "fmsr", "!0s, r!1d", 2),
+    ENCODING_MAP(THUMB2_FMRRD,       0xec500b10,
+                 BITBLT, 15, 12, BITBLT, 19, 16, DFP, 5, 0, UNUSED, -1, -1,
+                 IS_TERTIARY_OP | CLOBBER_DEST | CLOBBER_SRC1,
+                 "fmrrd", "r!0d, r!1d, !2S", 2),
+    ENCODING_MAP(THUMB2_FMDRR,       0xec400b10,
+                 DFP, 5, 0, BITBLT, 15, 12, BITBLT, 19, 16, UNUSED, -1, -1,
+                 IS_TERTIARY_OP | CLOBBER_DEST,
+                 "fmdrr", "!0S, r!1d, r!2d", 2),
 };
 
 
@@ -812,7 +837,8 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             } else if (delta > 1020) {
                 return true;
             }
-            lir->operands[1] = (lir->opCode == THUMB2_LDR_PC_REL12) ? delta : delta >> 2;
+            lir->operands[1] = (lir->opCode == THUMB2_LDR_PC_REL12) ?
+                                delta : delta >> 2;
         } else if (lir->opCode == THUMB2_CBNZ || lir->opCode == THUMB2_CBZ) {
             ArmLIR *targetLIR = (ArmLIR *) lir->generic.target;
             intptr_t pc = lir->generic.offset + 4;
@@ -820,8 +846,8 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             int delta = target - pc;
             if (delta > 126 || delta < 0) {
                 /*
-                 * TODO: allow multiple kinds of assembler failure to allow us to
-                 * change code patterns when things don't fit.
+                 * TODO: allow multiple kinds of assembler failure to allow
+                 * change of code patterns when things don't fit.
                  */
                 return true;
             } else {

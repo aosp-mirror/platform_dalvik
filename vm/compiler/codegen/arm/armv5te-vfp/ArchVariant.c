@@ -116,11 +116,12 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
     int offset = offsetof(InterpState, retval);
     OpCode opCode = mir->dalvikInsn.opCode;
-    int vSrc = mir->dalvikInsn.vA;
+    int vSrc = mir->dalvikInsn.arg[0];
     loadValueAddress(cUnit, vSrc, r2);
     genDispatchToHandler(cUnit, TEMPLATE_SQRT_DOUBLE_VFP);
     newLIR3(cUnit, THUMB_STR_RRI5, r0, rGLUE, offset >> 2);
     newLIR3(cUnit, THUMB_STR_RRI5, r1, rGLUE, (offset >> 2) + 1);
+    resetRegisterScoreboard(cUnit);
     return false;
 }
 
