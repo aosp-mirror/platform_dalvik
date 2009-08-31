@@ -158,7 +158,14 @@ void dvmLateEnableCheckedJni(void);
 /*
  * Decode a local, global, or weak-global reference.
  */
+#ifdef USE_INDIRECT_REF
 Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj);
+#else
+/* use an inline to ensure this is a no-op */
+INLINE Object* dvmDecodeIndirectRef(JNIEnv* env, jobject jobj) {
+    return (Object*) jobj;
+}
+#endif
 
 /*
  * Verify that a reference passed in from native code is valid.  Returns
