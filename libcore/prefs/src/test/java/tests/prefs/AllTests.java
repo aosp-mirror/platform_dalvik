@@ -20,7 +20,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all tests for the Math project.
+ * Test suite that includes all tests for the Prefs project.
+ *
  */
 public class AllTests {
 

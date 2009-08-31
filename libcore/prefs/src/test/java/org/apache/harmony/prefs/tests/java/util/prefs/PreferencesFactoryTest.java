@@ -37,6 +37,7 @@ public class PreferencesFactoryTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         f = new PreferencesFactoryImpl();
@@ -49,7 +50,7 @@ public class PreferencesFactoryTest extends TestCase {
         args = {}
     )
     public void testUserRoot() {
-        f.userRoot();
+        assertNull(f.userRoot());
     }
 
     @TestTargetNew(
@@ -59,7 +60,7 @@ public class PreferencesFactoryTest extends TestCase {
         args = {}
     )
     public void testSystemRoot() {
-        f.systemRoot();
+        assertNull(f.systemRoot());
     }
 
     public static class PreferencesFactoryImpl implements PreferencesFactory {
