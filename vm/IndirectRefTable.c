@@ -35,6 +35,12 @@ bool dvmInitIndirectRefTable(IndirectRefTable* pRef, int initialCount,
 #ifndef NDEBUG
     memset(pRef->table, 0xd1, initialCount * sizeof(Object*));
 #endif
+
+    pRef->slotData =
+        (IndirectRefSlot*) calloc(maxCount, sizeof(IndirectRefSlot));
+    if (pRef->slotData == NULL)
+        return false;
+
     pRef->segmentState.all = IRT_FIRST_SEGMENT;
     pRef->allocEntries = initialCount;
     pRef->maxEntries = maxCount;
@@ -79,8 +85,8 @@ bool dvmPopIndirectRefTableSegmentCheck(IndirectRefTable* pRef, u4 cookie)
         return false;
     }
 
-    LOGV("--- after pop, top=%d holes=%d\n",
-        sst.parts.topIndex, sst.parts.numHoles);
+    LOGV("IRT %p[%d]: pop, top=%d holes=%d\n",
+        pRef, pRef->kind, sst.parts.topIndex, sst.parts.numHoles);
 
     return true;
 }
@@ -91,12 +97,42 @@ bool dvmPopIndirectRefTableSegmentCheck(IndirectRefTable* pRef, u4 cookie)
 static bool checkEntry(IndirectRefTable* pRef, IndirectRef iref, int idx)
 {
     Object* obj = pRef->table[idx];
-    IndirectRef checkRef = dvmObjectToIndirectRef(obj, idx, pRef->kind);
+    IndirectRef checkRef = dvmObjectToIndirectRef(pRef, obj, idx, pRef->kind);
     if (checkRef != iref) {
-        LOGW("iref mismatch: %p vs %p\n", iref, checkRef);
+        LOGW("IRT %p[%d]: iref mismatch (req=%p vs cur=%p)\n",
+            pRef, pRef->kind, iref, checkRef);
         return false;
     }
     return true;
+}
+
+/*
+ * Update extended debug info when an entry is added.
+ *
+ * We advance the serial number, invalidating any outstanding references to
+ * this slot.
+ */
+static inline void updateSlotAdd(IndirectRefTable* pRef, Object* obj, int slot)
+{
+    if (pRef->slotData != NULL) {
+        IndirectRefSlot* pSlot = &pRef->slotData[slot];
+        pSlot->serial++;
+        //LOGI("+++ add [%d] slot %d (%p->%p), serial=%d\n",
+        //    pRef->kind, slot, obj, iref, pSlot->serial);
+        pSlot->previous[pSlot->serial % kIRTPrevCount] = obj;
+    }
+}
+
+/*
+ * Update extended debug info when an entry is removed.
+ */
+static inline void updateSlotRemove(IndirectRefTable* pRef, int slot)
+{
+    if (pRef->slotData != NULL) {
+        IndirectRefSlot* pSlot = &pRef->slotData[slot];
+        //LOGI("+++ remove [%d] slot %d, serial now %d\n",
+        //    pRef->kind, slot, pSlot->serial);
+    }
 }
 
 /*
@@ -161,12 +197,15 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
         while (*--pScan != NULL) {
             assert(pScan >= pRef->table + bottomIndex);
         }
-        result = dvmObjectToIndirectRef(obj, pScan - pRef->table, pRef->kind);
+        updateSlotAdd(pRef, obj, pScan - pRef->table);
+        result = dvmObjectToIndirectRef(pRef, obj, pScan - pRef->table,
+            pRef->kind);
         *pScan = obj;
         pRef->segmentState.parts.numHoles--;
     } else {
         /* add to the end */
-        result = dvmObjectToIndirectRef(obj, topIndex, pRef->kind);
+        updateSlotAdd(pRef, obj, topIndex);
+        result = dvmObjectToIndirectRef(pRef, obj, topIndex, pRef->kind);
         pRef->table[topIndex++] = obj;
         pRef->segmentState.parts.topIndex = topIndex;
     }
@@ -220,6 +259,9 @@ bool dvmGetFromIndirectRefTableCheck(IndirectRefTable* pRef, IndirectRef iref)
  * specified by the cookie, we don't remove anything.  This is the behavior
  * required by JNI's DeleteLocalRef function.
  *
+ * Note this is NOT called when a local frame is popped.  This is only used
+ * for explict single removals.
+ *
  * Returns "false" if nothing was removed.
  */
 bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
@@ -255,6 +297,7 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
          */
         if (!checkEntry(pRef, iref, idx))
             return false;
+        updateSlotRemove(pRef, idx);
 
 #ifndef NDEBUG
         pRef->table[idx] = (IndirectRef) 0xd3d3d3d3;
@@ -290,6 +333,7 @@ bool dvmRemoveFromIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
         }
         if (!checkEntry(pRef, iref, idx))
             return false;
+        updateSlotRemove(pRef, idx);
 
         pRef->table[idx] = NULL;
         pRef->segmentState.parts.numHoles++;
@@ -408,7 +452,7 @@ void dvmDumpIndirectRefTable(const IndirectRefTable* pRef, const char* descr)
     qsort(tableCopy, count, sizeof(Object*), compareObject);
     refs = tableCopy;       // use sorted list
 
-    {
+    if (false) {
         int q;
         for (q = 0; q < count; q++)
             LOGI("%d %p\n", q, refs[q]);

@@ -245,12 +245,15 @@ static bool basicTest(void)
     dvmRemoveFromIndirectRefTable(&irt, cookie, iref0);
     iref1 = dvmAddToIndirectRefTable(&irt, cookie, obj0);
     if (iref0 != iref1) {
+        /* try 0, should not work */
         if (dvmRemoveFromIndirectRefTable(&irt, cookie, iref0)) {
             LOGE("temporal del succeeded (%p vs %p)\n", iref0, iref1);
             goto bail;
         }
-    } else {
-        dvmRemoveFromIndirectRefTable(&irt, cookie, iref1);
+    }
+    if (!dvmRemoveFromIndirectRefTable(&irt, cookie, iref1)) {
+        LOGE("temporal cleanup failed\n");
+        goto bail;
     }
     if (dvmIndirectRefTableEntries(&irt) != 0) {
         LOGE("temporal del not empty\n");
