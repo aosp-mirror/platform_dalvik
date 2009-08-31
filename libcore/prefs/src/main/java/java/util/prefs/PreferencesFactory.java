@@ -14,36 +14,30 @@
  * limitations under the License.
  */
 
-
 package java.util.prefs;
 
 /**
  * This interface is used by the {@link Preferences} class as factory class to
- * create {@code Preferences} instances. This interface can be implemented and installed
- * to replace the default preferences implementation.
+ * create {@code Preferences} instances. This interface can be implemented and
+ * installed to replace the default preferences implementation.
  * 
- * @since Android 1.0
+ * @see java.util.prefs.Preferences
+ * 
+ * @since 1.4
  */
 public interface PreferencesFactory {
-
     /**
      * Returns the root node of the preferences hierarchy for the calling user
      * context.
      * 
      * @return the user preferences hierarchy root node.
-     * @since Android 1.0
      */
     Preferences userRoot();
-    
+
     /**
      * Returns the root node of the system preferences hierarchy.
      * 
      * @return the system preferences hierarchy root node.
-     * @since Android 1.0
      */
     Preferences systemRoot();
 }
-
-
-
- 

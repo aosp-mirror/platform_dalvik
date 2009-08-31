@@ -30,6 +30,7 @@ import java.util.prefs.Preferences;
 import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
+import tests.util.PrefsTester;
 
 /**
  * 
@@ -37,26 +38,17 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 @TestTargetClass(NodeChangeEvent.class)
 public class NodeChangeEventTest extends TestCase {
 
-    NodeChangeEvent event;
+    private final PrefsTester prefsTester = new PrefsTester();
 
-    String oldUserHome = System.getProperty("user.home");
-    String oldJavaHome = System.getProperty("java.home");
+    NodeChangeEvent event;
 
     protected void setUp() throws Exception {
         super.setUp();
-
-        System.setProperty("user.home", System.getProperty("java.io.tmpdir"));
-        System.setProperty("java.home", System.getProperty("java.io.tmpdir"));
-        Preferences.systemRoot().clear();
-        Preferences.userRoot().clear();
+        prefsTester.setUp();
     }
 
     protected void tearDown() throws Exception {
-        Preferences.systemRoot().clear();
-        Preferences.userRoot().clear();
-        System.setProperty("user.home", oldUserHome);
-        System.setProperty("java.home", oldJavaHome);
-
+        prefsTester.tearDown();
         super.tearDown();
     }
 

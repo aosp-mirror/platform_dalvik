@@ -17,10 +17,10 @@
 package java.util.prefs;
 
 /**
- * The default implementation of <code>PreferencesFactory</code> for the Linux 
+ * The default implementation of <code>PreferencesFactory</code> for the Linux
  * platform, using the file system as its back end.
- * 
- * @since Android 1.0
+ *
+ * @since 1.4
  */
 class FilePreferencesFactoryImpl implements PreferencesFactory {
     //  user root preferences

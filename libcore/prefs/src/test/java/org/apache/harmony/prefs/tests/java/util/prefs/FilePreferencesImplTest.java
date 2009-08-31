@@ -28,28 +28,22 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import junit.framework.TestCase;
+import tests.util.PrefsTester;
 
 @TestTargetClass(java.util.prefs.Preferences.class)
 public class FilePreferencesImplTest extends TestCase {
 
-    String oldUserHome = System.getProperty("user.home");
-    String oldJavaHome = System.getProperty("java.home");
+    private final PrefsTester prefsTester = new PrefsTester();
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
-
-        System.setProperty("user.home", System.getProperty("java.io.tmpdir"));
-        System.setProperty("java.home", System.getProperty("java.io.tmpdir"));
-        Preferences.systemRoot().clear();
-        Preferences.userRoot().clear();
+        prefsTester.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
-        Preferences.systemRoot().clear();
-        Preferences.userRoot().clear();
-        System.setProperty("user.home", oldUserHome);
-        System.setProperty("java.home", oldJavaHome);
-
+        prefsTester.tearDown();
         super.tearDown();
     }
 
@@ -313,6 +307,7 @@ public class FilePreferencesImplTest extends TestCase {
             System.setSecurityManager(dflt);
         }
 
+        @Override
         public void checkPermission(Permission perm) {
             if (perm instanceof FilePermission) {
                 throw new SecurityException();
@@ -321,6 +316,7 @@ public class FilePreferencesImplTest extends TestCase {
             }
         }
 
+        @Override
         public void checkPermission(Permission perm, Object ctx) {
             if (perm instanceof FilePermission) {
                 System.out.println(perm.getActions());

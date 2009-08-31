@@ -26,6 +26,7 @@ import java.util.prefs.NodeChangeListener;
 import java.util.prefs.Preferences;
 
 import junit.framework.TestCase;
+import tests.util.PrefsTester;
 
 /**
  * 
@@ -33,20 +34,26 @@ import junit.framework.TestCase;
 @TestTargetClass(NodeChangeListener.class)
 public class NodeChangeListenerTest extends TestCase {
 
+    private final PrefsTester prefsTester = new PrefsTester();
+
     NodeChangeListener l;
 
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
+        prefsTester.setUp();
         l = new NodeChangeListenerImpl();
     }
 
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
+        prefsTester.tearDown();
         super.tearDown();
     }
 
