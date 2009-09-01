@@ -479,7 +479,7 @@ static void bufferAndInvoke(jmethodID method, void* data, const char* text,
  * @returns index of the separator
  */
 static int findSeparator(const char* s) {
-    char* pointer = strchr(s, '|');
+    const char* pointer = strchr(s, '|');
     return pointer == NULL ? -1 : pointer - s;
 }
 
