@@ -15,6 +15,10 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// Completely different implementation from harmony.  Runs much faster.
+// BEGIN android-note
+
 package java.util;
 
 import java.io.IOException;
@@ -742,9 +746,9 @@ public class HashMap<K, V> extends AbstractMap<K, V>
     }
 
     private abstract class HashIterator {
-        int nextIndex = 0;
+        int nextIndex;
         HashMapEntry<K, V> nextEntry = entryForNullKey;
-        HashMapEntry<K, V> lastEntryReturned = null;
+        HashMapEntry<K, V> lastEntryReturned;
         int expectedModCount = modCount;
 
         HashIterator() {

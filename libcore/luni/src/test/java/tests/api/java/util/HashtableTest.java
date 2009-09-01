@@ -35,6 +35,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.Collections;
 
 import tests.api.java.util.HashMapTest.ReusableKey;
 import tests.support.Support_MapTest2;
@@ -165,6 +166,24 @@ public class HashtableTest extends junit.framework.TestCase {
         }
     }
 
+    /**
+     * @tests java.util.Hashtable#Hashtable(java.util.Map)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Hashtable",
+        args = {java.util.Map.class}
+    )
+    public void test_ConversionConstructorNullValue() {
+        Map<String, Void> map = Collections.singletonMap("Dog", null);
+        try {
+            new Hashtable<String, Void>(map);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+    }
     /**
      * @tests java.util.Hashtable#clear()
      */
@@ -310,46 +329,49 @@ public class HashtableTest extends junit.framework.TestCase {
         assertEquals("All keys not retrieved", 10, ht10.size());
     }
 
-    /**
-     * @tests java.util.Hashtable#elements()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "elements",
-        args = {}
-    )
-    public void test_elements_subtest0() {
-        // this is the reference implementation behavior
-        final Hashtable ht = new Hashtable(7);
-        ht.put("1", "a");
-        // these three elements hash to the same bucket in a 7 element Hashtable
-        ht.put("2", "b");
-        ht.put("9", "c");
-        ht.put("12", "d");
-        // Hashtable looks like:
-        // 0: "1"
-        // 1: "12" -> "9" -> "2"
-        Enumeration en = ht.elements();
-        // cache the first entry
-        en.hasMoreElements();
-        ht.remove("12");
-        ht.remove("9");
-        boolean exception = false;
-        try {
-            // cached "12"
-            Object result = en.nextElement();
-            assertNull("unexpected: " + result, result);
-            // next is removed "9"
-            result = en.nextElement();
-            assertNull("unexpected: " + result, result);
-            result = en.nextElement();
-            assertTrue("unexpected: " + result, "b".equals(result));
-        } catch (NoSuchElementException e) {
-            exception = true;
-        }
-        assertTrue("unexpected NoSuchElementException", !exception);
-    }
+// BEGIN android-removed
+// implementation dependent
+//    /**
+//     * @tests java.util.Hashtable#elements()
+//     */
+//    @TestTargetNew(
+//        level = TestLevel.COMPLETE,
+//        notes = "",
+//        method = "elements",
+//        args = {}
+//    )
+//    public void test_elements_subtest0() {
+//        // this is the reference implementation behavior
+//        final Hashtable ht = new Hashtable(7);
+//        ht.put("1", "a");
+//        // these three elements hash to the same bucket in a 7 element Hashtable
+//        ht.put("2", "b");
+//        ht.put("9", "c");
+//        ht.put("12", "d");
+//        // Hashtable looks like:
+//        // 0: "1"
+//        // 1: "12" -> "9" -> "2"
+//        Enumeration en = ht.elements();
+//        // cache the first entry
+//        en.hasMoreElements();
+//        ht.remove("12");
+//        ht.remove("9");
+//        boolean exception = false;
+//        try {
+//            // cached "12"
+//            Object result = en.nextElement();
+//            assertNull("unexpected: " + result, result);
+//            // next is removed "9"
+//            result = en.nextElement();
+//            assertNull("unexpected: " + result, result);
+//            result = en.nextElement();
+//            assertTrue("unexpected: " + result, "b".equals(result));
+//        } catch (NoSuchElementException e) {
+//            exception = true;
+//        }
+//        assertTrue("unexpected NoSuchElementException", !exception);
+//    }
+// END android-removed
 
     /**
      * @tests java.util.Hashtable#entrySet()
@@ -371,9 +393,11 @@ public class HashtableTest extends junit.framework.TestCase {
         while (e.hasMoreElements())
             assertTrue("Returned incorrect entry set", s2.contains(e
                     .nextElement()));
-
-        assertEquals("Not synchronized", 
-                "java.util.Collections$SynchronizedSet", s.getClass().getName());
+// BEGIN android-removed
+// implementation dependent
+//        assertEquals("Not synchronized",
+//                "java.util.Collections$SynchronizedSet", s.getClass().getName());
+// END android-removed
 
         boolean exception = false;
         try {
@@ -417,26 +441,28 @@ public class HashtableTest extends junit.framework.TestCase {
         Hashtable h = hashtableClone(htfull);
         assertEquals("Could not retrieve element", "FVal 2", ((String) h.get("FKey 2"))
                 );
-        
-        
-        // Regression for HARMONY-262
-        ReusableKey k = new ReusableKey();
-        Hashtable h2 = new Hashtable();
-        k.setKey(1);
-        h2.put(k, "value1");
 
-        k.setKey(13);
-        assertNull(h2.get(k));
-
-        k.setKey(12);
-        assertNull(h2.get(k));
-
-        try {
-            h2.get(null);
-            fail("NullPointerException expected");
-        } catch (NullPointerException e) {
-            //expected
-        }
+// BEGIN android-removed
+// implementation dependent
+//        // Regression for HARMONY-262
+//        ReusableKey k = new ReusableKey();
+//        Hashtable h2 = new Hashtable();
+//        k.setKey(1);
+//        h2.put(k, "value1");
+//
+//        k.setKey(13);
+//        assertNull(h2.get(k));
+//
+//        k.setKey(12);
+//        assertNull(h2.get(k));
+//        
+//        try {
+//            h2.get(null);
+//            fail("NullPointerException expected");
+//        } catch (NullPointerException e) {
+//            //expected
+//        }
+// END android-removed
     }
 
     /**
@@ -569,9 +595,12 @@ public class HashtableTest extends junit.framework.TestCase {
             assertTrue("Returned incorrect key set", s
                     .contains(e.nextElement()));
 
-        assertEquals("Not synchronized", 
-                "java.util.Collections$SynchronizedSet", s.getClass().getName());
-
+// BEGIN android-removed
+// implementation dependent
+//        assertEquals("Not synchronized",
+//                "java.util.Collections$SynchronizedSet", s.getClass().getName());
+// END android-removed
+        
         Map map = new Hashtable(101);
         map.put(new Integer(1), "1");
         map.put(new Integer(102), "102");
@@ -651,54 +680,57 @@ public class HashtableTest extends junit.framework.TestCase {
         }
     }
 
-    /**
-     * @tests java.util.Hashtable#keySet()
-     */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "keySet",
-        args = {}
-    )
-    public void test_keySet_subtest1() {
-        // this is the reference implementation behavior
-        final Hashtable ht = new Hashtable(7);
-        ht.put("1", "a");
-        // these three elements hash to the same bucket in a 7 element Hashtable
-        ht.put("2", "b");
-        ht.put("9", "c");
-        ht.put("12", "d");
-        // Hashtable looks like:
-        // 0: "1"
-        // 1: "12" -> "9" -> "2"
-        Enumeration en = ht.elements();
-        // cache the first entry
-        en.hasMoreElements();
-        Iterator it = ht.keySet().iterator();
-        // this is mostly a copy of the test in test_elements_subtest0()
-        // test removing with the iterator does not null the values
-        while (it.hasNext()) {
-            String key = (String) it.next();
-            if ("12".equals(key) || "9".equals(key)) {
-                it.remove();
-            }
-        }
-        it.remove();
-        boolean exception = false;
-        try {
-            // cached "12"
-            Object result = en.nextElement();
-            assertTrue("unexpected: " + result, "d".equals(result));
-            // next is removed "9"
-            result = en.nextElement();
-            assertTrue("unexpected: " + result, "c".equals(result));
-            result = en.nextElement();
-            assertTrue("unexpected: " + result, "b".equals(result));
-        } catch (NoSuchElementException e) {
-            exception = true;
-        }
-        assertTrue("unexpected NoSuchElementException", !exception);
-    }
+// BEGIN android-removed
+// implementation dependent
+//    /**
+//     * @tests java.util.Hashtable#keySet()
+//     */
+//    @TestTargetNew(
+//        level = TestLevel.PARTIAL_COMPLETE,
+//        notes = "",
+//        method = "keySet",
+//        args = {}
+//    )
+//    public void test_keySet_subtest1() {
+//        // this is the reference implementation behavior
+//        final Hashtable ht = new Hashtable(7);
+//        ht.put("1", "a");
+//        // these three elements hash to the same bucket in a 7 element Hashtable
+//        ht.put("2", "b");
+//        ht.put("9", "c");
+//        ht.put("12", "d");
+//        // Hashtable looks like:
+//        // 0: "1"
+//        // 1: "12" -> "9" -> "2"
+//        Enumeration en = ht.elements();
+//        // cache the first entry
+//        en.hasMoreElements();
+//        Iterator it = ht.keySet().iterator();
+//        // this is mostly a copy of the test in test_elements_subtest0()
+//        // test removing with the iterator does not null the values
+//        while (it.hasNext()) {
+//            String key = (String) it.next();
+//            if ("12".equals(key) || "9".equals(key)) {
+//                it.remove();
+//            }
+//        }
+//        it.remove();
+//        boolean exception = false;
+//        try {
+//            // cached "12"
+//            Object result = en.nextElement();
+//            assertTrue("unexpected: " + result, "d".equals(result));
+//            // next is removed "9"
+//            result = en.nextElement();
+//            assertTrue("unexpected: " + result, "c".equals(result));
+//            result = en.nextElement();
+//            assertTrue("unexpected: " + result, "b".equals(result));
+//        } catch (NoSuchElementException e) {
+//            exception = true;
+//        }
+//        assertTrue("unexpected NoSuchElementException", !exception);
+//    }
+// END android-removed
 
     /**
      * @tests java.util.Hashtable#put(java.lang.Object, java.lang.Object)
@@ -871,9 +903,12 @@ public class HashtableTest extends junit.framework.TestCase {
         while (e.hasMoreElements())
             assertTrue("Returned incorrect values", c.contains(e.nextElement()));
 
-        assertEquals("Not synchronized", 
-                "java.util.Collections$SynchronizedCollection", c.getClass().getName());
-
+// BEGIN android-removed
+// implementation dependent
+//        assertEquals("Not synchronized",
+//                "java.util.Collections$SynchronizedCollection", c.getClass().getName());
+// END android-removed
+        
         Hashtable myHashtable = new Hashtable();
         for (int i = 0; i < 100; i++)
             myHashtable.put(new Integer(i), new Integer(i));
