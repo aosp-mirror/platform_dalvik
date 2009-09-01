@@ -98,6 +98,16 @@ typedef enum IndirectRefKind {
 } IndirectRefKind;
 
 /*
+ * Extended debugging structure.  We keep a parallel array of these, one
+ * per slot in the table.
+ */
+#define kIRTPrevCount   4
+typedef struct IndirectRefSlot {
+    u4          serial;         /* slot serial */
+    Object*     previous[kIRTPrevCount];
+} IndirectRefSlot;
+
+/*
  * Table definition.
  *
  * For the global reference table, the expected common operations are
@@ -179,6 +189,7 @@ typedef struct IndirectRefTable {
     Object**        table;              /* bottom of the stack */
 
     /* private */
+    IndirectRefSlot* slotData;          /* extended debugging info */
     int             allocEntries;       /* #of entries we have space for */
     int             maxEntries;         /* max #of entries allowed */
     IndirectRefKind kind;               /* bit mask, ORed into all irefs */
@@ -198,12 +209,14 @@ typedef struct IndirectRefTable {
  * The object pointer itself is subject to relocation in some GC
  * implementations, so we shouldn't really be using it here.
  */
-INLINE IndirectRef dvmObjectToIndirectRef(Object* obj, u4 tableIndex,
-    IndirectRefKind kind)
+INLINE IndirectRef dvmObjectToIndirectRef(IndirectRefTable* pRef,
+    Object* obj, u4 tableIndex, IndirectRefKind kind)
 {
     assert(tableIndex < 65536);
-    u4 objChunk = (((u4) obj >> 3) ^ ((u4) obj >> 19)) & 0x3fff;
-    u4 uref = objChunk << 18 | (tableIndex << 2) | kind;
+    //u4 objChunk = (((u4) obj >> 3) ^ ((u4) obj >> 19)) & 0x3fff;
+    //u4 uref = objChunk << 18 | (tableIndex << 2) | kind;
+    u4 serialChunk = pRef->slotData[tableIndex].serial;
+    u4 uref = serialChunk << 20 | (tableIndex << 2) | kind;
     return (IndirectRef) uref;
 }
 
@@ -270,7 +283,7 @@ bool dvmPopIndirectRefTableSegmentCheck(IndirectRefTable* pRef, u4 cookie);
  *
  * IMPORTANT: this is implemented as a single instruction in mterp, rather
  * than a call here.  You can add debugging aids for the C-language
- * interpreters, but the basic implementation may not change.
+ * interpreters, but the basic implementation must not change.
  */
 INLINE void dvmPopIndirectRefTableSegment(IndirectRefTable* pRef, u4 cookie)
 {
@@ -323,7 +336,8 @@ INLINE IndirectRef dvmAppendToIndirectRefTable(IndirectRefTable* pRef,
         /* up against alloc or max limit, call the fancy version */
         return dvmAddToIndirectRefTable(pRef, cookie, obj);
     } else {
-        IndirectRef result = dvmObjectToIndirectRef(obj, topIndex, pRef->kind);
+        IndirectRef result = dvmObjectToIndirectRef(pRef, obj, topIndex,
+            pRef->kind);
         pRef->table[topIndex++] = obj;
         pRef->segmentState.parts.topIndex = topIndex;
         return result;
