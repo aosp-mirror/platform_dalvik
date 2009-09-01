@@ -35,9 +35,9 @@ public class InetSocketAddress extends SocketAddress {
     private int port;
 
     /**
-     * Creates a socket endpoint with the given port number {@code port} and the
-     * wildcard address {@code InetAddress.ANY}. The range for valid port numbers
-     * is between 0 and 65535 inclusive.
+     * Creates a socket endpoint with the given port number {@code port} and
+     * no specified address. The range for valid port numbers is between 0 and
+     * 65535 inclusive.
      *
      * @param port
      *            the specified port number to which this socket is bound.
@@ -50,7 +50,7 @@ public class InetSocketAddress extends SocketAddress {
      * Creates a socket endpoint with the given port number {@code port} and
      * {@code address}. The range for valid port numbers is between 0 and 65535
      * inclusive. If {@code address} is {@code null} this socket is bound to the
-     * wildcard address {@code InetAddress.ANY}.
+     * IPv4 wildcard address.
      *
      * @param port
      *            the specified port number to which this socket is bound.
@@ -62,7 +62,7 @@ public class InetSocketAddress extends SocketAddress {
             throw new IllegalArgumentException();
         }
         if (address == null) {
-            addr = InetAddress.ANY;
+            addr = Inet4Address.ANY;
         } else {
             addr = address;
         }
