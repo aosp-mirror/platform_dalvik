@@ -33,11 +33,17 @@ public final class Inet4Address extends InetAddress {
 
     private static final long serialVersionUID = 3286316764910316507L;
 
+    final static InetAddress ANY = new Inet4Address(new byte[] { 0, 0, 0, 0 });
+    final static InetAddress LOOPBACK = new Inet4Address(
+            new byte[] { 127, 0, 0, 1 }, "localhost"); //$NON-NLS-1$
+
     Inet4Address(byte[] address) {
+        family = AF_INET;
         ipaddress = address;
     }
 
     Inet4Address(byte[] address, String name) {
+        family = AF_INET;
         ipaddress = address;
         hostName = name;
     }
@@ -228,31 +234,17 @@ public final class Inet4Address extends InetAddress {
         return hostAddress;
     }
 
-    /**
-     * Gets the hashcode of the represented IP address.
-     * 
-     * @return the appropriate hashcode value.
-     */
-    @Override
-    public int hashCode() {
-        return InetAddress.bytesToInt(ipaddress, 0);
-    }
+    // BEGIN android-removed
+    // public int hashCode() {
+    // }
+    // END android-removed
 
-    /**
-     * Compares this instance with the IP address in the object {@code obj} and
-     * returns {@code true} if they are of the same type and represent the same
-     * IP address, {@code false} otherwise.
-     * 
-     * @param obj
-     *            the object to be tested for equality.
-     * @return {@code true} if the addresses are equal, {@code false} otherwise.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
-    }
+    // BEGIN android-removed
+    // public boolean equals(Object obj) {
+    // }
+    // END android-removed
 
     private Object writeReplace() throws ObjectStreamException {
-        return new InetAddress(ipaddress, hostName);
+        return new Inet4Address(ipaddress, hostName);
     }
 }

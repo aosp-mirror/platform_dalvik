@@ -46,16 +46,7 @@ import org.apache.harmony.luni.util.PriviAction;
  */
 public class InetAddress extends Object implements Serializable {
 
-    final static byte[] any_bytes = { 0, 0, 0, 0 };
-
-    final static byte[] localhost_bytes = { 127, 0, 0, 1 };
-
-    static InetAddress ANY = new Inet4Address(any_bytes);
-
     private final static INetworkSystem NETIMPL = Platform.getNetworkSystem();
-
-    final static InetAddress LOOPBACK = new Inet4Address(localhost_bytes,
-            "localhost"); //$NON-NLS-1$
 
     private static final String ERRMSG_CONNECTION_REFUSED = "Connection refused"; //$NON-NLS-1$
 
@@ -79,7 +70,9 @@ public class InetAddress extends Object implements Serializable {
 
     private int addrCount;
 
-    int family = 2;
+    int family = 0;
+    static final int AF_INET = 2;
+    static final int AF_INET6 = 10;
 
     byte[] ipaddress;
 
@@ -93,12 +86,22 @@ public class InetAddress extends Object implements Serializable {
     // END android-removed
 
     /**
-     * Constructs an InetAddress.
+     * Constructs an {@code InetAddress}.
+     *
+     * Note: this constructor should not be used. Creating an InetAddress
+     * without specifying whether it's an IPv4 or IPv6 address does not make
+     * sense, because subsequent code cannot know which of of the subclasses'
+     * methods need to be called to implement a given InetAddress method. The
+     * proper way to create an InetAddress is to call new Inet4Address or
+     * Inet6Address or to use one of the static methods that return
+     * InetAddresses (e.g., getByAddress). That is why the API does not have
+     * public constructors for any of these classes.
      */
     InetAddress() {
         super();
     }
 
+    // BEGIN android-removed
     /**
      * Constructs an {@code InetAddress}, representing the {@code address} and
      * {@code hostName}.
@@ -106,23 +109,27 @@ public class InetAddress extends Object implements Serializable {
      * @param address
      *            the network address.
      */
-    InetAddress(byte[] address) {
-        super();
-        this.ipaddress = address;
-    }
+    // InetAddress(byte[] address) {
+    //     super();
+    //     this.ipaddress = address;
+    // }
+    // END android-removed
 
+    // BEGIN android-removed
     /**
      * Constructs an {@code InetAddress}, representing the {@code address} and
      * {@code hostName}.
      *
      * @param address
      *            the network address.
+     *
      */
-    InetAddress(byte[] address, String hostName) {
-        super();
-        this.ipaddress = address;
-        this.hostName = hostName;
-    }
+    // InetAddress(byte[] address, String hostName) {
+    //     super();
+    //     this.ipaddress = address;
+    //     this.hostName = hostName;
+    // }
+    // END android-removed
 
     // BEGIN android-removed
     // CacheElement cacheElement() {
@@ -145,21 +152,8 @@ public class InetAddress extends Object implements Serializable {
         if (!(obj instanceof InetAddress)) {
             return false;
         }
+        return Arrays.equals(this.ipaddress, ((InetAddress) obj).ipaddress);
         // END android-changed
-
-        // now check if their byte arrays match...
-        byte[] objIPaddress = ((InetAddress) obj).ipaddress;
-        // BEGIN android-added
-        if (objIPaddress.length != ipaddress.length) {
-            return false;
-        }
-        // END android-added
-        for (int i = 0; i < objIPaddress.length; i++) {
-            if (objIPaddress[i] != this.ipaddress[i]) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -253,15 +247,17 @@ public class InetAddress extends Object implements Serializable {
             throws UnknownHostException {
         if (host == null || 0 == host.length()) {
             if (preferIPv6Addresses()) {
-                return new InetAddress[] { Inet6Address.LOOPBACK, LOOPBACK };
+                return new InetAddress[] { Inet6Address.LOOPBACK,
+                                           Inet4Address.LOOPBACK };
             } else {
-                return new InetAddress[] { LOOPBACK, Inet6Address.LOOPBACK };
+                return new InetAddress[] { Inet4Address.LOOPBACK,
+                                           Inet6Address.LOOPBACK };
             }
         }
 
         // Special-case "0" for legacy IPv4 applications.
         if (host.equals("0")) { //$NON-NLS-1$
-            return new InetAddress[] { InetAddress.ANY };
+            return new InetAddress[] { Inet4Address.ANY };
         }
 
         if (isHostName(host)) {
@@ -281,8 +277,10 @@ public class InetAddress extends Object implements Serializable {
             return (new InetAddress[] { new Inet4Address(hBytes) });
         } else if (hBytes.length == 16) {
             return (new InetAddress[] { new Inet6Address(hBytes) });
+        } else {
+            throw new UnknownHostException(
+                    Msg.getString("K0339")); //$NON-NLS-1$
         }
-        return (new InetAddress[] { new InetAddress(hBytes) });
     }
     // END android-added
 
@@ -403,7 +401,7 @@ public class InetAddress extends Object implements Serializable {
                 security.checkConnect(host, -1);
             }
         } catch (SecurityException e) {
-            return InetAddress.LOOPBACK;
+            return Inet4Address.LOOPBACK;
         }
         return lookupHostByName(host)[0];
     }
@@ -415,18 +413,24 @@ public class InetAddress extends Object implements Serializable {
      */
     @Override
     public int hashCode() {
-        return bytesToInt(ipaddress, 0);
+        // BEGIN android-changed
+        return Arrays.hashCode(ipaddress);
+        // END android-changed
     }
 
-    /**
-     * Returns whether this address is an IP multicast address or not.
+    // BEGIN android-changed
+    /*
+     * Returns whether this address is an IP multicast address or not. This
+     * implementation returns always {@code false}.
      *
      * @return {@code true} if this address is in the multicast group, {@code
      *         false} otherwise.
      */
     public boolean isMulticastAddress() {
-        return ((ipaddress[0] & 255) >>> 4) == 0xE;
+        return false;
     }
+    // END android-changed
+
 
     /**
      * Resolves a hostname to its IP addresses using a cache for faster lookups.
@@ -530,7 +534,14 @@ public class InetAddress extends Object implements Serializable {
     //    throws UnknownHostException;
     static InetAddress getHostByAddrImpl(byte[] addr)
             throws UnknownHostException {
-        return new InetAddress(addr, gethostbyaddr(addr));
+        if (addr.length == 4) {
+            return new Inet4Address(addr, gethostbyaddr(addr));
+        } else if (addr.length == 16) {
+            return new Inet6Address(addr, gethostbyaddr(addr));
+        } else {
+            throw new UnknownHostException(Msg.getString(
+                    "K0339")); //$NON-NLS-1$
+        }
     }
 
     /**
@@ -618,7 +629,7 @@ public class InetAddress extends Object implements Serializable {
 
     static String getHostNameInternal(String host) throws UnknownHostException {
         if (host == null || 0 == host.length()) {
-            return InetAddress.LOOPBACK.getHostAddress();
+            return Inet4Address.LOOPBACK.getHostAddress();
         }
         if (isHostName(host)) {
             return lookupHostByName(host)[0].getHostAddress();

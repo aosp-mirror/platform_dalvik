@@ -84,7 +84,7 @@ public class ServerSocket {
      *             if an error occurs while creating the server socket.
      */
     public ServerSocket(int aport) throws IOException {
-        this(aport, defaultBacklog(), InetAddress.ANY);
+        this(aport, defaultBacklog(), Inet4Address.ANY);
     }
 
     /**
@@ -102,7 +102,7 @@ public class ServerSocket {
      *             if an error occurs while creating the server socket.
      */
     public ServerSocket(int aport, int backlog) throws IOException {
-        this(aport, backlog, InetAddress.ANY);
+        this(aport, backlog, Inet4Address.ANY);
     }
 
     /**
@@ -127,7 +127,7 @@ public class ServerSocket {
         checkListen(aport);
         impl = factory != null ? factory.createSocketImpl()
                 : new PlainServerSocketImpl();
-        InetAddress addr = localAddr == null ? InetAddress.ANY : localAddr;
+        InetAddress addr = localAddr == null ? Inet4Address.ANY : localAddr;
 
         synchronized (this) {
             impl.create(true);
@@ -391,7 +391,7 @@ public class ServerSocket {
             throw new BindException(Msg.getString("K0315")); //$NON-NLS-1$
         }
         int port = 0;
-        InetAddress addr = InetAddress.ANY;
+        InetAddress addr = Inet4Address.ANY;
         if (localAddr != null) {
             if (!(localAddr instanceof InetSocketAddress)) {
                 throw new IllegalArgumentException(Msg.getString(
