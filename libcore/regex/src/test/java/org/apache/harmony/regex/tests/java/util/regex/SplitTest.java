@@ -32,12 +32,62 @@ public class SplitTest extends TestCase {
         Pattern p = Pattern.compile("/");
         String[] results = p.split("have/you/done/it/right");
         String[] expected = new String[] { "have", "you", "done", "it", "right" };
-        assertEquals(expected.length, results.length);
-        for (int i = 0; i < expected.length; i++) {
-            assertEquals(results[i], expected[i]);
-        }
+        assertArraysEqual(expected, results);
     }
 
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies the basic functionality of split with empty matches.",
+            method = "split",
+            args = {java.lang.CharSequence.class}
+        )
+    })
+    public void testEmptySplits() {
+        // Trailing empty matches are removed.
+        assertArraysEqual(new String[0], "hello".split("."));
+        assertArraysEqual(new String[] { "1", "2" }, "1:2:".split(":"));
+        // ...including when that results in an empty result.
+        assertArraysEqual(new String[0], ":".split(":"));
+        // ...but not when limit < 0.
+        assertArraysEqual(new String[] { "1", "2", "" }, "1:2:".split(":", -1));
+        
+        // Leading empty matches are retained.
+        assertArraysEqual(new String[] { "", "", "o" }, "hello".split(".."));
+        
+        // A separator that doesn't occur in the input gets you the input.
+        assertArraysEqual(new String[] { "hello" }, "hello".split("not-present-in-test"));
+        // ...including when the input is the empty string.
+        // (Perl returns an empty list instead.)
+        assertArraysEqual(new String[] { "" }, "".split("not-present-in-test"));
+        assertArraysEqual(new String[] { "" }, "".split("A?"));
+        
+        // The limit argument controls the size of the result.
+        // If l == 0, the result is as long as needed, except trailing empty matches are dropped.
+        // If l < 0, the result is as long as needed, and trailing empty matches are retained.
+        // If l > 0, the result contains the first l matches, plus one string containing the remaining input.
+        // Examples without a trailing separator (and hence without a trailing empty match):
+        assertArraysEqual(new String[] { "a", "b", "c" }, "a,b,c".split(",", 0));
+        assertArraysEqual(new String[] { "a,b,c" }, "a,b,c".split(",", 1));
+        assertArraysEqual(new String[] { "a", "b,c" }, "a,b,c".split(",", 2));
+        assertArraysEqual(new String[] { "a", "b", "c" }, "a,b,c".split(",", 3));
+        assertArraysEqual(new String[] { "a", "b", "c" }, "a,b,c".split(",", Integer.MAX_VALUE));
+        // Examples with a trailing separator (and hence possibly with a trailing empty match):
+        assertArraysEqual(new String[] { "a", "b", "c" }, "a,b,c,".split(",", 0));
+        assertArraysEqual(new String[] { "a,b,c," }, "a,b,c,".split(",", 1));
+        assertArraysEqual(new String[] { "a", "b,c," }, "a,b,c,".split(",", 2));
+        assertArraysEqual(new String[] { "a", "b", "c," }, "a,b,c,".split(",", 3));
+        assertArraysEqual(new String[] { "a", "b", "c", "" }, "a,b,c,".split(",", Integer.MAX_VALUE));
+        assertArraysEqual(new String[] { "a", "b", "c", "" }, "a,b,c,".split(",", -1));
+    }
+    
+    private void assertArraysEqual(String[] expected, String[] actual) {
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(Integer.toString(i), expected[i], actual[i]);
+        }
+    }
+    
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
         notes = "Verifies the functionality of split(java.lang.CharSequence). Test uses not empty pattern.",
