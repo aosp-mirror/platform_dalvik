@@ -476,6 +476,24 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             cUnit.hasLoop = true;
         }
 
+        /* Fallthrough block not included in the trace */
+        if (!isUnconditionalBranch(lastInsn) && curBB->fallThrough == NULL) {
+            /*
+             * If the chaining cell is after an invoke or
+             * instruction that cannot change the control flow, request a hot
+             * chaining cell.
+             */
+            if (isInvoke || curBB->needFallThroughBranch) {
+                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_HOT);
+            } else {
+                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_NORMAL);
+            }
+            lastBB = lastBB->next;
+            lastBB->id = numBlocks++;
+            lastBB->startOffset = fallThroughOffset;
+            curBB->fallThrough = lastBB;
+        }
+
         /* Target block not included in the trace */
         if (curBB->taken == NULL &&
             (isInvoke || (targetOffset != curOffset))) {
@@ -515,24 +533,6 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             curBB->taken = newBB;
             lastBB->next = newBB;
             lastBB = newBB;
-        }
-
-        /* Fallthrough block not included in the trace */
-        if (!isUnconditionalBranch(lastInsn) && curBB->fallThrough == NULL) {
-            /*
-             * If the chaining cell is after an invoke or
-             * instruction that cannot change the control flow, request a hot
-             * chaining cell.
-             */
-            if (isInvoke || curBB->needFallThroughBranch) {
-                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_HOT);
-            } else {
-                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_NORMAL);
-            }
-            lastBB = lastBB->next;
-            lastBB->id = numBlocks++;
-            lastBB->startOffset = fallThroughOffset;
-            curBB->fallThrough = lastBB;
         }
     }
 
