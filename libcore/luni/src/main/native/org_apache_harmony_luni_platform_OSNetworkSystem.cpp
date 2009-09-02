@@ -156,8 +156,9 @@
 struct CachedFields {
     jfieldID fd_descriptor;
     jclass iaddr_class;
-    jmethodID iaddr_class_init;
     jmethodID iaddr_getbyaddress;
+    jclass i4addr_class;
+    jmethodID i4addr_class_init;
     jfieldID iaddr_ipaddress;
     jclass genericipmreq_class;
     jclass integer_class;
@@ -1401,23 +1402,27 @@ static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
     // initializing InetAddress
 
     jclass iaddrclass = env->FindClass("java/net/InetAddress");
-
     if (iaddrclass == NULL) {
         jniThrowException(env, "java/lang/ClassNotFoundException",
                 "java.net.InetAddress");
         return;
     }
-
     gCachedFields.iaddr_class = (jclass) env->NewGlobalRef(iaddrclass);
 
-    jmethodID iaddrclassinit = env->GetMethodID(iaddrclass, "<init>", "()V");
-
-    if (iaddrclassinit == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError", "InetAddress.<init>()");
+    jclass i4addrclass = env->FindClass("java/net/Inet4Address");
+    if (i4addrclass == NULL) {
+        jniThrowException(env, "java/lang/ClassNotFoundException",
+                "java.net.Inet4Address");
         return;
     }
+    gCachedFields.i4addr_class = (jclass) env->NewGlobalRef(i4addrclass);
 
-    gCachedFields.iaddr_class_init = iaddrclassinit;
+    jmethodID i4addrclassinit = env->GetMethodID(i4addrclass, "<init>", "([B)V");
+    if (i4addrclassinit == NULL) {
+        jniThrowException(env, "java/lang/NoSuchMethodError", "Inet4Address.<init>(byte[])");
+        return;
+    }
+    gCachedFields.i4addr_class_init = i4addrclassinit;
 
     jmethodID iaddrgetbyaddress = env->GetStaticMethodID(iaddrclass,
             "getByAddress", "([B)Ljava/net/InetAddress;");
@@ -1431,13 +1436,11 @@ static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
     gCachedFields.iaddr_getbyaddress = iaddrgetbyaddress;
 
     jfieldID iaddripaddress = env->GetFieldID(iaddrclass, "ipaddress", "[B");
-
     if (iaddripaddress == NULL) {
         jniThrowException(env, "java/lang/NoSuchFieldError",
                 "Can't find field InetAddress.ipaddress");
         return;
     }
-
     gCachedFields.iaddr_ipaddress = iaddripaddress;
 
     // get the GenericIPMreq class
@@ -3621,8 +3624,10 @@ static jobject osNetworkSystem_inheritedChannelImpl(JNIEnv* env, jobject obj) {
                     ntohs(local_addr.sin_port));
 
             // new and set remote addr
-            addr_object = env->NewObject(gCachedFields.iaddr_class,
-                    gCachedFields.iaddr_class_init);
+            addr_array = env->NewByteArray((jsize)4);
+            env->SetByteArrayRegion(addr_array, (jsize)0, (jsize)4, address);
+            addr_object = env->NewObject(gCachedFields.i4addr_class,
+                    gCachedFields.i4addr_class_init, addr_array);
             if (NULL == addr_object) {
                 goto clean;
             }
@@ -3634,13 +3639,6 @@ static jobject osNetworkSystem_inheritedChannelImpl(JNIEnv* env, jobject obj) {
             if (NULL == socketaddr_object) {
                 goto clean;
             }
-            addr_field = env->GetFieldID(socketaddr_class, "addr",
-                    "Ljava/net/InetAddress;");
-            env->SetObjectField(socketaddr_object, addr_field, addr_object);
-            addr_array = env->NewByteArray((jsize)4);
-            env->SetByteArrayRegion(addr_array, (jsize)0, (jsize)4, address);
-            env->SetObjectField(addr_object, gCachedFields.iaddr_ipaddress,
-                     addr_array);
 
             // localAddr
             socketaddr_class = env->FindClass("java/net/InetSocketAddress");
@@ -3650,9 +3648,11 @@ static jobject osNetworkSystem_inheritedChannelImpl(JNIEnv* env, jobject obj) {
                      socketaddr_field);
 
             localAddr_field = env->GetFieldID(channel_class, "localAddress",
-                     "Ljava/net/InetAddress;");
-            localAddr_object = env->NewObject(gCachedFields.iaddr_class,
-                     gCachedFields.iaddr_class_init);
+                     "Ljava/net/Inet4Address;");
+            addr_array = env->NewByteArray((jsize)4);
+            env->SetByteArrayRegion(addr_array, (jsize)0, (jsize)4, localAddr);
+            localAddr_object = env->NewObject(gCachedFields.i4addr_class,
+                     gCachedFields.i4addr_class_init, addr_array);
             jfieldID socketaddr_field = env->GetFieldID(channel_class,
                      "connectAddress", "Ljava/net/InetSocketAddress;");
             jobject socketaddr_object = env->GetObjectField(channel_object,
@@ -3662,10 +3662,6 @@ static jobject osNetworkSystem_inheritedChannelImpl(JNIEnv* env, jobject obj) {
             if (NULL == localAddr_object) {
                 goto clean;
             }
-            addr_array = env->NewByteArray((jsize)4);
-            env->SetByteArrayRegion(addr_array, (jsize)0, (jsize)4, localAddr);
-            env->SetObjectField(localAddr_object, gCachedFields.iaddr_ipaddress,
-                    addr_array);
 
 
             // set port
@@ -3720,8 +3716,10 @@ static jobject osNetworkSystem_inheritedChannelImpl(JNIEnv* env, jobject obj) {
 
             localAddr_field = env->GetFieldID(channel_class, "localAddress",
                     "Ljava/net/InetAddress;");
-            localAddr_object = env->NewObject(gCachedFields.iaddr_class,
-                    gCachedFields.iaddr_class_init);
+            memset(address, 0, 4);
+            env->SetByteArrayRegion(addr_array, (jsize)0, (jsize)4, address);
+            localAddr_object = env->NewObject(gCachedFields.i4addr_class,
+                    gCachedFields.i4addr_class_init, addr_array);
             if (NULL == localAddr_object) {
                  goto clean;
             }
@@ -3768,8 +3766,10 @@ static jobject osNetworkSystem_inheritedChannelImpl(JNIEnv* env, jobject obj) {
         env->SetIntField(channel_object, port_field, ntohs(local_addr.sin_port));
 
         // new and set remote addr
+        addr_array = env->NewByteArray((jsize)4);
+        env->SetByteArrayRegion(addr_array, (jsize)0, (jsize)4, address);
         addr_object = env->NewObject(gCachedFields.iaddr_class,
-                gCachedFields.iaddr_class_init);
+                gCachedFields.i4addr_class_init, addr_array);
         if (NULL == addr_object) {
             goto clean;
         }
@@ -3780,12 +3780,6 @@ static jobject osNetworkSystem_inheritedChannelImpl(JNIEnv* env, jobject obj) {
         if (NULL == socketaddr_object) {
             goto clean;
         }
-        addr_field = env->GetFieldID(socketaddr_class, "addr",
-                "Ljava/net/InetAddress;");
-        env->SetObjectField(socketaddr_object, addr_field, addr_object);
-        addr_array = env->NewByteArray((jsize)4);
-        env->SetByteArrayRegion(addr_array, (jsize)0, (jsize)4, address);
-        env->SetObjectField(addr_object, gCachedFields.iaddr_ipaddress, addr_array);
 
         // set bound
         if (0 != local_addr.sin_port) {
