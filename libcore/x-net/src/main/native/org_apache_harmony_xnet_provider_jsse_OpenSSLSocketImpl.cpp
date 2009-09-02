@@ -421,7 +421,7 @@ typedef struct app_data {
 static int sslCreateAppData(SSL* ssl) {
     APP_DATA* data = (APP_DATA*) malloc(sizeof(APP_DATA));
 
-    memset(data, sizeof(APP_DATA), 0);
+    memset(data, 0, sizeof(APP_DATA));
 
     data->aliveAndKicking = 1;
     data->waitingThreads = 0;
