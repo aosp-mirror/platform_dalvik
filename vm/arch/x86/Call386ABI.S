@@ -145,7 +145,7 @@ isSmall:
     movl     %eax,(%ecx)
     jmp      cleanUpAndExit
 checkShort:
-    cmpl     $6,%eax  /* U2? */
+    cmpl     $6,%ebx  /* U2? */
     jne      isSignedShort
     movzwl   %ax,%eax
     movl     %eax,(%ecx)
@@ -153,6 +153,7 @@ checkShort:
 isSignedShort:
     /* Must be S2 */
     movswl   %ax,%eax
+    movl     %eax,(%ecx)
     jmp      cleanUpAndExit
 isFP:
     /* Is Float? */
