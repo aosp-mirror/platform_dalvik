@@ -48,8 +48,7 @@ static void applyRedundantBranchElimination(CompilationUnit *cUnit)
                 /*
                  * Found real useful stuff between the branch and the target
                  */
-                if (!isPseudoOpCode(nextLIR->opCode) ||
-                    nextLIR->opCode == ARM_PSEUDO_ALIGN4)
+                if (!isPseudoOpCode(nextLIR->opCode))
                     break;
             }
         }

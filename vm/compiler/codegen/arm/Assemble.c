@@ -742,7 +742,12 @@ ArmEncodingMap EncodingMap[ARM_LAST] = {
 };
 
 
-#define PADDING_MOV_R0_R0               0x1C00
+/*
+ * The fake NOP of moving r0 to r0 actually will incur data stalls if r0 is
+ * not ready. Since r5 (rFP) is not updated often, it is less likely to
+ * generate unnecessary stall cycles.
+ */
+#define PADDING_MOV_R5_R5               0x1C2D
 
 /* Write the numbers in the literal pool to the codegen stream */
 static void installDataContent(CompilationUnit *cUnit)
@@ -777,7 +782,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             if ((lir->opCode == ARM_PSEUDO_ALIGN4) &&
                 /* 1 means padding is needed */
                 (lir->operands[0] == 1)) {
-                *bufferAddr++ = PADDING_MOV_R0_R0;
+                *bufferAddr++ = PADDING_MOV_R5_R5;
             }
             continue;
         }
