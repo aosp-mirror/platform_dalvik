@@ -998,7 +998,7 @@ static void* freeGuardedCopy(void* dataBuf)
     void* originalPtr = (void*) pExtra->originalPtr;
     size_t len = pExtra->originalLen;
 
-    memset(dataBuf, len, 0xdd);
+    memset(dataBuf, 0xdd, len);
     free(fullBuf);
     return originalPtr;
 }
@@ -2607,4 +2607,3 @@ void dvmUseCheckedJniVm(JavaVMExt* pVm)
     pVm->baseFuncTable = pVm->funcTable;
     pVm->funcTable = &gCheckInvokeInterface;
 }
-
