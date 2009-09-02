@@ -479,10 +479,6 @@ public class InetAddressTest extends junit.framework.TestCase {
         }
     }
 
-    static final int TEST_IP_HASHCODE = 2130706433;
-    static final int TEST_IP6_HASHCODE = -1022939537;
-    static final int TEST_IP6_LO_HASHCODE = 1353309698;
-
     /**
      * @tests java.net.InetAddress#hashCode()
      */
@@ -492,28 +488,25 @@ public class InetAddressTest extends junit.framework.TestCase {
         method = "hashCode",
         args = {}
     )
-    void assertHashCode(String literal, int expectedHashCode) {
+    int getHashCode(String literal) {
         InetAddress host = null;
         try {
             host = InetAddress.getByName(literal);
         } catch(UnknownHostException e) {
             fail("Exception during hashCode test : " + e.getMessage());
         }
-        int hashCode = host.hashCode();
-        assertEquals("incorrect hashCode for " + host, expectedHashCode,
-                hashCode);
+        return host.hashCode();
     }
 
     public void test_hashCode() {
-        // Test for method int java.net.InetAddress.hashCode()
-        // Create InetAddresses from string literals instead of from hostnames
-        // because we are only testing hashCode, not getByName. That way the
-        // test does not depend on name resolution and we can test many
-        // different addresses, not just localhost.
-        assertHashCode(Support_Configuration.InetTestIP, TEST_IP_HASHCODE);
-        assertHashCode(Support_Configuration.InetTestIP6, TEST_IP6_HASHCODE);
-        assertHashCode(Support_Configuration.InetTestIP6LO,
-                TEST_IP6_LO_HASHCODE);
+        int hashCode = getHashCode(Support_Configuration.InetTestIP);
+        int ip6HashCode = getHashCode(Support_Configuration.InetTestIP6);
+        int ip6LOHashCode = getHashCode(Support_Configuration.InetTestIP6LO);
+        assertFalse("Hash collision", hashCode == ip6HashCode);
+        assertFalse("Hash collision", ip6HashCode == ip6LOHashCode);
+        assertFalse("Hash collision", hashCode == ip6LOHashCode);
+        assertFalse("Hash collision", ip6LOHashCode == 0);
+        assertFalse("Hash collision", ip6LOHashCode == 1);
     }
 
     /**
