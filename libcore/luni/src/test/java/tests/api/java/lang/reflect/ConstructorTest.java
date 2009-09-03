@@ -104,7 +104,11 @@ public class ConstructorTest extends junit.framework.TestCase {
         public GenericConstructorTestHelper(T t, S s) {}
         public GenericConstructorTestHelper() throws E{}
     }
- 
+    
+    static class NoPublicConstructorTestHelper {
+        // This class has no public constructor.
+    }
+    
 //    Used to test synthetic constructor.
 //    
 //    static class Outer {
@@ -479,7 +483,6 @@ public class ConstructorTest extends junit.framework.TestCase {
         } catch (Exception e) {
             fail("Exception during getGenericExceptionTypes test:" + e.toString());
         }
-        System.out.println(Arrays.toString(types));
         assertEquals("Wrong number of exception types returned", 1, types.length);
        
         
@@ -555,7 +558,35 @@ public class ConstructorTest extends junit.framework.TestCase {
                         .equals(
                                 "public tests.api.java.lang.reflect.ConstructorTest$ConstructorTestHelper(java.lang.Object)"));
     }
-
+    
+    /**
+     * @tests java.lang.reflect.Constructor#getConstructor((Class[]) null)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getConstructor",
+        args = {}
+    )
+    public void test_getConstructor() throws Exception {
+        // Passing new Class[0] should be equivalent to (Class[]) null.
+        Class<ConstructorTestHelper> c2 = ConstructorTestHelper.class;
+        assertEquals(c2.getConstructor(new Class[0]), c2.getConstructor((Class[]) null));
+        assertEquals(c2.getDeclaredConstructor(new Class[0]),
+                     c2.getDeclaredConstructor((Class[]) null));
+        
+        // We can get a non-public constructor via getDeclaredConstructor...
+        Class<NoPublicConstructorTestHelper> c1 = NoPublicConstructorTestHelper.class;
+        c1.getDeclaredConstructor((Class[]) null);
+        // ...but not with getConstructor (which only returns public constructors).
+        try {
+            c1.getConstructor((Class[]) null);
+            fail("Should throw NoSuchMethodException");
+        } catch (NoSuchMethodException ex) {
+            // Expected.
+        }
+    }
+    
     /**
      * Sets up the fixture, for example, open a network connection. This method
      * is called before a test is executed.
@@ -570,4 +601,3 @@ public class ConstructorTest extends junit.framework.TestCase {
     protected void tearDown() {
     }
 }
-
