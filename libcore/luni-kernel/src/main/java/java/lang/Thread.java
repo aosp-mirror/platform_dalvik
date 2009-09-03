@@ -922,9 +922,7 @@ public class Thread implements Runnable {
      * @since Android 1.0
      */
     public final boolean isAlive() {
-        Thread.State state = getState();
-
-        return (state != Thread.State.TERMINATED && state != Thread.State.NEW);
+        return (vmThread != null);
     }
 
     /**
