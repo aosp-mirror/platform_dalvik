@@ -54,6 +54,8 @@ public class AllTests
         suite.addTest(tests.xml.AllTests.suite());
         suite.addTest(tests.xnet.AllTests.suite());
 
+        suite.addTest(org.apache.harmony.luni.platform.AllTests.suite());
+        
         return suite;
     }
 }
