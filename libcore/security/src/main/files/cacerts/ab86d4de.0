@@ -1,0 +1,104 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 946062766 (0x3863c5ae)
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: O=Entrust.net, OU=www.entrust.net/CPS_2048 incorp. by ref. (limits liab.), OU=(c) 1999 Entrust.net Limited, CN=Entrust.net Certification Authority (2048)
+        Validity
+            Not Before: Aug 25 18:14:26 2008 GMT
+            Not After : Aug 25 18:44:26 2018 GMT
+        Subject: C=US, O=Entrust, Inc., OU=AND ADDITIONAL TERMS GOVERNING USE AND RELIANCE, OU=CPS CONTAINS IMPORTANT LIMITATIONS OF WARRANTIES AND LIABILITY, OU=www.entrust.net/CPS is incorporated by reference, OU=(c) 2008 Entrust, Inc., CN=Entrust Certification Authority - L1B
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (2048 bit)
+                Modulus (2048 bit):
+                    00:dc:21:f5:68:f9:7a:ce:87:f2:78:df:d8:3b:4d:
+                    06:7d:c6:24:e4:a9:cd:9d:01:56:e4:f6:71:17:aa:
+                    7f:75:22:18:e4:74:6d:1b:3e:56:d5:b1:a6:1e:dd:
+                    59:26:53:ca:06:e6:ba:0b:6f:37:bb:a8:c6:9c:15:
+                    3b:06:1b:87:0c:c2:1a:4d:d3:81:ae:db:50:65:a5:
+                    3a:64:4f:30:34:9a:2b:a9:1f:fd:2b:d1:38:71:19:
+                    68:f2:8e:eb:7b:c9:40:3c:48:c4:19:b1:b7:10:25:
+                    ef:44:a7:e6:77:9b:7d:22:9a:de:d8:5e:d9:c3:ce:
+                    c9:71:22:bb:ae:ef:05:d6:f2:17:e7:56:78:e1:53:
+                    05:4a:26:73:b8:c7:49:67:93:23:0f:56:b2:8f:dd:
+                    c9:59:05:e5:63:15:b4:87:7e:40:46:e9:b5:00:7b:
+                    03:b4:0d:e4:96:67:2c:de:1b:59:0b:1a:1f:b8:63:
+                    44:ae:c1:d7:44:87:c4:91:59:9c:00:43:6d:c6:df:
+                    0a:b0:b1:04:cd:fe:be:30:5e:3a:25:72:dd:a2:3e:
+                    ed:46:3a:c7:a4:5c:5c:e4:25:f2:13:07:e8:ae:da:
+                    9b:19:9b:a2:d9:60:9d:ce:90:47:6a:61:7b:40:e8:
+                    14:c2:fe:2f:84:5a:66:17:c0:97:d3:49:38:de:63:
+                    02:9f
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            Authority Information Access: 
+                OCSP - URI:http://ocsp.entrust.net
+
+            X509v3 CRL Distribution Points: 
+                URI:http://crl.entrust.net/2048ca.crl
+
+            X509v3 Certificate Policies: 
+                Policy: X509v3 Any Policy
+                  CPS: http://www.entrust.net/CPS
+
+            X509v3 Subject Key Identifier: 
+                F5:F2:96:88:7D:0D:F3:2A:F9:4E:E7:34:A0:BD:46:7E:13:D6:16:C8
+            X509v3 Authority Key Identifier: 
+                keyid:55:E4:81:D1:11:80:BE:D8:89:B9:08:A3:31:F9:A1:24:09:16:B9:70
+
+            1.2.840.113533.7.65.0: 
+                0
+..V7.1....
+    Signature Algorithm: sha1WithRSAEncryption
+        0b:25:3c:58:fa:8e:dc:a2:42:3b:76:71:6e:6c:d4:4f:2b:b9:
+        53:5c:b2:58:b9:b1:dc:6f:1a:e4:e3:c4:50:f2:41:82:ba:f4:
+        7d:c7:c1:f9:fa:8c:53:bf:b9:62:b7:49:e3:1d:0a:fc:1f:d6:
+        c4:76:6a:93:cb:77:1e:2c:7f:d0:3f:16:63:4c:72:4c:67:60:
+        0f:f8:80:d6:a7:9a:ca:a2:33:91:0f:44:b2:66:3d:8e:68:0c:
+        40:85:12:37:91:b9:82:77:34:59:2d:5c:df:82:6e:2c:b6:7a:
+        d2:04:90:67:68:4b:70:fc:2d:b8:ff:90:64:6f:7e:91:f7:d1:
+        47:33:f3:5b:b8:58:2e:21:d8:75:60:1b:13:cc:f8:b2:a8:fa:
+        6a:a9:2a:5a:4f:45:85:40:b4:dd:34:05:b7:70:ca:01:ef:e1:
+        81:e7:11:50:db:3e:e2:d7:10:2e:6a:15:7f:b7:d4:a3:62:b2:
+        89:69:61:57:c6:7f:8e:9e:d4:24:7a:f3:a1:43:5f:a0:7a:89:
+        dc:59:cd:7d:d7:75:a7:bc:53:d5:47:35:c6:31:30:20:9f:9b:
+        ba:b5:83:e6:89:55:01:4d:91:3b:d6:89:35:87:3c:83:6b:7a:
+        29:82:d4:4b:d4:e6:16:74:b0:01:10:ab:69:06:14:37:7b:f7:
+        66:30:3a:c5
+-----BEGIN CERTIFICATE-----
+MIIFkTCCBHmgAwIBAgIEOGPFrjANBgkqhkiG9w0BAQUFADCBtDEUMBIGA1UEChML
+RW50cnVzdC5uZXQxQDA+BgNVBAsUN3d3dy5lbnRydXN0Lm5ldC9DUFNfMjA0OCBp
+bmNvcnAuIGJ5IHJlZi4gKGxpbWl0cyBsaWFiLikxJTAjBgNVBAsTHChjKSAxOTk5
+IEVudHJ1c3QubmV0IExpbWl0ZWQxMzAxBgNVBAMTKkVudHJ1c3QubmV0IENlcnRp
+ZmljYXRpb24gQXV0aG9yaXR5ICgyMDQ4KTAeFw0wODA4MjUxODE0MjZaFw0xODA4
+MjUxODQ0MjZaMIIBNDELMAkGA1UEBhMCVVMxFjAUBgNVBAoTDUVudHJ1c3QsIElu
+Yy4xODA2BgNVBAsTL0FORCBBRERJVElPTkFMIFRFUk1TIEdPVkVSTklORyBVU0Ug
+QU5EIFJFTElBTkNFMUcwRQYDVQQLEz5DUFMgQ09OVEFJTlMgSU1QT1JUQU5UIExJ
+TUlUQVRJT05TIE9GIFdBUlJBTlRJRVMgQU5EIExJQUJJTElUWTE5MDcGA1UECxMw
+d3d3LmVudHJ1c3QubmV0L0NQUyBpcyBpbmNvcnBvcmF0ZWQgYnkgcmVmZXJlbmNl
+MR8wHQYDVQQLExYoYykgMjAwOCBFbnRydXN0LCBJbmMuMS4wLAYDVQQDEyVFbnRy
+dXN0IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gTDFCMIIBIjANBgkqhkiG9w0B
+AQEFAAOCAQ8AMIIBCgKCAQEA3CH1aPl6zofyeN/YO00GfcYk5KnNnQFW5PZxF6p/
+dSIY5HRtGz5W1bGmHt1ZJlPKBua6C283u6jGnBU7BhuHDMIaTdOBrttQZaU6ZE8w
+NJorqR/9K9E4cRlo8o7re8lAPEjEGbG3ECXvRKfmd5t9Ipre2F7Zw87JcSK7ru8F
+1vIX51Z44VMFSiZzuMdJZ5MjD1ayj93JWQXlYxW0h35ARum1AHsDtA3klmcs3htZ
+CxofuGNErsHXRIfEkVmcAENtxt8KsLEEzf6+MF46JXLdoj7tRjrHpFxc5CXyEwfo
+rtqbGZui2WCdzpBHamF7QOgUwv4vhFpmF8CX00k43mMCnwIDAQABo4IBJjCCASIw
+DgYDVR0PAQH/BAQDAgEGMA8GA1UdEwEB/wQFMAMBAf8wMwYIKwYBBQUHAQEEJzAl
+MCMGCCsGAQUFBzABhhdodHRwOi8vb2NzcC5lbnRydXN0Lm5ldDAyBgNVHR8EKzAp
+MCegJaAjhiFodHRwOi8vY3JsLmVudHJ1c3QubmV0LzIwNDhjYS5jcmwwOwYDVR0g
+BDQwMjAwBgRVHSAAMCgwJgYIKwYBBQUHAgEWGmh0dHA6Ly93d3cuZW50cnVzdC5u
+ZXQvQ1BTMB0GA1UdDgQWBBT18paIfQ3zKvlO5zSgvUZ+E9YWyDAfBgNVHSMEGDAW
+gBRV5IHREYC+2Im5CKMx+aEkCRa5cDAZBgkqhkiG9n0HQQAEDDAKGwRWNy4xAwIA
+gTANBgkqhkiG9w0BAQUFAAOCAQEACyU8WPqO3KJCO3ZxbmzUTyu5U1yyWLmx3G8a
+5OPEUPJBgrr0fcfB+fqMU7+5YrdJ4x0K/B/WxHZqk8t3Hix/0D8WY0xyTGdgD/iA
+1qeayqIzkQ9EsmY9jmgMQIUSN5G5gnc0WS1c34JuLLZ60gSQZ2hLcPwtuP+QZG9+
+kffRRzPzW7hYLiHYdWAbE8z4sqj6aqkqWk9FhUC03TQFt3DKAe/hgecRUNs+4tcQ
+LmoVf7fUo2KyiWlhV8Z/jp7UJHrzoUNfoHqJ3FnNfdd1p7xT1Uc1xjEwIJ+burWD
+5olVAU2RO9aJNYc8g2t6KYLUS9TmFnSwARCraQYUN3v3ZjA6xQ==
+-----END CERTIFICATE-----
