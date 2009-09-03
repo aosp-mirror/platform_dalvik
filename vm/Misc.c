@@ -387,6 +387,9 @@ char* dvmDotToSlash(const char* str)
     char* newStr = strdup(str);
     char* cp = newStr;
 
+    if (newStr == NULL)
+        return NULL;
+
     while (*cp != '\0') {
         if (*cp == '/') {
             assert(false);
@@ -417,6 +420,9 @@ char* dvmDescriptorToDot(const char* str)
     }
 
     newStr = malloc(at + 1); /* Add one for the '\0'. */
+    if (newStr == NULL)
+        return NULL;
+
     newStr[at] = '\0';
 
     while (at > 0) {
