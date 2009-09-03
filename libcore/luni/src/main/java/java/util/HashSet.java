@@ -185,15 +185,11 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
-        stream.writeInt(backingMap.elementData.length);
-        stream.writeFloat(backingMap.loadFactor);
-        stream.writeInt(backingMap.elementCount);
-        for (int i = backingMap.elementData.length; --i >= 0;) {
-            HashMap.Entry<E, HashSet<E>> entry = backingMap.elementData[i];
-            while (entry != null) {
-                stream.writeObject(entry.key);
-                entry = entry.next;
-            }
+        stream.writeInt(backingMap.table.length);
+        stream.writeFloat(HashMap.DEFAULT_LOAD_FACTOR);
+        stream.writeInt(size());
+        for (E e : this) {
+            stream.writeObject(e);
         }
     }
 

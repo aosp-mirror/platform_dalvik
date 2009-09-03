@@ -20,17 +20,9 @@ package tests.api.java.util;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestTargetClass;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 import tests.support.Support_MapTest2;
 import tests.support.Support_UnmodifiableCollectionTest;
@@ -39,7 +31,7 @@ import tests.support.Support_UnmodifiableCollectionTest;
 public class HashMapTest extends junit.framework.TestCase {
     class MockMap extends AbstractMap {
         public Set entrySet() {
-            return null;
+            return Collections.EMPTY_SET;
         }
         public int size(){
             return 0;
@@ -151,14 +143,10 @@ public class HashMapTest extends junit.framework.TestCase {
         for (int counter = 0; counter < hmSize; counter++)
             assertTrue("Failed to construct correct HashMap", hm
                     .get(objArray2[counter]) == hm2.get(objArray2[counter]));
-        
-        try {
-            Map mockMap = new MockMap();
-            hm = new HashMap(mockMap);
-            fail("Should throw NullPointerException");
-        } catch (NullPointerException e) {
-            //empty
-        }
+
+        Map mockMap = new MockMap();
+        hm = new HashMap(mockMap);
+        assertEquals(hm, mockMap);
     }
 
     /**
@@ -293,6 +281,40 @@ public class HashMapTest extends junit.framework.TestCase {
                     .getKey())
                     && hm.containsValue(m.getValue()));
         }
+    }
+
+    /**
+     * @tests java.util.HashMap#entrySet()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "entrySet",
+        args = {}
+    )
+    public void test_entrySetEquals() {
+        Set s1 = hm.entrySet();
+        Set s2 = new HashMap(hm).entrySet();
+        assertEquals(s1, s2);
+    }
+
+    /**
+     * @tests java.util.HashMap#entrySet()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "entrySet",
+        args = {}
+    )
+    public void test_removeFromViews() {
+        hm.put("A", null);
+        hm.put("B", null);
+        assertTrue(hm.keySet().remove("A"));
+
+        Map<String, String> m2 = new HashMap<String, String>();
+        m2.put("B", null);
+        assertTrue(hm.entrySet().remove(m2.entrySet().iterator().next()));
     }
 
     /**
@@ -479,7 +501,39 @@ public class HashMapTest extends junit.framework.TestCase {
         } catch (NullPointerException e) {
             // expected.
         }
-    } 
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Checks putAll that causes map to resize",
+            method = "putAll",
+            args = {java.util.Map.class}
+    )
+    public void test_putAllLjava_util_Map_Resize() {
+        Random rnd = new Random(666);
+
+        Map<Integer,Integer> m1 = new HashMap<Integer, Integer>();
+        int MID = 10000;
+        for (int i = 0; i < MID; i++) {
+            Integer j = rnd.nextInt();
+            m1.put(j, j);
+        }
+
+        Map<Integer,Integer> m2 = new HashMap<Integer, Integer>();
+        int HI = 30000;
+        for (int i = MID; i < HI; i++) {
+            Integer j = rnd.nextInt();
+            m2.put(j, j);
+        }
+        
+        m1.putAll(m2);
+
+        rnd = new Random(666);
+        for (int i = 0; i < HI; i++) {
+            Integer j = rnd.nextInt();
+            assertEquals(j, m1.get(j));
+        }
+    }
 
     /**
      * @tests java.util.HashMap#remove(java.lang.Object)
