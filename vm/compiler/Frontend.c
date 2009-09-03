@@ -445,34 +445,49 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                        kInstrInvoke)) == 0) ||
             (lastInsn->dalvikInsn.opCode == OP_INVOKE_DIRECT_EMPTY);
 
-
         if (curBB->taken == NULL &&
             curBB->fallThrough == NULL &&
             flags == (kInstrCanBranch | kInstrCanContinue) &&
             fallThroughOffset == startBB->startOffset) {
-            BasicBlock *newBB;
+            BasicBlock *loopBranch = curBB;
+            BasicBlock *exitBB;
+            BasicBlock *exitChainingCell;
 
             if (cUnit.printMe) {
                 LOGD("Natural loop detected!");
             }
-            newBB = dvmCompilerNewBB(EXIT_BLOCK);
-            newBB->startOffset = targetOffset;
-            newBB->id = numBlocks++;
-            newBB->needFallThroughBranch = true;
+            exitBB = dvmCompilerNewBB(EXIT_BLOCK);
+            lastBB->next = exitBB;
+            lastBB = exitBB;
 
-            lastBB->next = newBB;
-            lastBB = newBB;
-            curBB->taken = newBB;
-            curBB->fallThrough = startBB->next;
+            exitBB->startOffset = targetOffset;
+            exitBB->id = numBlocks++;
+            exitBB->needFallThroughBranch = true;
 
-            /* Create the chaining cell */
-            newBB = dvmCompilerNewBB(CHAINING_CELL_NORMAL);
-            newBB->startOffset = targetOffset;
-            newBB->id = numBlocks++;
+            loopBranch->taken = exitBB;
+#if !defined(WITH_SELF_VERIFICATION)
+            loopBranch->fallThrough = startBB->next;
+#else
+            BasicBlock *backwardCell =
+                dvmCompilerNewBB(CHAINING_CELL_BACKWARD_BRANCH);
+            lastBB->next = backwardCell;
+            lastBB = backwardCell;
 
-            lastBB->fallThrough = newBB;
-            lastBB->next = newBB;
-            lastBB = newBB;
+            backwardCell->startOffset = startBB->startOffset;
+            backwardCell->id = numBlocks++;
+            loopBranch->fallThrough = backwardCell;
+#endif
+
+            /* Create the chaining cell as the fallthrough of the exit block */
+            exitChainingCell = dvmCompilerNewBB(CHAINING_CELL_NORMAL);
+            lastBB->next = exitChainingCell;
+            lastBB = exitChainingCell;
+
+            exitChainingCell->startOffset = targetOffset;
+            exitChainingCell->id = numBlocks++;
+
+            exitBB->fallThrough = exitChainingCell;
+
             cUnit.hasLoop = true;
         }
 

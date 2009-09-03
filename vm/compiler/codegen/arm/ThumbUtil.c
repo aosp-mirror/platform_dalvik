@@ -62,6 +62,10 @@ static inline ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
                                      ArmConditionCode cond, int reg,
                                      int checkValue, int dOffset,
                                      ArmLIR *pcrLabel);
+static inline ArmLIR *genRegRegCheck(CompilationUnit *cUnit,
+                                     ArmConditionCode cond,
+                                     int reg1, int reg2, int dOffset,
+                                     ArmLIR *pcrLabel);
 ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc);
 static ArmLIR *loadMultiple(CompilationUnit *cUnit, int rBase, int rMask);
 static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask);
@@ -443,7 +447,11 @@ static inline ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
                                          int checkValue, int dOffset,
                                          ArmLIR *pcrLabel)
 {
-    assert((checkValue & 0xff) == checkValue);
+    if ((checkValue & 0xff) != checkValue) {
+        /* NOTE: direct use of hot temp r7 here. Revisit. */
+        loadConstant(cUnit, r7, checkValue);
+        return genRegRegCheck(cUnit, cond, reg, r7, dOffset, pcrLabel);
+    }
     newLIR2(cUnit, THUMB_CMP_RI8, reg, checkValue);
     ArmLIR *branch = newLIR2(cUnit, THUMB_B_COND, 0, cond);
     return genCheckCommon(cUnit, dOffset, branch, pcrLabel);

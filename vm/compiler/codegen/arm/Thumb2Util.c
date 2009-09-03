@@ -639,10 +639,11 @@ static ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
     ArmLIR *branch;
     int modImm;
     /*
-     * TODO: re-enable usage of THUMB2_CBZ & THUMB2_CBNZ once assembler is enhanced
-     * to allow us to replace code patterns when instructions don't reach.  Currently,
-     * CB[N]Z is causing too many assembler aborts.  What we want to do is emit
-     * the short forms, and then replace them with longer versions when needed.
+     * TODO: re-enable usage of THUMB2_CBZ & THUMB2_CBNZ once assembler is
+     * enhanced to allow us to replace code patterns when instructions don't
+     * reach.  Currently, CB[N]Z is causing too many assembler aborts.
+     * What we want to do is emit the short forms, and then replace them with
+     * longer versions when needed.
      */
     if (0 && (LOWREG(reg)) && (checkValue == 0) &&
        ((cond == ARM_COND_EQ) || (cond == ARM_COND_NE))) {

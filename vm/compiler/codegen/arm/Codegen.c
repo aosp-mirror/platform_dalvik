@@ -654,10 +654,10 @@ static inline ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
  * Perform a "reg cmp reg" operation and jump to the PCR region if condition
  * satisfies.
  */
-static inline ArmLIR *insertRegRegCheck(CompilationUnit *cUnit,
-                                           ArmConditionCode cond,
-                                           int reg1, int reg2, int dOffset,
-                                           ArmLIR *pcrLabel)
+static inline ArmLIR *genRegRegCheck(CompilationUnit *cUnit,
+                                     ArmConditionCode cond,
+                                     int reg1, int reg2, int dOffset,
+                                     ArmLIR *pcrLabel)
 {
     ArmLIR *res;
     res = opRegReg(cUnit, OP_CMP, reg1, reg2);
@@ -696,7 +696,7 @@ static ArmLIR *genZeroCheck(CompilationUnit *cUnit, int mReg,
 static ArmLIR *genBoundsCheck(CompilationUnit *cUnit, int rIndex,
                                   int rBound, int dOffset, ArmLIR *pcrLabel)
 {
-    return insertRegRegCheck(cUnit, ARM_COND_CS, rIndex, rBound, dOffset,
+    return genRegRegCheck(cUnit, ARM_COND_CS, rIndex, rBound, dOffset,
                             pcrLabel);
 }
 
@@ -3489,8 +3489,8 @@ static void genHoistedChecksForCountUpLoop(CompilationUnit *cUnit, MIR *mir)
         opRegImm(cUnit, OP_ADD, regIdxEnd, delta, regIdxEnd);
     }
     /* Punt if "regIdxEnd < len(Array)" is false */
-    insertRegRegCheck(cUnit, ARM_COND_GE, regIdxEnd, regLength, 0,
-                      (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
+    genRegRegCheck(cUnit, ARM_COND_GE, regIdxEnd, regLength, 0,
+                   (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
 }
 
 /*
@@ -3525,8 +3525,8 @@ static void genHoistedChecksForCountDownLoop(CompilationUnit *cUnit, MIR *mir)
     }
 
     /* Punt if "regIdxInit < len(Array)" is false */
-    insertRegRegCheck(cUnit, ARM_COND_GE, regIdxInit, regLength, 0,
-                      (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
+    genRegRegCheck(cUnit, ARM_COND_GE, regIdxInit, regLength, 0,
+                   (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
 }
 
 /*
