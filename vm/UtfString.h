@@ -13,12 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * UTF-8 and Unicode string manipulation functions, plus convenience
  * functions for working with java/lang/String.
  */
 #ifndef _DALVIK_STRING
 #define _DALVIK_STRING
+
+/*
+ * (This is private to UtfString.c, but we cheat a bit and also use it
+ * for InlineNative.c.  Not really worth creating a separate header.)
+ *
+ * We can avoid poking around in gDvm by hard-coding the expected values of
+ * the String field offsets.  This will be annoying if String is in flux
+ * or the VM field layout is changing, so we use defines here to make it
+ * easy to switch back to the gDvm version.
+ *
+ * The values are checked for correctness during startup.
+ */
+//#define USE_GLOBAL_STRING_DEFS
+#ifdef USE_GLOBAL_STRING_DEFS
+# define STRING_FIELDOFF_VALUE      gDvm.offJavaLangString_value
+# define STRING_FIELDOFF_OFFSET     gDvm.offJavaLangString_offset
+# define STRING_FIELDOFF_COUNT      gDvm.offJavaLangString_count
+# define STRING_FIELDOFF_HASHCODE   gDvm.offJavaLangString_hashCode
+#else
+# define STRING_FIELDOFF_VALUE      8
+# define STRING_FIELDOFF_HASHCODE   12
+# define STRING_FIELDOFF_OFFSET     16
+# define STRING_FIELDOFF_COUNT      20
+#endif
 
 /*
  * Hash function for modified UTF-8 strings.

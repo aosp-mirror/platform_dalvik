@@ -129,14 +129,14 @@ static bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
         return false;
 
     //LOGI("String.charAt this=0x%08x index=%d\n", arg0, arg1);
-    count = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
+    count = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
     if ((s4) arg1 < 0 || (s4) arg1 >= count) {
         dvmThrowException("Ljava/lang/StringIndexOutOfBoundsException;", NULL);
         return false;
     } else {
-        offset = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_offset);
+        offset = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_OFFSET);
         chars = (ArrayObject*)
-            dvmGetFieldObject((Object*) arg0, gDvm.offJavaLangString_value);
+            dvmGetFieldObject((Object*) arg0, STRING_FIELDOFF_VALUE);
 
         pResult->i = ((const u2*) chars->contents)[arg1 + offset];
         return true;
@@ -157,17 +157,17 @@ static void badMatch(StringObject* thisStrObj, StringObject* compStrObj,
     int thisOffset, compOffset, thisCount, compCount;
 
     thisCount =
-        dvmGetFieldInt((Object*) thisStrObj, gDvm.offJavaLangString_count);
+        dvmGetFieldInt((Object*) thisStrObj, STRING_FIELDOFF_COUNT);
     compCount =
-        dvmGetFieldInt((Object*) compStrObj, gDvm.offJavaLangString_count);
+        dvmGetFieldInt((Object*) compStrObj, STRING_FIELDOFF_COUNT);
     thisOffset =
-        dvmGetFieldInt((Object*) thisStrObj, gDvm.offJavaLangString_offset);
+        dvmGetFieldInt((Object*) thisStrObj, STRING_FIELDOFF_OFFSET);
     compOffset =
-        dvmGetFieldInt((Object*) compStrObj, gDvm.offJavaLangString_offset);
+        dvmGetFieldInt((Object*) compStrObj, STRING_FIELDOFF_OFFSET);
     thisArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) thisStrObj, gDvm.offJavaLangString_value);
+        dvmGetFieldObject((Object*) thisStrObj, STRING_FIELDOFF_VALUE);
     compArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) compStrObj, gDvm.offJavaLangString_value);
+        dvmGetFieldObject((Object*) compStrObj, STRING_FIELDOFF_VALUE);
 
     thisStr = dvmCreateCstrFromString(thisStrObj);
     compStr = dvmCreateCstrFromString(compStrObj);
@@ -221,16 +221,16 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     const u2* compChars;
     int i, minCount, countDiff;
 
-    thisCount = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
-    compCount = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_count);
+    thisCount = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
+    compCount = dvmGetFieldInt((Object*) arg1, STRING_FIELDOFF_COUNT);
     countDiff = thisCount - compCount;
     minCount = (countDiff < 0) ? thisCount : compCount;
-    thisOffset = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_offset);
-    compOffset = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_offset);
+    thisOffset = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_OFFSET);
+    compOffset = dvmGetFieldInt((Object*) arg1, STRING_FIELDOFF_OFFSET);
     thisArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) arg0, gDvm.offJavaLangString_value);
+        dvmGetFieldObject((Object*) arg0, STRING_FIELDOFF_VALUE);
     compArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) arg1, gDvm.offJavaLangString_value);
+        dvmGetFieldObject((Object*) arg1, STRING_FIELDOFF_VALUE);
     thisChars = ((const u2*) thisArray->contents) + thisOffset;
     compChars = ((const u2*) compArray->contents) + compOffset;
 
@@ -321,19 +321,19 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     int i;
 
     /* quick length check */
-    thisCount = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
-    compCount = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_count);
+    thisCount = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
+    compCount = dvmGetFieldInt((Object*) arg1, STRING_FIELDOFF_COUNT);
     if (thisCount != compCount) {
         pResult->i = false;
         return true;
     }
 
-    thisOffset = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_offset);
-    compOffset = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_offset);
+    thisOffset = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_OFFSET);
+    compOffset = dvmGetFieldInt((Object*) arg1, STRING_FIELDOFF_OFFSET);
     thisArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) arg0, gDvm.offJavaLangString_value);
+        dvmGetFieldObject((Object*) arg0, STRING_FIELDOFF_VALUE);
     compArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) arg1, gDvm.offJavaLangString_value);
+        dvmGetFieldObject((Object*) arg1, STRING_FIELDOFF_VALUE);
     thisChars = ((const u2*) thisArray->contents) + thisOffset;
     compChars = ((const u2*) compArray->contents) + compOffset;
 
@@ -383,7 +383,90 @@ static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     if (!dvmValidateObject((Object*) arg0))
         return false;
 
-    pResult->i = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
+    pResult->i = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
+    return true;
+}
+
+/*
+ * Determine the index of the first character matching "ch".  The string
+ * to search is described by "chars", "offset", and "count".
+ *
+ * The "ch" parameter is allowed to be > 0xffff.  Our Java-language
+ * implementation does not currently handle this, so neither do we.
+ *
+ * The "start" parameter must be clamped to [0..count].
+ *
+ * Returns -1 if no match is found.
+ */
+static inline int indexOfCommon(Object* strObj, int ch, int start)
+{
+    //if ((ch & 0xffff) != ch)        /* 32-bit code point */
+    //    return -1;
+
+    /* pull out the basic elements */
+    ArrayObject* charArray =
+        (ArrayObject*) dvmGetFieldObject(strObj, STRING_FIELDOFF_VALUE);
+    const u2* chars = (const u2*) charArray->contents;
+    int offset = dvmGetFieldInt(strObj, STRING_FIELDOFF_OFFSET);
+    int count = dvmGetFieldInt(strObj, STRING_FIELDOFF_COUNT);
+    //LOGI("String.indexOf(0x%08x, 0x%04x, %d) off=%d count=%d\n",
+    //    (u4) strObj, ch, start, offset, count);
+
+    /* factor out the offset */
+    chars += offset;
+
+    if (start < 0)
+        start = 0;
+
+#if 0
+    /* 16-bit loop, simple */
+    while (start < count) {
+        if (chars[start] == ch)
+            return start;
+        start++;
+    }
+#else
+    /* 16-bit loop, slightly better on ARM */
+    const u2* ptr = chars + start;
+    const u2* endPtr = chars + count;
+    while (ptr < endPtr) {
+        if (*ptr++ == ch)
+            return (ptr-1) - chars;
+    }
+#endif
+
+    return -1;
+}
+
+/*
+ * public int indexOf(int c)
+ *
+ * Scan forward through the string for a matching character.
+ */
+static bool javaLangString_indexOf_I(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    /* null reference check on "this" */
+    if (!dvmValidateObject((Object*) arg0))
+        return false;
+
+    pResult->i = indexOfCommon((Object*) arg0, arg1, 0);
+    return true;
+}
+
+/*
+ * public int indexOf(int c, int start)
+ *
+ * Scan forward through the string for a matching character.
+ */
+static bool javaLangString_indexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    /* null reference check on "this" */
+    if (!dvmValidateObject((Object*) arg0))
+        return false;
+
+    pResult->i = indexOfCommon((Object*) arg0, arg1, arg2);
     return true;
 }
 
@@ -564,6 +647,10 @@ const InlineOperation gDvmInlineOpsTable[] = {
         "Ljava/lang/String;", "compareTo", "(Ljava/lang/String;)I" },
     { javaLangString_equals,
         "Ljava/lang/String;", "equals", "(Ljava/lang/Object;)Z" },
+    { javaLangString_indexOf_I,
+        "Ljava/lang/String;", "indexOf", "(I)I" },
+    { javaLangString_indexOf_II,
+        "Ljava/lang/String;", "indexOf", "(II)I" },
     { javaLangString_length,
         "Ljava/lang/String;", "length", "()I" },
 
@@ -586,7 +673,6 @@ const InlineOperation gDvmInlineOpsTable[] = {
     { javaLangMath_sin,
         "Ljava/lang/Math;", "sin", "(D)D" },
 };
-
 
 /*
  * Allocate some tables.
@@ -696,3 +782,4 @@ skip_prof:
 #endif
     return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3, pResult);
 }
+
