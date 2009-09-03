@@ -19,6 +19,11 @@
  */
 public class Main {
     public static void main(String args[]) {
+        basicTest();
+        indexTest();
+    }
+
+    public static void basicTest() {
         String baseStr = "*** This is a very nice string!!!";
         String testStr;
         int i;
@@ -48,5 +53,32 @@ public class Main {
         } catch (StringIndexOutOfBoundsException sioobe) {
             System.out.println("Got expected exception");
         }
+    }
+
+    public static void indexTest() {
+        String baseStr = "The quick brown fox jumps over the lazy dog!";
+        String subStr;
+
+        subStr = baseStr.substring(5, baseStr.length() - 4);
+        System.out.println("subStr is '" + subStr + "'");
+
+        System.out.println("Indexes are: " +
+            baseStr.indexOf('T') + ":" +
+            subStr.indexOf('T') + ":" +
+            subStr.indexOf('u') + ":" +
+            baseStr.indexOf('!') + ":" +
+            subStr.indexOf('y') + ":" +
+            subStr.indexOf('d') + ":" +
+            baseStr.indexOf('x') + ":" +
+            subStr.indexOf('x', 0) + ":" +
+            subStr.indexOf('x', -1) + ":" +
+            subStr.indexOf('x', 200) + ":" +
+            baseStr.indexOf('x', 17) + ":" +
+            baseStr.indexOf('x', 18) + ":" +
+            baseStr.indexOf('x', 19) + ":" +
+            subStr.indexOf('x', 13) + ":" +
+            subStr.indexOf('x', 14) + ":" +
+            subStr.indexOf('&') + ":" +
+            baseStr.indexOf(0x12341234));
     }
 }

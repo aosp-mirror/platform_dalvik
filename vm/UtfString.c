@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * UTF-8 and Unicode string manipulation, plus java/lang/String convenience
  * functions.
@@ -68,6 +69,30 @@ static bool stringStartup()
         LOGE("VM-required field missing from java/lang/String\n");
         return false;
     }
+
+    bool badValue = false;
+    if (gDvm.offJavaLangString_value != STRING_FIELDOFF_VALUE) {
+        LOGE("InlineNative: String.value offset = %d, expected %d\n",
+            gDvm.offJavaLangString_value, STRING_FIELDOFF_VALUE);
+        badValue = true;
+    }
+    if (gDvm.offJavaLangString_count != STRING_FIELDOFF_COUNT) {
+        LOGE("InlineNative: String.count offset = %d, expected %d\n",
+            gDvm.offJavaLangString_count, STRING_FIELDOFF_COUNT);
+        badValue = true;
+    }
+    if (gDvm.offJavaLangString_offset != STRING_FIELDOFF_OFFSET) {
+        LOGE("InlineNative: String.offset offset = %d, expected %d\n",
+            gDvm.offJavaLangString_offset, STRING_FIELDOFF_OFFSET);
+        badValue = true;
+    }
+    if (gDvm.offJavaLangString_hashCode != STRING_FIELDOFF_HASHCODE) {
+        LOGE("InlineNative: String.hashCode offset = %d, expected %d\n",
+            gDvm.offJavaLangString_hashCode, STRING_FIELDOFF_HASHCODE);
+        badValue = true;
+    }
+    if (badValue)
+        return false;
 
     gDvm.javaLangStringReady = 1;
 
@@ -213,11 +238,11 @@ static inline u4 dvmComputeUtf16Hash(const u2* utf16Str, int len)
 }
 u4 dvmComputeStringHash(StringObject* strObj) {
     ArrayObject* chars = (ArrayObject*) dvmGetFieldObject((Object*) strObj,
-                                gDvm.offJavaLangString_value);
+                                STRING_FIELDOFF_VALUE);
     int offset, len;
 
-    len = dvmGetFieldInt((Object*) strObj, gDvm.offJavaLangString_count);
-    offset = dvmGetFieldInt((Object*) strObj, gDvm.offJavaLangString_offset);
+    len = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_COUNT);
+    offset = dvmGetFieldInt((Object*) strObj, STRING_FIELDOFF_OFFSET);
 
     return dvmComputeUtf16Hash((u2*) chars->contents + offset, len);
 }
@@ -285,11 +310,11 @@ StringObject* dvmCreateStringFromCstrAndLength(const char* utf8Str,
     dvmConvertUtf8ToUtf16((u2*)chars->contents, utf8Str);
     hashCode = dvmComputeUtf16Hash((u2*) chars->contents, utf16Length);
 
-    dvmSetFieldObject((Object*)newObj, gDvm.offJavaLangString_value,
+    dvmSetFieldObject((Object*)newObj, STRING_FIELDOFF_VALUE,
         (Object*)chars);
     dvmReleaseTrackedAllocIFN((Object*) chars, NULL, allocFlags);
-    dvmSetFieldInt((Object*)newObj, gDvm.offJavaLangString_count, utf16Length);
-    dvmSetFieldInt((Object*)newObj, gDvm.offJavaLangString_hashCode, hashCode);
+    dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_COUNT, utf16Length);
+    dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_HASHCODE, hashCode);
     /* leave offset set to zero */
 
     /* debugging stuff */
@@ -339,11 +364,11 @@ StringObject* dvmCreateStringFromUnicode(const u2* unichars, int len)
         memcpy(chars->contents, unichars, len * sizeof(u2));
     hashCode = dvmComputeUtf16Hash((u2*) chars->contents, len);
 
-    dvmSetFieldObject((Object*)newObj, gDvm.offJavaLangString_value,
+    dvmSetFieldObject((Object*)newObj, STRING_FIELDOFF_VALUE,
         (Object*)chars);
     dvmReleaseTrackedAlloc((Object*) chars, NULL);
-    dvmSetFieldInt((Object*)newObj, gDvm.offJavaLangString_count, len);
-    dvmSetFieldInt((Object*)newObj, gDvm.offJavaLangString_hashCode, hashCode);
+    dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_COUNT, len);
+    dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_HASHCODE, hashCode);
     /* leave offset set to zero */
 
     /* debugging stuff */
@@ -371,10 +396,10 @@ char* dvmCreateCstrFromString(StringObject* jstr)
     if (jstr == NULL)
         return NULL;
 
-    len = dvmGetFieldInt((Object*) jstr, gDvm.offJavaLangString_count);
-    offset = dvmGetFieldInt((Object*) jstr, gDvm.offJavaLangString_offset);
+    len = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_COUNT);
+    offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
     chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                gDvm.offJavaLangString_value);
+                                STRING_FIELDOFF_VALUE);
     data = (const u2*) chars->contents + offset;
     assert(offset + len <= (int) chars->length);
 
@@ -416,10 +441,10 @@ int dvmStringUtf8ByteLen(StringObject* jstr)
     if (jstr == NULL)
         return 0;       // should we throw something?  assert?
 
-    len = dvmGetFieldInt((Object*) jstr, gDvm.offJavaLangString_count);
-    offset = dvmGetFieldInt((Object*) jstr, gDvm.offJavaLangString_offset);
+    len = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_COUNT);
+    offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
     chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                gDvm.offJavaLangString_value);
+                                STRING_FIELDOFF_VALUE);
     data = (const u2*) chars->contents + offset;
     assert(offset + len <= (int) chars->length);
 
@@ -431,7 +456,7 @@ int dvmStringUtf8ByteLen(StringObject* jstr)
  */
 int dvmStringLen(StringObject* jstr)
 {
-    return dvmGetFieldInt((Object*) jstr, gDvm.offJavaLangString_count);
+    return dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_COUNT);
 }
 
 /*
@@ -440,7 +465,7 @@ int dvmStringLen(StringObject* jstr)
 ArrayObject* dvmStringCharArray(StringObject* jstr)
 {
     return (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                gDvm.offJavaLangString_value);
+                                STRING_FIELDOFF_VALUE);
 }
 
 /*
@@ -451,9 +476,9 @@ const u2* dvmStringChars(StringObject* jstr)
     ArrayObject* chars;
     int offset;
 
-    offset = dvmGetFieldInt((Object*) jstr, gDvm.offJavaLangString_offset);
+    offset = dvmGetFieldInt((Object*) jstr, STRING_FIELDOFF_OFFSET);
     chars = (ArrayObject*) dvmGetFieldObject((Object*) jstr,
-                                gDvm.offJavaLangString_value);
+                                STRING_FIELDOFF_VALUE);
     return (const u2*) chars->contents + offset;
 }
 
@@ -476,17 +501,17 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
     assert(gDvm.javaLangStringReady > 0);
 
     /* get offset and length into char array; all values are in 16-bit units */
-    len1 = dvmGetFieldInt((Object*) strObj1, gDvm.offJavaLangString_count);
-    offset1 = dvmGetFieldInt((Object*) strObj1, gDvm.offJavaLangString_offset);
-    len2 = dvmGetFieldInt((Object*) strObj2, gDvm.offJavaLangString_count);
-    offset2 = dvmGetFieldInt((Object*) strObj2, gDvm.offJavaLangString_offset);
+    len1 = dvmGetFieldInt((Object*) strObj1, STRING_FIELDOFF_COUNT);
+    offset1 = dvmGetFieldInt((Object*) strObj1, STRING_FIELDOFF_OFFSET);
+    len2 = dvmGetFieldInt((Object*) strObj2, STRING_FIELDOFF_COUNT);
+    offset2 = dvmGetFieldInt((Object*) strObj2, STRING_FIELDOFF_OFFSET);
     if (len1 != len2)
         return len1 - len2;
 
     chars1 = (ArrayObject*) dvmGetFieldObject((Object*) strObj1,
-                                gDvm.offJavaLangString_value);
+                                STRING_FIELDOFF_VALUE);
     chars2 = (ArrayObject*) dvmGetFieldObject((Object*) strObj2,
-                                gDvm.offJavaLangString_value);
+                                STRING_FIELDOFF_VALUE);
 
     /* damage here actually indicates a broken java/lang/String */
     assert(offset1 + len1 <= (int) chars1->length);
