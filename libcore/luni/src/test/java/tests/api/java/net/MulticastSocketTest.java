@@ -531,7 +531,6 @@ public class MulticastSocketTest extends SocketTestCase {
         method = "joinGroup",
         args = {java.net.SocketAddress.class, java.net.NetworkInterface.class}
     )
-    @KnownFailure("Needs investigation")
     public void test_joinGroupLjava_net_SocketAddressLjava_net_NetworkInterface() 
                                     throws IOException, InterruptedException {
         // security manager that allows us to check that we only return the

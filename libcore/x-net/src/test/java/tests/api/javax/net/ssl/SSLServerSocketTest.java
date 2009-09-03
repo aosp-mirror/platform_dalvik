@@ -16,7 +16,6 @@
 
 package tests.api.javax.net.ssl;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -366,7 +365,6 @@ public class SSLServerSocketTest extends TestCase {
             args = {}
         )
     })
-    @KnownFailure("Wrong check in SSLServerSocket. Has been fixed in Donutburger")
     public void test_EnabledProtocols() throws Exception {
         SSLServerSocket sss = getSSLServerSocket();
         try {

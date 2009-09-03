@@ -78,12 +78,13 @@ public class CertPathValidatorUtilities
         "privilegeWithdrawn",
         "aACompromise" };
     
+// BEGIN android-changed
     /**
      * Search the given Set of TrustAnchor's for one that is the
      * issuer of the given X509 certificate.
      *
      * @param cert the X509 certificate
-     * @param trustAnchors a Set of TrustAnchor's
+     * @param params with trust anchors
      *
      * @return the <code>TrustAnchor</code> object if found or
      * <code>null</code> if not.
@@ -93,15 +94,20 @@ public class CertPathValidatorUtilities
      * has thrown an exception. This Exception can be obtainted with
      * <code>getCause()</code> method.
      **/
-    protected static final TrustAnchor findTrustAnchor(
-        X509Certificate cert,
-        CertPath        certPath,
-        int             index,
-        Set             trustAnchors) 
-        throws CertPathValidatorException
-    {
-        Iterator iter = trustAnchors.iterator();
-        TrustAnchor trust = null;
+    static final TrustAnchor findTrustAnchor(
+            X509Certificate cert,
+            CertPath certPath,
+            int index,
+            PKIXParameters params)
+            throws CertPathValidatorException {
+        // If we have a trust anchor index, use it.
+        if (params instanceof IndexedPKIXParameters) {
+            IndexedPKIXParameters indexed = (IndexedPKIXParameters) params;
+            return indexed.findTrustAnchor(cert, certPath, index);
+        }
+
+        Iterator iter = params.getTrustAnchors().iterator();
+        TrustAnchor found = null;
         PublicKey trustPublicKey = null;
         Exception invalidKeyEx = null;
 
@@ -116,65 +122,63 @@ public class CertPathValidatorUtilities
             throw new CertPathValidatorException(ex);
         }
 
-        // BEGIN android-changed
         byte[] certBytes = null;
         try {
             certBytes = cert.getEncoded();
         } catch (Exception e) {
             // ignore, just continue
         }
-        while (iter.hasNext() && trust == null)
+        while (iter.hasNext() && found == null)
         {
-            trust = (TrustAnchor) iter.next();
-            X509Certificate trustCert = trust.getTrustedCert();
-            if (trustCert != null)
+            found = (TrustAnchor) iter.next();
+            X509Certificate foundCert = found.getTrustedCert();
+            if (foundCert != null)
             {
                 // If the trust anchor is identical to the certificate we're
                 // done. Just return the anchor.
                 // There is similar code in PKIXCertPathValidatorSpi.
                 try {
-                    byte[] trustBytes = trustCert.getEncoded();
-                    if (certBytes != null && Arrays.equals(trustBytes,
+                    byte[] foundBytes = foundCert.getEncoded();
+                    if (certBytes != null && Arrays.equals(foundBytes,
                             certBytes)) {
-                        return trust;
+                        return found;
                     }
                 } catch (Exception e) {
                     // ignore, continue and verify the certificate
                 }
-                if (certSelectX509.match(trustCert))
+                if (certSelectX509.match(foundCert))
                 {
-                    trustPublicKey = trustCert.getPublicKey();
+                    trustPublicKey = foundCert.getPublicKey();
                 }
                 else
                 {
-                    trust = null;
+                    found = null;
                 }
-        // END android-changed
             }
-            else if (trust.getCAName() != null
-                    && trust.getCAPublicKey() != null)
+            else if (found.getCAName() != null
+                    && found.getCAPublicKey() != null)
             {
                 try
                 {
                     X500Principal certIssuer = getEncodedIssuerPrincipal(cert);
-                    X500Principal caName = new X500Principal(trust.getCAName());
+                    X500Principal caName = new X500Principal(found.getCAName());
                     if (certIssuer.equals(caName))
                     {
-                        trustPublicKey = trust.getCAPublicKey();
+                        trustPublicKey = found.getCAPublicKey();
                     }
                     else
                     {
-                        trust = null;
+                        found = null;
                     }
                 }
                 catch (IllegalArgumentException ex)
                 {
-                    trust = null;
+                    found = null;
                 }
             }
             else
             {
-                trust = null;
+                found = null;
             }
 
             if (trustPublicKey != null)
@@ -186,18 +190,19 @@ public class CertPathValidatorUtilities
                 catch (Exception ex)
                 {
                     invalidKeyEx = ex;
-                    trust = null;
+                    found = null;
                 }
             }
         }
 
-        if (trust == null && invalidKeyEx != null)
+        if (found == null && invalidKeyEx != null)
         {
             throw new CertPathValidatorException("TrustAnchor found but certificate validation failed.", invalidKeyEx, certPath, index);
         }
 
-        return trust;
+        return found;
     }
+// END android-changed
 
     protected static X500Principal getEncodedIssuerPrincipal(X509Certificate cert)
     {

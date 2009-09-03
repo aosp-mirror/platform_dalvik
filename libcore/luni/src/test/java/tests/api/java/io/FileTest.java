@@ -691,7 +691,8 @@ public class FileTest extends junit.framework.TestCase {
         level = TestLevel.PARTIAL_COMPLETE,
         method = "delete",
         args = {}
-    )        
+    )
+    @KnownFailure("Non empty directories are deleted on Android.")
     public void test_delete() {
         // Test for method boolean java.io.File.delete()
         try {
