@@ -3307,6 +3307,8 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
                     return genInlinedAbsDouble(cUnit, mir);
                 case INLINE_STRING_COMPARETO:
                 case INLINE_STRING_EQUALS:
+                case INLINE_STRING_INDEXOF_I:
+                case INLINE_STRING_INDEXOF_II:
                     break;
                 default:
                     dvmAbort();
