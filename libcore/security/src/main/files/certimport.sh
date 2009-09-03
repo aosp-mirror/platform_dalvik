@@ -1,10 +1,19 @@
 #!/bin/bash
+# java version >= 1.6 is required for this script.
 # This script was tested to work with bouncycastle 1.32.
 
 set -x
 set -e
 
 CERTSTORE=cacerts.bks
+
+# Check java version.
+JAVA_VERSION=`java -version 2>&1 | head -1`
+JAVA_VERSION_MINOR=`expr match "$JAVA_VERSION" "java version \"[1-9]\.\([0-9]\).*\""`
+if [ $JAVA_VERSION_MINOR -lt 6 ]; then
+  echo "java version 1.6 or greater required for keytool usage"
+  exit 255
+fi
 
 if [ -a $CERTSTORE ]; then
     rm $CERTSTORE || exit 1
