@@ -419,7 +419,7 @@ void dvmDbgDisconnected(void)
     dvmHashTableLock(gDvm.dbgRegistry);
     gDvm.debuggerConnected = false;
 
-    LOGI("Debugger has detached; object registry had %d entries\n",
+    LOGD("Debugger has detached; object registry had %d entries\n",
         dvmHashTableNumEntries(gDvm.dbgRegistry));
     //int i;
     //for (i = 0; i < gDvm.dbgRegistryNext; i++)
