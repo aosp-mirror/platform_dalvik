@@ -1631,8 +1631,10 @@ static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
  *
  * @param fileDescriptor the file descriptor to bind the socket to
  * @param type the socket type to create, e.g., SOCK_STREAM
+ * @throws SocketException an error occurred when creating the socket
  *
- * @return the socket file descriptor, or -1 on failure
+ * @return the socket file descriptor. On failure, an exception is thrown and
+ *         a negative value is returned.
  *
  */
 static int createSocketFileDescriptor(JNIEnv* env, jobject fileDescriptor,
