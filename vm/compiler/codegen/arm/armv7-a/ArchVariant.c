@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <math.h>  // for double sqrt(double)
+
 
 /*
  * This file is included by Codegen-armv5te-vfp.c, and implements architecture
@@ -116,14 +118,26 @@ bool dvmCompilerArchInit(void)
 static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
     int offset = offsetof(InterpState, retval);
-    int vSrc = mir->dalvikInsn.vA;
+    int vSrc = mir->dalvikInsn.arg[0];
     int vDest = inlinedTarget(mir);
+    ArmLIR *branch;
+    ArmLIR *target;
+
     loadDouble(cUnit, vSrc, dr1);
     newLIR2(cUnit, THUMB2_VSQRTD, dr0, dr1);
+    newLIR2(cUnit, THUMB2_VCMPD, dr0, dr0);
+    newLIR0(cUnit, THUMB2_FMSTAT);
+    branch = newLIR2(cUnit, THUMB_B_COND, 0, ARM_COND_EQ);
+    loadConstant(cUnit, r2, (int)sqrt);
+    newLIR3(cUnit, THUMB2_FMRRD, r0, r1, dr1);
+    newLIR1(cUnit, THUMB_BLX_R, r2);
+    newLIR3(cUnit, THUMB2_FMDRR, dr0, r0, r1);
     if (vDest >= 0)
-        storeDouble(cUnit, dr0, vDest, rNone);
+        target = storeDouble(cUnit, dr0, vDest, rNone);
     else
-        newLIR3(cUnit, THUMB2_VSTRD, dr0, rGLUE, offset >> 2);
+        target = newLIR3(cUnit, THUMB2_VSTRD, dr0, rGLUE, offset >> 2);
+    branch->generic.target = (LIR *)target;
+    resetRegisterScoreboard(cUnit);
     return true;
 }
 
@@ -304,13 +318,13 @@ static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
         loadDouble(cUnit, vSrc2, dr1);
         // Hard-coded use of r7 as temp.  Revisit
         loadConstant(cUnit,r7, defaultResult);
-        newLIR2(cUnit, THUMB2_VCMPED, dr0, dr1);
+        newLIR2(cUnit, THUMB2_VCMPD, dr0, dr1);
     } else {
         loadFloat(cUnit, vSrc1, fr0);
         loadFloat(cUnit, vSrc2, fr2);
         // Hard-coded use of r7 as temp.  Revisit
         loadConstant(cUnit,r7, defaultResult);
-        newLIR2(cUnit, THUMB2_VCMPES, fr0, fr2);
+        newLIR2(cUnit, THUMB2_VCMPS, fr0, fr2);
     }
     newLIR0(cUnit, THUMB2_FMSTAT);
     genIT(cUnit, (defaultResult == -1) ? ARM_COND_GT : ARM_COND_MI, "");

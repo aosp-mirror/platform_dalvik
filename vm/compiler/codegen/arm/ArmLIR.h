@@ -481,14 +481,27 @@ typedef enum ArmOpCode {
                                    rd[11..8] imm8 */
     THUMB2_IT,            /* it [10111111] firstcond[7-4] mask[3-0] */
     THUMB2_FMSTAT,        /* fmstat [11101110111100011111101000010000] */
-    THUMB2_VCMPED,        /* vcmpe [111011101] D [11011] rd[15-12] [1011]
+    THUMB2_VCMPD,         /* vcmp [111011101] D [11011] rd[15-12] [1011]
                                    E [1] M [0] rm[3-0] */
-    THUMB2_VCMPES,        /* vcmpe [111011101] D [11010] rd[15-12] [1011]
+    THUMB2_VCMPS,         /* vcmp [111011101] D [11010] rd[15-12] [1011]
                                    E [1] M [0] rm[3-0] */
     THUMB2_LDR_PC_REL12,  /* ldr rd,[pc,#imm12] [1111100011011111] rt[15-12]
                                      imm12[11-0] */
     THUMB2_B_COND,        /* b<c> [1110] S cond[25-22] imm6[21-16] [10]
                                   J1 [0] J2 imm11[10..0] */
+    THUMB2_VMOVD_RR,      /* vmov [111011101] D [110000] vd[15-12 [101101]
+                                  M [0] vm[3-0] */
+    THUMB2_VMOVS_RR,      /* vmov [111011101] D [110000] vd[15-12 [101001]
+                                  M [0] vm[3-0] */
+    THUMB2_FMRS,          /* vmov [111011100000] vn[19-16] rt[15-12] [1010]
+                                  N [0010000] */
+    THUMB2_FMSR,          /* vmov [111011100001] vn[19-16] rt[15-12] [1010]
+                                  N [0010000] */
+    THUMB2_FMRRD,         /* vmov [111011000100] rt2[19-16] rt[15-12]
+                                  [101100] M [1] vm[3-0] */
+    THUMB2_FMDRR,         /* vmov [111011000101] rt2[19-16] rt[15-12]
+                                  [101100] M [1] vm[3-0] */
+
     ARM_LAST,
 } ArmOpCode;
 

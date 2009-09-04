@@ -24,7 +24,7 @@
     /* op vAA, vBB, vCC */
     flds    s0, [r0]                    @ d0<- vBB
     flds    s1, [r1]                    @ d1<- vCC
-    fcmpes  s0, s1                      @ compare (vBB, vCC)
+    fcmps  s0, s1                      @ compare (vBB, vCC)
     mov     r0, #1                      @ r0<- 1 (default)
     fmstat                              @ export status flags
     mvnmi   r0, #0                      @ (less than) r0<- -1

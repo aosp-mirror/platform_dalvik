@@ -876,7 +876,7 @@ dvmCompiler_TEMPLATE_CMPG_DOUBLE_VFP:
     /* op vAA, vBB, vCC */
     fldd    d0, [r0]                    @ d0<- vBB
     fldd    d1, [r1]                    @ d1<- vCC
-    fcmped  d0, d1                      @ compare (vBB, vCC)
+    fcmpd  d0, d1                       @ compare (vBB, vCC)
     mov     r0, #1                      @ r0<- 1 (default)
     fmstat                              @ export status flags
     mvnmi   r0, #0                      @ (less than) r0<- -1
@@ -945,7 +945,7 @@ dvmCompiler_TEMPLATE_CMPG_FLOAT_VFP:
     /* op vAA, vBB, vCC */
     flds    s0, [r0]                    @ d0<- vBB
     flds    s1, [r1]                    @ d1<- vCC
-    fcmpes  s0, s1                      @ compare (vBB, vCC)
+    fcmps  s0, s1                      @ compare (vBB, vCC)
     mov     r0, #1                      @ r0<- 1 (default)
     fmstat                              @ export status flags
     mvnmi   r0, #0                      @ (less than) r0<- -1
@@ -979,7 +979,7 @@ dvmCompiler_TEMPLATE_CMPL_FLOAT_VFP:
     /* op vAA, vBB, vCC */
     flds    s0, [r0]                    @ d0<- vBB
     flds    s1, [r1]                    @ d1<- vCC
-    fcmpes  s0, s1                      @ compare (vBB, vCC)
+    fcmps  s0, s1                      @ compare (vBB, vCC)
     mvn     r0, #0                      @ r0<- -1 (default)
     fmstat                              @ export status flags
     movgt   r0, #1                      @ (greater than) r0<- 1

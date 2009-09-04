@@ -633,8 +633,11 @@ static bool javaLangMath_sin(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * pointer field.
  *
  * IMPORTANT: you must update DALVIK_VM_BUILD in DalvikVersion.h if you make
- * changes to this table.  Must also be kept in sync with NativeInlineOps
- * enum in InlineNative.h.
+ * changes to this table.
+ *
+ * NOTE: If present, the JIT will also need to know about changes
+ * to this table.  Update the NativeInlineOps enum in InlineNative.h and
+ * the dispatch code in compiler/codegen/<target>/Codegen.c.
  */
 const InlineOperation gDvmInlineOpsTable[] = {
     { org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod,
@@ -782,4 +785,3 @@ skip_prof:
 #endif
     return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3, pResult);
 }
-
