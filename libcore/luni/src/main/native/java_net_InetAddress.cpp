@@ -111,11 +111,6 @@ static jobjectArray getAllByNameUsingDns(JNIEnv* env, const char* name,
     jobjectArray addressArray = NULL;
 
     memset(&hints, 0, sizeof(hints));
-    /*
-     * IPv4 only for now until the socket code supports IPv6; otherwise, the
-     * resolver will create two separate requests, one for IPv4 and one,
-     * currently unnecessary, for IPv6.
-     */
     hints.ai_family = AF_UNSPEC;
     hints.ai_flags = AI_ADDRCONFIG;
     /*
@@ -233,7 +228,9 @@ jobjectArray InetAddress_getallbyname(JNIEnv* env, jobject obj,
     }
 
     if (!out) {
+#if LOG_DNS
         LOGI("Unknown host %s, throwing UnknownHostException", name);
+#endif
         jniThrowException(env, "java/net/UnknownHostException", name);
     }
     env->ReleaseStringUTFChars(javaName, name);
@@ -241,6 +238,14 @@ jobjectArray InetAddress_getallbyname(JNIEnv* env, jobject obj,
 }
 
 
+/**
+ * Looks up the name corresponding to an IP address.
+ *
+ * @param javaAddress: a byte array containing the raw IP address bytes. Must be
+ *         4 or 16 bytes long.
+ * @return the hostname.
+ * @throws UnknownHostException: the IP address has no associated hostname.
+ */
 static jstring InetAddress_gethostbyaddr(JNIEnv* env, jobject obj,
                                          jbyteArray javaAddress)
 {
@@ -257,57 +262,45 @@ static jstring InetAddress_gethostbyaddr(JNIEnv* env, jobject obj,
     }
 
     // Convert the raw address bytes into a socket address structure.
+    int ret = 0;
     struct sockaddr_storage ss;
     struct sockaddr_in *sin = (struct sockaddr_in *) &ss;
     struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &ss;
     size_t socklen;
+    memset(&ss, 0, sizeof(ss));
     switch (addrlen) {
         case 4:
             socklen = sizeof(struct sockaddr_in);
-            memset(sin, 0, sizeof(struct sockaddr_in));
             sin->sin_family = AF_INET;
-            memcpy(&sin->sin_addr.s_addr, rawAddress, 4);
+            memcpy(&sin->sin_addr.s_addr, rawAddress, addrlen);
             env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
             break;
         case 16:
             socklen = sizeof(struct sockaddr_in6);
-            memset(sin6, 0, sizeof(struct sockaddr_in6));
             sin6->sin6_family = AF_INET6;
-            memcpy(&sin6->sin6_addr.s6_addr, rawAddress, 16);
+            memcpy(&sin6->sin6_addr.s6_addr, rawAddress, addrlen);
             env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
             break;
         default:
+            // The caller already throws an exception in this case. Don't worry
+            // about it here.
             env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
-            jniThrowException(env, "java/net/UnknownHostException",
-                                   "Invalid address length");
             return NULL;
     }
 
-
-    // Convert the socket address structure to an IP string for logging.
-    int ret;
-    char ipstr[INET6_ADDRSTRLEN];
-    ret = getnameinfo((struct sockaddr *) &ss, socklen, ipstr, sizeof(ipstr),
-                      NULL, 0, NI_NUMERICHOST);
-    if (ret) {
-        LOGE("gethostbyaddr: getnameinfo: %s", gai_strerror(ret));
-        return NULL;
-    }
-
-    // Look up the IP address from the socket address structure.
-    jstring result = NULL;
+    // Look up the host name from the IP address.
     char name[NI_MAXHOST];
-    ret = getnameinfo((struct sockaddr *) &ss, socklen, name, sizeof(name),
-                      NULL, 0, 0);
     if (ret == 0) {
-        LOGI("gethostbyaddr: getnameinfo: %s = %s", ipstr, name);
-        result = env->NewStringUTF(name);
-    } else {
-        LOGE("gethostbyaddr: getnameinfo: unknown host %s: %s", ipstr,
-             gai_strerror(ret));
+        ret = getnameinfo((struct sockaddr *) &ss, socklen, name, sizeof(name),
+                          NULL, 0, NI_NAMEREQD);
     }
 
-    return result;
+    if (ret == 0) {
+        return env->NewStringUTF(name);
+    }
+
+    jniThrowException(env, "java/net/UnknownHostException", gai_strerror(ret));
+    return NULL;
 }
 
 /*
