@@ -1435,11 +1435,7 @@ public class CollectionsTest extends junit.framework.TestCase {
                 .indexOfSubList(src, sub2));
     }
 
-    /**
-     * @param string2
-     * @param string1
-     * @param index
-     */
+
     private void testwithCharList(int count, String string1, String string2,
             boolean first) {
         char[] chars = string1.toCharArray();
@@ -2379,8 +2375,10 @@ public class CollectionsTest extends junit.framework.TestCase {
         m.put("one", "1");
         m.put("two", "2");
         Map um = Collections.unmodifiableMap(m);
-        assertEquals("{one=1, two=2}", um.toString());
+        assertTrue("{one=1, two=2}".equals(um.toString()) ||
+                   "{two=2, one=1}".equals(um.toString())); 
     }
+
 
     @TestTargetNew(
         level = TestLevel.COMPLETE,
