@@ -1651,6 +1651,7 @@ static int createSocketFileDescriptor(JNIEnv* env, jobject fileDescriptor,
     if (sock < 0) {
         int err = convertError(errno);
         throwSocketException(env, err);
+        return sock;
     }
     jniSetFileDescriptorOfFD(env, fileDescriptor, sock);
     return sock;
