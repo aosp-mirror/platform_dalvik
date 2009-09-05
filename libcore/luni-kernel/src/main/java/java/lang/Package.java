@@ -268,8 +268,8 @@ public class Package implements AnnotatedElement {
      */
     public boolean isCompatibleWith(String version)
             throws NumberFormatException {
-        String[] requested = version.split("."); 
-        String[] provided = specVersion.split("."); 
+        String[] requested = version.split("\\."); 
+        String[] provided = specVersion.split("\\."); 
         
         for (int i = 0; i < Math.min(requested.length, provided.length); i++) {
             int reqNum = Integer.parseInt(requested[i]);
@@ -318,4 +318,3 @@ public class Package implements AnnotatedElement {
         return "package " + name;
     }
 }
-
