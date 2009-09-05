@@ -15,21 +15,34 @@ public class SamplingProfiler {
     private static final Logger logger = Logger.getLogger(
             SamplingProfiler.class.getName());
 
+    static final boolean DEBUG = false;
+
+    enum State {
+        /** The sampling thread hasn't started or is waiting to resume. */
+        PAUSED,
+        /** The sampling thread is collecting samples. */
+        RUNNING,
+        /** The sampling thread is shutting down. */
+        SHUTTING_DOWN
+    }
+
     /** Pointer to native state. */
     int pointer = 0;
 
     /** The thread that collects samples. */
     Thread samplingThread;
 
-    /** Whether or not the profiler is running. */
-    boolean running = false;
-    int delayPerThread; // ms
+    /** Time between samples. */
+    volatile int delay; // ms
 
-    /** Number of samples taken. */
-    int sampleCount = 0;
+    /** Number of samples taken (~samples per second * number of threads). */
+    int totalThreadsSampled = 0;
 
     /** Total time spent collecting samples. */
     long totalSampleTime = 0;
+
+    /** The state of the profiler. */
+    volatile State state = State.PAUSED;
 
     private SamplingProfiler() {}
 
@@ -37,40 +50,43 @@ public class SamplingProfiler {
      * Returns true if the profiler is running.
      */
     public boolean isRunning() {
-        return running;
+        return state == State.RUNNING;
     }
 
     /**
      * Starts collecting samples.
      *
-     * @param threadsPerSecond number of threads to sample per second
+     * @param samplesPerSecond number of times to sample each thread per second
+     * @throws IllegalStateException if the profiler is
+     *  {@linkplain #shutDown()} shutting down}
      */
-    public synchronized void start(int threadsPerSecond) {
-        if (threadsPerSecond < 1) {
-            throw new IllegalArgumentException("threadsPerSecond < 1");
+    public synchronized void start(int samplesPerSecond) {
+        if (samplesPerSecond < 1) {
+            throw new IllegalArgumentException("samplesPerSecond < 1");
         }
-        if (!running) {
-            logger.info("Starting profiler.");
-            running = true;
+        ensureNotShuttingDown();
+        delay = 1000 / samplesPerSecond;
+        if (!isRunning()) {
+            if (DEBUG) logger.info("Starting profiler...");
+            state = State.RUNNING;
             if (samplingThread == null) {
                 // TODO: Priority?
-                samplingThread = new Thread(new Sampler());
+                samplingThread = new Thread(new Sampler(), "SamplingProfiler");
                 samplingThread.setDaemon(true);
                 samplingThread.start();
             } else {
                 notifyAll();
             }
         }
-        delayPerThread = 1000 / threadsPerSecond;
     }
 
     /**
-     * Stops sample collection.
+     * Pauses sample collection.
      */
-    public synchronized void stop() {
-        if (running) {
-            logger.info("Stopping profiler.");
-            running = false;
+    public synchronized void pause() {
+        if (isRunning()) {
+            if (DEBUG) logger.info("Pausing profiler...");
+            state = State.PAUSED;
         }
     }
 
@@ -80,41 +96,105 @@ public class SamplingProfiler {
      *
      * <p>Note: The exact format is not documented because it's not set in
      * stone yet.
+     *
+     * @throws IllegalStateException if the profiler is
+     *  {@linkplain #shutDown()} shutting down}
      */
     public synchronized byte[] snapshot() {
-        if (pointer == 0 || sampleCount == 0) {
+        ensureNotShuttingDown();
+        if (pointer == 0 || totalThreadsSampled == 0) {
             return null;
         }
 
-        int size = size(pointer);
-        int collisions = collisions(pointer);
+        if (DEBUG) {
+            int size = size(pointer);
+            int collisions = collisions(pointer);
 
-        long start = System.nanoTime();
-        byte[] bytes = snapshot(pointer);
-        long elapsed = System.nanoTime() - start;
+            long start = System.nanoTime();
+            byte[] bytes = snapshot(pointer);
+            long elapsed = System.nanoTime() - start;
 
-        logger.info("Grabbed snapshot in " + (elapsed / 1000) + "us."
-                + " Samples collected: " + sampleCount
-                + ", Average sample time (per thread): "
-                    + (((totalSampleTime / sampleCount) << 10) / 1000) + "us"
-                + ", Set size: " + size
-                + ", Collisions: " + collisions);
-        sampleCount = 0;
-        totalSampleTime = 0;
+            long averageSampleTime = ((totalSampleTime / totalThreadsSampled)
+                    << 10) / 1000;
+            logger.info("Grabbed snapshot in " + (elapsed / 1000) + "us."
+                    + " Samples collected: " + totalThreadsSampled
+                    + ", Average sample time (per thread): "
+                            + averageSampleTime + "us"
+                    + ", Set size: " + size
+                    + ", Collisions: " + collisions);
+            totalThreadsSampled = 0;
+            totalSampleTime = 0;
 
-        return bytes;
+            return bytes;
+        } else {
+            totalThreadsSampled = 0;
+            return snapshot(pointer);
+        }
     }
 
     /**
      * Identifies the "event thread". For a user-facing application, this
      * might be the UI thread. For a background process, this might be the
      * thread that processes incoming requests.
+     *
+     * @throws IllegalStateException if the profiler is
+     *  {@linkplain #shutDown()} shutting down}
      */
     public synchronized void setEventThread(Thread eventThread) {
+        ensureNotShuttingDown();
         if (pointer == 0) {
             pointer = allocate();
         }
         setEventThread(pointer, eventThread);
+    }
+
+    private void ensureNotShuttingDown() {
+        if (state == State.SHUTTING_DOWN) {
+            throw new IllegalStateException("Profiler is shutting down.");
+        }
+    }
+
+    /**
+     * Shuts down the profiler thread and frees native memory. The profiler
+     * will recreate the thread the next time {@link #start(int)} is called.
+     *
+     * @throws IllegalStateException if the profiler is already shutting down
+     */
+    public void shutDown() {
+        Thread toStop;
+        synchronized (this) {
+            ensureNotShuttingDown();
+
+            toStop = samplingThread;
+            if (toStop == null) {
+                // The profiler hasn't started yet.
+                return;
+            }
+
+            state = State.SHUTTING_DOWN;
+            samplingThread = null;
+            notifyAll();
+        }
+
+        // Release lock to 'this' so background thread can grab it and stop.
+        boolean successful = false;
+        while (!successful) {
+            try {
+                toStop.join();
+                successful = true;
+            } catch (InterruptedException e) { /* ignore */ }
+        }
+
+        synchronized (this) {
+            if (pointer != 0) {
+                free(pointer);
+                pointer = 0;
+            }
+
+            totalThreadsSampled = 0;
+            totalSampleTime = 0;
+            state = State.PAUSED;
+        }
     }
 
     /** Collects some data. Returns number of threads sampled. */
@@ -122,6 +202,9 @@ public class SamplingProfiler {
 
     /** Allocates native state. */
     private static native int allocate();
+
+    /** Frees native state. */
+    private static native void free(int pointer);
 
     /** Gets the number of methods in the sample set. */
     private static native int size(int pointer);
@@ -142,11 +225,15 @@ public class SamplingProfiler {
         public void run() {
             boolean firstSample = true;
             while (true) {
-                int threadsSampled;
                 synchronized (SamplingProfiler.this) {
-                    if (!running) {
-                        logger.info("Stopped profiler.");
-                        while (!running) {
+                    if (!isRunning()) {
+                        if (DEBUG) logger.info("Paused profiler.");
+                        while (!isRunning()) {
+                            if (state == State.SHUTTING_DOWN) {
+                                // Stop thread.
+                                return;
+                            }
+
                             try {
                                 SamplingProfiler.this.wait();
                             } catch (InterruptedException e) { /* ignore */ }
@@ -159,20 +246,24 @@ public class SamplingProfiler {
                     }
 
                     if (firstSample) {
-                        logger.info("Started profiler.");
+                        if (DEBUG) logger.info("Started profiler.");
                         firstSample = false;
                     }
 
-                    long start = System.nanoTime();
-                    threadsSampled = sample(pointer);
-                    long elapsed = System.nanoTime() - start;
+                    if (DEBUG) {
+                        long start = System.nanoTime();
+                        int threadsSampled = sample(pointer);
+                        long elapsed = System.nanoTime() - start;
 
-                    sampleCount += threadsSampled;
-                    totalSampleTime += elapsed >> 10; // shift avoids overflow.
+                        totalThreadsSampled += threadsSampled;
+                        totalSampleTime += elapsed >> 10; // avoids overflow.
+                    } else {
+                        totalThreadsSampled += sample(pointer);
+                    }
                 }
 
                 try {
-                    Thread.sleep(delayPerThread * threadsSampled);
+                    Thread.sleep(delay);
                 } catch (InterruptedException e) { /* ignore */ }
             }
         }
@@ -211,9 +302,12 @@ public class SamplingProfiler {
 
     private static void appendCounts(DataInputStream in, StringBuilder sb)
             throws IOException {
-        sb.append("      running: ").append(in.readShort()).append('\n');
-        sb.append("      native: ").append(in.readShort()).append('\n');
-        sb.append("      suspended: ").append(in.readShort()).append('\n');
+        sb.append("      running:\n");
+        sb.append("        caller: ").append(in.readShort()).append('\n');
+        sb.append("        leaf: ").append(in.readShort()).append('\n');
+        sb.append("      suspended:\n");
+        sb.append("        caller: ").append(in.readShort()).append('\n');
+        sb.append("        leaf: ").append(in.readShort()).append('\n');
     }
 
     /** This will be allocated when the user calls getInstance(). */
