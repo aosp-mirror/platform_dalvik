@@ -344,18 +344,11 @@ public final class CharsetDecoderICU extends CharsetDecoder{
 
         // ok was there input held in the previous invocation of decodeLoop 
         // that resulted in output in this invocation?
-        if(data[OUTPUT_OFFSET]>0 && savedInputHeldLen >0){
-            int len = in.position() + data[INPUT_OFFSET] + savedInputHeldLen;
-            in.position(len);   
-            savedInputHeldLen = data[INPUT_HELD];
-        }else{
-            in.position(in.position() + data[INPUT_OFFSET] + savedInputHeldLen);
-            savedInputHeldLen = data[INPUT_HELD];
-            in.position(in.position() - savedInputHeldLen);
-        }       
-        // BEGIN android-added
+        // BEGIN android-changed
+        in.position(in.position() + data[INPUT_OFFSET] + savedInputHeldLen - data[INPUT_HELD]);
+        savedInputHeldLen = data[INPUT_HELD];
         // release reference to input array, which may not be ours
         input = null;
-        // END android-added
+        // END android-changed
     }
 }
