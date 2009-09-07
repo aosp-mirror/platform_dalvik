@@ -68,6 +68,10 @@ public class JarFile extends ZipFile {
 
         private JarVerifier.VerifierEntry entry;
 
+        // BEGIN android-added
+        private boolean done = false;
+        // END android-added
+
         JarFileInputStream(InputStream is, ZipEntry ze,
                 JarVerifier.VerifierEntry e) {
             super(is);
@@ -78,6 +82,10 @@ public class JarFile extends ZipFile {
 
         @Override
         public int read() throws IOException {
+            // BEGIN android-changed
+            if (done) {
+                return -1;
+            }
             if (count > 0) {
                 int r = super.read();
                 if (r != -1) {
@@ -87,16 +95,24 @@ public class JarFile extends ZipFile {
                     count = 0;
                 }
                 if (count == 0) {
+                    done = true;
                     entry.verify();
                 }
                 return r;
             } else {
+                done = true;
+                entry.verify();
                 return -1;
             }
+            // END android-changed
         }
 
         @Override
         public int read(byte[] buf, int off, int nbytes) throws IOException {
+            // BEGIN android-changed
+            if (done) {
+                return -1;
+            }
             if (count > 0) {
                 int r = super.read(buf, off, nbytes);
                 if (r != -1) {
@@ -110,22 +126,25 @@ public class JarFile extends ZipFile {
                     count = 0;
                 }
                 if (count == 0) {
+                    done = true;
                     entry.verify();
                 }
                 return r;
             } else {
+                done = true;
+                entry.verify();
                 return -1;
             }
+            // END android-changed
         }
 
         // BEGIN android-added
         @Override
         public int available() throws IOException {
-            if (count > 0) {
-                return super.available();
-            } else {
+            if (done) {
                 return 0;
             }
+            return super.available();
         }
         // END android-added
 
