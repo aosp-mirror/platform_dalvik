@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.security.KeyStore;
+import java.security.SecureRandom;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -584,5 +585,27 @@ public class SSLServerSocketTest extends TestCase {
         SSLServerSocket sss = (SSLServerSocket) context.getServerSocketFactory()
                 .createServerSocket();
         return sss;
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Guard against native resource leakage.",
+        method = "SSLSocket",
+        args = {}
+    )
+    public void test_creationStressTest() throws Exception {
+        KeyManager[] keyManagers = getKeyManagers();
+        // Test the default codepath, which uses /dev/urandom.
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(keyManagers, null, null);
+        for (int i = 0; i < 2048; ++i) {
+            sslContext.getServerSocketFactory().createServerSocket();
+        }
+        
+        // Test the other codepath, which copies a seed from a byte[].
+        sslContext.init(keyManagers, null, new SecureRandom());
+        for (int i = 0; i < 2048; ++i) {
+            sslContext.getServerSocketFactory().createServerSocket();
+        }
     }
 }

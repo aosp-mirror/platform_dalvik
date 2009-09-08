@@ -87,9 +87,9 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_init(J
     // 'seed == null' when no SecureRandom Object is set
     // in the SSLContext.
     if (seed != NULL) {
-        jboolean iscopy = JNI_FALSE;
-        jbyte* randseed = env->GetByteArrayElements(seed, &iscopy);
+        jbyte* randseed = env->GetByteArrayElements(seed, NULL);
         RAND_seed((unsigned char*) randseed, 1024);
+        env->ReleaseByteArrayElements(seed, randseed, 0);
     } else {
         RAND_load_file("/dev/urandom", 1024);
     }

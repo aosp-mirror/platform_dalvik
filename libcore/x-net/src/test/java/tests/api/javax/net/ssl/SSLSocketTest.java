@@ -26,6 +26,7 @@ import javax.security.cert.X509Certificate;
 
 import java.net.*;
 import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.lang.String;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -333,6 +334,27 @@ public class SSLSocketTest extends TestCase {
             // expected
         } catch (Exception e) {
             fail(e + " was thrown instead of UnknownHostException");
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Guard against native resource leakage.",
+        method = "SSLSocket",
+        args = {}
+    )
+    public void test_creationStressTest() throws Exception {
+        // Test the default codepath, which uses /dev/urandom.
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, null, null);
+        for (int i = 0; i < 2048; ++i) {
+            sslContext.getSocketFactory().createSocket();
+        }
+        
+        // Test the other codepath, which copies a seed from a byte[].
+        sslContext.init(null, null, new SecureRandom());
+        for (int i = 0; i < 2048; ++i) {
+            sslContext.getSocketFactory().createSocket();
         }
     }
     
