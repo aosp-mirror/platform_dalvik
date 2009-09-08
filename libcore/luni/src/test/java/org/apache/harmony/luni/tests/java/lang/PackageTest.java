@@ -312,7 +312,7 @@ public class PackageTest extends junit.framework.TestCase {
         method = "isCompatibleWith",
         args = {java.lang.String.class}
     )
-    @KnownFailure("isCompatibleWith returns incorrect value.")
+    @KnownFailure("Dalvik packages are always version '0.0'.")
     public void test_isCompatibleWithLjava_lang_String() throws Exception {
         Package p = getTestPackage("hyts_c.jar", "p.C");
 
