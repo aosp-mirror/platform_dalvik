@@ -37,7 +37,7 @@ typedef struct ShadowHeap {
 
 typedef struct InstructionTrace {
     int addr;
-    int opcode;
+    DecodedInstruction decInsn;
 } InstructionTrace;
 
 typedef struct ShadowSpace {

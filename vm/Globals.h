@@ -748,6 +748,11 @@ struct DvmJitGlobals {
 
     /* Table to track the overall and trace statistics of hot methods */
     HashTable*  methodStatsTable;
+
+#if defined(WITH_SELF_VERIFICATION)
+    /* Spin when error is detected, volatile so GDB can reset it */
+    volatile bool selfVerificationSpin;
+#endif
 };
 
 extern struct DvmJitGlobals gDvmJit;
