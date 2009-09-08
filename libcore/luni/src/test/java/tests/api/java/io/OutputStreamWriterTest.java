@@ -17,7 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -31,7 +30,6 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.util.Arrays;
 
 import tests.support.Support_OutputStream;
 
@@ -426,7 +424,6 @@ public class OutputStreamWriterTest extends TestCase {
                 clazz = InputStreamReader.class
         )
     })
-    @KnownFailure("Error when reading bytes in UTF-8 expected:<8916> but was:<8907> ")
     public void test_write$C() throws Exception {
         int upper;
         InputStreamReader isr = null;
@@ -471,7 +468,7 @@ public class OutputStreamWriterTest extends TestCase {
                         j = 0;
                     }
                     assertEquals("Error when reading bytes in "
-                            + MINIMAL_CHARSETS[i], expected++, largeBuffer[j++]);
+                            + MINIMAL_CHARSETS[i] + " at " + j, expected++, largeBuffer[j++]);
                 }
             } finally {
                 try {
@@ -878,5 +875,4 @@ public class OutputStreamWriterTest extends TestCase {
             fail("UTF-8 not supported");
         }
     }
-
 }
