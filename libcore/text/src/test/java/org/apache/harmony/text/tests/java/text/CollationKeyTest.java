@@ -16,7 +16,6 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -127,7 +126,6 @@ public class CollationKeyTest extends junit.framework.TestCase {
         method = "toByteArray",
         args = {}
     )
-    @KnownFailure("This test fails on Harmony ClassLibrary.")
     public void test_toByteArray() {
         // Test for method byte [] java.text.CollationKey.toByteArray()
         Collator collator = Collator.getInstance();
@@ -142,7 +140,6 @@ public class CollationKeyTest extends junit.framework.TestCase {
             fail("ParseException");
             return;
         }
-        bytes = collator.getCollationKey("1234567").toByteArray();
         /*
          * CollationElementIterator it =
          * ((RuleBasedCollator)collator).getCollationElementIterator("1234567");
@@ -152,8 +149,51 @@ public class CollationKeyTest extends junit.framework.TestCase {
          * i+=2) { System.out.print(Integer.toHexString(bytes[i]) +
          * Integer.toHexString(bytes[i+1]) + " "); } System.out.println();
          */
-        byte[] result = new byte[] { 0, 2, 0, 2, 0, 2, 0, 0, 0, 3, 0, 3, 0, 1,
-                0, 2, 0, 2, 0, 0, 0, 4, 0, 4, 0, 1, 0, 1, 0, 2 };
-        assertTrue("Wrong bytes", Arrays.equals(bytes, result));
+
+        // The RI has a different algorithm to generate the collation keys.
+        // bytes = collator.getCollationKey("1234567").toByteArray();
+        // byte[] result = new byte[] { 0, 2, 0, 2, 0, 2, 0, 0, 0, 3, 0, 3, 0, 1,
+        //         0, 2, 0, 2, 0, 0, 0, 4, 0, 4, 0, 1, 0, 1, 0, 2 };
+        byte[] bytes1 = collator.getCollationKey("12").toByteArray();
+        byte[] bytes2 = collator.getCollationKey("123").toByteArray();
+        byte[] bytes3 = collator.getCollationKey("124").toByteArray();
+        byte[] bytes4 = collator.getCollationKey("1245").toByteArray();
+        byte[] bytes5 = collator.getCollationKey("1245").toByteArray();
+
+        assertTrue("returned collation key does not sort correctly",
+                compareUnsignedByteArrays(bytes1, bytes2) < 0);
+
+        assertTrue("returned collation key does not sort correctly",
+                compareUnsignedByteArrays(bytes2, bytes3) < 0);
+
+        assertTrue("returned collation key does not sort correctly",
+                compareUnsignedByteArrays(bytes3, bytes4) < 0);
+
+        assertTrue("returned collation key does not sort correctly",
+                compareUnsignedByteArrays(bytes4, bytes5) == 0);
+
+    }
+
+    private int compareUnsignedByteArrays(byte[] bytes1, byte[] bytes2) {
+        int commonLength = Math.min(bytes1.length, bytes2.length);
+
+        for (int i = 0; i < commonLength; i++) {
+            int keyA = bytes1[i] & 0xFF;
+            int keyB = bytes2[i] & 0xFF;
+            if (keyA < keyB) {
+                return -1;
+            }
+            if (keyA > keyB) {
+                return 1;
+            }
+        }
+
+        if (bytes1.length < bytes2.length) {
+            return -1;
+        } else if (bytes1.length > bytes2.length) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 }
