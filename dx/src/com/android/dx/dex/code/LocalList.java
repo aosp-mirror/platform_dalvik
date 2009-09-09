@@ -278,9 +278,9 @@ public final class LocalList extends FixedSizeList {
         /**
          * Returns whether or not this instance matches the given spec.
          * 
-         * @param spec non-null; the spec in question
+         * @param otherSpec non-null; the spec in question
          * @return <code>true</code> iff this instance matches
-         * <code>spec</code>
+         * <code>otherSpec</code>
          */
         public boolean matches(RegisterSpec otherSpec) {
             return spec.equalsUsingSimpleType(otherSpec);
