@@ -43,44 +43,34 @@ JNIEXPORT void JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1close
 
   ubidi_close ((*data).pBiDi);
   
-  if ((*data).embeddingLevels != NULL)
-    free((*data).embeddingLevels);
-    free(data);
+  free((*data).embeddingLevels);
+  free(data);
 }
 
 JNIEXPORT void JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1setPara
   (JNIEnv * env, jclass clazz, jlong pBiDi, jcharArray text, jint length,
-   jbyte paraLevel, jbyteArray embeddingLevels)
+   jbyte paraLevel, jbyteArray newEmbeddingLevels)
 {
-  UErrorCode err = 0;
-  jchar *_text = NULL;
   BiDiData *data = (BiDiData *)pBiDi;
-  /* Remembering old embedding levels */
-  void *embLvls = (*data).embeddingLevels;
-  
-  _text = (*env)->GetCharArrayElements (env, text, NULL);
+  void *oldEmbeddingLevels = (*data).embeddingLevels;
 
-  if (embeddingLevels != NULL)
-    {        
-        jbyte *el = (*env)->GetByteArrayElements (env, embeddingLevels, NULL);
-        (*data).embeddingLevels = malloc(length);
-        memcpy(((*data).embeddingLevels), el, length);
-        (*env)->ReleaseByteArrayElements (env, embeddingLevels, el, 0);
-    } else
-    {
-        (*data).embeddingLevels = NULL;
-    }
-
-  ubidi_setPara ((*data).pBiDi, _text, length, paraLevel,
-                 ((*data).embeddingLevels), &err);
-  check_fail (env, err);
-
-  /* Freeing old embedding levels */
-  if (embLvls != NULL) {
-    free(embLvls);
+  // Copy the new embedding levels from the Java heap to the native heap.
+  if (newEmbeddingLevels != NULL) {
+    (*data).embeddingLevels = malloc(length);
+    (*env)->GetByteArrayRegion(env, newEmbeddingLevels, 0, length,
+                               (*data).embeddingLevels);
+  } else {
+    (*data).embeddingLevels = NULL;
   }
 
+  UErrorCode err = 0;
+  jchar* _text = (*env)->GetCharArrayElements(env, text, NULL);
+  ubidi_setPara ((*data).pBiDi, _text, length, paraLevel,
+                 ((*data).embeddingLevels), &err);
   (*env)->ReleaseCharArrayElements (env, text, _text, 0);
+  check_fail (env, err);
+
+  free(oldEmbeddingLevels);
 }
 
 JNIEXPORT jlong JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1setLine
