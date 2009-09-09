@@ -104,29 +104,20 @@ Java_java_util_zip_Inflater_setInputImpl (JNIEnv * env, jobject recv,
 {
   PORT_ACCESS_FROM_ENV (env);
 
-  jbyte *in;
-  U_8 *baseAddr;
   JCLZipStream *stream = (JCLZipStream *) ((IDATA) handle);
-
-  if (stream->inaddr != NULL)   /*Input has already been provided, free the old buffer */
+  if (stream->inaddr != NULL) {
+    /* Input has already been provided, free the old buffer. */
     jclmem_free_memory (env, stream->inaddr);
-  baseAddr = jclmem_allocate_memory (env, len);
-  if (baseAddr == NULL)
-    {
-      throwNewOutOfMemoryError (env, "");
-      return;
-    }
+  }
+  U_8* baseAddr = jclmem_allocate_memory (env, len);
+  if (baseAddr == NULL) {
+    throwNewOutOfMemoryError (env, "");
+    return;
+  }
   stream->inaddr = baseAddr;
   stream->stream->next_in = (Bytef *) baseAddr;
   stream->stream->avail_in = len;
-  in = ((*env)->GetPrimitiveArrayCritical (env, buf, 0));
-  if (in == NULL) {
-    throwNewOutOfMemoryError(env, "");
-    return;
-  }
-  memcpy (baseAddr, (in + off), len);
-  ((*env)->ReleasePrimitiveArrayCritical (env, buf, in, JNI_ABORT));
-  return;
+  (*env)->GetByteArrayRegion(env, buf, off, len, (jbyte*) baseAddr);
 }
 
 JNIEXPORT jint JNICALL
