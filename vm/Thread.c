@@ -1314,10 +1314,18 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
     assert(threadObj != NULL);
 
     if(gDvm.zygote) {
-        dvmThrowException("Ljava/lang/IllegalStateException;",
-            "No new threads in -Xzygote mode");
+        // Allow the sampling profiler thread. We shut it down before forking.
+        StringObject* nameStr = (StringObject*) dvmGetFieldObject(threadObj,
+                    gDvm.offJavaLangThread_name);
+        char* threadName = dvmCreateCstrFromString(nameStr);
+        bool profilerThread = strcmp(threadName, "SamplingProfiler") == 0;
+        free(threadName);
+        if (!profilerThread) {
+            dvmThrowException("Ljava/lang/IllegalStateException;",
+                "No new threads in -Xzygote mode");
 
-        goto fail;
+            goto fail;
+        }
     }
 
     self = dvmThreadSelf();
@@ -2251,6 +2259,11 @@ void dvmDetachCurrentThread(void)
     dvmUnlockThreadList();
 
     setThreadSelf(NULL);
+
+    if (self->statFile > 0) {
+        close(self->statFile);
+    }
+
     freeThread(self);
 }
 
@@ -3868,4 +3881,116 @@ void dvmGcScanRootThreadGroups()
      * of the root set.
      */
     gcScanAllThreads();
+}
+
+/* Converts a Linux thread state to a ThreadStatus. */
+static ThreadStatus stateToStatus(char state) {
+    switch (state) {
+        case 'R': return THREAD_RUNNING; // running
+        case 'S': return THREAD_WAIT;    // sleeping in interruptible wait
+        case 'D': return THREAD_WAIT;    // uninterruptible disk sleep
+        case 'Z': return THREAD_ZOMBIE;  // zombie
+        case 'T': return THREAD_WAIT;    // traced or stopped on a signal
+        case 'W': return THREAD_PAGING;  // paging memory
+        default:
+            LOGE("Unexpected state: %c", state);
+            return THREAD_NATIVE;
+    }
+}
+
+/* Reads the state char starting from the beginning of the file. */
+static char readStateFromBeginning(Thread* thread) {
+    char buffer[256];
+    int size = read(thread->statFile, buffer, sizeof(buffer));
+    if (size == 0) {
+        LOGE("EOF trying to read stat file.");
+        return 0;
+    }
+    char* endOfName = (char*) memchr(buffer, ')', sizeof(buffer));
+    if (endOfName == NULL) {
+        LOGE("End of executable name not found.");
+        return 0;
+    }
+    char* state = endOfName + 2;
+    thread->stateOffset = state - buffer;
+    if (*state == 0) {
+        LOGE("State char is 0.");
+    }
+    return *state;
+}
+
+/*
+ * Looks for the state char at the last place we found it. Read from the
+ * beginning if necessary.
+ */
+static char readStateRelatively(Thread* thread) {
+    char buffer[3];
+    // Position file offset at end of executable name.
+    int result = lseek(thread->statFile, thread->stateOffset - 2, SEEK_SET);
+    if (result < 0) {
+        LOGE("lseek() error.");
+        return 0;
+    }
+    int size = read(thread->statFile, buffer, sizeof(buffer));
+    if (size < (int) sizeof(buffer)) {
+        LOGE("EOF trying to read stat file.");
+        return 0;
+    }
+    if (buffer[0] != ')') {
+        // The executable name must have changed.
+        result = lseek(thread->statFile, 0, SEEK_SET);
+        if (result < 0) {
+            LOGE("lseek() error.");
+            return 0;
+        }
+        return readStateFromBeginning(thread);
+    }
+    char state = buffer[2];
+    if (state == 0) {
+        LOGE("State char is 0.");
+    }
+    return state;
+}
+
+ThreadStatus dvmGetNativeThreadStatus(Thread* thread) {
+    // TODO: Add a custom hook so this just reads a char from memory.
+
+    ThreadStatus status = thread->status;
+    if (status != THREAD_NATIVE) {
+        // Return cached status so we don't accidentally return THREAD_NATIVE.
+        return status;
+    }
+
+    if (thread->statFile == -1) {
+        // We tried and failed to open the file earlier. Return current status.
+        return thread->status;
+    }
+
+    // Note: see "man proc" for the format of stat.
+    char state;
+    if (thread->statFile == 0) {
+        // We haven't tried to open the file yet. Do so.
+        char fileName[256];
+        sprintf(fileName, "/proc/self/task/%d/stat", thread->systemTid);
+        thread->statFile = open(fileName, O_RDONLY);
+        if (thread->statFile == NULL) {
+            LOGE("Error opening %s: %s", fileName, strerror(errno));
+            thread->statFile = -1;
+            return thread->status;
+        }
+        state = readStateFromBeginning(thread);
+    } else {
+        state = readStateRelatively(thread);
+    }
+
+    if (state == 0) {
+        close(thread->statFile);
+        thread->statFile = -1;
+        return thread->status;
+    }
+    ThreadStatus nativeStatus = stateToStatus(state);
+
+    // The thread status could have changed from NATIVE.
+    status = thread->status;
+    return status == THREAD_NATIVE ? nativeStatus : status;
 }

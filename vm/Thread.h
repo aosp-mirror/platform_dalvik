@@ -51,6 +51,7 @@ typedef enum ThreadStatus {
     THREAD_STARTING     = 6,        /* started, not yet on thread list */
     THREAD_NATIVE       = 7,        /* off in a JNI native method */
     THREAD_VMWAIT       = 8,        /* waiting on a VM resource */
+    THREAD_PAGING       = 9,        /* paging memory */
 } ThreadStatus;
 
 /* thread priorities, from java.lang.Thread */
@@ -90,7 +91,7 @@ typedef struct Thread {
      * Thread's current status.  Can only be changed by the thread itself
      * (i.e. don't mess with this from other threads).
      */
-    ThreadStatus status;
+    volatile ThreadStatus status;
 
     /*
      * This is the number of times the thread has been suspended.  When the
@@ -219,6 +220,11 @@ typedef struct Thread {
     /* Buffer for register state during self verification */
     struct ShadowSpace* shadowSpace;
 #endif
+
+    /* /proc/PID/task/TID/stat */
+    int statFile;
+    /* offset of state char in stat file, last we checked */
+    int stateOffset;
 } Thread;
 
 /* start point for an internal thread; mimics pthread args */
@@ -439,6 +445,13 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
 void dvmDumpAllThreads(bool grabLock);
 void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
 
+/*
+ * Reads the native thread status. If the thread is in native code, this
+ * function queries the native thread state and converts it to an equivalent
+ * ThreadStatus. If the native status can't be read, this function returns
+ * THREAD_NATIVE.
+ */
+ThreadStatus dvmGetNativeThreadStatus(Thread* thread);
 
 #ifdef WITH_MONITOR_TRACKING
 /*

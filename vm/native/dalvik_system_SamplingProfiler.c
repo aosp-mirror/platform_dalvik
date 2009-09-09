@@ -25,10 +25,10 @@
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
-// ~16k
+// ~20k
 #define INITIAL_CAPACITY 1024
 
-// ~64k
+// ~80k
 #define MAX_CAPACITY 4096
 
 typedef enum {
@@ -43,20 +43,27 @@ typedef enum {
 typedef enum {
     /** Executing bytecode. */
     RUNNING_THREAD,
-    /** In a native method. */
-    NATIVE_THREAD,
     /** Waiting on a lock or VM resource. */
     SUSPENDED_THREAD
 } ThreadState;
 
 #define THREAD_STATE_SIZE (SUSPENDED_THREAD + 1)
 
+typedef enum {
+    /** This method is in the call stack. */
+    CALLING_METHOD,
+    /** VM is in this method. */
+    LEAF_METHOD
+} MethodState;
+
+#define METHOD_STATE_SIZE (LEAF_METHOD + 1)
+
 /** SampleSet entry. */
 typedef struct {
     /** Entry key. */
     const Method* method; // 4 bytes
     /** Sample counts for method divided by thread type and state. */
-    u2 counts[THREAD_TYPE_SIZE][THREAD_STATE_SIZE]; // 12 bytes
+    u2 counts[THREAD_TYPE_SIZE][THREAD_STATE_SIZE][METHOD_STATE_SIZE]; // 16B
 } MethodCount;
 
 /**
@@ -143,7 +150,8 @@ static void expand(SampleSet* oldSet) {
 
 /** Increments counter for method in set. */
 static void countMethod(SampleSet* set, const Method* method,
-        ThreadType threadType, ThreadState threadState) {
+        ThreadType threadType, ThreadState threadState,
+        MethodState methodState) {
     MethodCount* entries = set->entries;
     int start = hash(method) & set->mask;
     int i;
@@ -152,7 +160,7 @@ static void countMethod(SampleSet* set, const Method* method,
 
         if (entry->method == method) {
             // We found an existing entry.
-            entry->counts[threadType][threadState]++;
+            entry->counts[threadType][threadState][methodState]++;
             return;
         }
 
@@ -160,14 +168,15 @@ static void countMethod(SampleSet* set, const Method* method,
             // Add a new entry.
             if (set->size < set->maxSize) {
                 entry->method = method;
-                entry->counts[threadType][threadState] = 1;
+                entry->counts[threadType][threadState][methodState] = 1;
                 set->collisions += (i != start);
                 set->size++;
             } else {
                 if (set->capacity < MAX_CAPACITY) {
                     // The set is 3/4 full. Expand it, and then add the entry.
                     expand(set);
-                    countMethod(set, method, threadType, threadState);
+                    countMethod(set, method, threadType, threadState,
+                            methodState);
                 } else {
                     // Don't add any more entries.
                     // TODO: Should we replace the LRU entry?
@@ -193,10 +202,10 @@ static void sample(SampleSet* set, Thread* thread) {
         ? EVENT_THREAD : OTHER_THREAD;
 
     ThreadState threadState;
-    switch (thread->status) {
+    switch (dvmGetNativeThreadStatus(thread)) {
         case THREAD_RUNNING: threadState = RUNNING_THREAD; break;
-        case THREAD_NATIVE: threadState = NATIVE_THREAD; break;
-        default: threadState = SUSPENDED_THREAD;
+        case THREAD_NATIVE: dvmAbort();
+        default: threadState = SUSPENDED_THREAD; // includes PAGING
     }
 
     /*
@@ -213,13 +222,15 @@ static void sample(SampleSet* set, Thread* thread) {
         return;
     }
 
+    MethodState methodState = LEAF_METHOD;
     while (true) {
         StackSaveArea* saveArea = SAVEAREA_FROM_FP(currentFrame);
 
         const Method* method = saveArea->method;
         // Count the method now. We'll validate later that it's a real Method*.
         if (method != NULL) {
-            countMethod(set, method, threadType, threadState);
+            countMethod(set, method, threadType, threadState, methodState);
+            methodState = CALLING_METHOD;
         }
 
         void* callerFrame = saveArea->prevFrame;
@@ -398,7 +409,8 @@ static int calculateSnapshotEntrySize(void* data, void* arg) {
 
         size += 2; // method name size
         size += wrapper->methodNameLength;
-        size += THREAD_TYPE_SIZE * THREAD_STATE_SIZE * 2; // sample counts
+        // sample counts
+        size += THREAD_TYPE_SIZE * THREAD_STATE_SIZE * METHOD_STATE_SIZE * 2;
         wrapper = wrapper->next;
     } while (wrapper != NULL);
 
@@ -451,11 +463,15 @@ static int writeSnapshotEntry(void* data, void* arg) {
                 wrapper->methodNameLength);
 
         // Sample counts.
-        u2 (*counts)[THREAD_STATE_SIZE] = wrapper->methodCount->counts;
-        int type, state;
+        u2 (*counts)[THREAD_STATE_SIZE][METHOD_STATE_SIZE]
+                = wrapper->methodCount->counts;
+        int type, threadState, methodState;
         for (type = 0; type < THREAD_TYPE_SIZE; type++)
-            for (state = 0; state < THREAD_STATE_SIZE; state++)
-                writeShort(offset, counts[type][state]);
+            for (threadState = 0; threadState < THREAD_STATE_SIZE;
+                    threadState++)
+                for (methodState = 0; methodState < METHOD_STATE_SIZE;
+                        methodState++)
+                    writeShort(offset, counts[type][threadState][methodState]);
 
         methodCount++;
         wrapper = wrapper->next;
@@ -489,13 +505,16 @@ static void Dalvik_dalvik_system_SamplingProfiler_snapshot(const u4* args,
      *  MethodEntry:
      *    method name length (2 bytes)
      *    UTF-8 method name
-     *    Counts (for event thread)
-     *    Counts (for other threads)
+     *    CountsByThreadState (for event thread)
+     *    CountsByThreadState (for other threads)
      *
-     *  Counts:
-     *    running count (2 bytes)
-     *    native count (2 bytes)
-     *    suspended count (2 bytes)
+     *  CountsByThreadState:
+     *    CountsByMethodState (for running threads)
+     *    CountsByMethodState (for suspended threads)
+     *
+     *  CountsByMethodState:
+     *    as calling method (2 bytes)
+     *    as leaf method (2 bytes)
      */
 
     SampleSet* set = (SampleSet*) args[0];
@@ -591,6 +610,17 @@ static void Dalvik_dalvik_system_SamplingProfiler_allocate(const u4* args,
 }
 
 /**
+ * Frees native memory.
+ */
+static void Dalvik_dalvik_system_SamplingProfiler_free(const u4* args,
+        JValue* pResult) {
+    SampleSet* set = (SampleSet*) args[0];
+    free(set->entries);
+    free(set);
+    RETURN_VOID();
+}
+
+/**
  * Identifies the event thread.
  */
 static void Dalvik_dalvik_system_SamplingProfiler_setEventThread(const u4* args,
@@ -608,6 +638,7 @@ const DalvikNativeMethod dvm_dalvik_system_SamplingProfiler[] = {
     { "size", "(I)I", Dalvik_dalvik_system_SamplingProfiler_size },
     { "sample", "(I)I", Dalvik_dalvik_system_SamplingProfiler_sample },
     { "snapshot", "(I)[B", Dalvik_dalvik_system_SamplingProfiler_snapshot },
+    { "free", "(I)V", Dalvik_dalvik_system_SamplingProfiler_free },
     { "allocate", "()I", Dalvik_dalvik_system_SamplingProfiler_allocate },
     { "setEventThread", "(ILjava/lang/Thread;)V",
             Dalvik_dalvik_system_SamplingProfiler_setEventThread },
