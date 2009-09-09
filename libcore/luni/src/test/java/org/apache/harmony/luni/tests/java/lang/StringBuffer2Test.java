@@ -414,7 +414,6 @@ public class StringBuffer2Test extends junit.framework.TestCase {
         method = "ensureCapacity",
         args = {int.class}
     )
-    @KnownFailure("Google TODO 1481226") 
     public void test_ensureCapacityI() {
         // Test for method void java.lang.StringBuffer.ensureCapacity(int)
         StringBuffer sb = new StringBuffer(10);
