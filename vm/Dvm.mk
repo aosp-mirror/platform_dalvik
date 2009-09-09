@@ -195,13 +195,11 @@ LOCAL_SRC_FILES := \
 
 ifeq ($(WITH_JIT_TUNING),true)
   LOCAL_CFLAGS += -DWITH_JIT_TUNING
+  # NOTE: Turn on assertion for JIT for now
+  LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT
 endif
 
 ifeq ($(WITH_JIT),true)
-  # NOTE: Turn on assertion for JIT for now
-  LOCAL_CFLAGS += -DWITH_DALVIK_ASSERT
-  # NOTE: Also turn on tuning when JIT is enabled for now
-  LOCAL_CFLAGS += -DWITH_JIT_TUNING
   LOCAL_CFLAGS += -DWITH_JIT
   LOCAL_SRC_FILES += \
 	../dexdump/OpCodeNames.c \
