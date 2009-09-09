@@ -1235,7 +1235,7 @@ public final class BytecodeArray {
          *
          * @param offset   offset to the instruction
          * @param length   length of the instruction, in bytes
-         * @param cst non-null; the type of the array
+         * @param type non-null; the type of the array
          * @param initVals non-null; list of bytecode offsets for init values
          */
         public void visitNewarray(int offset, int length, CstType type,
