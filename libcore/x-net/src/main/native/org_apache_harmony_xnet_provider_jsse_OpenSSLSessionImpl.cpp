@@ -150,20 +150,15 @@ static jint org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_deserialize
  */
 static jbyteArray org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getid(JNIEnv* env, jobject object)
 {
-    SSL_SESSION * ssl_session;
-    jbyteArray bytes;
-    jbyte *tmp;
+    SSL_SESSION* ssl_session = getSslSessionPointer(env, object);
 
-    ssl_session = getSslSessionPointer(env, object);
-
-    bytes = env->NewByteArray(ssl_session->session_id_length);
-    if (bytes != NULL) {
-        tmp = env->GetByteArrayElements(bytes, NULL);
-        memcpy(tmp, ssl_session->session_id, ssl_session->session_id_length);
-        env->ReleaseByteArrayElements(bytes, tmp, 0);
+    jbyteArray result = env->NewByteArray(ssl_session->session_id_length);
+    if (result != NULL) {
+        jbyte* src = reinterpret_cast<jbyte*>(ssl_session->session_id);
+        env->SetByteArrayRegion(result, 0, ssl_session->session_id_length, src);
     }
 
-    return bytes;
+    return result;
 }
 
 /**

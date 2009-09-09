@@ -76,9 +76,8 @@ static jobjectArray getcertificatebytes(JNIEnv* env,
                 joa = NULL;
                 break;
             } else {
-                jbyte *tmp = env->GetByteArrayElements(bytes, NULL);
-                memcpy(tmp, bptr->data, bptr->length);
-                env->ReleaseByteArrayElements(bytes, tmp, 0);
+                jbyte* src = reinterpret_cast<jbyte*>(bptr->data);
+                env->SetByteArrayRegion(bytes, 0, bptr->length, src);
                 env->SetObjectArrayElement(joa, i, bytes);
             }
         }

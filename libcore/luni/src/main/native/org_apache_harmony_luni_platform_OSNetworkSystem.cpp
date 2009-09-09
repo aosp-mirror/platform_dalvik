@@ -222,9 +222,6 @@ static void throwNullPointerException(JNIEnv *env) {
  */
 static int javaAddressToStructIn(
         JNIEnv *env, jbyteArray java_address, struct in_addr *address) {
-
-    memset(address, 0, sizeof(address));
-
     if (java_address == NULL) {
         return -1;
     }
@@ -233,15 +230,10 @@ static int javaAddressToStructIn(
         return -1;
     }
 
-    jbyte * java_address_bytes
-        =  env->GetByteArrayElements(java_address, NULL);
+    memset(address, 0, sizeof(address));
 
-    memcpy(&(address->s_addr),
-        java_address_bytes,
-        sizeof(address->s_addr));
-
-    env->ReleaseByteArrayElements(java_address, java_address_bytes, JNI_ABORT);
-
+    jbyte* dst = reinterpret_cast<jbyte*>(&(address->s_addr));
+    env->GetByteArrayRegion(java_address, 0, sizeof(address->s_addr), dst);
     return 0;
 }
 
@@ -336,49 +328,45 @@ static jobject socketAddressToInetAddress(JNIEnv *env,
  *
  * @exception SocketError if the address family is unknown
  */
-static int inetAddressToSocketAddress(JNIEnv *env,
-        jobject inetaddress, int port, struct sockaddr_storage *sockaddress) {
-
+static int inetAddressToSocketAddress(JNIEnv *env, jobject inetaddress,
+        int port, struct sockaddr_storage *sockaddress) {
     // Get the byte array that stores the IP address bytes in the InetAddress.
-    jbyteArray addressByteArray;
-    addressByteArray = (jbyteArray)env->GetObjectField(inetaddress,
-            gCachedFields.iaddr_ipaddress);
-    if (addressByteArray == NULL) {
-      throwNullPointerException(env);
-      return -1;
+    if (inetaddress == NULL) {
+        throwNullPointerException(env);
+        return -1;
     }
-
-    // Get the raw IP address bytes.
-    jbyte *addressBytes = env->GetByteArrayElements(addressByteArray, NULL);
+    jbyteArray addressBytes =
+        reinterpret_cast<jbyteArray>(env->GetObjectField(inetaddress,
+            gCachedFields.iaddr_ipaddress));
     if (addressBytes == NULL) {
-      throwNullPointerException(env);
-      return -1;
+        throwNullPointerException(env);
+        return -1;
     }
 
     // Convert the IP address bytes to the proper IP address type.
-    size_t addressLength = env->GetArrayLength(addressByteArray);
-    int result = 0;
+    size_t addressLength = env->GetArrayLength(addressBytes);
     if (addressLength == 4) {
         // IPv4 address.
-        struct sockaddr_in *sin = (struct sockaddr_in *) sockaddress;
+        struct sockaddr_in *sin = reinterpret_cast<sockaddr_in*>(sockaddress);
         memset(sin, 0, sizeof(struct sockaddr_in));
         sin->sin_family = AF_INET;
         sin->sin_port = htons(port);
-        memcpy(&sin->sin_addr.s_addr, addressBytes, 4);
+        jbyte* dst = reinterpret_cast<jbyte*>(&sin->sin_addr.s_addr);
+        env->GetByteArrayRegion(addressBytes, 0, 4, dst);
     } else if (addressLength == 16) {
         // IPv6 address.
-        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sockaddress;
+        struct sockaddr_in6 *sin6 = reinterpret_cast<sockaddr_in6*>(sockaddress);
         memset(sin6, 0, sizeof(struct sockaddr_in6));
         sin6->sin6_family = AF_INET6;
         sin6->sin6_port = htons(port);
-        memcpy(&sin6->sin6_addr.s6_addr, addressBytes, 16);
+        jbyte* dst = reinterpret_cast<jbyte*>(&sin6->sin6_addr.s6_addr);
+        env->GetByteArrayRegion(addressBytes, 0, 16, dst);
     } else {
         // Unknown address family.
         throwSocketException(env, SOCKERR_BADAF);
-        result = -1;
+        return -1;
     }
-    env->ReleaseByteArrayElements(addressByteArray, addressBytes, 0);
-    return result;
+    return 0;
 }
 
 /**

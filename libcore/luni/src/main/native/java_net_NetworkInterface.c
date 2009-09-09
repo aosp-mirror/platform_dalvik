@@ -241,24 +241,18 @@ static char * netLookupErrorString(int anErrorNum) {
 static int structInToJavaAddress(
         JNIEnv *env, struct in_addr *address, jbyteArray java_address) {
 
-    if(java_address == NULL) {
+    if (java_address == NULL) {
         throwNullPointerException(env);
         return -1;
     }
 
-    if((*env)->GetArrayLength(env, java_address) != sizeof(address->s_addr)) {
+    if ((*env)->GetArrayLength(env, java_address) != sizeof(address->s_addr)) {
         jniThrowIOException(env, errno);
         return -1;
     }
 
-    jbyte *java_address_bytes;
-
-    java_address_bytes = (*env)->GetByteArrayElements(env, java_address, NULL);
-
-    memcpy(java_address_bytes, &(address->s_addr), sizeof(address->s_addr));
-
-    (*env)->ReleaseByteArrayElements(env, java_address, java_address_bytes, 0);
-
+    jbyte* src = (jbyte*)(&(address->s_addr));
+    (*env)->SetByteArrayRegion(env, java_address, 0, sizeof(address->s_addr), src);
     return 0;
 }
 
