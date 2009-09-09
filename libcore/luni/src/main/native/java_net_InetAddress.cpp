@@ -24,7 +24,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include <netdb.h>
 #include <errno.h>
 
@@ -254,53 +253,40 @@ static jstring InetAddress_gethostbyaddr(JNIEnv* env, jobject obj,
         return NULL;
     }
 
-    size_t addrlen = env->GetArrayLength(javaAddress);
-    jbyte* rawAddress = env->GetByteArrayElements(javaAddress, NULL);
-    if (rawAddress == NULL) {
-        throwNullPointerException(env);
-        return NULL;
-    }
-
     // Convert the raw address bytes into a socket address structure.
-    int ret = 0;
     struct sockaddr_storage ss;
-    struct sockaddr_in *sin = (struct sockaddr_in *) &ss;
-    struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &ss;
-    size_t socklen;
     memset(&ss, 0, sizeof(ss));
-    switch (addrlen) {
-        case 4:
-            socklen = sizeof(struct sockaddr_in);
-            sin->sin_family = AF_INET;
-            memcpy(&sin->sin_addr.s_addr, rawAddress, addrlen);
-            env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
-            break;
-        case 16:
-            socklen = sizeof(struct sockaddr_in6);
-            sin6->sin6_family = AF_INET6;
-            memcpy(&sin6->sin6_addr.s6_addr, rawAddress, addrlen);
-            env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
-            break;
-        default:
-            // The caller already throws an exception in this case. Don't worry
-            // about it here.
-            env->ReleaseByteArrayElements(javaAddress, rawAddress, JNI_ABORT);
-            return NULL;
+
+    size_t socklen;
+    const size_t addressLength = env->GetArrayLength(javaAddress);
+    if (addressLength == 4) {
+        struct sockaddr_in* sin = reinterpret_cast<sockaddr_in*>(&ss);
+        sin->sin_family = AF_INET;
+        socklen = sizeof(struct sockaddr_in);
+        jbyte* dst = reinterpret_cast<jbyte*>(&sin->sin_addr.s_addr);
+        env->GetByteArrayRegion(javaAddress, 0, 4, dst);
+    } else if (addressLength == 16) {
+        struct sockaddr_in6 *sin6 = reinterpret_cast<sockaddr_in6*>(&ss);
+        sin6->sin6_family = AF_INET6;
+        socklen = sizeof(struct sockaddr_in6);
+        jbyte* dst = reinterpret_cast<jbyte*>(&sin6->sin6_addr.s6_addr);
+        env->GetByteArrayRegion(javaAddress, 0, 16, dst);
+    } else {
+        // The caller already throws an exception in this case. Don't worry
+        // about it here.
+        return NULL;
     }
 
     // Look up the host name from the IP address.
     char name[NI_MAXHOST];
-    if (ret == 0) {
-        ret = getnameinfo((struct sockaddr *) &ss, socklen, name, sizeof(name),
-                          NULL, 0, NI_NAMEREQD);
+    int ret = getnameinfo(reinterpret_cast<sockaddr*>(&ss), socklen,
+                          name, sizeof(name), NULL, 0, NI_NAMEREQD);
+    if (ret != 0) {
+        jniThrowException(env, "java/net/UnknownHostException", gai_strerror(ret));
+        return NULL;
     }
 
-    if (ret == 0) {
-        return env->NewStringUTF(name);
-    }
-
-    jniThrowException(env, "java/net/UnknownHostException", gai_strerror(ret));
-    return NULL;
+    return env->NewStringUTF(name);
 }
 
 /*
