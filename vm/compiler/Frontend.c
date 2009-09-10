@@ -465,9 +465,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             exitBB->needFallThroughBranch = true;
 
             loopBranch->taken = exitBB;
-#if !defined(WITH_SELF_VERIFICATION)
-            loopBranch->fallThrough = startBB->next;
-#else
+#if defined(WITH_SELF_VERIFICATION)
             BasicBlock *backwardCell =
                 dvmCompilerNewBB(CHAINING_CELL_BACKWARD_BRANCH);
             lastBB->next = backwardCell;
@@ -476,6 +474,21 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             backwardCell->startOffset = startBB->startOffset;
             backwardCell->id = numBlocks++;
             loopBranch->fallThrough = backwardCell;
+#elif defined(WITH_JIT_TUNING)
+            if (gDvmJit.profile) {
+                BasicBlock *backwardCell =
+                    dvmCompilerNewBB(CHAINING_CELL_BACKWARD_BRANCH);
+                lastBB->next = backwardCell;
+                lastBB = backwardCell;
+
+                backwardCell->startOffset = startBB->startOffset;
+                backwardCell->id = numBlocks++;
+                loopBranch->fallThrough = backwardCell;
+            } else {
+                loopBranch->fallThrough = startBB->next;
+            }
+#else
+            loopBranch->fallThrough = startBB->next;
 #endif
 
             /* Create the chaining cell as the fallthrough of the exit block */

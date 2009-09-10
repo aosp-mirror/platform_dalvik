@@ -1345,6 +1345,11 @@ u4* dvmJitUnchain(void* codeAddr)
                     targetOffset = offsetof(InterpState,
                           jitToInterpEntries.dvmJitToBackwardBranch);
                     break;
+#elif defined(WITH_JIT_TUNING)
+                case CHAINING_CELL_BACKWARD_BRANCH:
+                    targetOffset = offsetof(InterpState,
+                          jitToInterpEntries.dvmJitToInterpNormal);
+                    break;
 #endif
                 default:
                     dvmAbort();
