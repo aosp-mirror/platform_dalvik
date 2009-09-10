@@ -3386,13 +3386,18 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
-#if defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION) || defined(WITH_JIT_TUNING)
 /* Chaining cell for branches that branch back into the same basic block */
 static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
                                              unsigned int offset)
 {
+#if defined(WITH_SELF_VERIFICATION)
     newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE,
         offsetof(InterpState, jitToInterpEntries.dvmJitToBackwardBranch) >> 2);
+#else
+    newLIR3(cUnit, THUMB_LDR_RRI5, r0, rGLUE,
+        offsetof(InterpState, jitToInterpEntries.dvmJitToInterpNormal) >> 2);
+#endif
     newLIR1(cUnit, THUMB_BLX_R, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
@@ -3749,7 +3754,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         opReg(cUnit, OP_BLX, r1);
                     }
                     break;
-#if defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION) || defined(WITH_JIT_TUNING)
                 case CHAINING_CELL_BACKWARD_BRANCH:
                     labelList[i].opCode =
                         ARM_PSEUDO_CHAINING_CELL_BACKWARD_BRANCH;
@@ -3969,7 +3974,7 @@ gen_fallthrough:
                     handleHotChainingCell(cUnit,
                         blockList[blockId]->startOffset);
                     break;
-#if defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION) || defined(WITH_JIT_TUNING)
                 case CHAINING_CELL_BACKWARD_BRANCH:
                     handleBackwardBranchChainingCell(cUnit,
                         blockList[blockId]->startOffset);
