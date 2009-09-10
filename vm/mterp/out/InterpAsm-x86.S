@@ -8727,11 +8727,12 @@ common_invokeMethodNoRange:
     ADVANCE_PC(3)
     GOTO_NEXT                           # jump to next instruction
 
-.LstackOverflow:
+.LstackOverflow:    # eax=methodToCall
+    movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
     GET_GLUE(%eax)                      # %eax<- pMterpGlue
     movl        offGlue_self(%eax), %eax # %eax<- glue->self
     movl        %eax, OUT_ARG0(%esp)    # push parameter self
-    call        dvmHandleStackOverflow  # call: (Thread* self)
+    call        dvmHandleStackOverflow  # call: (Thread* self, Method* meth)
     UNSPILL(rPC)                        # return: void
     jmp         common_exceptionThrown  # handle exception
 

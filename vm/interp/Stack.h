@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Stack frames, and uses thereof.
  */
@@ -275,7 +276,7 @@ bool dvmCreateStackTraceArray(const void* fp, const Method*** pArray,
 /*
  * Common handling for stack overflow.
  */
-void dvmHandleStackOverflow(Thread* self);
+void dvmHandleStackOverflow(Thread* self, const Method* method);
 void dvmCleanupStackOverflow(Thread* self);
 
 /* debugging; dvmDumpThread() is probably a better starting point */

@@ -3854,10 +3854,11 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             bottom = (u1*) newSaveArea - methodToCall->outsSize * sizeof(u4);
             if (bottom < self->interpStackEnd) {
                 /* stack overflow */
-                LOGV("Stack overflow on method call (start=%p end=%p newBot=%p size=%d '%s')\n",
+                LOGV("Stack overflow on method call (start=%p end=%p newBot=%p(%d) size=%d '%s')\n",
                     self->interpStackStart, self->interpStackEnd, bottom,
-                    self->interpStackSize, methodToCall->name);
-                dvmHandleStackOverflow(self);
+                    (u1*) fp - bottom, self->interpStackSize,
+                    methodToCall->name);
+                dvmHandleStackOverflow(self, methodToCall);
                 assert(dvmCheckException(self));
                 GOTO_exceptionThrown();
             }
