@@ -337,16 +337,12 @@ static jlong harmony_io_writeDirectImpl(JNIEnv * env, jobject thiz, jint fd,
 static jlong harmony_io_readImpl(JNIEnv * env, jobject thiz, jint fd, 
         jbyteArray byteArray, jint offset, jint nbytes) {
 
-    jboolean isCopy;
-    jbyte *bytes;
-    jlong result;
-
     if (nbytes == 0) {
         return 0;
     }
 
-    bytes = env->GetByteArrayElements(byteArray, &isCopy);
-
+    jbyte* bytes = env->GetByteArrayElements(byteArray, NULL);
+    jlong result;
     for (;;) {
         result = read(fd, (void *) (bytes + offset), (int) nbytes);
 
@@ -374,7 +370,7 @@ static jlong harmony_io_readImpl(JNIEnv * env, jobject thiz, jint fd,
             jniThrowException(env, "java/io/InterruptedIOException",
                     "Read timed out");
         } else {
-        jniThrowException(env, "java/io/IOException", strerror(errno));
+            jniThrowException(env, "java/io/IOException", strerror(errno));
         }
     }
 
@@ -389,10 +385,8 @@ static jlong harmony_io_readImpl(JNIEnv * env, jobject thiz, jint fd,
 static jlong harmony_io_writeImpl(JNIEnv * env, jobject thiz, jint fd, 
         jbyteArray byteArray, jint offset, jint nbytes) {
 
-    jboolean isCopy;
-    jbyte *bytes = env->GetByteArrayElements(byteArray, &isCopy);
+    jbyte* bytes = env->GetByteArrayElements(byteArray, NULL);
     jlong result;
-
     for (;;) {
         result = write(fd, (const char *) bytes + offset, (int) nbytes);
         
@@ -416,7 +410,7 @@ static jlong harmony_io_writeImpl(JNIEnv * env, jobject thiz, jint fd,
             jniThrowException(env, "java/io/InterruptedIOException",
                     "Write timed out");
         } else {
-        jniThrowException(env, "java/io/IOException", strerror(errno));
+            jniThrowException(env, "java/io/IOException", strerror(errno));
         }
     }
 
@@ -562,11 +556,13 @@ static jint harmony_io_truncateImpl(JNIEnv * env, jobject thiz, jint fd,
 static jint harmony_io_openImpl(JNIEnv * env, jobject obj, jbyteArray path, 
         jint jflags) {
     
+    if (path == NULL) {
+        jniThrowException(env, "java/lang/NullPointerException", NULL);
+        return -1;
+    }
+    
     int flags = 0;
     int mode = 0; 
-    jint * portFD;
-    jsize length;
-    char pathCopy[HyMaxPath];
 
 // BEGIN android-changed
 // don't want default permissions to allow global access.
@@ -596,19 +592,14 @@ static jint harmony_io_openImpl(JNIEnv * env, jobject obj, jbyteArray path,
 
     flags = EsTranslateOpenFlags(flags);
 
-    length = env->GetArrayLength (path);
+    jsize length = env->GetArrayLength (path);
     length = length < HyMaxPath - 1 ? length : HyMaxPath - 1;
+    char pathCopy[HyMaxPath];
     env->GetByteArrayRegion (path, 0, length, (jbyte *)pathCopy);
     pathCopy[length] = '\0';
     convertToPlatform (pathCopy);
 
     int cc;
-    
-    if(pathCopy == NULL) {
-        jniThrowException(env, "java/lang/NullPointerException", NULL);
-        return -1;
-    }
-
     do {
         cc = open(pathCopy, flags, mode);
     } while(cc < 0 && errno == EINTR);
@@ -731,44 +722,7 @@ static jint harmony_io_ioctlAvailable(JNIEnv *env, jobject thiz, jint fd) {
  */
 static jlong harmony_io_ttyReadImpl(JNIEnv *env, jobject thiz, 
         jbyteArray byteArray, jint offset, jint nbytes) {
-  
-    jboolean isCopy;
-    jbyte *bytes = env->GetByteArrayElements(byteArray, &isCopy);
-    jlong result;
-
-    for(;;) {
-
-        result = (jlong) read(STDIN_FILENO, (char *)(bytes + offset), (int) nbytes);
-
-        if ((result != -1) || (errno != EINTR)) {
-            break;
-        }
-
-        /*
-         * If we didn't break above, that means that the read() call
-         * returned due to EINTR. We shield Java code from this
-         * possibility by trying again. Note that this is different
-         * from EAGAIN, which should result in this code throwing
-         * an InterruptedIOException.
-         */
-    }
-
-    env->ReleaseByteArrayElements(byteArray, bytes, 0);
-
-    if (result == 0) {
-        return -1;
-    }
-    
-    if (result == -1) {
-        if (errno == EAGAIN) {
-            jniThrowException(env, "java/io/InterruptedIOException",
-                    "Read timed out");
-        } else {
-            jniThrowException(env, "java/io/IOException", strerror(errno));
-        }
-    }
-
-    return result;
+    return harmony_io_readImpl(env, thiz, STDIN_FILENO, byteArray, offset, nbytes);
 }
 
 /*

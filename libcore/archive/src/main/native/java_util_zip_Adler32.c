@@ -25,16 +25,11 @@ Java_java_util_zip_Adler32_updateImpl (JNIEnv * env, jobject recv,
                                        jbyteArray buf, int off, int len,
                                        jlong crc)
 {
-  jbyte *b;
-  jboolean isCopy;
-  jlong result;
-
-  b = (*env)->GetPrimitiveArrayCritical (env, buf, &isCopy);
+  jbyte* b = (*env)->GetPrimitiveArrayCritical (env, buf, NULL);
   if (b == NULL) {
-    throwNewOutOfMemoryError(env, "");
     return 0;
   }
-  result = (jlong) adler32 ((uLong) crc, (Bytef *) (b + off), (uInt) len);
+  jlong result = (jlong) adler32 ((uLong) crc, (Bytef *) (b + off), (uInt) len);
   (*env)->ReleasePrimitiveArrayCritical (env, buf, b, JNI_ABORT);
 
   return result;
