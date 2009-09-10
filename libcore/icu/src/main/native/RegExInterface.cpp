@@ -32,12 +32,12 @@ static jchar EMPTY_STRING = 0;
  * character data it refers to (but does not have a copy of), so we can
  * manage memory properly.
  */
-typedef struct RegExDataStruct {
+struct RegExData {
     // A pointer to the ICU regular expression
     URegularExpression* regex;
     // A pointer to (a copy of) the input text that *we* manage
     jchar* text;
-} RegExData;
+};
 
 static void throwPatternSyntaxException(JNIEnv* env, UErrorCode status,
                                         jstring pattern, UParseError error)
@@ -63,8 +63,8 @@ static void _close(JNIEnv* env, jclass clazz, RegExData* data)
         uregex_close(data->regex);
     }
 
-    if (data->text != NULL && data->text != &EMPTY_STRING) {
-        free(data->text);
+    if (data->text != &EMPTY_STRING) {
+        delete[] data->text;
     }
 
     free(data);
@@ -125,8 +125,8 @@ static void setText(JNIEnv* env, jclass clazz, RegExData* data, jstring text)
         return;
     }
 
-    if (data->text != NULL && data->text != &EMPTY_STRING) {
-        free(data->text);
+    if (data->text != &EMPTY_STRING) {
+        delete[] data->text;
         data->text = NULL;
     }
 
@@ -134,11 +134,9 @@ static void setText(JNIEnv* env, jclass clazz, RegExData* data, jstring text)
     if (textLen == 0) {
         data->text = &EMPTY_STRING;
     } else {
-        jchar const * textRaw = env->GetStringChars(text, NULL);
-        data->text = (jchar*)malloc((textLen + 1) * sizeof(jchar));
-        memcpy(data->text, textRaw, textLen * sizeof(jchar));
+        data->text = new jchar[textLen + 1];
+        env->GetStringRegion(text, 0, textLen, data->text);
         data->text[textLen] = 0;
-        env->ReleaseStringChars(text, textRaw);
     }
 
     uregex_setText(data->regex, data->text, textLen, &status);

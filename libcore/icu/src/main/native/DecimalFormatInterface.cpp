@@ -671,28 +671,12 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
 
 static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
         jobject position) {
-
-    const char * textUTF = env->GetStringUTFChars(text, NULL);
-    env->ReleaseStringUTFChars(text, textUTF);
-
-    const char * parsePositionClassName = "java/text/ParsePosition";
-    const char * longClassName = "java/lang/Long";
-    const char * doubleClassName = "java/lang/Double";
-    const char * bigDecimalClassName = "java/math/BigDecimal";
-    const char * bigIntegerClassName = "java/math/BigInteger";
-
-    UErrorCode status = U_ZERO_ERROR;
-
-    UNumberFormat *fmt = (UNumberFormat *)(int)addr;
-
-    jchar *str = (UChar *)env->GetStringChars(text, NULL);
-    int strlength = env->GetStringLength(text);
-
-    jclass parsePositionClass = env->FindClass(parsePositionClassName);
-    jclass longClass =  env->FindClass(longClassName);
-    jclass doubleClass =  env->FindClass(doubleClassName);
-    jclass bigDecimalClass = env->FindClass(bigDecimalClassName);
-    jclass bigIntegerClass = env->FindClass(bigIntegerClassName);
+    // TODO: cache these?
+    jclass parsePositionClass = env->FindClass("java/text/ParsePosition");
+    jclass longClass =  env->FindClass("java/lang/Long");
+    jclass doubleClass =  env->FindClass("java/lang/Double");
+    jclass bigDecimalClass = env->FindClass("java/math/BigDecimal");
+    jclass bigIntegerClass = env->FindClass("java/math/BigInteger");
 
     jmethodID getIndexMethodID = env->GetMethodID(parsePositionClass,
             "getIndex", "()I");
@@ -707,27 +691,26 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
     jmethodID bigIntegerInitMethodID = env->GetMethodID(bigIntegerClass, "<init>", "(Ljava/lang/String;)V");
     jmethodID doubleValueMethodID = env->GetMethodID(bigDecimalClass, "doubleValue", "()D");
 
-    bool resultAssigned;
-    int parsePos = env->CallIntMethod(position, getIndexMethodID, NULL);
-
     // make sure the ParsePosition is valid. Actually icu4c would parse a number
     // correctly even if the parsePosition is set to -1, but since the RI fails
     // for that case we have to fail too
+    int parsePos = env->CallIntMethod(position, getIndexMethodID, NULL);
+    const int strlength = env->GetStringLength(text);
     if(parsePos < 0 || parsePos > strlength) {
         return NULL;
     }
-
-    Formattable res;
-
-    const UnicodeString src((UChar*)str, strlength, strlength);
+    
     ParsePosition pp;
-
     pp.setIndex(parsePos);
 
     DigitList digits;
-
+    
+    UNumberFormat *fmt = (UNumberFormat *)(int)addr;
+    Formattable res;
+    bool resultAssigned;
+    jchar *str = (UChar *)env->GetStringChars(text, NULL);
+    const UnicodeString src((UChar*)str, strlength, strlength);
     ((const DecimalFormat*)fmt)->parse(src, resultAssigned, res, pp, FALSE, digits);
-
     env->ReleaseStringChars(text, str);
 
     if(pp.getErrorIndex() == -1) {
@@ -738,20 +721,14 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
         return NULL;
     }
 
-    Formattable::Type numType;
-    numType = res.getType();
+    Formattable::Type numType = res.getType();
     UErrorCode fmtStatus;
 
     double resultDouble;
     long resultLong;
     int64_t resultInt64;
-    UnicodeString resultString;
     jstring resultStr;
-    int resLength;
-    const char * resultUTF;
     jobject resultObject1, resultObject2;
-    jdouble doubleTest;
-    jchar * result;
 
     if (resultAssigned)
     {

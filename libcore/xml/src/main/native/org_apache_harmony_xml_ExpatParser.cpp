@@ -105,16 +105,7 @@ static jclass stringClass;
 static jstring emptyString;
 
 /**
- * Throws a NullPointerException.
- *
- * @param msg exception message
- */
-static void throw_NullPointerException(JNIEnv* env, const char* msg) {
-    jniThrowException(env, "java/lang/NullPointerException", msg);
-}
-
-/**
- * Throw a NullPointerException.
+ * Throws OutOfMemoryError.
  */
 static void throw_OutOfMemoryError(JNIEnv* env) {
     jniThrowException(env, "java/lang/OutOfMemoryError", "Out of memory.");
@@ -1308,26 +1299,21 @@ static jint getAttributeIndex(JNIEnv* env, jobject clazz,
         return getAttributeIndexForQName(
                 env, clazz, attributePointer, localName);
     }
-
     int localNameLength = env->GetStringUTFLength(localName);
 
     // Create string in the same format used by Expat: "uri|localName"
+    // TODO: do we have a guarantee that uriLength and localNameLength are small?
     char concatenated[uriLength + localNameLength + 2];
 
     // Append uri.
-    const char* uriBytes = env->GetStringUTFChars(uri, NULL);
-    if (uriBytes == NULL) return -1;
-    strcpy(concatenated, uriBytes);
-    env->ReleaseStringUTFChars(uri, uriBytes);
+    env->GetStringUTFRegion(uri, 0, uriLength, concatenated);
 
-    // Separarator.
+    // Separator.
     concatenated[uriLength] = '|';
 
     // Append local name.
-    const char* localNameBytes = env->GetStringUTFChars(localName, NULL);
-    if (localNameBytes == NULL) return -1;
-    strcpy(concatenated + uriLength + 1, localNameBytes);
-    env->ReleaseStringUTFChars(localName, localNameBytes);
+    env->GetStringUTFRegion(localName, 0, localNameLength,
+                            concatenated + uriLength + 1);
 
     return findAttributeByName(attributes, concatenated);
 }
