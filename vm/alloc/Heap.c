@@ -783,7 +783,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
          */
 
         if (priorityResult >= ANDROID_PRIORITY_BACKGROUND) {
-            dvmChangeThreadSchedulerPolicy(SCHED_FOREGROUND);
+            dvmChangeThreadSchedulerPolicy(SP_FOREGROUND);
         }
 
         if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
@@ -1036,7 +1036,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
         }
 
         if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
-            dvmChangeThreadSchedulerPolicy(SCHED_BACKGROUND);
+            dvmChangeThreadSchedulerPolicy(SP_BACKGROUND);
         }
     }
     gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;
