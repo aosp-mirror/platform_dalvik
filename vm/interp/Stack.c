@@ -80,7 +80,7 @@ static bool dvmPushInterpFrame(Thread* self, const Method* method)
              "(req=%d top=%p cur=%p size=%d %s.%s)\n",
             stackReq, self->interpStackStart, self->curFrame,
             self->interpStackSize, method->clazz->descriptor, method->name);
-        dvmHandleStackOverflow(self);
+        dvmHandleStackOverflow(self, method);
         assert(dvmCheckException(self));
         return false;
     }
@@ -153,7 +153,7 @@ bool dvmPushJNIFrame(Thread* self, const Method* method)
              "(req=%d top=%p cur=%p size=%d '%s')\n",
             stackReq, self->interpStackStart, self->curFrame,
             self->interpStackSize, method->name);
-        dvmHandleStackOverflow(self);
+        dvmHandleStackOverflow(self, method);
         assert(dvmCheckException(self));
         return false;
     }
@@ -227,7 +227,7 @@ bool dvmPushLocalFrame(Thread* self, const Method* method)
              "(req=%d top=%p cur=%p size=%d '%s')\n",
             stackReq, self->interpStackStart, self->curFrame,
             self->interpStackSize, method->name);
-        dvmHandleStackOverflow(self);
+        dvmHandleStackOverflow(self, method);
         assert(dvmCheckException(self));
         return false;
     }
@@ -1014,7 +1014,7 @@ bool dvmCreateStackTraceArray(const void* fp, const Method*** pArray,
  * need to resolve classes, which requires calling into the class loader if
  * the classes aren't already in the "initiating loader" list.
  */
-void dvmHandleStackOverflow(Thread* self)
+void dvmHandleStackOverflow(Thread* self, const Method* method)
 {
     /*
      * Can we make the reserved area available?
@@ -1030,7 +1030,15 @@ void dvmHandleStackOverflow(Thread* self)
     }
 
     /* open it up to the full range */
-    LOGI("Stack overflow, expanding (%p to %p)\n", self->interpStackEnd,
+    LOGI("threadid=%d: stack overflow on call to %s.%s:%s\n",
+        self->threadId,
+        method->clazz->descriptor, method->name, method->shorty);
+    StackSaveArea* saveArea = SAVEAREA_FROM_FP(self->curFrame);
+    LOGI("  method requires %d+%d+%d=%d bytes, fp is %p (%d left)\n",
+        method->registersSize * 4, sizeof(StackSaveArea), method->outsSize * 4,
+        (method->registersSize + method->outsSize) * 4 + sizeof(StackSaveArea),
+        saveArea, (u1*) saveArea - self->interpStackEnd);
+    LOGI("  expanding stack end (%p to %p)\n", self->interpStackEnd,
         self->interpStackStart - self->interpStackSize);
     //dvmDumpThread(self, false);
     self->interpStackEnd = self->interpStackStart - self->interpStackSize;

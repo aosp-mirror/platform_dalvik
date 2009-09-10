@@ -9477,7 +9477,8 @@ dalvik_mterp:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
-.LstackOverflow:
+.LstackOverflow:    @ r0=methodToCall
+    mov     r1, r0                      @ r1<- methodToCall
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- self
     bl      dvmHandleStackOverflow
     b       common_exceptionThrown
