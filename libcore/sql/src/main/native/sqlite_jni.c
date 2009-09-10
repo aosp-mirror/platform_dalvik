@@ -331,16 +331,10 @@ trans2iso(JNIEnv *env, int haveutf, jstring enc, jstring src,
     dest->result = 0;
     dest->tofree = 0;
     if (haveutf) {
-	const char *utf = (*env)->GetStringUTFChars(env, src, 0);
-
-	if (!utf) {
-	    return dest->result;
-	}
-	dest->tofree = malloc(strlen(utf) + 1);
-	dest->result = dest->tofree;
-	strcpy(dest->result, utf);
-	(*env)->ReleaseStringUTFChars(env, src, utf);
-	return dest->result;
+        const jsize utfLength = (*env)->GetStringUTFLength(env, src);
+        dest->result = dest->tofree = malloc(utfLength + 1);
+        (*env)->GetStringUTFRegion(env, src, 0, utfLength, dest->result);
+        return dest->result;
     }
     if (enc) {
 	bytes = (*env)->CallObjectMethod(env, src,
@@ -3674,19 +3668,16 @@ Java_SQLite_Stmt_bind__ILjava_lang_String_2(JNIEnv *env, jobject obj,
 	    return;
 	}
 	if (val) {
-	    len = (*env)->GetStringLength(env, val);
+	    const jsize charCount = (*env)->GetStringLength(env, val);
+	    len = charCount * sizeof(jchar);
 	    if (len > 0) {
-	        const jchar *ch;
-
-		len *= sizeof (jchar);
 		data = sqlite3_malloc(len);
 		if (!data) {
 		    throwoom(env, "unable to get blob parameter");
 		    return;
 		}
-		ch = (*env)->GetStringChars(env, val, 0);
-		memcpy(data, ch, len);
-		(*env)->ReleaseStringChars(env, val, ch);
+		
+		(*env)->GetStringRegion(env, val, 0, charCount, (jchar*) data);
 		ret = sqlite3_bind_text16((sqlite3_stmt *) v->vm,
 					  pos, data, len, sqlite3_free);
 	    } else {

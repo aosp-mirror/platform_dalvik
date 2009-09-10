@@ -265,22 +265,11 @@ static jobject parseRBNFImpl(JNIEnv *env, jclass clazz, jint addr, jstring text,
         jobject position, jboolean lenient) {
 
     // LOGI("ENTER parseRBNFImpl");
-
-    const char * parsePositionClassName = "java/text/ParsePosition";
-    const char * longClassName = "java/lang/Long";
-    const char * doubleClassName = "java/lang/Double";
-
-
-    UErrorCode status = U_ZERO_ERROR;
-
-    UNumberFormat *fmt = (UNumberFormat *)(int)addr;
-
-    jchar *str = (UChar *)env->GetStringChars(text, NULL);
-    int strlength = env->GetStringLength(text);
-
-    jclass parsePositionClass = env->FindClass(parsePositionClassName);
-    jclass longClass =  env->FindClass(longClassName);
-    jclass doubleClass =  env->FindClass(doubleClassName);
+    
+    // TODO: cache these?
+    jclass parsePositionClass = env->FindClass("java/text/ParsePosition");
+    jclass longClass =  env->FindClass("java/lang/Long");
+    jclass doubleClass =  env->FindClass("java/lang/Double");
 
     jmethodID getIndexMethodID = env->GetMethodID(parsePositionClass, 
             "getIndex", "()I");
@@ -292,22 +281,25 @@ static jobject parseRBNFImpl(JNIEnv *env, jclass clazz, jint addr, jstring text,
     jmethodID longInitMethodID = env->GetMethodID(longClass, "<init>", "(J)V");
     jmethodID dblInitMethodID = env->GetMethodID(doubleClass, "<init>", "(D)V");
 
-    int parsePos = env->CallIntMethod(position, getIndexMethodID, NULL);
-
     // make sure the ParsePosition is valid. Actually icu4c would parse a number 
     // correctly even if the parsePosition is set to -1, but since the RI fails 
     // for that case we have to fail too
+    int parsePos = env->CallIntMethod(position, getIndexMethodID, NULL);
+    const int strlength = env->GetStringLength(text);
     if(parsePos < 0 || parsePos > strlength) {
         return NULL;
     }
-
+    
     Formattable res;
-
+    
+    jchar *str = (UChar *)env->GetStringChars(text, NULL);
+    
     const UnicodeString src((UChar*)str, strlength, strlength);
     ParsePosition pp;
     
     pp.setIndex(parsePos);
     
+    UNumberFormat *fmt = (UNumberFormat *)(int)addr;
     if(lenient) {
         unum_setAttribute(fmt, UNUM_LENIENT_PARSE, JNI_TRUE);
     }
@@ -328,35 +320,23 @@ static jobject parseRBNFImpl(JNIEnv *env, jclass clazz, jint addr, jstring text,
         return NULL;
     }
 
-    Formattable::Type numType;
-    numType = res.getType();
-    UErrorCode fmtStatus;
-
-    double resultDouble;
-    long resultLong;
-    int64_t resultInt64;
-
-    switch(numType) {
-        case Formattable::kDouble:
-            resultDouble = res.getDouble();
-            env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
-            return env->NewObject(doubleClass, dblInitMethodID, 
-                    (jdouble) resultDouble);
-        case Formattable::kLong:
-            resultLong = res.getLong();
-            env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
-            return env->NewObject(longClass, longInitMethodID, 
-                    (jlong) resultLong);
-        case Formattable::kInt64:
-            resultInt64 = res.getInt64();
-            env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
-            return env->NewObject(longClass, longInitMethodID, 
-                    (jlong) resultInt64);
-        default:
-            break;
+    Formattable::Type numType = res.getType();
+    if (numType == Formattable::kDouble) {
+        double resultDouble = res.getDouble();
+        env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
+        return env->NewObject(doubleClass, dblInitMethodID,
+                              (jdouble) resultDouble);
+    } else if (numType == Formattable::kLong) {
+        long resultLong = res.getLong();
+        env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
+        return env->NewObject(longClass, longInitMethodID, (jlong) resultLong);
+    } else if (numType == Formattable::kInt64) {
+        int64_t resultInt64 = res.getInt64();
+        env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
+        return env->NewObject(longClass, longInitMethodID, (jlong) resultInt64);
+    } else {
+        return NULL;
     }
-
-    return NULL;
 }
 
 static JNINativeMethod gMethods[] = {
