@@ -633,6 +633,8 @@ struct DvmGlobals {
      */
     pid_t systemServerPid;
 
+    int kernelGroupScheduling;
+
 //#define COUNT_PRECISE_METHODS
 #ifdef COUNT_PRECISE_METHODS
     PointerSet* preciseMethods;
