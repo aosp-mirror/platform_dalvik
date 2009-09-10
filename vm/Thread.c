@@ -3110,18 +3110,16 @@ void dvmChangeThreadSchedulerPolicy(SchedPolicy policy)
     if (gDvm.kernelGroupScheduling) {
         const char *grp = NULL;
 
-        if (policy == SCHED_BACKGROUND) {
+        if (policy == SP_BACKGROUND) {
             grp = "bg_non_interactive";
         }
 
         dvmChangeThreadSchedulerGroup(grp);
     } else {
         struct sched_param param;
-
         param.sched_priority = 0;
-        sched_setscheduler(getpid(),
-                           (policy == SCHED_BACKGROUND) ? 5 : 0,
-                            &param);
+        sched_setscheduler(dvmGetSysThreadId(),
+                           (policy == SP_BACKGROUND) ? 5 : 0, &param);
     }
 }
 
@@ -3143,9 +3141,9 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
     newNice = kNiceValues[newPriority-1];
 
     if (newNice >= ANDROID_PRIORITY_BACKGROUND) {
-        dvmChangeThreadSchedulerPolicy(SCHED_BACKGROUND);
+        dvmChangeThreadSchedulerPolicy(SP_BACKGROUND);
     } else if (getpriority(PRIO_PROCESS, pid) >= ANDROID_PRIORITY_BACKGROUND) {
-        dvmChangeThreadSchedulerPolicy(SCHED_FOREGROUND);
+        dvmChangeThreadSchedulerPolicy(SP_FOREGROUND);
     }
 
     if (setpriority(PRIO_PROCESS, pid, newNice) != 0) {
