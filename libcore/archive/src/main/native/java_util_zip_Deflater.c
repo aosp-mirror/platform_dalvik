@@ -162,29 +162,19 @@ Java_java_util_zip_Deflater_setInputImpl (JNIEnv * env, jobject recv,
 {
   PORT_ACCESS_FROM_ENV (env);
 
-  jbyte *in;
-  JCLZipStream *stream;
-
-  stream = (JCLZipStream *) ((IDATA) handle);
-  if (stream->inaddr != NULL)	/*Input has already been provided, free the old buffer */
+  JCLZipStream* stream = (JCLZipStream *) ((IDATA) handle);
+  if (stream->inaddr != NULL) {
+    /* Input has already been provided, free the old buffer. */
     jclmem_free_memory (env, stream->inaddr);
+  }
   stream->inaddr = jclmem_allocate_memory (env, len);
-  if (stream->inaddr == NULL)
-    {
-      throwNewOutOfMemoryError (env, "");
-      return;
-    }
-  in = ((*env)->GetPrimitiveArrayCritical (env, buf, 0));
-  if (in == NULL) {
-    throwNewOutOfMemoryError(env, "");
+  if (stream->inaddr == NULL) {
+    throwNewOutOfMemoryError (env, "");
     return;
   }
-  memcpy (stream->inaddr, (in + off), len);
-  ((*env)->ReleasePrimitiveArrayCritical (env, buf, in, JNI_ABORT));
+  (*env)->GetByteArrayRegion(env, buf, off, len, (jbyte*) stream->inaddr);
   stream->stream->next_in = (Bytef *) stream->inaddr;
   stream->stream->avail_in = len;
-
-  return;
 }
 
 JNIEXPORT jint JNICALL

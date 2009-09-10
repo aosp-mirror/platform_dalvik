@@ -144,9 +144,8 @@ static jbyte harmony_nio_getByteImpl(JNIEnv *_env, jobject _this,
  */
 static void harmony_nio_getBytesImpl(JNIEnv *_env, jobject _this, jint pointer, 
         jbyteArray dst, jint offset, jint length) {
-    jbyte *dst_ = (jbyte *)_env->GetPrimitiveArrayCritical(dst, (jboolean *)0);
-    memcpy(dst_ + offset, (jbyte *)pointer, length);
-    _env->ReleasePrimitiveArrayCritical(dst, dst_, 0);
+    jbyte* src = reinterpret_cast<jbyte*>(static_cast<uintptr_t>(pointer));
+    _env->SetByteArrayRegion(dst, offset, length, src);
 }
 
 /*
@@ -166,9 +165,8 @@ static void harmony_nio_putByteImpl(JNIEnv *_env, jobject _this, jint pointer,
  */
 static void harmony_nio_putBytesImpl(JNIEnv *_env, jobject _this,
         jint pointer, jbyteArray src, jint offset, jint length) {
-    jbyte *src_ = (jbyte *)_env->GetPrimitiveArrayCritical(src, (jboolean *)0);
-    memcpy((jbyte *)pointer, src_ + offset, length);
-    _env->ReleasePrimitiveArrayCritical(src, src_, JNI_ABORT);
+    jbyte* dst = reinterpret_cast<jbyte*>(static_cast<uintptr_t>(pointer));
+    _env->GetByteArrayRegion(src, offset, length, dst);
 }
 
 static void
