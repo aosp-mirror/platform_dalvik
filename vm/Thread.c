@@ -3086,7 +3086,7 @@ static const int kNiceValues[10] = {
  *
  * Returns 0 on success.
  */
-int dvmChangeThreadSchedulerGroup(const char *cgroup)
+static int dvmChangeThreadSchedulerGroup(const char *cgroup)
 {
 #ifdef HAVE_ANDROID_OS
     int fd;
@@ -3122,6 +3122,29 @@ int dvmChangeThreadSchedulerGroup(const char *cgroup)
 }
 
 /*
+ * Change the scheduling policy of the current thread
+ */
+void dvmChangeThreadSchedulerPolicy(SchedPolicy policy)
+{
+    if (gDvm.kernelGroupScheduling) {
+        const char *grp = NULL;
+
+        if (policy == SCHED_BACKGROUND) {
+            grp = "bg_non_interactive";
+        }
+
+        dvmChangeThreadSchedulerGroup(grp);
+    } else {
+        struct sched_param param;
+
+        param.sched_priority = 0;
+        sched_setscheduler(getpid(),
+                           (policy == SCHED_BACKGROUND) ? 5 : 0,
+                            &param);
+    }
+}
+
+/*
  * Change the priority of a system thread to match that of the Thread object.
  *
  * We map a priority value from 1-10 to Linux "nice" values, where lower
@@ -3139,9 +3162,9 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
     newNice = kNiceValues[newPriority-1];
 
     if (newNice >= ANDROID_PRIORITY_BACKGROUND) {
-        dvmChangeThreadSchedulerGroup("bg_non_interactive");
+        dvmChangeThreadSchedulerPolicy(SCHED_BACKGROUND);
     } else if (getpriority(PRIO_PROCESS, pid) >= ANDROID_PRIORITY_BACKGROUND) {
-        dvmChangeThreadSchedulerGroup(NULL);
+        dvmChangeThreadSchedulerPolicy(SCHED_FOREGROUND);
     }
 
     if (setpriority(PRIO_PROCESS, pid, newNice) != 0) {
