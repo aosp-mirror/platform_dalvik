@@ -1117,6 +1117,14 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     }
 #endif
 
+    /* Configure group scheduling capabilities */
+    if (!access("/dev/cpuctl/tasks", F_OK)) {
+        LOGV("Using kernel group scheduling");
+        gDvm.kernelGroupScheduling = 1;
+    } else {
+        LOGV("Using kernel scheduler policies");
+    }
+
     /* configure signal handling */
     if (!gDvm.reduceSignals)
         blockSignals();

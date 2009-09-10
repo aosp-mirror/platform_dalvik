@@ -416,10 +416,17 @@ bool dvmIsOnThreadList(const Thread* thread);
 INLINE JNIEnv* dvmGetThreadJNIEnv(Thread* self) { return self->jniEnv; }
 INLINE void dvmSetThreadJNIEnv(Thread* self, JNIEnv* env) { self->jniEnv = env;}
 
+typedef enum SchedPolicy {
+    SCHED_BACKGROUND = 0,
+    SCHED_FOREGROUND = 1,
+} SchedPolicy;
+
 /*
- * Change the scheduler group of the current process
+ * Change the scheduling policy of the current process.
+ * This is mapped onto whatever underlying scheme the kernel
+ * supports (cgroups/scheduler policies/wombats/etc)
  */
-int dvmChangeThreadSchedulerGroup(const char *group);
+void dvmChangeThreadSchedulerPolicy(SchedPolicy policy);
 
 /*
  * Update the priority value of the underlying pthread.
