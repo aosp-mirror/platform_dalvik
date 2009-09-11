@@ -79,9 +79,6 @@ public class NativeBN {
 
     public static native int[] bn2litEndInts(int a, int[] to);
 
-    public static native byte[] bn2twosComp(int a, byte[] to);
-
-
     public static native int sign(int a);
     // Returns -1, 0, 1 AND NOT boolean.
     // #define BN_is_negative(a) ((a)->neg != 0)

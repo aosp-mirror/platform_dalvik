@@ -456,27 +456,6 @@ static jintArray NativeBN_bn2litEndInts(JNIEnv* env, jclass cls, BIGNUM* a, jint
     }
 }
 
-/**
- * public static native byte[] bn2twosComp(int, byte[])
- */
-static jbyteArray NativeBN_bn2twosComp(JNIEnv* env, jclass cls, BIGNUM* a, jbyteArray to) {
-    if (!oneValidHandle(env, a)) return NULL;
-    jbyteArray returnJBytes = to;
-    unsigned char * tmpBytes;
-    int len, byteCnt;
-    byteCnt = BN_num_bytes(a);
-// FIXME: Currently ignoring array passed in to:
-    returnJBytes = (*env)->NewByteArray(env, byteCnt);
-// FIXME: is it neccessary to check for returnJBytes != NULL?
-    tmpBytes = (unsigned char *)((*env)->GetPrimitiveArrayCritical(env, returnJBytes, NULL));
-    if (tmpBytes != NULL) {
-        len = BN_bn2bin(a, tmpBytes);
-        (*env)->ReleasePrimitiveArrayCritical(env, returnJBytes, tmpBytes, 0);
-        return returnJBytes;
-    }
-    else return NULL;
-}
-
 
 /**
  * public static native int sign(int)
@@ -833,7 +812,6 @@ static JNINativeMethod METHODS[] = {
    { "BN_bn2hex", "(I)Ljava/lang/String;", (void*)NativeBN_BN_bn2hex },
    { "BN_bn2bin", "(I[B)[B", (void*)NativeBN_BN_bn2bin },
    { "bn2litEndInts", "(I[I)[I", (void*)NativeBN_bn2litEndInts },
-   { "bn2twosComp", "(I[B)[B", (void*)NativeBN_bn2twosComp },
    { "sign", "(I)I", (void*)NativeBN_sign },
    { "BN_set_negative", "(II)V", (void*)NativeBN_BN_set_negative },
    { "twosCompFitsIntoBytes", "(II)Z", (void*)NativeBN_twosCompFitsIntoBytes },
