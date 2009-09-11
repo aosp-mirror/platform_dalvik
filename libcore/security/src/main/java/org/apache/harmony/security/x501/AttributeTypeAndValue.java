@@ -327,11 +327,15 @@ public class AttributeTypeAndValue {
                 if (attrFormat == X500Principal.CANONICAL) {
                     // only PrintableString and UTF8String in string format
                     // all others are output in hex format
+                    // BEGIN android-changed
+                    // no hex for teletex; see bug 2102191
                     int tag = value.getTag();
                     if (!ASN1StringType.UTF8STRING.checkTag(tag)
-                            && !ASN1StringType.PRINTABLESTRING.checkTag(tag)) {
+                            && !ASN1StringType.PRINTABLESTRING.checkTag(tag)
+                            && !ASN1StringType.TELETEXSTRING.checkTag(tag)) {
                         hexFormat = true;
                     }
+                    // END android-changed
                 }
 
             } else {
