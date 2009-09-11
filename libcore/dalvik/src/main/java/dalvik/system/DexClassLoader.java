@@ -114,7 +114,7 @@ public class DexClassLoader extends ClassLoader {
 
         /* open all Zip and DEX files up front */
         for (int i = 0; i < length; i++) {
-            System.out.println("My path is: " + dexPathList[i]);
+            //System.out.println("My path is: " + dexPathList[i]);
             File pathFile = new File(dexPathList[i]);
             mFiles[i] = pathFile;
 
