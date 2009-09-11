@@ -172,6 +172,16 @@ static inline int selectFirstRegister(CompilationUnit *cUnit, int vSrc,
 }
 
 /*
+ * Generate a ARM_PSEUDO_IT_BOTTOM marker to indicate the end of an IT block
+ */
+static void genITBottom(CompilationUnit *cUnit)
+{
+    ArmLIR *itBottom = newLIR0(cUnit, ARM_PSEUDO_IT_BOTTOM);
+    /* Mark all resources as being clobbered */
+    itBottom->defMask = -1;
+}
+
+/*
  * Generate a Thumb2 IT instruction, which can nullify up to
  * four subsequent instructions based on a condition and its
  * inverse.  The condition applies to the first instruction, which
@@ -190,6 +200,7 @@ static ArmLIR *genIT(CompilationUnit *cUnit, ArmConditionCode code,
     int mask3 = 0;
     int mask2 = 0;
     int mask1 = 0;
+
     //Note: case fallthroughs intentional
     switch(strlen(guide)) {
         case 3:
@@ -230,6 +241,7 @@ static ArmLIR *fpRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
         res->operands[0] = rDest;
         res->operands[1] = rSrc;
     }
+    setupResourceMasks(res);
     return res;
 }
 
@@ -249,9 +261,10 @@ ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
     else
          opCode = THUMB_MOV_RR_L2H;
 
-    res->operands[0] = rDest & THUMB_REG_MASK;
-    res->operands[1] = rSrc & THUMB_REG_MASK;
+    res->operands[0] = rDest;
+    res->operands[1] = rSrc;
     res->opCode = opCode;
+    setupResourceMasks(res);
     if (rDest == rSrc) {
         res->isNop = true;
     }
@@ -348,6 +361,7 @@ static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
     loadPcRel->opCode = THUMB_LDR_PC_REL;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
+    setupResourceMasks(loadPcRel);
     res = loadPcRel;
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
 
@@ -751,17 +765,17 @@ static ArmLIR *opRegRegShift(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
     ArmOpCode opCode = THUMB_BKPT;
     switch (op) {
         case OP_ADC:
-            opCode = (thumbForm) ? THUMB_ADC : THUMB2_ADC_RRR;
+            opCode = (thumbForm) ? THUMB_ADC_RR : THUMB2_ADC_RRR;
             break;
         case OP_AND:
             opCode = (thumbForm) ? THUMB_AND_RR : THUMB2_AND_RRR;
             break;
         case OP_BIC:
-            opCode = (thumbForm) ? THUMB_BIC : THUMB2_BIC_RRR;
+            opCode = (thumbForm) ? THUMB_BIC_RR : THUMB2_BIC_RRR;
             break;
         case OP_CMN:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_CMN : THUMB2_CMN_RR;
+            opCode = (thumbForm) ? THUMB_CMN_RR : THUMB2_CMN_RR;
             break;
         case OP_CMP:
             if (thumbForm)
@@ -772,15 +786,11 @@ static ArmLIR *opRegRegShift(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
                 opCode = THUMB_CMP_LH;
             else if (shift == 0)
                 opCode = THUMB_CMP_HL;
-            if (shift == 0) {
-                rDestSrc1 &= THUMB_REG_MASK;
-                rSrc2 &= THUMB_REG_MASK;
-            } else {
+            else
                 opCode = THUMB2_CMP_RR;
-            }
             break;
         case OP_XOR:
-            opCode = (thumbForm) ? THUMB_EOR : THUMB2_EOR_RRR;
+            opCode = (thumbForm) ? THUMB_EOR_RR : THUMB2_EOR_RRR;
             break;
         case OP_MOV:
             assert(shift == 0);
@@ -792,8 +802,6 @@ static ArmLIR *opRegRegShift(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
                 opCode = THUMB_MOV_RR_H2L;
             else
                 opCode = THUMB_MOV_RR_L2H;
-            rDestSrc1 &= THUMB_REG_MASK;
-            rSrc2 &= THUMB_REG_MASK;
             break;
         case OP_MUL:
             assert(shift == 0);
@@ -817,19 +825,19 @@ static ArmLIR *opRegRegShift(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
             break;
         case OP_LSL:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_LSLV : THUMB2_LSLV_RRR;
+            opCode = (thumbForm) ? THUMB_LSL_RR : THUMB2_LSL_RRR;
             break;
         case OP_LSR:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_LSRV : THUMB2_LSRV_RRR;
+            opCode = (thumbForm) ? THUMB_LSR_RR : THUMB2_LSR_RRR;
             break;
         case OP_ASR:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_ASRV : THUMB2_ASRV_RRR;
+            opCode = (thumbForm) ? THUMB_ASR_RR : THUMB2_ASR_RRR;
             break;
         case OP_ROR:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_RORV : THUMB2_RORV_RRR;
+            opCode = (thumbForm) ? THUMB_ROR_RR : THUMB2_ROR_RRR;
             break;
         case OP_ADD:
             opCode = (thumbForm) ? THUMB_ADD_RRR : THUMB2_ADD_RRR;
@@ -956,19 +964,19 @@ static ArmLIR *opRegRegRegShift(CompilationUnit *cUnit, OpKind op,
             break;
         case OP_LSL:
             assert(shift == 0);
-            opCode = THUMB2_LSLV_RRR;
+            opCode = THUMB2_LSL_RRR;
             break;
         case OP_LSR:
             assert(shift == 0);
-            opCode = THUMB2_LSRV_RRR;
+            opCode = THUMB2_LSR_RRR;
             break;
         case OP_ASR:
             assert(shift == 0);
-            opCode = THUMB2_ASRV_RRR;
+            opCode = THUMB2_ASR_RRR;
             break;
         case OP_ROR:
             assert(shift == 0);
-            opCode = THUMB2_RORV_RRR;
+            opCode = THUMB2_ROR_RRR;
             break;
         default:
             assert(0);
@@ -1004,26 +1012,28 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
     switch(op) {
         case OP_LSL:
             if (allLowRegs)
-                return newLIR3(cUnit, THUMB_LSL, rDest, rSrc1, value);
+                return newLIR3(cUnit, THUMB_LSL_RRI5, rDest, rSrc1, value);
             else
                 return newLIR3(cUnit, THUMB2_LSL_RRI5, rDest, rSrc1, value);
         case OP_LSR:
             if (allLowRegs)
-                return newLIR3(cUnit, THUMB_LSR, rDest, rSrc1, value);
+                return newLIR3(cUnit, THUMB_LSR_RRI5, rDest, rSrc1, value);
             else
                 return newLIR3(cUnit, THUMB2_LSR_RRI5, rDest, rSrc1, value);
         case OP_ASR:
             if (allLowRegs)
-                return newLIR3(cUnit, THUMB_ASR, rDest, rSrc1, value);
+                return newLIR3(cUnit, THUMB_ASR_RRI5, rDest, rSrc1, value);
             else
                 return newLIR3(cUnit, THUMB2_ASR_RRI5, rDest, rSrc1, value);
         case OP_ROR:
             return newLIR3(cUnit, THUMB2_ROR_RRI5, rDest, rSrc1, value);
         case OP_ADD:
-            if (LOWREG(rDest) && (rSrc1 == 13) && (value <= 1020) && ((value & 0x3)==0)) {
+            if (LOWREG(rDest) && (rSrc1 == 13) &&
+                (value <= 1020) && ((value & 0x3)==0)) {
                 return newLIR3(cUnit, THUMB_ADD_SP_REL, rDest, rSrc1,
                                value >> 2);
-            } else if (LOWREG(rDest) && (rSrc1 == rpc) && (value <= 1020) && ((value & 0x3)==0)) {
+            } else if (LOWREG(rDest) && (rSrc1 == rpc) &&
+                       (value <= 1020) && ((value & 0x3)==0)) {
                 return newLIR3(cUnit, THUMB_ADD_PC_REL, rDest, rSrc1,
                                value >> 2);
             }
@@ -1129,6 +1139,7 @@ static void genCmpLong(CompilationUnit *cUnit, MIR *mir,
     branch1->generic.target = (LIR *) genIT(cUnit, ARM_COND_HI, "E");
     newLIR2(cUnit, THUMB2_MOV_IMM_SHIFT, r7, modifiedImmediate(-1));
     newLIR2(cUnit, THUMB_MOV_IMM, r7, 1);
+    genITBottom(cUnit);
 
     branch2->generic.target = (LIR *) opRegReg(cUnit, OP_NEG, r7, r7);
     branch1->generic.target = (LIR *) storeValue(cUnit, r7, vDest, r4PC);
@@ -1268,6 +1279,7 @@ static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
     //TODO: need assertion mechanism to validate IT region size
     genIT(cUnit, (isMin) ? ARM_COND_GT : ARM_COND_LT, "");
     opRegReg(cUnit, OP_MOV, reg0, reg1);
+    genITBottom(cUnit);
     if (vDest >= 0)
         storeValue(cUnit, reg0, vDest, reg1);
     else

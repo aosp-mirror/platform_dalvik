@@ -22,6 +22,7 @@
  * variant code such as ThumbUtilty.c
  */
 
+static void setupResourceMasks(ArmLIR *lir);
 static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpCode opCode);
 static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpCode opCode,
                            int dest);

@@ -120,6 +120,7 @@ static void dvmUsage(const char* progName)
                        "(eg Ljava/lang/String\\;replace)\n");
     dvmFprintf(stderr, "  -Xjitverbose\n");
     dvmFprintf(stderr, "  -Xjitprofile\n");
+    dvmFprintf(stderr, "  -Xjitdisableopt\n");
 #endif
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
@@ -910,6 +911,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
           gDvmJit.printMe = true;
         } else if (strncmp(argv[i], "-Xjitprofile", 12) == 0) {
           gDvmJit.profile = true;
+        } else if (strncmp(argv[i], "-Xjitdisableopt:", 16) == 0) {
+          sscanf(argv[i] + 16, "%x", &gDvmJit.disableOpt);
 #endif
 
         } else if (strncmp(argv[i], "-Xdeadlockpredict:", 18) == 0) {

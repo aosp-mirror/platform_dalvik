@@ -90,3 +90,17 @@ void dvmCompilerInsertLIRBefore(LIR *currentLIR, LIR *newLIR)
     newLIR->next = currentLIR;
     currentLIR->prev = newLIR;
 }
+
+/*
+ * Insert an LIR instruction after the current instruction, which cannot be the
+ * first instruction.
+ *
+ * currentLIR -> newLIR -> oldNext
+ */
+void dvmCompilerInsertLIRAfter(LIR *currentLIR, LIR *newLIR)
+{
+    newLIR->prev = currentLIR;
+    newLIR->next = currentLIR->next;
+    currentLIR->next = newLIR;
+    newLIR->next->prev = newLIR;
+}

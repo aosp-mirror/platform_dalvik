@@ -203,8 +203,10 @@ void dvmCompilerDumpStats(void)
          gDvmJit.compilerMaxQueued);
     dvmJitStats();
     dvmCompilerArchDump();
-    dvmHashForeach(gDvmJit.methodStatsTable, dumpMethodStats,
-                   &totalMethodStats);
+    if (gDvmJit.methodStatsTable) {
+        dvmHashForeach(gDvmJit.methodStatsTable, dumpMethodStats,
+                       &totalMethodStats);
+    }
     LOGD("Code size stats: %d/%d (compiled/total Dalvik), %d (native)",
          totalMethodStats.compiledDalvikSize,
          totalMethodStats.dalvikSize,

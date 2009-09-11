@@ -188,12 +188,11 @@ ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
          opCode = THUMB_MOV_RR_H2L;
     else
          opCode = THUMB_MOV_RR_L2H;
-    rDest &= THUMB_REG_MASK;
-    rSrc &= THUMB_REG_MASK;
 
-    res->operands[0] = rDest & THUMB_REG_MASK;
-    res->operands[1] = rSrc & THUMB_REG_MASK;
+    res->operands[0] = rDest;
+    res->operands[1] = rSrc;
     res->opCode = opCode;
+    setupResourceMasks(res);
     if (rDest == rSrc) {
         res->isNop = true;
     }
@@ -224,6 +223,7 @@ static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
     loadPcRel->opCode = THUMB_LDR_PC_REL;
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
+    setupResourceMasks(loadPcRel);
     res = loadPcRel;
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
 
@@ -530,22 +530,22 @@ static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
     ArmOpCode opCode = THUMB_BKPT;
     switch (op) {
         case OP_ADC:
-            opCode = THUMB_ADC;
+            opCode = THUMB_ADC_RR;
             break;
         case OP_AND:
             opCode = THUMB_AND_RR;
             break;
         case OP_BIC:
-            opCode = THUMB_BIC;
+            opCode = THUMB_BIC_RR;
             break;
         case OP_CMN:
-            opCode = THUMB_CMN;
+            opCode = THUMB_CMN_RR;
             break;
         case OP_CMP:
             opCode = THUMB_CMP_RR;
             break;
         case OP_XOR:
-            opCode = THUMB_EOR;
+            opCode = THUMB_EOR_RR;
             break;
         case OP_MOV:
             if (LOWREG(rDestSrc1) && LOWREG(rSrc2))
@@ -556,8 +556,6 @@ static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
                 opCode = THUMB_MOV_RR_H2L;
             else
                 opCode = THUMB_MOV_RR_L2H;
-            rDestSrc1 &= THUMB_REG_MASK;
-            rSrc2 &= THUMB_REG_MASK;
             break;
         case OP_MUL:
             opCode = THUMB_MUL;
@@ -578,16 +576,16 @@ static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
             opCode = THUMB_TST;
             break;
         case OP_LSL:
-            opCode = THUMB_LSLV;
+            opCode = THUMB_LSL_RR;
             break;
         case OP_LSR:
-            opCode = THUMB_LSRV;
+            opCode = THUMB_LSR_RRR;
             break;
         case OP_ASR:
-            opCode = THUMB_ASRV;
+            opCode = THUMB_ASR_RR;
             break;
         case OP_ROR:
-            opCode = THUMB_RORV;
+            opCode = THUMB_ROR_RR;
         case OP_ADD:
         case OP_SUB:
             return opRegRegReg(cUnit, op, rDestSrc1, rDestSrc1, rSrc2);
@@ -727,15 +725,15 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
             break;
         case OP_LSL:
                 shortForm = (!neg && value <= 31);
-                opCode = THUMB_LSL;
+                opCode = THUMB_LSL_RRI5;
                 break;
         case OP_LSR:
                 shortForm = (!neg && value <= 31);
-                opCode = THUMB_LSR;
+                opCode = THUMB_LSR_RRI5;
                 break;
         case OP_ASR:
                 shortForm = (!neg && value <= 31);
-                opCode = THUMB_ASR;
+                opCode = THUMB_ASR_RRI5;
                 break;
         case OP_MUL:
         case OP_AND:
@@ -824,9 +822,9 @@ static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
     int sign = NEXT_REG(reg0);
     /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
     loadValue(cUnit, dInsn->arg[0], reg0);
-    newLIR3(cUnit, THUMB_ASR, sign, reg0, 31);
+    newLIR3(cUnit, THUMB_ASR_RRI5, sign, reg0, 31);
     newLIR3(cUnit, THUMB_ADD_RRR, reg0, reg0, sign);
-    newLIR2(cUnit, THUMB_EOR, reg0, sign);
+    newLIR2(cUnit, THUMB_EOR_RR, reg0, sign);
     storeWordDisp(cUnit, rGLUE, offset, reg0, sign);
     return false;
 }
@@ -887,11 +885,11 @@ static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
     int sign = NEXT_REG(ophi);
     /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
     loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
-    newLIR3(cUnit, THUMB_ASR, sign, ophi, 31);
+    newLIR3(cUnit, THUMB_ASR_RRI5, sign, ophi, 31);
     newLIR3(cUnit, THUMB_ADD_RRR, oplo, oplo, sign);
-    newLIR2(cUnit, THUMB_ADC, ophi, sign);
-    newLIR2(cUnit, THUMB_EOR, oplo, sign);
-    newLIR2(cUnit, THUMB_EOR, ophi, sign);
+    newLIR2(cUnit, THUMB_ADC_RR, ophi, sign);
+    newLIR2(cUnit, THUMB_EOR_RR, oplo, sign);
+    newLIR2(cUnit, THUMB_EOR_RR, ophi, sign);
     storeWordDisp(cUnit, rGLUE, offset, oplo, sign);
     storeWordDisp(cUnit, rGLUE, offset + 4, ophi, sign);
     return false;

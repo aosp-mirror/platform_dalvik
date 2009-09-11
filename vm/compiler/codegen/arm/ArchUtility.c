@@ -204,6 +204,9 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
     u2 *cPtr = (u2*)baseAddr;
     /* Handle pseudo-ops individually, and all regular insns as a group */
     switch(lir->opCode) {
+        case ARM_PSEUDO_IT_BOTTOM:
+            LOGD("-------- IT_Bottom");
+            break;
         case ARM_PSEUDO_EXTENDED_MIR:
             /* intentional fallthrough */
         case ARM_PSEUDO_SSA_REP:
@@ -283,7 +286,8 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
     for (lirInsn = cUnit->wordList; lirInsn; lirInsn = lirInsn->next) {
         armLIR = (ArmLIR *) lirInsn;
         LOGD("%p (%04x): .word (0x%x)\n",
-             (char*)cUnit->baseAddr + armLIR->generic.offset, armLIR->generic.offset,
+             (char*)cUnit->baseAddr + armLIR->generic.offset,
+             armLIR->generic.offset,
              armLIR->operands[0]);
     }
 }

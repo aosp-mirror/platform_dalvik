@@ -483,6 +483,91 @@ static void selfVerificationMemOpWrapper(CompilationUnit *cUnit, int regMap,
 #endif
 
 /*
+ * Set up the proper fields in the resource mask
+ */
+static void setupResourceMasks(ArmLIR *lir)
+{
+    int opCode = lir->opCode;
+    int flags;
+
+    if (opCode <= 0) {
+        lir->useMask = lir->defMask = 0;
+        return;
+    }
+
+    flags = EncodingMap[lir->opCode].flags;
+
+    /* Set up the mask for resources that are updated */
+    if (flags & IS_BRANCH) {
+        lir->defMask |= ENCODE_REG_PC;
+    }
+
+    if (flags & REG_DEF0) {
+        lir->defMask |= ENCODE_GP_REG(lir->operands[0]);
+    }
+
+    if (flags & REG_DEF1) {
+        lir->defMask |= ENCODE_GP_REG(lir->operands[1]);
+    }
+
+    if (flags & REG_DEF_SP) {
+        lir->defMask |= ENCODE_REG_SP;
+    }
+
+    if (flags & REG_DEF_LIST0) {
+        lir->defMask |= ENCODE_REG_LIST(lir->operands[0]);
+    }
+
+    if (flags & REG_DEF_LIST1) {
+        lir->defMask |= ENCODE_REG_LIST(lir->operands[1]);
+    }
+
+    if (flags & SETS_CCODES) {
+        lir->defMask |= ENCODE_CCODE;
+    }
+
+    /* Conservatively treat the IT block */
+    if (flags & IS_IT) {
+        lir->defMask = -1;
+    }
+
+    /* Set up the mask for resources that are used */
+    if (flags & IS_BRANCH) {
+        lir->useMask |= ENCODE_REG_PC;
+    }
+
+    if (flags & (REG_USE0 | REG_USE1 | REG_USE2)) {
+        int i;
+
+        for (i = 0; i < 3; i++) {
+            if (flags & (1 << (kRegUse0 + i))) {
+                lir->useMask |= ENCODE_GP_REG(lir->operands[i]);
+            }
+        }
+    }
+
+    if (flags & REG_USE_PC) {
+        lir->useMask |= ENCODE_REG_PC;
+    }
+
+    if (flags & REG_USE_SP) {
+        lir->useMask |= ENCODE_REG_SP;
+    }
+
+    if (flags & REG_USE_LIST0) {
+        lir->useMask |= ENCODE_REG_LIST(lir->operands[0]);
+    }
+
+    if (flags & REG_USE_LIST1) {
+        lir->useMask |= ENCODE_REG_LIST(lir->operands[1]);
+    }
+
+    if (flags & USES_CCODES) {
+        lir->useMask |= ENCODE_CCODE;
+    }
+}
+
+/*
  * The following are building blocks to construct low-level IRs with 0 - 4
  * operands.
  */
@@ -491,6 +576,7 @@ static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpCode opCode)
     ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
     assert(isPseudoOpCode(opCode) || (EncodingMap[opCode].flags & NO_OPERAND));
     insn->opCode = opCode;
+    setupResourceMasks(insn);
     dvmCompilerAppendLIR(cUnit, (LIR *) insn);
     return insn;
 }
@@ -502,6 +588,7 @@ static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpCode opCode,
     assert(isPseudoOpCode(opCode) || (EncodingMap[opCode].flags & IS_UNARY_OP));
     insn->opCode = opCode;
     insn->operands[0] = dest;
+    setupResourceMasks(insn);
     dvmCompilerAppendLIR(cUnit, (LIR *) insn);
     return insn;
 }
@@ -515,6 +602,7 @@ static ArmLIR *newLIR2(CompilationUnit *cUnit, ArmOpCode opCode,
     insn->opCode = opCode;
     insn->operands[0] = dest;
     insn->operands[1] = src1;
+    setupResourceMasks(insn);
     dvmCompilerAppendLIR(cUnit, (LIR *) insn);
     return insn;
 }
@@ -529,6 +617,7 @@ static ArmLIR *newLIR3(CompilationUnit *cUnit, ArmOpCode opCode,
     insn->operands[0] = dest;
     insn->operands[1] = src1;
     insn->operands[2] = src2;
+    setupResourceMasks(insn);
     dvmCompilerAppendLIR(cUnit, (LIR *) insn);
     return insn;
 }
@@ -544,6 +633,7 @@ static ArmLIR *newLIR4(CompilationUnit *cUnit, ArmOpCode opCode,
     insn->operands[1] = src1;
     insn->operands[2] = src2;
     insn->operands[3] = info;
+    setupResourceMasks(insn);
     dvmCompilerAppendLIR(cUnit, (LIR *) insn);
     return insn;
 }
@@ -3615,11 +3705,13 @@ static void setupLoopEntryBlock(CompilationUnit *cUnit, BasicBlock *entry,
     ArmLIR *branchToBody = dvmCompilerNew(sizeof(ArmLIR), true);
     branchToBody->opCode = THUMB_B_UNCOND;
     branchToBody->generic.target = (LIR *) bodyLabel;
+    setupResourceMasks(branchToBody);
     cUnit->loopAnalysis->branchToBody = (LIR *) branchToBody;
 
     ArmLIR *branchToPCR = dvmCompilerNew(sizeof(ArmLIR), true);
     branchToPCR->opCode = THUMB_B_UNCOND;
     branchToPCR->generic.target = (LIR *) pcrLabel;
+    setupResourceMasks(branchToPCR);
     cUnit->loopAnalysis->branchToPCR = (LIR *) branchToPCR;
 }
 
@@ -3662,7 +3754,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             (LIR *) newLIR1(cUnit, ARM_16BIT_DATA, CHAIN_CELL_OFFSET_TAG);
         cUnit->headerSize = 6;
         /* Thumb instruction used directly here to ensure correct size */
-        newLIR2(cUnit, THUMB_MOV_RR_H2L, r0, rpc & THUMB_REG_MASK);
+        newLIR2(cUnit, THUMB_MOV_RR_H2L, r0, rpc);
         newLIR2(cUnit, THUMB_SUB_RI8, r0, 10);
         newLIR3(cUnit, THUMB_LDR_RRI5, r1, r0, 0);
         newLIR2(cUnit, THUMB_ADD_RI8, r1, 1);
