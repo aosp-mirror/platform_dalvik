@@ -579,7 +579,7 @@ static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
             opCode = THUMB_LSL_RR;
             break;
         case OP_LSR:
-            opCode = THUMB_LSR_RRR;
+            opCode = THUMB_LSR_RR;
             break;
         case OP_ASR:
             opCode = THUMB_ASR_RR;
