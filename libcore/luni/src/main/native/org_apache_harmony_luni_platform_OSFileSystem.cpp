@@ -184,40 +184,24 @@ static jint harmony_io_getAllocGranularity(JNIEnv * env, jobject thiz) {
  * Signature: (I[J[I[I)J
  */
 static jlong harmony_io_readvImpl(JNIEnv *env, jobject thiz, jint fd, 
-        jintArray jbuffers, jintArray joffsets, jintArray jlengths, jint size) {
-
-    jboolean bufsCopied = JNI_FALSE;
-    jboolean offsetsCopied = JNI_FALSE;
-    jboolean lengthsCopied = JNI_FALSE;
-    jint *bufs; 
-    jint *offsets;
-    jint *lengths;
-    int i = 0;
-    long totalRead = 0;  
-    struct iovec *vectors = (struct iovec *)malloc(size * sizeof(struct iovec));
-    if(vectors == NULL) {
+        jintArray jBuffers, jintArray jOffsets, jintArray jLengths, jint size) {
+    iovec* vectors = new iovec[size];
+    if (vectors == NULL) {
         return -1;
     }
-    bufs = env->GetIntArrayElements(jbuffers, &bufsCopied);
-    offsets = env->GetIntArrayElements(joffsets, &offsetsCopied);
-    lengths = env->GetIntArrayElements(jlengths, &lengthsCopied);
-    while(i < size) {
-        vectors[i].iov_base = (void *)((int)(bufs[i]+offsets[i]));
+    jint *buffers = env->GetIntArrayElements(jBuffers, NULL);
+    jint *offsets = env->GetIntArrayElements(jOffsets, NULL);
+    jint *lengths = env->GetIntArrayElements(jLengths, NULL);
+    for (int i = 0; i < size; ++i) {
+        vectors[i].iov_base = (void *)((int)(buffers[i]+offsets[i]));
         vectors[i].iov_len = lengths[i];
-        i++;
     }
-    totalRead = readv(fd, vectors, size);
-    if(bufsCopied) {
-        env->ReleaseIntArrayElements(jbuffers, bufs, JNI_ABORT);
-    }
-    if(offsetsCopied) {
-        env->ReleaseIntArrayElements(joffsets, offsets, JNI_ABORT);
-    }
-    if(lengthsCopied) {
-        env->ReleaseIntArrayElements(jlengths, lengths, JNI_ABORT);
-    }
-    free(vectors);
-    return totalRead;
+    long result = readv(fd, vectors, size);
+    env->ReleaseIntArrayElements(jBuffers, buffers, JNI_ABORT);
+    env->ReleaseIntArrayElements(jOffsets, offsets, JNI_ABORT);
+    env->ReleaseIntArrayElements(jLengths, lengths, JNI_ABORT);
+    delete[] vectors;
+    return result;
 }
 
 /*
@@ -226,40 +210,24 @@ static jlong harmony_io_readvImpl(JNIEnv *env, jobject thiz, jint fd,
  * Signature: (I[J[I[I)J
  */
 static jlong harmony_io_writevImpl(JNIEnv *env, jobject thiz, jint fd, 
-        jintArray jbuffers, jintArray joffsets, jintArray jlengths, jint size) {
-
-    jboolean bufsCopied = JNI_FALSE;
-    jboolean offsetsCopied = JNI_FALSE;
-    jboolean lengthsCopied = JNI_FALSE;
-    jint *bufs; 
-    jint *offsets;
-    jint *lengths;
-    int i = 0;
-    long totalRead = 0;  
-    struct iovec *vectors = (struct iovec *)malloc(size * sizeof(struct iovec));
-    if(vectors == NULL) {
+        jintArray jBuffers, jintArray jOffsets, jintArray jLengths, jint size) {
+    iovec* vectors = new iovec[size];
+    if (vectors == NULL) {
         return -1;
     }
-    bufs = env->GetIntArrayElements(jbuffers, &bufsCopied);
-    offsets = env->GetIntArrayElements(joffsets, &offsetsCopied);
-    lengths = env->GetIntArrayElements(jlengths, &lengthsCopied);
-    while(i < size) {
-        vectors[i].iov_base = (void *)((int)(bufs[i]+offsets[i]));
+    jint *buffers = env->GetIntArrayElements(jBuffers, NULL);
+    jint *offsets = env->GetIntArrayElements(jOffsets, NULL);
+    jint *lengths = env->GetIntArrayElements(jLengths, NULL);
+    for (int i = 0; i < size; ++i) {
+        vectors[i].iov_base = (void *)((int)(buffers[i]+offsets[i]));
         vectors[i].iov_len = lengths[i];
-        i++;
     }
-    totalRead = writev(fd, vectors, size);
-    if(bufsCopied) {
-        env->ReleaseIntArrayElements(jbuffers, bufs, JNI_ABORT);
-    }
-    if(offsetsCopied) {
-        env->ReleaseIntArrayElements(joffsets, offsets, JNI_ABORT);
-    }
-    if(lengthsCopied) {
-        env->ReleaseIntArrayElements(jlengths, lengths, JNI_ABORT);
-    }
-    free(vectors);
-    return totalRead;
+    long result = writev(fd, vectors, size);
+    env->ReleaseIntArrayElements(jBuffers, buffers, JNI_ABORT);
+    env->ReleaseIntArrayElements(jOffsets, offsets, JNI_ABORT);
+    env->ReleaseIntArrayElements(jLengths, lengths, JNI_ABORT);
+    delete[] vectors;
+    return result;
 }
 
 /*
