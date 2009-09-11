@@ -225,12 +225,6 @@ class BigInt
         return a;
     }
 
-    public byte[] bigEndianTwosComplement() {
-        byte[] a = NativeBN.bn2twosComp(this.bignum, null);
-        return a;
-    }
-
-
     public int sign() {
         return NativeBN.sign(this.bignum);
     }
