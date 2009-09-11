@@ -571,10 +571,6 @@ alloc_succeeded:
             }
         }
 
-#if WITH_OBJECT_HEADERS
-        hc->header = OBJECT_HEADER;
-        hc->birthGeneration = gGeneration;
-#endif
         ptr = hc->data;
 
         /* The caller may not want us to collect this object.

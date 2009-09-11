@@ -68,11 +68,6 @@
 #define LOGV_SWEEP(...) LOGVV_GC("SWEEP: " __VA_ARGS__)
 #define LOGV_REF(...)   LOGVV_GC("REF: " __VA_ARGS__)
 
-#if WITH_OBJECT_HEADERS
-u2 gGeneration = 0;
-static const Object *gMarkParent = NULL;
-#endif
-
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
 #endif
@@ -170,10 +165,6 @@ dvmHeapBeginMarkStep()
     mc->numBitmaps = numBitmaps;
     mc->finger = NULL;
 
-#if WITH_OBJECT_HEADERS
-    gGeneration++;
-#endif
-
     return true;
 }
 
@@ -213,28 +204,6 @@ _markObjectNonNullCommon(const Object *obj, GcMarkContext *ctx,
             MARK_STACK_PUSH(ctx->stack, obj);
         }
 
-#if WITH_OBJECT_HEADERS
-        if (hc->scanGeneration != hc->markGeneration) {
-            LOGE("markObject(0x%08x): wasn't scanned last time\n", (uint)obj);
-            dvmAbort();
-        }
-        if (hc->markGeneration == gGeneration) {
-            LOGE("markObject(0x%08x): already marked this generation\n",
-                    (uint)obj);
-            dvmAbort();
-        }
-        hc->oldMarkGeneration = hc->markGeneration;
-        hc->markGeneration = gGeneration;
-        hc->markFingerOld = hc->markFinger;
-        hc->markFinger = ctx->finger;
-        if (gMarkParent != NULL) {
-            hc->parentOld = hc->parent;
-            hc->parent = gMarkParent;
-        } else {
-            hc->parent = (const Object *)((uintptr_t)hc->parent | 1);
-        }
-        hc->markCount++;
-#endif
 #if WITH_HPROF
         if (gDvm.gcHeap->hprofContext != NULL) {
             hprofMarkRootObject(gDvm.gcHeap->hprofContext, obj, 0);
@@ -535,17 +504,6 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     }
 #endif
 
-#if WITH_OBJECT_HEADERS
-    if (ptr2chunk(obj)->scanGeneration == gGeneration) {
-        LOGE("object 0x%08x was already scanned this generation\n",
-                (uintptr_t)obj);
-        dvmAbort();
-    }
-    ptr2chunk(obj)->oldScanGeneration = ptr2chunk(obj)->scanGeneration;
-    ptr2chunk(obj)->scanGeneration = gGeneration;
-    ptr2chunk(obj)->scanCount++;
-#endif
-
     /* Get and mark the class object for this particular instance.
      */
     clazz = obj->clazz;
@@ -566,10 +524,6 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
          */
         return;
     }
-
-#if WITH_OBJECT_HEADERS
-    gMarkParent = obj;
-#endif
 
     assert(dvmIsValidObject((Object *)clazz));
     markObjectNonNull((Object *)clazz, ctx);
@@ -720,10 +674,6 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
             scanClassObject((ClassObject *)obj, ctx);
         }
     }
-
-#if WITH_OBJECT_HEADERS
-    gMarkParent = NULL;
-#endif
 }
 
 static void
@@ -1225,13 +1175,6 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
         hc = (DvmHeapChunk *)*ptrs++;
         obj = (Object *)chunk2ptr(hc);
 
-#if WITH_OBJECT_HEADERS
-        if (hc->markGeneration == gGeneration) {
-            LOGE("sweeping marked object: 0x%08x\n", (uint)obj);
-            dvmAbort();
-        }
-#endif
-
         /* Free the monitor associated with the object.
          */
         dvmFreeObjectMonitor(obj);
@@ -1264,16 +1207,9 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
         {
             int chunklen;
             ClassObject *clazz = obj->clazz;
-#if WITH_OBJECT_HEADERS
-            DvmHeapChunk chunk = *hc;
-            chunk.header = ~OBJECT_HEADER | 1;
-#endif
             chunklen = dvmHeapSourceChunkSize(hc);
             memset(hc, 0xa5, chunklen);
             obj->clazz = (ClassObject *)((uintptr_t)clazz ^ 0xffffffff);
-#if WITH_OBJECT_HEADERS
-            *hc = chunk;
-#endif
         }
 #endif
     }

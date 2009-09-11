@@ -29,27 +29,7 @@
 #define ptr2chunk(p)    (((DvmHeapChunk *)(p)) - 1)
 #define chunk2ptr(p)    ((void *)(((DvmHeapChunk *)(p)) + 1))
 
-#define WITH_OBJECT_HEADERS 0
-#if WITH_OBJECT_HEADERS
-#define OBJECT_HEADER   0x11335577
-extern u2 gGeneration;
-#endif
-
 typedef struct DvmHeapChunk {
-#if WITH_OBJECT_HEADERS
-    u4 header;
-    const Object *parent;
-    const Object *parentOld;
-    const Object *markFinger;
-    const Object *markFingerOld;
-    u2 birthGeneration;
-    u2 markCount;
-    u2 scanCount;
-    u2 oldMarkGeneration;
-    u2 markGeneration;
-    u2 oldScanGeneration;
-    u2 scanGeneration;
-#endif
 #if WITH_HPROF && WITH_HPROF_STACK
     u4 stackTraceSerialNumber;
 #endif
