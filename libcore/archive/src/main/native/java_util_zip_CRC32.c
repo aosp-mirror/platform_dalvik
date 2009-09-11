@@ -25,15 +25,11 @@ Java_java_util_zip_CRC32_updateImpl (JNIEnv * env, jobject recv,
                                      jbyteArray buf, int off, int len,
                                      jlong crc)
 {
-  jbyte *b;
-  jlong result;
-
-  b = ((*env)->GetPrimitiveArrayCritical (env, buf, 0));
+  jbyte* b = ((*env)->GetPrimitiveArrayCritical (env, buf, 0));
   if (b == NULL) {
-    throwNewOutOfMemoryError(env, "");
     return -1;
   }
-  result = crc32 ((uLong) crc, (Bytef *) (b + off), (uInt) len);
+  jlong result = crc32 ((uLong) crc, (Bytef *) (b + off), (uInt) len);
   ((*env)->ReleasePrimitiveArrayCritical (env, buf, b, JNI_ABORT));
   return result;
 }

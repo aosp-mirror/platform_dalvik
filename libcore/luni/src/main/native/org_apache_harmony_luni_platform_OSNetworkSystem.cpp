@@ -2624,8 +2624,7 @@ static jint osNetworkSystem_receiveStreamImpl(JNIEnv* env, jclass clazz,
     int spaceAvailable = env->GetArrayLength(data) - offset;
     int localCount = count < spaceAvailable? count : spaceAvailable;
 
-    jboolean isCopy;
-    jbyte *body = env->GetByteArrayElements(data, &isCopy);
+    jbyte* body = env->GetByteArrayElements(data, NULL);
 
     // set timeout
     struct timeval tv;
@@ -2668,8 +2667,7 @@ static jint osNetworkSystem_sendStreamImpl(JNIEnv* env, jclass clazz,
     int handle = 0;
     int result = 0, sent = 0;
 
-    jboolean isCopy;
-    jbyte *message = env->GetByteArrayElements(data, &isCopy);
+    jbyte *message = env->GetByteArrayElements(data, NULL);
 
     // Cap write length to available buf size
     int spaceAvailable = env->GetArrayLength(data) - offset;
@@ -2826,7 +2824,6 @@ static jint osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
     jobject gotFD;
     fd_set *fdset_read,*fdset_write;
     int handle;
-    jboolean isCopy ;
     jint *flagArray;
     int val;
     unsigned int time_sec = (unsigned int)timeout/1000;
@@ -2885,7 +2882,7 @@ static jint osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
 
     if (0 < result) {
         /*output the result to a int array*/
-        flagArray = env->GetIntArrayElements(outFlags, &isCopy);
+        flagArray = env->GetIntArrayElements(outFlags, NULL);
 
         for (val=0; val<countReadC; val++) {
             gotFD = env->GetObjectArrayElement(readFDArray,val);

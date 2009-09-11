@@ -47,20 +47,6 @@ static SSL_SESSION *getSslSessionPointer(JNIEnv* env, jobject object) {
 }
 
 /**
- * Throws java.io.IOexception with the provided message.
- */
-static void throwIOExceptionStr(JNIEnv* env, const char* message)
-{
-    jclass exClass = env->FindClass("java/io/IOException");
-
-    if (exClass == NULL) {
-        LOGE("Unable to find class java/io/IOException");
-    } else {
-        env->ThrowNew(exClass, message);
-    }
-}
-
-/**
  * Gets the peer certificate in the chain and fills a byte array with the
  * information therein.
  */
