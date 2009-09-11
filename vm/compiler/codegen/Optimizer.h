@@ -19,6 +19,15 @@
 
 #include "Dalvik.h"
 
+/*
+ * If the corresponding bit is set in gDvmJit.disableOpt, the selected
+ * optimization will be suppressed.
+ */
+typedef enum optControlVector {
+    kLoadStoreElimination = 0,
+    kLoadHoisting,
+} optControlVector;
+
 /* Forward declarations */
 struct CompilationUnit;
 struct LIR;

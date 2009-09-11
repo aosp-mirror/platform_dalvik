@@ -85,6 +85,11 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
             int nativeRegId = thisLIR->operands[0];
             ArmLIR *checkLIR;
             int sinkDistance = 0;
+            /*
+             * Add r15 (pc) to the mask to prevent this instruction
+             * from sinking past branch instructions.
+             */
+            u8 stopMask = ENCODE_GP_REG(rpc) | thisLIR->useMask;
 
             for (checkLIR = NEXT_LIR(thisLIR);
                  checkLIR != tailLIR;
@@ -122,7 +127,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                     bool stopHere = false;
 
                     /* Last instruction reached */
-                    stopHere |= checkLIR->generic.next == NULL;
+                    stopHere |= NEXT_LIR(checkLIR) == tailLIR;
 
                     /*
                      * Conservatively assume there is a memory dependency
@@ -139,24 +144,12 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                                 checkLIR->opCode == THUMB2_VLDRD ||
                                 checkLIR->opCode == THUMB2_VSTRD;
 
-                    /* Don't migrate into an IF region */
-                    stopHere |= checkLIR->opCode == THUMB2_IT;
 
-                    if (!isPseudoOpCode(checkLIR->opCode)) {
-
-                        /* Store data is clobbered */
-                        stopHere |= (EncodingMap[checkLIR->opCode].flags &
-                                     CLOBBER_DEST) != 0 &&
-                                     regClobber(checkLIR->operands[0],
-                                               nativeRegId);
-
-                        stopHere |= (EncodingMap[checkLIR->opCode].flags &
-                                     IS_BRANCH) != 0;
-                    }
+                    /* Store data is clobbered */
+                    stopHere |= (stopMask & checkLIR->defMask) != 0;
 
                     /* Found a new place to put the store - move it here */
                     if (stopHere == true) {
-
                         /* The store can be sunk for at least one cycle */
                         if (sinkDistance != 0) {
                             ArmLIR *newStoreLIR =
@@ -186,10 +179,126 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
     }
 }
 
+static void applyLoadHoisting(CompilationUnit *cUnit,
+                              ArmLIR *headLIR,
+                              ArmLIR *tailLIR)
+{
+    ArmLIR *thisLIR;
+
+    cUnit->optRound++;
+    for (thisLIR = headLIR;
+         thisLIR != tailLIR;
+         thisLIR = NEXT_LIR(thisLIR)) {
+        /* Skip newly added instructions */
+        if (thisLIR->age >= cUnit->optRound ||
+            thisLIR->isNop == true) {
+            continue;
+        }
+        if (isDalvikLoad(thisLIR)) {
+            int dRegId = thisLIR->operands[2];
+            int nativeRegId = thisLIR->operands[0];
+            ArmLIR *checkLIR;
+            int hoistDistance = 0;
+            u8 stopUseMask = ENCODE_GP_REG(rpc) | thisLIR->useMask;
+            u8 stopDefMask = thisLIR->defMask;
+
+            for (checkLIR = PREV_LIR(thisLIR);
+                 checkLIR != headLIR;
+                 checkLIR = PREV_LIR(checkLIR)) {
+
+                if (checkLIR->isNop) continue;
+
+                /* Check if the current load is redundant */
+                if ((isDalvikLoad(checkLIR) || isDalvikStore(checkLIR)) &&
+                    checkLIR->operands[2] == dRegId ) {
+                    if (FPREG(nativeRegId) != FPREG(checkLIR->operands[0])) {
+                        break;  // TODO: handle gen<=>float copies
+                    }
+                    /* Insert a move to replace the load */
+                    if (checkLIR->operands[0] != nativeRegId) {
+                        ArmLIR *moveLIR;
+                        moveLIR = dvmCompilerRegCopy(cUnit,
+                                                    nativeRegId,
+                                                    checkLIR->operands[0]);
+                        /*
+                         * Convert *thisLIR* load into a move
+                         */
+                        dvmCompilerInsertLIRAfter((LIR *) checkLIR,
+                                                  (LIR *) moveLIR);
+                    }
+                    cUnit->printMe = true;
+                    thisLIR->isNop = true;
+                    break;
+
+                /* Find out if the load can be yanked past the checkLIR */
+                } else {
+                    bool stopHere = false;
+
+                    /* Last instruction reached */
+                    stopHere |= PREV_LIR(checkLIR) == headLIR;
+
+                    /*
+                     * Conservatively assume there is a memory dependency
+                     * for st/ld multiples and reg+reg address mode
+                     */
+                    stopHere |= checkLIR->opCode == THUMB_STMIA ||
+                                checkLIR->opCode == THUMB_LDMIA ||
+                                checkLIR->opCode == THUMB_STR_RRR ||
+                                checkLIR->opCode == THUMB_LDR_RRR ||
+                                checkLIR->opCode == THUMB2_STR_RRR ||
+                                checkLIR->opCode == THUMB2_LDR_RRR ||
+                                checkLIR->opCode == THUMB2_STMIA ||
+                                checkLIR->opCode == THUMB2_LDMIA ||
+                                checkLIR->opCode == THUMB2_VLDRD ||
+                                checkLIR->opCode == THUMB2_VSTRD;
+
+                    /* Base address is clobbered by checkLIR */
+                    stopHere |= (stopUseMask & checkLIR->defMask) != 0;
+
+                    /* Load target clobbers use/def in checkLIR */
+                    stopHere |= (stopDefMask &
+                                 (checkLIR->useMask | checkLIR->defMask)) != 0;
+
+                    /* Found a new place to put the load - move it here */
+                    if (stopHere == true) {
+                        /* The store can be hoisted for at least one cycle */
+                        if (hoistDistance != 0) {
+                            ArmLIR *newLoadLIR =
+                                dvmCompilerNew(sizeof(ArmLIR), true);
+                            *newLoadLIR = *thisLIR;
+                            newLoadLIR->age = cUnit->optRound;
+                            /*
+                             * Insertion is guaranteed to succeed since checkLIR
+                             * is never the first LIR on the list
+                             */
+                            dvmCompilerInsertLIRAfter((LIR *) checkLIR,
+                                                      (LIR *) newLoadLIR);
+                            thisLIR->isNop = true;
+                            cUnit->printMe = true;
+                        }
+                        break;
+                    }
+
+                    /*
+                     * Saw a real instruction that the store can be sunk after
+                     */
+                    if (!isPseudoOpCode(checkLIR->opCode)) {
+                        hoistDistance++;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void dvmCompilerApplyLocalOptimizations(CompilationUnit *cUnit, LIR *headLIR,
                                         LIR *tailLIR)
 {
-    applyLoadStoreElimination(cUnit,
-                              (ArmLIR *) headLIR,
-                              (ArmLIR *) tailLIR);
+    if (!(gDvmJit.disableOpt & (1 << kLoadStoreElimination))) {
+        applyLoadStoreElimination(cUnit, (ArmLIR *) headLIR,
+                                  (ArmLIR *) tailLIR);
+    }
+    if (!(gDvmJit.disableOpt & (1 << kLoadHoisting))) {
+        applyLoadHoisting(cUnit, (ArmLIR *) headLIR, (ArmLIR *) tailLIR);
+    }
 }

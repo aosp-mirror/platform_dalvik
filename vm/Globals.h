@@ -748,6 +748,9 @@ struct DvmJitGlobals {
     /* Flag to count trace execution */
     bool profile;
 
+    /* Vector to disable selected optimizations */
+    int disableOpt;
+
     /* Table to track the overall and trace statistics of hot methods */
     HashTable*  methodStatsTable;
 

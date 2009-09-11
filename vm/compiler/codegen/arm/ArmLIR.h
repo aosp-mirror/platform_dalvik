@@ -72,12 +72,32 @@
 #define SINGLEREG(x) (FPREG(x) && !DOUBLEREG(x))
 /* Mask to strip off fp flags */
 #define FP_REG_MASK (FP_REG_OFFSET-1)
-/* Mask to convert high reg to low for Thumb */
-#define THUMB_REG_MASK 0x7
 /* non-existent Dalvik register */
 #define vNone   (-1)
 /* non-existant physical register */
 #define rNone   (-1)
+
+typedef enum ResourceEncodingPos {
+    kGPReg0     = 0,
+    kRegSP      = 13,
+    kRegLR      = 14,
+    kRegPC      = 15,
+    kFPReg0     = 16,
+    kITBlock    = 48,
+    kCCode      = 49,
+    kFPStatus   = 50,
+} ResourceEncodingPos;
+
+#define ENCODE_GP_REG(N)        (1ULL << N)
+#define ENCODE_REG_LIST(N)      ((u8) N)
+#define ENCODE_REG_SP           (1ULL << kRegSP)
+#define ENCODE_REG_LR           (1ULL << kRegLR)
+#define ENCODE_REG_PC           (1ULL << kRegPC)
+#define ENCODE_SFP_REG(N)       (1ULL << (N - FP_REG_OFFSET + kFPReg0))
+#define ENCODE_DFP_REG(N)       (3ULL << (((N - FP_DOUBLE) << 1) + kFPReg0))
+#define ENCODE_IT_BLOCK         (1ULL << kITBlock)
+#define ENCODE_CCODE            (1ULL << kCCode)
+#define ENCODE_FP_STATUS        (1ULL << kFPStatus)
 
 typedef enum OpSize {
     WORD,
@@ -220,6 +240,7 @@ typedef enum ArmConditionCode {
  * Assemble.c.
  */
 typedef enum ArmOpCode {
+    ARM_PSEUDO_IT_BOTTOM = -17,
     ARM_PSEUDO_EXTENDED_MIR = -16,
     ARM_PSEUDO_SSA_REP = -15,
     ARM_PSEUDO_ENTRY_BLOCK = -14,
@@ -238,7 +259,7 @@ typedef enum ArmOpCode {
     ARM_PSEUDO_NORMAL_BLOCK_LABEL = -1,
     /************************************************************************/
     ARM_16BIT_DATA,       /* DATA   [0] rd[15..0] */
-    THUMB_ADC,            /* adc     [0100000101] rm[5..3] rd[2..0] */
+    THUMB_ADC_RR,         /* adc     [0100000101] rm[5..3] rd[2..0] */
     THUMB_ADD_RRI3,       /* add(1)  [0001110] imm_3[8..6] rn[5..3] rd[2..0]*/
     THUMB_ADD_RI8,        /* add(2)  [00110] rd[10..8] imm_8[7..0] */
     THUMB_ADD_RRR,        /* add(3)  [0001100] rm[8..6] rn[5..3] rd[2..0] */
@@ -249,11 +270,11 @@ typedef enum ArmOpCode {
     THUMB_ADD_SP_REL,     /* add(6)  [10101] rd[10..8] imm_8[7..0] */
     THUMB_ADD_SPI7,       /* add(7)  [101100000] imm_7[6..0] */
     THUMB_AND_RR,         /* and     [0100000000] rm[5..3] rd[2..0] */
-    THUMB_ASR,            /* asr(1)  [00010] imm_5[10..6] rm[5..3] rd[2..0] */
-    THUMB_ASRV,           /* asr(2)  [0100000100] rs[5..3] rd[2..0] */
+    THUMB_ASR_RRI5,       /* asr(1)  [00010] imm_5[10..6] rm[5..3] rd[2..0] */
+    THUMB_ASR_RR,         /* asr(2)  [0100000100] rs[5..3] rd[2..0] */
     THUMB_B_COND,         /* b(1)    [1101] cond[11..8] offset_8[7..0] */
     THUMB_B_UNCOND,       /* b(2)    [11100] offset_11[10..0] */
-    THUMB_BIC,            /* bic     [0100001110] rm[5..3] rd[2..0] */
+    THUMB_BIC_RR,         /* bic     [0100001110] rm[5..3] rd[2..0] */
     THUMB_BKPT,           /* bkpt    [10111110] imm_8[7..0] */
     THUMB_BLX_1,          /* blx(1)  [111] H[10] offset_11[10..0] */
     THUMB_BLX_2,          /* blx(1)  [111] H[01] offset_11[10..0] */
@@ -261,13 +282,13 @@ typedef enum ArmOpCode {
     THUMB_BL_2,           /* blx(1)  [111] H[11] offset_11[10..0] */
     THUMB_BLX_R,          /* blx(2)  [010001111] rm[6..3] [000] */
     THUMB_BX,             /* bx      [010001110] H2[6..6] rm[5..3] SBZ[000] */
-    THUMB_CMN,            /* cmn     [0100001011] rm[5..3] rd[2..0] */
+    THUMB_CMN_RR,         /* cmn     [0100001011] rm[5..3] rd[2..0] */
     THUMB_CMP_RI8,        /* cmp(1)  [00101] rn[10..8] imm_8[7..0] */
     THUMB_CMP_RR,         /* cmp(2)  [0100001010] rm[5..3] rd[2..0] */
     THUMB_CMP_LH,         /* cmp(3)  [01000101] H12[01] rm[5..3] rd[2..0] */
     THUMB_CMP_HL,         /* cmp(3)  [01000110] H12[10] rm[5..3] rd[2..0] */
     THUMB_CMP_HH,         /* cmp(3)  [01000111] H12[11] rm[5..3] rd[2..0] */
-    THUMB_EOR,            /* eor     [0100000001] rm[5..3] rd[2..0] */
+    THUMB_EOR_RR,         /* eor     [0100000001] rm[5..3] rd[2..0] */
     THUMB_LDMIA,          /* ldmia   [11001] rn[10..8] reglist [7..0] */
     THUMB_LDR_RRI5,       /* ldr(1)  [01101] imm_5[10..6] rn[5..3] rd[2..0] */
     THUMB_LDR_RRR,        /* ldr(2)  [0101100] rm[8..6] rn[5..3] rd[2..0] */
@@ -279,10 +300,10 @@ typedef enum ArmOpCode {
     THUMB_LDRH_RRR,       /* ldrh(2) [0101101] rm[8..6] rn[5..3] rd[2..0] */
     THUMB_LDRSB_RRR,      /* ldrsb   [0101011] rm[8..6] rn[5..3] rd[2..0] */
     THUMB_LDRSH_RRR,      /* ldrsh   [0101111] rm[8..6] rn[5..3] rd[2..0] */
-    THUMB_LSL,            /* lsl(1)  [00000] imm_5[10..6] rm[5..3] rd[2..0] */
-    THUMB_LSLV,           /* lsl(2)  [0100000010] rs[5..3] rd[2..0] */
-    THUMB_LSR,            /* lsr(1)  [00001] imm_5[10..6] rm[5..3] rd[2..0] */
-    THUMB_LSRV,           /* lsr(2)  [0100000011] rs[5..3] rd[2..0] */
+    THUMB_LSL_RRI5,       /* lsl(1)  [00000] imm_5[10..6] rm[5..3] rd[2..0] */
+    THUMB_LSL_RR,         /* lsl(2)  [0100000010] rs[5..3] rd[2..0] */
+    THUMB_LSR_RRI5,       /* lsr(1)  [00001] imm_5[10..6] rm[5..3] rd[2..0] */
+    THUMB_LSR_RR,         /* lsr(2)  [0100000011] rs[5..3] rd[2..0] */
     THUMB_MOV_IMM,        /* mov(1)  [00100] rd[10..8] imm_8[7..0] */
     THUMB_MOV_RR,         /* mov(2)  [0001110000] rn[5..3] rd[2..0] */
     THUMB_MOV_RR_H2H,     /* mov(3)  [01000111] H12[11] rm[5..3] rd[2..0] */
@@ -294,7 +315,7 @@ typedef enum ArmOpCode {
     THUMB_ORR,            /* orr     [0100001100] rm[5..3] rd[2..0] */
     THUMB_POP,            /* pop     [1011110] r[8..8] rl[7..0] */
     THUMB_PUSH,           /* push    [1011010] r[8..8] rl[7..0] */
-    THUMB_RORV,           /* ror     [0100000111] rs[5..3] rd[2..0] */
+    THUMB_ROR_RR,         /* ror     [0100000111] rs[5..3] rd[2..0] */
     THUMB_SBC,            /* sbc     [0100000110] rm[5..3] rd[2..0] */
     THUMB_STMIA,          /* stmia   [11000] rn[10..8] reglist [7.. 0] */
     THUMB_STR_RRI5,       /* str(1)  [01100] imm_5[10..6] rn[5..3] rd[2..0] */
@@ -447,13 +468,13 @@ typedef enum ArmOpCode {
                                    [0000] rm[3..0] */
     THUMB2_TST_RR,        /* tst [111010100001] rn[19..16] [0000] [1111]
                                    [0000] rm[3..0] */
-    THUMB2_LSLV_RRR,      /* lsl [111110100000] rn[19..16] [1111] rd[11..8]
+    THUMB2_LSL_RRR,       /* lsl [111110100000] rn[19..16] [1111] rd[11..8]
                                    [0000] rm[3..0] */
-    THUMB2_LSRV_RRR,      /* lsr [111110100010] rn[19..16] [1111] rd[11..8]
+    THUMB2_LSR_RRR,       /* lsr [111110100010] rn[19..16] [1111] rd[11..8]
                                    [0000] rm[3..0] */
-    THUMB2_ASRV_RRR,      /* asr [111110100100] rn[19..16] [1111] rd[11..8]
+    THUMB2_ASR_RRR,       /* asr [111110100100] rn[19..16] [1111] rd[11..8]
                                    [0000] rm[3..0] */
-    THUMB2_RORV_RRR,      /* ror [111110100110] rn[19..16] [1111] rd[11..8]
+    THUMB2_ROR_RRR,       /* ror [111110100110] rn[19..16] [1111] rd[11..8]
                                    [0000] rm[3..0] */
     THUMB2_LSL_RRI5,      /* lsl [11101010010011110] imm[14.12] rd[11..8]
                                    [00] rm[3..0] */
@@ -507,17 +528,57 @@ typedef enum ArmOpCode {
 
 /* Bit flags describing the behavior of each native opcode */
 typedef enum ArmOpFeatureFlags {
-    IS_BRANCH =           1 << 1,
-    CLOBBER_DEST =        1 << 2,
-    CLOBBER_SRC1 =        1 << 3,
-    NO_OPERAND =          1 << 4,
-    IS_UNARY_OP =         1 << 5,
-    IS_BINARY_OP =        1 << 6,
-    IS_TERTIARY_OP =      1 << 7,
-    IS_QUAD_OP =          1 << 8,
-    SETS_CCODES =         1 << 9,
-    USES_CCODES =         1 << 10,
+    kIsBranch = 0,
+    kRegDef0,
+    kRegDef1,
+    kRegDefSP,
+    kRegDefList0,
+    kRegDefList1,
+    kRegUse0,
+    kRegUse1,
+    kRegUse2,
+    kRegUseSP,
+    kRegUsePC,
+    kRegUseList0,
+    kRegUseList1,
+    kNoOperand,
+    kIsUnaryOp,
+    kIsBinaryOp,
+    kIsTertiaryOp,
+    kIsQuadOp,
+    kIsIT,
+    kSetsCCodes,
+    kUsesCCodes,
 } ArmOpFeatureFlags;
+
+#define IS_BRANCH       (1 << kIsBranch)
+#define REG_DEF0        (1 << kRegDef0)
+#define REG_DEF1        (1 << kRegDef1)
+#define REG_DEF_SP      (1 << kRegDefSP)
+#define REG_DEF_LIST0   (1 << kRegDefList0)
+#define REG_DEF_LIST1   (1 << kRegDefList1)
+#define REG_USE0        (1 << kRegUse0)
+#define REG_USE1        (1 << kRegUse1)
+#define REG_USE2        (1 << kRegUse2)
+#define REG_USE_PC      (1 << kRegUsePC)
+#define REG_USE_SP      (1 << kRegUseSP)
+#define REG_USE_LIST0   (1 << kRegUseList0)
+#define REG_USE_LIST1   (1 << kRegUseList1)
+#define NO_OPERAND      (1 << kNoOperand)
+#define IS_UNARY_OP     (1 << kIsUnaryOp)
+#define IS_BINARY_OP    (1 << kIsBinaryOp)
+#define IS_TERTIARY_OP  (1 << kIsTertiaryOp)
+#define IS_QUAD_OP      (1 << kIsQuadOp)
+#define IS_IT           (1 << kIsIT)
+#define SETS_CCODES     (1 << kSetsCCodes)
+#define USES_CCODES     (1 << kUsesCCodes)
+
+/* Common combo register usage patterns */
+#define REG_DEF0_USE1   (REG_DEF0 | REG_USE1)
+#define REG_DEF0_USE01  (REG_DEF0 | REG_USE0 | REG_USE1)
+#define REG_DEF0_USE12  (REG_DEF0 | REG_USE1 | REG_USE2)
+#define REG_USE01       (REG_USE0 | REG_USE1)
+#define REG_USE012      (REG_USE0 | REG_USE1 | REG_USE2)
 
 /* Instruction assembly fieldLoc kind */
 typedef enum ArmEncodingKind {
@@ -556,7 +617,16 @@ extern ArmEncodingMap EncodingMap[ARM_LAST];
 /*
  * Each instance of this struct holds a pseudo or real LIR instruction:
  * - pesudo ones (eg labels and marks) and will be discarded by the assembler.
- * - real ones will e assembled into Thumb instructions.
+ * - real ones will be assembled into Thumb instructions.
+ *
+ * Machine resources are encoded into a 64-bit vector, where the encodings are
+ * as following:
+ * - [ 0..15]: general purpose registers including PC, SP, and LR
+ * - [16..47]: floating-point registers where d0 is expanded to s[01] and s0
+ *   starts at bit 16
+ * - [48]: IT block
+ * - [49]: integer condition code
+ * - [50]: floatint-point status word
  */
 typedef struct ArmLIR {
     LIR generic;
@@ -565,6 +635,8 @@ typedef struct ArmLIR {
     bool isNop;         // LIR is optimized away
     int age;            // default is 0, set lazily by the optimizer
     int size;           // 16-bit unit size (1 for thumb, 1 or 2 for thumb2)
+    u8 useMask;         // Resource mask for use
+    u8 defMask;         // Resource mask for def
 } ArmLIR;
 
 /* Chain cell for predicted method invocation */

@@ -152,6 +152,8 @@ void dvmCompilerAppendLIR(CompilationUnit *cUnit, LIR *lir);
 
 void dvmCompilerInsertLIRBefore(LIR *currentLIR, LIR *newLIR);
 
+void dvmCompilerInsertLIRAfter(LIR *currentLIR, LIR *newLIR);
+
 /* Debug Utilities */
 void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit);
 
