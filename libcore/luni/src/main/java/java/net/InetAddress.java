@@ -1124,7 +1124,7 @@ public class InetAddress extends Object implements Serializable {
             throws UnknownHostException {
         // simply call the method by the same name specifying the default scope
         // id of 0
-        return getByAddress(ipAddress, 0);
+        return getByAddressInternal(null, ipAddress, 0);
     }
 
     /**
@@ -1144,49 +1144,33 @@ public class InetAddress extends Object implements Serializable {
      */
     static InetAddress getByAddress(byte[] ipAddress, int scope_id)
             throws UnknownHostException {
-        byte[] copy_address;
-        if (ipAddress != null && ipAddress.length == 4) {
-            copy_address = new byte[4];
-            for (int i = 0; i < 4; i++) {
-                copy_address[i] = ipAddress[i];
-            }
-            return new Inet4Address(copy_address);
-        }
-
-        if (ipAddress != null && ipAddress.length == 16) {
-            // First check to see if the address is an IPv6-mapped
-            // IPv4 address. If it is, then we can make it a IPv4
-            // address, otherwise, we'll create an IPv6 address.
-            if (isIPv4MappedAddress(ipAddress)) {
-                copy_address = new byte[4];
-                for (int i = 0; i < 4; i++) {
-                    copy_address[i] = ipAddress[12 + i];
-                }
-                return new Inet4Address(copy_address);
-            }
-            copy_address = ipAddress.clone();
-            return new Inet6Address(copy_address, scope_id);
-        }
-
-        // K0339=Invalid IP Address is neither 4 or 16 bytes
-        throw new UnknownHostException(Msg.getString("K0339")); //$NON-NLS-1$
+        return getByAddressInternal(null, ipAddress, scope_id);
     }
 
     private static boolean isIPv4MappedAddress(byte ipAddress[]) {
         // Check if the address matches ::FFFF:d.d.d.d
         // The first 10 bytes are 0. The next to are -1 (FF).
         // The last 4 bytes are varied.
+        if (ipAddress == null || ipAddress.length != 16) {
+            return false;
+        }
         for (int i = 0; i < 10; i++) {
             if (ipAddress[i] != 0) {
                 return false;
             }
         }
-
         if (ipAddress[10] != -1 || ipAddress[11] != -1) {
             return false;
         }
-
         return true;
+    }
+
+    private static byte[] ipv4MappedToIPv4(byte[] mappedAddress) {
+        byte[] ipv4Address = new byte[4];
+        for(int i = 0; i < 4; i++) {
+            ipv4Address[i] = mappedAddress[12 + i];
+        }
+        return ipv4Address;
     }
 
     /**
@@ -1238,36 +1222,32 @@ public class InetAddress extends Object implements Serializable {
      */
     static InetAddress getByAddressInternal(String hostName, byte[] ipAddress,
             int scope_id) throws UnknownHostException {
-        byte[] copy_address;
-        if (ipAddress != null && ipAddress.length == 4) {
-            copy_address = new byte[4];
-            for (int i = 0; i < 4; i++) {
-                copy_address[i] = ipAddress[i];
-            }
-            return new Inet4Address(ipAddress, hostName);
+        if (ipAddress == null) {
+            throw new NullPointerException();
         }
-
-        if (ipAddress != null && ipAddress.length == 16) {
-            // First check to see if the address is an IPv6-mapped
-            // IPv4 address. If it is, then we can make it a IPv4
-            // address, otherwise, we'll create an IPv6 address.
-            if (isIPv4MappedAddress(ipAddress)) {
-                copy_address = new byte[4];
-                for (int i = 0; i < 4; i++) {
-                    copy_address[i] = ipAddress[12 + i];
+        switch (ipAddress.length) {
+            case 4:
+                return new Inet4Address(ipAddress.clone());
+            case 16:
+                // First check to see if the address is an IPv6-mapped
+                // IPv4 address. If it is, then we can make it a IPv4
+                // address, otherwise, we'll create an IPv6 address.
+                if (isIPv4MappedAddress(ipAddress)) {
+                    return new Inet4Address(ipv4MappedToIPv4(ipAddress));
+                } else {
+                    return new Inet6Address(ipAddress.clone(), scope_id);
                 }
-                return new Inet4Address(ipAddress, hostName);
-            }
-
-            copy_address = new byte[16];
-            for (int i = 0; i < 16; i++) {
-                copy_address[i] = ipAddress[i];
-            }
-
-            return new Inet6Address(ipAddress, hostName, scope_id);
+            default:
+                if (hostName != null) {
+                    // "Invalid IP Address is neither 4 or 16 bytes: <hostName>"
+                    throw new UnknownHostException(
+                            Msg.getString("K0332", hostName)); //$NON-NLS-1$
+                } else {
+                    // "Invalid IP Address is neither 4 or 16 bytes"
+                    throw new UnknownHostException(
+                            Msg.getString("K0339")); //$NON-NLS-1$
+                }
         }
-
-        throw new UnknownHostException(Msg.getString("K0332", hostName)); //$NON-NLS-1$
     }
 
     /**
