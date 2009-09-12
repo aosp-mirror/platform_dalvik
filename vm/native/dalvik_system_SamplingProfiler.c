@@ -24,6 +24,7 @@
 
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
+#include "native/SystemThread.h"
 
 // ~20k
 #define INITIAL_CAPACITY 1024
@@ -202,9 +203,9 @@ static void sample(SampleSet* set, Thread* thread) {
         ? EVENT_THREAD : OTHER_THREAD;
 
     ThreadState threadState;
-    switch (dvmGetNativeThreadStatus(thread)) {
+    switch (dvmGetSystemThreadStatus(thread)) {
         case THREAD_RUNNING: threadState = RUNNING_THREAD; break;
-        case THREAD_NATIVE: dvmAbort();
+        case THREAD_NATIVE: return; // Something went wrong. Skip this thread.
         default: threadState = SUSPENDED_THREAD; // includes PAGING
     }
 
