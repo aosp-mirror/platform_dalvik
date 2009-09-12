@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package dalvik.system;
 
 import java.util.logging.Logger;
@@ -114,6 +130,10 @@ public class SamplingProfiler {
             byte[] bytes = snapshot(pointer);
             long elapsed = System.nanoTime() - start;
 
+            /*
+             * We shifted the times by 10 bits in the sampling thread to avoid
+             * overflow. Undo the shift and then convert from ns to us.
+             */
             long averageSampleTime = ((totalSampleTime / totalThreadsSampled)
                     << 10) / 1000;
             logger.info("Grabbed snapshot in " + (elapsed / 1000) + "us."
@@ -159,6 +179,8 @@ public class SamplingProfiler {
      * will recreate the thread the next time {@link #start(int)} is called.
      *
      * @throws IllegalStateException if the profiler is already shutting down
+     *  or if it hasn't started yet
+     *
      */
     public void shutDown() {
         Thread toStop;
@@ -167,8 +189,8 @@ public class SamplingProfiler {
 
             toStop = samplingThread;
             if (toStop == null) {
-                // The profiler hasn't started yet.
-                return;
+                throw new IllegalStateException(
+                        "The profiler was never started.");
             }
 
             state = State.SHUTTING_DOWN;
@@ -177,11 +199,12 @@ public class SamplingProfiler {
         }
 
         // Release lock to 'this' so background thread can grab it and stop.
-        boolean successful = false;
-        while (!successful) {
+        // Interrupt the thread in case it's sleeping.
+        toStop.interrupt();
+        while (true) {
             try {
                 toStop.join();
-                successful = true;
+                break;
             } catch (InterruptedException e) { /* ignore */ }
         }
 
