@@ -19,9 +19,9 @@ package tests.support;
 import java.io.*;
 import java.lang.Thread;
 import java.net.*;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -41,6 +41,10 @@ public class Support_TestWebServer implements Support_HttpConstants {
 
     /* Where worker threads stand idle */
     Vector threads = new Vector();
+
+    /** maps the recently requested URLs to the full request snapshot */
+    private final Map<String, Request> pathToRequest
+            = new ConcurrentHashMap<String, Request>();
 
     /* List of all active worker threads */
     Vector activeThreads = new Vector();
@@ -206,12 +210,20 @@ public class Support_TestWebServer implements Support_HttpConstants {
      * a redirect code with the Location response header set to the value
      * specified.
      * @param redirect The location to be redirected to
-     * @param redirectCode The code to send when redirecting
+     * @param code The code to send when redirecting
      */
     public void setRedirect(String redirect, int code) {
         redirectHost = redirect;
         redirectCode = code;
         log("Server will redirect output to "+redirect+" code "+code);
+    }
+
+    /**
+     * Returns a map from recently-requested paths (like "/index.html") to a
+     * snapshot of the request data.
+     */
+    public Map<String, Request> pathToRequest() {
+        return pathToRequest;
     }
 
     /**
@@ -328,6 +340,28 @@ public class Support_TestWebServer implements Support_HttpConstants {
     static final byte[] EOL = {(byte)'\r', (byte)'\n' };
 
     /**
+     * An immutable snapshot of an HTTP request.
+     */
+    public static class Request {
+        private final String path;
+        private final Map<String, String> headers;
+        // TODO: include posted content?
+
+        public Request(String path, Map<String, String> headers) {
+            this.path = path;
+            this.headers = new LinkedHashMap<String, String>(headers);
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public Map<String, String> getHeaders() {
+            return headers;
+        }
+    }
+
+    /**
      * The worker thread handles all interactions with a current open
      * connection. If pipelining is turned on, this will allow this
      * thread to continuously operate on numerous requests before the
@@ -347,6 +381,9 @@ public class Support_TestWebServer implements Support_HttpConstants {
         /* Reference to current requests test file/data */
         private String testID;
 
+        /* The requested path, such as "/test1" */
+        private String path;
+
         /* Reference to test number from testID */
         private int testNum;
 
@@ -359,7 +396,7 @@ public class Support_TestWebServer implements Support_HttpConstants {
         boolean running = false;
 
         /* Request headers are stored here */
-        private Hashtable<String, String> headers = new Hashtable<String, String>();
+        private Map<String, String> headers = new LinkedHashMap<String, String>();
 
         /* Create a new worker thread */
         Worker() {
@@ -559,10 +596,8 @@ public class Support_TestWebServer implements Support_HttpConstants {
                     i++;
                 }
 
-                testID = new String(buf, 0, index, i-index);
-                if (testID.startsWith("/")) {
-                    testID = testID.substring(1);
-                }
+                path = new String(buf, 0, index, i-index);
+                testID = path.substring(1);
 
                 return nread;
             }
@@ -601,7 +636,7 @@ public class Support_TestWebServer implements Support_HttpConstants {
             while (buf[i] == ' ') {
                 i++;
             }
-            String headerValue = new String(buf, i, nread-1);
+            String headerValue = new String(buf, i, nread-i);
 
             headers.put(headerName, headerValue);
             return nread;
@@ -665,6 +700,8 @@ public class Support_TestWebServer implements Support_HttpConstants {
 
                     // If status line found, read any headers
                     nread = readHeaders(is);
+
+                    pathToRequest().put(path, new Request(path, headers));
 
                     // Then read content (if any)
                     // TODO handle chunked encoding from the client

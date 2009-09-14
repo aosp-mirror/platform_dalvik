@@ -17,14 +17,11 @@
 package org.apache.harmony.luni.tests.java.net;
 
 import dalvik.annotation.BrokenTest;
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
-
 import junit.framework.TestCase;
-
 import tests.support.Support_Configuration;
 import tests.support.Support_PortManager;
 import tests.support.Support_TestWebData;
@@ -59,7 +56,6 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.UnknownServiceException;
 import java.security.Permission;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -461,6 +457,28 @@ public class URLConnectionTest extends TestCase {
         } catch (UnsupportedOperationException e) {
             // Expected
         }
+    }
+
+    public void testHttpPostHeaders() throws IOException {
+        String path = "/" + Math.random();
+        HttpURLConnection connection = (HttpURLConnection)
+                new URL("http://localhost:" + port + path).openConnection();
+
+        // post a request
+        connection.setDoOutput(true);
+        OutputStreamWriter writer
+                = new OutputStreamWriter(connection.getOutputStream());
+        writer.write("hello");
+        writer.flush();
+        assertEquals(200, connection.getResponseCode());
+
+        // validate the request by asking the server what was received
+        Map<String, String> headers = server.pathToRequest().get(path).getHeaders();
+        assertEquals("*, */*", headers.get("Accept"));
+        assertEquals("application/x-www-form-urlencoded", headers.get("Content-Type"));
+        assertEquals("5", headers.get("Content-Length"));
+        assertEquals("localhost:" + port, headers.get("Host"));
+        // TODO: test User-Agent?
     }
 
     /**

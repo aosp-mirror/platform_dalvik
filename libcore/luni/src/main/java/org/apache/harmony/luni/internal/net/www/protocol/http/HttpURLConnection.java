@@ -1385,7 +1385,9 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
             output.append("\r\n"); //$NON-NLS-1$
         }
         if (reqHeader.get("Accept") == null) { //$NON-NLS-1$
-            output.append("Accept: *; */*\r\n"); //$NON-NLS-1$
+            // BEGIN android-changed
+            output.append("Accept: *, */*\r\n"); //$NON-NLS-1$
+            // END android-changed
         }
         if (httpVersion > 0 && reqHeader.get("Connection") == null) { //$NON-NLS-1$
             output.append("Connection: Keep-Alive\r\n"); //$NON-NLS-1$
