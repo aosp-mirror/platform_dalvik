@@ -47,7 +47,7 @@ import com.ibm.icu4jni.regex.NativeRegEx;
  *     boolean b2 = Pattern.matches("Hello, A[a-z]*!", "Hello, Robot!");   // false
  * </pre>
  * <p/>
- * Please consult the <a href="package-summary.html">package documentation</a> for an
+ * Please consult the <a href="package.html">package documentation</a> for an
  * overview of the regular expression syntax used in this class as well as
  * Android-specific implementation details.
  * 
@@ -61,8 +61,6 @@ public final class Pattern implements Serializable {
     /**
      * This constant specifies that a pattern matches Unix line endings ('\n')
      * only against the '.', '^', and '$' meta characters.
-     * 
-     * @since Android 1.0
      */
     public static final int UNIX_LINES = 0x01;
 
@@ -76,8 +74,6 @@ public final class Pattern implements Serializable {
      * constant. So if case insensitivity is enabled, this automatically extends
      * to all Unicode characters. The {@code UNICODE_CASE} constant itself has
      * no special consequences.
-     * 
-     * @since Android 1.0
      */
     public static final int CASE_INSENSITIVE = 0x02;
 
@@ -85,8 +81,6 @@ public final class Pattern implements Serializable {
      * This constant specifies that a {@code Pattern} may contain whitespace or
      * comments. Otherwise comments and whitespace are taken as literal
      * characters.
-     * 
-     * @since Android 1.0
      */
     public static final int COMMENTS = 0x04;
 
@@ -94,24 +88,18 @@ public final class Pattern implements Serializable {
      * This constant specifies that the meta characters '^' and '$' match only
      * the beginning and end end of an input line, respectively. Normally, they
      * match the beginning and the end of the complete input.
-     * 
-     * @since Android 1.0
      */
     public static final int MULTILINE = 0x08;
 
     /**
      * This constant specifies that the whole {@code Pattern} is to be taken
      * literally, that is, all meta characters lose their meanings.
-     * 
-     * @since Android 1.0
      */
     public static final int LITERAL = 0x10;
 
     /**
      * This constant specifies that the '.' meta character matches arbitrary
      * characters, including line endings, which is normally not the case.
-     * 
-     * @since Android 1.0
      */
     public static final int DOTALL = 0x20;
 
@@ -126,8 +114,6 @@ public final class Pattern implements Serializable {
      * constant. So if case insensitivity is enabled, this automatically extends
      * to all Unicode characters. The {@code UNICODE_CASE} constant then has no
      * special consequences.
-     * 
-     * @since Android 1.0
      */
     public static final int UNICODE_CASE = 0x40;
 
@@ -135,8 +121,6 @@ public final class Pattern implements Serializable {
      * This constant specifies that a character in a {@code Pattern} and a
      * character in the input string only match if they are canonically
      * equivalent. It is (currently) not supported in Android.
-     * 
-     * @since Android 1.0
      */
     public static final int CANON_EQ = 0x80;
 
@@ -159,24 +143,144 @@ public final class Pattern implements Serializable {
      * Holds the number of groups in the pattern.
      */
     transient int mGroupCount;
-    
+
+
     /**
-     * Compiles a regular expression, creating a new Pattern instance in the
-     * process. This is actually a convenience method that calls {@link
-     * #compile(String, int)} with a {@code flags} value of zero.
-     * 
-     * @param pattern
-     *            the regular expression.
-     * 
-     * @return the new {@code Pattern} instance.
-     * 
-     * @throws PatternSyntaxException
-     *             if the regular expression is syntactically incorrect.
-     * 
-     * @since Android 1.0
+     * Returns a {@link Matcher} for the {@code Pattern} and a given input. The
+     * {@code Matcher} can be used to match the {@code Pattern} against the
+     * whole input, find occurrences of the {@code Pattern} in the input, or
+     * replace parts of the input.
+     *
+     * @param input
+     *            the input to process.
+     *
+     * @return the resulting {@code Matcher}.
      */
-    public static Pattern compile(String pattern) throws PatternSyntaxException {
-        return new Pattern(pattern, 0);
+    public Matcher matcher(CharSequence input) {
+        return new Matcher(this, input);
+    }
+
+    /**
+     * Splits the given input sequence at occurrences of this {@code Pattern}.
+     *
+     * <p>If this {@code Pattern} does not occur in the input, the result is an
+     * array containing the input (converted from a {@code CharSequence} to
+     * a {@code String}).
+     *
+     * <p>Otherwise, the {@code limit} parameter controls the contents of the
+     * returned array as described below.
+     *
+     * @param inputSeq
+     *            the input sequence.
+     * @param limit
+     *            Determines the maximum number of entries in the resulting
+     *            array, and the treatment of trailing empty strings.
+     *            <ul>
+     *            <li>For n &gt; 0, the resulting array contains at most n
+     *            entries. If this is fewer than the number of matches, the
+     *            final entry will contain all remaining input.
+     *            <li>For n &lt; 0, the length of the resulting array is
+     *            exactly the number of occurrences of the {@code Pattern}
+     *            plus one for the text after the final separator.
+     *            All entries are included.
+     *            <li>For n == 0, the result is as for n &lt; 0, except
+     *            trailing empty strings will not be returned. (Note that
+     *            the case where the input is itself an empty string is
+     *            special, as described above, and the limit parameter does
+     *            not apply there.)
+     *            </ul>
+     *
+     * @return the resulting array.
+     */
+    public String[] split(CharSequence inputSeq, int limit) {
+        if (inputSeq.length() == 0) {
+            // Unlike Perl, which considers the result of splitting the empty
+            // string to be the empty array, Java returns an array containing
+            // the empty string.
+            return new String[] { "" };
+        }
+
+        int maxLength = limit <= 0 ? Integer.MAX_VALUE : limit;
+
+        String input = inputSeq.toString();
+        ArrayList<String> list = new ArrayList<String>();
+
+        Matcher matcher = new Matcher(this, inputSeq);
+        int savedPos = 0;
+
+        // Add text preceding each occurrence, if enough space.
+        while(matcher.find() && list.size() + 1 < maxLength) {
+            list.add(input.substring(savedPos, matcher.start()));
+            savedPos = matcher.end();
+        }
+
+        // Add trailing text if enough space.
+        if (list.size() < maxLength) {
+            if (savedPos < input.length()) {
+                list.add(input.substring(savedPos));
+            } else {
+                list.add("");
+            }
+        }
+
+        // Remove trailing empty matches in the limit == 0 case.
+        if (limit == 0) {
+            int i = list.size() - 1;
+            while (i >= 0 && "".equals(list.get(i))) {
+                list.remove(i);
+                i--;
+            }
+        }
+
+        return list.toArray(new String[list.size()]);
+    }
+
+    /**
+     * Splits a given input around occurrences of a regular expression. This is
+     * a convenience method that is equivalent to calling the method
+     * {@link #split(java.lang.CharSequence, int)} with a limit of 0.
+     *
+     * @param input
+     *            the input sequence.
+     *
+     * @return the resulting array.
+     */
+    public String[] split(CharSequence input) {
+        return split(input, 0);
+    }
+
+    /**
+     * Returns the regular expression that was compiled into this
+     * {@code Pattern}.
+     *
+     * @return the regular expression.
+     */
+    public String pattern() {
+        return pattern;
+    }
+
+    @Override
+    public String toString() {
+        return pattern;
+    }
+
+    /**
+     * Returns the flags that have been set for this {@code Pattern}.
+     *
+     * @return the flags that have been set. A combination of the constants
+     *         defined in this class.
+     *
+     * @see #CANON_EQ
+     * @see #CASE_INSENSITIVE
+     * @see #COMMENTS
+     * @see #DOTALL
+     * @see #LITERAL
+     * @see #MULTILINE
+     * @see #UNICODE_CASE
+     * @see #UNIX_LINES
+     */
+    public int flags() {
+        return flags;
     }
 
     /**
@@ -208,8 +312,6 @@ public final class Pattern implements Serializable {
      * @see #MULTILINE
      * @see #UNICODE_CASE
      * @see #UNIX_LINES
-     * 
-     * @since Android 1.0
      */
     public static Pattern compile(String pattern, int flags) throws PatternSyntaxException {
         return new Pattern(pattern, flags);
@@ -238,7 +340,24 @@ public final class Pattern implements Serializable {
         
         compileImpl(pattern, flags);
     }
-    
+
+    /**
+     * Compiles a regular expression, creating a new Pattern instance in the
+     * process. This is actually a convenience method that calls {@link
+     * #compile(String, int)} with a {@code flags} value of zero.
+     *
+     * @param pattern
+     *            the regular expression.
+     *
+     * @return the new {@code Pattern} instance.
+     *
+     * @throws PatternSyntaxException
+     *             if the regular expression is syntactically incorrect.
+     */
+    public static Pattern compile(String pattern) {
+        return new Pattern(pattern, 0);
+    }
+
     /**
      * Compiles the given regular expression using the given flags. Used
      * internally only.
@@ -266,56 +385,6 @@ public final class Pattern implements Serializable {
     }
 
     /**
-     * Returns the regular expression that was compiled into this
-     * {@code Pattern}.
-     * 
-     * @return the regular expression.
-     * 
-     * @since Android 1.0
-     */
-    public String pattern() {
-        return pattern;
-    }
-    
-    /**
-     * Returns the flags that have been set for this {@code Pattern}.
-     *  
-     * @return the flags that have been set. A combination of the constants
-     *         defined in this class.
-     *         
-     * @see #CANON_EQ
-     * @see #CASE_INSENSITIVE
-     * @see #COMMENTS
-     * @see #DOTALL
-     * @see #LITERAL
-     * @see #MULTILINE
-     * @see #UNICODE_CASE
-     * @see #UNIX_LINES
-     *         
-     * @since Android 1.0
-     */
-    public int flags() {
-        return flags;
-    }
-
-    /**
-     * Returns a {@link Matcher} for the {@code Pattern} and a given input. The
-     * {@code Matcher} can be used to match the {@code Pattern} against the
-     * whole input, find occurrences of the {@code Pattern} in the input, or
-     * replace parts of the input.
-     * 
-     * @param input
-     *            the input to process.
-     * 
-     * @return the resulting {@code Matcher}.
-     * 
-     * @since Android 1.0
-     */
-    public Matcher matcher(CharSequence input) {
-        return new Matcher(this, input);
-    }
-
-    /**
      * Tries to match a given regular expression against a given input. This is
      * actually nothing but a convenience method that compiles the regular
      * expression into a {@code Pattern}, builds a {@link Matcher} for it, and
@@ -332,104 +401,9 @@ public final class Pattern implements Serializable {
      * 
      * @see Pattern#compile(java.lang.String, int)
      * @see Matcher#matches()
-     * 
-     * @since Android 1.0
      */
-    static public boolean matches(String regex, CharSequence input) {
+    public static boolean matches(String regex, CharSequence input) {
         return new Matcher(new Pattern(regex, 0), input).matches();
-    }
-
-    /**
-     * Splits a given input around occurrences of a regular expression. This is
-     * a convenience method that is equivalent to calling the method
-     * {@link #split(java.lang.CharSequence, int)} with a limit of 0.
-     * 
-     * @param input
-     *            the input sequence.
-     * 
-     * @return the resulting array.
-     * 
-     * @since Android 1.0
-     */
-    public String[] split(CharSequence input) {
-        return split(input, 0);
-    }
-
-    /**
-     * Splits the given input sequence at occurrences of this {@code Pattern}.
-     * 
-     * If this {@code Pattern} does not occur in the input, the result is an
-     * array containing the input (converted from a {@code CharSequence} to
-     * a {@code String}).
-     * 
-     * Otherwise, the {@code limit} parameter controls the contents of the
-     * returned array as described below.
-     * 
-     * @param inputSeq
-     *            the input sequence.
-     * @param limit
-     *            Determines the maximum number of entries in the resulting
-     *            array, and the treatment of trailing empty strings.
-     *            <ul>
-     *            <li>For n &gt; 0, the resulting array contains at most n
-     *            entries. If this is fewer than the number of matches, the
-     *            final entry will contain all remaining input.
-     *            <li>For n &lt; 0, the length of the resulting array is
-     *            exactly the number of occurrences of the {@code Pattern}
-     *            plus one for the text after the final separator.
-     *            All entries are included.
-     *            <li>For n == 0, the result is as for n &lt; 0, except
-     *            trailing empty strings will not be returned. (Note that
-     *            the case where the input is itself an empty string is
-     *            special, as described above, and the limit parameter does
-     *            not apply there.)
-     *            </ul>
-     * 
-     * @return the resulting array.
-     * 
-     * @since Android 1.0
-     */
-    public String[] split(CharSequence inputSeq, int limit) {
-        if (inputSeq.length() == 0) {
-            // Unlike Perl, which considers the result of splitting the empty
-            // string to be the empty array, Java returns an array containing
-            // the empty string.
-            return new String[] { "" };
-        }
-        
-        int maxLength = limit <= 0 ? Integer.MAX_VALUE : limit;
-
-        String input = inputSeq.toString();
-        ArrayList<String> list = new ArrayList<String>();
-
-        Matcher matcher = new Matcher(this, inputSeq);
-        int savedPos = 0;
-        
-        // Add text preceding each occurrence, if enough space.
-        while(matcher.find() && list.size() + 1 < maxLength) {
-            list.add(input.substring(savedPos, matcher.start()));
-            savedPos = matcher.end();
-        }
-        
-        // Add trailing text if enough space.
-        if (list.size() < maxLength) {
-            if (savedPos < input.length()) {
-                list.add(input.substring(savedPos));
-            } else {
-                list.add("");
-            }
-        }
-        
-        // Remove trailing empty matches in the limit == 0 case.
-        if (limit == 0) {
-            int i = list.size() - 1;
-            while (i >= 0 && "".equals(list.get(i))) {
-                list.remove(i);
-                i--;
-            }
-        }
-        
-        return list.toArray(new String[list.size()]);
     }
 
     /**
@@ -441,26 +415,19 @@ public final class Pattern implements Serializable {
      *            the string to quote.
      * 
      * @return the quoted string.
-     * 
-     * @since Android 1.0
      */
     public static String quote(String s) {
-        StringBuffer sb = new StringBuffer().append("\\Q");
+        StringBuilder sb = new StringBuilder().append("\\Q"); //$NON-NLS-1$
         int apos = 0;
         int k;
-        while ((k = s.indexOf("\\E", apos)) >= 0) {
-            sb.append(s.substring(apos, k + 2)).append("\\\\E\\Q");
+        while ((k = s.indexOf("\\E", apos)) >= 0) { //$NON-NLS-1$
+            sb.append(s.substring(apos, k + 2)).append("\\\\E\\Q"); //$NON-NLS-1$
             apos = k + 2;
         }
 
-        return sb.append(s.substring(apos)).append("\\E").toString();
+        return sb.append(s.substring(apos)).append("\\E").toString(); //$NON-NLS-1$
     }
     
-    @Override
-    public String toString() {
-        return pattern;
-    }
-
     @Override
     protected void finalize() throws Throwable {
         try {
@@ -474,7 +441,7 @@ public final class Pattern implements Serializable {
     }
 
     /**
-     * Provides serialization support
+     * Serialization support
      */
     private void readObject(java.io.ObjectInputStream s)
             throws java.io.IOException, ClassNotFoundException {
