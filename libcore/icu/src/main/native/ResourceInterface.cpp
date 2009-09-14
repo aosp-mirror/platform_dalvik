@@ -40,32 +40,6 @@
 
 jclass string_class;
 
-static UBool icuError(JNIEnv *env, UErrorCode errorcode)
-{
-  const char   *emsg      = u_errorName(errorcode);
-        jclass  exception;
-
-  if (U_FAILURE(errorcode)) {
-    switch (errorcode) {
-      case U_ILLEGAL_ARGUMENT_ERROR :
-        exception = env->FindClass("java/lang/IllegalArgumentException");
-        break;
-      case U_INDEX_OUTOFBOUNDS_ERROR :
-      case U_BUFFER_OVERFLOW_ERROR :
-        exception = env->FindClass("java/lang/ArrayIndexOutOfBoundsException");
-        break;
-      case U_UNSUPPORTED_ERROR :
-        exception = env->FindClass("java/lang/UnsupportedOperationException");
-        break;
-      default :
-        exception = env->FindClass("java/lang/RuntimeException");
-    }
-
-    return (env->ThrowNew(exception, emsg) != 0);
-  }
-  return 0;
-}
-
 static Locale getLocale(JNIEnv *env, jstring locale) {
     const char *name = env->GetStringUTFChars(locale, NULL);
     Locale result = Locale::createFromName(name);

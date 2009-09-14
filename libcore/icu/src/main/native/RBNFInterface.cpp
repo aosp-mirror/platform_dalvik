@@ -25,32 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static UBool icuError(JNIEnv *env, UErrorCode errorcode)
-{
-  const char  *emsg = u_errorName(errorcode);
-  jclass  exception;
-
-  if (errorcode > U_ZERO_ERROR && errorcode < U_ERROR_LIMIT) {
-    switch (errorcode) {
-      case U_ILLEGAL_ARGUMENT_ERROR :
-        exception = env->FindClass("java/lang/IllegalArgumentException");
-        break;
-      case U_INDEX_OUTOFBOUNDS_ERROR :
-      case U_BUFFER_OVERFLOW_ERROR :
-        exception = env->FindClass("java/lang/ArrayIndexOutOfBoundsException");
-        break;
-      case U_UNSUPPORTED_ERROR :
-        exception = env->FindClass("java/lang/UnsupportedOperationException");
-        break;
-      default :
-        exception = env->FindClass("java/lang/RuntimeException");
-    }
-
-    return (env->ThrowNew(exception, emsg) != 0);
-  }
-  return 0;
-}
-
 static jint openRBNFImpl1(JNIEnv* env, jclass clazz, 
         jint type, jstring locale) {
 
@@ -72,7 +46,7 @@ static jint openRBNFImpl1(JNIEnv* env, jclass clazz,
     } else if(type == 3) {
         style = URBNF_COUNT;
     } else {
-        icuError(env, U_ILLEGAL_ARGUMENT_ERROR);
+        icu4jni_error(env, U_ILLEGAL_ARGUMENT_ERROR);
     }
     
     Locale loc = Locale::createFromName(localeChars);
@@ -84,7 +58,7 @@ static jint openRBNFImpl1(JNIEnv* env, jclass clazz,
     env->ReleaseStringUTFChars(locale, localeChars);
 
     // check for an error
-    if ( icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         return 0;
     }
 
@@ -117,7 +91,7 @@ static jint openRBNFImpl2(JNIEnv* env, jclass clazz,
     env->ReleaseStringUTFChars(locale, localeChars);
 
     // check for an error
-    if ( icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         return 0;
     }
 
@@ -183,7 +157,7 @@ static jstring formatLongRBNFImpl(JNIEnv *env, jclass clazz, jint addr, jlong va
 
         res.extract(result, reslenneeded + 1, status);
     }
-    if (icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         free(result);
         return NULL;
     }
@@ -245,7 +219,7 @@ static jstring formatDoubleRBNFImpl(JNIEnv *env, jclass clazz, jint addr, jdoubl
 
         res.extract(result, reslenneeded + 1, status);
     }
-    if (icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         free(result);
         return NULL;
     }

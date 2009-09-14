@@ -29,33 +29,6 @@
 #include <string.h>
 #include "cutils/log.h"
 
-
-static UBool icuError(JNIEnv *env, UErrorCode errorcode)
-{
-    const char *emsg = u_errorName(errorcode);
-    jclass  exception;
-
-    if (U_FAILURE(errorcode)) {// errorcode > U_ZERO_ERROR && errorcode < U_ERROR_LIMIT) {
-        switch (errorcode) {
-            case U_ILLEGAL_ARGUMENT_ERROR :
-                exception = env->FindClass("java/lang/IllegalArgumentException");
-                break;
-            case U_INDEX_OUTOFBOUNDS_ERROR :
-            case U_BUFFER_OVERFLOW_ERROR :
-                exception = env->FindClass("java/lang/ArrayIndexOutOfBoundsException");
-                break;
-            case U_UNSUPPORTED_ERROR :
-                exception = env->FindClass("java/lang/UnsupportedOperationException");
-                break;
-            default :
-                exception = env->FindClass("java/lang/RuntimeException");
-        }
-
-        return (env->ThrowNew(exception, emsg) != 0);
-    }
-    return 0;
-}
-
 static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale,
         jstring pattern) {
 
@@ -78,7 +51,7 @@ static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale,
     env->ReleaseStringUTFChars(locale, localeChars);
 
     // check for an error
-    if ( icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         return 0;
     }
 
@@ -115,8 +88,8 @@ static void setSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol,
     // release previously allocated space
     env->ReleaseStringChars(text, textChars);
 
-    // check if an error occured
-    icuError(env, status);
+    // check if an error occurred
+    icu4jni_error(env, status);
 }
 
 static jstring getSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
@@ -144,7 +117,7 @@ static jstring getSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
         reslenneeded=unum_getSymbol(fmt, (UNumberFormatSymbol) symbol, result,
                 resultlength, &status);
     }
-    if (icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         return NULL;
     }
 
@@ -189,7 +162,7 @@ static void setTextAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol,
 
     env->ReleaseStringChars(text, textChars);
 
-    icuError(env, status);
+    icu4jni_error(env, status);
 }
 
 static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
@@ -219,7 +192,7 @@ static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
                 (UNumberFormatTextAttribute) symbol, result, resultlength,
                 &status);
     }
-    if (icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         return NULL;
     }
 
@@ -246,7 +219,7 @@ static void applyPatternImpl(JNIEnv *env, jclass clazz, jint addr,
 
     env->ReleaseStringChars(pattern, pattChars);
 
-    icuError(env, status);
+    icu4jni_error(env, status);
 }
 
 static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr,
@@ -274,7 +247,7 @@ static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr,
         reslenneeded=unum_toPattern(fmt, localized, result, resultlength,
                 &status);
     }
-    if (icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         return NULL;
     }
 
@@ -335,7 +308,7 @@ static jstring formatLong(JNIEnv *env, jclass clazz, jint addr, jlong value,
 
         res->extract(result, reslenneeded + 1, status);
     }
-    if (icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         free(attrBuffer->buffer);
         free(attrBuffer);
         free(result);
@@ -444,7 +417,7 @@ static jstring formatDouble(JNIEnv *env, jclass clazz, jint addr, jdouble value,
         res->extract(result, reslenneeded + 1, status);
 
     }
-    if (icuError(env, status) != FALSE) {
+    if (icu4jni_error(env, status) != FALSE) {
         free(attrBuffer->buffer);
         free(attrBuffer);
         free(result);
@@ -510,7 +483,7 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
     // env->ReleaseStringUTFChars(value, valueUTF);
 
     if (scale < 0) {
-        icuError(env, U_ILLEGAL_ARGUMENT_ERROR);
+        icu4jni_error(env, U_ILLEGAL_ARGUMENT_ERROR);
         return NULL;
     }
 
@@ -582,7 +555,7 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
 
         res.extract(result, reslenneeded + 1, status);
 
-        if (icuError(env, status) != FALSE) {
+        if (icu4jni_error(env, status) != FALSE) {
             if(fieldType != NULL) {
                 env->ReleaseStringUTFChars(fieldType, fieldName);
             }
@@ -786,7 +759,7 @@ static jint cloneImpl(JNIEnv *env, jclass clazz, jint addr) {
 
     UNumberFormat *result = unum_clone(fmt, &status);
 
-    if(icuError(env, status) != FALSE) {
+    if(icu4jni_error(env, status) != FALSE) {
         return 0;
     }
 

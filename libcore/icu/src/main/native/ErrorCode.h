@@ -13,6 +13,10 @@
 #include "unicode/utypes.h"
 #include "unicode/putil.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
 * Checks if an error has occured. 
 * Throws a generic Java RuntimeException if an error has occured.
@@ -23,5 +27,9 @@
 * @exception thrown if errorcode represents an error
 */
 UBool icu4jni_error(JNIEnv *env, UErrorCode errorcode);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
