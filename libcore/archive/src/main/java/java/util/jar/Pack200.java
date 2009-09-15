@@ -57,7 +57,7 @@ public abstract class Pack200 {
                     public Object run() {
                         String className = System
                                 .getProperty(SYSTEM_PROPERTY_PACKER,
-                                        "org.apache.harmony.archive.internal.pack200.Pack200PackerAdapter"); //$NON-NLS-1$
+                                        "org.apache.harmony.pack200.Pack200PackerAdapter"); //$NON-NLS-1$
                         try {
                             // TODO Not sure if this will cause problems with
                             // loading the packer
@@ -87,7 +87,7 @@ public abstract class Pack200 {
                     public Object run() {
                         String className = System
                                 .getProperty(SYSTEM_PROPERTY_UNPACKER,
-                                        "org.apache.harmony.archive.internal.pack200.Pack200UnpackerAdapter");//$NON-NLS-1$
+                                        "org.apache.harmony.unpack200.Pack200UnpackerAdapter");//$NON-NLS-1$
                         try {
                             return ClassLoader.getSystemClassLoader()
                                     .loadClass(className).newInstance();
