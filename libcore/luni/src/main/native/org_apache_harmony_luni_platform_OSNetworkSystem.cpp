@@ -172,6 +172,7 @@ struct CachedFields {
     jfieldID byte_class_value;
     jclass string_class;
     jmethodID string_class_init;
+    jclass socketimpl_class;
     jfieldID socketimpl_address;
     jfieldID socketimpl_port;
     jclass dpack_class;
@@ -1386,231 +1387,77 @@ static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
     }
 
     memset(&gCachedFields, 0, sizeof(gCachedFields));
+    struct CachedFields *c = &gCachedFields;
 
-    // initializing InetAddress
-
-    jclass iaddrclass = env->FindClass("java/net/InetAddress");
-    if (iaddrclass == NULL) {
-        jniThrowException(env, "java/lang/ClassNotFoundException",
-                "java.net.InetAddress");
-        return;
-    }
-    gCachedFields.iaddr_class = (jclass) env->NewGlobalRef(iaddrclass);
-
-    jclass i4addrclass = env->FindClass("java/net/Inet4Address");
-    if (i4addrclass == NULL) {
-        jniThrowException(env, "java/lang/ClassNotFoundException",
-                "java.net.Inet4Address");
-        return;
-    }
-    gCachedFields.i4addr_class = (jclass) env->NewGlobalRef(i4addrclass);
-
-    jmethodID i4addrclassinit = env->GetMethodID(i4addrclass, "<init>", "([B)V");
-    if (i4addrclassinit == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError", "Inet4Address.<init>(byte[])");
-        return;
-    }
-    gCachedFields.i4addr_class_init = i4addrclassinit;
-
-    jmethodID iaddrgetbyaddress = env->GetStaticMethodID(iaddrclass,
-            "getByAddress", "([B)Ljava/net/InetAddress;");
-
-    if (iaddrgetbyaddress == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError",
-                "InetAddress.getByAddress(byte[] val)");
-        return;
+    struct classInfo {
+        jclass *clazz;
+        const char *name;
+    } classes[] = {
+        {&c->iaddr_class, "java/net/InetAddress"},
+        {&c->i4addr_class, "java/net/Inet4Address"},
+        {&c->genericipmreq_class, "org/apache/harmony/luni/net/GenericIPMreq"},
+        {&c->integer_class, "java/lang/Integer"},
+        {&c->boolean_class, "java/lang/Boolean"},
+        {&c->byte_class, "java/lang/Byte"},
+        {&c->string_class, "java/lang/String"},
+        {&c->socketimpl_class, "java/net/SocketImpl"},
+        {&c->dpack_class, "java/net/DatagramPacket"}
+    };
+    for (unsigned i = 0; i < sizeof(classes) / sizeof(classes[0]); i++) {
+        classInfo c = classes[i];
+        jclass tempClass = env->FindClass(c.name);
+        if (tempClass == NULL) return;
+        *c.clazz = (jclass) env->NewGlobalRef(tempClass);
     }
 
-    gCachedFields.iaddr_getbyaddress = iaddrgetbyaddress;
-
-    jfieldID iaddripaddress = env->GetFieldID(iaddrclass, "ipaddress", "[B");
-    if (iaddripaddress == NULL) {
-        jniThrowException(env, "java/lang/NoSuchFieldError",
-                "Can't find field InetAddress.ipaddress");
-        return;
-    }
-    gCachedFields.iaddr_ipaddress = iaddripaddress;
-
-    // get the GenericIPMreq class
-
-    jclass genericipmreqclass = env->FindClass("org/apache/harmony/luni/net/GenericIPMreq");
-
-    if (genericipmreqclass == NULL) {
-        jniThrowException(env, "java/lang/ClassNotFoundException",
-                "org.apache.harmony.luni.net.GenericIPMreq");
-        return;
-    }
-
-    gCachedFields.genericipmreq_class = (jclass) env->NewGlobalRef(genericipmreqclass);
-
-    // initializing Integer
-
-    jclass integerclass = env->FindClass("java/lang/Integer");
-
-    if (integerclass == NULL) {
-        jniThrowException(env, "java/lang/ClassNotFoundException",
-                "java.lang.Integer");
-        return;
+    struct methodInfo {
+        jmethodID *method;
+        jclass clazz;
+        const char *name;
+        const char *signature;
+        bool isStatic;
+    } methods[] = {
+        {&c->i4addr_class_init, c->i4addr_class, "<init>", "([B)V", false},
+        {&c->integer_class_init, c->integer_class, "<init>", "(I)V", false},
+        {&c->boolean_class_init, c->boolean_class, "<init>", "(Z)V", false},
+        {&c->byte_class_init, c->byte_class, "<init>", "(B)V", false},
+        {&c->string_class_init, c->string_class, "<init>", "([B)V", false},
+        {&c->iaddr_getbyaddress, c->iaddr_class, "getByAddress",
+                    "([B)Ljava/net/InetAddress;", true}
+    };
+    for (unsigned i = 0; i < sizeof(methods) / sizeof(methods[0]); i++) {
+        methodInfo m = methods[i];
+        if (m.isStatic) {
+            *m.method = env->GetStaticMethodID(m.clazz, m.name, m.signature);
+        } else {
+            *m.method = env->GetMethodID(m.clazz, m.name, m.signature);
+        }
+        if (*m.method == NULL) return;
     }
 
-    jmethodID integerclassinit = env->GetMethodID(integerclass, "<init>", "(I)V");
-
-    if (integerclassinit == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError",
-                "Integer.<init>(int val)");
-        return;
+    struct fieldInfo {
+        jfieldID *field;
+        jclass clazz;
+        const char *name;
+        const char *type;
+    } fields[] = {
+        {&c->iaddr_ipaddress, c->iaddr_class, "ipaddress", "[B"},
+        {&c->integer_class_value, c->integer_class, "value", "I"},
+        {&c->boolean_class_value, c->boolean_class, "value", "Z"},
+        {&c->byte_class_value, c->byte_class, "value", "B"},
+        {&c->socketimpl_port, c->socketimpl_class, "port", "I"},
+        {&c->socketimpl_address, c->socketimpl_class, "address",
+                "Ljava/net/InetAddress;"},
+        {&c->dpack_address, c->dpack_class, "address",
+                "Ljava/net/InetAddress;"},
+        {&c->dpack_port, c->dpack_class, "port", "I"},
+        {&c->dpack_length, c->dpack_class, "length", "I"}
+    };
+    for (unsigned i = 0; i < sizeof(fields) / sizeof(fields[0]); i++) {
+        fieldInfo f = fields[i];
+        *f.field = env->GetFieldID(f.clazz, f.name, f.type);
+        if (*f.field == NULL) return;
     }
-
-    jfieldID integerclassvalue = env->GetFieldID(integerclass, "value", "I");
-
-    if (integerclassvalue == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError", "Integer.value");
-        return;
-    }
-
-    gCachedFields.integer_class = (jclass) env->NewGlobalRef(integerclass);
-    gCachedFields.integer_class_init = integerclassinit;
-    gCachedFields.integer_class_value = integerclassvalue;
-
-    // initializing Boolean
-
-    jclass booleanclass = env->FindClass("java/lang/Boolean");
-
-    if (booleanclass == NULL) {
-        jniThrowException(env, "java/lang/ClassNotFoundException",
-                "java.lang.Boolean");
-        return;
-    }
-
-    jmethodID booleanclassinit = env->GetMethodID(booleanclass, "<init>", "(Z)V");
-
-    if (booleanclassinit == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError",
-                "Boolean.<init>(boolean val)");
-        return;
-    }
-
-    jfieldID booleanclassvalue = env->GetFieldID(booleanclass, "value", "Z");
-
-    if (booleanclassvalue == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError", "Boolean.value");
-        return;
-    }
-
-    gCachedFields.boolean_class = (jclass) env->NewGlobalRef(booleanclass);
-    gCachedFields.boolean_class_init = booleanclassinit;
-    gCachedFields.boolean_class_value = booleanclassvalue;
-
-    // initializing Byte
-
-    jclass byteclass = env->FindClass("java/lang/Byte");
-
-    if (byteclass == NULL) {
-        jniThrowException(env, "java/lang/ClassNotFoundException",
-                "java.lang.Byte");
-        return;
-    }
-
-    jmethodID byteclassinit = env->GetMethodID(byteclass, "<init>", "(B)V");
-
-    if (byteclassinit == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError",
-                "Byte.<init>(byte val)");
-        return;
-    }
-
-    jfieldID byteclassvalue = env->GetFieldID(byteclass, "value", "B");
-
-    if (byteclassvalue == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError", "Byte.value");
-        return;
-    }
-
-    gCachedFields.byte_class = (jclass) env->NewGlobalRef(byteclass);
-    gCachedFields.byte_class_init = byteclassinit;
-    gCachedFields.byte_class_value = byteclassvalue;
-
-    // initializing String
-
-    jclass stringclass = env->FindClass("java/lang/String");
-
-    if (stringclass == NULL) {
-        jniThrowException(env, "java/lang/ClassNotFoundException",
-                "java.lang.String");
-        return;
-    }
-
-    jmethodID stringclassinit = env->GetMethodID(stringclass, "<init>", "([B)V");
-
-    if (stringclassinit == NULL) {
-        jniThrowException(env, "java/lang/NoSuchMethodError",
-                "String.<init>(byte[] val)");
-        return;
-    }
-
-    gCachedFields.string_class = (jclass) env->NewGlobalRef(stringclass);
-    gCachedFields.string_class_init = stringclassinit;
-
-    // initializing ScoketImpl
-
-    jclass socketimplclass = env->FindClass("java/net/SocketImpl");
-
-    if (socketimplclass == NULL) {
-        jniThrowException(env, "java/lang/ClassNotFoundException",
-                "java.net.SocketImpl");
-        return;
-    }
-
-    jfieldID socketimplport = env->GetFieldID(socketimplclass, "port", "I");
-
-    if (socketimplport == NULL) {
-        jniThrowException(env, "java/lang/NoSuchFieldError", "SocketImpl.port");
-        return;
-    }
-
-    jfieldID socketimpladdress = env->GetFieldID(socketimplclass, "address",
-            "Ljava/net/InetAddress;");
-
-    if (socketimpladdress == NULL) {
-        jniThrowException(env, "java/lang/NoSuchFieldError",
-                "SocketImpl.address");
-        return;
-    }
-
-    gCachedFields.socketimpl_address = socketimpladdress;
-    gCachedFields.socketimpl_port = socketimplport;
-
-    gCachedFields.dpack_class = env->FindClass("java/net/DatagramPacket");
-    if (gCachedFields.dpack_class == NULL) {
-        jniThrowException(env, "java/lang/ClassNotFoundException",
-                "java.net.DatagramPacket");
-        return;
-    }
-
-    gCachedFields.dpack_address = env->GetFieldID(gCachedFields.dpack_class,
-            "address", "Ljava/net/InetAddress;");
-    if (gCachedFields.dpack_address == NULL) {
-        jniThrowException(env, "java/lang/NoSuchFieldError",
-                "DatagramPacket.address");
-        return;
-    }
-
-    gCachedFields.dpack_port = env->GetFieldID(gCachedFields.dpack_class,
-            "port", "I");
-    if (gCachedFields.dpack_port == NULL) {
-        jniThrowException(env, "java/lang/NoSuchFieldError",
-                "DatagramPacket.port");
-        return;
-    }
-
-    gCachedFields.dpack_length = env->GetFieldID(gCachedFields.dpack_class,
-            "length", "I");
-    if (gCachedFields.dpack_length == NULL) {
-        jniThrowException(env, "java/lang/NoSuchFieldError",
-                "DatagramPacket.length");
-        return;
-    }
-
 }
 
 /**
@@ -3702,6 +3549,7 @@ static jobject osNetworkSystem_inheritedChannelImpl(JNIEnv* env, jobject obj) {
                  goto clean;
             }
 
+            addr_array = env->NewByteArray((jsize)4);
             localAddr_field = env->GetFieldID(channel_class, "localAddress",
                     "Ljava/net/InetAddress;");
             memset(address, 0, 4);
