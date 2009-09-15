@@ -3293,88 +3293,6 @@ static void osNetworkSystem_socketCloseImpl(JNIEnv* env, jclass clazz,
     close(handle);
 }
 
-static jobject osNetworkSystem_getHostByAddrImpl(JNIEnv* env, jclass clazz,
-        jbyteArray addrStr) {
-    // LOGD("ENTER getHostByAddrImpl");
-
-    if (addrStr == NULL) {
-        throwNullPointerException(env);
-        return JNI_FALSE;
-    }
-
-    jstring address = (jstring)newJavaLangString(env, addrStr);
-    jstring result;
-    const char* addr = env->GetStringUTFChars(address, NULL);
-
-    struct hostent* ent = gethostbyaddr(addr, strlen(addr), AF_INET);
-
-    if (ent != NULL  && ent->h_name != NULL) {
-        result = env->NewStringUTF(ent->h_name);
-    } else {
-        result = NULL;
-    }
-
-    env->ReleaseStringUTFChars(address, addr);
-
-    return result;
-}
-
-static jobject osNetworkSystem_getHostByNameImpl(JNIEnv* env, jclass clazz,
-        jstring nameStr, jboolean preferIPv6Addresses) {
-    // LOGD("ENTER getHostByNameImpl");
-
-    if (nameStr == NULL) {
-        throwNullPointerException(env);
-        return NULL;
-    }
-
-    const char* name = env->GetStringUTFChars(nameStr, NULL);
-
-    if (useAdbNetworking) {
-
-        union {
-            struct in_addr a;
-            jbyte j[4];
-        } outaddr;
-
-        // LOGD("ADB networking: +gethostbyname '%s'", name);
-        int err;
-        err = adb_networking_gethostbyname(name, &(outaddr.a));
-
-        env->ReleaseStringUTFChars(nameStr, name);
-#if 0
-        LOGD("ADB networking: -gethostbyname err %d addr 0x%08x %u.%u.%u.%u",
-                err, (unsigned int)outaddr.a.s_addr,
-                outaddr.j[0],outaddr.j[1],
-                outaddr.j[2],outaddr.j[3]);
-#endif
-
-        if (err < 0) {
-            return NULL;
-        } else {
-            jbyteArray addr = env->NewByteArray(4);
-            env->SetByteArrayRegion(addr, 0, 4, outaddr.j);
-            return addr;
-        }
-    } else {
-
-        // normal case...no adb networking
-        struct hostent* ent = gethostbyname(name);
-
-        env->ReleaseStringUTFChars(nameStr, name);
-
-        if (ent != NULL  && ent->h_length > 0) {
-            jbyteArray addr = env->NewByteArray(4);
-            jbyte v[4];
-            memcpy(v, ent->h_addr, 4);
-            env->SetByteArrayRegion(addr, 0, 4, v);
-            return addr;
-        } else {
-            return NULL;
-        }
-    }
-}
-
 static void osNetworkSystem_setInetAddressImpl(JNIEnv* env, jobject obj,
         jobject sender, jbyteArray address) {
     // LOGD("ENTER setInetAddressImpl");
@@ -3690,8 +3608,6 @@ static JNINativeMethod gMethods[] = {
     { "setSocketOptionImpl",               "(Ljava/io/FileDescriptor;ILjava/lang/Object;)V",                           (void*) osNetworkSystem_setSocketOptionImpl                },
     { "getSocketFlagsImpl",                "()I",                                                                      (void*) osNetworkSystem_getSocketFlagsImpl                 },
     { "socketCloseImpl",                   "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_socketCloseImpl                    },
-    { "getHostByAddrImpl",                 "([B)Ljava/net/InetAddress;",                                               (void*) osNetworkSystem_getHostByAddrImpl                  },
-    { "getHostByNameImpl",                 "(Ljava/lang/String;Z)Ljava/net/InetAddress;",                              (void*) osNetworkSystem_getHostByNameImpl                  },
     { "setInetAddressImpl",                "(Ljava/net/InetAddress;[B)V",                                              (void*) osNetworkSystem_setInetAddressImpl                 },
     { "inheritedChannelImpl",              "()Ljava/nio/channels/Channel;",                                            (void*) osNetworkSystem_inheritedChannelImpl               },
 };
