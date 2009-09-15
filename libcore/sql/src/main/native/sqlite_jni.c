@@ -1325,11 +1325,10 @@ Java_SQLite_Database__1exec__Ljava_lang_String_2LSQLite_Callback_2_3Ljava_lang_S
     }
     if (h) {
 	if (h->sqlite) {
-	    jboolean b;
 	    jthrowable exc;
 	    int rc = SQLITE_ERROR, nargs, i;
 	    char *err = 0, *p;
-	    const char *str = (*env)->GetStringUTFChars(env, sql, &b);
+	    const char *str = (*env)->GetStringUTFChars(env, sql, NULL);
 	    transstr sqlstr;
 	    struct args {
 		char *arg;
@@ -3003,10 +3002,9 @@ Java_SQLite_Database_vm_1compile_1args(JNIEnv *env,
 	hvm *v;
 	jvalue vv;
 	jthrowable exc;
-	jboolean b;
 	int rc = SQLITE_ERROR, nargs, i;
 	char *p;
-	const char *str = (*env)->GetStringUTFChars(env, sql, &b);
+	const char *str = (*env)->GetStringUTFChars(env, sql, NULL);
 	const char *tail;
 	transstr sqlstr;
 	struct args {
@@ -3395,7 +3393,7 @@ Java_SQLite_Database_stmt_1prepare(JNIEnv *env, jobject obj, jstring sql,
 	return;
     }
     len16 = len16 + sizeof (jchar) - ((char *) tail - (char *) sql16);
-    if (len16 < sizeof (jchar)) {
+    if (len16 < (jsize) sizeof (jchar)) {
         len16 = sizeof (jchar);
     }
     v = malloc(sizeof (hvm) + len16);
