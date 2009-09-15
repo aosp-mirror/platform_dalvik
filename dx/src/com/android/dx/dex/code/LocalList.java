@@ -280,7 +280,7 @@ public final class LocalList extends FixedSizeList {
         /**
          * Returns whether or not this instance matches the given spec.
          *
-         * @param spec {@code non-null;} the spec in question
+         * @param otherSpec {@code non-null;} the spec in question
          * @return {@code true} iff this instance matches
          * {@code spec}
          */
