@@ -125,8 +125,24 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
                 return;
             }
         }
+
+        /*
+         * The following code is careful to leave the ZipInputStream in a
+         * consistent state, even when close() results in an exception. It does
+         * so by:
+         *  - pushing bytes back into the source stream
+         *  - reading a data descriptor footer from the source stream
+         *  - resetting fields that manage the entry being closed
+         */
+
         // Ensure all entry bytes are read
-        skip(Long.MAX_VALUE);
+        Exception failure = null;
+        try {
+            skip(Long.MAX_VALUE);
+        } catch (Exception e) {
+            failure = e;
+        }
+
         int inB, out;
         if (currentEntry.compressionMethod == DEFLATED) {
             inB = inf.getTotalIn();
@@ -135,12 +151,38 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
             inB = inRead;
             out = inRead;
         }
-        int diff = 0;
+        int diff = entryIn - inB;
         // Pushback any required bytes
-        if ((diff = entryIn - inB) != 0) {
+        if (diff != 0) {
             ((PushbackInputStream) in).unread(buf, len - diff, diff);
         }
 
+        try {
+            readAndVerifyDataDescriptor(inB, out);
+        } catch (Exception e) {
+            if (failure == null) { // otherwise we're already going to throw
+                failure = e;
+            }
+        }
+
+        inf.reset();
+        lastRead = inRead = entryIn = len = 0;
+        crc.reset();
+        currentEntry = null;
+
+        if (failure != null) {
+            if (failure instanceof IOException) {
+                throw (IOException) failure;
+            } else if (failure instanceof RuntimeException) {
+                throw (RuntimeException) failure;
+            }
+            AssertionError error = new AssertionError();
+            error.initCause(failure);
+            throw error;
+        }
+    }
+
+    private void readAndVerifyDataDescriptor(int inB, int out) throws IOException {
         if (hasDD) {
             in.read(hdrBuf, 0, EXTHDR);
             if (getLong(hdrBuf, 0) != EXTSIG) {
@@ -156,26 +198,19 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
         if (currentEntry.compressedSize != inB || currentEntry.size != out) {
             throw new ZipException(Messages.getString("archive.21")); //$NON-NLS-1$
         }
-
-        inf.reset();
-        lastRead = inRead = entryIn = len = 0;
-        crc.reset();
-        currentEntry = null;
     }
 
     /**
-     * Reads the next entry from this {@code ZipInputStream}.
+     * Reads the next entry from this {@code ZipInputStream} or {@code null} if
+     * no more entries are present.
      *
      * @return the next {@code ZipEntry} contained in the input stream.
      * @throws IOException
-     *             if the stream is not positioned at the beginning of an entry
-     *             or if an other {@code IOException} occurs.
+     *             if an {@code IOException} occurs.
      * @see ZipEntry
      */
     public ZipEntry getNextEntry() throws IOException {
-        if (currentEntry != null) {
-            closeEntry();
-        }
+        closeEntry();
         if (entriesEnd) {
             return null;
         }
