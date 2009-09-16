@@ -53,7 +53,6 @@ typedef enum ThreadStatus {
     THREAD_STARTING     = 6,        /* started, not yet on thread list */
     THREAD_NATIVE       = 7,        /* off in a JNI native method */
     THREAD_VMWAIT       = 8,        /* waiting on a VM resource */
-    THREAD_PAGING       = 9,        /* paging memory */
 } ThreadStatus;
 
 /* thread priorities, from java.lang.Thread */
@@ -79,6 +78,11 @@ void dvmSlayDaemons(void);
 #define kMinStackSize       (512 + STACK_OVERFLOW_RESERVE)
 #define kDefaultStackSize   (12*1024)   /* three 4K pages */
 #define kMaxStackSize       (256*1024 + STACK_OVERFLOW_RESERVE)
+
+/*
+ * System thread state. See native/SystemThread.h.
+ */
+typedef struct SystemThread SystemThread;
 
 /*
  * Our per-thread data.
@@ -223,10 +227,8 @@ typedef struct Thread {
     struct ShadowSpace* shadowSpace;
 #endif
 
-    /* /proc/PID/task/TID/stat */
-    int statFile;
-    /* offset of state char in stat file, last we checked */
-    int stateOffset;
+    /* system thread state */
+    SystemThread* systemThread;
 } Thread;
 
 /* start point for an internal thread; mimics pthread args */
@@ -435,7 +437,6 @@ void dvmChangeThreadSchedulerPolicy(SchedPolicy policy);
  */
 void dvmChangeThreadPriority(Thread* thread, int newPriority);
 
-
 /*
  * Debug: dump information about a single thread.
  */
@@ -448,14 +449,6 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
  */
 void dvmDumpAllThreads(bool grabLock);
 void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
-
-/*
- * Reads the native thread status. If the thread is in native code, this
- * function queries the native thread state and converts it to an equivalent
- * ThreadStatus. If the native status can't be read, this function returns
- * THREAD_NATIVE.
- */
-ThreadStatus dvmGetNativeThreadStatus(Thread* thread);
 
 #ifdef WITH_MONITOR_TRACKING
 /*
