@@ -49,7 +49,7 @@ public abstract class Reference<T> {
      * VM requirement: this field <em>must</em> be called "referent"
      * and be an object.
      */
-    T referent;
+    volatile T referent;
 
     /**
      * If non-null, the queue on which this reference will be enqueued
@@ -58,7 +58,7 @@ public abstract class Reference<T> {
      * and be a java.lang.ref.ReferenceQueue.
      */
     @SuppressWarnings("unchecked")
-    ReferenceQueue queue;
+    volatile ReferenceQueue queue;
 
     /**
      * Used internally by java.lang.ref.ReferenceQueue.
@@ -66,7 +66,7 @@ public abstract class Reference<T> {
      * and be a java.lang.ref.Reference.
      */
     @SuppressWarnings("unchecked")
-    Reference queueNext;
+    volatile Reference queueNext;
 
     /**
      * Used internally by Dalvik.
@@ -74,7 +74,7 @@ public abstract class Reference<T> {
      * and be an int.
      */
     @SuppressWarnings("unused")
-    private int vmData;
+    volatile private int vmData;
 
     /**
      * Constructs a new instance of this class.
