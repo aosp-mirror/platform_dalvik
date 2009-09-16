@@ -207,20 +207,33 @@ final class OSNetworkSystem implements INetworkSystem {
     static native void disconnectDatagramImpl(FileDescriptor aFD)
             throws SocketException;
 
-    public InetAddress getHostByAddr(byte[] addr)
+    public InetAddress getHostByAddr(byte[] ipAddress)
             throws UnknownHostException {
-        return getHostByAddrImpl(addr);
+        // BEGIN android-changed
+        // Wallpaper fix for http://b/1851257. This  is a layering violation,
+        // but at least the method has the right return type.
+        // TODO: Fix the socket code to remove this method altogether.
+        return InetAddress.getByAddress(ipAddress);
+        // END android-changed
     }
-    static native InetAddress getHostByAddrImpl(byte[] addr)
-            throws UnknownHostException;
+    // BEGIN android-removed
+    // static native InetAddress getHostByAddrImpl(byte[] addr)
+    //         throws UnknownHostException;
+    // END android-removed
 
-    public InetAddress getHostByName(String addr,
+    // BEGIN android-removed
+    public InetAddress getHostByName(String hostName,
             boolean preferIPv6Addresses) throws UnknownHostException {
-        return getHostByNameImpl(addr, preferIPv6Addresses);
+        // BEGIN android-changed
+        // Wallpaper fix for http://b/1851257.
+        return InetAddress.getByName(hostName);
+        // END android-changed
     }
 
-    static native InetAddress getHostByNameImpl(String addr,
-            boolean preferIPv6Addresses) throws UnknownHostException;
+    // BEGIN android-removed
+    // static native InetAddress getHostByNameImpl(String addr,
+    //         boolean preferIPv6Addresses) throws UnknownHostException;
+    // END android-removed
 
     public int getSocketFlags() {
         return getSocketFlagsImpl();
