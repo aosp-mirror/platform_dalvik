@@ -100,7 +100,10 @@ static jobjectArray getAllByNameUsingAdb(JNIEnv* env, const char* name)
             env->SetByteArrayRegion(byteArray, 0, 4, (jbyte*) &outaddr.s_addr);
             env->SetObjectArrayElement(addressArray, 1, byteArray);
         }
+    } else {
+        jniThrowException(env, "java/net/UnknownHostException", "adb error");
     }
+
     return addressArray;
 }
 
@@ -189,8 +192,8 @@ static jobjectArray getAllByNameUsingDns(JNIEnv* env, const char* name,
             env, "java/lang/SecurityException",
             "Permission denied (maybe missing INTERNET permission)");
     } else {
-        // Do nothing. Return value will be null and the caller will throw an
-        // UnknownHostExeption.
+        jniThrowException(env, "java/net/UnknownHostException",
+                gai_strerror(result));
     }
 
     if (addressList) {
@@ -227,12 +230,6 @@ jobjectArray InetAddress_getallbyname(JNIEnv* env, jobject obj,
         out = getAllByNameUsingDns(env, name, preferIPv4Stack);
     }
 
-    if (!out) {
-#if LOG_DNS
-        LOGI("Unknown host %s, throwing UnknownHostException", name);
-#endif
-        jniThrowException(env, "java/net/UnknownHostException", name);
-    }
     env->ReleaseStringUTFChars(javaName, name);
     return out;
 }
