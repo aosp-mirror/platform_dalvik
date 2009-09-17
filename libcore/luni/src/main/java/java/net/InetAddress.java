@@ -301,14 +301,31 @@ public class InetAddress extends Object implements Serializable {
         return getAllByNameImpl(host, false)[0];
     }
 
+    /*
+     * Convenience method to convert a byte array to a string, converting
+     * exceptions to runtime exceptions. This is used when passing in byte
+     * arrays that have been verified to be correct and is necessary because
+     * some methods, such as getHostName(), are not allowed to throw exceptions
+     * but are implemented using byteArrayToIpString(), which throws
+     * UnknownHostException. Exceptions should never occur when the address is
+     * valid, but they cannot be simply ignored because they could be due to
+     * runtime errors such as out-of-memory conditions.
+     */
+    private static String ipAddressToString(byte[] ipaddress) {
+        try {
+            return NETIMPL.byteArrayToIpString(ipaddress);
+        } catch(UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Gets the textual representation of this IP address.
      *
-     * @return the textual representation of this host address in form of a
-     *         dotted string.
+     * @return the textual representation of host's IP address.
      */
     public String getHostAddress() {
-        return inetNtoaImpl(bytesToInt(ipaddress, 0));
+        return ipAddressToString(ipaddress);
     }
 
     /**
@@ -325,18 +342,17 @@ public class InetAddress extends Object implements Serializable {
                 if (ipaddress.length == 4) {
                     address = bytesToInt(ipaddress, 0);
                     if (address == 0) {
-                        return hostName = inetNtoaImpl(address);
+                        return hostName = ipAddressToString(ipaddress);
                     }
                 }
                 hostName = getHostByAddrImpl(ipaddress).hostName;
                 if (hostName.equals("localhost") && ipaddress.length == 4 //$NON-NLS-1$
                         && address != 0x7f000001) {
-                    return hostName = inetNtoaImpl(address);
+                    return hostName = ipAddressToString(ipaddress);
                 }
             }
         } catch (UnknownHostException e) {
-            return hostName = Inet6Util
-                    .createIPAddrStringFromByteArray(ipaddress);
+            return hostName = ipAddressToString(ipaddress);
         }
         SecurityManager security = System.getSecurityManager();
         try {
@@ -345,7 +361,7 @@ public class InetAddress extends Object implements Serializable {
                 security.checkConnect(hostName, -1);
             }
         } catch (SecurityException e) {
-            return Inet6Util.createIPAddrStringFromByteArray(ipaddress);
+            return ipAddressToString(ipaddress);
         }
         return hostName;
     }
@@ -365,12 +381,12 @@ public class InetAddress extends Object implements Serializable {
             if (ipaddress.length == 4) {
                 address = bytesToInt(ipaddress, 0);
                 if (address == 0) {
-                    return inetNtoaImpl(address);
+                    return ipAddressToString(ipaddress);
                 }
             }
             canonicalName = getHostByAddrImpl(ipaddress).hostName;
         } catch (UnknownHostException e) {
-            return Inet6Util.createIPAddrStringFromByteArray(ipaddress);
+            return ipAddressToString(ipaddress);
         }
         SecurityManager security = System.getSecurityManager();
         try {
@@ -379,7 +395,7 @@ public class InetAddress extends Object implements Serializable {
                 security.checkConnect(canonicalName, -1);
             }
         } catch (SecurityException e) {
-            return Inet6Util.createIPAddrStringFromByteArray(ipaddress);
+            return ipAddressToString(ipaddress);
         }
         return canonicalName;
     }
@@ -550,10 +566,9 @@ public class InetAddress extends Object implements Serializable {
     private static native String gethostbyaddr(byte[] addr);
     // END android-changed
 
-    static int inetAddr(String host) throws UnknownHostException {
-        return (host.equals("255.255.255.255")) ? 0xFFFFFFFF //$NON-NLS-1$
-                : inetAddrImpl(host);
-    }
+    // BEGIN android-removed
+    // static int inetAddr(String host) throws UnknownHostException
+    // END android-removed
 
     /**
      * Convert a string containing an IPv4 Internet Protocol dotted address into
@@ -561,41 +576,17 @@ public class InetAddress extends Object implements Serializable {
      * exception, so this value should not be used as an argument. See also
      * inetAddr(String).
      */
-    // BEGIN android-changed
+    // BEGIN android-removed
     // static native int inetAddrImpl(String host) throws UnknownHostException;
-    static int inetAddrImpl(String host) throws UnknownHostException {
-        // TODO Probably not exactly what we want, and also inefficient. Provide native later.
-        try {
-            String[] args = host.split("\\.");
-
-            int a = Integer.parseInt(args[0]) << 24;
-            int b = Integer.parseInt(args[1]) << 16;
-            int c = Integer.parseInt(args[2]) <<  8;
-            int d = Integer.parseInt(args[3])      ;
-
-            return a | b | c | d;
-        } catch (Exception ex) {
-            throw new UnknownHostException(host);
-        }
-    }
-    // END android-changed
+    // END android-removed
 
     /**
      * Convert a binary address into a string containing an Ipv4 Internet
      * Protocol dotted address.
      */
-    // BEGIN android-changed
+    // BEGIN android-removed
     // static native String inetNtoaImpl(int hipAddr);
-    static String inetNtoaImpl(int hipAddr) {
-        // TODO Inefficient and probably wrong. Provide proper (native?) implementation later.
-        int a = (hipAddr >> 24) & 0xFF;
-        int b = (hipAddr >> 16) & 0xFF;
-        int c = (hipAddr >>  8) & 0xFF;
-        int d = (hipAddr      ) & 0xFF;
-
-        return "" + a + "." + b + "." + c + "." + d;
-    }
-    // END android-changed
+    // END android-removed
 
     // BEGIN android-removed
     /**
@@ -1223,7 +1214,11 @@ public class InetAddress extends Object implements Serializable {
     static InetAddress getByAddressInternal(String hostName, byte[] ipAddress,
             int scope_id) throws UnknownHostException {
         if (ipAddress == null) {
-            throw new NullPointerException();
+            // We don't throw NullPointerException here for RI compatibility,
+            // but we do say "address is null" (K0331), instead of "addr is of
+            // illegal length".
+            throw new UnknownHostException(
+                Msg.getString("K0331", hostName)); //$NON-NLS-1$
         }
         switch (ipAddress.length) {
             case 4:

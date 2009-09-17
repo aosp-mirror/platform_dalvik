@@ -217,7 +217,10 @@ public interface INetworkSystem {
             throws UnknownHostException;
 
     public void setInetAddress(InetAddress sender, byte[] address);
-    
+
+    public String byteArrayToIpString(byte[] address)
+            throws UnknownHostException;
+
     // BEGIN android-removed
     // public boolean isReachableByICMP(InetAddress dest,InetAddress source,int ttl,int timeout);
     // END android-removed
