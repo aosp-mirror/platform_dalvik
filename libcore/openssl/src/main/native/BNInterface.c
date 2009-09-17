@@ -33,12 +33,6 @@
 
 
 static void
-throwOutOfMemoryException(JNIEnv* env, const char* message)
-{
-    jniThrowException(env, "java/lang/OutOfMemoryError", message);
-}
-
-static void
 throwNewNullPointerException (JNIEnv* env, const char* message)
 {
     jniThrowException(env, "java/lang/NullPointerException", message);
