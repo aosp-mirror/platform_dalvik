@@ -292,9 +292,6 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
             }
             currentEntry.setExtra(e);
         }
-        // BEGIN android-added
-        eof = false;
-        // END android-added
         return currentEntry;
     }
 
@@ -318,62 +315,56 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
         if (closed) {
             throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
         }
-        // END android-changed
         if (inf.finished() || currentEntry == null) {
             return -1;
         }
         // avoid int overflow, check null buffer
-        if (start <= buffer.length && length >= 0 && start >= 0
-                && buffer.length - start >= length) {
-            if (currentEntry.compressionMethod == STORED) {
-                int csize = (int) currentEntry.size;
-                if (inRead >= csize) {
-                    // BEGIN android-added
-                    eof = true;
-                    // END android-added
-                    return -1;
-                }
-                if (lastRead >= len) {
-                    lastRead = 0;
-                    if ((len = in.read(buf)) == -1) {
-                        // BEGIN android-added
-                        eof = true;
-                        // END android-added
-                        return -1;
-                    }
-                    entryIn += len;
-                }
-                // BEGIN android-changed
-                int toRead = length > (len - lastRead) ? len - lastRead : length;
-                // END android-changed
-                if ((csize - inRead) < toRead) {
-                    toRead = csize - inRead;
-                }
-                System.arraycopy(buf, lastRead, buffer, start, toRead);
-                lastRead += toRead;
-                inRead += toRead;
-                crc.update(buffer, start, toRead);
-                return toRead;
-            }
-            if (inf.needsInput()) {
-                fill();
-                if (len > 0) {
-                    entryIn += len;
-                }
-            }
-            int read = 0;
-            try {
-                read = inf.inflate(buffer, start, length);
-            } catch (DataFormatException e) {
-                throw new ZipException(e.getMessage());
-            }
-            if (read == 0 && inf.finished()) {
+        if (start > buffer.length || length < 0 || start < 0
+                || buffer.length - start < length) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        if (currentEntry.compressionMethod == STORED) {
+            int csize = (int) currentEntry.size;
+            if (inRead >= csize) {
                 return -1;
             }
-            crc.update(buffer, start, read);
-            return read;
+            if (lastRead >= len) {
+                lastRead = 0;
+                if ((len = in.read(buf)) == -1) {
+                    eof = true;
+                    return -1;
+                }
+                entryIn += len;
+            }
+            int toRead = length > (len - lastRead) ? len - lastRead : length;
+            if ((csize - inRead) < toRead) {
+                toRead = csize - inRead;
+            }
+            System.arraycopy(buf, lastRead, buffer, start, toRead);
+            lastRead += toRead;
+            inRead += toRead;
+            crc.update(buffer, start, toRead);
+            return toRead;
         }
-        throw new ArrayIndexOutOfBoundsException();
+        if (inf.needsInput()) {
+            fill();
+            if (len > 0) {
+                entryIn += len;
+            }
+        }
+        int read;
+        try {
+            read = inf.inflate(buffer, start, length);
+        } catch (DataFormatException e) {
+            throw new ZipException(e.getMessage());
+        }
+        if (read == 0 && inf.finished()) {
+            return -1;
+        }
+        crc.update(buffer, start, read);
+        return read;
+        // END android-changed
     }
 
     /**
@@ -416,10 +407,7 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
         if (closed) {
             throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
         }
-        if (currentEntry == null) {
-            return 1;
-        }
-        return super.available();
+        return (currentEntry == null || inRead < currentEntry.size) ? 1 : 0;
         // END android-changed
     }
 
