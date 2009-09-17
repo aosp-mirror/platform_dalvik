@@ -27,6 +27,8 @@
 #include "utils/threads.h"      // need Android thread priorities
 #define kInvalidPriority        10000
 
+#include <cutils/sched_policy.h>
+
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <limits.h>
@@ -779,7 +781,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
          */
 
         if (priorityResult >= ANDROID_PRIORITY_BACKGROUND) {
-            dvmChangeThreadSchedulerPolicy(SP_FOREGROUND);
+            set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
         }
 
         if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
@@ -1032,7 +1034,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
         }
 
         if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
-            dvmChangeThreadSchedulerPolicy(SP_BACKGROUND);
+            set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
         }
     }
     gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;

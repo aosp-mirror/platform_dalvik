@@ -22,8 +22,6 @@
 
 #include "jni.h"
 
-#include <utils/threads.h> /* Need SchedPolicy */
-
 #if defined(CHECK_MUTEX) && !defined(__USE_UNIX98)
 /* glibc lacks this unless you #define __USE_UNIX98 */
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
@@ -424,13 +422,6 @@ bool dvmIsOnThreadList(const Thread* thread);
  */
 INLINE JNIEnv* dvmGetThreadJNIEnv(Thread* self) { return self->jniEnv; }
 INLINE void dvmSetThreadJNIEnv(Thread* self, JNIEnv* env) { self->jniEnv = env;}
-
-/*
- * Change the scheduling policy of the current process.
- * This is mapped onto whatever underlying scheme the kernel
- * supports (cgroups/scheduler policies/wombats/etc)
- */
-void dvmChangeThreadSchedulerPolicy(SchedPolicy policy);
 
 /*
  * Update the priority value of the underlying pthread.

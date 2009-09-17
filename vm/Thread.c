@@ -30,6 +30,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <cutils/sched_policy.h>
+
 #if defined(HAVE_PRCTL)
 #include <sys/prctl.h>
 #endif
@@ -3081,67 +3083,6 @@ static const int kNiceValues[10] = {
 };
 
 /*
- * Change the scheduler cgroup of the current thread.
- *
- * Returns 0 on success.
- */
-static int dvmChangeThreadSchedulerGroup(const char *cgroup)
-{
-#ifdef HAVE_ANDROID_OS
-    int fd;
-    char path[255];
-
-    snprintf(path, sizeof(path), "/dev/cpuctl/%s/tasks", (cgroup ? cgroup :""));
-
-    if ((fd = open(path, O_WRONLY)) < 0) {
-        int err = errno;
-#if ENABLE_CGROUP_ERR_LOGGING
-        LOGW("Unable to open %s (%s)\n", path, strerror(err));
-#endif
-        return -err;
-    }
-
-    if (write(fd, "0", 1) < 0) {
-        int err = errno;
-#if ENABLE_CGROUP_ERR_LOGGING
-        LOGW("Unable to move tid %d to cgroup %s (%s)\n",
-            dvmThreadSelf()->systemTid,
-            (cgroup ? cgroup : "<default>"), strerror(err));
-#endif
-        close(fd);
-        return -err;
-    }
-    close(fd);
-
-    return 0;
-
-#else // HAVE_ANDROID_OS
-    return 0;
-#endif
-}
-
-/*
- * Change the scheduling policy of the current thread
- */
-void dvmChangeThreadSchedulerPolicy(SchedPolicy policy)
-{
-    if (gDvm.kernelGroupScheduling) {
-        const char *grp = NULL;
-
-        if (policy == SP_BACKGROUND) {
-            grp = "bg_non_interactive";
-        }
-
-        dvmChangeThreadSchedulerGroup(grp);
-    } else {
-        struct sched_param param;
-        param.sched_priority = 0;
-        sched_setscheduler(dvmGetSysThreadId(),
-                           (policy == SP_BACKGROUND) ? 5 : 0, &param);
-    }
-}
-
-/*
  * Change the priority of a system thread to match that of the Thread object.
  *
  * We map a priority value from 1-10 to Linux "nice" values, where lower
@@ -3159,9 +3100,9 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
     newNice = kNiceValues[newPriority-1];
 
     if (newNice >= ANDROID_PRIORITY_BACKGROUND) {
-        dvmChangeThreadSchedulerPolicy(SP_BACKGROUND);
+        set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
     } else if (getpriority(PRIO_PROCESS, pid) >= ANDROID_PRIORITY_BACKGROUND) {
-        dvmChangeThreadSchedulerPolicy(SP_FOREGROUND);
+        set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
     }
 
     if (setpriority(PRIO_PROCESS, pid, newNice) != 0) {
