@@ -51,7 +51,9 @@ public class Inflater {
 
     private boolean finished; // Set by the inflateImpl native
 
-    private boolean gotFirstByte = false;
+    // BEGIN android-removed
+    // private boolean gotFirstHeaderByte;
+    // END android-removed
 
     int inLength;
 
@@ -59,7 +61,9 @@ public class Inflater {
 
     private boolean needsDictionary; // Set by the inflateImpl native
 
-    private boolean pass_magic_number_check = true;
+    // BEGIN android-removed
+    // private boolean pass_magic_number_check = true;
+    // END android-removed
 
     private long streamHandle = -1;
 
@@ -82,6 +86,9 @@ public class Inflater {
      */
     public Inflater(boolean noHeader) {
         streamHandle = createStream(noHeader);
+        // BEGIN android-removed
+        // gotFirstHeaderByte = noHeader;
+        // END android-removed
     }
 
     private native long createStream(boolean noHeader1);
@@ -250,9 +257,11 @@ public class Inflater {
                 throw new IllegalStateException();
             }
 
-            if (!pass_magic_number_check) {
-                throw new DataFormatException();
-            }
+            // BEGIN android-removed
+            // if (!pass_magic_number_check) {
+            //     throw new DataFormatException();
+            // }
+            // END android-removed
 
             if (needsInput()) {
                 return 0;
@@ -398,21 +407,13 @@ public class Inflater {
         } else {
             throw new ArrayIndexOutOfBoundsException();
         }
-        // BEGIN android-note
-        // Note:  pass_magic_number_check is set to false when setInput is
-        //        called for the first time and for a single byte.
-        //        Since setInput is called only by InflaterInputStream.fill
-        //        with an arbitrary byte len this check seems quite useless.
-        // FIXME: We should find out whether the first byte has to be the magic
-        //        number in all cases and correct the check as well as place it
-        //        in setFileInput accordingly.
-        //        And at a first glance it doesn't look like the first byte has
-        //        to be 120.
-        // END android-note
-        if (!gotFirstByte && nbytes > 0) {
-            pass_magic_number_check = (buf[off] == MAGIC_NUMBER || nbytes > 1);
-            gotFirstByte = true;
-        }
+
+        // BEGIN android-removed
+        // if (!gotFirstHeaderByte && nbytes > 0) {
+        //     pass_magic_number_check = (buf[off] == MAGIC_NUMBER);
+        //     gotFirstHeaderByte = true;
+        //}
+        // END android-removed
     }
 
     // BEGIN android-added
