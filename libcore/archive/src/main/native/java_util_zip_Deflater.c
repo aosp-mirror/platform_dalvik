@@ -199,7 +199,6 @@ Java_java_util_zip_Deflater_deflateImpl (JNIEnv * env, jobject recv,
   sout = stream->stream->total_out;
   out = ((*env)->GetPrimitiveArrayCritical (env, buf, 0));
   if (out == NULL) {
-    throwNewOutOfMemoryError(env, "");
     return -1;
   }
   stream->stream->next_out = (Bytef *) out + off;
