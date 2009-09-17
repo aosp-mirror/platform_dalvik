@@ -18,9 +18,14 @@ package org.apache.harmony.archive.tests.java.util.jar;
 
 
 import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+
+import junit.framework.TestCase;
+
+import tests.support.Support_PlatformFile;
+import tests.support.resource.Support_Resources;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,10 +45,6 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
-
-import junit.framework.TestCase;
-import tests.support.Support_PlatformFile;
-import tests.support.resource.Support_Resources;
 
 
 @TestTargetClass(JarFile.class)
@@ -74,13 +75,21 @@ public class JarFileTest extends TestCase {
 
     private final String jarName5 = "hyts_signed_inc.jar";
 
-    private final String integrateJar = "Integrate.jar";
-
     private final String entryName = "foo/bar/A.class";
 
     private final String entryName3 = "coucou/FileAccess.class";
 
+    private final String integrateJar = "Integrate.jar";
+
     private final String integrateJarEntry = "Test.class";
+
+    private final String emptyEntryJar = "EmptyEntries_signed.jar";
+
+    private final String emptyEntry1 = "subfolder/internalSubset01.js";
+
+    private final String emptyEntry2 = "svgtest.js";
+
+    private final String emptyEntry3 = "svgunit.js";
 
     private File resources;
 
@@ -1060,5 +1069,34 @@ public class JarFileTest extends TestCase {
         } catch (IllegalStateException ee) {
             // expected
         }
+    }
+
+    /**
+     * The jar is intact, but the entry object is modified.
+     */
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Regression test for issue introduced by HAROMNY-4569. "
+                + "signed archives containing files with size 0 could not get verified",
+            method = "getInputStream",
+            args = {ZipEntry.class}
+    )
+    public void testJarVerificationEmptyEntry() throws IOException {
+        Support_Resources.copyFile(resources, null, emptyEntryJar);
+        File f = new File(resources, emptyEntryJar);
+
+        JarFile jarFile = new JarFile(f);
+
+        ZipEntry zipEntry = jarFile.getJarEntry(emptyEntry1);
+        int res = jarFile.getInputStream(zipEntry).read(new byte[100], 0, 100);
+        assertEquals("Wrong length of empty jar entry", -1, res);
+
+        zipEntry = jarFile.getJarEntry(emptyEntry2);
+        res = jarFile.getInputStream(zipEntry).read(new byte[100], 0, 100);
+        assertEquals("Wrong length of empty jar entry", -1, res);
+
+        zipEntry = jarFile.getJarEntry(emptyEntry3);
+        res = jarFile.getInputStream(zipEntry).read();
+        assertEquals("Wrong length of empty jar entry", -1, res);
     }
 }
