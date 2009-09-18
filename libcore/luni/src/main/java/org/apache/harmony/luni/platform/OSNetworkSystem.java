@@ -242,6 +242,9 @@ final class OSNetworkSystem implements INetworkSystem {
     public native String byteArrayToIpString(byte[] address)
             throws UnknownHostException;
 
+    public native byte[] ipStringToByteArray(String address)
+            throws UnknownHostException;
+
     static native int getSocketFlagsImpl();
 
     public InetAddress getSocketLocalAddress(FileDescriptor fd,
