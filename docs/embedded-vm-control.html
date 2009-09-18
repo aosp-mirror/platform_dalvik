@@ -36,12 +36,22 @@ effect (<code>adb shell stop; adb shell start</code>).  This is because the
 settings are processed in the "zygote" process, which starts early and stays
 around "forever".
 
-<p>You could also add a line to <code>/data/local.prop</code> that looks like:
+<p>You may not be able to set this as an unprivileged user.  You can use
+<code>adb root</code> or run the <code>su</code> command from the device
+shell on "userdebug" builds to become root first.  When in doubt,
+<pre>adb shell getprop &lt;name&gt;</pre>
+will tell you if the <code>setprop</code> took.
+
+<p>If you don't want the property to evaporate when the device reboots,
+add a line to <code>/data/local.prop</code> that looks like:
 <pre>&lt;name&gt; = &lt;value&gt;</pre>
 
-<p>Such changes will survive reboots, but will be removed by anything
-that wipes the data partition.  (Hint: create a <code>local.prop</code>
-on your workstation, then <code>adb push local.prop /data</code> .)
+<p>Such changes will survive reboots, but will be lost if the data
+partition is wiped.  (Hint: create a <code>local.prop</code>
+on your workstation, then <code>adb push local.prop /data</code> .  Or,
+use one-liners like
+<code>adb shell "echo name = value &gt;&gt; /data/local.prop"</code> -- note
+the quotes are important.)
 
 
 <h2><a name="checkjni">Extended JNI Checks</a></h2>
@@ -73,7 +83,8 @@ not passed in, and JNI checks will be disabled.
 
 <p>You can also pass JNI-checking options into the VM through a system
 property.  The value set for <code>dalvik.vm.jniopts</code> will
-be passed in as the <code>-Xjniopts</code> argument.
+be passed in as the <code>-Xjniopts</code> argument.  For example:
+<pre>adb shell setprop dalvik.vm.jniopts forcecopy</pre>
 
 <p>For more information about JNI checks, see
 <a href="jni-tips.html">JNI Tips</a>.
@@ -159,7 +170,12 @@ constrast, the "portable" interpreter is written in C and expected to
 run on a broad range of platforms.  The "debug" interpreter is a variant
 of "portable" that includes support for profiling and single-stepping.
 
-<p>The VM allows you to choose between "fast" and "portable" with an
+<p>The VM may also support just-in-time compilation.  While not strictly
+a different interpreter, the JIT compiler may be enabled or disabled
+with the same flag.  (Check the output of <code>dalvikvm -help</code> to
+see if JIT compilation is enabled in your VM.)
+
+<p>The VM allows you to choose between "fast", "portable", and "jit" with an
 extended form of the <code>-Xint</code> argument.  The value of this
 argument can be set through the <code>dalvik.vm.execution-mode</code>
 system property.
