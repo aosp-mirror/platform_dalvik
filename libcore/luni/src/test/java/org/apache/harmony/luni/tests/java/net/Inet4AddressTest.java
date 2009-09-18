@@ -17,7 +17,6 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -484,12 +483,6 @@ public class Inet4AddressTest extends junit.framework.TestCase {
         method = "equals",
         args = {java.lang.Object.class}
     )
-    @KnownFailure("127.0.0 is not recognized as a valid IP address. " +
-            "Unfortunately, despite the fact that these IP address formats " +
-            "have been the cause of numerous phishing and security " +
-            "vulnerabilities in the past, and most other languages refuse " +
-            "them, the RI documentation explicitly specifies that they are " +
-            "supported. Fix the code to support these.")
     public void test_equals() throws Exception {
         InetAddress addr = Inet4Address.getByName("239.191.255.255");
         assertTrue(addr.equals(addr));
@@ -508,7 +501,6 @@ public class Inet4AddressTest extends junit.framework.TestCase {
         method = "getHostAddress",
         args = {}
     )
-    @KnownFailure("1, 1.1 and 1.1.1 are not recognized as valid IP addresses.")
     public void test_getHostAddress() throws Exception {
         InetAddress addr = Inet4Address.getByName("localhost");
         assertEquals("127.0.0.1", addr.getHostAddress());
@@ -535,7 +527,6 @@ public class Inet4AddressTest extends junit.framework.TestCase {
         method = "hashCode",
         args = {}
     )
-    @KnownFailure("1.1 and 1.1.1 are not recognized as valid IP addresses.")
     public void test_hashCode() throws Exception {
         InetAddress addr1 = Inet4Address.getByName("1.1");
         InetAddress addr2 = Inet4Address.getByName("1.1.1");

@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+// BEGIN android-changed
+//
+// This file has been substantially reworked in order to provide more IPv6
+// support and to move functionality from Java to native code where it made
+// sense (e.g. when converting between IP addresses, socket structures, and
+// strings, for which there exist fast and robust native implementations).
+
 #define LOG_TAG "OSNetworkSystem"
 
 #include "JNIHelp.h"
@@ -26,6 +33,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #include <sys/time.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
@@ -215,28 +223,6 @@ static void throwNullPointerException(JNIEnv *env) {
 }
 
 /**
- * Converts a 4-byte array to a native address structure. Throws a
- * NullPointerException or an IOException in case of error. This is
- * signaled by a return value of -1. The normal return value is 0.
- */
-static int javaAddressToStructIn(
-        JNIEnv *env, jbyteArray java_address, struct in_addr *address) {
-    if (java_address == NULL) {
-        return -1;
-    }
-
-    if (env->GetArrayLength(java_address) != sizeof(address->s_addr)) {
-        return -1;
-    }
-
-    memset(address, 0, sizeof(address));
-
-    jbyte* dst = reinterpret_cast<jbyte*>(&(address->s_addr));
-    env->GetByteArrayRegion(java_address, 0, sizeof(address->s_addr), dst);
-    return 0;
-}
-
-/**
  * Converts a native address structure to a Java byte array. Throws a
  * NullPointerException or an IOException in case of error. This is
  * signaled by a return value of -1. The normal return value is 0.
@@ -246,7 +232,7 @@ static int javaAddressToStructIn(
  * @exception SocketException the address family is unknown, or out of memory
  *
  */
-static jbyteArray socketAddressToAddressBytes(JNIEnv *env,
+static jbyteArray socketAddressToByteArray(JNIEnv *env,
         struct sockaddr_storage *address) {
 
     void *rawAddress;
@@ -293,6 +279,34 @@ static int getSocketAddressPort(struct sockaddr_storage *address) {
 }
 
 /**
+ * Checks whether a socket address structure contains an IPv4-mapped address.
+ *
+ * @param address the socket address structure to check
+ * @return true if address contains an IPv4-mapped address, false otherwise.
+ */
+static bool isMappedAddress(sockaddr *address) {
+    if (! address || address->sa_family != AF_INET6) {
+        return false;
+    }
+    in6_addr addr = ((sockaddr_in6 *) address)->sin6_addr;
+    return (addr.s6_addr32[0] == 0 &&
+            addr.s6_addr32[1] == 0 &&
+            addr.s6_addr32[2] == htonl(0xffff));
+}
+
+/**
+ * Checks whether a 16-byte array represents an IPv4-mapped IPv6 address.
+ *
+ * @param addressBytes the address to check. Must be 16 bytes long.
+ * @return true if address contains an IPv4-mapped address, false otherwise.
+ */
+static bool isJavaMappedAddress(jbyte *addressBytes) {
+    static const unsigned char mappedBytes[] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
+    return !memcmp(mappedBytes, addressBytes, sizeof(mappedBytes));
+}
+
+/**
  * Converts a native address structure to an InetAddress object.
  * Throws a NullPointerException or an IOException in case of
  * error.
@@ -304,12 +318,45 @@ static int getSocketAddressPort(struct sockaddr_storage *address) {
 static jobject socketAddressToInetAddress(JNIEnv *env,
         struct sockaddr_storage *sockaddress) {
 
-    jbyteArray byteArray = socketAddressToAddressBytes(env, sockaddress);
+    jbyteArray byteArray = socketAddressToByteArray(env, sockaddress);
     if (byteArray == NULL)  // Exception has already been thrown.
         return NULL;
 
     return env->CallStaticObjectMethod(gCachedFields.iaddr_class,
             gCachedFields.iaddr_getbyaddress, byteArray);
+}
+
+/**
+ * Converts an IPv4-mapped IPv6 address to an IPv4 address. Performs no error
+ * checking.
+ *
+ * @param address the address to convert. Must contain an IPv4-mapped address.
+ * @param outputAddress the converted address. Will contain an IPv4 address.
+ */
+static void convertMappedToIpv4(sockaddr_in6 *sin6, sockaddr_in *sin) {
+  memset(sin, 0, sizeof(*sin));
+  sin->sin_family = AF_INET;
+  sin->sin_addr.s_addr = sin6->sin6_addr.s6_addr32[3];
+  sin->sin_port = sin6->sin6_port;
+}
+
+/**
+ * Converts an IPv4 address to an IPv4-mapped IPv6 address. Performs no error
+ * checking.
+ *
+ * @param address the address to convert. Must contain an IPv4 address.
+ * @param outputAddress the converted address. Will contain an IPv6 address.
+ * @param mapUnspecified if true, convert 0.0.0.0 to ::ffff:0:0; if false, to ::
+ */
+static void convertIpv4ToMapped(struct sockaddr_in *sin,
+        struct sockaddr_in6 *sin6, bool mapUnspecified) {
+  memset(sin6, 0, sizeof(*sin6));
+  sin6->sin6_family = AF_INET6;
+  sin6->sin6_addr.s6_addr32[3] = sin->sin_addr.s_addr;
+  if (sin->sin_addr.s_addr != 0  || mapUnspecified) {
+      sin6->sin6_addr.s6_addr32[2] = htonl(0xffff);
+  }
+  sin6->sin6_port = sin->sin_port;
 }
 
 /**
@@ -332,8 +379,9 @@ static int byteArrayToSocketAddress(JNIEnv *env,
         throwNullPointerException(env);
         return EFAULT;
     }
-    // Convert the IP address bytes to the proper IP address type.
     size_t addressLength = env->GetArrayLength(addressBytes);
+
+    // Convert the IP address bytes to the proper IP address type.
     if (addressLength == 4) {
         // IPv4 address.
         sockaddr_in *sin = reinterpret_cast<sockaddr_in*>(sockaddress);
@@ -470,6 +518,84 @@ static jstring osNetworkSystem_byteArrayToIpString(JNIEnv *env, jclass clazz,
         return NULL;
     }
     return env->NewStringUTF(ipString);
+}
+
+/**
+ * Convert a Java string representing an IP address to a Java byte array.
+ * The formats accepted are:
+ * - IPv4:
+ *   - 1.2.3.4
+ *   - 1.2.4
+ *   - 1.4
+ *   - 4
+ * - IPv6
+ *   - Compressed form (2001:db8::1)
+ *   - Uncompressed form (2001:db8:0:0:0:0:0:1)
+ *   - IPv4-compatible (::192.0.2.0)
+ *   - With an embedded IPv4 address (2001:db8::192.0.2.0).
+ * IPv6 addresses may appear in square brackets.
+ *
+ * @param addressByteArray the byte array to convert.
+ *
+ * @return a string with the textual representation of the address.
+ *
+ * @throws UnknownHostException the IP address was invalid.
+ */
+static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv *env, jclass clazz,
+        jstring javaString) {
+    if (javaString == NULL) {
+        throwNullPointerException(env);
+    }
+
+    char ipString[INET6_ADDRSTRLEN];
+    int stringLength = env->GetStringUTFLength(javaString);
+    env->GetStringUTFRegion(javaString, 0, stringLength, ipString);
+
+    // Accept IPv6 addresses (only) in square brackets for compatibility.
+    if (ipString[0] == '[' && ipString[stringLength - 1] == ']' &&
+            index(ipString, ':') != NULL) {
+        memmove(ipString, ipString + 1, stringLength - 2);
+        ipString[stringLength - 2] = '\0';
+    }
+
+    jbyteArray result = NULL;
+    sockaddr_in sin;
+    addrinfo hints, *res;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_flags = AI_NUMERICHOST;
+    int ret = getaddrinfo(ipString, NULL, &hints, &res);
+    if (ret == 0 && res) {
+        // Convert mapped addresses to IPv4 addresses if necessary.
+        if (res->ai_family == AF_INET6 && isMappedAddress(res->ai_addr)) {
+            convertMappedToIpv4((sockaddr_in6 *) res->ai_addr, &sin);
+            result = socketAddressToByteArray(env, (sockaddr_storage *) &sin);
+        } else {
+            result = socketAddressToByteArray(env,
+                    (sockaddr_storage *) res->ai_addr);
+        }
+    } else {
+        // For backwards compatibility, deal with address formats that
+        // getaddrinfo does not support. For example, 1.2.3, 1.3, and even 3 are
+        // valid IPv4 addresses according to the Java API. If getaddrinfo fails,
+        // try to use inet_aton.
+        if (inet_aton(ipString, &sin.sin_addr)) {
+            sin.sin_port = 0;
+            sin.sin_family = AF_INET;
+            result = socketAddressToByteArray(env, (sockaddr_storage *) &sin);
+        }
+    }
+
+    if (res) {
+        freeaddrinfo(res);
+    }
+
+    if (! result) {
+        env->ExceptionClear();
+        jniThrowException(env, "java/net/UnknownHostException",
+                gai_strerror(ret));
+    }
+
+    return result;
 }
 
 /**
@@ -924,41 +1050,50 @@ static int getSocketAddressFamily(int socket) {
 }
 
 /**
- * Converts an IPv4-mapped IPv6 address to an IPv4 address. Performs no error
- * checking.
+ * A helper method, to set the connect context to a Long object.
  *
- * @param address the address to convert. Must contain an IPv4-mapped address.
- * @param outputAddress the converted address. Will contain an IPv4 address.
+ * @param env  pointer to the JNI library
+ * @param longclass Java Long Object
  */
-static void convertMappedToIpv4(sockaddr_storage *address,
-        sockaddr_storage *outputAddress) {
-  memset(outputAddress, 0, sizeof(sockaddr_in));
-  const sockaddr_in6 *sin6 = ((sockaddr_in6 *) address);
-  sockaddr_in *sin = ((sockaddr_in *) outputAddress);
-  sin->sin_family = AF_INET;
-  sin->sin_addr.s_addr = sin6->sin6_addr.s6_addr32[3];
-  sin->sin_port = sin6->sin6_port;
-}
+void setConnectContext(JNIEnv *env,jobject longclass,jbyte * context) {
+    jclass descriptorCLS;
+    jfieldID descriptorFID;
+    descriptorCLS = env->FindClass("java/lang/Long");
+    descriptorFID = env->GetFieldID(descriptorCLS, "value", "J");
+    env->SetLongField(longclass, descriptorFID, (jlong)((jint)context));
+};
 
 /**
- * Converts an IPv4 address to an IPv4-mapped IPv6 address. Performs no error
- * checking.
+ * A helper method, to get the connect context.
  *
- * @param address the address to convert. Must contain an IPv4 address.
- * @param outputAddress the converted address. Will contain an IPv6 address.
- * @param mapUnspecified if true, convert 0.0.0.0 to ::ffff:0:0; if false, to ::
+ * @param env  pointer to the JNI library
+ * @param longclass Java Long Object
  */
-static void convertIpv4ToMapped(struct sockaddr_storage *address,
-        struct sockaddr_storage *outputAddress, bool mapUnspecified) {
-  memset(outputAddress, 0, sizeof(struct sockaddr_in6));
-  const struct sockaddr_in *sin = ((struct sockaddr_in *) address);
-  struct sockaddr_in6 *sin6 = ((struct sockaddr_in6 *) outputAddress);
-  sin6->sin6_family = AF_INET6;
-  sin6->sin6_addr.s6_addr32[3] = sin->sin_addr.s_addr;
-  if (sin->sin_addr.s_addr != 0  || mapUnspecified) {
-      sin6->sin6_addr.s6_addr32[2] = htonl(0xffff);
-  }
-  sin6->sin6_port = sin->sin_port;
+jbyte *getConnectContext(JNIEnv *env, jobject longclass) {
+    jclass descriptorCLS;
+    jfieldID descriptorFID;
+    descriptorCLS = env->FindClass("java/lang/Long");
+    descriptorFID = env->GetFieldID(descriptorCLS, "value", "J");
+    return (jbyte*) ((jint)env->GetLongField(longclass, descriptorFID));
+};
+
+// typical ip checksum
+unsigned short ip_checksum(unsigned short* buffer, int size) {
+    register unsigned short * buf = buffer;
+    register int bufleft = size;
+    register unsigned long sum = 0;
+
+    while (bufleft > 1) {
+        sum = sum + (*buf++);
+        bufleft = bufleft - sizeof(unsigned short );
+    }
+    if (bufleft) {
+        sum = sum + (*(unsigned char*)buf);
+    }
+    sum = (sum >> 16) + (sum & 0xffff);
+    sum += (sum >> 16);
+
+    return (unsigned short )(~sum);
 }
 
 /**
@@ -969,11 +1104,12 @@ static void convertIpv4ToMapped(struct sockaddr_storage *address,
  * @param socketAddress the address to connect to
  */
 static int doConnect(int socket, struct sockaddr_storage *socketAddress) {
-    struct sockaddr_storage mappedAddress;
-    struct sockaddr_storage *realAddress;
+    sockaddr_storage mappedAddress;
+    sockaddr_storage *realAddress;
     if (socketAddress->ss_family == AF_INET &&
         getSocketAddressFamily(socket) == AF_INET6) {
-        convertIpv4ToMapped(socketAddress, &mappedAddress, true);
+        convertIpv4ToMapped((sockaddr_in *) socketAddress,
+                (sockaddr_in6 *) &mappedAddress, true);
         realAddress = &mappedAddress;
     } else {
         realAddress = socketAddress;
@@ -998,7 +1134,8 @@ static int doBind(int socket, struct sockaddr_storage *socketAddress) {
     struct sockaddr_storage *realAddress;
     if (socketAddress->ss_family == AF_INET &&
         getSocketAddressFamily(socket) == AF_INET6) {
-        convertIpv4ToMapped(socketAddress, &mappedAddress, false);
+        convertIpv4ToMapped((sockaddr_in *) socketAddress,
+                (sockaddr_in6 *) &mappedAddress, false);
         realAddress = &mappedAddress;
     } else {
         realAddress = socketAddress;
@@ -1256,7 +1393,6 @@ static int interfaceIndexFromMulticastSocket(int socket) {
         return -1;
 }
 
-
 /**
  * Join/Leave the nominated multicast group on the specified socket.
  * Implemented by setting the multicast 'add membership'/'drop membership'
@@ -1513,7 +1649,6 @@ static int createSocketFileDescriptor(JNIEnv* env, jobject fileDescriptor,
     jniSetFileDescriptorOfFD(env, fileDescriptor, sock);
     return sock;
 }
-
 
 static void osNetworkSystem_createStreamSocketImpl(JNIEnv* env, jclass clazz,
         jobject fileDescriptor, jboolean preferIPv4Stack) {
@@ -2272,7 +2407,7 @@ static jint osNetworkSystem_receiveDatagramDirectImpl(JNIEnv* env, jclass clazz,
     }
 
     if (packet != NULL) {
-        jbyteArray addr = socketAddressToAddressBytes(env, &sockAddr);
+        jbyteArray addr = socketAddressToByteArray(env, &sockAddr);
         if (addr == NULL)  // Exception has already been thrown.
             return 0;
         int port = getSocketAddressPort(&sockAddr);
@@ -3589,6 +3724,7 @@ static JNINativeMethod gMethods[] = {
     { "setInetAddressImpl",                "(Ljava/net/InetAddress;[B)V",                                              (void*) osNetworkSystem_setInetAddressImpl                 },
     { "inheritedChannelImpl",              "()Ljava/nio/channels/Channel;",                                            (void*) osNetworkSystem_inheritedChannelImpl               },
     { "byteArrayToIpString",               "([B)Ljava/lang/String;",                                                   (void*) osNetworkSystem_byteArrayToIpString                },
+    { "ipStringToByteArray",               "(Ljava/lang/String;)[B",                                                   (void*) osNetworkSystem_ipStringToByteArray                },
 };
 
 int register_org_apache_harmony_luni_platform_OSNetworkSystem(JNIEnv* env) {
@@ -3597,3 +3733,4 @@ int register_org_apache_harmony_luni_platform_OSNetworkSystem(JNIEnv* env) {
             gMethods,
             NELEM(gMethods));
 }
+// END android-changed
