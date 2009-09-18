@@ -86,7 +86,7 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
         ZipEntry ze = new ZipEntry("testEntry");
         ze.setTime(System.currentTimeMillis());
         zos.putNextEntry(ze);
-        zos.write("Hello World".getBytes());
+        zos.write("Hello World".getBytes("UTF-8"));
         zos.closeEntry();
         assertTrue("closeEntry failed to update required fields",
                 ze.getSize() == 11 && ze.getCompressedSize() == 13);

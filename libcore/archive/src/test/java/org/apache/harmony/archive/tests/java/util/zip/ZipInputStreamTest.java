@@ -30,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
@@ -174,8 +175,6 @@ public class ZipInputStreamTest extends TestCase {
         method = "close",
         args = {}
     )
-    @KnownFailure("after an exception has been thrown wile reading a "
-            + "call to close also throws an exception.")
     public void test_closeAfterException() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
@@ -279,6 +278,31 @@ public class ZipInputStreamTest extends TestCase {
         } catch (IOException ee) {
             // expected
         }
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            method = "read",
+            args = {byte[].class, int.class, int.class}
+    )
+    public void testReadOneByteAtATime() throws IOException {
+        InputStream in = new FilterInputStream(Support_Resources.getStream("hyts_ZipFile.zip")) {
+            @Override
+            public int read(byte[] buffer, int offset, int count) throws IOException {
+                return super.read(buffer, offset, 1); // one byte at a time
+            }
+
+            @Override
+            public int read(byte[] buffer) throws IOException {
+                return super.read(buffer, 0, 1); // one byte at a time
+            }
+        };
+
+        zis = new ZipInputStream(in);
+        while ((zentry = zis.getNextEntry()) != null) {
+            zentry.getName();
+        }
+        zis.close();
     }
 
     /**

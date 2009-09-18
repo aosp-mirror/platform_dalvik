@@ -179,7 +179,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         method = "getNextJarEntry",
         args = {}
     )
-    @KnownFailure("IOException not thrown when using getNextJarEntry() after close().")
     public void test_getNextJarEntry_Ex() throws Exception {
         final Set<String> desired = new HashSet<String>(Arrays
                 .asList(new String[] {
@@ -280,25 +279,17 @@ public class JarInputStreamTest extends junit.framework.TestCase {
                 .getURL("Modified_Manifest_MainAttributes.jar");
         InputStream is = new URL(modJarName).openConnection().getInputStream();
         JarInputStream jin = new JarInputStream(is, true);
-        ZipEntry zipEntry = null;
 
-        final int indexofDSA = 2;
-        final int totalEntries = 4;
-        int count = 0;
-        while (count == 0 || zipEntry != null) {
-            count++;
-            try {
-                zipEntry = jin.getNextEntry();
-                if (count == indexofDSA + 1) {
-                    fail("Should throw Security Exception");
-                }
-            } catch (SecurityException e) {
-                if (count != indexofDSA + 1) {
-                    throw e;
-                }
-            }
+        assertEquals("META-INF/TESTROOT.SF", jin.getNextEntry().getName());
+        assertEquals("META-INF/TESTROOT.DSA", jin.getNextEntry().getName());
+        try {
+            jin.getNextEntry();
+            fail();
+        } catch (SecurityException expected) {
         }
-        assertEquals(totalEntries + 2, count);
+        assertEquals("META-INF/", jin.getNextEntry().getName());
+        assertEquals("Test.class", jin.getNextEntry().getName());
+        assertNull(jin.getNextEntry());
         jin.close();
     }
 
@@ -542,7 +533,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         method = "close",
         args = {}
     )
-    @KnownFailure("The behaviour is different from RI, but not neccessarily wrong. However a strange exception message is given anyway!")
     public void test_closeAfterException() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "Broken_entry.jar");
@@ -555,7 +545,7 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         } catch (ZipException ee) {
             // expected
         }
-        jis.close(); // Android throws exception here, but RI throws when getNextEntry/read/skip are called.
+        jis.close();
         try {
             jis.getNextEntry();
             fail("IOException expected");
