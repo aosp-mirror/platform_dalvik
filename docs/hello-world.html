@@ -42,6 +42,53 @@ options.
 
 
 
+<h2>Using a debugger</h2>
+
+<p>
+You can debug stand-alone applications with any JDWP-compliant debugger.
+There are two basic approaches.
+</p><p>
+The first way is to connect directly through TCP.  Add, to the "dalvikvm"
+invocation line above, an argument like:
+</p><p>
+<code>&nbsp;&nbsp;-agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=y</code>
+</p><p>
+This tells the VM to wait for a debugger to connect to it on TCP port 8000.
+You need to tell adb to forward local port 8000 to device port 8000:
+</p><p>
+<code>% <font color="green">adb forward tcp:8000 tcp:8000</font></code>
+</p><p>
+and then connect to it with your favorite debugger (using <code>jdb</code>
+as an example here):
+</p><p>
+<code>% <font color="green">jdb -attach localhost:8000</font></code>
+</p><p>
+When the debugger attaches, the VM will be in a suspended state.  You can
+set breakpoints and then tell it to continue.
+
+
+</p><p>
+You can also connect through DDMS, like you would for an Android application.
+Add, to the "dalvikvm" command line:
+</p><p>
+<code>&nbsp;&nbsp;-agentlib:jdwp=transport=dt_android_adb,suspend=y,server=y</code>
+</p><p>
+Note the <code>transport</code> has changed, and you no longer need to
+specify a TCP port number.  When your application starts, it will appear
+in DDMS, with "?" as the application name.  Select it in DDMS, and connect
+to it as usual, e.g.:
+</p><p>
+<code>% <font color="green">jdb -attach localhost:8700</font></code>
+</p><p>
+Because command-line applications don't include the client-side
+DDM setup, features like thread monitoring and allocation tracking will not
+be available in DDMS.  It's strictly a debugger pass-through in this mode.
+</p><p>
+See <a href="debugger.html">Dalvik Debugger Support</a> for more information
+about using debuggers with Dalvik.
+
+
+
 <h2>Working with the desktop build</h2>
 
 <!-- largely lifted from
