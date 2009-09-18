@@ -18,7 +18,6 @@
 package org.apache.harmony.archive.tests.java.util.zip;
 
 import dalvik.annotation.KnownFailure;
-import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;

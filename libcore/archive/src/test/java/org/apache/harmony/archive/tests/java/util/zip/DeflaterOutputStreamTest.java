@@ -211,20 +211,21 @@ public class DeflaterOutputStreamTest extends TestCase {
     )
     public void test_close() throws Exception {
         File f1 = File.createTempFile("close", ".tst");
-        FileOutputStream fos = new FileOutputStream(f1);
-        DeflaterOutputStream dos = new DeflaterOutputStream(fos);
-        byte byteArray[] = {1, 3, 4, 6};
-        dos.write(byteArray);
 
-        FileInputStream fis = new FileInputStream(f1);
-        InflaterInputStream iis = new InflaterInputStream(fis);
+        InflaterInputStream iis = new InflaterInputStream(new FileInputStream(f1));
         try {
             iis.read();
             fail("EOFException Not Thrown");
         } catch (EOFException e) {
         }
 
+        FileOutputStream fos = new FileOutputStream(f1);
+        DeflaterOutputStream dos = new DeflaterOutputStream(fos);
+        byte byteArray[] = {1, 3, 4, 6};
+        dos.write(byteArray);
         dos.close();
+
+        iis = new InflaterInputStream(new FileInputStream(f1));
 
         // Test to see if the finish method wrote the bytes to the file.
         assertEquals("Incorrect Byte Returned.", 1, iis.read());

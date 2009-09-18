@@ -53,6 +53,11 @@ public class InflaterInputStream extends FilterInputStream {
 
     boolean closed;
 
+    /**
+     * True if this stream's last byte has been returned to the user. This
+     * could be because the underlying stream has been exhausted, or if errors
+     * were encountered while inflating that stream.
+     */
     boolean eof;
 
     static final int BUF_SIZE = 512;
@@ -165,41 +170,47 @@ public class InflaterInputStream extends FilterInputStream {
             return 0;
         }
 
-        if (inf.finished()) {
-            eof = true;
+        // BEGIN android-changed
+        if (eof) {
             return -1;
         }
 
         // avoid int overflow, check null buffer
-        if (off <= buffer.length && nbytes >= 0 && off >= 0
-                && buffer.length - off >= nbytes) {
-            do {
-                if (inf.needsInput()) {
-                    fill();
-                }
-                int result;
-                try {
-                    result = inf.inflate(buffer, off, nbytes);
-                } catch (DataFormatException e) {
-                    if (len == -1) {
-                        throw new EOFException();
-                    }
-                    throw (IOException) (new IOException().initCause(e));
-                }
+        if (off > buffer.length || nbytes < 0 || off < 0
+                || buffer.length - off < nbytes) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        do {
+            if (inf.needsInput()) {
+                fill();
+            }
+            // Invariant: if reading returns -1 or throws, eof must be true.
+            // It may also be true if the next read() should return -1.
+            try {
+                int result = inf.inflate(buffer, off, nbytes);
+                eof = inf.finished();
                 if (result > 0) {
                     return result;
-                } else if (inf.finished()) {
-                    eof = true;
+                } else if (eof) {
                     return -1;
                 } else if (inf.needsDictionary()) {
+                    eof = true;
                     return -1;
                 } else if (len == -1) {
+                    eof = true;
                     throw new EOFException();
                     // If result == 0, fill() and try again
                 }
-            } while (true);
-        }
-        throw new ArrayIndexOutOfBoundsException();
+            } catch (DataFormatException e) {
+                eof = true;
+                if (len == -1) {
+                    throw new EOFException();
+                }
+                throw (IOException) (new IOException().initCause(e));
+            }
+        } while (true);
+        // END android-changed
     }
 
     /**
@@ -252,7 +263,9 @@ public class InflaterInputStream extends FilterInputStream {
                         (rem = nbytes - count) > buf.length ? buf.length
                                 : (int) rem);
                 if (x == -1) {
-                    eof = true;
+                    // BEGIN android-removed
+                    // eof = true;
+                    // END android-removed
                     return count;
                 }
                 count += x;
@@ -263,9 +276,18 @@ public class InflaterInputStream extends FilterInputStream {
     }
 
     /**
-     * Returns whether data can be read from this stream.
+     * Returns 0 when when this stream has exhausted its input; and 1 otherwise.
+     * A result of 1 does not guarantee that further bytes can be returned,
+     * with or without blocking.
      *
-     * @return 0 if this stream has been closed, 1 otherwise.
+     * <p>Although consistent with the RI, this behavior is inconsistent with
+     * {@link InputStream#available()}, and violates the <a
+     * href="http://en.wikipedia.org/wiki/Liskov_substitution_principle">Liskov
+     * Substitution Principle</a>. This method should not be used.
+     *
+     * @return 0 if no further bytes are available. Otherwise returns 1,
+     *         which suggests (but does not guarantee) that additional bytes are
+     *         available.
      * @throws IOException
      *             If an error occurs.
      */

@@ -32,6 +32,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.io.EOFException;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
@@ -206,6 +208,42 @@ public class InflaterInputStreamTest extends TestCase {
         } catch (IOException ee) {
             // expected.
         }
+    }
+
+    public void testAvailableNonEmptySource() throws Exception {
+        // this byte[] is a deflation of these bytes: { 1, 3, 4, 6 }
+        byte[] deflated = { 72, -119, 99, 100, 102, 97, 3, 0, 0, 31, 0, 15, 0 };
+        InputStream in = new InflaterInputStream(new ByteArrayInputStream(deflated));
+        // InflaterInputStream.available() returns either 1 or 0, even though
+        // that contradicts the behavior defined in InputStream.available()
+        assertEquals(1, in.read());
+        assertEquals(1, in.available());
+        assertEquals(3, in.read());
+        assertEquals(1, in.available());
+        assertEquals(4, in.read());
+        assertEquals(1, in.available());
+        assertEquals(6, in.read());
+        assertEquals(0, in.available());
+        assertEquals(-1, in.read());
+        assertEquals(-1, in.read());
+    }
+
+    public void testAvailableSkip() throws Exception {
+        // this byte[] is a deflation of these bytes: { 1, 3, 4, 6 }
+        byte[] deflated = { 72, -119, 99, 100, 102, 97, 3, 0, 0, 31, 0, 15, 0 };
+        InputStream in = new InflaterInputStream(new ByteArrayInputStream(deflated));
+        assertEquals(1, in.available());
+        assertEquals(4, in.skip(4));
+        assertEquals(0, in.available());
+    }
+
+    public void testAvailableEmptySource() throws Exception {
+        // this byte[] is a deflation of the empty file
+        byte[] deflated = { 120, -100, 3, 0, 0, 0, 0, 1 };
+        InputStream in = new InflaterInputStream(new ByteArrayInputStream(deflated));
+        assertEquals(-1, in.read());
+        assertEquals(-1, in.read());
+        assertEquals(0, in.available());
     }
 
     /**
@@ -471,12 +509,11 @@ public class InflaterInputStreamTest extends TestCase {
         InflaterInputStream iis = new InflaterInputStream(is);
 
         int available;
-        int read;
         for (int i = 0; i < 11; i++) {
-            read = iis.read();
+            iis.read();
             available = iis.available();
-            if (read == -1) {
-                assertEquals("Bytes Available Should Return 0 ", 0, available);
+            if (available == 0) {
+                assertEquals("Expected no more bytes to read", -1, iis.read());
             } else {
                 assertEquals("Bytes Available Should Return 1.", 1, available);
             }

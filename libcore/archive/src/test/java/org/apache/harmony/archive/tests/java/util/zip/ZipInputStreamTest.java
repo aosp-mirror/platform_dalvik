@@ -17,7 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.zip;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -384,19 +383,19 @@ public class ZipInputStreamTest extends TestCase {
         long entrySize = entry.getSize();
         assertTrue("Entry size was < 1", entrySize > 0);
         int i = 0;
-        for (i = 0; i < entrySize; i++) {
+        while (zis1.available() > 0) {
             zis1.skip(1);
-            if (zis1.available() == 0) break;
+            i++;
         }
         if (i != entrySize) {
             fail("ZipInputStream.available or ZipInputStream.skip does not " +
                     "working properly. Only skipped " + i +
                     " bytes instead of " + entrySize);
         }
-        zis1.skip(1);
-        assertTrue(zis1.available() == 0);
+        assertEquals(0, zis1.skip(1));
+        assertEquals(0, zis1.available());
         zis1.closeEntry();
-        assertFalse(zis.available() == 0);
+        assertEquals(1, zis.available());
         zis1.close();
         try {
             zis1.available();

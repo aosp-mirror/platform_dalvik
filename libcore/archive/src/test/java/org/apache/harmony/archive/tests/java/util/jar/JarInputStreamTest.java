@@ -154,12 +154,12 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         assertEquals(actual, desired);
         jis.close();
 
-//        try {
-//            jis.getNextJarEntry(); //Android implementation does not throw exception
-//            fail("IOException expected");
-//        } catch (IOException ee) {
-//            // expected
-//        }
+        try {
+            jis.getNextJarEntry();
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
 
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "Broken_entry.jar");
@@ -181,8 +181,7 @@ public class JarInputStreamTest extends junit.framework.TestCase {
     )
     public void test_getNextJarEntry_Ex() throws Exception {
         final Set<String> desired = new HashSet<String>(Arrays
-                .asList(new String[] {
-                        "foo/", "foo/bar/", "foo/bar/A.class", "Blah.txt"}));
+                .asList("foo/", "foo/bar/", "foo/bar/A.class", "Blah.txt"));
         Set<String> actual = new HashSet<String>();
         InputStream is = new URL(jarName).openConnection().getInputStream();
         JarInputStream jis = new JarInputStream(is);
@@ -195,7 +194,7 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jis.close();
 
         try {
-            jis.getNextJarEntry(); //Android implementation does not throw exception
+            jis.getNextJarEntry();
             fail("IOException expected");
         } catch (IOException ee) {
             // expected
@@ -275,9 +274,9 @@ public class JarInputStreamTest extends junit.framework.TestCase {
     )
     public void test_JarInputStream_Modified_Manifest_MainAttributes_getNextEntry()
             throws IOException {
-        String modJarName = Support_Resources
-                .getURL("Modified_Manifest_MainAttributes.jar");
-        InputStream is = new URL(modJarName).openConnection().getInputStream();
+        String modJarName = Support_Resources.getURL("Modified_Manifest_MainAttributes.jar");
+        InputStream is = new URL(modJarName).openConnection()
+                .getInputStream();
         JarInputStream jin = new JarInputStream(is, true);
 
         assertEquals("META-INF/TESTROOT.SF", jin.getNextEntry().getName());
