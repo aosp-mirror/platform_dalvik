@@ -217,22 +217,10 @@ public final class Inet4Address extends InetAddress {
         return prefix >= 0xEFC0 && prefix <= 0xEFC3;
     }
 
-    /**
-     * Returns a textual representation of this IP address.
-     * 
-     * @return the textual representation of this host address.
-     */
-    @Override
-    public String getHostAddress() {
-        String hostAddress = ""; //$NON-NLS-1$
-        for (int i = 0; i < 4; i++) {
-            hostAddress += ipaddress[i] & 255;
-            if (i != 3) {
-                hostAddress += "."; //$NON-NLS-1$
-            }
-        }
-        return hostAddress;
-    }
+    // BEGIN android-removed
+    // public String getHostAddress() {
+    // }
+    // END android-removed
 
     // BEGIN android-removed
     // public int hashCode() {

@@ -333,53 +333,151 @@ static jobject socketAddressToInetAddress(JNIEnv *env,
  * @param port the port number
  * @param sockaddress the sockaddr_storage structure to write to
  *
+ * @return 0 on success, a system error code on failure
+ *
+ * @exception SocketError if the address family is unknown
+ */
+static int byteArrayToSocketAddress(JNIEnv *env,
+        jbyteArray addressByteArray, int port, sockaddr_storage *sockaddress) {
+    if (addressByteArray == NULL) {
+      throwNullPointerException(env);
+      return EFAULT;
+    }
+    // Convert the IP address bytes to the proper IP address type.
+    size_t addressLength = env->GetArrayLength(addressByteArray);
+    if (addressLength == 4) {
+        // IPv4 address.
+        sockaddr_in *sin = (sockaddr_in *) sockaddress;
+        memset(sin, 0, sizeof(sockaddr_in));
+        sin->sin_family = AF_INET;
+        sin->sin_port = htons(port);
+        jbyte *rawBytes = (jbyte *) &sin->sin_addr.s_addr;
+        env->GetByteArrayRegion(addressByteArray, 0, 4, rawBytes);
+    } else if (addressLength == 16) {
+        // IPv6 address.
+        sockaddr_in6 *sin6 = (sockaddr_in6 *) sockaddress;
+        memset(sin6, 0, sizeof(sockaddr_in6));
+        sin6->sin6_family = AF_INET6;
+        sin6->sin6_port = htons(port);
+        jbyte *rawBytes = (jbyte *) &sin6->sin6_addr.s6_addr;
+        env->GetByteArrayRegion(addressByteArray, 0, 16, rawBytes);
+    } else {
+        // Unknown address family.
+        throwSocketException(env, SOCKERR_BADAF);
+        return EAFNOSUPPORT;
+    }
+    return 0;
+}
+
+/**
+ * Converts an InetAddress object and port number to a native address structure.
+ * Throws a NullPointerException or a SocketException in case of
+ * error. This is signaled by a return value of -1. The normal
+ * return value is 0.
+ *
+ * @param inetaddress the InetAddress object to convert
+ * @param port the port number
+ * @param sockaddress the sockaddr_storage structure to write to
+ *
  * @return 0 on success, -1 on failure
+ * @throw UnknownHostException if any error occurs
  *
  * @exception SocketError if the address family is unknown
  */
 static int inetAddressToSocketAddress(JNIEnv *env,
-        jobject inetaddress, int port, struct sockaddr_storage *sockaddress) {
+        jobject inetaddress, int port, sockaddr_storage *sockaddress) {
 
     // Get the byte array that stores the IP address bytes in the InetAddress.
     jbyteArray addressByteArray;
     addressByteArray = (jbyteArray)env->GetObjectField(inetaddress,
             gCachedFields.iaddr_ipaddress);
-    if (addressByteArray == NULL) {
-      throwNullPointerException(env);
-      return -1;
-    }
 
-    // Get the raw IP address bytes.
-    jbyte *addressBytes = env->GetByteArrayElements(addressByteArray, NULL);
-    if (addressBytes == NULL) {
-      throwNullPointerException(env);
-      return -1;
-    }
+    return byteArrayToSocketAddress(env, addressByteArray, port, sockaddress);
+}
 
-    // Convert the IP address bytes to the proper IP address type.
-    size_t addressLength = env->GetArrayLength(addressByteArray);
-    int result = 0;
-    if (addressLength == 4) {
-        // IPv4 address.
-        struct sockaddr_in *sin = (struct sockaddr_in *) sockaddress;
-        memset(sin, 0, sizeof(struct sockaddr_in));
-        sin->sin_family = AF_INET;
-        sin->sin_port = htons(port);
-        memcpy(&sin->sin_addr.s_addr, addressBytes, 4);
-    } else if (addressLength == 16) {
-        // IPv6 address.
-        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sockaddress;
-        memset(sin6, 0, sizeof(struct sockaddr_in6));
-        sin6->sin6_family = AF_INET6;
-        sin6->sin6_port = htons(port);
-        memcpy(&sin6->sin6_addr.s6_addr, addressBytes, 16);
+/**
+ * Convert a sockaddr_storage structure to a Java string.
+ *
+ * @param address pointer to sockaddr_storage structure to convert.
+ * @param withPort whether to include the port number in the output as well.
+ *
+ * @return 0 on success, a getnameinfo return code on failure.
+ *
+ * @throws SocketException the address family was unknown.
+ */
+static int socketAddressToString(sockaddr_storage *address, char *ipString,
+        int len, bool withPort) {
+    // TODO: getnameinfo seems to want its length parameter to be exactly
+    // sizeof(sockaddr_in) for an IPv4 address and sizeof (sockaddr_in6) for an
+    // IPv6 address. Fix getnameinfo so it accepts sizeof(sockaddr_storage), and
+    // then remove this hack.
+    int size;
+    if (address->ss_family == AF_INET) {
+        size = sizeof(sockaddr_in);
+    } else if (address->ss_family == AF_INET6) {
+        size = sizeof(sockaddr_in6);
     } else {
-        // Unknown address family.
-        throwSocketException(env, SOCKERR_BADAF);
-        result = -1;
+        errno = EAFNOSUPPORT;
+        return EAI_SYSTEM;
     }
-    env->ReleaseByteArrayElements(addressByteArray, addressBytes, 0);
-    return result;
+
+    char tmp[INET6_ADDRSTRLEN];
+    int result = getnameinfo((sockaddr *)address, size, tmp, sizeof(tmp), NULL,
+            0, NI_NUMERICHOST);
+    if (result != 0) {
+        return result;
+    }
+
+    int port;
+    if (withPort) {
+        if (address->ss_family == AF_INET6) {
+            sockaddr_in6 *sin6 = (sockaddr_in6 *) address;
+            port = ntohs(sin6->sin6_port);
+            snprintf(ipString, len, "[%s]:%d", tmp, port);
+        } else {
+            sockaddr_in *sin = (sockaddr_in *) address;
+            port = ntohs(sin->sin_port);
+            snprintf(ipString, len, "%s:%d", tmp, port);
+        }
+    } else {
+        strncpy(ipString, tmp, len);
+    }
+    return 0;
+}
+
+/**
+ * Convert a Java byte array representing an IP address to a Java string.
+ *
+ * @param addressByteArray the byte array to convert.
+ *
+ * @return a string with the textual representation of the address.
+ *
+ * @throws SocketException the address family was unknown.
+ */
+static jstring osNetworkSystem_byteArrayToIpString(JNIEnv *env, jclass clazz,
+        jbyteArray byteArray) {
+    // For compatibility, ensure that an UnknownHostException is thrown if the
+    // address is null.
+    if (byteArray == NULL) {
+        jniThrowException(env, "java/net/UnknownHostException",
+                strerror(EFAULT));
+        return NULL;
+    }
+    struct sockaddr_storage ss;
+    int ret = byteArrayToSocketAddress(env, byteArray, 0, &ss);
+    if (ret) {
+        jniThrowException(env, "java/net/UnknownHostException", strerror(ret));
+        return NULL;
+    }
+    char ipString[INET6_ADDRSTRLEN];
+    ret = socketAddressToString(&ss, ipString, sizeof(ipString), false);
+    if (ret) {
+        env->ExceptionClear();
+        jniThrowException(env, "java/net/UnknownHostException",
+                gai_strerror(ret));
+        return NULL;
+    }
+    return env->NewStringUTF(ipString);
 }
 
 /**
@@ -504,49 +602,6 @@ static int isLocalHost(struct sockaddr_storage *address) {
 static bool useAdbNetworkingForAddress(struct sockaddr_storage *address) {
     return useAdbNetworking && !isLocalHost(address) &&
            address->ss_family == AF_INET;
-}
-
-/**
- * Convert a sockaddr_storage structure to a string for logging purposes.
- *
- * @param address pointer to sockaddr_storage structure to print
- *
- * @return a string with the textual representation of the address.
- *
- * @note Returns a statically allocated buffer, so is not thread-safe.
- */
-static char *socketAddressToString(struct sockaddr_storage *address) {
-    static char invalidString[] = "<invalid>";
-    static char ipString[INET6_ADDRSTRLEN + sizeof("[]:65535")];
-
-    char tmp[INET6_ADDRSTRLEN];
-    int port;
-    // TODO: getnameinfo seems to want its length parameter to be exactly
-    // sizeof(sockaddr_in) for an IPv4 address and sizeof (sockaddr_in6) for an
-    // IPv6 address. Fix getnameinfo so it accepts sizeof(sockaddr_storage), and
-    // then remove this hack.
-    int size = (address->ss_family == AF_INET) ?
-            sizeof(sockaddr_in) : sizeof(sockaddr_in6);
-    int result = getnameinfo((struct sockaddr *)address,
-            size, tmp, sizeof(tmp), NULL, 0,
-            NI_NUMERICHOST);
-
-    if (result != 0)
-        return invalidString;
-
-    if (address->ss_family == AF_INET6) {
-        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) address;
-        port = ntohs(sin6->sin6_port);
-        sprintf(ipString, "[%s]:%d", tmp, port);
-        return ipString;
-    } else if (address->ss_family == AF_INET) {
-        struct sockaddr_in *sin = (struct sockaddr_in *) address;
-        port = ntohs(sin->sin_port);
-        sprintf(ipString, "%s:%d", tmp, port);
-        return ipString;
-    } else {
-        return invalidString;
-    }
 }
 
 /**
@@ -930,6 +985,23 @@ unsigned short ip_checksum(unsigned short* buffer, int size) {
 }
 
 /**
+ * Converts an IPv4-mapped IPv6 address to an IPv4 address. Performs no error
+ * checking.
+ *
+ * @param address the address to convert. Must contain an IPv4-mapped address.
+ * @param outputAddress the converted address. Will contain an IPv4 address.
+ */
+static void convertMappedToIpv4(sockaddr_storage *address,
+        sockaddr_storage *outputAddress) {
+  memset(outputAddress, 0, sizeof(sockaddr_in));
+  const sockaddr_in6 *sin6 = ((sockaddr_in6 *) address);
+  sockaddr_in *sin = ((sockaddr_in *) outputAddress);
+  sin->sin_family = AF_INET;
+  sin->sin_addr.s_addr = sin6->sin6_addr.s6_addr32[3];
+  sin->sin_port = sin6->sin6_port;
+}
+
+/**
  * Converts an IPv4 address to an IPv4-mapped IPv6 address. Performs no error
  * checking.
  *
@@ -937,9 +1009,9 @@ unsigned short ip_checksum(unsigned short* buffer, int size) {
  * @param outputAddress the converted address. Will contain an IPv6 address.
  * @param mapUnspecified if true, convert 0.0.0.0 to ::ffff:0:0; if false, to ::
  */
-static void ipv4ToMappedAddress(struct sockaddr_storage *address,
+static void convertIpv4ToMapped(struct sockaddr_storage *address,
         struct sockaddr_storage *outputAddress, bool mapUnspecified) {
-  memset(outputAddress, 0, sizeof(struct sockaddr_storage));
+  memset(outputAddress, 0, sizeof(struct sockaddr_in6));
   const struct sockaddr_in *sin = ((struct sockaddr_in *) address);
   struct sockaddr_in6 *sin6 = ((struct sockaddr_in6 *) outputAddress);
   sin6->sin6_family = AF_INET6;
@@ -962,7 +1034,7 @@ static int doConnect(int socket, struct sockaddr_storage *socketAddress) {
     struct sockaddr_storage *realAddress;
     if (socketAddress->ss_family == AF_INET &&
         getSocketAddressFamily(socket) == AF_INET6) {
-        ipv4ToMappedAddress(socketAddress, &mappedAddress, true);
+        convertIpv4ToMapped(socketAddress, &mappedAddress, true);
         realAddress = &mappedAddress;
     } else {
         realAddress = socketAddress;
@@ -987,7 +1059,7 @@ static int doBind(int socket, struct sockaddr_storage *socketAddress) {
     struct sockaddr_storage *realAddress;
     if (socketAddress->ss_family == AF_INET &&
         getSocketAddressFamily(socket) == AF_INET6) {
-        ipv4ToMappedAddress(socketAddress, &mappedAddress, false);
+        convertIpv4ToMapped(socketAddress, &mappedAddress, false);
         realAddress = &mappedAddress;
     } else {
         realAddress = socketAddress;
@@ -3610,6 +3682,7 @@ static JNINativeMethod gMethods[] = {
     { "socketCloseImpl",                   "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_socketCloseImpl                    },
     { "setInetAddressImpl",                "(Ljava/net/InetAddress;[B)V",                                              (void*) osNetworkSystem_setInetAddressImpl                 },
     { "inheritedChannelImpl",              "()Ljava/nio/channels/Channel;",                                            (void*) osNetworkSystem_inheritedChannelImpl               },
+    { "byteArrayToIpString",               "([B)Ljava/lang/String;",                                                   (void*) osNetworkSystem_byteArrayToIpString                },
 };
 
 int register_org_apache_harmony_luni_platform_OSNetworkSystem(JNIEnv* env) {
