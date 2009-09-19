@@ -169,6 +169,13 @@ for example, the return values from consecutive calls to
 you must use the <code>IsSameObject</code> function.</strong>  Never compare
 references with "==" in native code.
 </p><p>
+One consequence of this is that you
+<strong>must not assume object references are constant</strong>
+in native code.  The 32-bit value representing an object may be different
+from one invocation of a method to the next, and it's possible that two
+different objects could have the same 32-bit value at different times.  Do
+not use jobjects as keys.
+</p><p>
 Programmers are required to "not excessively allocate" local references.  In practical terms this means
 that if you're creating large numbers of local references, perhaps while running through an array of
 Objects, you should free them manually with
@@ -312,10 +319,10 @@ We can accomplish the same thing with this:
 </p><p>
 This accomplishes the same thing, with several advantages:
 <ul>
-    <li>Requires one JNI call instead of 3, reducing overhead.
+    <li>Requires one JNI call instead of 2, reducing overhead.
     <li>Doesn't require pinning or extra data copies.
-    <li>Reduces the risk of programmer error -- no need to match up
-    <code>Get</code> and <code>Release</code> calls.
+    <li>Reduces the risk of programmer error -- no risk of forgetting
+    to call <code>Release</code> after something fails.
 </ul>
 </p><p>
 Similarly, you can use the <code>Set&lt;Type&gt;ArrayRegion</code> call
@@ -384,7 +391,7 @@ puts a different table of functions into the JavaVM and JNIEnv pointers.  These 
 an extended series of checks before calling the standard implementation.
 
 </p><p>
-Some things that may be verified:
+Some things that may be checked:
 </p><p>
 </p>
 <ul>
@@ -427,6 +434,7 @@ flag.  Currently supported values include:
 are over-allocated and surrounded with a guard pattern to help identify
 code writing outside the buffer, and the contents are erased before the
 storage is freed to trip up code that uses the data after calling Release.
+This will have a noticeable performance impact on some applications.
 <dt>warnonly
 <dd>By default, JNI "warnings" cause the VM to abort.  With this flag
 it continues on.
