@@ -239,6 +239,9 @@ final class OSNetworkSystem implements INetworkSystem {
         return getSocketFlagsImpl();
     }
 
+    public native String byteArrayToIpString(byte[] address)
+            throws UnknownHostException;
+
     static native int getSocketFlagsImpl();
 
     public InetAddress getSocketLocalAddress(FileDescriptor fd,
