@@ -271,14 +271,23 @@ public class ZipFileTest extends junit.framework.TestCase {
 
         Enumeration<? extends ZipEntry> enumeration = zfile.entries();
         zfile.close();
-        zfile = null;
-        boolean pass = false;
+        try {
+            enumeration.nextElement();
+            fail("did not detect closed file");
+        } catch (IllegalStateException expected) {
+        }
+
         try {
             enumeration.hasMoreElements();
-        } catch (IllegalStateException e) {
-            pass = true;
+            fail("did not detect closed file");
+        } catch (IllegalStateException expected) {
         }
-        assertTrue("did not detect closed jar file", pass);
+
+        try {
+            zfile.entries();
+            fail("did not detect closed file");
+        } catch (IllegalStateException expected) {
+        }
     }
 
     /**
@@ -349,20 +358,15 @@ public class ZipFileTest extends junit.framework.TestCase {
         method = "getEntry",
         args = {java.lang.String.class}
     )
-    @KnownFailure("Android does not throw IllegalStateException when using "
-            + "getEntry() after close().")
     public void test_getEntryLjava_lang_String_Ex() throws IOException {
         java.util.zip.ZipEntry zentry = zfile.getEntry("File1.txt");
         assertNotNull("Could not obtain ZipEntry", zentry);
-        int r;
-        InputStream in;
 
         zfile.close();
         try {
-            zentry = zfile.getEntry("File2.txt");
-            fail("IllegalStateException expected"); // Android fails here!
+            zfile.getEntry("File2.txt");
+            fail("IllegalStateException expected");
         } catch (IllegalStateException ee) {
-            // expected
         }
     }
 
@@ -435,16 +439,13 @@ public class ZipFileTest extends junit.framework.TestCase {
         method = "size",
         args = {}
     )
-    @KnownFailure("IllegalStateException not thrown when using ZipFile.size() "
-            + "after close().")
     public void test_size() throws IOException {
         assertEquals(6, zfile.size());
         zfile.close();
         try {
             zfile.size();
-            fail("IllegalStateException expected"); // Android fails here!
-        } catch (IllegalStateException ee) {
-            // expected
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException expected) {
         }
     }
 

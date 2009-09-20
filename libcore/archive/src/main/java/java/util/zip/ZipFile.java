@@ -52,12 +52,12 @@ public class ZipFile implements ZipConstants {
     File fileToDeleteOnClose;
 
     /**
-     * Open zip file for read.
+     * Open ZIP file for read.
      */
     public static final int OPEN_READ = 1;
 
     /**
-     * Delete zip file when closed.
+     * Delete ZIP file when closed.
      */
     public static final int OPEN_DELETE = 4;
 
@@ -140,7 +140,7 @@ public class ZipFile implements ZipConstants {
     }
 
     /**
-     * Closes this ZIP file.
+     * Closes this ZIP file. This method is idempotent.
      *
      * @throws IOException
      *             if an IOException occurs.
@@ -166,23 +166,32 @@ public class ZipFile implements ZipConstants {
         }
     }
 
+    private void checkNotClosed() {
+        if (mRaf == null) {
+            throw new IllegalStateException("Zip File closed.");
+        }
+    }
+
     /**
      * Returns an enumeration of the entries. The entries are listed in the
      * order in which they appear in the ZIP archive.
      *
      * @return the enumeration of the entries.
+     * @throws IllegalStateException if this ZIP file has been closed.
      */
     public Enumeration<? extends ZipEntry> entries() {
+        checkNotClosed();
+
         return new Enumeration<ZipEntry>() {
             private int i = 0;
 
             public boolean hasMoreElements() {
-                if (mRaf == null) throw new IllegalStateException("Zip File closed.");
+                checkNotClosed();
                 return i < mEntryList.size();
             }
 
             public ZipEntry nextElement() {
-                if (mRaf == null) throw new IllegalStateException("Zip File closed.");
+                checkNotClosed();
                 if (i >= mEntryList.size())
                     throw new NoSuchElementException();
                 return (ZipEntry) mEntryList.get(i++);
@@ -197,8 +206,10 @@ public class ZipFile implements ZipConstants {
      *            the name of the entry in the ZIP file.
      * @return a {@code ZipEntry} or {@code null} if the entry name does not
      *         exist in the ZIP file.
+     * @throws IllegalStateException if this ZIP file has been closed.
      */
     public ZipEntry getEntry(String entryName) {
+        checkNotClosed();
         if (entryName != null) {
             ZipEntry ze = mFastLookup.get(entryName);
             if (ze == null) ze = mFastLookup.get(entryName + "/");
@@ -215,6 +226,7 @@ public class ZipFile implements ZipConstants {
      * @return an input stream of the data contained in the {@code ZipEntry}.
      * @throws IOException
      *             if an {@code IOException} occurs.
+     * @throws IllegalStateException if this ZIP file has been closed.
      */
     public InputStream getInputStream(ZipEntry entry) throws IOException {
         /*
@@ -229,27 +241,25 @@ public class ZipFile implements ZipConstants {
          * Create a ZipInputStream at the right part of the file.
          */
         RandomAccessFile raf = mRaf;
-        if (raf != null) {
-            synchronized (raf) {
-                // Unfortunately we don't know the entry data's start position.
-                // All we have is the position of the entry's local header.
-                // At position 28 we find the length of the extra data.
-                // In some cases this length differs from the one coming in
-                // the central header!!!
-                RAFStream rafstrm = new RAFStream(raf, entry.mLocalHeaderRelOffset + 28);
-                int localExtraLenOrWhatever = ler.readShortLE(rafstrm);
-                // Now we need to skip the name
-                // and this "extra" data or whatever it is:
-                rafstrm.skip(entry.nameLen + localExtraLenOrWhatever);
-                rafstrm.mLength = rafstrm.mOffset + entry.compressedSize;
-                if (entry.compressionMethod == ZipEntry.DEFLATED) {
-                    return new InflaterInputStream(rafstrm, new Inflater(true));
-                } else {
-                    return rafstrm;
-                }
+        synchronized (raf) {
+            // Unfortunately we don't know the entry data's start position.
+            // All we have is the position of the entry's local header.
+            // At position 28 we find the length of the extra data.
+            // In some cases this length differs from the one coming in
+            // the central header!!!
+            RAFStream rafstrm = new RAFStream(raf,
+                    entry.mLocalHeaderRelOffset + 28);
+            int localExtraLenOrWhatever = ler.readShortLE(rafstrm);
+            // Now we need to skip the name
+            // and this "extra" data or whatever it is:
+            rafstrm.skip(entry.nameLen + localExtraLenOrWhatever);
+            rafstrm.mLength = rafstrm.mOffset + entry.compressedSize;
+            if (entry.compressionMethod == ZipEntry.DEFLATED) {
+                return new InflaterInputStream(rafstrm, new Inflater(true));
+            } else {
+                return rafstrm;
             }
         }
-        throw new IllegalStateException("Zip File closed");
     }
 
     /**
@@ -265,8 +275,10 @@ public class ZipFile implements ZipConstants {
      * Returns the number of {@code ZipEntries} in this {@code ZipFile}.
      *
      * @return the number of entries in this file.
+     * @throws IllegalStateException if this ZIP file has been closed.
      */
     public int size() {
+        checkNotClosed();
         return mEntryList.size();
     }
 
