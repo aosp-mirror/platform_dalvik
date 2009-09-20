@@ -38,6 +38,10 @@
  */
 InstructionWidth* dexCreateInstrWidthTable(void)
 {
+#ifdef __ARM_ARCH_7A__
+    /* hack to work around mysterious problem on emulator */
+    LOGD("creating instr width table\n");
+#endif
     InstructionWidth* instrWidth;
     int i;
 
