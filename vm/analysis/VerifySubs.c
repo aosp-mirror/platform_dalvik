@@ -65,6 +65,8 @@ bool dvmComputeCodeWidths(const Method* meth, InsnFlags* insnFlags,
             if (width == 0) {
                 LOG_VFY_METH(meth,
                     "VFY: invalid post-opt instruction (0x%x)\n", instr);
+                LOGI("### instr=%d width=%d table=%d\n",
+                    instr, width, dexGetInstrWidthAbs(gDvm.instrWidth, instr));
                 goto bail;
             }
             if (width < 0 || width > 5) {
