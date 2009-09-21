@@ -1896,7 +1896,7 @@ public final class Formatter implements Closeable, Flushable {
             }
             // output result
             FloatUtil floatUtil = new FloatUtil(result, formatToken,
-                    (DecimalFormat) NumberFormat.getInstance(locale), arg);
+                    (DecimalFormat) getNumberFormat(), arg);
             floatUtil.transform(formatToken, result);
 
             formatToken.setPrecision(FormatToken.UNSET);
