@@ -20,7 +20,7 @@ package tests.api.java.util;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestTargetClass;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ import tests.support.Support_UnmodifiableCollectionTest;
 /**
  * @tests java.util.LinkedHashMap
  */
-@TestTargetClass(LinkedHashMap.class) 
+@TestTargetClass(LinkedHashMap.class)
 public class LinkedHashMapTest extends junit.framework.TestCase {
 
     LinkedHashMap hm;
@@ -48,13 +48,13 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     Object[] objArray;
 
     Object[] objArray2;
-    
+
     static final class CacheMap extends LinkedHashMap {
         protected boolean removeEldestEntry(Map.Entry e) {
             return size() > 5;
         }
     }
-    
+
     private static class MockMapNull extends AbstractMap {
         @Override
         public Set entrySet() {
@@ -131,7 +131,7 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
         } catch (IllegalArgumentException e) {
             //expected
         }
-    
+
         LinkedHashMap empty = new LinkedHashMap(0, 0.75f);
         assertNull("Empty hashtable access", empty.get("nothing"));
         empty.put("something", "here");
@@ -196,7 +196,7 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
         // Test for method java.lang.Object
         // java.util.LinkedHashMap.put(java.lang.Object, java.lang.Object)
         hm.put("KEY", "VALUE");
-        assertEquals("Failed to install key/value pair", 
+        assertEquals("Failed to install key/value pair",
                 "VALUE", hm.get("KEY"));
 
         LinkedHashMap m = new LinkedHashMap();
@@ -237,7 +237,7 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
         notes = "",
         method = "putAll",
         args = {java.util.Map.class}
-    )    
+    )
     public void test_putAllLjava_util_Map() {
         // Test for method void java.util.LinkedHashMap.putAll(java.util.Map)
         LinkedHashMap hm2 = new LinkedHashMap();
@@ -271,7 +271,7 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
         } catch (NullPointerException e) {
             // expected.
         }
-    } 
+    }
 
     /**
      * @tests java.util.LinkedHashMap#entrySet()
@@ -303,7 +303,7 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     )
     public void test_entrySetRemove() {
         entrySetRemoveHelper("military", "intelligence");
-        entrySetRemoveHelper(null, "hypothesis");  
+        entrySetRemoveHelper(null, "hypothesis");
     }
     private void entrySetRemoveHelper(String key, String value) {
         Map<String, String> m1 = new LinkedHashMap<String, String>();
@@ -475,23 +475,23 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
         // get the keySet() and values() on the original Map
         Set keys = map.keySet();
         Collection values = map.values();
-        assertEquals("values() does not work", 
+        assertEquals("values() does not work",
                 "value", values.iterator().next());
-        assertEquals("keySet() does not work", 
+        assertEquals("keySet() does not work",
                 "key", keys.iterator().next());
         AbstractMap map2 = (AbstractMap) map.clone();
         map2.put("key", "value2");
         Collection values2 = map2.values();
         assertTrue("values() is identical", values2 != values);
-        
+
         // values() and keySet() on the cloned() map should be different
-        assertEquals("values() was not cloned", 
+        assertEquals("values() was not cloned",
                 "value2", values2.iterator().next());
         map2.clear();
         map2.put("key2", "value3");
         Set key2 = map2.keySet();
         assertTrue("keySet() is identical", key2 != keys);
-        assertEquals("keySet() was not cloned", 
+        assertEquals("keySet() was not cloned",
                 "key2", key2.iterator().next());
     }
 
@@ -512,10 +512,10 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
         hm1.put("c", "c");
         LinkedHashMap<String, String> hm2 = (LinkedHashMap<String, String>) hm1.clone();
         hm1.get("a");
-        
+
         Map.Entry<String, String>[] set = new Map.Entry[3];
         Iterator<Map.Entry<String,String>> iterator = hm1.entrySet().iterator();
-        
+
         assertEquals("b", iterator.next().getKey());
         assertEquals("c", iterator.next().getKey());
         assertEquals("a", iterator.next().getKey());
@@ -531,7 +531,7 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
         notes = "Regression test.",
         method = "clone",
         args = {}
-    )   
+    )
     // regresion test for HARMONY-4603
     public void test_clone_Mock() {
         LinkedHashMap hashMap = new MockMap();
@@ -557,7 +557,30 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
         protected boolean removeEldestEntry(Map.Entry e) {
             return num > 1;
         }
-    } 
+    }
+
+    /**
+     * @tests put/get interaction in access-order map where removeEldest
+     * returns true.
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression for bug Google Bug 2121546",
+        method = "get",
+        args = {java.lang.Object.class}
+    )
+    public void test_removeEldestFromSameBucketAsNewEntry() {
+        LinkedHashMap<String, String> map
+                = new LinkedHashMap<String, String>(6, 0.75F, true) {
+            @Override
+            protected boolean removeEldestEntry(Entry<String, String> e) {
+                return true;
+            }
+        };
+        map.put("N", "E");
+        map.put("F", "I");
+        assertEquals(null, map.get("N"));
+    }
 
     /**
      * @tests java.util.LinkedHashMap#containsKey(java.lang.Object)
