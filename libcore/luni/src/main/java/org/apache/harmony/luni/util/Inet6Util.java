@@ -144,55 +144,6 @@ public class Inet6Util {
 
 	}
 
-    // BEGIN android-changed
-    static char[] hexCharacters = {'0', '1', '2', '3', '4', '5', '6', '7', '8',
-            '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-    // END android-changed
-
-	public static String createIPAddrStringFromByteArray(byte ipByteArray[]) {
-		if (ipByteArray.length == 4) {
-			return addressToString(bytesToInt(ipByteArray, 0));
-		}
-
-		if (ipByteArray.length == 16) {
-			if (isIPv4MappedAddress(ipByteArray)) {
-				byte ipv4ByteArray[] = new byte[4];
-				for (int i = 0; i < 4; i++) {
-					ipv4ByteArray[i] = ipByteArray[i + 12];
-				}
-				return addressToString(bytesToInt(ipv4ByteArray, 0));
-			}
-            StringBuilder buffer = new StringBuilder();
-            // BEGIN android-changed
-            for (int i = 0; i < 8; i++) { // ipByteArray.length / 2
-
-                int num = (ipByteArray[2 * i] & 0xff) << 8;
-                num ^= ipByteArray[2 * i + 1] & 0xff;
-
-                // count the digits to display without leading 0
-                int count = 1, j = num;
-                while ((j >>>= 4) != 0) {
-                    count++;
-                }
-
-                char[] buf = new char[count];
-                do {
-                    int t = num & 0x0f;
-                    buf[--count] = hexCharacters[t];
-                    num >>>= 4;
-                } while (count > 0);
-
-                buffer.append(buf);
-                if ((i + 1) < 8) { // ipByteArray.length / 2
-                    buffer.append(":");
-                }
-            }
-            // END android-changed
-            return buffer.toString();
-		}
-		return null;
-	}
-
 	/** Converts a 4 character hex word into a 2 byte word equivalent */
 	public static void convertToBytes(String hexWord, byte ipByteArray[],
 			int byteIndex) {
