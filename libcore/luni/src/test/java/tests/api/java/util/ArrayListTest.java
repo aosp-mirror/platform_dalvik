@@ -19,7 +19,7 @@ package tests.api.java.util;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestTargetClass;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,13 +33,13 @@ import java.util.Vector;
 
 import tests.support.Support_ListTest;
 
-@TestTargetClass(ArrayList.class) 
+@TestTargetClass(ArrayList.class)
 public class ArrayListTest extends junit.framework.TestCase {
 
     List alist;
 
     Object[] objArray;
-    
+
     /**
      * @tests java.util.ArrayList#ArrayList()
      */
@@ -72,7 +72,7 @@ public class ArrayListTest extends junit.framework.TestCase {
         // Test for method java.util.ArrayList(int)
         ArrayList al = new ArrayList(5);
         assertEquals("Incorrect arrayList created", 0, al.size());
-        
+
         try {
             new ArrayList(-10);
             fail("IllegalArgumentException expected");
@@ -130,14 +130,14 @@ public class ArrayListTest extends junit.framework.TestCase {
         assertNull("Should have returned null", alist.get(25));
         assertTrue("Should have returned the old item from slot 25", alist
                 .get(26) == oldItem);
-        
+
         try {
             alist.add(-1, null);
             fail("IndexOutOfBoundsException expected");
         } catch (IndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             alist.add(alist.size() + 1, null);
             fail("IndexOutOfBoundsException expected");
@@ -198,9 +198,9 @@ public class ArrayListTest extends junit.framework.TestCase {
         assertTrue("Incorrect size: " + alist.size(), alist.size() == 205);
         assertNull("Item at slot 100 should be null", alist.get(100));
         assertNull("Item at slot 101 should be null", alist.get(101));
-        assertEquals("Item at slot 102 should be 'yoink'", 
+        assertEquals("Item at slot 102 should be 'yoink'",
                 "yoink", alist.get(102));
-        assertEquals("Item at slot 103 should be 'kazoo'", 
+        assertEquals("Item at slot 103 should be 'kazoo'",
                 "kazoo", alist.get(103));
         assertNull("Item at slot 104 should be null", alist.get(104));
         alist.addAll(205, listWithNulls);
@@ -228,24 +228,29 @@ public class ArrayListTest extends junit.framework.TestCase {
         }
     }
 
-    /**
-     * @tests java.util.ArrayList#addAll(int, java.util.Collection)
-     */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies IndexOutOfBoundsException.",
-        method = "addAll",
-        args = {int.class, java.util.Collection.class}
-    )
-    public void test_addAllILjava_util_Collection_2() {
-        // Regression for HARMONY-467
-        ArrayList obj = new ArrayList();
-        try {
-            obj.addAll((int) -1, (Collection) null);
-            fail("IndexOutOfBoundsException expected");
-        } catch (IndexOutOfBoundsException e) {
-        }
-    }
+// BEGIN android-removed
+// The spec does not mandate that IndexOutOfBoundsException be thrown in
+// preference to NullPointerException when the caller desserves both.
+//
+//    /**
+//     * @tests java.util.ArrayList#addAll(int, java.util.Collection)
+//     */
+//    @TestTargetNew(
+//        level = TestLevel.PARTIAL_COMPLETE,
+//        notes = "Verifies IndexOutOfBoundsException.",
+//        method = "addAll",
+//        args = {int.class, java.util.Collection.class}
+//    )
+//    public void test_addAllILjava_util_Collection_2() {
+//        // Regression for HARMONY-467
+//        ArrayList obj = new ArrayList();
+//        try {
+//            obj.addAll((int) -1, (Collection) null);
+//            fail("IndexOutOfBoundsException expected");
+//        } catch (IndexOutOfBoundsException e) {
+//        }
+//    }
+// END android-removed
 
     /**
      * @tests java.util.ArrayList#addAll(java.util.Collection)
@@ -287,17 +292,17 @@ public class ArrayListTest extends junit.framework.TestCase {
                 .get(101) == i.next());
         assertTrue("Item at slot 103 is wrong: " + alist.get(102), alist
                 .get(102) == i.next());
-        
-        
+
+
         // Regression test for Harmony-3481
         ArrayList<Integer> originalList = new ArrayList<Integer>(12);
         for (int j = 0; j < 12; j++) {
             originalList.add(j);
         }
-        
+
         originalList.remove(0);
         originalList.remove(0);
-        
+
         ArrayList<Integer> additionalList = new ArrayList<Integer>(11);
         for (int j = 0; j < 11; j++) {
             additionalList.add(j);
@@ -672,7 +677,7 @@ public class ArrayListTest extends junit.framework.TestCase {
                 assertTrue("Returned incorrect array: " + i,
                         retArray[i] == objArray[i]);
         }
-        
+
         String[] strArray = new String[100];
         try {
             alist.toArray(strArray);
@@ -746,16 +751,16 @@ public class ArrayListTest extends junit.framework.TestCase {
 
         list.remove(0);
         assertEquals(1, list.size());
-        
+
         ArrayList collection = new ArrayList();
         collection.add("1");
         collection.add("2");
         collection.add("3");
         assertEquals(3, collection.size());
-        
+
         list.addAll(0, collection);
         assertEquals(4, list.size());
-        
+
         list.remove(0);
         list.remove(0);
         assertEquals(2, list.size());
@@ -769,13 +774,13 @@ public class ArrayListTest extends junit.framework.TestCase {
         collection.add("10");
         collection.add("11");
         collection.add("12");
-        
+
         assertEquals(12, collection.size());
-        
+
         list.addAll(0, collection);
         assertEquals(14, list.size());
     }
-    
+
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
@@ -818,7 +823,7 @@ public class ArrayListTest extends junit.framework.TestCase {
         mal.add("f");
         mal.add("g");
         mal.add("h");
-        
+
         mal.removeRange(2, 4);
 
         String[] result = new String[6];
@@ -827,30 +832,30 @@ public class ArrayListTest extends junit.framework.TestCase {
                 new String[] { "a", "b", "e", "f", "g", "h"}));
     }
 
-    
+
     /**
      * Sets up the fixture, for example, open a network connection. This method
      * is called before a test is executed.
      */
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         objArray = new Object[100];
         for (int i = 0; i < objArray.length; i++) {
             objArray[i] = new Integer(i);
         }
-        
+
         alist = new ArrayList();
         for (int i = 0; i < objArray.length; i++) {
             alist.add(objArray[i]);
         }
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         objArray = null;
         alist = null;
-        
+
         super.tearDown();
     }
 }
