@@ -159,7 +159,9 @@ globalRef = env-&gt;NewGlobalRef(localRef);
 </pre>
 
 The global reference is guaranteed to be valid until you call
-<code>DeleteGlobalRef</code>.
+<code>DeleteGlobalRef</code>.  This pattern is frequently used for
+cached copies of class objects obtained from <code>FindClass</code>.
+</p><p>
 </p><p>
 All JNI methods accept both local and global references as arguments.
 It's possible for references to the same object to have different values;
@@ -480,13 +482,23 @@ You can also call <code>System.load()</code> with the full path name of the
 shared library.  For Android apps, you can get the full path to the
 application's private data storage area from the context object.
 </p><p>
-Dalvik does support "discovery" of native methods that are named in a
+This is the recommended approach, but not the only approach.  The VM does
+not require explicit registration, nor that you provide a
+<code>JNI_OnLoad</code> function.
+You can instead use "discovery" of native methods that are named in a
 specific way (see <a href="http://java.sun.com/javase/6/docs/technotes/guides/jni/spec/design.html#wp615">
-    the JNI spec</a> for details), but this is a less desirable
-approach.  It requires more space in the shared object symbol table,
+    the JNI spec</a> for details), though this is less desirable.
+It requires more space in the shared object symbol table,
 loading is slower because it requires string searches through all of the
 loaded shared libraries, and if a method signature is wrong you won't know
 about it until the first time the method is actually used.
+</p><p>
+One other note about <code>JNI_OnLoad</code>: any <code>FindClass</code>
+calls you make from there will happen in the context of the class loader
+that was used to load the shared library.  Normally <code>FindClass</code>
+uses the loader associated with the method at the top of the interpreted
+stack, or if there isn't one (because the thread was just attached to
+the VM) it uses the "system" class loader.
 </p><p>
 
 
