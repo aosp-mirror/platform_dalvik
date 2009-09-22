@@ -376,8 +376,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
         int hash = secondaryHash(key.hashCode());
         HashMapEntry<K, V>[] tab = table;
         int index = hash & (tab.length - 1);
-        HashMapEntry<K, V> first = tab[index];
-        for (HashMapEntry<K, V> e = first; e != null; e = e.next) {
+        for (HashMapEntry<K, V> e = tab[index]; e != null; e = e.next) {
             if (e.hash == hash && key.equals(e.key)) {
                 preModify(e);
                 V oldValue = e.value;
@@ -391,16 +390,15 @@ public class HashMap<K, V> extends AbstractMap<K, V>
         if (size++ > threshold) {
             tab = doubleCapacity();
             index = hash & (tab.length - 1);
-            first = tab[index];
         }
-        tab[index] = newEntry(key, value, hash, first);
+        addNewEntry(key, value, hash, index);
         return null;
     }
 
     private V putValueForNullKey(V value) {
         HashMapEntry<K, V> entry = entryForNullKey;
         if (entry == null) {
-            entryForNullKey = newEntry(null, value, 0, null);
+            addNewEntryForNullKey(value);
             size++;
             modCount++;
             return null;
@@ -455,13 +453,22 @@ public class HashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Creates a new entry for the given key, value, hash, and successor entry.
-     * This method is called by put (and indirectly, putAll), and overridden by
-     * LinkedHashMap. The hash must incorporate the secondary hash function.
+     * Creates a new entry for the given key, value, hash, and index and
+     * inserts it into the hash table. This method is called by put
+     * (and indirectly, putAll), and overridden by LinkedHashMap. The hash
+     * must incorporate the secondary hash function.
      */
-    HashMapEntry<K, V> newEntry(
-            K key, V value, int hash, HashMapEntry<K, V> next) {
-        return new HashMapEntry<K, V>(key, value, hash, next);
+    void addNewEntry(K key, V value, int hash, int index) {
+        table[index] = new HashMapEntry<K, V>(key, value, hash, table[index]);
+    }
+
+    /**
+     * Creates a new entry for the null key, and the given value and
+     * inserts it into the hash table. This method is called by put
+     * (and indirectly, putAll), and overridden by LinkedHashMap.
+     */
+    void addNewEntryForNullKey(V value) {
+        entryForNullKey = new HashMapEntry<K, V>(null, value, 0, null);
     }
 
     /**

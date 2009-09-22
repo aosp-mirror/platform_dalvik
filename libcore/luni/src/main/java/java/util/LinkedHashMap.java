@@ -57,7 +57,7 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
      * The first real entry is header.nxt, and the last is header.prv.
      * If the map is empty, header.nxt == header && header.prv == header.
      */
-    private transient LinkedEntry<K, V> header;
+    transient LinkedEntry<K, V> header;
 
     /**
      * True if access ordered, false if insertion ordered.
@@ -138,9 +138,8 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
         constructorPutAll(map);
     }
 
-    @Override void init(){
-        header = new LinkedEntry<K, V>(null, null, 0, null, null, null);
-        header.nxt = header.prv = header;
+    @Override void init() {
+        header = new LinkedEntry<K, V>();
     }
 
     /**
@@ -150,6 +149,13 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
         LinkedEntry<K, V> nxt;
         LinkedEntry<K, V> prv;
 
+        /** Create the header entry */
+        LinkedEntry() {
+            super(null, null, 0, null);
+            nxt = prv = this;
+        }
+
+        /** Create a normal entry */
         LinkedEntry(K key, V value, int hash, HashMapEntry<K, V> next,
                     LinkedEntry<K, V> nxt, LinkedEntry<K, V> prv) {
             super(key, value, hash, next);
@@ -162,20 +168,45 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
      * Evicts eldest entry if instructed, creates a new entry and links it in
      * as head of linked list. This method should call constructorNewEntry
      * (instead of duplicating code) if the performance of your VM permits.
+     *
+     * <p>It may seem strange that this method is tasked with adding the entry
+     * to the hash table (which is properly the province of our superclass).
+     * The alternative of passing the "next" link in to this method and
+     * returning the newly created element does not work! If we remove an
+     * (eldest) entry that happens to be the first entry in the same bucket
+     * as the newly created entry, the "next" link would become invalid, and
+     * the resulting hash table corrupt.
      */
-    @Override LinkedEntry<K, V> newEntry(
-            K key, V value, int hash, HashMapEntry<K, V> next) {
+    @Override void addNewEntry(K key, V value, int hash, int index) {
+        LinkedEntry<K, V> header = this.header;
+
         // Remove eldest entry if instructed to do so.
         LinkedEntry<K, V> eldest = header.nxt;
-        if (eldest != header && removeEldestEntry(eldest))
+        if (eldest != header && removeEldestEntry(eldest)) {
             remove(eldest.key);
+        }
 
-        // Create new entry and link it on to list
-        LinkedEntry<K, V> header = this.header;
+        // Create new entry, link it on to list, and put it into table
         LinkedEntry<K, V> oldTail = header.prv;
-        LinkedEntry<K, V> newTail
-                = new LinkedEntry<K,V>(key, value, hash, next, header, oldTail);
-        return oldTail.nxt = header.prv = newTail;
+        LinkedEntry<K, V> newTail = new LinkedEntry<K,V>(
+                key, value, hash, table[index], header, oldTail);
+        table[index] = oldTail.nxt = header.prv = newTail;
+    }
+
+    @Override void addNewEntryForNullKey(V value) {
+        LinkedEntry<K, V> header = this.header;
+
+        // Remove eldest entry if instructed to do so.
+        LinkedEntry<K, V> eldest = header.nxt;
+        if (eldest != header && removeEldestEntry(eldest)) {
+            remove(eldest.key);
+        }
+
+        // Create new entry, link it on to list, and put it into table
+        LinkedEntry<K, V> oldTail = header.prv;
+        LinkedEntry<K, V> newTail = new LinkedEntry<K,V>(
+                null, value, 0, null, header, oldTail);
+        entryForNullKey = oldTail.nxt = header.prv = newTail;
     }
 
     /**
@@ -274,7 +305,7 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
                     return true;
                 }
             }
-            return entryForNullKey != null && entryForNullKey.value == null;
+            return false;
         }
 
         // value is non-null
@@ -284,20 +315,19 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
                 return true;
             }
         }
-        return entryForNullKey != null && value.equals(entryForNullKey.value);
+        return false;
     }
-    
+
     public void clear() {
         super.clear();
 
         // Clear all links to help GC
         LinkedEntry<K, V> header = this.header;
-        LinkedEntry<K, V> e = header;
-        do {
+        for (LinkedEntry<K, V> e = header.nxt; e != header; ) {
             LinkedEntry<K, V> nxt = e.nxt;
             e.nxt = e.prv = null;
             e = nxt;
-        } while(e != header);
+        }
 
         header.nxt = header.prv = header;
     }
