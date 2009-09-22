@@ -2640,8 +2640,12 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
                     break;
                 default: dvmAbort();
             }
-            opRegRegImm(cUnit, op, regDest, reg0, lit, reg1);
-            storeValue(cUnit, regDest, vDest, reg1);
+            if (lit != 0) {
+                opRegRegImm(cUnit, op, regDest, reg0, lit, reg1);
+                storeValue(cUnit, regDest, vDest, reg1);
+            } else {
+                storeValue(cUnit, reg0, vDest, reg1);
+            }
             break;
 
         case OP_DIV_INT_LIT8:
