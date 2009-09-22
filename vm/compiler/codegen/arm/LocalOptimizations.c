@@ -18,49 +18,40 @@
 #include "vm/compiler/CompilerInternals.h"
 #include "ArmLIR.h"
 
+#define DEBUG_OPT(X)
+
 ArmLIR* dvmCompilerGenCopy(CompilationUnit *cUnit, int rDest, int rSrc);
 
 /* Is this a Dalvik register access? */
 static inline bool isDalvikLoad(ArmLIR *lir)
 {
-    return ((lir->operands[1] == rFP) &&
-            ((lir->opCode == THUMB_LDR_RRI5) ||
-             (lir->opCode == THUMB2_LDR_RRI12) ||
-             (lir->opCode == THUMB2_VLDRS) ||
-             (lir->opCode == THUMB2_VLDRD)));
+    return (lir->useMask != ~0ULL) && (lir->useMask & ENCODE_DALVIK_REG);
 }
 
 static inline bool isDalvikStore(ArmLIR *lir)
 {
-    return ((lir->operands[1] == rFP) &&
-            ((lir->opCode == THUMB_STR_RRI5) ||
-             (lir->opCode == THUMB2_STR_RRI12) ||
-             (lir->opCode == THUMB2_VSTRS) ||
-             (lir->opCode == THUMB2_VSTRD)));
+    return (lir->defMask != ~0ULL) && (lir->defMask & ENCODE_DALVIK_REG);
 }
 
-/* Double regs overlap float regs.  Return true if collision  */
-static bool regClobber(int reg1, int reg2)
+static inline bool isDalvikRegisterPartiallyClobbered(ArmLIR *lir1,
+                                                      ArmLIR *lir2)
 {
-    int reg1a, reg1b;
-    int reg2a, reg2b;
-    if (!FPREG(reg1) || !FPREG(reg2))
-        return (reg1 == reg2);
-    if (DOUBLEREG(reg1)) {
-        reg1a = reg1 & FP_REG_MASK;
-        reg1b = reg1a + 1;
-    } else {
-        reg1a = reg1b = reg1 & FP_REG_MASK;
-    }
-    if (DOUBLEREG(reg2)) {
-        reg2a = reg2 & FP_REG_MASK;
-        reg2b = reg2a + 1;
-    } else {
-        reg2a = reg2b = reg2 & FP_REG_MASK;
-    }
-    return (reg1a == reg2a) || (reg1a == reg2b) ||
-           (reg1b == reg2a) || (reg1b == reg2b);
+  int reg1Lo = DECODE_ALIAS_INFO_REG(lir1->aliasInfo);
+  int reg1Hi = reg1Lo + DECODE_ALIAS_INFO_WIDE(lir1->aliasInfo);
+  int reg2Lo = DECODE_ALIAS_INFO_REG(lir2->aliasInfo);
+  int reg2Hi = reg2Lo + DECODE_ALIAS_INFO_WIDE(lir2->aliasInfo);
+
+  return (reg1Lo == reg2Hi) || (reg1Hi == reg2Lo);
 }
+
+static void dumpDependentInsnPair(ArmLIR *thisLIR, ArmLIR *checkLIR,
+                                  const char *optimization)
+{
+    LOGD("************ %s ************", optimization);
+    dvmDumpLIRInsn((LIR *) thisLIR, 0);
+    dvmDumpLIRInsn((LIR *) checkLIR, 0);
+}
+
 /*
  * Perform a pass of top-down walk to
  * 1) Eliminate redundant loads and stores
@@ -81,15 +72,18 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
             continue;
         }
         if (isDalvikStore(thisLIR)) {
-            int dRegId = thisLIR->operands[2];
+            int dRegId = DECODE_ALIAS_INFO_REG(thisLIR->aliasInfo);
+            int dRegIdHi = dRegId + DECODE_ALIAS_INFO_WIDE(thisLIR->aliasInfo);
             int nativeRegId = thisLIR->operands[0];
             ArmLIR *checkLIR;
             int sinkDistance = 0;
             /*
              * Add r15 (pc) to the mask to prevent this instruction
-             * from sinking past branch instructions.
+             * from sinking past branch instructions. Unset the Dalvik register
+             * bit when checking with native resource constraints.
              */
-            u8 stopMask = ENCODE_GP_REG(rpc) | thisLIR->useMask;
+            u8 stopMask = (ENCODE_REG_PC | thisLIR->useMask) &
+                          ~ENCODE_DALVIK_REG;
 
             for (checkLIR = NEXT_LIR(thisLIR);
                  checkLIR != tailLIR;
@@ -97,10 +91,8 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
 
                 /* Check if a Dalvik register load is redundant */
                 if (isDalvikLoad(checkLIR) &&
-                    checkLIR->operands[2] == dRegId ) {
-                    if (FPREG(nativeRegId) != FPREG(checkLIR->operands[0])) {
-                        break;  // TODO: handle gen<=>float copies
-                    }
+                    (checkLIR->aliasInfo == thisLIR->aliasInfo) &&
+                    (REGTYPE(checkLIR->operands[0]) == REGTYPE(nativeRegId))) {
                     /* Insert a move to replace the load */
                     if (checkLIR->operands[0] != nativeRegId) {
                         ArmLIR *moveLIR;
@@ -117,39 +109,34 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                     checkLIR->isNop = true;
                     continue;
 
-                /* Found a true output dependency - nuke the previous store */
+                /*
+                 * Found a true output dependency - nuke the previous store.
+                 * The register type doesn't matter here.
+                 */
                 } else if (isDalvikStore(checkLIR) &&
-                           checkLIR->operands[2] == dRegId) {
+                           (checkLIR->aliasInfo == thisLIR->aliasInfo)) {
                     thisLIR->isNop = true;
                     break;
                 /* Find out the latest slot that the store can be sunk into */
                 } else {
-                    bool stopHere = false;
-
                     /* Last instruction reached */
-                    stopHere |= NEXT_LIR(checkLIR) == tailLIR;
-
-                    /*
-                     * Conservatively assume there is a memory dependency
-                     * for st/ld multiples and reg+reg address mode
-                     */
-                    stopHere |= checkLIR->opCode == THUMB_STMIA ||
-                                checkLIR->opCode == THUMB_LDMIA ||
-                                checkLIR->opCode == THUMB_STR_RRR ||
-                                checkLIR->opCode == THUMB_LDR_RRR ||
-                                checkLIR->opCode == THUMB2_STR_RRR ||
-                                checkLIR->opCode == THUMB2_LDR_RRR ||
-                                checkLIR->opCode == THUMB2_STMIA ||
-                                checkLIR->opCode == THUMB2_LDMIA ||
-                                checkLIR->opCode == THUMB2_VLDRD ||
-                                checkLIR->opCode == THUMB2_VSTRD;
-
+                    bool stopHere = (NEXT_LIR(checkLIR) == tailLIR);
 
                     /* Store data is clobbered */
-                    stopHere |= (stopMask & checkLIR->defMask) != 0;
+                    stopHere |= ((stopMask & checkLIR->defMask) != 0);
+
+                    /* Store data partially clobbers the Dalvik register */
+                    if (stopHere == false &&
+                        ((checkLIR->useMask | checkLIR->defMask) &
+                         ENCODE_DALVIK_REG)) {
+                        stopHere = isDalvikRegisterPartiallyClobbered(thisLIR,
+                                                                      checkLIR);
+                    }
 
                     /* Found a new place to put the store - move it here */
                     if (stopHere == true) {
+                        DEBUG_OPT(dumpDependentInsnPair(thisLIR, checkLIR,
+                                                        "SINK STORE"));
                         /* The store can be sunk for at least one cycle */
                         if (sinkDistance != 0) {
                             ArmLIR *newStoreLIR =
@@ -195,25 +182,73 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
             continue;
         }
         if (isDalvikLoad(thisLIR)) {
-            int dRegId = thisLIR->operands[2];
+            int dRegId = DECODE_ALIAS_INFO_REG(thisLIR->aliasInfo);
+            int dRegIdHi = dRegId + DECODE_ALIAS_INFO_WIDE(thisLIR->aliasInfo);
             int nativeRegId = thisLIR->operands[0];
             ArmLIR *checkLIR;
             int hoistDistance = 0;
-            u8 stopUseMask = ENCODE_GP_REG(rpc) | thisLIR->useMask;
-            u8 stopDefMask = thisLIR->defMask;
+            u8 stopUseMask = (ENCODE_REG_PC | thisLIR->useMask) &
+                             ~ENCODE_DALVIK_REG;
+            u8 stopDefMask = thisLIR->defMask & ~ENCODE_DALVIK_REG;
 
+            /* First check if the load can be completely elinimated */
             for (checkLIR = PREV_LIR(thisLIR);
                  checkLIR != headLIR;
                  checkLIR = PREV_LIR(checkLIR)) {
 
                 if (checkLIR->isNop) continue;
 
+                /*
+                 * Check if the Dalvik register is previously accessed
+                 * with exactly the same type.
+                 */
+                if ((isDalvikLoad(checkLIR) || isDalvikStore(checkLIR)) &&
+                    (checkLIR->aliasInfo == thisLIR->aliasInfo) &&
+                    (checkLIR->operands[0] == nativeRegId)) {
+                    /*
+                     * If it is previously accessed but with a different type,
+                     * the search will terminate later at the point checking
+                     * for partially overlapping stores.
+                     */
+                    thisLIR->isNop = true;
+                    break;
+                }
+
+                /*
+                 * No earlier use/def can reach this load if:
+                 * 1) Head instruction is reached
+                 * 2) load target register is clobbered
+                 * 3) A branch is seen (stopUseMask has the PC bit set).
+                 */
+                if ((checkLIR == headLIR) ||
+                    (stopUseMask | stopDefMask) & checkLIR->defMask) {
+                    break;
+                }
+
+                /* Store data partially clobbers the Dalvik register */
+                if (isDalvikStore(checkLIR) &&
+                    isDalvikRegisterPartiallyClobbered(thisLIR, checkLIR)) {
+                    break;
+                }
+            }
+
+            /* The load has been eliminated */
+            if (thisLIR->isNop) continue;
+
+            /*
+             * The load cannot be eliminated. See if it can be hoisted to an
+             * earlier spot.
+             */
+            for (checkLIR = PREV_LIR(thisLIR);
+                 /* empty by intention */;
+                 checkLIR = PREV_LIR(checkLIR)) {
+
+                if (checkLIR->isNop) continue;
+
                 /* Check if the current load is redundant */
                 if ((isDalvikLoad(checkLIR) || isDalvikStore(checkLIR)) &&
-                    checkLIR->operands[2] == dRegId ) {
-                    if (FPREG(nativeRegId) != FPREG(checkLIR->operands[0])) {
-                        break;  // TODO: handle gen<=>float copies
-                    }
+                    (checkLIR->aliasInfo == thisLIR->aliasInfo) &&
+                    (REGTYPE(checkLIR->operands[0]) == REGTYPE(nativeRegId))) {
                     /* Insert a move to replace the load */
                     if (checkLIR->operands[0] != nativeRegId) {
                         ArmLIR *moveLIR;
@@ -226,41 +261,54 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                         dvmCompilerInsertLIRAfter((LIR *) checkLIR,
                                                   (LIR *) moveLIR);
                     }
-                    cUnit->printMe = true;
                     thisLIR->isNop = true;
                     break;
 
                 /* Find out if the load can be yanked past the checkLIR */
                 } else {
-                    bool stopHere = false;
-
                     /* Last instruction reached */
-                    stopHere |= PREV_LIR(checkLIR) == headLIR;
-
-                    /*
-                     * Conservatively assume there is a memory dependency
-                     * for st/ld multiples and reg+reg address mode
-                     */
-                    stopHere |= checkLIR->opCode == THUMB_STMIA ||
-                                checkLIR->opCode == THUMB_LDMIA ||
-                                checkLIR->opCode == THUMB_STR_RRR ||
-                                checkLIR->opCode == THUMB_LDR_RRR ||
-                                checkLIR->opCode == THUMB2_STR_RRR ||
-                                checkLIR->opCode == THUMB2_LDR_RRR ||
-                                checkLIR->opCode == THUMB2_STMIA ||
-                                checkLIR->opCode == THUMB2_LDMIA ||
-                                checkLIR->opCode == THUMB2_VLDRD ||
-                                checkLIR->opCode == THUMB2_VSTRD;
+                    bool stopHere = (checkLIR == headLIR);
 
                     /* Base address is clobbered by checkLIR */
-                    stopHere |= (stopUseMask & checkLIR->defMask) != 0;
+                    stopHere |= ((stopUseMask & checkLIR->defMask) != 0);
 
                     /* Load target clobbers use/def in checkLIR */
-                    stopHere |= (stopDefMask &
-                                 (checkLIR->useMask | checkLIR->defMask)) != 0;
+                    stopHere |= ((stopDefMask &
+                                 (checkLIR->useMask | checkLIR->defMask)) != 0);
+
+                    /* Store data partially clobbers the Dalvik register */
+                    if (stopHere == false &&
+                        (checkLIR->defMask & ENCODE_DALVIK_REG)) {
+                        stopHere = isDalvikRegisterPartiallyClobbered(thisLIR,
+                                                                      checkLIR);
+                    }
+
+                    /*
+                     * Stop at an earlier Dalvik load if the offset of checkLIR
+                     * is not less than thisLIR
+                     *
+                     * Experiments show that doing
+                     *
+                     * ldr     r1, [r5, #16]
+                     * ldr     r0, [r5, #20]
+                     *
+                     * is much faster than
+                     *
+                     * ldr     r0, [r5, #20]
+                     * ldr     r1, [r5, #16]
+                     */
+                    if (isDalvikLoad(checkLIR)) {
+                        int dRegId2 =
+                            DECODE_ALIAS_INFO_REG(checkLIR->aliasInfo);
+                        if (dRegId2 <= dRegId) {
+                            stopHere = true;
+                        }
+                    }
 
                     /* Found a new place to put the load - move it here */
                     if (stopHere == true) {
+                        DEBUG_OPT(dumpDependentInsnPair(thisLIR, checkLIR,
+                                                        "HOIST LOAD"));
                         /* The store can be hoisted for at least one cycle */
                         if (hoistDistance != 0) {
                             ArmLIR *newLoadLIR =
@@ -274,13 +322,13 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                             dvmCompilerInsertLIRAfter((LIR *) checkLIR,
                                                       (LIR *) newLoadLIR);
                             thisLIR->isNop = true;
-                            cUnit->printMe = true;
                         }
                         break;
                     }
 
                     /*
-                     * Saw a real instruction that the store can be sunk after
+                     * Saw a real instruction that hosting the load is
+                     * beneficial
                      */
                     if (!isPseudoOpCode(checkLIR->opCode)) {
                         hoistDistance++;

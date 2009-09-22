@@ -122,9 +122,10 @@ static void selfVerificationLoad(InterpState* interpState)
     if (heapSpacePtr == shadowSpace->heapSpaceTail)
         data = *((unsigned int*) addr);
 
-    //LOGD("*** HEAP LOAD: Addr: 0x%x Data: 0x%x", addr, data);
-
     int reg = (heapArgSpace->regMap >> 4) & 0xF;
+
+    //LOGD("*** HEAP LOAD: Reg:%d Addr: 0x%x Data: 0x%x", reg, addr, data);
+
     selfVerificationLoadDecodeData(heapArgSpace, data, reg);
 }
 
@@ -483,6 +484,48 @@ static void selfVerificationMemOpWrapper(CompilationUnit *cUnit, int regMap,
 #endif
 
 /*
+ * Mark load/store instructions that access Dalvik registers through rFP +
+ * offset.
+ */
+static void annotateDalvikRegAccess(ArmLIR *lir, int regId, bool isLoad)
+{
+    if (isLoad) {
+        lir->useMask |= ENCODE_DALVIK_REG;
+    } else {
+        lir->defMask |= ENCODE_DALVIK_REG;
+    }
+
+    /*
+     * Store the Dalvik register id in aliasInfo. Mark he MSB if it is a 64-bit
+     * access.
+     */
+    lir->aliasInfo = regId;
+    if (DOUBLEREG(lir->operands[0])) {
+        lir->aliasInfo |= 0x80000000;
+    }
+}
+
+/*
+ * Decode the register id and mark the corresponding bit(s).
+ */
+static inline void setupRegMask(u8 *mask, int reg)
+{
+    u8 seed;
+    int shift;
+    int regId = reg & 0x1f;
+
+    /*
+     * Each double register is equal to a pair of single-precision FP registers
+     */
+    seed = DOUBLEREG(reg) ? 3 : 1;
+    /* FP register starts at bit position 16 */
+    shift = FPREG(reg) ? kFPReg0 : 0;
+    /* Expand the double register id into single offset */
+    shift += regId;
+    *mask |= seed << shift;
+}
+
+/*
  * Set up the proper fields in the resource mask
  */
 static void setupResourceMasks(ArmLIR *lir)
@@ -500,18 +543,23 @@ static void setupResourceMasks(ArmLIR *lir)
     /* Set up the mask for resources that are updated */
     if (flags & IS_BRANCH) {
         lir->defMask |= ENCODE_REG_PC;
+        lir->useMask |= ENCODE_REG_PC;
     }
 
     if (flags & REG_DEF0) {
-        lir->defMask |= ENCODE_GP_REG(lir->operands[0]);
+        setupRegMask(&lir->defMask, lir->operands[0]);
     }
 
     if (flags & REG_DEF1) {
-        lir->defMask |= ENCODE_GP_REG(lir->operands[1]);
+        setupRegMask(&lir->defMask, lir->operands[1]);
     }
 
     if (flags & REG_DEF_SP) {
         lir->defMask |= ENCODE_REG_SP;
+    }
+
+    if (flags & REG_DEF_SP) {
+        lir->defMask |= ENCODE_REG_LR;
     }
 
     if (flags & REG_DEF_LIST0) {
@@ -528,7 +576,7 @@ static void setupResourceMasks(ArmLIR *lir)
 
     /* Conservatively treat the IT block */
     if (flags & IS_IT) {
-        lir->defMask = -1;
+        lir->defMask = ENCODE_ALL;
     }
 
     /* Set up the mask for resources that are used */
@@ -541,7 +589,7 @@ static void setupResourceMasks(ArmLIR *lir)
 
         for (i = 0; i < 3; i++) {
             if (flags & (1 << (kRegUse0 + i))) {
-                lir->useMask |= ENCODE_GP_REG(lir->operands[i]);
+                setupRegMask(&lir->useMask, lir->operands[i]);
             }
         }
     }
@@ -696,6 +744,17 @@ static ArmLIR *scanLiteralPool(CompilationUnit *cUnit, int value,
         dataTarget = dataTarget->next;
     }
     return NULL;
+}
+
+/*
+ * Generate an ARM_PSEUDO_BARRIER marker to indicate the boundary of special
+ * blocks.
+ */
+static void genBarrier(CompilationUnit *cUnit)
+{
+    ArmLIR *barrier = newLIR0(cUnit, ARM_PSEUDO_BARRIER);
+    /* Mark all resources as being clobbered */
+    barrier->defMask = -1;
 }
 
 /* Perform the actual operation for OP_RETURN_* */
@@ -1603,7 +1662,13 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
     opRegRegImm(cUnit, OP_ADD, r4PC, rFP, srcOffset, rNone);
     /* load [r0 .. min(numArgs,4)] */
     regMask = (1 << ((numArgs < 4) ? numArgs : 4)) - 1;
+    /*
+     * Protect the loadMultiple instruction from being reordered with other
+     * Dalvik stack accesses.
+     */
+    genBarrier(cUnit);
     loadMultiple(cUnit, r4PC, regMask);
+    genBarrier(cUnit);
 
     opRegRegImm(cUnit, OP_SUB, r7, rFP,
                 sizeof(StackSaveArea) + (numArgs << 2), rNone);
@@ -1627,9 +1692,16 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
         if (numArgs > 11) {
             loadConstant(cUnit, 5, ((numArgs - 4) >> 2) << 2);
             loopLabel = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
+            loopLabel->defMask = ENCODE_ALL;
         }
         storeMultiple(cUnit, r7, regMask);
+        /*
+         * Protect the loadMultiple instruction from being reordered with other
+         * Dalvik stack accesses.
+         */
+        genBarrier(cUnit);
         loadMultiple(cUnit, r4PC, regMask);
+        genBarrier(cUnit);
         /* No need to generate the loop structure if numArgs <= 11 */
         if (numArgs > 11) {
             opRegImm(cUnit, OP_SUB, rFP, 4, rNone);
@@ -1643,7 +1715,13 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
     /* Generate the loop epilogue - don't use r0 */
     if ((numArgs > 4) && (numArgs % 4)) {
         regMask = ((1 << (numArgs & 0x3)) - 1) << 1;
+        /*
+         * Protect the loadMultiple instruction from being reordered with other
+         * Dalvik stack accesses.
+         */
+        genBarrier(cUnit);
         loadMultiple(cUnit, r4PC, regMask);
+        genBarrier(cUnit);
     }
     if (numArgs >= 8)
         opImm(cUnit, OP_POP, (1 << r0 | 1 << rFP));
@@ -1960,7 +2038,13 @@ static ArmLIR *loadValuePair(CompilationUnit *cUnit, int vSrc, int rDestLo,
     } else {
         assert(rDestLo < rDestHi);
         res = loadValueAddress(cUnit, vSrc, rDestLo);
+        /*
+         * Protect the loadMultiple instruction from being reordered with other
+         * Dalvik stack accesses.
+         */
+        genBarrier(cUnit);
         loadMultiple(cUnit, rDestLo, (1<<rDestLo) | (1<<rDestHi));
+        genBarrier(cUnit);
     }
     return res;
 }
@@ -1984,7 +2068,13 @@ static ArmLIR *storeValuePair(CompilationUnit *cUnit, int rSrcLo, int rSrcHi,
     } else {
         assert(rSrcLo < rSrcHi);
         res = loadValueAddress(cUnit, vDest, rScratch);
+        /*
+         * Protect the storeMultiple instruction from being reordered with
+         * other Dalvik stack accesses.
+         */
+        genBarrier(cUnit);
         storeMultiple(cUnit, rScratch, (1<<rSrcLo) | (1 << rSrcHi));
+        genBarrier(cUnit);
     }
     return res;
 }
@@ -2262,6 +2352,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             genZeroCheck(cUnit, r0, mir->offset, NULL);
             /* check cast passed - branch target here */
             ArmLIR *target = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
+            target->defMask = ENCODE_ALL;
             branch1->generic.target = (LIR *)target;
             branch2->generic.target = (LIR *)target;
             break;
@@ -2738,6 +2829,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             opReg(cUnit, OP_BLX, r4PC);
             /* branch target here */
             ArmLIR *target = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
+            target->defMask = ENCODE_ALL;
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
             branch1->generic.target = (LIR *)target;
             branch2->generic.target = (LIR *)target;
@@ -3888,6 +3980,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             /* Remember the first LIR for this block */
             if (headLIR == NULL) {
                 headLIR = boundaryLIR;
+                /* Set the first boundaryLIR as a scheduling barrier */
+                headLIR->defMask = ENCODE_ALL;
             }
 
             bool notHandled;
@@ -4154,4 +4248,20 @@ void dvmCompilerArchDump(void)
     if (strlen(buf)) {
         LOGD("dalvik.vm.jit.op = %s", buf);
     }
+}
+
+/* Common initialization routine for an architecture family */
+bool dvmCompilerArchInit()
+{
+    int i;
+
+    for (i = 0; i < ARM_LAST; i++) {
+        if (EncodingMap[i].opCode != i) {
+            LOGE("Encoding order for %s is wrong: expecting %d, seeing %d",
+                 EncodingMap[i].name, i, EncodingMap[i].opCode);
+            dvmAbort();
+        }
+    }
+
+    return compilerArchVariantInit();
 }

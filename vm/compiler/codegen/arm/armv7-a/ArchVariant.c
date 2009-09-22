@@ -77,7 +77,7 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
 }
 
 /* Architecture-specific initializations and checks go here */
-bool dvmCompilerArchInit(void)
+static bool compilerArchVariantInit(void)
 {
     /* First, declare dvmCompiler_TEMPLATE_XXX for each template */
 #define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();
@@ -132,11 +132,13 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     newLIR3(cUnit, THUMB2_FMRRD, r0, r1, dr1);
     newLIR1(cUnit, THUMB_BLX_R, r2);
     newLIR3(cUnit, THUMB2_FMDRR, dr0, r0, r1);
+    ArmLIR *label = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
+    label->defMask = ENCODE_ALL;
+    branch->generic.target = (LIR *)label;
     if (vDest >= 0)
-        target = storeDouble(cUnit, dr0, vDest, rNone);
+        storeDouble(cUnit, dr0, vDest);
     else
-        target = newLIR3(cUnit, THUMB2_VSTRD, dr0, rGLUE, offset >> 2);
-    branch->generic.target = (LIR *)target;
+        newLIR3(cUnit, THUMB2_VSTRD, dr0, rGLUE, offset >> 2);
     resetRegisterScoreboard(cUnit);
     return true;
 }
@@ -175,10 +177,21 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
         default:
             return true;
     }
-    loadFloat(cUnit, vSrc1, fr2);
-    loadFloat(cUnit, vSrc2, fr4);
-    newLIR3(cUnit, op, fr0, fr2, fr4);
-    storeFloat(cUnit, fr0, vDest, 0);
+    int reg0, reg1, reg2;
+    reg1 = selectSFPReg(cUnit, vSrc1);
+    reg2 = selectSFPReg(cUnit, vSrc2);
+    /*
+     * The register mapping is overly optimistic and lazily updated so we
+     * need to detect false sharing here.
+     */
+    if (reg1 == reg2 && vSrc1 != vSrc2) {
+        reg2 = nextFPReg(cUnit, vSrc2, false /* isDouble */);
+    }
+    loadFloat(cUnit, vSrc1, reg1);
+    loadFloat(cUnit, vSrc2, reg2);
+    reg0 = selectSFPReg(cUnit, vDest);
+    newLIR3(cUnit, op, reg0, reg1, reg2);
+    storeFloat(cUnit, reg0, vDest);
     return false;
 }
 
@@ -212,10 +225,19 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
         default:
             return true;
     }
-    loadDouble(cUnit, vSrc1, dr1);
-    loadDouble(cUnit, vSrc2, dr2);
-    newLIR3(cUnit, op, dr0, dr1, dr2);
-    storeDouble(cUnit, dr0, vDest, rNone);
+
+    int reg0, reg1, reg2;
+    reg1 = selectDFPReg(cUnit, vSrc1);
+    reg2 = selectDFPReg(cUnit, vSrc2);
+    if (reg1 == reg2 && vSrc1 != vSrc2) {
+        reg2 = nextFPReg(cUnit, vSrc2, true /* isDouble */);
+    }
+    loadDouble(cUnit, vSrc1, reg1);
+    loadDouble(cUnit, vSrc2, reg2);
+    /* Rename the new vDest to a new register */
+    reg0 = selectDFPReg(cUnit, vNone);
+    newLIR3(cUnit, op, reg0, reg1, reg2);
+    storeDouble(cUnit, reg0, vDest);
     return false;
 }
 
@@ -270,18 +292,20 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
             return true;
     }
     if (longSrc) {
-        srcReg = dr1;
+        srcReg = selectDFPReg(cUnit, vSrc2);
         loadDouble(cUnit, vSrc2, srcReg);
     } else {
-        srcReg = fr2;
+        srcReg = selectSFPReg(cUnit, vSrc2);
         loadFloat(cUnit, vSrc2, srcReg);
     }
     if (longDest) {
-        newLIR2(cUnit, op, dr0, srcReg);
-        storeDouble(cUnit, dr0, vSrc1Dest, rNone);
+        int destReg = selectDFPReg(cUnit, vNone);
+        newLIR2(cUnit, op, destReg, srcReg);
+        storeDouble(cUnit, destReg, vSrc1Dest);
     } else {
-        newLIR2(cUnit, op, fr0, srcReg);
-        storeFloat(cUnit, fr0, vSrc1Dest, 0);
+        int destReg = selectSFPReg(cUnit, vNone);
+        newLIR2(cUnit, op, destReg, srcReg);
+        storeFloat(cUnit, destReg, vSrc1Dest);
     }
     return false;
 }
@@ -292,6 +316,7 @@ static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
     bool isDouble;
     int defaultResult;
     bool ltNaNBias;
+    int fpReg1, fpReg2;
 
     switch(mir->dalvikInsn.opCode) {
         case OP_CMPL_FLOAT:
@@ -314,17 +339,27 @@ static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
             return true;
     }
     if (isDouble) {
-        loadDouble(cUnit, vSrc1, dr0);
-        loadDouble(cUnit, vSrc2, dr1);
+        fpReg1 = selectDFPReg(cUnit, vSrc1);
+        fpReg2 = selectDFPReg(cUnit, vSrc2);
+        if (fpReg1 == fpReg2 && vSrc1 != vSrc2) {
+            fpReg2 = nextFPReg(cUnit, vSrc2, true /* isDouble */);
+        }
+        loadDouble(cUnit, vSrc1, fpReg1);
+        loadDouble(cUnit, vSrc2, fpReg2);
         // Hard-coded use of r7 as temp.  Revisit
-        loadConstant(cUnit,r7, defaultResult);
-        newLIR2(cUnit, THUMB2_VCMPD, dr0, dr1);
+        loadConstant(cUnit, r7, defaultResult);
+        newLIR2(cUnit, THUMB2_VCMPD, fpReg1, fpReg2);
     } else {
-        loadFloat(cUnit, vSrc1, fr0);
-        loadFloat(cUnit, vSrc2, fr2);
+        fpReg1 = selectSFPReg(cUnit, vSrc1);
+        fpReg2 = selectSFPReg(cUnit, vSrc2);
+        if (fpReg1 == fpReg2 && vSrc1 != vSrc2) {
+            fpReg2 = nextFPReg(cUnit, vSrc2, false /* isDouble */);
+        }
+        loadFloat(cUnit, vSrc1, fpReg1);
+        loadFloat(cUnit, vSrc2, fpReg2);
         // Hard-coded use of r7 as temp.  Revisit
-        loadConstant(cUnit,r7, defaultResult);
-        newLIR2(cUnit, THUMB2_VCMPS, fr0, fr2);
+        loadConstant(cUnit, r7, defaultResult);
+        newLIR2(cUnit, THUMB2_VCMPS, fpReg1, fpReg2);
     }
     newLIR0(cUnit, THUMB2_FMSTAT);
     genIT(cUnit, (defaultResult == -1) ? ARM_COND_GT : ARM_COND_MI, "");

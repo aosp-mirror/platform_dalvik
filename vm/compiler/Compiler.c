@@ -227,11 +227,6 @@ bool dvmCompilerStartup(void)
     /* Track method-level compilation statistics */
     gDvmJit.methodStatsTable =  dvmHashTableCreate(32, NULL);
 
-    /*
-     * FIXME - temporarily disable optimizations for this intermediate checkin
-     */
-    gDvmJit.disableOpt = 0x3;
-
     dvmUnlockMutex(&gDvmJit.compilerLock);
 
     return true;

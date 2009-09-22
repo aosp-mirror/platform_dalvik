@@ -40,11 +40,14 @@ typedef struct GrowableList {
 
 #define GET_ELEM_N(LIST, TYPE, N) (((TYPE*) LIST->elemList)[N])
 
+struct LIR;
+
 void dvmInitGrowableList(GrowableList *gList, size_t initLength);
 void dvmInsertGrowableList(GrowableList *gList, void *elem);
-
 BitVector* dvmCompilerAllocBitVector(int startBits, bool expandable);
 bool dvmCompilerSetBit(BitVector* pBits, int num);
 void dvmDebugBitVector(char *msg, const BitVector *bv, int length);
+void dvmDumpLIRInsn(struct LIR *lir, unsigned char *baseAddr);
+void dvmDumpResourceMask(struct LIR *lir, u8 mask, const char *prefix);
 
 #endif /* _DALVIK_COMPILER_UTILITY */

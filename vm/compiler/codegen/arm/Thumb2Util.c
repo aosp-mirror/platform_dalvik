@@ -107,11 +107,16 @@ static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir);
 static inline void resetRegisterScoreboard(CompilationUnit *cUnit)
 {
     RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
+    int i;
 
     dvmClearAllBits(registerScoreboard->nullCheckedRegs);
     registerScoreboard->liveDalvikReg = vNone;
     registerScoreboard->nativeReg = vNone;
     registerScoreboard->nativeRegHi = vNone;
+    for (i = 0; i < 32; i++) {
+        registerScoreboard->fp[i] = vNone;
+    }
+    registerScoreboard->nextFP = 0;
 }
 
 /* Kill the corresponding bit in the null-checked register list */
@@ -168,17 +173,6 @@ static inline int selectFirstRegister(CompilationUnit *cUnit, int vSrc,
     } else {
         return (registerScoreboard->nativeReg + 1) & 3;
     }
-
-}
-
-/*
- * Generate a ARM_PSEUDO_IT_BOTTOM marker to indicate the end of an IT block
- */
-static void genITBottom(CompilationUnit *cUnit)
-{
-    ArmLIR *itBottom = newLIR0(cUnit, ARM_PSEUDO_IT_BOTTOM);
-    /* Mark all resources as being clobbered */
-    itBottom->defMask = -1;
 }
 
 /*
@@ -457,42 +451,116 @@ static ArmLIR *fpVarAccess(CompilationUnit *cUnit, int vSrcDest,
 {
     ArmLIR *res;
     if (vSrcDest > 255) {
-        res = opRegRegImm(cUnit, OP_ADD, r7, rFP, vSrcDest * 4, rNone);
-        newLIR3(cUnit, opCode, rSrcDest, r7, 0);
+        opRegRegImm(cUnit, OP_ADD, r7, rFP, vSrcDest * 4, rNone);
+        res = newLIR3(cUnit, opCode, rSrcDest, r7, 0);
     } else {
         res = newLIR3(cUnit, opCode, rSrcDest, rFP, vSrcDest);
     }
     return res;
 }
+
+static int nextFPReg(CompilationUnit *cUnit, int dalvikReg, bool isDouble)
+{
+    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
+    int reg;
+
+    if (isDouble) {
+        reg = ((registerScoreboard->nextFP + 1) & ~1) % 32;
+        registerScoreboard->nextFP = reg + 2;
+        registerScoreboard->nextFP %= 32;
+        registerScoreboard->fp[reg] = dalvikReg;
+        return dr0 + reg;
+    }
+    else {
+        reg = registerScoreboard->nextFP++;
+        registerScoreboard->nextFP %= 32;
+        registerScoreboard->fp[reg] = dalvikReg;
+        return fr0 + reg;
+    }
+}
+
+/*
+ * Select a SFP register for the dalvikReg
+ */
+static int selectSFPReg(CompilationUnit *cUnit, int dalvikReg)
+{
+    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
+    int i;
+
+    if (dalvikReg == vNone) {
+        return nextFPReg(cUnit, dalvikReg, false);;
+    }
+
+    for (i = 0; i < 32; i++) {
+        if (registerScoreboard->fp[i] == dalvikReg) {
+            return fr0 + i;
+        }
+    }
+    return nextFPReg(cUnit, dalvikReg, false);;
+}
+
+/*
+ * Select a DFP register for the dalvikReg
+ */
+static int selectDFPReg(CompilationUnit *cUnit, int dalvikReg)
+{
+    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
+    int i;
+
+    if (dalvikReg == vNone) {
+        return nextFPReg(cUnit, dalvikReg, true);;
+    }
+
+    for (i = 0; i < 32; i += 2) {
+        if (registerScoreboard->fp[i] == dalvikReg) {
+            return dr0 + i;
+        }
+    }
+    return nextFPReg(cUnit, dalvikReg, true);
+}
+
 static ArmLIR *loadFloat(CompilationUnit *cUnit, int vSrc, int rDest)
 {
     assert(SINGLEREG(rDest));
-    return fpVarAccess(cUnit, vSrc, rDest, THUMB2_VLDRS);
+    ArmLIR *lir = fpVarAccess(cUnit, vSrc, rDest, THUMB2_VLDRS);
+    annotateDalvikRegAccess(lir, vSrc, true /* isLoad */);
+    return lir;
 }
 
 /* Store a float to a Dalvik register */
-static ArmLIR *storeFloat(CompilationUnit *cUnit, int rSrc, int vDest,
-                          int rScratch)
+static ArmLIR *storeFloat(CompilationUnit *cUnit, int rSrc, int vDest)
 {
+    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
+
     assert(SINGLEREG(rSrc));
-    return fpVarAccess(cUnit, vDest, rSrc, THUMB2_VSTRS);
+    registerScoreboard->fp[rSrc % 32] = vDest;
+
+    ArmLIR *lir = fpVarAccess(cUnit, vDest, rSrc, THUMB2_VSTRS);
+    annotateDalvikRegAccess(lir, vDest, false /* isLoad */);
+    return lir;
 }
 
 /* Load a double from a Dalvik register */
 static ArmLIR *loadDouble(CompilationUnit *cUnit, int vSrc, int rDest)
 {
     assert(DOUBLEREG(rDest));
-    return fpVarAccess(cUnit, vSrc, rDest, THUMB2_VLDRD);
+    ArmLIR *lir = fpVarAccess(cUnit, vSrc, rDest, THUMB2_VLDRD);
+    annotateDalvikRegAccess(lir, vSrc, true /* isLoad */);
+    return lir;
 }
 
 /* Store a double to a Dalvik register */
-static ArmLIR *storeDouble(CompilationUnit *cUnit, int rSrc, int vDest,
-                           int rScratch)
+static ArmLIR *storeDouble(CompilationUnit *cUnit, int rSrc, int vDest)
 {
-    assert(DOUBLEREG(rSrc));
-    return fpVarAccess(cUnit, vDest, rSrc, THUMB2_VSTRD);
-}
+    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
 
+    assert(DOUBLEREG(rSrc));
+    registerScoreboard->fp[rSrc % 32] = vDest;
+
+    ArmLIR *lir = fpVarAccess(cUnit, vDest, rSrc, THUMB2_VSTRD);
+    annotateDalvikRegAccess(lir, vDest, false /* isLoad */);
+    return lir;
+}
 
 /*
  * Load value from base + displacement.  Optionally perform null check
@@ -507,28 +575,30 @@ static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
                             bool nullCheck, int vReg)
 {
     ArmLIR *first = NULL;
-    ArmLIR *res;
+    ArmLIR *res, *load;
     ArmOpCode opCode = THUMB_BKPT;
     bool shortForm = false;
     bool thumb2Form = (displacement < 4092 && displacement >= 0);
     int shortMax = 128;
     bool allLowRegs = (LOWREG(rBase) && LOWREG(rDest));
+    int encodedDisp = displacement;
+
     switch (size) {
         case WORD:
             if (LOWREG(rDest) && (rBase == rpc) &&
                 (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
-                displacement >>= 2;
+                encodedDisp >>= 2;
                 opCode = THUMB_LDR_PC_REL;
             } else if (LOWREG(rDest) && (rBase == r13) &&
                       (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
-                displacement >>= 2;
+                encodedDisp >>= 2;
                 opCode = THUMB_LDR_SP_REL;
             } else if (allLowRegs && displacement < 128 && displacement >= 0) {
                 assert((displacement & 0x3) == 0);
                 shortForm = true;
-                displacement >>= 2;
+                encodedDisp >>= 2;
                 opCode = THUMB_LDR_RRI5;
             } else if (thumb2Form) {
                 shortForm = true;
@@ -539,7 +609,7 @@ static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
             if (allLowRegs && displacement < 64 && displacement >= 0) {
                 assert((displacement & 0x1) == 0);
                 shortForm = true;
-                displacement >>= 1;
+                encodedDisp >>= 1;
                 opCode = THUMB_LDRH_RRI5;
             } else if (displacement < 4092 && displacement >= 0) {
                 shortForm = true;
@@ -573,11 +643,15 @@ static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
     if (nullCheck)
         first = genNullCheck(cUnit, vReg, rBase, mir->offset, NULL);
     if (shortForm) {
-        res = newLIR3(cUnit, opCode, rDest, rBase, displacement);
+        load = res = newLIR3(cUnit, opCode, rDest, rBase, encodedDisp);
     } else {
         assert(rBase != rDest);
-        res = loadConstant(cUnit, rDest, displacement);
-        loadBaseIndexed(cUnit, rBase, rDest, rDest, 0, size);
+        res = loadConstant(cUnit, rDest, encodedDisp);
+        load = loadBaseIndexed(cUnit, rBase, rDest, rDest, 0, size);
+    }
+
+    if (rBase == rFP) {
+        annotateDalvikRegAccess(load, displacement >> 2, true /* isLoad */);
     }
     return (first) ? first : res;
 }
@@ -586,12 +660,14 @@ static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
                              int displacement, int rSrc, OpSize size,
                              int rScratch)
 {
-    ArmLIR *res;
+    ArmLIR *res, *store;
     ArmOpCode opCode = THUMB_BKPT;
     bool shortForm = false;
     bool thumb2Form = (displacement < 4092 && displacement >= 0);
     int shortMax = 128;
     bool allLowRegs = (LOWREG(rBase) && LOWREG(rSrc));
+    int encodedDisp = displacement;
+
     if (rScratch != -1)
         allLowRegs &= LOWREG(rScratch);
     switch (size) {
@@ -599,7 +675,7 @@ static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
             if (allLowRegs && displacement < 128 && displacement >= 0) {
                 assert((displacement & 0x3) == 0);
                 shortForm = true;
-                displacement >>= 2;
+                encodedDisp >>= 2;
                 opCode = THUMB_STR_RRI5;
             } else if (thumb2Form) {
                 shortForm = true;
@@ -611,7 +687,7 @@ static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
             if (displacement < 64 && displacement >= 0) {
                 assert((displacement & 0x1) == 0);
                 shortForm = true;
-                displacement >>= 1;
+                encodedDisp >>= 1;
                 opCode = THUMB_STRH_RRI5;
             } else if (thumb2Form) {
                 shortForm = true;
@@ -632,11 +708,15 @@ static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
             assert(0);
     }
     if (shortForm) {
-        res = newLIR3(cUnit, opCode, rSrc, rBase, displacement);
+        store = res = newLIR3(cUnit, opCode, rSrc, rBase, encodedDisp);
     } else {
         assert(rScratch != -1);
-        res = loadConstant(cUnit, rScratch, displacement);
-        storeBaseIndexed(cUnit, rBase, rScratch, rSrc, 0, size);
+        res = loadConstant(cUnit, rScratch, encodedDisp);
+        store = storeBaseIndexed(cUnit, rBase, rScratch, rSrc, 0, size);
+    }
+
+    if (rBase == rFP) {
+        annotateDalvikRegAccess(store, displacement >> 2, false /* isLoad */);
     }
     return res;
 }
@@ -1139,7 +1219,7 @@ static void genCmpLong(CompilationUnit *cUnit, MIR *mir,
     branch1->generic.target = (LIR *) genIT(cUnit, ARM_COND_HI, "E");
     newLIR2(cUnit, THUMB2_MOV_IMM_SHIFT, r7, modifiedImmediate(-1));
     newLIR2(cUnit, THUMB_MOV_IMM, r7, 1);
-    genITBottom(cUnit);
+    genBarrier(cUnit);
 
     branch2->generic.target = (LIR *) opRegReg(cUnit, OP_NEG, r7, r7);
     branch1->generic.target = (LIR *) storeValue(cUnit, r7, vDest, r4PC);
@@ -1279,7 +1359,7 @@ static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
     //TODO: need assertion mechanism to validate IT region size
     genIT(cUnit, (isMin) ? ARM_COND_GT : ARM_COND_LT, "");
     opRegReg(cUnit, OP_MOV, reg0, reg1);
-    genITBottom(cUnit);
+    genBarrier(cUnit);
     if (vDest >= 0)
         storeValue(cUnit, reg0, vDest, reg1);
     else

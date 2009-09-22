@@ -66,6 +66,7 @@
 /* Offset to distinguish DP FP regs */
 #define FP_DOUBLE 64
 /* Reg types */
+#define REGTYPE(x) (x & (FP_REG_OFFSET | FP_DOUBLE))
 #define FPREG(x) ((x & FP_REG_OFFSET) == FP_REG_OFFSET)
 #define LOWREG(x) ((x & 0x7) == x)
 #define DOUBLEREG(x) ((x & FP_DOUBLE) == FP_DOUBLE)
@@ -83,21 +84,23 @@ typedef enum ResourceEncodingPos {
     kRegLR      = 14,
     kRegPC      = 15,
     kFPReg0     = 16,
-    kITBlock    = 48,
-    kCCode      = 49,
-    kFPStatus   = 50,
+    kRegEnd     = 48,
+    kCCode      = kRegEnd,
+    kFPStatus,
+    kDalvikReg,
 } ResourceEncodingPos;
 
-#define ENCODE_GP_REG(N)        (1ULL << N)
 #define ENCODE_REG_LIST(N)      ((u8) N)
 #define ENCODE_REG_SP           (1ULL << kRegSP)
 #define ENCODE_REG_LR           (1ULL << kRegLR)
 #define ENCODE_REG_PC           (1ULL << kRegPC)
-#define ENCODE_SFP_REG(N)       (1ULL << (N - FP_REG_OFFSET + kFPReg0))
-#define ENCODE_DFP_REG(N)       (3ULL << (((N - FP_DOUBLE) << 1) + kFPReg0))
-#define ENCODE_IT_BLOCK         (1ULL << kITBlock)
 #define ENCODE_CCODE            (1ULL << kCCode)
 #define ENCODE_FP_STATUS        (1ULL << kFPStatus)
+#define ENCODE_DALVIK_REG       (1ULL << kDalvikReg)
+#define ENCODE_ALL              (~0ULL)
+
+#define DECODE_ALIAS_INFO_REG(X)        (X & 0xffff)
+#define DECODE_ALIAS_INFO_WIDE(X)       ((X & 0x80000000) ? 1 : 0)
 
 typedef enum OpSize {
     WORD,
@@ -240,7 +243,7 @@ typedef enum ArmConditionCode {
  * Assemble.c.
  */
 typedef enum ArmOpCode {
-    ARM_PSEUDO_IT_BOTTOM = -17,
+    ARM_PSEUDO_BARRIER = -17,
     ARM_PSEUDO_EXTENDED_MIR = -16,
     ARM_PSEUDO_SSA_REP = -15,
     ARM_PSEUDO_ENTRY_BLOCK = -14,
@@ -532,6 +535,7 @@ typedef enum ArmOpFeatureFlags {
     kRegDef0,
     kRegDef1,
     kRegDefSP,
+    kRegDefLR,
     kRegDefList0,
     kRegDefList1,
     kRegUse0,
@@ -555,13 +559,14 @@ typedef enum ArmOpFeatureFlags {
 #define REG_DEF0        (1 << kRegDef0)
 #define REG_DEF1        (1 << kRegDef1)
 #define REG_DEF_SP      (1 << kRegDefSP)
+#define REG_DEF_LR      (1 << kRegDefLR)
 #define REG_DEF_LIST0   (1 << kRegDefList0)
 #define REG_DEF_LIST1   (1 << kRegDefList1)
 #define REG_USE0        (1 << kRegUse0)
 #define REG_USE1        (1 << kRegUse1)
 #define REG_USE2        (1 << kRegUse2)
-#define REG_USE_PC      (1 << kRegUsePC)
 #define REG_USE_SP      (1 << kRegUseSP)
+#define REG_USE_PC      (1 << kRegUsePC)
 #define REG_USE_LIST0   (1 << kRegUseList0)
 #define REG_USE_LIST1   (1 << kRegUseList1)
 #define NO_OPERAND      (1 << kNoOperand)
@@ -574,11 +579,14 @@ typedef enum ArmOpFeatureFlags {
 #define USES_CCODES     (1 << kUsesCCodes)
 
 /* Common combo register usage patterns */
-#define REG_DEF0_USE1   (REG_DEF0 | REG_USE1)
-#define REG_DEF0_USE01  (REG_DEF0 | REG_USE0 | REG_USE1)
-#define REG_DEF0_USE12  (REG_DEF0 | REG_USE1 | REG_USE2)
 #define REG_USE01       (REG_USE0 | REG_USE1)
-#define REG_USE012      (REG_USE0 | REG_USE1 | REG_USE2)
+#define REG_USE012      (REG_USE01 | REG_USE2)
+#define REG_USE12       (REG_USE1 | REG_USE2)
+#define REG_DEF0_USE0   (REG_DEF0 | REG_USE0)
+#define REG_DEF0_USE1   (REG_DEF0 | REG_USE1)
+#define REG_DEF0_USE01  (REG_DEF0 | REG_USE01)
+#define REG_DEF0_USE12  (REG_DEF0 | REG_USE12)
+#define REG_DEF01_USE2  (REG_DEF0 | REG_DEF1 | REG_USE2)
 
 /* Instruction assembly fieldLoc kind */
 typedef enum ArmEncodingKind {
@@ -635,6 +643,7 @@ typedef struct ArmLIR {
     bool isNop;         // LIR is optimized away
     int age;            // default is 0, set lazily by the optimizer
     int size;           // 16-bit unit size (1 for thumb, 1 or 2 for thumb2)
+    int aliasInfo;      // For Dalvik register access disambiguation
     u8 useMask;         // Resource mask for use
     u8 defMask;         // Resource mask for def
 } ArmLIR;

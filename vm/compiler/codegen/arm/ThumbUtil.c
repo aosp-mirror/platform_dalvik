@@ -322,26 +322,28 @@ static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
                             bool nullCheck, int vReg)
 {
     ArmLIR *first = NULL;
-    ArmLIR *res;
+    ArmLIR *res, *load;
     ArmOpCode opCode = THUMB_BKPT;
     bool shortForm = false;
     int shortMax = 128;
+    int encodedDisp = displacement;
+
     switch (size) {
         case WORD:
             if (LOWREG(rDest) && (rBase == rpc) &&
                 (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
-                displacement >>= 2;
+                encodedDisp >>= 2;
                 opCode = THUMB_LDR_PC_REL;
             } else if (LOWREG(rDest) && (rBase == r13) &&
                       (displacement <= 1020) && (displacement >= 0)) {
                 shortForm = true;
-                displacement >>= 2;
+                encodedDisp >>= 2;
                 opCode = THUMB_LDR_SP_REL;
             } else if (displacement < 128 && displacement >= 0) {
                 assert((displacement & 0x3) == 0);
                 shortForm = true;
-                displacement >>= 2;
+                encodedDisp >>= 2;
                 opCode = THUMB_LDR_RRI5;
             } else {
                 opCode = THUMB_LDR_RRR;
@@ -351,7 +353,7 @@ static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
             if (displacement < 64 && displacement >= 0) {
                 assert((displacement & 0x1) == 0);
                 shortForm = true;
-                displacement >>= 1;
+                encodedDisp >>= 1;
                 opCode = THUMB_LDRH_RRI5;
             } else {
                 opCode = THUMB_LDRH_RRR;
@@ -377,12 +379,17 @@ static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
     if (nullCheck)
         first = genNullCheck(cUnit, vReg, rBase, mir->offset, NULL);
     if (shortForm) {
-        res = newLIR3(cUnit, opCode, rDest, rBase, displacement);
+        load = res = newLIR3(cUnit, opCode, rDest, rBase, encodedDisp);
     } else {
         assert(rBase != rDest);
-        res = loadConstant(cUnit, rDest, displacement);
-        newLIR3(cUnit, opCode, rDest, rBase, rDest);
+        res = loadConstant(cUnit, rDest, encodedDisp);
+        load = newLIR3(cUnit, opCode, rDest, rBase, rDest);
     }
+
+    if (rBase == rFP) {
+        annotateDalvikRegAccess(load, displacement >> 2, true /* isLoad */);
+    }
+
     return (first) ? first : res;
 }
 
@@ -390,16 +397,18 @@ static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
                              int displacement, int rSrc, OpSize size,
                              int rScratch)
 {
-    ArmLIR *res;
+    ArmLIR *res, *store;
     ArmOpCode opCode = THUMB_BKPT;
     bool shortForm = false;
     int shortMax = 128;
+    int encodedDisp = displacement;
+
     switch (size) {
         case WORD:
             if (displacement < 128 && displacement >= 0) {
                 assert((displacement & 0x3) == 0);
                 shortForm = true;
-                displacement >>= 2;
+                encodedDisp >>= 2;
                 opCode = THUMB_STR_RRI5;
             } else {
                 opCode = THUMB_STR_RRR;
@@ -410,7 +419,7 @@ static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
             if (displacement < 64 && displacement >= 0) {
                 assert((displacement & 0x1) == 0);
                 shortForm = true;
-                displacement >>= 1;
+                encodedDisp >>= 1;
                 opCode = THUMB_STRH_RRI5;
             } else {
                 opCode = THUMB_STRH_RRR;
@@ -429,11 +438,15 @@ static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
             assert(0);
     }
     if (shortForm) {
-        res = newLIR3(cUnit, opCode, rSrc, rBase, displacement);
+        store = res = newLIR3(cUnit, opCode, rSrc, rBase, encodedDisp);
     } else {
         assert(rScratch != -1);
-        res = loadConstant(cUnit, rScratch, displacement);
-        newLIR3(cUnit, opCode, rSrc, rBase, rScratch);
+        res = loadConstant(cUnit, rScratch, encodedDisp);
+        store = newLIR3(cUnit, opCode, rSrc, rBase, rScratch);
+    }
+
+    if (rBase == rFP) {
+        annotateDalvikRegAccess(store, displacement >> 2, false /* isLoad */);
     }
     return res;
 }

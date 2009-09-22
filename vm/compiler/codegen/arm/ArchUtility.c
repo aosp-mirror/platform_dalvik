@@ -110,9 +110,6 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                    case 'd':
                        sprintf(tbuf,"%d", operand);
                        break;
-                   case 'D':
-                       sprintf(tbuf,"%d", operand+8);
-                       break;
                    case 'E':
                        sprintf(tbuf,"%d", operand*4);
                        break;
@@ -193,8 +190,49 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
     *buf = 0;
 }
 
+void dvmDumpResourceMask(LIR *lir, u8 mask, const char *prefix)
+{
+    char buf[256];
+    buf[0] = 0;
+    ArmLIR *armLIR = (ArmLIR *) lir;
+
+    if (mask == ENCODE_ALL) {
+        strcpy(buf, "all");
+    } else {
+        char num[8];
+        int i;
+
+        for (i = 0; i < kRegEnd; i++) {
+            if (mask & (1ULL << i)) {
+                sprintf(num, "%d ", i);
+                strcat(buf, num);
+            }
+        }
+
+        if (mask & ENCODE_CCODE) {
+            strcat(buf, "cc ");
+        }
+        if (mask & ENCODE_FP_STATUS) {
+            strcat(buf, "fpcc ");
+        }
+        if (armLIR && (mask & ENCODE_DALVIK_REG)) {
+            sprintf(buf + strlen(buf), "dr%d%s", armLIR->aliasInfo & 0xffff,
+                    (armLIR->aliasInfo & 0x80000000) ? "(+1)" : "");
+        }
+    }
+    if (buf[0]) {
+        LOGD("%s: %s", prefix, buf);
+    }
+}
+
+/*
+ * Debugging macros
+ */
+#define DUMP_RESOURCE_MASK(X)
+#define DUMP_SSA_REP(X)
+
 /* Pretty-print a LIR instruction */
-static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
+void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
 {
     ArmLIR *lir = (ArmLIR *) arg;
     char buf[256];
@@ -202,15 +240,17 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
     int offset = lir->generic.offset;
     int dest = lir->operands[0];
     u2 *cPtr = (u2*)baseAddr;
+    const bool dumpNop = false;
+
     /* Handle pseudo-ops individually, and all regular insns as a group */
     switch(lir->opCode) {
-        case ARM_PSEUDO_IT_BOTTOM:
-            LOGD("-------- IT_Bottom");
+        case ARM_PSEUDO_BARRIER:
+            LOGD("-------- BARRIER");
             break;
         case ARM_PSEUDO_EXTENDED_MIR:
             /* intentional fallthrough */
         case ARM_PSEUDO_SSA_REP:
-            LOGD("-------- %s\n", (char *) dest);
+            DUMP_SSA_REP(LOGD("-------- %s\n", (char *) dest));
             break;
         case ARM_PSEUDO_TARGET_LABEL:
             break;
@@ -258,16 +298,26 @@ static void dumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             LOGD("L%#06x:\n", dest);
             break;
         default:
-            if (lir->isNop) {
+            if (lir->isNop && !dumpNop) {
                 break;
             }
             buildInsnString(EncodingMap[lir->opCode].name, lir, opName,
                             baseAddr, 256);
             buildInsnString(EncodingMap[lir->opCode].fmt, lir, buf, baseAddr,
                             256);
-            LOGD("%p (%04x): %-8s%s\n",
-                 baseAddr + offset, offset, opName, buf);
+            LOGD("%p (%04x): %-8s%s%s\n",
+                 baseAddr + offset, offset, opName, buf,
+                 lir->isNop ? "(nop)" : "");
             break;
+    }
+
+    if (lir->useMask && (!lir->isNop || dumpNop)) {
+        DUMP_RESOURCE_MASK(dvmDumpResourceMask((LIR *) lir,
+                                               lir->useMask, "use"));
+    }
+    if (lir->defMask && (!lir->isNop || dumpNop)) {
+        DUMP_RESOURCE_MASK(dvmDumpResourceMask((LIR *) lir,
+                                               lir->defMask, "def"));
     }
 }
 
@@ -281,7 +331,7 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit)
     LOGD("installed code is at %p\n", cUnit->baseAddr);
     LOGD("total size is %d bytes\n", cUnit->totalSize);
     for (lirInsn = cUnit->firstLIRInsn; lirInsn; lirInsn = lirInsn->next) {
-        dumpLIRInsn(lirInsn, cUnit->baseAddr);
+        dvmDumpLIRInsn(lirInsn, cUnit->baseAddr);
     }
     for (lirInsn = cUnit->wordList; lirInsn; lirInsn = lirInsn->next) {
         armLIR = (ArmLIR *) lirInsn;

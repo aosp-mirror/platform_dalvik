@@ -74,7 +74,7 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
 }
 
 /* Architecture-specific initializations and checks go here */
-bool dvmCompilerArchInit(void)
+static bool compilerArchVariantInit(void)
 {
     /* First, declare dvmCompiler_TEMPLATE_XXX for each template */
 #define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();

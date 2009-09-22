@@ -22,6 +22,7 @@
  * variant code such as ThumbUtilty.c
  */
 
+static void annotateDalvikRegAccess(ArmLIR *lir, int regId, bool isLoad);
 static void setupResourceMasks(ArmLIR *lir);
 static ArmLIR *newLIR0(CompilationUnit *cUnit, ArmOpCode opCode);
 static ArmLIR *newLIR1(CompilationUnit *cUnit, ArmOpCode opCode,
@@ -38,10 +39,10 @@ static ArmLIR *addWordData(CompilationUnit *cUnit, int value, bool inPlace);
 static inline ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
                                          ArmLIR *branch,
                                          ArmLIR *pcrLabel);
+static void genBarrier(CompilationUnit *cUnit);
 
 /* Routines which must be supplied by the variant-specific code */
 static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode);
-bool dvmCompilerArchInit(void);
 static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir);
 static bool genInlineCos(CompilationUnit *cUnit, MIR *mir);
 static bool genInlineSin(CompilationUnit *cUnit, MIR *mir);
@@ -52,7 +53,6 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
                              int vSrc1, int vSrc2);
 static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
                     int vSrc2);
-
-
+static bool compilerArchVariantInit();
 
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_CODEGEN_H */

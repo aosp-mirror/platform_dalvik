@@ -44,6 +44,8 @@ typedef struct RegisterScoreboard {
     int nativeReg;              // And the mapped native register
     int nativeRegHi;            // And the mapped native register
     bool isWide;                // Whether a pair of registers are alive
+    int fp[32];                 // Track the Dalvik register held in a SFP reg
+    int nextFP;                 // Next index for FP register allocation
 } RegisterScoreboard;
 
 void dvmCompilerApplyLocalOptimizations(struct CompilationUnit *cUnit,
