@@ -18,8 +18,9 @@ package dalvik.system;
 
 /**
  * Is thrown when the VM identifies a potential deadlock.
- * 
- * @since Android 1.0
+ *
+ * @deprecated this is an internal Dalvik class that is not appropriate for
+ *      general use. It will be removed from the public API in a future release.
  */
 public class PotentialDeadlockError extends VirtualMachineError {
     /**
