@@ -272,7 +272,7 @@ public class InetAddress extends Object implements Serializable {
             }
         }
 
-        byte[] hBytes = Inet6Util.createByteArrayFromIPAddressString(host);
+        byte[] hBytes = NETIMPL.ipStringToByteArray(host);
         if (hBytes.length == 4) {
             return (new InetAddress[] { new Inet4Address(hBytes) });
         } else if (hBytes.length == 16) {
@@ -301,7 +301,8 @@ public class InetAddress extends Object implements Serializable {
         return getAllByNameImpl(host, false)[0];
     }
 
-    /*
+    // BEGIN android-added
+    /**
      * Convenience method to convert a byte array to a string, converting
      * exceptions to runtime exceptions. This is used when passing in byte
      * arrays that have been verified to be correct and is necessary because
@@ -310,6 +311,8 @@ public class InetAddress extends Object implements Serializable {
      * UnknownHostException. Exceptions should never occur when the address is
      * valid, but they cannot be simply ignored because they could be due to
      * runtime errors such as out-of-memory conditions.
+     *
+     * @param ipaddress the byte array to convert
      */
     private static String ipAddressToString(byte[] ipaddress) {
         try {
@@ -318,6 +321,7 @@ public class InetAddress extends Object implements Serializable {
             throw new RuntimeException(e);
         }
     }
+    // END android-added
 
     /**
      * Gets the textual representation of this IP address.
@@ -735,8 +739,12 @@ public class InetAddress extends Object implements Serializable {
      * Returns true if the string is a host name, false if it is an IP Address.
      */
     private static boolean isHostName(String value) {
-        return !(Inet6Util.isValidIPV4Address(value) || Inet6Util
-                .isValidIP6Address(value));
+        try {
+            NETIMPL.ipStringToByteArray(value);
+            return false;
+        } catch (UnknownHostException e) {
+            return true;
+        }
     }
 
     /**
@@ -1276,173 +1284,6 @@ public class InetAddress extends Object implements Serializable {
                 | ((bytes[start + 1] & 255) << 16)
                 | ((bytes[start] & 255) << 24);
         return value;
-    }
-
-    /**
-     * Creates an InetAddress based on the {@code ipAddressString}. No error
-     * handling is performed here.
-     */
-    static InetAddress createHostNameFromIPAddress(String ipAddressString)
-            throws UnknownHostException {
-
-        InetAddress address = null;
-
-        if (Inet6Util.isValidIPV4Address(ipAddressString)) {
-            byte[] byteAddress = new byte[4];
-            String[] parts = ipAddressString.split("\\."); //$NON-NLS-1$
-            int length = parts.length;
-            if (length == 1) {
-                long value = Long.parseLong(parts[0]);
-                for (int i = 0; i < 4; i++) {
-                    byteAddress[i] = (byte) (value >> ((3 - i) * 8));
-                }
-            } else {
-                for (int i = 0; i < length; i++) {
-                    byteAddress[i] = (byte) Integer.parseInt(parts[i]);
-                }
-            }
-
-            // adjust for 2/3 parts address
-            if (length == 2) {
-                byteAddress[3] = byteAddress[1];
-                byteAddress[1] = 0;
-            }
-            if (length == 3) {
-                byteAddress[3] = byteAddress[2];
-                byteAddress[2] = 0;
-            }
-
-            address = new Inet4Address(byteAddress);
-        } else { // otherwise it must be ipv6
-
-            if (ipAddressString.charAt(0) == '[') {
-                ipAddressString = ipAddressString.substring(1, ipAddressString
-                        .length() - 1);
-            }
-
-            StringTokenizer tokenizer = new StringTokenizer(ipAddressString,
-                    ":.%", true); //$NON-NLS-1$
-            ArrayList<String> hexStrings = new ArrayList<String>();
-            ArrayList<String> decStrings = new ArrayList<String>();
-            String scopeString = null;
-            String token = ""; //$NON-NLS-1$
-            String prevToken = ""; //$NON-NLS-1$
-            String prevPrevToken = ""; //$NON-NLS-1$
-            int doubleColonIndex = -1; // If a double colon exists, we need to
-            // insert 0s.
-
-            // Go through the tokens, including the separators ':' and '.'
-            // When we hit a : or . the previous token will be added to either
-            // the hex list or decimal list. In the case where we hit a ::
-            // we will save the index of the hexStrings so we can add zeros
-            // in to fill out the string
-            while (tokenizer.hasMoreTokens()) {
-                prevPrevToken = prevToken;
-                prevToken = token;
-                token = tokenizer.nextToken();
-
-                if (token.equals(":")) { //$NON-NLS-1$
-                    if (prevToken.equals(":")) { //$NON-NLS-1$
-                        doubleColonIndex = hexStrings.size();
-                    } else if (!prevToken.equals("")) { //$NON-NLS-1$
-                        hexStrings.add(prevToken);
-                    }
-                } else if (token.equals(".")) { //$NON-NLS-1$
-                    decStrings.add(prevToken);
-                } else if (token.equals("%")) { //$NON-NLS-1$
-                    // add the last word before the % properly
-                    if (!prevToken.equals(":") && !prevToken.equals(".")) { //$NON-NLS-1$ //$NON-NLS-2$
-                        if (prevPrevToken.equals(":")) { //$NON-NLS-1$
-                            hexStrings.add(prevToken);
-                        } else if (prevPrevToken.equals(".")) { //$NON-NLS-1$
-                            decStrings.add(prevToken);
-                        }
-                    }
-
-                    // the rest should be the scope string
-                    scopeString = tokenizer.nextToken();
-                    while (tokenizer.hasMoreTokens()) {
-                        scopeString = scopeString + tokenizer.nextToken();
-                    }
-                }
-            }
-
-            if (prevToken.equals(":")) { //$NON-NLS-1$
-                if (token.equals(":")) { //$NON-NLS-1$
-                    doubleColonIndex = hexStrings.size();
-                } else {
-                    hexStrings.add(token);
-                }
-            } else if (prevToken.equals(".")) { //$NON-NLS-1$
-                decStrings.add(token);
-            }
-
-            // figure out how many hexStrings we should have
-            // also check if it is a IPv4 address
-            int hexStringsLength = 8;
-
-            // If we have an IPv4 address tagged on at the end, subtract
-            // 4 bytes, or 2 hex words from the total
-            if (decStrings.size() > 0) {
-                hexStringsLength -= 2;
-            }
-
-            // if we hit a double Colon add the appropriate hex strings
-            if (doubleColonIndex != -1) {
-                int numberToInsert = hexStringsLength - hexStrings.size();
-                for (int i = 0; i < numberToInsert; i++) {
-                    hexStrings.add(doubleColonIndex, "0"); //$NON-NLS-1$
-                }
-            }
-
-            byte ipByteArray[] = new byte[16];
-
-            // Finally convert these strings to bytes...
-            for (int i = 0; i < hexStrings.size(); i++) {
-                Inet6Util.convertToBytes(hexStrings.get(i), ipByteArray, i * 2);
-            }
-
-            // Now if there are any decimal values, we know where they go...
-            for (int i = 0; i < decStrings.size(); i++) {
-                ipByteArray[i + 12] = (byte) (Integer.parseInt(decStrings
-                        .get(i)) & 255);
-            }
-
-            // now check to see if this guy is actually and IPv4 address
-            // an ipV4 address is ::FFFF:d.d.d.d
-            boolean ipV4 = true;
-            for (int i = 0; i < 10; i++) {
-                if (ipByteArray[i] != 0) {
-                    ipV4 = false;
-                    break;
-                }
-            }
-
-            if (ipByteArray[10] != -1 || ipByteArray[11] != -1) {
-                ipV4 = false;
-            }
-
-            if (ipV4) {
-                byte ipv4ByteArray[] = new byte[4];
-                for (int i = 0; i < 4; i++) {
-                    ipv4ByteArray[i] = ipByteArray[i + 12];
-                }
-                address = InetAddress.getByAddress(ipv4ByteArray);
-            } else {
-                int scopeId = 0;
-                if (scopeString != null) {
-                    try {
-                        scopeId = Integer.parseInt(scopeString);
-                    } catch (Exception e) {
-                        // this should not occur as we should not get into this
-                        // function unless the address is in a valid format
-                    }
-                }
-                address = InetAddress.getByAddress(ipByteArray, scopeId);
-            }
-        }
-
-        return address;
     }
 
     static boolean preferIPv6Addresses() {

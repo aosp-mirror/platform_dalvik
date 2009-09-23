@@ -18,7 +18,6 @@
 package org.apache.harmony.luni.tests.java.net;
 
 import dalvik.annotation.BrokenTest;
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -255,12 +254,6 @@ public class InetAddressTest extends junit.framework.TestCase {
         method = "getByName",
         args = {java.lang.String.class}
     )
-    @KnownFailure("1.2.3 and 1.2 are not recognized as valid IPv4 addresses. " +
-            "Unfortunately, despite the fact that these IP address formats " +
-            "have been the cause of numerous phishing and security " +
-            "vulnerabilities in the past, and most other languages refuse " +
-            "them, the RI documentation explicitly specifies that they are " +
-            "supported. Fix the code to support these.")
     public void test_getByNameLjava_lang_String() throws Exception {
         // Test for method java.net.InetAddress
         // java.net.InetAddress.getByName(java.lang.String)

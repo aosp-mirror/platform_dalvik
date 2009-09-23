@@ -17,7 +17,6 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -1153,12 +1152,6 @@ public class Inet6AddressTest extends junit.framework.TestCase {
         method = "equals",
         args = {java.lang.Object.class}
     )
-    @KnownFailure("127.0.0 is not recognized as a valid IP address. " +
-            "Unfortunately, despite the fact that these IP address formats " +
-            "have been the cause of numerous phishing and security " +
-            "vulnerabilities in the past, and most other languages refuse " +
-            "them, the RI documentation explicitly specifies that they are " +
-            "supported. Fix the code to support these.")
     public void test_equals() throws Exception {
         InetAddress addr = Inet6Address.getByName("239.191.255.255");
         assertTrue(addr.equals(addr));
@@ -1177,7 +1170,6 @@ public class Inet6AddressTest extends junit.framework.TestCase {
         method = "getHostAddress",
         args = {}
     )
-    @KnownFailure("1, 1.1 and 1.1.1 are not recognized as valid IP addresses.")
     public void test_getHostAddress() throws Exception {
         InetAddress aAddr = Inet6Address.getByName("localhost");
         assertEquals("127.0.0.1", aAddr.getHostAddress());
@@ -1201,7 +1193,9 @@ public class Inet6AddressTest extends junit.framework.TestCase {
                 0x25, (byte) 0xFF, (byte) 0xFE, (byte) 0xF8, (byte) 0x7C,
                 (byte) 0xB2 };
         aAddr = Inet6Address.getByAddress(bAddr);
-        assertEquals("fe80:0:0:0:211:25ff:fef8:7cb2", aAddr.getHostAddress());
+        String aString = aAddr.getHostAddress();
+        assertTrue(aString.equals("fe80:0:0:0:211:25ff:fef8:7cb2") ||
+                   aString.equals("fe80::211:25ff:fef8:7cb2"));
 
         byte[] cAddr = { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
                 (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
@@ -1215,7 +1209,9 @@ public class Inet6AddressTest extends junit.framework.TestCase {
                 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
                 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
         aAddr = Inet6Address.getByAddress(dAddr);
-        assertEquals("0:0:0:0:0:0:0:0", aAddr.getHostAddress());
+        aString = aAddr.getHostAddress();
+        assertTrue(aString.equals("0:0:0:0:0:0:0:0") ||
+                   aString.equals("::"));
 
         byte[] eAddr = { (byte) 0x00, (byte) 0x01, (byte) 0x02, (byte) 0x03,
                 (byte) 0x04, (byte) 0x05, (byte) 0x06, (byte) 0x07,
@@ -1238,7 +1234,6 @@ public class Inet6AddressTest extends junit.framework.TestCase {
         method = "hashCode",
         args = {}
     )
-    @KnownFailure("1.1 and 1.1.1 are not recognized as valid IP addresses.")
     public void test_hashCode() throws Exception {
         InetAddress addr1 = Inet6Address.getByName("1.1");
         InetAddress addr2 = Inet6Address.getByName("1.1.1");
