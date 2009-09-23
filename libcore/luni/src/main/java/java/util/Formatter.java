@@ -885,7 +885,6 @@ public final class Formatter implements Closeable, Flushable {
         if (transformer == null || ! transformer.locale.equals(l)) {
             transformer = new Transformer(this, l);
         }
-        // END android-changed
 
         int currentObjectIndex = 0;
         Object lastArgument = null;
@@ -893,12 +892,13 @@ public final class Formatter implements Closeable, Flushable {
         while (formatBuffer.hasRemaining()) {
             parser.reset();
             FormatToken token = parser.getNextFormatToken();
-            String result;
             String plainText = token.getPlainText();
             if (token.getConversionType() == (char) FormatToken.UNSET) {
-                result = plainText;
+                outputCharSequence(plainText);
             } else {
                 plainText = plainText.substring(0, plainText.indexOf('%'));
+                outputCharSequence(plainText);
+
                 Object argument = null;
                 if (token.requireArgument()) {
                     int index = token.getArgIndex() == FormatToken.UNSET ? currentObjectIndex++
@@ -908,20 +908,25 @@ public final class Formatter implements Closeable, Flushable {
                     lastArgument = argument;
                     hasLastArgumentSet = true;
                 }
-                result = transformer.transform(token, argument);
-                result = (null == result ? plainText : plainText + result);
-            }
-            // if output is made by formattable callback
-            if (null != result) {
-                try {
-                    out.append(result);
-                } catch (IOException e) {
-                    lastIOException = e;
-                }
+                outputCharSequence(transformer.transform(token, argument));
             }
         }
+        // END android-changed
         return this;
     }
+
+    // BEGIN android-added
+    // Fixes http://code.google.com/p/android/issues/detail?id=1767.
+    private void outputCharSequence(CharSequence cs) {
+        if (cs != null) {
+            try {
+                out.append(cs);
+            } catch (IOException e) {
+                lastIOException = e;
+            }
+        }
+    }
+    // END android-added
 
     private Object getArgument(Object[] args, int index, FormatToken token,
             Object lastArgument, boolean hasLastArgumentSet) {
@@ -1184,13 +1189,13 @@ public final class Formatter implements Closeable, Flushable {
          * Gets the formatted string according to the format token and the
          * argument.
          */
-        String transform(FormatToken token, Object argument) {
+        CharSequence transform(FormatToken token, Object argument) {
 
             /* init data member to print */
             this.formatToken = token;
             this.arg = argument;
 
-            String result;
+            CharSequence result;
             switch (token.getConversionType()) {
                 case 'B':
                 case 'b': {
@@ -1254,7 +1259,7 @@ public final class Formatter implements Closeable, Flushable {
 
             if (Character.isUpperCase(token.getConversionType())) {
                 if (null != result) {
-                    result = result.toUpperCase(Locale.US);
+                    result = result.toString().toUpperCase(Locale.US);
                 }
             }
             return result;
@@ -1263,7 +1268,7 @@ public final class Formatter implements Closeable, Flushable {
         /*
          * Transforms the Boolean argument to a formatted string.
          */
-        private String transformFromBoolean() {
+        private CharSequence transformFromBoolean() {
             StringBuilder result = new StringBuilder();
             int startIndex = 0;
             int flags = formatToken.getFlags();
@@ -1294,7 +1299,7 @@ public final class Formatter implements Closeable, Flushable {
         /*
          * Transforms the hashcode of the argument to a formatted string.
          */
-        private String transformFromHashCode() {
+        private CharSequence transformFromHashCode() {
             StringBuilder result = new StringBuilder();
 
             int startIndex = 0;
@@ -1324,7 +1329,7 @@ public final class Formatter implements Closeable, Flushable {
         /*
          * Transforms the String to a formatted string.
          */
-        private String transformFromString() {
+        private CharSequence transformFromString() {
             StringBuilder result = new StringBuilder();
             int startIndex = 0;
             int flags = formatToken.getFlags();
@@ -1374,7 +1379,7 @@ public final class Formatter implements Closeable, Flushable {
         /*
          * Transforms the Character to a formatted string.
          */
-        private String transformFromCharacter() {
+        private CharSequence transformFromCharacter() {
             StringBuilder result = new StringBuilder();
 
             int startIndex = 0;
@@ -1434,7 +1439,7 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms percent to a formatted string. Only '-' is legal flag.
          * Precision is illegal.
          */
-        private String transformFromPercent() {
+        private CharSequence transformFromPercent() {
             StringBuilder result = new StringBuilder("%"); //$NON-NLS-1$
 
             int startIndex = 0;
@@ -1462,7 +1467,7 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms line separator to a formatted string. Any flag, the width
          * or the precision is illegal.
          */
-        private String transformFromLineSeparator() {
+        private CharSequence transformFromLineSeparator() {
             if (formatToken.isPrecisionSet()) {
                 throw new IllegalFormatPrecisionException(formatToken
                         .getPrecision());
@@ -1492,7 +1497,7 @@ public final class Formatter implements Closeable, Flushable {
         /*
          * Pads characters to the formatted string.
          */
-        private String padding(StringBuilder source, int startIndex) {
+        private CharSequence padding(StringBuilder source, int startIndex) {
             int start = startIndex;
             boolean paddingRight = formatToken
                     .isFlagSet(FormatToken.FLAG_MINUS);
@@ -1520,7 +1525,7 @@ public final class Formatter implements Closeable, Flushable {
                 width = Math.max(source.length(), width);
             }
             if (length >= width) {
-                return source.toString();
+                return source;
             }
 
             char[] paddings = new char[width - length];
@@ -1532,13 +1537,13 @@ public final class Formatter implements Closeable, Flushable {
             } else {
                 source.insert(start, insertString);
             }
-            return source.toString();
+            return source;
         }
 
         /*
          * Transforms the Integer to a formatted string.
          */
-        private String transformFromInteger() {
+        private CharSequence transformFromInteger() {
             int startIndex = 0;
             boolean isNegative = false;
             StringBuilder result = new StringBuilder();
@@ -1651,7 +1656,7 @@ public final class Formatter implements Closeable, Flushable {
             if (isNegative
                     && formatToken.isFlagSet(FormatToken.FLAG_PARENTHESIS)) {
                 result = wrapParentheses(result);
-                return result.toString();
+                return result;
 
             }
             if (isNegative && formatToken.isFlagSet(FormatToken.FLAG_ZERO)) {
@@ -1680,7 +1685,7 @@ public final class Formatter implements Closeable, Flushable {
             return result;
         }
 
-        private String transformFromSpecialNumber() {
+        private CharSequence transformFromSpecialNumber() {
             String source = null;
 
             if (!(arg instanceof Number) || arg instanceof BigDecimal) {
@@ -1713,12 +1718,12 @@ public final class Formatter implements Closeable, Flushable {
                 formatToken.setPrecision(FormatToken.UNSET);
                 formatToken.setFlags(formatToken.getFlags()
                         & (~FormatToken.FLAG_ZERO));
-                source = padding(new StringBuilder(source), 0);
+                return padding(new StringBuilder(source), 0);
             }
             return source;
         }
 
-        private String transformFromNull() {
+        private CharSequence transformFromNull() {
             formatToken.setFlags(formatToken.getFlags()
                     & (~FormatToken.FLAG_ZERO));
             return padding(new StringBuilder("null"), 0); //$NON-NLS-1$
@@ -1727,7 +1732,7 @@ public final class Formatter implements Closeable, Flushable {
         /*
          * Transforms a BigInteger to a formatted string.
          */
-        private String transformFromBigInteger() {
+        private CharSequence transformFromBigInteger() {
             int startIndex = 0;
             boolean isNegative = false;
             StringBuilder result = new StringBuilder();
@@ -1817,7 +1822,7 @@ public final class Formatter implements Closeable, Flushable {
             if (isNegative
                     && formatToken.isFlagSet(FormatToken.FLAG_PARENTHESIS)) {
                 result = wrapParentheses(result);
-                return result.toString();
+                return result;
 
             }
             if (isNegative && formatToken.isFlagSet(FormatToken.FLAG_ZERO)) {
@@ -1829,7 +1834,7 @@ public final class Formatter implements Closeable, Flushable {
         /*
          * Transforms a Float,Double or BigDecimal to a formatted string.
          */
-        private String transformFromFloat() {
+        private CharSequence transformFromFloat() {
             StringBuilder result = new StringBuilder();
             int startIndex = 0;
             char currentConversionType = formatToken.getConversionType();
@@ -1883,7 +1888,7 @@ public final class Formatter implements Closeable, Flushable {
                         currentConversionType, arg.getClass());
             }
 
-            String specialNumberResult = transformFromSpecialNumber();
+            CharSequence specialNumberResult = transformFromSpecialNumber();
             if (null != specialNumberResult) {
                 return specialNumberResult;
             }
@@ -1904,7 +1909,7 @@ public final class Formatter implements Closeable, Flushable {
             if (getDecimalFormatSymbols().getMinusSign() == result.charAt(0)) {
                 if (formatToken.isFlagSet(FormatToken.FLAG_PARENTHESIS)) {
                     result = wrapParentheses(result);
-                    return result.toString();
+                    return result;
                 }
             } else {
                 if (formatToken.isFlagSet(FormatToken.FLAG_SPACE)) {
@@ -1933,7 +1938,7 @@ public final class Formatter implements Closeable, Flushable {
         /*
          * Transforms a Date to a formatted string.
          */
-        private String transformFromDateTime() {
+        private CharSequence transformFromDateTime() {
             int startIndex = 0;
             char currentConversionType = formatToken.getConversionType();
 
