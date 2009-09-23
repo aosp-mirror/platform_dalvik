@@ -218,8 +218,13 @@ public interface INetworkSystem {
 
     public void setInetAddress(InetAddress sender, byte[] address);
 
+    // BEGIN android-added
     public String byteArrayToIpString(byte[] address)
             throws UnknownHostException;
+
+    public byte[] ipStringToByteArray(String address)
+            throws UnknownHostException;
+    // END android-added
 
     // BEGIN android-removed
     // public boolean isReachableByICMP(InetAddress dest,InetAddress source,int ttl,int timeout);
