@@ -22,8 +22,6 @@
  * variant-specific code.
  */
 
-#define USE_IN_CACHE_HANDLER 1
-
 /*
  * Determine the initial instruction set to be used for this trace.
  * Later components may decide to change this.
@@ -39,7 +37,6 @@ JitInstructionSetType dvmCompilerInstructionSet(CompilationUnit *cUnit)
  */
 static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
 {
-#if USE_IN_CACHE_HANDLER
     /*
      * NOTE - In practice BLX only needs one operand, but since the assembler
      * may abort itself and retry due to other out-of-range conditions we
@@ -48,32 +45,13 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
      * we fake BLX_1 is a two operand instruction and the absolute target
      * address is stored in operand[1].
      */
-    newLIR2(cUnit, THUMB_BLX_1,
+    clobberHandlerRegs(cUnit);
+    newLIR2(cUnit, kThumbBlx1,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-    newLIR2(cUnit, THUMB_BLX_2,
+    newLIR2(cUnit, kThumbBlx2,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-#else
-    /*
-     * In case we want to access the statically compiled handlers for
-     * debugging purposes, define USE_IN_CACHE_HANDLER to 0
-     */
-    void *templatePtr;
-
-#define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();
-#include "../../../template/armv5te-vfp/TemplateOpList.h"
-#undef JIT_TEMPLATE
-    switch (opCode) {
-#define JIT_TEMPLATE(X) \
-        case TEMPLATE_##X: { templatePtr = dvmCompiler_TEMPLATE_##X; break; }
-#include "../../../template/armv5te-vfp/TemplateOpList.h"
-#undef JIT_TEMPLATE
-        default: templatePtr = NULL;
-    }
-    loadConstant(cUnit, r7, (int) templatePtr);
-    newLIR1(cUnit, THUMB_BLX_R, r7);
-#endif
 }
 
 /* Architecture-specific initializations and checks go here */
@@ -117,36 +95,37 @@ static bool compilerArchVariantInit(void)
 
 static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
-    int vSrc = mir->dalvikInsn.arg[0];
-    int vDest = inlinedTarget(mir);
     ArmLIR *branch;
-    ArmLIR *target;
-
-    loadDouble(cUnit, vSrc, dr1);
-    newLIR2(cUnit, THUMB2_VSQRTD, dr0, dr1);
-    newLIR2(cUnit, THUMB2_VCMPD, dr0, dr0);
-    newLIR0(cUnit, THUMB2_FMSTAT);
-    branch = newLIR2(cUnit, THUMB_B_COND, 0, ARM_COND_EQ);
+    DecodedInstruction *dInsn = &mir->dalvikInsn;
+    RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+    RegLocation rlDest = inlinedTargetWide(cUnit, mir, true);
+    rlSrc = loadValueWide(cUnit, rlSrc, kFPReg);
+    RegLocation rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    newLIR2(cUnit, kThumb2Vsqrtd, S2D(rlResult.lowReg, rlResult.highReg),
+            S2D(rlSrc.lowReg, rlSrc.highReg));
+    newLIR2(cUnit, kThumb2Vcmpd, S2D(rlResult.lowReg, rlResult.highReg),
+            S2D(rlResult.lowReg, rlResult.highReg));
+    newLIR0(cUnit, kThumb2Fmstat);
+    branch = newLIR2(cUnit, kThumbBCond, 0, kArmCondEq);
+    clobberCallRegs(cUnit);
     loadConstant(cUnit, r2, (int)sqrt);
-    newLIR3(cUnit, THUMB2_FMRRD, r0, r1, dr1);
-    newLIR1(cUnit, THUMB_BLX_R, r2);
-    newLIR3(cUnit, THUMB2_FMDRR, dr0, r0, r1);
-    ArmLIR *label = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
+    newLIR3(cUnit, kThumb2Fmrrd, r0, r1, S2D(rlSrc.lowReg, rlSrc.highReg));
+    newLIR1(cUnit, kThumbBlxR, r2);
+    newLIR3(cUnit, kThumb2Fmdrr, S2D(rlResult.lowReg, rlResult.highReg),
+            r0, r1);
+    ArmLIR *label = newLIR0(cUnit, kArmPseudoTargetLabel);
     label->defMask = ENCODE_ALL;
     branch->generic.target = (LIR *)label;
-    if (vDest >= 0)
-        storeDouble(cUnit, dr0, vDest);
-    else
-        newLIR3(cUnit, THUMB2_VSTRD, dr0, rGLUE, offset >> 2);
-    resetRegisterScoreboard(cUnit);
+    storeValueWide(cUnit, rlDest, rlResult);
     return true;
 }
 
-static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
-                                int vSrc1, int vSrc2)
+static bool handleArithOpFloat(CompilationUnit *cUnit, MIR *mir,
+                               RegLocation rlDest, RegLocation rlSrc1,
+                               RegLocation rlSrc2)
 {
-    int op = THUMB_BKPT;
+    int op = kThumbBkpt;
+    RegLocation rlResult;
 
     /*
      * Don't attempt to optimize register usage since these opcodes call out to
@@ -155,168 +134,165 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
     switch (mir->dalvikInsn.opCode) {
         case OP_ADD_FLOAT_2ADDR:
         case OP_ADD_FLOAT:
-            op = THUMB2_VADDS;
+            op = kThumb2Vadds;
             break;
         case OP_SUB_FLOAT_2ADDR:
         case OP_SUB_FLOAT:
-            op = THUMB2_VSUBS;
+            op = kThumb2Vsubs;
             break;
         case OP_DIV_FLOAT_2ADDR:
         case OP_DIV_FLOAT:
-            op = THUMB2_VDIVS;
+            op = kThumb2Vdivs;
             break;
         case OP_MUL_FLOAT_2ADDR:
         case OP_MUL_FLOAT:
-            op = THUMB2_VMULS;
+            op = kThumb2Vmuls;
             break;
         case OP_REM_FLOAT_2ADDR:
         case OP_REM_FLOAT:
         case OP_NEG_FLOAT: {
-            return genArithOpFloatPortable(cUnit, mir, vDest, vSrc1, vSrc2);
+            return handleArithOpFloatPortable(cUnit, mir, rlDest, rlSrc1,
+                                              rlSrc2);
         }
         default:
             return true;
     }
-    int reg0, reg1, reg2;
-    reg1 = selectSFPReg(cUnit, vSrc1);
-    reg2 = selectSFPReg(cUnit, vSrc2);
-    /*
-     * The register mapping is overly optimistic and lazily updated so we
-     * need to detect false sharing here.
-     */
-    if (reg1 == reg2 && vSrc1 != vSrc2) {
-        reg2 = nextFPReg(cUnit, vSrc2, false /* isDouble */);
-    }
-    loadFloat(cUnit, vSrc1, reg1);
-    loadFloat(cUnit, vSrc2, reg2);
-    reg0 = selectSFPReg(cUnit, vDest);
-    newLIR3(cUnit, op, reg0, reg1, reg2);
-    storeFloat(cUnit, reg0, vDest);
+    rlSrc1 = loadValue(cUnit, rlSrc1, kFPReg);
+    rlSrc2 = loadValue(cUnit, rlSrc2, kFPReg);
+    rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    newLIR3(cUnit, op, rlResult.lowReg, rlSrc1.lowReg, rlSrc2.lowReg);
+    storeValue(cUnit, rlDest, rlResult);
     return false;
 }
 
-static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
-                             int vSrc1, int vSrc2)
+static bool handleArithOpDouble(CompilationUnit *cUnit, MIR *mir,
+                                RegLocation rlDest, RegLocation rlSrc1,
+                                RegLocation rlSrc2)
 {
-    int op = THUMB_BKPT;
+    int op = kThumbBkpt;
+    RegLocation rlResult;
 
     switch (mir->dalvikInsn.opCode) {
         case OP_ADD_DOUBLE_2ADDR:
         case OP_ADD_DOUBLE:
-            op = THUMB2_VADDD;
+            op = kThumb2Vaddd;
             break;
         case OP_SUB_DOUBLE_2ADDR:
         case OP_SUB_DOUBLE:
-            op = THUMB2_VSUBD;
+            op = kThumb2Vsubd;
             break;
         case OP_DIV_DOUBLE_2ADDR:
         case OP_DIV_DOUBLE:
-            op = THUMB2_VDIVD;
+            op = kThumb2Vdivd;
             break;
         case OP_MUL_DOUBLE_2ADDR:
         case OP_MUL_DOUBLE:
-            op = THUMB2_VMULD;
+            op = kThumb2Vmuld;
             break;
         case OP_REM_DOUBLE_2ADDR:
         case OP_REM_DOUBLE:
         case OP_NEG_DOUBLE: {
-            return genArithOpDoublePortable(cUnit, mir, vDest, vSrc1, vSrc2);
+            return handleArithOpDoublePortable(cUnit, mir, rlDest, rlSrc1,
+                                               rlSrc2);
         }
         default:
             return true;
     }
 
-    int reg0, reg1, reg2;
-    reg1 = selectDFPReg(cUnit, vSrc1);
-    reg2 = selectDFPReg(cUnit, vSrc2);
-    if (reg1 == reg2 && vSrc1 != vSrc2) {
-        reg2 = nextFPReg(cUnit, vSrc2, true /* isDouble */);
-    }
-    loadDouble(cUnit, vSrc1, reg1);
-    loadDouble(cUnit, vSrc2, reg2);
-    /* Rename the new vDest to a new register */
-    reg0 = selectDFPReg(cUnit, vNone);
-    newLIR3(cUnit, op, reg0, reg1, reg2);
-    storeDouble(cUnit, reg0, vDest);
+    rlSrc1 = loadValueWide(cUnit, rlSrc1, kFPReg);
+    assert(rlSrc1.wide);
+    rlSrc2 = loadValueWide(cUnit, rlSrc2, kFPReg);
+    assert(rlSrc2.wide);
+    rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    assert(rlDest.wide);
+    assert(rlResult.wide);
+    newLIR3(cUnit, op, S2D(rlResult.lowReg, rlResult.highReg),
+            S2D(rlSrc1.lowReg, rlSrc1.highReg),
+            S2D(rlSrc2.lowReg, rlSrc2.highReg));
+    storeValueWide(cUnit, rlDest, rlResult);
     return false;
 }
 
-static bool genConversion(CompilationUnit *cUnit, MIR *mir)
+static bool handleConversion(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode opCode = mir->dalvikInsn.opCode;
-    int vSrc1Dest = mir->dalvikInsn.vA;
-    int vSrc2 = mir->dalvikInsn.vB;
-    int op = THUMB_BKPT;
+    int op = kThumbBkpt;
     bool longSrc = false;
     bool longDest = false;
     int srcReg;
-    int tgtReg;
+    RegLocation rlSrc;
+    RegLocation rlDest;
+    RegLocation rlResult;
 
     switch (opCode) {
         case OP_INT_TO_FLOAT:
             longSrc = false;
             longDest = false;
-            op = THUMB2_VCVTIF;
+            op = kThumb2VcvtIF;
             break;
         case OP_FLOAT_TO_INT:
             longSrc = false;
             longDest = false;
-            op = THUMB2_VCVTFI;
+            op = kThumb2VcvtFI;
             break;
         case OP_DOUBLE_TO_FLOAT:
             longSrc = true;
             longDest = false;
-            op = THUMB2_VCVTDF;
+            op = kThumb2VcvtDF;
             break;
         case OP_FLOAT_TO_DOUBLE:
             longSrc = false;
             longDest = true;
-            op = THUMB2_VCVTFD;
+            op = kThumb2VcvtFd;
             break;
         case OP_INT_TO_DOUBLE:
             longSrc = false;
             longDest = true;
-            op = THUMB2_VCVTID;
+            op = kThumb2VcvtID;
             break;
         case OP_DOUBLE_TO_INT:
             longSrc = true;
             longDest = false;
-            op = THUMB2_VCVTDI;
+            op = kThumb2VcvtDI;
             break;
+        case OP_LONG_TO_DOUBLE:
         case OP_FLOAT_TO_LONG:
         case OP_LONG_TO_FLOAT:
         case OP_DOUBLE_TO_LONG:
-        case OP_LONG_TO_DOUBLE:
-            return genConversionPortable(cUnit, mir);
+            return handleConversionPortable(cUnit, mir);
         default:
             return true;
     }
     if (longSrc) {
-        srcReg = selectDFPReg(cUnit, vSrc2);
-        loadDouble(cUnit, vSrc2, srcReg);
+        rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+        rlSrc = loadValueWide(cUnit, rlSrc, kFPReg);
+        srcReg = S2D(rlSrc.lowReg, rlSrc.highReg);
     } else {
-        srcReg = selectSFPReg(cUnit, vSrc2);
-        loadFloat(cUnit, vSrc2, srcReg);
+        rlSrc = getSrcLoc(cUnit, mir, 0);
+        rlSrc = loadValue(cUnit, rlSrc, kFPReg);
+        srcReg = rlSrc.lowReg;
     }
     if (longDest) {
-        int destReg = selectDFPReg(cUnit, vNone);
-        newLIR2(cUnit, op, destReg, srcReg);
-        storeDouble(cUnit, destReg, vSrc1Dest);
+        rlDest = getDestLocWide(cUnit, mir, 0, 1);
+        rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+        newLIR2(cUnit, op, S2D(rlResult.lowReg, rlResult.highReg), srcReg);
+        storeValueWide(cUnit, rlDest, rlResult);
     } else {
-        int destReg = selectSFPReg(cUnit, vNone);
-        newLIR2(cUnit, op, destReg, srcReg);
-        storeFloat(cUnit, destReg, vSrc1Dest);
+        rlDest = getDestLoc(cUnit, mir, 0);
+        rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+        newLIR2(cUnit, op, rlResult.lowReg, srcReg);
+        storeValue(cUnit, rlDest, rlResult);
     }
     return false;
 }
 
-static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
-                    int vSrc2)
+static bool handleCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
+                        RegLocation rlSrc1, RegLocation rlSrc2)
 {
     bool isDouble;
     int defaultResult;
     bool ltNaNBias;
-    int fpReg1, fpReg2;
+    RegLocation rlResult;
 
     switch(mir->dalvikInsn.opCode) {
         case OP_CMPL_FLOAT:
@@ -339,35 +315,26 @@ static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
             return true;
     }
     if (isDouble) {
-        fpReg1 = selectDFPReg(cUnit, vSrc1);
-        fpReg2 = selectDFPReg(cUnit, vSrc2);
-        if (fpReg1 == fpReg2 && vSrc1 != vSrc2) {
-            fpReg2 = nextFPReg(cUnit, vSrc2, true /* isDouble */);
-        }
-        loadDouble(cUnit, vSrc1, fpReg1);
-        loadDouble(cUnit, vSrc2, fpReg2);
-        // Hard-coded use of r7 as temp.  Revisit
-        loadConstant(cUnit, r7, defaultResult);
-        newLIR2(cUnit, THUMB2_VCMPD, fpReg1, fpReg2);
+        rlSrc1 = loadValueWide(cUnit, rlSrc1, kFPReg);
+        rlSrc2 = loadValueWide(cUnit, rlSrc2, kFPReg);
+        rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+        loadConstant(cUnit, rlResult.lowReg, defaultResult);
+        newLIR2(cUnit, kThumb2Vcmpd, S2D(rlSrc1.lowReg, r1Src2.highReg),
+                S2D(rlSrc2.lowReg, rlSrc2.highReg));
     } else {
-        fpReg1 = selectSFPReg(cUnit, vSrc1);
-        fpReg2 = selectSFPReg(cUnit, vSrc2);
-        if (fpReg1 == fpReg2 && vSrc1 != vSrc2) {
-            fpReg2 = nextFPReg(cUnit, vSrc2, false /* isDouble */);
-        }
-        loadFloat(cUnit, vSrc1, fpReg1);
-        loadFloat(cUnit, vSrc2, fpReg2);
-        // Hard-coded use of r7 as temp.  Revisit
-        loadConstant(cUnit, r7, defaultResult);
-        newLIR2(cUnit, THUMB2_VCMPS, fpReg1, fpReg2);
+        rlSrc1 = loadValue(cUnit, rlSrc1, kFPReg);
+        rlSrc2 = loadValue(cUnit, rlSrc2, kFPReg);
+        rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+        loadConstant(cUnit, rlResult.lowReg, defaultResult);
+        newLIR2(cUnit, kThumb2Vcmps, rlSrc1.lowReg, rlSrc2.lowReg);
     }
-    newLIR0(cUnit, THUMB2_FMSTAT);
-    genIT(cUnit, (defaultResult == -1) ? ARM_COND_GT : ARM_COND_MI, "");
-    newLIR2(cUnit, THUMB2_MOV_IMM_SHIFT, r7,
+    assert(!FPREG(rlResult.lowReg));
+    newLIR0(cUnit, kThumb2Fmstat);
+    genIT(cUnit, (defaultResult == -1) ? kArmCondGt : kArmCondMi, "");
+    newLIR2(cUnit, kThumb2MovImmShift, rlResult.lowReg,
             modifiedImmediate(-defaultResult)); // Must not alter ccodes
-    genIT(cUnit, ARM_COND_EQ, "");
-    loadConstant(cUnit, r7, 0);
-    // Hard-coded use of r4PC as temp.  Revisit
-    storeValue(cUnit, r7, vDest, r4PC);
+    genIT(cUnit, kArmCondEq, "");
+    loadConstant(cUnit, rlResult.lowReg, 0);
+    storeValue(cUnit, rlDest, rlResult);
     return false;
 }

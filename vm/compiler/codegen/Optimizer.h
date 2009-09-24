@@ -26,27 +26,13 @@
 typedef enum optControlVector {
     kLoadStoreElimination = 0,
     kLoadHoisting,
+    kTrackLiveTemps,
+    kSuppressLoads,
 } optControlVector;
 
 /* Forward declarations */
 struct CompilationUnit;
 struct LIR;
-
-/*
- * Data structure tracking the mapping between a Dalvik register (pair) and a
- * native register (pair). The idea is to reuse the previously loaded value
- * if possible, otherwise to keep the value in a native register as long as
- * possible.
- */
-typedef struct RegisterScoreboard {
-    BitVector *nullCheckedRegs; // Track which registers have been null-checked
-    int liveDalvikReg;          // Track which Dalvik register is live
-    int nativeReg;              // And the mapped native register
-    int nativeRegHi;            // And the mapped native register
-    bool isWide;                // Whether a pair of registers are alive
-    int fp[32];                 // Track the Dalvik register held in a SFP reg
-    int nextFP;                 // Next index for FP register allocation
-} RegisterScoreboard;
 
 void dvmCompilerApplyLocalOptimizations(struct CompilationUnit *cUnit,
                                         struct LIR *head,

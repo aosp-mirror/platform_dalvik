@@ -266,9 +266,6 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Locate the entry to store compilation statistics for this method */
     methodStats = analyzeMethodBody(desc->method);
 
-    cUnit.registerScoreboard.nullCheckedRegs =
-        dvmCompilerAllocBitVector(desc->method->registersSize, false);
-
     /* Initialize the printMe flag */
     cUnit.printMe = gDvmJit.printMe;
 
@@ -339,11 +336,11 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     }
 
     /* Allocate the entry block */
-    lastBB = startBB = curBB = dvmCompilerNewBB(ENTRY_BLOCK);
+    lastBB = startBB = curBB = dvmCompilerNewBB(kEntryBlock);
     curBB->startOffset = curOffset;
     curBB->id = numBlocks++;
 
-    curBB = dvmCompilerNewBB(DALVIK_BYTECODE);
+    curBB = dvmCompilerNewBB(kDalvikByteCode);
     curBB->startOffset = curOffset;
     curBB->id = numBlocks++;
 
@@ -382,7 +379,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             if (currRun->frag.runEnd) {
                 break;
             } else {
-                curBB = dvmCompilerNewBB(DALVIK_BYTECODE);
+                curBB = dvmCompilerNewBB(kDalvikByteCode);
                 lastBB->next = curBB;
                 lastBB = curBB;
                 curBB->id = numBlocks++;
@@ -461,7 +458,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             if (cUnit.printMe) {
                 LOGD("Natural loop detected!");
             }
-            exitBB = dvmCompilerNewBB(EXIT_BLOCK);
+            exitBB = dvmCompilerNewBB(kExitBlock);
             lastBB->next = exitBB;
             lastBB = exitBB;
 
@@ -472,7 +469,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             loopBranch->taken = exitBB;
 #if defined(WITH_SELF_VERIFICATION)
             BasicBlock *backwardCell =
-                dvmCompilerNewBB(CHAINING_CELL_BACKWARD_BRANCH);
+                dvmCompilerNewBB(kChainingCellBackwardBranch);
             lastBB->next = backwardCell;
             lastBB = backwardCell;
 
@@ -482,7 +479,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 #elif defined(WITH_JIT_TUNING)
             if (gDvmJit.profile) {
                 BasicBlock *backwardCell =
-                    dvmCompilerNewBB(CHAINING_CELL_BACKWARD_BRANCH);
+                    dvmCompilerNewBB(kChainingCellBackwardBranch);
                 lastBB->next = backwardCell;
                 lastBB = backwardCell;
 
@@ -497,7 +494,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 #endif
 
             /* Create the chaining cell as the fallthrough of the exit block */
-            exitChainingCell = dvmCompilerNewBB(CHAINING_CELL_NORMAL);
+            exitChainingCell = dvmCompilerNewBB(kChainingCellNormal);
             lastBB->next = exitChainingCell;
             lastBB = exitChainingCell;
 
@@ -517,9 +514,9 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
              * chaining cell.
              */
             if (isInvoke || curBB->needFallThroughBranch) {
-                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_HOT);
+                lastBB->next = dvmCompilerNewBB(kChainingCellHot);
             } else {
-                lastBB->next = dvmCompilerNewBB(CHAINING_CELL_NORMAL);
+                lastBB->next = dvmCompilerNewBB(kChainingCellNormal);
             }
             lastBB = lastBB->next;
             lastBB->id = numBlocks++;
@@ -535,30 +532,30 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             if (isInvoke) {
                 /* Monomorphic callee */
                 if (callee) {
-                    newBB = dvmCompilerNewBB(CHAINING_CELL_INVOKE_SINGLETON);
+                    newBB = dvmCompilerNewBB(kChainingCellInvokeSingleton);
                     newBB->startOffset = 0;
                     newBB->containingMethod = callee;
                 /* Will resolve at runtime */
                 } else {
-                    newBB = dvmCompilerNewBB(CHAINING_CELL_INVOKE_PREDICTED);
+                    newBB = dvmCompilerNewBB(kChainingCellInvokePredicted);
                     newBB->startOffset = 0;
                 }
             /* For unconditional branches, request a hot chaining cell */
             } else {
 #if !defined(WITH_SELF_VERIFICATION)
                 newBB = dvmCompilerNewBB(flags & kInstrUnconditional ?
-                                                  CHAINING_CELL_HOT :
-                                                  CHAINING_CELL_NORMAL);
+                                                  kChainingCellHot :
+                                                  kChainingCellNormal);
                 newBB->startOffset = targetOffset;
 #else
                 /* Handle branches that branch back into the block */
                 if (targetOffset >= curBB->firstMIRInsn->offset &&
                     targetOffset <= curBB->lastMIRInsn->offset) {
-                    newBB = dvmCompilerNewBB(CHAINING_CELL_BACKWARD_BRANCH);
+                    newBB = dvmCompilerNewBB(kChainingCellBackwardBranch);
                 } else {
                     newBB = dvmCompilerNewBB(flags & kInstrUnconditional ?
-                                                      CHAINING_CELL_HOT :
-                                                      CHAINING_CELL_NORMAL);
+                                                      kChainingCellHot :
+                                                      kChainingCellNormal);
                 }
                 newBB->startOffset = targetOffset;
 #endif
@@ -571,12 +568,12 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     }
 
     /* Now create a special block to host PC reconstruction code */
-    lastBB->next = dvmCompilerNewBB(PC_RECONSTRUCTION);
+    lastBB->next = dvmCompilerNewBB(kPCReconstruction);
     lastBB = lastBB->next;
     lastBB->id = numBlocks++;
 
     /* And one final block that publishes the PC and raise the exception */
-    lastBB->next = dvmCompilerNewBB(EXCEPTION_HANDLING);
+    lastBB->next = dvmCompilerNewBB(kExceptionHandling);
     lastBB = lastBB->next;
     lastBB->id = numBlocks++;
 
@@ -613,6 +610,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Preparation for SSA conversion */
     dvmInitializeSSAConversion(&cUnit);
 
+
     if (cUnit.hasLoop) {
         dvmCompilerLoopOpt(&cUnit);
     }
@@ -620,12 +618,17 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         dvmCompilerNonLoopAnalysis(&cUnit);
     }
 
+    dvmCompilerInitializeRegAlloc(&cUnit);  // Needs to happen after SSA naming
+
     if (cUnit.printMe) {
         dvmCompilerDumpCompilationUnit(&cUnit);
     }
 
     /* Set the instruction set to use (NOTE: later components may change it) */
     cUnit.instructionSet = dvmCompilerInstructionSet(&cUnit);
+
+    /* Allocate Registers */
+    dvmCompilerRegAlloc(&cUnit);
 
     /* Convert MIR to LIR, etc. */
     dvmCompilerMIR2LIR(&cUnit);
@@ -673,7 +676,7 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
     int blockID = 0;
     unsigned int curOffset = 0;
 
-    BasicBlock *firstBlock = dvmCompilerNewBB(DALVIK_BYTECODE);
+    BasicBlock *firstBlock = dvmCompilerNewBB(kDalvikByteCode);
     firstBlock->id = blockID++;
 
     /* Allocate the bit-vector to track the beginning of basic blocks */
@@ -763,7 +766,7 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
 
                 /* Block not split yet - do it now */
                 if (j == cUnit.numBlocks) {
-                    BasicBlock *newBB = dvmCompilerNewBB(DALVIK_BYTECODE);
+                    BasicBlock *newBB = dvmCompilerNewBB(kDalvikByteCode);
                     newBB->id = blockID++;
                     newBB->firstMIRInsn = insn;
                     newBB->startOffset = insn->offset;

@@ -36,6 +36,12 @@ void* dvmJitChain(void *tgtAddr, u4* branchAddr);
 u4* dvmJitUnchain(void *codeAddr);
 void dvmJitUnchainAll(void);
 
+/* Implemented in codegen/<target>/Ralloc.c */
+void dvmCompilerRegAlloc(CompilationUnit *cUnit);
+
+/* Implemented in codegen/<target>/Thumb<version>Util.c */
+void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit);
+
 /* Implemented in codegen/<target>/<target_variant>/ArchVariant.c */
 JitInstructionSetType dvmCompilerInstructionSet(CompilationUnit *cUnit);
 

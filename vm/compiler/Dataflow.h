@@ -38,6 +38,9 @@ typedef enum DataFlowAttributePos {
     kNullNRangeCheck0,
     kNullNRangeCheck1,
     kNullNRangeCheck2,
+    kFPA,
+    kFPB,
+    kFPC,
 } DataFlowAttributes;
 
 #define DF_NOP                  0
@@ -58,6 +61,9 @@ typedef enum DataFlowAttributePos {
 #define DF_NULL_N_RANGE_CHECK_0 (1 << kNullNRangeCheck0)
 #define DF_NULL_N_RANGE_CHECK_1 (1 << kNullNRangeCheck1)
 #define DF_NULL_N_RANGE_CHECK_2 (1 << kNullNRangeCheck2)
+#define DF_FP_A                 (1 << kFPA)
+#define DF_FP_B                 (1 << kFPB)
+#define DF_FP_C                 (1 << kFPC)
 
 #define DF_HAS_USES             (DF_UA | DF_UB | DF_UC | DF_UA_WIDE | \
                                  DF_UB_WIDE | DF_UC_WIDE)
@@ -72,7 +78,7 @@ typedef enum DataFlowAttributePos {
 #define DF_B_IS_REG             (DF_UB | DF_UB_WIDE)
 #define DF_C_IS_REG             (DF_UC | DF_UC_WIDE)
 
-extern int dvmCompilerDataFlowAttributes[MIR_OP_LAST];
+extern int dvmCompilerDataFlowAttributes[kMirOpLast];
 
 typedef struct BasicBlockDataFlow {
     BitVector *useV;
@@ -85,8 +91,10 @@ typedef struct BasicBlockDataFlow {
 typedef struct SSARepresentation {
     int numUses;
     int *uses;
+    bool *fpUse;
     int numDefs;
     int *defs;
+    bool *fpDef;
 } SSARepresentation;
 
 typedef struct InductionVariableInfo {

@@ -19,24 +19,49 @@
 
 #include "codegen/Optimizer.h"
 
+typedef enum RegisterClass {
+    kCoreReg,
+    kFPReg,
+    kAnyReg,
+} RegisterClass;
+
+typedef enum RegLocationType {
+    kLocDalvikFrame = 0,
+    kLocPhysReg,
+    kLocRetval,          // Return region in interpState
+    kLocSpill,
+} RegLocationType;
+
+typedef struct RegLocation {
+    RegLocationType location:2;
+    unsigned wide:1;
+    unsigned fp:1;      // Hint for float/double
+    u1 lowReg:6;        // First physical register
+    u1 highReg:6;       // 2nd physical register (if wide)
+    s2 sRegLow;         // SSA name for low Dalvik word
+} RegLocation;
+
+#define INVALID_SREG (-1)
+#define INVALID_REG (-1)
+
 typedef enum BBType {
     /* For coding convenience reasons chaining cell types should appear first */
-    CHAINING_CELL_NORMAL = 0,
-    CHAINING_CELL_HOT,
-    CHAINING_CELL_INVOKE_SINGLETON,
-    CHAINING_CELL_INVOKE_PREDICTED,
-    CHAINING_CELL_BACKWARD_BRANCH,
-    CHAINING_CELL_LAST,
-    ENTRY_BLOCK,
-    DALVIK_BYTECODE,
-    EXIT_BLOCK,
-    PC_RECONSTRUCTION,
-    EXCEPTION_HANDLING,
+    kChainingCellNormal = 0,
+    kChainingCellHot,
+    kChainingCellInvokeSingleton,
+    kChainingCellInvokePredicted,
+    kChainingCellBackwardBranch,
+    kChainingCellLast,
+    kEntryBlock,
+    kDalvikByteCode,
+    kExitBlock,
+    kPCReconstruction,
+    kExceptionHandling,
 } BBType;
 
 typedef struct ChainCellCounts {
     union {
-        u1 count[CHAINING_CELL_LAST];
+        u1 count[kChainingCellLast];
         u4 dummyForAlignment;
     } u;
 } ChainCellCounts;
@@ -49,13 +74,13 @@ typedef struct LIR {
 } LIR;
 
 enum ExtendedMIROpcode {
-    MIR_OP_FIRST = 256,
-    MIR_OP_PHI = MIR_OP_FIRST,
-    MIR_OP_NULL_N_RANGE_UP_CHECK,
-    MIR_OP_NULL_N_RANGE_DOWN_CHECK,
-    MIR_OP_LOWER_BOUND_CHECK,
-    MIR_OP_PUNT,
-    MIR_OP_LAST,
+    kMirOpFirst = 256,
+    kMirOpPhi = kMirOpFirst,
+    kMirOpNullNRangeUpCheck,
+    kMirOpNullNRangeDownCheck,
+    kMirOpLowerBound,
+    kMirOpPunt,
+    kMirOpLast,
 };
 
 struct SSARepresentation;
@@ -80,6 +105,7 @@ typedef struct MIR {
     struct MIR *next;
     struct SSARepresentation *ssaRep;
     int OptimizationFlags;
+    int seqNum;
 } MIR;
 
 struct BasicBlockDataFlow;
@@ -100,6 +126,7 @@ typedef struct BasicBlock {
 } BasicBlock;
 
 struct LoopAnalysis;
+struct RegisterPool;
 
 typedef struct CompilationUnit {
     int numInsts;
@@ -122,9 +149,9 @@ typedef struct CompilationUnit {
     bool halveInstCount;
     bool executionCount;                // Add code to count trace executions
     bool hasLoop;
-    int numChainingCells[CHAINING_CELL_LAST];
-    LIR *firstChainingLIR[CHAINING_CELL_LAST];
-    RegisterScoreboard registerScoreboard;      // Track register dependency
+    int numChainingCells[kChainingCellLast];
+    LIR *firstChainingLIR[kChainingCellLast];
+    struct RegisterPool *regPool;
     int optRound;                       // round number to tell an LIR's age
     JitInstructionSetType instructionSet;
     /* Number of total regs used in the whole cUnit after SSA transformation */
@@ -140,6 +167,10 @@ typedef struct CompilationUnit {
 
     /* Data structure for loop analysis and optimizations */
     struct LoopAnalysis *loopAnalysis;
+
+    /* Map SSA names to location */
+    RegLocation *regLocation;
+    int sequenceNumber;
 } CompilationUnit;
 
 BasicBlock *dvmCompilerNewBB(BBType blockType);

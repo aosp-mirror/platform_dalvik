@@ -442,7 +442,7 @@ dvmCompiler_TEMPLATE_CMPG_DOUBLE:
 /* File: armv5te/TEMPLATE_CMPG_DOUBLE.S */
 /* File: armv5te/TEMPLATE_CMPL_DOUBLE.S */
     /*
-     * For the JIT: incoming arguments are pointers to the arguments in r0/r1
+     * For the JIT: incoming arguments in r0-r1, r2-r3
      *              result in r0
      *
      * Compare two floating-point values.  Puts 0, 1, or -1 into the
@@ -456,28 +456,26 @@ dvmCompiler_TEMPLATE_CMPG_DOUBLE:
      * For: cmpl-double, cmpg-double
      */
     /* op vAA, vBB, vCC */
-    mov     r4, lr                      @ save return address
-    mov     r9, r0                      @ save copy of &arg1
-    mov     r10, r1                     @ save copy of &arg2
-    ldmia   r9, {r0-r1}                 @ r0/r1<- vBB/vBB+1
-    ldmia   r10, {r2-r3}                @ r2/r3<- vCC/vCC+1
+    push    {r0-r3}                     @ save operands
+    mov     r11, lr                     @ save return address
     LDR_PC_LR ".L__aeabi_cdcmple"       @ PIC way of "bl __aeabi_cdcmple"
     bhi     .LTEMPLATE_CMPG_DOUBLE_gt_or_nan       @ C set and Z clear, disambiguate
     mvncc   r0, #0                      @ (less than) r1<- -1
     moveq   r0, #0                      @ (equal) r1<- 0, trumps less than
-    bx      r4
+    add     sp, #16                     @ drop unused operands
+    bx      r11
 
     @ Test for NaN with a second comparison.  EABI forbids testing bit
     @ patterns, and we can't represent 0x7fc00000 in immediate form, so
     @ make the library call.
 .LTEMPLATE_CMPG_DOUBLE_gt_or_nan:
-    ldmia   r10, {r0-r1}                @ reverse order
-    ldmia   r9, {r2-r3}
+    pop     {r2-r3}                     @ restore operands in reverse order
+    pop     {r0-r1}                     @ restore operands in reverse order
     LDR_PC_LR ".L__aeabi_cdcmple"       @ r0<- Z set if eq, C clear if <
     movcc   r0, #1                      @ (greater than) r1<- 1
-    bxcc    r4
+    bxcc    r11
     mov     r0, #1                            @ r1<- 1 or -1 for NaN
-    bx      r4
+    bx      r11
 
 
 
@@ -487,7 +485,7 @@ dvmCompiler_TEMPLATE_CMPG_DOUBLE:
 dvmCompiler_TEMPLATE_CMPL_DOUBLE:
 /* File: armv5te/TEMPLATE_CMPL_DOUBLE.S */
     /*
-     * For the JIT: incoming arguments are pointers to the arguments in r0/r1
+     * For the JIT: incoming arguments in r0-r1, r2-r3
      *              result in r0
      *
      * Compare two floating-point values.  Puts 0, 1, or -1 into the
@@ -501,28 +499,26 @@ dvmCompiler_TEMPLATE_CMPL_DOUBLE:
      * For: cmpl-double, cmpg-double
      */
     /* op vAA, vBB, vCC */
-    mov     r4, lr                      @ save return address
-    mov     r9, r0                      @ save copy of &arg1
-    mov     r10, r1                     @ save copy of &arg2
-    ldmia   r9, {r0-r1}                 @ r0/r1<- vBB/vBB+1
-    ldmia   r10, {r2-r3}                @ r2/r3<- vCC/vCC+1
+    push    {r0-r3}                     @ save operands
+    mov     r11, lr                     @ save return address
     LDR_PC_LR ".L__aeabi_cdcmple"       @ PIC way of "bl __aeabi_cdcmple"
     bhi     .LTEMPLATE_CMPL_DOUBLE_gt_or_nan       @ C set and Z clear, disambiguate
     mvncc   r0, #0                      @ (less than) r1<- -1
     moveq   r0, #0                      @ (equal) r1<- 0, trumps less than
-    bx      r4
+    add     sp, #16                     @ drop unused operands
+    bx      r11
 
     @ Test for NaN with a second comparison.  EABI forbids testing bit
     @ patterns, and we can't represent 0x7fc00000 in immediate form, so
     @ make the library call.
 .LTEMPLATE_CMPL_DOUBLE_gt_or_nan:
-    ldmia   r10, {r0-r1}                @ reverse order
-    ldmia   r9, {r2-r3}
+    pop     {r2-r3}                     @ restore operands in reverse order
+    pop     {r0-r1}                     @ restore operands in reverse order
     LDR_PC_LR ".L__aeabi_cdcmple"       @ r0<- Z set if eq, C clear if <
     movcc   r0, #1                      @ (greater than) r1<- 1
-    bxcc    r4
+    bxcc    r11
     mvn     r0, #0                            @ r1<- 1 or -1 for NaN
-    bx      r4
+    bx      r11
 
 
 /* ------------------------------ */
@@ -532,7 +528,7 @@ dvmCompiler_TEMPLATE_CMPG_FLOAT:
 /* File: armv5te/TEMPLATE_CMPG_FLOAT.S */
 /* File: armv5te/TEMPLATE_CMPL_FLOAT.S */
     /*
-     * For the JIT: incoming arguments in r0, r1
+     * For the JIT: incoming arguments in r0-r1, r2-r3
      *              result in r0
      *
      * Compare two floating-point values.  Puts 0, 1, or -1 into the
@@ -565,25 +561,25 @@ dvmCompiler_TEMPLATE_CMPG_FLOAT:
      * for: cmpl-float, cmpg-float
      */
     /* op vAA, vBB, vCC */
-    mov     r4, lr                      @ save return address
     mov     r9, r0                      @ Save copies - we may need to redo
     mov     r10, r1
+    mov     r11, lr                     @ save return address
     LDR_PC_LR ".L__aeabi_cfcmple"       @ cmp <=: C clear if <, Z set if eq
     bhi     .LTEMPLATE_CMPG_FLOAT_gt_or_nan       @ C set and Z clear, disambiguate
     mvncc   r0, #0                      @ (less than) r0<- -1
     moveq   r0, #0                      @ (equal) r0<- 0, trumps less than
-    bx      r4
+    bx      r11
     @ Test for NaN with a second comparison.  EABI forbids testing bit
     @ patterns, and we can't represent 0x7fc00000 in immediate form, so
     @ make the library call.
 .LTEMPLATE_CMPG_FLOAT_gt_or_nan:
-    mov     r1, r9                      @ reverse order
-    mov     r0, r10
+    mov     r0, r10                     @ restore in reverse order
+    mov     r1, r9
     LDR_PC_LR ".L__aeabi_cfcmple"       @ r0<- Z set if eq, C clear if <
     movcc   r0, #1                      @ (greater than) r1<- 1
-    bxcc    r4
+    bxcc    r11
     mov     r0, #1                            @ r1<- 1 or -1 for NaN
-    bx      r4
+    bx      r11
 
 
 
@@ -594,7 +590,7 @@ dvmCompiler_TEMPLATE_CMPG_FLOAT:
 dvmCompiler_TEMPLATE_CMPL_FLOAT:
 /* File: armv5te/TEMPLATE_CMPL_FLOAT.S */
     /*
-     * For the JIT: incoming arguments in r0, r1
+     * For the JIT: incoming arguments in r0-r1, r2-r3
      *              result in r0
      *
      * Compare two floating-point values.  Puts 0, 1, or -1 into the
@@ -627,25 +623,25 @@ dvmCompiler_TEMPLATE_CMPL_FLOAT:
      * for: cmpl-float, cmpg-float
      */
     /* op vAA, vBB, vCC */
-    mov     r4, lr                      @ save return address
     mov     r9, r0                      @ Save copies - we may need to redo
     mov     r10, r1
+    mov     r11, lr                     @ save return address
     LDR_PC_LR ".L__aeabi_cfcmple"       @ cmp <=: C clear if <, Z set if eq
     bhi     .LTEMPLATE_CMPL_FLOAT_gt_or_nan       @ C set and Z clear, disambiguate
     mvncc   r0, #0                      @ (less than) r0<- -1
     moveq   r0, #0                      @ (equal) r0<- 0, trumps less than
-    bx      r4
+    bx      r11
     @ Test for NaN with a second comparison.  EABI forbids testing bit
     @ patterns, and we can't represent 0x7fc00000 in immediate form, so
     @ make the library call.
 .LTEMPLATE_CMPL_FLOAT_gt_or_nan:
-    mov     r1, r9                      @ reverse order
-    mov     r0, r10
+    mov     r0, r10                     @ restore in reverse order
+    mov     r1, r9
     LDR_PC_LR ".L__aeabi_cfcmple"       @ r0<- Z set if eq, C clear if <
     movcc   r0, #1                      @ (greater than) r1<- 1
-    bxcc    r4
+    bxcc    r11
     mvn     r0, #0                            @ r1<- 1 or -1 for NaN
-    bx      r4
+    bx      r11
 
 
 
@@ -759,6 +755,47 @@ dvmCompiler_TEMPLATE_THROW_EXCEPTION_COMMON:
      *    r0    Dalvik PC that raises the exception
      */
     b       .LhandleException
+
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_SAVE_STATE
+dvmCompiler_TEMPLATE_SAVE_STATE:
+/* File: armv5te/TEMPLATE_SAVE_STATE.S */
+    /*
+     * This handler performs a register save for selfVerification mode.
+     * On entry:
+     *    Top of stack + 4: r7 value to save
+     *    Top of stack + 0: r0 value to save
+     *    r0 - offset from rGLUE to the beginning of the heapArgSpace record
+     *    r7 - the value of regMap
+     *
+     * The handler must save regMap, r0-r12 and then return with r0-r12
+     * with their original values (note that this means r0 and r7 must take
+     * the values on the stack - not the ones in those registers on entry.
+     * Finally, the two registers previously pushed must be popped.
+     */
+    add     r0, r0, rGLUE               @ pointer to heapArgSpace
+    stmia   r0!, {r7}                   @ save regMap
+    ldr     r7, [r13, #0]               @ recover r0 value
+    stmia   r0!, {r7}                   @ save r0
+    ldr     r7, [r13, #4]               @ recover r7 value
+    stmia   r0!, {r1-r12}
+    pop     {r0, r7}                    @ recover r0, r7
+    bx      lr
+
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_RESTORE_STATE
+dvmCompiler_TEMPLATE_RESTORE_STATE:
+/* File: armv5te/TEMPLATE_RESTORE_STATE.S */
+    /*
+     * This handler restores state following a selfVerification memory access.
+     * On entry:
+     *    r0 - offset from rGLUE to the 1st element of the coreRegs save array.
+     */
+    add     r0, r0, rGLUE               @ pointer to heapArgSpace.coreRegs[0]
+    ldmia   r0, {r0-r12}
+    bx      lr
 
     .size   dvmCompilerTemplateStart, .-dvmCompilerTemplateStart
 /* File: armv5te/footer.S */

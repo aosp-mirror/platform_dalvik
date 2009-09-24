@@ -23,246 +23,6 @@
  */
 
 #include "Codegen.h"
-/* Forward decls */
-static ArmLIR *genNullCheck(CompilationUnit *cUnit, int vReg, int mReg,
-                            int dOffset, ArmLIR *pcrLabel);
-static ArmLIR *loadValueAddress(CompilationUnit *cUnit, int vSrc, int rDest);
-static ArmLIR *loadValue(CompilationUnit *cUnit, int vSrc, int rDest);
-static ArmLIR *loadWordDisp(CompilationUnit *cUnit, int rBase,
-                            int displacement, int rDest);
-static ArmLIR *storeWordDisp(CompilationUnit *cUnit, int rBase,
-                             int displacement, int rSrc, int rScratch);
-static ArmLIR *storeValue(CompilationUnit *cUnit, int rSrc, int vDest,
-                          int rScratch);
-static ArmLIR *genConditionalBranch(CompilationUnit *cUnit,
-                                    ArmConditionCode cond,
-                                    ArmLIR *target);
-static ArmLIR *genUnconditionalBranch(CompilationUnit *cUnit, ArmLIR *target);
-static ArmLIR *loadValuePair(CompilationUnit *cUnit, int vSrc, int rDestLo,
-                             int rDestHi);
-static ArmLIR *storeValuePair(CompilationUnit *cUnit, int rSrcLo, int rSrcHi,
-                              int vDest, int rScratch);
-static ArmLIR *genBoundsCheck(CompilationUnit *cUnit, int rIndex,
-                              int rBound, int dOffset, ArmLIR *pcrLabel);
-static ArmLIR *genRegCopy(CompilationUnit *cUnit, int rDest, int rSrc);
-static int inlinedTarget(MIR *mir);
-
-
-/* Routines which must be supplied here */
-static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value);
-static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir, int rDPC,
-                           int rAddr);
-static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
-                            int displacement, int rDest, OpSize size,
-                            bool nullCheck, int vReg);
-static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
-                             int displacement, int rSrc, OpSize size,
-                             int rScratch);
-static inline ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
-                                     ArmConditionCode cond, int reg,
-                                     int checkValue, int dOffset,
-                                     ArmLIR *pcrLabel);
-ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc);
-static ArmLIR *loadMultiple(CompilationUnit *cUnit, int rBase, int rMask);
-static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask);
-
-static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op);
-static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value);
-static ArmLIR *opCondBranch(CompilationUnit *cUnit, ArmConditionCode cc);
-static ArmLIR *opReg(CompilationUnit *cUnit, OpKind op, int rDestSrc);
-static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
-                        int rSrc2);
-static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
-                        int value, int rScratch);
-static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
-                           int rSrc1, int value, int rScratch);
-static ArmLIR *opRegRegReg(CompilationUnit *cUnit, OpKind op, int rDest,
-                           int rSrc1, int rSrc2);
-static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
-                               int rIndex, int rDest, int scale, OpSize size);
-static void genCmpLong(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
-                       int vSrc2);
-
-static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir);
-static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir);
-static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir);
-static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir);
-static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir);
-static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin);
-static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir);
-
-/*
- * Support for register allocation
- */
-
-/* get the next register in r0..r3 in a round-robin fashion */
-#define NEXT_REG(reg) ((reg + 1) & 3)
-/*
- * The following are utility routines to help maintain the RegisterScoreboard
- * state to facilitate register renaming.
- */
-
-/* Reset the tracker to unknown state */
-static inline void resetRegisterScoreboard(CompilationUnit *cUnit)
-{
-    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
-    int i;
-
-    dvmClearAllBits(registerScoreboard->nullCheckedRegs);
-    registerScoreboard->liveDalvikReg = vNone;
-    registerScoreboard->nativeReg = vNone;
-    registerScoreboard->nativeRegHi = vNone;
-    for (i = 0; i < 32; i++) {
-        registerScoreboard->fp[i] = vNone;
-    }
-    registerScoreboard->nextFP = 0;
-}
-
-/* Kill the corresponding bit in the null-checked register list */
-static inline void killNullCheckedRegister(CompilationUnit *cUnit, int vReg)
-{
-    dvmClearBit(cUnit->registerScoreboard.nullCheckedRegs, vReg);
-}
-
-/* The Dalvik register pair held in native registers have changed */
-static inline void updateLiveRegisterPair(CompilationUnit *cUnit,
-                                          int vReg, int mRegLo, int mRegHi)
-{
-    cUnit->registerScoreboard.liveDalvikReg = vReg;
-    cUnit->registerScoreboard.nativeReg = mRegLo;
-    cUnit->registerScoreboard.nativeRegHi = mRegHi;
-    cUnit->registerScoreboard.isWide = true;
-}
-
-/* The Dalvik register held in a native register has changed */
-static inline void updateLiveRegister(CompilationUnit *cUnit,
-                                      int vReg, int mReg)
-{
-    cUnit->registerScoreboard.liveDalvikReg = vReg;
-    cUnit->registerScoreboard.nativeReg = mReg;
-    cUnit->registerScoreboard.isWide = false;
-}
-
-/*
- * Given a Dalvik register id vSrc, use a very simple algorithm to increase
- * the lifetime of cached Dalvik value in a native register.
- */
-static inline int selectFirstRegister(CompilationUnit *cUnit, int vSrc,
-                                      bool isWide)
-{
-    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
-
-    /* No live value - suggest to use r0 */
-    if (registerScoreboard->liveDalvikReg == vNone)
-        return r0;
-
-    /* Reuse the previously used native reg */
-    if (registerScoreboard->liveDalvikReg == vSrc) {
-        if (isWide != true) {
-            return registerScoreboard->nativeReg;
-        } else {
-            /* Return either r0 or r2 */
-            return (registerScoreboard->nativeReg + 1) & 2;
-        }
-    }
-
-    /* No reuse - choose the next one among r0..r3 in the round-robin fashion */
-    if (isWide) {
-        return (registerScoreboard->nativeReg + 2) & 2;
-    } else {
-        return (registerScoreboard->nativeReg + 1) & 3;
-    }
-}
-
-/*
- * Generate a Thumb2 IT instruction, which can nullify up to
- * four subsequent instructions based on a condition and its
- * inverse.  The condition applies to the first instruction, which
- * is executed if the condition is met.  The string "guide" consists
- * of 0 to 3 chars, and applies to the 2nd through 4th instruction.
- * A "T" means the instruction is executed if the condition is
- * met, and an "E" means the instruction is executed if the condition
- * is not met.
- */
-static ArmLIR *genIT(CompilationUnit *cUnit, ArmConditionCode code,
-                     char *guide)
-{
-    int mask;
-    int condBit = code & 1;
-    int altBit = condBit ^ 1;
-    int mask3 = 0;
-    int mask2 = 0;
-    int mask1 = 0;
-
-    //Note: case fallthroughs intentional
-    switch(strlen(guide)) {
-        case 3:
-            mask1 = (guide[2] == 'T') ? condBit : altBit;
-        case 2:
-            mask2 = (guide[1] == 'T') ? condBit : altBit;
-        case 1:
-            mask3 = (guide[0] == 'T') ? condBit : altBit;
-            break;
-        case 0:
-            break;
-        default:
-            assert(0);
-            dvmAbort();
-    }
-    mask = (mask3 << 3) | (mask2 << 2) | (mask1 << 1) |
-           (1 << (3 - strlen(guide)));
-    return newLIR2(cUnit, THUMB2_IT, code, mask);
-}
-
-
-static ArmLIR *fpRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
-{
-    ArmLIR* res = dvmCompilerNew(sizeof(ArmLIR), true);
-    res->operands[0] = rDest;
-    res->operands[1] = rSrc;
-    if (rDest == rSrc) {
-        res->isNop = true;
-    } else {
-        // TODO: support copy between FP and gen regs
-        if (DOUBLEREG(rDest)) {
-            assert(DOUBLEREG(rSrc));
-            res->opCode = THUMB2_VMOVD;
-        } else {
-            assert(SINGLEREG(rSrc));
-            res->opCode = THUMB2_VMOVS;
-        }
-        res->operands[0] = rDest;
-        res->operands[1] = rSrc;
-    }
-    setupResourceMasks(res);
-    return res;
-}
-
-ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
-{
-    ArmLIR* res;
-    ArmOpCode opCode;
-    if (FPREG(rDest) || FPREG(rSrc))
-        return fpRegCopy(cUnit, rDest, rSrc);
-    res = dvmCompilerNew(sizeof(ArmLIR), true);
-    if (LOWREG(rDest) && LOWREG(rSrc))
-        opCode = THUMB_MOV_RR;
-    else if (!LOWREG(rDest) && !LOWREG(rSrc))
-         opCode = THUMB_MOV_RR_H2H;
-    else if (LOWREG(rDest))
-         opCode = THUMB_MOV_RR_H2L;
-    else
-         opCode = THUMB_MOV_RR_L2H;
-
-    res->operands[0] = rDest;
-    res->operands[1] = rSrc;
-    res->opCode = opCode;
-    setupResourceMasks(res);
-    if (rDest == rSrc) {
-        res->isNop = true;
-    }
-    return res;
-}
 
 static int leadingZeros(u4 val)
 {
@@ -318,475 +78,264 @@ static int modifiedImmediate(u4 value)
 }
 
 /*
- * Load a immediate using a shortcut if possible; otherwise
- * grab from the per-translation literal pool
+ * Determine whether value can be encoded as a Thumb2 floating point
+ * immediate.  If not, return -1.  If so return encoded 8-bit value.
  */
-static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
+static int encodeImmDoubleHigh(int value)
 {
-    ArmLIR *res;
-    int modImm;
-    /* See if the value can be constructed cheaply */
-    if ((value >= 0) && (value <= 255)) {
-        return newLIR2(cUnit, THUMB_MOV_IMM, rDest, value);
+    int res;
+    int bitA =    (value & 0x80000000) >> 31;
+    int notBitB = (value & 0x40000000) >> 30;
+    int bitB =    (value & 0x20000000) >> 29;
+    int bSmear =  (value & 0x3fc00000) >> 22;
+    int slice =   (value & 0x003f0000) >> 16;
+    int zeroes =  (value & 0x0000ffff);
+    if (zeroes != 0)
+        return -1;
+    if (bitB) {
+        if ((notBitB != 0) || (bSmear != 0x1f))
+            return -1;
+    } else {
+        if ((notBitB != 1) || (bSmear != 0x0))
+            return -1;
     }
-    /* Check Modified immediate special cases */
-    modImm = modifiedImmediate(value);
-    if (modImm >= 0) {
-        res = newLIR2(cUnit, THUMB2_MOV_IMM_SHIFT, rDest, modImm);
-        return res;
-    }
-    modImm = modifiedImmediate(~value);
-    if (modImm >= 0) {
-        res = newLIR2(cUnit, THUMB2_MVN_IMM_SHIFT, rDest, modImm);
-        return res;
-    }
-    /* 16-bit immediate? */
-    if ((value & 0xffff) == value) {
-        res = newLIR2(cUnit, THUMB2_MOV_IMM16, rDest, value);
-        return res;
-    }
-    /* No shortcut - go ahead and use literal pool */
-    ArmLIR *dataTarget = scanLiteralPool(cUnit, value, 255);
-    if (dataTarget == NULL) {
-        dataTarget = addWordData(cUnit, value, false);
-    }
-    ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
-    loadPcRel->opCode = THUMB_LDR_PC_REL;
-    loadPcRel->generic.target = (LIR *) dataTarget;
-    loadPcRel->operands[0] = rDest;
-    setupResourceMasks(loadPcRel);
-    res = loadPcRel;
-    dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
+    res = (bitA << 7) | (bitB << 6) | slice;
+    return res;
+}
 
-    /*
-     * To save space in the constant pool, we use the ADD_RRI8 instruction to
-     * add up to 255 to an existing constant value.
-     */
-    if (dataTarget->operands[0] != value) {
-        newLIR2(cUnit, THUMB_ADD_RI8, rDest, value - dataTarget->operands[0]);
+static int encodeImmSingle(int value)
+{
+    int res;
+    int bitA =    (value & 0x80000000) >> 31;
+    int notBitB = (value & 0x40000000) >> 30;
+    int bitB =    (value & 0x20000000) >> 29;
+    int bSmear =  (value & 0x3e000000) >> 25;
+    int slice =   (value & 0x01f80000) >> 19;
+    int zeroes =  (value & 0x0007ffff);
+    if (zeroes != 0)
+        return -1;
+    if (bitB) {
+        if ((notBitB != 0) || (bSmear != 0x1f))
+            return -1;
+    } else {
+        if ((notBitB != 1) || (bSmear != 0x0))
+            return -1;
+    }
+    res = (bitA << 7) | (bitB << 6) | slice;
+    return res;
+}
+
+static int encodeImmDouble(int valLo, int valHi)
+{
+    int res = -1;
+    if (valLo == 0)
+        res = encodeImmDoubleHigh(valHi);
+    return res;
+}
+void genRegCopyWide(CompilationUnit *cUnit, int destLo, int destHi,
+                    int srcLo, int srcHi)
+{
+    bool destFP = FPREG(destLo) && FPREG(destHi);
+    bool srcFP = FPREG(srcLo) && FPREG(srcHi);
+    assert(FPREG(srcLo) == FPREG(srcHi));
+    assert(FPREG(destLo) == FPREG(destHi));
+    if (destFP) {
+        if (srcFP) {
+            genRegCopy(cUnit, S2D(destLo, destHi), S2D(srcLo, srcHi));
+        } else {
+            newLIR3(cUnit, kThumb2Fmdrr, S2D(destLo, destHi), srcLo, srcHi);
+        }
+    } else {
+        if (srcFP) {
+            newLIR3(cUnit, kThumb2Fmrrd, destLo, destHi, S2D(srcLo, srcHi));
+        } else {
+            // Handle overlap
+            if (srcHi == destLo) {
+                genRegCopy(cUnit, destHi, srcHi);
+                genRegCopy(cUnit, destLo, srcLo);
+            } else {
+                genRegCopy(cUnit, destLo, srcLo);
+                genRegCopy(cUnit, destHi, srcHi);
+            }
+        }
+    }
+}
+
+
+static int coreTemps[] = {r0, r1, r2, r3, r4PC, r7, r8, r9, r10, r11, r12};
+static int corePreserved[] = {};
+static int fpTemps[] = {fr16, fr17, fr18, fr19, fr20, fr21, fr22, fr23,
+                        fr24, fr25, fr26, fr27, fr28, fr29, fr30, fr31};
+static int fpPreserved[] = {};
+void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit)
+{
+    int i;
+    int numTemps = sizeof(coreTemps)/sizeof(int);
+    int numFPTemps = sizeof(fpTemps)/sizeof(int);
+    RegisterPool *pool = dvmCompilerNew(sizeof(*pool), true);
+    cUnit->regPool = pool;
+    pool->numCoreTemps = numTemps;
+    pool->coreTemps =
+            dvmCompilerNew(numTemps * sizeof(*cUnit->regPool->coreTemps), true);
+    pool->numFPTemps = numFPTemps;
+    pool->FPTemps =
+            dvmCompilerNew(numFPTemps * sizeof(*cUnit->regPool->FPTemps), true);
+    pool->numCoreRegs = 0;
+    pool->coreRegs = NULL;
+    pool->numFPRegs = 0;
+    pool->FPRegs = NULL;
+    initPool(pool->coreTemps, coreTemps, pool->numCoreTemps);
+    initPool(pool->FPTemps, fpTemps, pool->numFPTemps);
+    initPool(pool->coreRegs, NULL, 0);
+    initPool(pool->FPRegs, NULL, 0);
+    pool->nullCheckedRegs =
+        dvmCompilerAllocBitVector(cUnit->numSSARegs, false);
+}
+
+
+/*
+ * Alloc a pair of core registers, or a double.  Low reg in low byte,
+ * high reg in next byte.
+ */
+static int allocTypedTempPair(CompilationUnit *cUnit, bool fpHint, int regClass)
+{
+    int highReg;
+    int lowReg;
+    int res = 0;
+    if (((regClass == kAnyReg) && fpHint) || (regClass == kFPReg)) {
+        lowReg = allocTempDouble(cUnit);
+        highReg = lowReg + 1;
+    } else {
+        lowReg = allocTemp(cUnit);
+        highReg = allocTemp(cUnit);
+    }
+    res = (lowReg & 0xff) | ((highReg & 0xff) << 8);
+    return res;
+}
+
+static int allocTypedTemp(CompilationUnit *cUnit, bool fpHint, int regClass)
+{
+    if (((regClass == kAnyReg) && fpHint) || (regClass == kFPReg))
+        return allocTempFloat(cUnit);
+    return allocTemp(cUnit);
+}
+
+static int encodeShift(int code, int amount) {
+    return ((amount & 0x1f) << 2) | code;
+}
+
+/*
+ * Generate a Thumb2 IT instruction, which can nullify up to
+ * four subsequent instructions based on a condition and its
+ * inverse.  The condition applies to the first instruction, which
+ * is executed if the condition is met.  The string "guide" consists
+ * of 0 to 3 chars, and applies to the 2nd through 4th instruction.
+ * A "T" means the instruction is executed if the condition is
+ * met, and an "E" means the instruction is executed if the condition
+ * is not met.
+ */
+static ArmLIR *genIT(CompilationUnit *cUnit, ArmConditionCode code,
+                     char *guide)
+{
+    int mask;
+    int condBit = code & 1;
+    int altBit = condBit ^ 1;
+    int mask3 = 0;
+    int mask2 = 0;
+    int mask1 = 0;
+
+    //Note: case fallthroughs intentional
+    switch(strlen(guide)) {
+        case 3:
+            mask1 = (guide[2] == 'T') ? condBit : altBit;
+        case 2:
+            mask2 = (guide[1] == 'T') ? condBit : altBit;
+        case 1:
+            mask3 = (guide[0] == 'T') ? condBit : altBit;
+            break;
+        case 0:
+            break;
+        default:
+            assert(0);
+            dvmAbort();
+    }
+    mask = (mask3 << 3) | (mask2 << 2) | (mask1 << 1) |
+           (1 << (3 - strlen(guide)));
+    return newLIR2(cUnit, kThumb2It, code, mask);
+}
+
+
+static ArmLIR *fpRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
+{
+    ArmLIR* res = dvmCompilerNew(sizeof(ArmLIR), true);
+    res->operands[0] = rDest;
+    res->operands[1] = rSrc;
+    if (rDest == rSrc) {
+        res->isNop = true;
+    } else {
+        assert(DOUBLEREG(rDest) == DOUBLEREG(rSrc));
+        if (DOUBLEREG(rDest)) {
+            res->opCode = kThumb2Vmovd;
+        } else {
+            if (SINGLEREG(rDest)) {
+                res->opCode = SINGLEREG(rSrc) ? kThumb2Vmovs : kThumb2Fmsr;
+            } else {
+                assert(SINGLEREG(rSrc));
+                res->opCode = kThumb2Fmrs;
+            }
+        }
+        res->operands[0] = rDest;
+        res->operands[1] = rSrc;
+    }
+    setupResourceMasks(res);
+    return res;
+}
+
+ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
+{
+    ArmLIR* res;
+    ArmOpCode opCode;
+    if (FPREG(rDest) || FPREG(rSrc))
+        return fpRegCopy(cUnit, rDest, rSrc);
+    res = dvmCompilerNew(sizeof(ArmLIR), true);
+    if (LOWREG(rDest) && LOWREG(rSrc))
+        opCode = kThumbMovRR;
+    else if (!LOWREG(rDest) && !LOWREG(rSrc))
+         opCode = kThumbMovRR_H2H;
+    else if (LOWREG(rDest))
+         opCode = kThumbMovRR_H2L;
+    else
+         opCode = kThumbMovRR_L2H;
+
+    res->operands[0] = rDest;
+    res->operands[1] = rSrc;
+    res->opCode = opCode;
+    setupResourceMasks(res);
+    if (rDest == rSrc) {
+        res->isNop = true;
     }
     return res;
 }
 
 /* Export the Dalvik PC assicated with an instruction to the StackSave area */
-static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir, int rDPC,
-                           int rAddr)
+static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
 {
     ArmLIR *res;
     int offset = offsetof(StackSaveArea, xtra.currentPc);
+    int rDPC = allocTemp(cUnit);
     res = loadConstant(cUnit, rDPC, (int) (cUnit->method->insns + mir->offset));
-    newLIR3(cUnit, THUMB2_STR_RRI8_PREDEC, rDPC, rFP,
+    newLIR3(cUnit, kThumb2StrRRI8Predec, rDPC, rFP,
             sizeof(StackSaveArea) - offset);
-    return res;
-}
-
-/* Load value from base + scaled index. Note: index reg killed */
-static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
-                               int rIndex, int rDest, int scale, OpSize size)
-{
-    bool allLowRegs = LOWREG(rBase) && LOWREG(rIndex) && LOWREG(rDest);
-    ArmOpCode opCode = THUMB_BKPT;
-    bool thumbForm = (allLowRegs && (scale == 0));
-    switch (size) {
-        case WORD:
-            opCode = (thumbForm) ? THUMB_LDR_RRR : THUMB2_LDR_RRR;
-            break;
-        case UNSIGNED_HALF:
-            opCode = (thumbForm) ? THUMB_LDRH_RRR : THUMB2_LDRH_RRR;
-            break;
-        case SIGNED_HALF:
-            opCode = (thumbForm) ? THUMB_LDRSH_RRR : THUMB2_LDRSH_RRR;
-            break;
-        case UNSIGNED_BYTE:
-            opCode = (thumbForm) ? THUMB_LDRB_RRR : THUMB2_LDRB_RRR;
-            break;
-        case SIGNED_BYTE:
-            opCode = (thumbForm) ? THUMB_LDRSB_RRR : THUMB2_LDRSB_RRR;
-            break;
-        default:
-            assert(0);
-    }
-    if (thumbForm)
-        return newLIR3(cUnit, opCode, rDest, rBase, rIndex);
-    else
-        return newLIR4(cUnit, opCode, rDest, rBase, rIndex, scale);
-}
-
-/* store value base base + scaled index. Note: index reg killed */
-static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
-                                int rIndex, int rSrc, int scale, OpSize size)
-{
-    bool allLowRegs = LOWREG(rBase) && LOWREG(rIndex) && LOWREG(rSrc);
-    ArmOpCode opCode = THUMB_BKPT;
-    bool thumbForm = (allLowRegs && (scale == 0));
-    switch (size) {
-        case WORD:
-            opCode = (thumbForm) ? THUMB_STR_RRR : THUMB2_STR_RRR;
-            break;
-        case UNSIGNED_HALF:
-        case SIGNED_HALF:
-            opCode = (thumbForm) ? THUMB_STRH_RRR : THUMB2_STRH_RRR;
-            break;
-        case UNSIGNED_BYTE:
-        case SIGNED_BYTE:
-            opCode = (thumbForm) ? THUMB_STRB_RRR : THUMB2_STRB_RRR;
-            break;
-        default:
-            assert(0);
-    }
-    if (thumbForm)
-        return newLIR3(cUnit, opCode, rSrc, rBase, rIndex);
-    else
-        return newLIR4(cUnit, opCode, rSrc, rBase, rIndex, scale);
-}
-
-/*
- * Load a float from a Dalvik register.  Note: using fixed r7 here
- * when operation is out of range.  Revisit this when registor allocation
- * strategy changes.
- */
-static ArmLIR *fpVarAccess(CompilationUnit *cUnit, int vSrcDest,
-                           int rSrcDest, ArmOpCode opCode)
-{
-    ArmLIR *res;
-    if (vSrcDest > 255) {
-        opRegRegImm(cUnit, OP_ADD, r7, rFP, vSrcDest * 4, rNone);
-        res = newLIR3(cUnit, opCode, rSrcDest, r7, 0);
-    } else {
-        res = newLIR3(cUnit, opCode, rSrcDest, rFP, vSrcDest);
-    }
-    return res;
-}
-
-static int nextFPReg(CompilationUnit *cUnit, int dalvikReg, bool isDouble)
-{
-    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
-    int reg;
-
-    if (isDouble) {
-        reg = ((registerScoreboard->nextFP + 1) & ~1) % 32;
-        registerScoreboard->nextFP = reg + 2;
-        registerScoreboard->nextFP %= 32;
-        registerScoreboard->fp[reg] = dalvikReg;
-        return dr0 + reg;
-    }
-    else {
-        reg = registerScoreboard->nextFP++;
-        registerScoreboard->nextFP %= 32;
-        registerScoreboard->fp[reg] = dalvikReg;
-        return fr0 + reg;
-    }
-}
-
-/*
- * Select a SFP register for the dalvikReg
- */
-static int selectSFPReg(CompilationUnit *cUnit, int dalvikReg)
-{
-    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
-    int i;
-
-    if (dalvikReg == vNone) {
-        return nextFPReg(cUnit, dalvikReg, false);;
-    }
-
-    for (i = 0; i < 32; i++) {
-        if (registerScoreboard->fp[i] == dalvikReg) {
-            return fr0 + i;
-        }
-    }
-    return nextFPReg(cUnit, dalvikReg, false);;
-}
-
-/*
- * Select a DFP register for the dalvikReg
- */
-static int selectDFPReg(CompilationUnit *cUnit, int dalvikReg)
-{
-    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
-    int i;
-
-    if (dalvikReg == vNone) {
-        return nextFPReg(cUnit, dalvikReg, true);;
-    }
-
-    for (i = 0; i < 32; i += 2) {
-        if (registerScoreboard->fp[i] == dalvikReg) {
-            return dr0 + i;
-        }
-    }
-    return nextFPReg(cUnit, dalvikReg, true);
-}
-
-static ArmLIR *loadFloat(CompilationUnit *cUnit, int vSrc, int rDest)
-{
-    assert(SINGLEREG(rDest));
-    ArmLIR *lir = fpVarAccess(cUnit, vSrc, rDest, THUMB2_VLDRS);
-    annotateDalvikRegAccess(lir, vSrc, true /* isLoad */);
-    return lir;
-}
-
-/* Store a float to a Dalvik register */
-static ArmLIR *storeFloat(CompilationUnit *cUnit, int rSrc, int vDest)
-{
-    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
-
-    assert(SINGLEREG(rSrc));
-    registerScoreboard->fp[rSrc % 32] = vDest;
-
-    ArmLIR *lir = fpVarAccess(cUnit, vDest, rSrc, THUMB2_VSTRS);
-    annotateDalvikRegAccess(lir, vDest, false /* isLoad */);
-    return lir;
-}
-
-/* Load a double from a Dalvik register */
-static ArmLIR *loadDouble(CompilationUnit *cUnit, int vSrc, int rDest)
-{
-    assert(DOUBLEREG(rDest));
-    ArmLIR *lir = fpVarAccess(cUnit, vSrc, rDest, THUMB2_VLDRD);
-    annotateDalvikRegAccess(lir, vSrc, true /* isLoad */);
-    return lir;
-}
-
-/* Store a double to a Dalvik register */
-static ArmLIR *storeDouble(CompilationUnit *cUnit, int rSrc, int vDest)
-{
-    RegisterScoreboard *registerScoreboard = &cUnit->registerScoreboard;
-
-    assert(DOUBLEREG(rSrc));
-    registerScoreboard->fp[rSrc % 32] = vDest;
-
-    ArmLIR *lir = fpVarAccess(cUnit, vDest, rSrc, THUMB2_VSTRD);
-    annotateDalvikRegAccess(lir, vDest, false /* isLoad */);
-    return lir;
-}
-
-/*
- * Load value from base + displacement.  Optionally perform null check
- * on base (which must have an associated vReg and MIR).  If not
- * performing null check, incoming MIR can be null. Note: base and
- * dest must not be the same if there is any chance that the long
- * form must be used.
- * TODO: revisit, perhaps use hot temp reg in (base == dest) case.
- */
-static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
-                            int displacement, int rDest, OpSize size,
-                            bool nullCheck, int vReg)
-{
-    ArmLIR *first = NULL;
-    ArmLIR *res, *load;
-    ArmOpCode opCode = THUMB_BKPT;
-    bool shortForm = false;
-    bool thumb2Form = (displacement < 4092 && displacement >= 0);
-    int shortMax = 128;
-    bool allLowRegs = (LOWREG(rBase) && LOWREG(rDest));
-    int encodedDisp = displacement;
-
-    switch (size) {
-        case WORD:
-            if (LOWREG(rDest) && (rBase == rpc) &&
-                (displacement <= 1020) && (displacement >= 0)) {
-                shortForm = true;
-                encodedDisp >>= 2;
-                opCode = THUMB_LDR_PC_REL;
-            } else if (LOWREG(rDest) && (rBase == r13) &&
-                      (displacement <= 1020) && (displacement >= 0)) {
-                shortForm = true;
-                encodedDisp >>= 2;
-                opCode = THUMB_LDR_SP_REL;
-            } else if (allLowRegs && displacement < 128 && displacement >= 0) {
-                assert((displacement & 0x3) == 0);
-                shortForm = true;
-                encodedDisp >>= 2;
-                opCode = THUMB_LDR_RRI5;
-            } else if (thumb2Form) {
-                shortForm = true;
-                opCode = THUMB2_LDR_RRI12;
-            }
-            break;
-        case UNSIGNED_HALF:
-            if (allLowRegs && displacement < 64 && displacement >= 0) {
-                assert((displacement & 0x1) == 0);
-                shortForm = true;
-                encodedDisp >>= 1;
-                opCode = THUMB_LDRH_RRI5;
-            } else if (displacement < 4092 && displacement >= 0) {
-                shortForm = true;
-                opCode = THUMB2_LDRH_RRI12;
-            }
-            break;
-        case SIGNED_HALF:
-            if (thumb2Form) {
-                shortForm = true;
-                opCode = THUMB2_LDRSH_RRI12;
-            }
-            break;
-        case UNSIGNED_BYTE:
-            if (allLowRegs && displacement < 32 && displacement >= 0) {
-                shortForm = true;
-                opCode = THUMB_LDRB_RRI5;
-            } else if (thumb2Form) {
-                shortForm = true;
-                opCode = THUMB2_LDRB_RRI12;
-            }
-            break;
-        case SIGNED_BYTE:
-            if (thumb2Form) {
-                shortForm = true;
-                opCode = THUMB2_LDRSB_RRI12;
-            }
-            break;
-        default:
-            assert(0);
-    }
-    if (nullCheck)
-        first = genNullCheck(cUnit, vReg, rBase, mir->offset, NULL);
-    if (shortForm) {
-        load = res = newLIR3(cUnit, opCode, rDest, rBase, encodedDisp);
-    } else {
-        assert(rBase != rDest);
-        res = loadConstant(cUnit, rDest, encodedDisp);
-        load = loadBaseIndexed(cUnit, rBase, rDest, rDest, 0, size);
-    }
-
-    if (rBase == rFP) {
-        annotateDalvikRegAccess(load, displacement >> 2, true /* isLoad */);
-    }
-    return (first) ? first : res;
-}
-
-static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
-                             int displacement, int rSrc, OpSize size,
-                             int rScratch)
-{
-    ArmLIR *res, *store;
-    ArmOpCode opCode = THUMB_BKPT;
-    bool shortForm = false;
-    bool thumb2Form = (displacement < 4092 && displacement >= 0);
-    int shortMax = 128;
-    bool allLowRegs = (LOWREG(rBase) && LOWREG(rSrc));
-    int encodedDisp = displacement;
-
-    if (rScratch != -1)
-        allLowRegs &= LOWREG(rScratch);
-    switch (size) {
-        case WORD:
-            if (allLowRegs && displacement < 128 && displacement >= 0) {
-                assert((displacement & 0x3) == 0);
-                shortForm = true;
-                encodedDisp >>= 2;
-                opCode = THUMB_STR_RRI5;
-            } else if (thumb2Form) {
-                shortForm = true;
-                opCode = THUMB2_STR_RRI12;
-            }
-            break;
-        case UNSIGNED_HALF:
-        case SIGNED_HALF:
-            if (displacement < 64 && displacement >= 0) {
-                assert((displacement & 0x1) == 0);
-                shortForm = true;
-                encodedDisp >>= 1;
-                opCode = THUMB_STRH_RRI5;
-            } else if (thumb2Form) {
-                shortForm = true;
-                opCode = THUMB2_STRH_RRI12;
-            }
-            break;
-        case UNSIGNED_BYTE:
-        case SIGNED_BYTE:
-            if (displacement < 32 && displacement >= 0) {
-                shortForm = true;
-                opCode = THUMB_STRB_RRI5;
-            } else if (thumb2Form) {
-                shortForm = true;
-                opCode = THUMB2_STRH_RRI12;
-            }
-            break;
-        default:
-            assert(0);
-    }
-    if (shortForm) {
-        store = res = newLIR3(cUnit, opCode, rSrc, rBase, encodedDisp);
-    } else {
-        assert(rScratch != -1);
-        res = loadConstant(cUnit, rScratch, encodedDisp);
-        store = storeBaseIndexed(cUnit, rBase, rScratch, rSrc, 0, size);
-    }
-
-    if (rBase == rFP) {
-        annotateDalvikRegAccess(store, displacement >> 2, false /* isLoad */);
-    }
-    return res;
-}
-
-/*
- * Perform a "reg cmp imm" operation and jump to the PCR region if condition
- * satisfies.
- */
-static ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
-                                         ArmConditionCode cond, int reg,
-                                         int checkValue, int dOffset,
-                                         ArmLIR *pcrLabel)
-{
-    ArmLIR *branch;
-    int modImm;
-    /*
-     * TODO: re-enable usage of THUMB2_CBZ & THUMB2_CBNZ once assembler is
-     * enhanced to allow us to replace code patterns when instructions don't
-     * reach.  Currently, CB[N]Z is causing too many assembler aborts.
-     * What we want to do is emit the short forms, and then replace them with
-     * longer versions when needed.
-     */
-    if (0 && (LOWREG(reg)) && (checkValue == 0) &&
-       ((cond == ARM_COND_EQ) || (cond == ARM_COND_NE))) {
-        branch = newLIR2(cUnit,
-                         (cond == ARM_COND_EQ) ? THUMB2_CBZ : THUMB2_CBNZ,
-                         reg, 0);
-    } else {
-        modImm = modifiedImmediate(checkValue);
-        if ((checkValue & 0xff) == checkValue) {
-            newLIR2(cUnit, THUMB_CMP_RI8, reg, checkValue);
-        } else if (modImm >= 0) {
-            newLIR2(cUnit, THUMB2_CMP_RI8, reg, modImm);
-        } else {
-            /* Note: direct use of hot temp r7 here. Revisit. */
-            loadConstant(cUnit, r7, checkValue);
-            newLIR2(cUnit, THUMB_CMP_RR, reg, r7);
-        }
-        branch = newLIR2(cUnit, THUMB_B_COND, 0, cond);
-    }
-    return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
-}
-
-static ArmLIR *loadMultiple(CompilationUnit *cUnit, int rBase, int rMask)
-{
-    ArmLIR *res;
-    if (LOWREG(rBase) && ((rMask & 0xff)==rMask)) {
-        res = newLIR2(cUnit, THUMB_LDMIA, rBase, rMask);
-    } else {
-        res = newLIR2(cUnit, THUMB2_LDMIA, rBase, rMask);
-    }
-    return res;
-}
-
-static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask)
-{
-    ArmLIR *res;
-    if (LOWREG(rBase) && ((rMask & 0xff)==rMask)) {
-        res = newLIR2(cUnit, THUMB_STMIA, rBase, rMask);
-    } else {
-        res = newLIR2(cUnit, THUMB2_STMIA, rBase, rMask);
-    }
+    freeTemp(cUnit, rDPC);
     return res;
 }
 
 static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
 {
-    ArmOpCode opCode = THUMB_BKPT;
+    ArmOpCode opCode = kThumbBkpt;
     switch (op) {
-        case OP_UNCOND_BR:
-            opCode = THUMB_B_UNCOND;
+        case kOpUncondBr:
+            opCode = kThumbBUncond;
             break;
         default:
             assert(0);
@@ -796,18 +345,18 @@ static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
 
 static ArmLIR *opCondBranch(CompilationUnit *cUnit, ArmConditionCode cc)
 {
-    return newLIR2(cUnit, THUMB_B_COND, 0 /* offset to be patched */, cc);
+    return newLIR2(cUnit, kThumbBCond, 0 /* offset to be patched */, cc);
 }
 
 static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
 {
-    ArmOpCode opCode = THUMB_BKPT;
+    ArmOpCode opCode = kThumbBkpt;
     switch (op) {
-        case OP_PUSH:
-            opCode = ((value & 0xff00) != 0) ? THUMB2_PUSH : THUMB_PUSH;
+        case kOpPush:
+            opCode = ((value & 0xff00) != 0) ? kThumb2Push : kThumbPush;
             break;
-        case OP_POP:
-            opCode = ((value & 0xff00) != 0) ? THUMB2_POP : THUMB_POP;
+        case kOpPop:
+            opCode = ((value & 0xff00) != 0) ? kThumb2Pop : kThumbPop;
             break;
         default:
             assert(0);
@@ -817,10 +366,10 @@ static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
 
 static ArmLIR *opReg(CompilationUnit *cUnit, OpKind op, int rDestSrc)
 {
-    ArmOpCode opCode = THUMB_BKPT;
+    ArmOpCode opCode = kThumbBkpt;
     switch (op) {
-        case OP_BLX:
-            opCode = THUMB_BLX_R;
+        case kOpBlx:
+            opCode = kThumbBlxR;
             break;
         default:
             assert(0);
@@ -832,98 +381,98 @@ static ArmLIR *opRegRegShift(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
                         int rSrc2, int shift)
 {
     bool thumbForm = ((shift == 0) && LOWREG(rDestSrc1) && LOWREG(rSrc2));
-    ArmOpCode opCode = THUMB_BKPT;
+    ArmOpCode opCode = kThumbBkpt;
     switch (op) {
-        case OP_ADC:
-            opCode = (thumbForm) ? THUMB_ADC_RR : THUMB2_ADC_RRR;
+        case kOpAdc:
+            opCode = (thumbForm) ? kThumbAdcRR : kThumb2AdcRRR;
             break;
-        case OP_AND:
-            opCode = (thumbForm) ? THUMB_AND_RR : THUMB2_AND_RRR;
+        case kOpAnd:
+            opCode = (thumbForm) ? kThumbAndRR : kThumb2AndRRR;
             break;
-        case OP_BIC:
-            opCode = (thumbForm) ? THUMB_BIC_RR : THUMB2_BIC_RRR;
+        case kOpBic:
+            opCode = (thumbForm) ? kThumbBicRR : kThumb2BicRRR;
             break;
-        case OP_CMN:
+        case kOpCmn:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_CMN_RR : THUMB2_CMN_RR;
+            opCode = (thumbForm) ? kThumbCmnRR : kThumb2CmnRR;
             break;
-        case OP_CMP:
+        case kOpCmp:
             if (thumbForm)
-                opCode = THUMB_CMP_RR;
+                opCode = kThumbCmpRR;
             else if ((shift == 0) && !LOWREG(rDestSrc1) && !LOWREG(rSrc2))
-                opCode = THUMB_CMP_HH;
+                opCode = kThumbCmpHH;
             else if ((shift == 0) && LOWREG(rDestSrc1))
-                opCode = THUMB_CMP_LH;
+                opCode = kThumbCmpLH;
             else if (shift == 0)
-                opCode = THUMB_CMP_HL;
+                opCode = kThumbCmpHL;
             else
-                opCode = THUMB2_CMP_RR;
+                opCode = kThumb2CmpRR;
             break;
-        case OP_XOR:
-            opCode = (thumbForm) ? THUMB_EOR_RR : THUMB2_EOR_RRR;
+        case kOpXor:
+            opCode = (thumbForm) ? kThumbEorRR : kThumb2EorRRR;
             break;
-        case OP_MOV:
+        case kOpMov:
             assert(shift == 0);
             if (LOWREG(rDestSrc1) && LOWREG(rSrc2))
-                opCode = THUMB_MOV_RR;
+                opCode = kThumbMovRR;
             else if (!LOWREG(rDestSrc1) && !LOWREG(rSrc2))
-                opCode = THUMB_MOV_RR_H2H;
+                opCode = kThumbMovRR_H2H;
             else if (LOWREG(rDestSrc1))
-                opCode = THUMB_MOV_RR_H2L;
+                opCode = kThumbMovRR_H2L;
             else
-                opCode = THUMB_MOV_RR_L2H;
+                opCode = kThumbMovRR_L2H;
             break;
-        case OP_MUL:
+        case kOpMul:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_MUL : THUMB2_MUL_RRR;
+            opCode = (thumbForm) ? kThumbMul : kThumb2MulRRR;
             break;
-        case OP_MVN:
-            opCode = (thumbForm) ? THUMB_MVN : THUMB2_MVN_RR;
+        case kOpMvn:
+            opCode = (thumbForm) ? kThumbMvn : kThumb2MnvRR;
             break;
-        case OP_NEG:
+        case kOpNeg:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_NEG : THUMB2_NEG_RR;
+            opCode = (thumbForm) ? kThumbNeg : kThumb2NegRR;
             break;
-        case OP_OR:
-            opCode = (thumbForm) ? THUMB_ORR : THUMB2_ORR_RRR;
+        case kOpOr:
+            opCode = (thumbForm) ? kThumbOrr : kThumb2OrrRRR;
             break;
-        case OP_SBC:
-            opCode = (thumbForm) ? THUMB_SBC : THUMB2_SBC_RRR;
+        case kOpSbc:
+            opCode = (thumbForm) ? kThumbSbc : kThumb2SbcRRR;
             break;
-        case OP_TST:
-            opCode = (thumbForm) ? THUMB_TST : THUMB2_TST_RR;
+        case kOpTst:
+            opCode = (thumbForm) ? kThumbTst : kThumb2TstRR;
             break;
-        case OP_LSL:
+        case kOpLsl:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_LSL_RR : THUMB2_LSL_RRR;
+            opCode = (thumbForm) ? kThumbLslRR : kThumb2LslRRR;
             break;
-        case OP_LSR:
+        case kOpLsr:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_LSR_RR : THUMB2_LSR_RRR;
+            opCode = (thumbForm) ? kThumbLsrRR : kThumb2LsrRRR;
             break;
-        case OP_ASR:
+        case kOpAsr:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_ASR_RR : THUMB2_ASR_RRR;
+            opCode = (thumbForm) ? kThumbAsrRR : kThumb2AsrRRR;
             break;
-        case OP_ROR:
+        case kOpRor:
             assert(shift == 0);
-            opCode = (thumbForm) ? THUMB_ROR_RR : THUMB2_ROR_RRR;
+            opCode = (thumbForm) ? kThumbRorRR : kThumb2RorRRR;
             break;
-        case OP_ADD:
-            opCode = (thumbForm) ? THUMB_ADD_RRR : THUMB2_ADD_RRR;
+        case kOpAdd:
+            opCode = (thumbForm) ? kThumbAddRRR : kThumb2AddRRR;
             break;
-        case OP_SUB:
-            opCode = (thumbForm) ? THUMB_SUB_RRR : THUMB2_SUB_RRR;
+        case kOpSub:
+            opCode = (thumbForm) ? kThumbSubRRR : kThumb2SubRRR;
             break;
-        case OP_2BYTE:
+        case kOp2Byte:
             assert(shift == 0);
-            return newLIR4(cUnit, THUMB2_SBFX, rDestSrc1, rSrc2, 0, 8);
-        case OP_2SHORT:
+            return newLIR4(cUnit, kThumb2Sbfx, rDestSrc1, rSrc2, 0, 8);
+        case kOp2Short:
             assert(shift == 0);
-            return newLIR4(cUnit, THUMB2_SBFX, rDestSrc1, rSrc2, 0, 16);
-        case OP_2CHAR:
+            return newLIR4(cUnit, kThumb2Sbfx, rDestSrc1, rSrc2, 0, 16);
+        case kOp2Char:
             assert(shift == 0);
-            return newLIR4(cUnit, THUMB2_UBFX, rDestSrc1, rSrc2, 0, 16);
+            return newLIR4(cUnit, kThumb2Ubfx, rDestSrc1, rSrc2, 0, 16);
         default:
             assert(0);
             break;
@@ -932,7 +481,7 @@ static ArmLIR *opRegRegShift(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
     if (EncodingMap[opCode].flags & IS_BINARY_OP)
         return newLIR2(cUnit, opCode, rDestSrc1, rSrc2);
     else if (EncodingMap[opCode].flags & IS_TERTIARY_OP) {
-        if (EncodingMap[opCode].fieldLoc[2].kind == SHIFT)
+        if (EncodingMap[opCode].fieldLoc[2].kind == kFmtShift)
             return newLIR3(cUnit, opCode, rDestSrc1, rSrc2, shift);
         else
             return newLIR3(cUnit, opCode, rDestSrc1, rDestSrc1, rSrc2);
@@ -950,103 +499,56 @@ static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
     return opRegRegShift(cUnit, op, rDestSrc1, rSrc2, 0);
 }
 
-/* Handle Thumb-only variants here - otherwise punt to opRegRegImm */
-static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
-                        int value, int rScratch)
-{
-    ArmLIR *res;
-    bool neg = (value < 0);
-    int absValue = (neg) ? -value : value;
-    bool shortForm = (((absValue & 0xff) == absValue) && LOWREG(rDestSrc1));
-    ArmOpCode opCode = THUMB_BKPT;
-    switch (op) {
-        case OP_ADD:
-            if ( !neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
-                assert((value & 0x3) == 0);
-                return newLIR1(cUnit, THUMB_ADD_SPI7, value >> 2);
-            } else if (shortForm) {
-                opCode = (neg) ? THUMB_SUB_RI8 : THUMB_ADD_RI8;
-            }
-            break;
-        case OP_SUB:
-            if (!neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
-                assert((value & 0x3) == 0);
-                return newLIR1(cUnit, THUMB_SUB_SPI7, value >> 2);
-            } else if (shortForm) {
-                opCode = (neg) ? THUMB_ADD_RI8 : THUMB_SUB_RI8;
-            }
-            break;
-        case OP_CMP:
-            if (LOWREG(rDestSrc1) && shortForm)
-                opCode = (shortForm) ?  THUMB_CMP_RI8 : THUMB_CMP_RR;
-            else if (LOWREG(rDestSrc1))
-                opCode = THUMB_CMP_RR;
-            else {
-                shortForm = false;
-                opCode = THUMB_CMP_HL;
-            }
-            break;
-        default:
-            /* Punt to opRegRegImm - if bad case catch it there */
-            shortForm = false;
-            break;
-    }
-    if (shortForm)
-        return newLIR2(cUnit, opCode, rDestSrc1, absValue);
-    else
-        return opRegRegImm(cUnit, op, rDestSrc1, rDestSrc1, value, rScratch);
-}
-
 static ArmLIR *opRegRegRegShift(CompilationUnit *cUnit, OpKind op,
                                 int rDest, int rSrc1, int rSrc2, int shift)
 {
-    ArmOpCode opCode = THUMB_BKPT;
+    ArmOpCode opCode = kThumbBkpt;
     bool thumbForm = (shift == 0) && LOWREG(rDest) && LOWREG(rSrc1) &&
                       LOWREG(rSrc2);
     switch (op) {
-        case OP_ADD:
-            opCode = (thumbForm) ? THUMB_ADD_RRR : THUMB2_ADD_RRR;
+        case kOpAdd:
+            opCode = (thumbForm) ? kThumbAddRRR : kThumb2AddRRR;
             break;
-        case OP_SUB:
-            opCode = (thumbForm) ? THUMB_SUB_RRR : THUMB2_SUB_RRR;
+        case kOpSub:
+            opCode = (thumbForm) ? kThumbSubRRR : kThumb2SubRRR;
             break;
-        case OP_ADC:
-            opCode = THUMB2_ADC_RRR;
+        case kOpAdc:
+            opCode = kThumb2AdcRRR;
             break;
-        case OP_AND:
-            opCode = THUMB2_AND_RRR;
+        case kOpAnd:
+            opCode = kThumb2AndRRR;
             break;
-        case OP_BIC:
-            opCode = THUMB2_BIC_RRR;
+        case kOpBic:
+            opCode = kThumb2BicRRR;
             break;
-        case OP_XOR:
-            opCode = THUMB2_EOR_RRR;
+        case kOpXor:
+            opCode = kThumb2EorRRR;
             break;
-        case OP_MUL:
+        case kOpMul:
             assert(shift == 0);
-            opCode = THUMB2_MUL_RRR;
+            opCode = kThumb2MulRRR;
             break;
-        case OP_OR:
-            opCode = THUMB2_ORR_RRR;
+        case kOpOr:
+            opCode = kThumb2OrrRRR;
             break;
-        case OP_SBC:
-            opCode = THUMB2_SBC_RRR;
+        case kOpSbc:
+            opCode = kThumb2SbcRRR;
             break;
-        case OP_LSL:
+        case kOpLsl:
             assert(shift == 0);
-            opCode = THUMB2_LSL_RRR;
+            opCode = kThumb2LslRRR;
             break;
-        case OP_LSR:
+        case kOpLsr:
             assert(shift == 0);
-            opCode = THUMB2_LSR_RRR;
+            opCode = kThumb2LsrRRR;
             break;
-        case OP_ASR:
+        case kOpAsr:
             assert(shift == 0);
-            opCode = THUMB2_ASR_RRR;
+            opCode = kThumb2AsrRRR;
             break;
-        case OP_ROR:
+        case kOpRor:
             assert(shift == 0);
-            opCode = THUMB2_ROR_RRR;
+            opCode = kThumb2RorRRR;
             break;
         default:
             assert(0);
@@ -1067,97 +569,124 @@ static ArmLIR *opRegRegReg(CompilationUnit *cUnit, OpKind op, int rDest,
     return opRegRegRegShift(cUnit, op, rDest, rSrc1, rSrc2, 0);
 }
 
+static void genLong3Addr(CompilationUnit *cUnit, OpKind firstOp,
+                         OpKind secondOp, RegLocation rlDest,
+                         RegLocation rlSrc1, RegLocation rlSrc2)
+{
+    RegLocation rlResult;
+    rlSrc1 = loadValueWide(cUnit, rlSrc1, kCoreReg);
+    rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
+    rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    opRegRegReg(cUnit, firstOp, rlResult.lowReg, rlSrc1.lowReg, rlSrc2.lowReg);
+    opRegRegReg(cUnit, secondOp, rlResult.highReg, rlSrc1.highReg,
+                rlSrc2.highReg);
+    storeValueWide(cUnit, rlDest, rlResult);
+}
+
 static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
-                           int rSrc1, int value, int rScratch)
+                           int rSrc1, int value)
 {
     ArmLIR *res;
     bool neg = (value < 0);
     int absValue = (neg) ? -value : value;
-    ArmOpCode opCode = THUMB_BKPT;
-    ArmOpCode altOpCode = THUMB_BKPT;
+    ArmOpCode opCode = kThumbBkpt;
+    ArmOpCode altOpCode = kThumbBkpt;
     bool allLowRegs = (LOWREG(rDest) && LOWREG(rSrc1));
     int modImm = modifiedImmediate(value);
     int modImmNeg = modifiedImmediate(-value);
 
     switch(op) {
-        case OP_LSL:
+        case kOpLsl:
             if (allLowRegs)
-                return newLIR3(cUnit, THUMB_LSL_RRI5, rDest, rSrc1, value);
+                return newLIR3(cUnit, kThumbLslRRI5, rDest, rSrc1, value);
             else
-                return newLIR3(cUnit, THUMB2_LSL_RRI5, rDest, rSrc1, value);
-        case OP_LSR:
+                return newLIR3(cUnit, kThumb2LslRRI5, rDest, rSrc1, value);
+        case kOpLsr:
             if (allLowRegs)
-                return newLIR3(cUnit, THUMB_LSR_RRI5, rDest, rSrc1, value);
+                return newLIR3(cUnit, kThumbLsrRRI5, rDest, rSrc1, value);
             else
-                return newLIR3(cUnit, THUMB2_LSR_RRI5, rDest, rSrc1, value);
-        case OP_ASR:
+                return newLIR3(cUnit, kThumb2LsrRRI5, rDest, rSrc1, value);
+        case kOpAsr:
             if (allLowRegs)
-                return newLIR3(cUnit, THUMB_ASR_RRI5, rDest, rSrc1, value);
+                return newLIR3(cUnit, kThumbAsrRRI5, rDest, rSrc1, value);
             else
-                return newLIR3(cUnit, THUMB2_ASR_RRI5, rDest, rSrc1, value);
-        case OP_ROR:
-            return newLIR3(cUnit, THUMB2_ROR_RRI5, rDest, rSrc1, value);
-        case OP_ADD:
+                return newLIR3(cUnit, kThumb2AsrRRI5, rDest, rSrc1, value);
+        case kOpRor:
+            return newLIR3(cUnit, kThumb2RorRRI5, rDest, rSrc1, value);
+        case kOpAdd:
             if (LOWREG(rDest) && (rSrc1 == 13) &&
                 (value <= 1020) && ((value & 0x3)==0)) {
-                return newLIR3(cUnit, THUMB_ADD_SP_REL, rDest, rSrc1,
+                return newLIR3(cUnit, kThumbAddSpRel, rDest, rSrc1,
                                value >> 2);
             } else if (LOWREG(rDest) && (rSrc1 == rpc) &&
                        (value <= 1020) && ((value & 0x3)==0)) {
-                return newLIR3(cUnit, THUMB_ADD_PC_REL, rDest, rSrc1,
+                return newLIR3(cUnit, kThumbAddPcRel, rDest, rSrc1,
                                value >> 2);
             }
-            opCode = THUMB2_ADD_RRI8;
-            altOpCode = THUMB2_ADD_RRR;
+            opCode = kThumb2AddRRI8;
+            altOpCode = kThumb2AddRRR;
             // Note: intentional fallthrough
-        case OP_SUB:
+        case kOpSub:
             if (allLowRegs && ((absValue & 0x7) == absValue)) {
-                if (op == OP_ADD)
-                    opCode = (neg) ? THUMB_SUB_RRI3 : THUMB_ADD_RRI3;
+                if (op == kOpAdd)
+                    opCode = (neg) ? kThumbSubRRI3 : kThumbAddRRI3;
                 else
-                    opCode = (neg) ? THUMB_ADD_RRI3 : THUMB_SUB_RRI3;
+                    opCode = (neg) ? kThumbAddRRI3 : kThumbSubRRI3;
                 return newLIR3(cUnit, opCode, rDest, rSrc1, absValue);
             } else if ((absValue & 0xff) == absValue) {
-                if (op == OP_ADD)
-                    opCode = (neg) ? THUMB2_SUB_RRI12 : THUMB2_ADD_RRI12;
+                if (op == kOpAdd)
+                    opCode = (neg) ? kThumb2SubRRI12 : kThumb2AddRRI12;
                 else
-                    opCode = (neg) ? THUMB2_ADD_RRI12 : THUMB2_SUB_RRI12;
+                    opCode = (neg) ? kThumb2AddRRI12 : kThumb2SubRRI12;
                 return newLIR3(cUnit, opCode, rDest, rSrc1, absValue);
             }
             if (modImmNeg >= 0) {
-                op = (op == OP_ADD) ? OP_SUB : OP_ADD;
+                op = (op == kOpAdd) ? kOpSub : kOpAdd;
                 modImm = modImmNeg;
             }
-            if (op == OP_SUB) {
-                opCode = THUMB2_SUB_RRI8;
-                altOpCode = THUMB2_SUB_RRR;
+            if (op == kOpSub) {
+                opCode = kThumb2SubRRI8;
+                altOpCode = kThumb2SubRRR;
             }
             break;
-        case OP_ADC:
-            opCode = THUMB2_ADC_RRI8;
-            altOpCode = THUMB2_ADC_RRR;
+        case kOpAdc:
+            opCode = kThumb2AdcRRI8;
+            altOpCode = kThumb2AdcRRR;
             break;
-        case OP_SBC:
-            opCode = THUMB2_SBC_RRI8;
-            altOpCode = THUMB2_SBC_RRR;
+        case kOpSbc:
+            opCode = kThumb2SbcRRI8;
+            altOpCode = kThumb2SbcRRR;
             break;
-        case OP_OR:
-            opCode = THUMB2_ORR_RRI8;
-            altOpCode = THUMB2_ORR_RRR;
+        case kOpOr:
+            opCode = kThumb2OrrRRI8;
+            altOpCode = kThumb2OrrRRR;
             break;
-        case OP_AND:
-            opCode = THUMB2_AND_RRI8;
-            altOpCode = THUMB2_AND_RRR;
+        case kOpAnd:
+            opCode = kThumb2AndRRI8;
+            altOpCode = kThumb2AndRRR;
             break;
-        case OP_XOR:
-            opCode = THUMB2_EOR_RRI8;
-            altOpCode = THUMB2_EOR_RRR;
+        case kOpXor:
+            opCode = kThumb2EorRRI8;
+            altOpCode = kThumb2EorRRR;
             break;
-        case OP_MUL:
+        case kOpMul:
             //TUNING: power of 2, shift & add
             modImm = -1;
-            altOpCode = THUMB2_MUL_RRR;
+            altOpCode = kThumb2MulRRR;
             break;
+        case kOpCmp: {
+            int modImm = modifiedImmediate(value);
+            ArmLIR *res;
+            if (modImm >= 0) {
+                res = newLIR2(cUnit, kThumb2CmpRI8, rSrc1, modImm);
+            } else {
+                int rTmp = allocTemp(cUnit);
+                res = loadConstant(cUnit, rTmp, value);
+                opRegReg(cUnit, kOpCmp, rSrc1, rTmp);
+                freeTemp(cUnit, rTmp);
+            }
+            return res;
+        }
         default:
             assert(0);
     }
@@ -1165,12 +694,183 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
     if (modImm >= 0) {
         return newLIR3(cUnit, opCode, rDest, rSrc1, modImm);
     } else {
+        int rScratch = allocTemp(cUnit);
         loadConstant(cUnit, rScratch, value);
         if (EncodingMap[altOpCode].flags & IS_QUAD_OP)
-            return newLIR4(cUnit, altOpCode, rDest, rSrc1, rScratch, 0);
+            res = newLIR4(cUnit, altOpCode, rDest, rSrc1, rScratch, 0);
         else
-            return newLIR3(cUnit, altOpCode, rDest, rSrc1, rScratch);
+            res = newLIR3(cUnit, altOpCode, rDest, rSrc1, rScratch);
+        freeTemp(cUnit, rScratch);
+        return res;
     }
+}
+
+/* Handle Thumb-only variants here - otherwise punt to opRegRegImm */
+static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
+                        int value)
+{
+    ArmLIR *res;
+    bool neg = (value < 0);
+    int absValue = (neg) ? -value : value;
+    bool shortForm = (((absValue & 0xff) == absValue) && LOWREG(rDestSrc1));
+    ArmOpCode opCode = kThumbBkpt;
+    switch (op) {
+        case kOpAdd:
+            if ( !neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
+                assert((value & 0x3) == 0);
+                return newLIR1(cUnit, kThumbAddSpI7, value >> 2);
+            } else if (shortForm) {
+                opCode = (neg) ? kThumbSubRI8 : kThumbAddRI8;
+            }
+            break;
+        case kOpSub:
+            if (!neg && (rDestSrc1 == 13) && (value <= 508)) { /* sp */
+                assert((value & 0x3) == 0);
+                return newLIR1(cUnit, kThumbSubSpI7, value >> 2);
+            } else if (shortForm) {
+                opCode = (neg) ? kThumbAddRI8 : kThumbSubRI8;
+            }
+            break;
+        case kOpCmp:
+            if (LOWREG(rDestSrc1) && shortForm)
+                opCode = (shortForm) ?  kThumbCmpRI8 : kThumbCmpRR;
+            else if (LOWREG(rDestSrc1))
+                opCode = kThumbCmpRR;
+            else {
+                shortForm = false;
+                opCode = kThumbCmpHL;
+            }
+            break;
+        default:
+            /* Punt to opRegRegImm - if bad case catch it there */
+            shortForm = false;
+            break;
+    }
+    if (shortForm)
+        return newLIR2(cUnit, opCode, rDestSrc1, absValue);
+    else {
+        return opRegRegImm(cUnit, op, rDestSrc1, rDestSrc1, value);
+    }
+}
+
+static void genNegFloat(CompilationUnit *cUnit, RegLocation rlDest,
+                        RegLocation rlSrc)
+{
+    RegLocation rlResult;
+    rlSrc = loadValue(cUnit, rlSrc, kFPReg);
+    rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    newLIR2(cUnit, kThumb2Vnegs, rlResult.lowReg, rlSrc.lowReg);
+    storeValue(cUnit, rlDest, rlResult);
+}
+
+static void genNegDouble(CompilationUnit *cUnit, RegLocation rlDest,
+                        RegLocation rlSrc)
+{
+    RegLocation rlResult;
+    rlSrc = loadValueWide(cUnit, rlSrc, kFPReg);
+    rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    newLIR2(cUnit, kThumb2Vnegd, S2D(rlResult.lowReg, rlResult.highReg),
+            S2D(rlSrc.lowReg, rlSrc.highReg));
+    storeValueWide(cUnit, rlDest, rlResult);
+}
+
+/*
+ * To avoid possible conflicts, we use a lot of temps here.  Note that
+ * our usage of Thumb2 instruction forms avoids the problems with register
+ * reuse for multiply instructions prior to arm6.
+ */
+static void genMulLong(CompilationUnit *cUnit, RegLocation rlDest,
+                       RegLocation rlSrc1, RegLocation rlSrc2)
+{
+    RegLocation rlResult;
+    int resLo = allocTemp(cUnit);
+    int resHi = allocTemp(cUnit);
+    int tmp1 = allocTemp(cUnit);
+
+    rlSrc1 = loadValueWide(cUnit, rlSrc1, kCoreReg);
+    rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
+
+    newLIR3(cUnit, kThumb2MulRRR, tmp1, rlSrc2.lowReg, rlSrc1.highReg);
+    newLIR4(cUnit, kThumb2Umull, resLo, resHi, rlSrc2.lowReg, rlSrc1.lowReg);
+    newLIR4(cUnit, kThumb2Mla, tmp1, rlSrc1.lowReg, rlSrc2.highReg, tmp1);
+    newLIR4(cUnit, kThumb2AddRRR, resHi, tmp1, resHi, 0);
+    freeTemp(cUnit, tmp1);
+
+    rlResult = getReturnLocWide(cUnit);  // Just as a template, will patch
+    rlResult.lowReg = resLo;
+    rlResult.highReg = resHi;
+    storeValueWide(cUnit, rlDest, rlResult);
+}
+
+/*
+ * Handle simple case (thin lock) inline.  If it's complicated, bail
+ * out to the heavyweight lock/unlock routines.  We'll use dedicated
+ * registers here in order to be in the right position in case we
+ * to bail to dvm[Lock/Unlock]Object(self, object)
+ *
+ * r0 -> self pointer [arg0 for dvm[Lock/Unlock]Object
+ * r1 -> object [arg1 for dvm[Lock/Unlock]Object
+ * r2 -> intial contents of object->lock.thin, later result of strex
+ * r3 -> self->threadId
+ * r7 -> temp to hold new lock value [unlock only]
+ * r4 -> allow to be used by utilities as general temp
+ *
+ * The result of the strex is 0 if we acquire the lock.
+ */
+static void handleMonitor(CompilationUnit *cUnit, MIR *mir)
+{
+#if defined (THIN_LOCKING)
+    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+    bool enter = (mir->dalvikInsn.opCode == OP_MONITOR_ENTER);
+    ArmLIR *target;
+    ArmLIR *branch;
+
+    loadValueDirectFixed(cUnit, rlSrc, r1);  // Get obj
+    lockAllTemps(cUnit);  // Prepare for explicit register usage
+    freeTemp(cUnit, r4PC);  // Free up r4 for general use
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0); // Get self
+    genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
+    loadWordDisp(cUnit, r0, offsetof(Thread, threadId), r3); // Get threadId
+    newLIR3(cUnit, kThumb2Ldrex, r2, r1,
+            offsetof(Object, lock.thin) >> 2); // Get object->lock.thin
+    // Is lock.thin unheld on lock or held by us (==threadId) on unlock?
+    if (enter) {
+        opRegImm(cUnit, kOpSub, r2, DVM_LOCK_INITIAL_THIN_VALUE);
+    } else {
+        loadConstant(cUnit, r7, DVM_LOCK_INITIAL_THIN_VALUE);
+        opRegReg(cUnit, kOpSub, r2, r3);
+    }
+    // Note: start of IT block.  If last sub result != clear, else strex
+    genIT(cUnit, kArmCondNe, "E");
+    newLIR0(cUnit, kThumb2Clrex);
+    if (enter) {
+        newLIR4(cUnit, kThumb2Strex, r2, r3, r1,
+                offsetof(Object, lock.thin) >> 2);
+    } else {
+        newLIR4(cUnit, kThumb2Strex, r2, r7, r1,
+                offsetof(Object, lock.thin) >> 2);
+    }
+    // Note: end of IT block
+
+    branch = newLIR2(cUnit, kThumb2Cbz, r2, 0);
+
+    if (enter) {
+        loadConstant(cUnit, r7, (int)dvmLockObject);
+    } else {
+        loadConstant(cUnit, r7, (int)dvmUnlockObject);
+    }
+    genExportPC(cUnit, mir);
+    opReg(cUnit, kOpBlx, r7);
+
+    clobberCallRegs(cUnit);
+
+    // Resume here
+    target = newLIR0(cUnit, kArmPseudoTargetLabel);
+    target->defMask = ENCODE_ALL;
+    branch->generic.target = (LIR *)target;
+#else
+    handleMonitorPortable(cUnit, mir);
+#endif
 }
 
 /*
@@ -1189,199 +889,688 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
  * done:
  */
 static void genCmpLong(CompilationUnit *cUnit, MIR *mir,
-                               int vDest, int vSrc1, int vSrc2)
+                       RegLocation rlDest, RegLocation rlSrc1,
+                       RegLocation rlSrc2)
 {
-    int op1lo = selectFirstRegister(cUnit, vSrc1, true);
-    int op1hi = NEXT_REG(op1lo);
-    int op2lo = NEXT_REG(op1hi);
-    int op2hi = NEXT_REG(op2lo);
-    loadValuePair(cUnit, vSrc1, op1lo, op1hi);
-    loadValuePair(cUnit, vSrc2, op2lo, op2hi);
-    /* Note: using hardcoded r7 & r4PC for now.  revisit */
-    loadConstant(cUnit, r7, -1);
-    opRegReg(cUnit, OP_CMP, op1hi, op2hi);
-    ArmLIR *branch1 = opCondBranch(cUnit, ARM_COND_LT);
-    ArmLIR *branch2 = opCondBranch(cUnit, ARM_COND_GT);
-    opRegRegReg(cUnit, OP_SUB, r7, op1lo, op2lo);
-    ArmLIR *branch3 = opCondBranch(cUnit, ARM_COND_EQ);
+    RegLocation rlTemp = LOC_C_RETURN; // Just using as template, will change
+    ArmLIR *target1;
+    ArmLIR *target2;
+    rlSrc1 = loadValueWide(cUnit, rlSrc1, kCoreReg);
+    rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
+    rlTemp.lowReg = allocTemp(cUnit);
+    loadConstant(cUnit, rlTemp.lowReg, -1);
+    opRegReg(cUnit, kOpCmp, rlSrc1.highReg, rlSrc2.highReg);
+    ArmLIR *branch1 = opCondBranch(cUnit, kArmCondLt);
+    ArmLIR *branch2 = opCondBranch(cUnit, kArmCondGt);
+    opRegRegReg(cUnit, kOpSub, rlTemp.lowReg, rlSrc1.lowReg, rlSrc2.lowReg);
+    ArmLIR *branch3 = opCondBranch(cUnit, kArmCondEq);
 
-    // TODO: need assert mechanism to verify IT block size
-    branch1->generic.target = (LIR *) genIT(cUnit, ARM_COND_HI, "E");
-    newLIR2(cUnit, THUMB2_MOV_IMM_SHIFT, r7, modifiedImmediate(-1));
-    newLIR2(cUnit, THUMB_MOV_IMM, r7, 1);
+    genIT(cUnit, kArmCondHi, "E");
+    newLIR2(cUnit, kThumb2MovImmShift, rlTemp.lowReg, modifiedImmediate(-1));
+    loadConstant(cUnit, rlTemp.lowReg, 1);
     genBarrier(cUnit);
 
-    branch2->generic.target = (LIR *) opRegReg(cUnit, OP_NEG, r7, r7);
-    branch1->generic.target = (LIR *) storeValue(cUnit, r7, vDest, r4PC);
+    target2 = newLIR0(cUnit, kArmPseudoTargetLabel);
+    target2->defMask = -1;
+    opRegReg(cUnit, kOpNeg, rlTemp.lowReg, rlTemp.lowReg);
+
+    target1 = newLIR0(cUnit, kArmPseudoTargetLabel);
+    target1->defMask = -1;
+
+    storeValue(cUnit, rlDest, rlTemp);
+
+    branch1->generic.target = (LIR *)target1;
+    branch2->generic.target = (LIR *)target2;
     branch3->generic.target = branch1->generic.target;
+}
+
+static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
+                               int rIndex, int rDest, int scale, OpSize size)
+{
+    bool allLowRegs = LOWREG(rBase) && LOWREG(rIndex) && LOWREG(rDest);
+    ArmOpCode opCode = kThumbBkpt;
+    bool thumbForm = (allLowRegs && (scale == 0));
+    int regPtr;
+
+    if (FPREG(rDest)) {
+        assert(SINGLEREG(rDest));
+        assert((size == kWord) || (size == kSingle));
+        opCode = kThumb2Vldrs;
+        size = kSingle;
+    } else {
+        if (size == kSingle)
+            size = kWord;
+    }
+
+    switch (size) {
+        case kSingle:
+            regPtr = allocTemp(cUnit);
+            if (scale) {
+                newLIR4(cUnit, kThumb2AddRRR, regPtr, rBase, rIndex,
+                        encodeShift(kArmLsl, scale));
+            } else {
+                opRegRegReg(cUnit, kOpAdd, regPtr, rBase, rIndex);
+            }
+            return newLIR3(cUnit, opCode, rDest, regPtr, 0);
+        case kWord:
+            opCode = (thumbForm) ? kThumbLdrRRR : kThumb2LdrRRR;
+            break;
+        case kUnsignedHalf:
+            opCode = (thumbForm) ? kThumbLdrhRRR : kThumb2LdrhRRR;
+            break;
+        case kSignedHalf:
+            opCode = (thumbForm) ? kThumbLdrshRRR : kThumb2LdrshRRR;
+            break;
+        case kUnsignedByte:
+            opCode = (thumbForm) ? kThumbLdrbRRR : kThumb2LdrbRRR;
+            break;
+        case kSignedByte:
+            opCode = (thumbForm) ? kThumbLdrsbRRR : kThumb2LdrsbRRR;
+            break;
+        default:
+            assert(0);
+    }
+    if (thumbForm)
+        return newLIR3(cUnit, opCode, rDest, rBase, rIndex);
+    else
+        return newLIR4(cUnit, opCode, rDest, rBase, rIndex, scale);
+}
+
+static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
+                                int rIndex, int rSrc, int scale, OpSize size)
+{
+    bool allLowRegs = LOWREG(rBase) && LOWREG(rIndex) && LOWREG(rSrc);
+    ArmOpCode opCode = kThumbBkpt;
+    bool thumbForm = (allLowRegs && (scale == 0));
+    int regPtr;
+
+    if (FPREG(rSrc)) {
+        assert(SINGLEREG(rSrc));
+        assert((size == kWord) || (size == kSingle));
+        opCode = kThumb2Vstrs;
+        size = kSingle;
+    } else {
+        if (size == kSingle)
+            size = kWord;
+    }
+
+    switch (size) {
+        case kSingle:
+            regPtr = allocTemp(cUnit);
+            if (scale) {
+                newLIR4(cUnit, kThumb2AddRRR, regPtr, rBase, rIndex,
+                        encodeShift(kArmLsl, scale));
+            } else {
+                opRegRegReg(cUnit, kOpAdd, regPtr, rBase, rIndex);
+            }
+            return newLIR3(cUnit, opCode, rSrc, regPtr, 0);
+        case kWord:
+            opCode = (thumbForm) ? kThumbStrRRR : kThumb2StrRRR;
+            break;
+        case kUnsignedHalf:
+        case kSignedHalf:
+            opCode = (thumbForm) ? kThumbStrhRRR : kThumb2StrhRRR;
+            break;
+        case kUnsignedByte:
+        case kSignedByte:
+            opCode = (thumbForm) ? kThumbStrbRRR : kThumb2StrbRRR;
+            break;
+        default:
+            assert(0);
+    }
+    if (thumbForm)
+        return newLIR3(cUnit, opCode, rSrc, rBase, rIndex);
+    else
+        return newLIR4(cUnit, opCode, rSrc, rBase, rIndex, scale);
+}
+
+/* Load a float to a Dalvik register. */
+static ArmLIR *fpVarAccess(CompilationUnit *cUnit, int vSrcDest,
+                           int rSrcDest, ArmOpCode opCode)
+{
+    ArmLIR *res;
+    if (vSrcDest > 255) {
+        int rTmp = allocTemp(cUnit);
+        opRegRegImm(cUnit, kOpAdd, rTmp, rFP, vSrcDest * 4);
+        res = newLIR3(cUnit, opCode, rSrcDest, rTmp, 0);
+        freeTemp(cUnit, rTmp);
+    } else {
+        res = newLIR3(cUnit, opCode, rSrcDest, rFP, vSrcDest);
+    }
+    return res;
+}
+
+/*
+ * Load value from base + displacement.  Optionally perform null check
+ * on base (which must have an associated sReg and MIR).  If not
+ * performing null check, incoming MIR can be null.
+ */
+static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
+                                int displacement, int rDest, int rDestHi,
+                                OpSize size, bool nullCheck, int sReg)
+{
+    ArmLIR *first = NULL;
+    ArmLIR *res, *load;
+    ArmOpCode opCode = kThumbBkpt;
+    bool shortForm = false;
+    bool thumb2Form = (displacement < 4092 && displacement >= 0);
+    int shortMax = 128;
+    bool allLowRegs = (LOWREG(rBase) && LOWREG(rDest));
+    int encodedDisp = displacement;
+
+    switch (size) {
+        case kDouble:
+        case kLong:
+            if (FPREG(rDest)) {
+                if (SINGLEREG(rDest)) {
+                    assert(FPREG(rDestHi));
+                    rDest = S2D(rDest, rDestHi);
+                }
+                opCode = kThumb2Vldrd;
+                if (displacement <= 1020) {
+                    shortForm = true;
+                    encodedDisp >>= 2;
+                }
+                break;
+            } else {
+                res = loadBaseDispBody(cUnit, mir, rBase, displacement, rDest,
+                                       -1, kWord, nullCheck, sReg);
+                loadBaseDispBody(cUnit, NULL, rBase, displacement + 4, rDestHi,
+                                 -1, kWord, false, INVALID_SREG);
+                return res;
+            }
+        case kSingle:
+        case kWord:
+            if (FPREG(rDest)) {
+                opCode = kThumb2Vldrs;
+                if (displacement <= 1020) {
+                    shortForm = true;
+                    encodedDisp >>= 2;
+                }
+                break;
+            }
+            if (LOWREG(rDest) && (rBase == rpc) &&
+                (displacement <= 1020) && (displacement >= 0)) {
+                shortForm = true;
+                encodedDisp >>= 2;
+                opCode = kThumbLdrPcRel;
+            } else if (LOWREG(rDest) && (rBase == r13) &&
+                      (displacement <= 1020) && (displacement >= 0)) {
+                shortForm = true;
+                encodedDisp >>= 2;
+                opCode = kThumbLdrSpRel;
+            } else if (allLowRegs && displacement < 128 && displacement >= 0) {
+                assert((displacement & 0x3) == 0);
+                shortForm = true;
+                encodedDisp >>= 2;
+                opCode = kThumbLdrRRI5;
+            } else if (thumb2Form) {
+                shortForm = true;
+                opCode = kThumb2LdrRRI12;
+            }
+            break;
+        case kUnsignedHalf:
+            if (allLowRegs && displacement < 64 && displacement >= 0) {
+                assert((displacement & 0x1) == 0);
+                shortForm = true;
+                encodedDisp >>= 1;
+                opCode = kThumbLdrhRRI5;
+            } else if (displacement < 4092 && displacement >= 0) {
+                shortForm = true;
+                opCode = kThumb2LdrhRRI12;
+            }
+            break;
+        case kSignedHalf:
+            if (thumb2Form) {
+                shortForm = true;
+                opCode = kThumb2LdrshRRI12;
+            }
+            break;
+        case kUnsignedByte:
+            if (allLowRegs && displacement < 32 && displacement >= 0) {
+                shortForm = true;
+                opCode = kThumbLdrbRRI5;
+            } else if (thumb2Form) {
+                shortForm = true;
+                opCode = kThumb2LdrbRRI12;
+            }
+            break;
+        case kSignedByte:
+            if (thumb2Form) {
+                shortForm = true;
+                opCode = kThumb2LdrsbRRI12;
+            }
+            break;
+        default:
+            assert(0);
+    }
+    if (nullCheck)
+        first = genNullCheck(cUnit, sReg, rBase, mir->offset, NULL);
+    if (shortForm) {
+        load = res = newLIR3(cUnit, opCode, rDest, rBase, encodedDisp);
+    } else {
+        int regOffset = allocTemp(cUnit);
+        res = loadConstant(cUnit, regOffset, encodedDisp);
+        load = loadBaseIndexed(cUnit, rBase, regOffset, rDest, 0, size);
+        freeTemp(cUnit, regOffset);
+    }
+
+    if (rBase == rFP) {
+        annotateDalvikRegAccess(load, displacement >> 2, true /* isLoad */);
+    }
+    return (first) ? first : res;
+}
+
+static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
+                            int displacement, int rDest, OpSize size,
+                            bool nullCheck, int sReg)
+{
+    return loadBaseDispBody(cUnit, mir, rBase, displacement, rDest, -1,
+                            size, nullCheck, sReg);
+}
+
+static ArmLIR *loadBaseDispWide(CompilationUnit *cUnit, MIR *mir, int rBase,
+                                int displacement, int rDestLo, int rDestHi,
+                                bool nullCheck, int sReg)
+{
+    return loadBaseDispBody(cUnit, mir, rBase, displacement, rDestLo, rDestHi,
+                            kLong, nullCheck, sReg);
+}
+
+
+static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
+                             int displacement, int rSrc, int rSrcHi,
+                             OpSize size)
+{
+    ArmLIR *res, *store;
+    ArmOpCode opCode = kThumbBkpt;
+    bool shortForm = false;
+    bool thumb2Form = (displacement < 4092 && displacement >= 0);
+    int shortMax = 128;
+    bool allLowRegs = (LOWREG(rBase) && LOWREG(rSrc));
+    int encodedDisp = displacement;
+
+    switch (size) {
+        case kLong:
+        case kDouble:
+            if (!FPREG(rSrc)) {
+                res = storeBaseDispBody(cUnit, rBase, displacement, rSrc,
+                                        -1, kWord);
+                storeBaseDispBody(cUnit, rBase, displacement + 4, rSrcHi,
+                                  -1, kWord);
+                return res;
+            }
+            if (SINGLEREG(rSrc)) {
+                assert(FPREG(rSrcHi));
+                rSrc = S2D(rSrc, rSrcHi);
+            }
+            opCode = kThumb2Vstrd;
+            if (displacement <= 1020) {
+                shortForm = true;
+                encodedDisp >>= 2;
+            }
+            break;
+        case kSingle:
+        case kWord:
+            if (FPREG(rSrc)) {
+                assert(SINGLEREG(rSrc));
+                opCode = kThumb2Vstrs;
+                if (displacement <= 1020) {
+                    shortForm = true;
+                    encodedDisp >>= 2;
+                }
+            break;
+            }
+            if (allLowRegs && displacement < 128 && displacement >= 0) {
+                assert((displacement & 0x3) == 0);
+                shortForm = true;
+                encodedDisp >>= 2;
+                opCode = kThumbStrRRI5;
+            } else if (thumb2Form) {
+                shortForm = true;
+                opCode = kThumb2StrRRI12;
+            }
+            break;
+        case kUnsignedHalf:
+        case kSignedHalf:
+            if (allLowRegs && displacement < 64 && displacement >= 0) {
+                assert((displacement & 0x1) == 0);
+                shortForm = true;
+                encodedDisp >>= 1;
+                opCode = kThumbStrhRRI5;
+            } else if (thumb2Form) {
+                shortForm = true;
+                opCode = kThumb2StrhRRI12;
+            }
+            break;
+        case kUnsignedByte:
+        case kSignedByte:
+            if (allLowRegs && displacement < 32 && displacement >= 0) {
+                shortForm = true;
+                opCode = kThumbStrbRRI5;
+            } else if (thumb2Form) {
+                shortForm = true;
+                opCode = kThumb2StrhRRI12;
+            }
+            break;
+        default:
+            assert(0);
+    }
+    if (shortForm) {
+        store = res = newLIR3(cUnit, opCode, rSrc, rBase, encodedDisp);
+    } else {
+        int rScratch = allocTemp(cUnit);
+        res = loadConstant(cUnit, rScratch, encodedDisp);
+        store = storeBaseIndexed(cUnit, rBase, rScratch, rSrc, 0, size);
+        freeTemp(cUnit, rScratch);
+    }
+
+    if (rBase == rFP) {
+        annotateDalvikRegAccess(store, displacement >> 2, false /* isLoad */);
+    }
+    return res;
+}
+
+static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
+                             int displacement, int rSrc, OpSize size)
+{
+    return storeBaseDispBody(cUnit, rBase, displacement, rSrc, -1, size);
+}
+
+static ArmLIR *storeBaseDispWide(CompilationUnit *cUnit, int rBase,
+                                 int displacement, int rSrcLo, int rSrcHi)
+{
+    return storeBaseDispBody(cUnit, rBase, displacement, rSrcLo, rSrcHi, kLong);
+}
+
+static ArmLIR *loadMultiple(CompilationUnit *cUnit, int rBase, int rMask)
+{
+    ArmLIR *res;
+    genBarrier(cUnit);
+    if (LOWREG(rBase) && ((rMask & 0xff)==rMask)) {
+        res = newLIR2(cUnit, kThumbLdmia, rBase, rMask);
+    } else {
+        res = newLIR2(cUnit, kThumb2Ldmia, rBase, rMask);
+    }
+    genBarrier(cUnit);
+    return res;
+}
+
+static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask)
+{
+    ArmLIR *res;
+    genBarrier(cUnit);
+    if (LOWREG(rBase) && ((rMask & 0xff)==rMask)) {
+        res = newLIR2(cUnit, kThumbStmia, rBase, rMask);
+    } else {
+        res = newLIR2(cUnit, kThumb2Stmia, rBase, rMask);
+    }
+    genBarrier(cUnit);
+    return res;
+}
+
+static ArmLIR *loadFPConstantValue(CompilationUnit *cUnit, int rDest,
+                                   int value)
+{
+    int encodedImm = encodeImmSingle(value);
+    assert(SINGLEREG(rDest));
+    if (encodedImm >= 0) {
+        return newLIR2(cUnit, kThumb2Vmovs_IMM8, rDest, encodedImm);
+    }
+    ArmLIR *dataTarget = scanLiteralPool(cUnit, value, 0);
+    if (dataTarget == NULL) {
+        dataTarget = addWordData(cUnit, value, false);
+    }
+    ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
+    loadPcRel->opCode = kThumb2Vldrs;
+    loadPcRel->generic.target = (LIR *) dataTarget;
+    loadPcRel->operands[0] = rDest;
+    loadPcRel->operands[1] = rpc;
+    setupResourceMasks(loadPcRel);
+    dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
+    return loadPcRel;
+}
+
+static void storePair(CompilationUnit *cUnit, int base, int lowReg, int highReg)
+{
+    storeBaseDispWide(cUnit, base, 0, lowReg, highReg);
+}
+
+static void loadPair(CompilationUnit *cUnit, int base, int lowReg, int highReg)
+{
+    loadBaseDispWide(cUnit, NULL, base, 0, lowReg, highReg, false,
+                     INVALID_SREG);
+}
+
+
+/*
+ * Load a immediate using a shortcut if possible; otherwise
+ * grab from the per-translation literal pool.
+ */
+static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
+{
+    ArmLIR *res;
+    int modImm;
+
+    if (FPREG(rDest)) {
+        return loadFPConstantValue(cUnit, rDest, value);
+    }
+
+    /* See if the value can be constructed cheaply */
+    if (LOWREG(rDest) && (value >= 0) && (value <= 255)) {
+        return newLIR2(cUnit, kThumbMovImm, rDest, value);
+    }
+    /* Check Modified immediate special cases */
+    modImm = modifiedImmediate(value);
+    if (modImm >= 0) {
+        res = newLIR2(cUnit, kThumb2MovImmShift, rDest, modImm);
+        return res;
+    }
+    modImm = modifiedImmediate(~value);
+    if (modImm >= 0) {
+        res = newLIR2(cUnit, kThumb2MvnImmShift, rDest, modImm);
+        return res;
+    }
+    /* 16-bit immediate? */
+    if ((value & 0xffff) == value) {
+        res = newLIR2(cUnit, kThumb2MovImm16, rDest, value);
+        return res;
+    }
+    /* No shortcut - go ahead and use literal pool */
+    ArmLIR *dataTarget = scanLiteralPool(cUnit, value, 255);
+    if (dataTarget == NULL) {
+        dataTarget = addWordData(cUnit, value, false);
+    }
+    ArmLIR *loadPcRel = dvmCompilerNew(sizeof(ArmLIR), true);
+    loadPcRel->opCode = LOWREG(rDest) ? kThumbLdrPcRel : kThumb2LdrPcRel12;
+    loadPcRel->generic.target = (LIR *) dataTarget;
+    loadPcRel->operands[0] = rDest;
+    setupResourceMasks(loadPcRel);
+    res = loadPcRel;
+    dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
+
+    /*
+     * To save space in the constant pool, we use the ADD_RRI8 instruction to
+     * add up to 255 to an existing constant value.
+     */
+    if (dataTarget->operands[0] != value) {
+        opRegImm(cUnit, kOpAdd, rDest, value - dataTarget->operands[0]);
+    }
+    return res;
+}
+
+static ArmLIR *loadConstantValueWide(CompilationUnit *cUnit, int rDestLo,
+                                     int rDestHi, int valLo, int valHi)
+{
+    int encodedImm = encodeImmDouble(valLo, valHi);
+    ArmLIR *res;
+    if (FPREG(rDestLo) && (encodedImm >= 0)) {
+        res = newLIR2(cUnit, kThumb2Vmovd_IMM8, S2D(rDestLo, rDestHi),
+                      encodedImm);
+    } else {
+        res = loadConstantValue(cUnit, rDestLo, valLo);
+        loadConstantValue(cUnit, rDestHi, valHi);
+    }
+    return res;
+}
+
+/*
+ * Perform a "reg cmp imm" operation and jump to the PCR region if condition
+ * satisfies.
+ */
+static ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
+                                         ArmConditionCode cond, int reg,
+                                         int checkValue, int dOffset,
+                                         ArmLIR *pcrLabel)
+{
+    ArmLIR *branch;
+    int modImm;
+    /*
+     * TODO: re-enable usage of kThumb2Cbz & kThumb2Cbnz once assembler is
+     * enhanced to allow us to replace code patterns when instructions don't
+     * reach.  Currently, CB[N]Z is causing too many assembler aborts.
+     * What we want to do is emit the short forms, and then replace them with
+     * longer versions when needed.
+     */
+
+    if (0 && (LOWREG(reg)) && (checkValue == 0) &&
+       ((cond == kArmCondEq) || (cond == kArmCondNe))) {
+        branch = newLIR2(cUnit,
+                         (cond == kArmCondEq) ? kThumb2Cbz : kThumb2Cbnz,
+                         reg, 0);
+    } else {
+        modImm = modifiedImmediate(checkValue);
+        if (LOWREG(reg) && ((checkValue & 0xff) == checkValue)) {
+            newLIR2(cUnit, kThumbCmpRI8, reg, checkValue);
+        } else if (modImm >= 0) {
+            newLIR2(cUnit, kThumb2CmpRI8, reg, modImm);
+        } else {
+            int tReg = allocTemp(cUnit);
+            loadConstant(cUnit, tReg, checkValue);
+            opRegReg(cUnit, kOpCmp, reg, tReg);
+        }
+        branch = newLIR2(cUnit, kThumbBCond, 0, cond);
+    }
+    return genCheckCommon(cUnit, dOffset, branch, pcrLabel);
 }
 
 static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
 {
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int offset = offsetof(InterpState, retval);
-    int regObj = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int reg1 = NEXT_REG(regObj);
-    int vDest = inlinedTarget(mir);
-    loadValue(cUnit, dInsn->arg[0], regObj);
-    genNullCheck(cUnit, dInsn->arg[0], regObj, mir->offset, NULL);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, reg1);
-    if (vDest >= 0)
-        storeValue(cUnit, reg1, vDest, regObj);
-    else
-        storeWordDisp(cUnit, rGLUE, offset, reg1, rNone);
+    RegLocation rlObj = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlDest = inlinedTarget(cUnit, mir, false);
+    rlObj = loadValue(cUnit, rlObj, kCoreReg);
+    RegLocation rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset, NULL);
+    loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_count,
+                 rlResult.lowReg);
+    storeValue(cUnit, rlDest, rlResult);
     return false;
 }
 
 static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
 {
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int offset = offsetof(InterpState, retval);
     int contents = offsetof(ArrayObject, contents);
-    int regObj = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int regIdx = NEXT_REG(regObj);
-    int regMax = NEXT_REG(regIdx);
-    int regOff = NEXT_REG(regMax);
-    int vDest = inlinedTarget(mir);
-    loadValue(cUnit, dInsn->arg[0], regObj);
-    loadValue(cUnit, dInsn->arg[1], regIdx);
-    ArmLIR * pcrLabel = genNullCheck(cUnit, dInsn->arg[0], regObj,
-                                         mir->offset, NULL);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, regMax);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_offset, regOff);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_value, regObj);
-    genBoundsCheck(cUnit, regIdx, regMax, mir->offset, pcrLabel);
-    opRegImm(cUnit, OP_ADD, regObj, contents, rNone);
-    opRegReg(cUnit, OP_ADD, regIdx, regOff);
-    loadBaseIndexed(cUnit, regObj, regIdx, regMax, 1, UNSIGNED_HALF);
-    if (vDest >= 0)
-        storeValue(cUnit, regMax, vDest, regObj);
-    else
-        storeWordDisp(cUnit, rGLUE, offset, regMax, rNone);
+    RegLocation rlObj = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlIdx = getSrcLoc(cUnit, mir, 1);
+    RegLocation rlDest = inlinedTarget(cUnit, mir, false);
+    RegLocation rlResult;
+    rlObj = loadValue(cUnit, rlObj, kCoreReg);
+    rlIdx = loadValue(cUnit, rlIdx, kCoreReg);
+    int regMax = allocTemp(cUnit);
+    int regOff = allocTemp(cUnit);
+    int regPtr = allocTemp(cUnit);
+    ArmLIR *pcrLabel = genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg,
+                                    mir->offset, NULL);
+    loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_count, regMax);
+    loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_offset, regOff);
+    loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_value, regPtr);
+    genBoundsCheck(cUnit, rlIdx.lowReg, regMax, mir->offset, pcrLabel);
+    freeTemp(cUnit, regMax);
+    opRegImm(cUnit, kOpAdd, regPtr, contents);
+    opRegReg(cUnit, kOpAdd, regOff, rlIdx.lowReg);
+    rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    loadBaseIndexed(cUnit, regPtr, regOff, rlResult.lowReg, 1, kUnsignedHalf);
+    storeValue(cUnit, rlDest, rlResult);
     return false;
 }
 
 static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int sign = NEXT_REG(reg0);
-    int vDest = inlinedTarget(mir);
-    /* abs(x) = y<=x>>31, (x+y)^y.  */
-    loadValue(cUnit, dInsn->arg[0], reg0);
+    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+    rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
+    RegLocation rlDest = inlinedTarget(cUnit, mir, false);;
+    RegLocation rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    int signReg = allocTemp(cUnit);
     /*
+     * abs(x) = y<=x>>31, (x+y)^y.
      * Thumb2's IT block also yields 3 instructions, but imposes
      * scheduling constraints.
      */
-    opRegRegImm(cUnit, OP_ASR, sign, reg0, 31, rNone);
-    opRegReg(cUnit, OP_ADD, reg0, sign);
-    opRegReg(cUnit, OP_XOR, reg0, sign);
-    if (vDest >= 0)
-        storeValue(cUnit, reg0, vDest, sign);
-    else
-        storeWordDisp(cUnit, rGLUE, offset, reg0, rNone);
+    opRegRegImm(cUnit, kOpAsr, signReg, rlSrc.lowReg, 31);
+    opRegRegReg(cUnit, kOpAdd, rlResult.lowReg, rlSrc.lowReg, signReg);
+    opRegReg(cUnit, kOpXor, rlResult.lowReg, signReg);
+    storeValue(cUnit, rlDest, rlResult);
     return false;
 }
 
 static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int signMask = NEXT_REG(reg0);
-    int vDest = inlinedTarget(mir);
-    // TUNING: handle case of src already in FP reg
-    loadValue(cUnit, dInsn->arg[0], reg0);
-    loadConstant(cUnit, signMask, 0x7fffffff);
-    newLIR2(cUnit, THUMB_AND_RR, reg0, signMask);
-    if (vDest >= 0)
-        storeValue(cUnit, reg0, vDest, signMask);
-    else
-        storeWordDisp(cUnit, rGLUE, offset, reg0, rNone);
-    return false;
+    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlDest = inlinedTarget(cUnit, mir, true);
+    rlSrc = loadValue(cUnit, rlSrc, kFPReg);
+    RegLocation rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    newLIR2(cUnit, kThumb2Vabss, rlResult.lowReg, rlSrc.lowReg);
+    storeValue(cUnit, rlDest, rlResult);
+    return true;
 }
 
 static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int oplo = selectFirstRegister(cUnit, dInsn->arg[0], true);
-    int ophi = NEXT_REG(oplo);
-    int signMask = NEXT_REG(ophi);
-    int vSrc = dInsn->arg[0];
-    int vDest = inlinedTarget(mir);
-    // TUNING: handle case of src already in FP reg
-    if (vDest >= 0) {
-        /*
-         * FIXME: disable this case to to work around bug until after
-         * new schedule/ralloc mechanisms are done.
-         */
-        if (0 && (vDest == vSrc)) {
-            loadValue(cUnit, vSrc+1, ophi);
-            opRegRegImm(cUnit, OP_AND, ophi, ophi, 0x7fffffff, signMask);
-            storeValue(cUnit, ophi, vDest + 1, signMask);
-        } else {
-            loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
-            opRegRegImm(cUnit, OP_AND, ophi, ophi, 0x7fffffff, signMask);
-            storeValuePair(cUnit, oplo, ophi, vDest, signMask);
-        }
-    } else {
-        loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
-        loadConstant(cUnit, signMask, 0x7fffffff);
-        storeWordDisp(cUnit, rGLUE, offset, oplo, rNone);
-        opRegReg(cUnit, OP_AND, ophi, signMask);
-        storeWordDisp(cUnit, rGLUE, offset + 4, ophi, rNone);
-    }
-    return false;
+    RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+    RegLocation rlDest = inlinedTargetWide(cUnit, mir, true);
+    rlSrc = loadValueWide(cUnit, rlSrc, kFPReg);
+    RegLocation rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    newLIR2(cUnit, kThumb2Vabsd, S2D(rlResult.lowReg, rlResult.highReg),
+            S2D(rlSrc.lowReg, rlSrc.highReg));
+    storeValueWide(cUnit, rlDest, rlResult);
+    return true;
 }
 
 static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
 {
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int reg0 = selectFirstRegister(cUnit, dInsn->arg[0], false);
-    int reg1 = NEXT_REG(reg0);
-    int vDest = inlinedTarget(mir);
-    loadValue(cUnit, dInsn->arg[0], reg0);
-    loadValue(cUnit, dInsn->arg[1], reg1);
-    opRegReg(cUnit, OP_CMP, reg0, reg1);
-    //TODO: need assertion mechanism to validate IT region size
-    genIT(cUnit, (isMin) ? ARM_COND_GT : ARM_COND_LT, "");
-    opRegReg(cUnit, OP_MOV, reg0, reg1);
+    RegLocation rlSrc1 = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlSrc2 = getSrcLoc(cUnit, mir, 1);
+    rlSrc1 = loadValue(cUnit, rlSrc1, kCoreReg);
+    rlSrc2 = loadValue(cUnit, rlSrc2, kCoreReg);
+    RegLocation rlDest = inlinedTarget(cUnit, mir, false);
+    RegLocation rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    opRegReg(cUnit, kOpCmp, rlSrc1.lowReg, rlSrc2.lowReg);
+    genIT(cUnit, (isMin) ? kArmCondGt : kArmCondLt, "E");
+    opRegReg(cUnit, kOpMov, rlResult.lowReg, rlSrc2.lowReg);
+    opRegReg(cUnit, kOpMov, rlResult.lowReg, rlSrc1.lowReg);
     genBarrier(cUnit);
-    if (vDest >= 0)
-        storeValue(cUnit, reg0, vDest, reg1);
-    else
-        storeWordDisp(cUnit, rGLUE, offset, reg0, rNone);
+    storeValue(cUnit, rlDest, rlResult);
     return false;
 }
 
 static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int oplo = selectFirstRegister(cUnit, dInsn->arg[0], true);
-    int ophi = NEXT_REG(oplo);
-    int sign = NEXT_REG(ophi);
-    int vDest = inlinedTarget(mir);
-    /* abs(x) = y<=x>>31, (x+y)^y. */
-    loadValuePair(cUnit, dInsn->arg[0], oplo, ophi);
+    RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+    RegLocation rlDest = inlinedTargetWide(cUnit, mir, false);
+    rlSrc = loadValueWide(cUnit, rlSrc, kCoreReg);
+    RegLocation rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    int signReg = allocTemp(cUnit);
     /*
+     * abs(x) = y<=x>>31, (x+y)^y.
      * Thumb2 IT block allows slightly shorter sequence,
      * but introduces a scheduling barrier.  Stick with this
      * mechanism for now.
      */
-    opRegRegImm(cUnit, OP_ASR, sign, ophi, 31, rNone);
-    opRegReg(cUnit, OP_ADD, oplo, sign);
-    opRegReg(cUnit, OP_ADC, ophi, sign);
-    opRegReg(cUnit, OP_XOR, oplo, sign);
-    opRegReg(cUnit, OP_XOR, ophi, sign);
-    if (vDest >= 0) {
-        storeValuePair(cUnit, oplo, ophi, vDest, sign);
-    } else {
-        storeWordDisp(cUnit, rGLUE, offset, oplo, rNone);
-        storeWordDisp(cUnit, rGLUE, offset + 4, ophi, rNone);
-    }
+    opRegRegImm(cUnit, kOpAsr, signReg, rlSrc.highReg, 31);
+    opRegRegReg(cUnit, kOpAdd, rlResult.lowReg, rlSrc.lowReg, signReg);
+    opRegRegReg(cUnit, kOpAdc, rlResult.highReg, rlSrc.highReg, signReg);
+    opRegReg(cUnit, kOpXor, rlResult.lowReg, signReg);
+    opRegReg(cUnit, kOpXor, rlResult.highReg, signReg);
+    storeValueWide(cUnit, rlDest, rlResult);
     return false;
 }

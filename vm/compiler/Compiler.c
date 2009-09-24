@@ -193,7 +193,7 @@ bool dvmCompilerSetupCodeCache(void)
 bool dvmCompilerStartup(void)
 {
     /* Make sure the BBType enum is in sane state */
-    assert(CHAINING_CELL_NORMAL == 0);
+    assert(kChainingCellNormal == 0);
 
     /* Architecture-specific chores to initialize */
     if (!dvmCompilerArchInit())

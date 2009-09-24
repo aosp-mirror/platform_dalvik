@@ -39,12 +39,15 @@ typedef enum InterpEntry {
 
 #if defined(WITH_JIT)
 #if defined(WITH_SELF_VERIFICATION)
+/*
+ * Note: layout is important.  This record hold saved state information
+ * and is used by both C, generated code in the cache, and assembler handlers.
+ */
 typedef struct HeapArgSpace {
-    int r0;
-    int r1;
-    int r2;
-    int r3;
+//FIXME: This is arm-specific.  Need to be able to redefine this by target
     int regMap;
+    int coreRegs[16];
+    int fpRegs[32];
 } HeapArgSpace;
 #endif
 

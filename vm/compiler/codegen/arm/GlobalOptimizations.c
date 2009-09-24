@@ -31,7 +31,7 @@ static void applyRedundantBranchElimination(CompilationUnit *cUnit)
          thisLIR = NEXT_LIR(thisLIR)) {
 
         /* Branch to the next instruction */
-        if (thisLIR->opCode == THUMB_B_UNCOND) {
+        if (thisLIR->opCode == kThumbBUncond) {
             ArmLIR *nextLIR = thisLIR;
 
             while (true) {

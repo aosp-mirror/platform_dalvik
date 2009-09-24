@@ -19,8 +19,6 @@
  * variant-specific code.
  */
 
-#define USE_IN_CACHE_HANDLER 1
-
 /*
  * Determine the initial instruction set to be used for this trace.
  * Later components may decide to change this.
@@ -36,7 +34,6 @@ JitInstructionSetType dvmCompilerInstructionSet(CompilationUnit *cUnit)
  */
 static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
 {
-#if USE_IN_CACHE_HANDLER
     /*
      * NOTE - In practice BLX only needs one operand, but since the assembler
      * may abort itself and retry due to other out-of-range conditions we
@@ -45,32 +42,13 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
      * we fake BLX_1 is a two operand instruction and the absolute target
      * address is stored in operand[1].
      */
-    newLIR2(cUnit, THUMB_BLX_1,
+    clobberHandlerRegs(cUnit);
+    newLIR2(cUnit, kThumbBlx1,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-    newLIR2(cUnit, THUMB_BLX_2,
+    newLIR2(cUnit, kThumbBlx2,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-#else
-    /*
-     * In case we want to access the statically compiled handlers for
-     * debugging purposes, define USE_IN_CACHE_HANDLER to 0
-     */
-    void *templatePtr;
-
-#define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();
-#include "../../../template/armv5te/TemplateOpList.h"
-#undef JIT_TEMPLATE
-    switch (opCode) {
-#define JIT_TEMPLATE(X) \
-        case TEMPLATE_##X: { templatePtr = dvmCompiler_TEMPLATE_##X; break; }
-#include "../../../template/armv5te/TemplateOpList.h"
-#undef JIT_TEMPLATE
-        default: templatePtr = NULL;
-    }
-    loadConstant(cUnit, r7, (int) templatePtr);
-    newLIR1(cUnit, THUMB_BLX_R, r7);
-#endif
 }
 
 /* Architecture-specific initializations and checks go here */
@@ -117,54 +95,57 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
     return false;   /* punt to C handler */
 }
 
-static bool genConversion(CompilationUnit *cUnit, MIR *mir)
+static bool handleConversion(CompilationUnit *cUnit, MIR *mir)
 {
-    return genConversionPortable(cUnit, mir);
+    return handleConversionPortable(cUnit, mir);
 }
 
-static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
-                        int vSrc1, int vSrc2)
+static bool handleArithOpFloat(CompilationUnit *cUnit, MIR *mir,
+                               RegLocation rlDest, RegLocation rlSrc1,
+                               RegLocation rlSrc2)
 {
-    return genArithOpFloatPortable(cUnit, mir, vDest, vSrc1, vSrc2);
+    return handleArithOpFloatPortable(cUnit, mir, rlDest, rlSrc1, rlSrc2);
 }
 
-static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
-                      int vSrc1, int vSrc2)
+static bool handleArithOpDouble(CompilationUnit *cUnit, MIR *mir,
+                                RegLocation rlDest, RegLocation rlSrc1,
+                                RegLocation rlSrc2)
 {
-    return genArithOpDoublePortable(cUnit, mir, vDest, vSrc1, vSrc2);
+    return handleArithOpDoublePortable(cUnit, mir, rlDest, rlSrc1, rlSrc2);
 }
 
-static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
-                    int vSrc2)
+static bool handleCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
+                        RegLocation rlSrc1, RegLocation rlSrc2)
 {
+    RegLocation rlResult = LOC_C_RETURN;
     /*
      * Don't attempt to optimize register usage since these opcodes call out to
      * the handlers.
      */
     switch (mir->dalvikInsn.opCode) {
         case OP_CMPL_FLOAT:
-            loadValue(cUnit, vSrc1, r0);
-            loadValue(cUnit, vSrc2, r1);
+            loadValueDirectFixed(cUnit, rlSrc1, r0);
+            loadValueDirectFixed(cUnit, rlSrc2, r1);
             genDispatchToHandler(cUnit, TEMPLATE_CMPL_FLOAT);
-            storeValue(cUnit, r0, vDest, r1);
+            storeValue(cUnit, rlDest, rlResult);
             break;
         case OP_CMPG_FLOAT:
-            loadValue(cUnit, vSrc1, r0);
-            loadValue(cUnit, vSrc2, r1);
+            loadValueDirectFixed(cUnit, rlSrc1, r0);
+            loadValueDirectFixed(cUnit, rlSrc2, r1);
             genDispatchToHandler(cUnit, TEMPLATE_CMPG_FLOAT);
-            storeValue(cUnit, r0, vDest, r1);
+            storeValue(cUnit, rlDest, rlResult);
             break;
         case OP_CMPL_DOUBLE:
-            loadValueAddress(cUnit, vSrc1, r0);
-            loadValueAddress(cUnit, vSrc2, r1);
+            loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
+            loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
             genDispatchToHandler(cUnit, TEMPLATE_CMPL_DOUBLE);
-            storeValue(cUnit, r0, vDest, r1);
+            storeValue(cUnit, rlDest, rlResult);
             break;
         case OP_CMPG_DOUBLE:
-            loadValueAddress(cUnit, vSrc1, r0);
-            loadValueAddress(cUnit, vSrc2, r1);
+            loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
+            loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
             genDispatchToHandler(cUnit, TEMPLATE_CMPG_DOUBLE);
-            storeValue(cUnit, r0, vDest, r1);
+            storeValue(cUnit, rlDest, rlResult);
             break;
         default:
             return true;

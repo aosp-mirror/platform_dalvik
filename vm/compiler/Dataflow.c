@@ -27,7 +27,7 @@
  * TODO - many optimization flags are incomplete - they will only limit the
  * scope of optimizations but will not cause mis-optimizations.
  */
-int dvmCompilerDataFlowAttributes[MIR_OP_LAST] = {
+int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     // 00 OP_NOP
     DF_NOP,
 
@@ -164,19 +164,19 @@ int dvmCompilerDataFlowAttributes[MIR_OP_LAST] = {
     DF_UA,
 
     // 2D OP_CMPL_FLOAT vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC,
+    DF_DA | DF_UB | DF_UC | DF_FP_B | DF_FP_C,
 
     // 2E OP_CMPG_FLOAT vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC,
+    DF_DA | DF_UB | DF_UC | DF_FP_B | DF_FP_C,
 
     // 2F OP_CMPL_DOUBLE vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA | DF_UB_WIDE | DF_UC_WIDE | DF_FP_B | DF_FP_C,
 
     // 30 OP_CMPG_DOUBLE vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA | DF_UB_WIDE | DF_UC_WIDE | DF_FP_B | DF_FP_C,
 
     // 31 OP_CMP_LONG vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA | DF_UB_WIDE | DF_UC_WIDE,
 
     // 32 OP_IF_EQ vA, vB, +CCCC
     DF_UA | DF_UB,
@@ -411,46 +411,46 @@ int dvmCompilerDataFlowAttributes[MIR_OP_LAST] = {
     DF_DA_WIDE | DF_UB_WIDE,
 
     // 7F OP_NEG_FLOAT vA, vB
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_FP_A | DF_FP_B,
 
     // 80 OP_NEG_DOUBLE vA, vB
-    DF_DA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_FP_A | DF_FP_B,
 
     // 81 OP_INT_TO_LONG vA, vB
     DF_DA_WIDE | DF_UB,
 
     // 82 OP_INT_TO_FLOAT vA, vB
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_FP_A,
 
     // 83 OP_INT_TO_DOUBLE vA, vB
-    DF_DA_WIDE | DF_UB,
+    DF_DA_WIDE | DF_UB | DF_FP_A,
 
     // 84 OP_LONG_TO_INT vA, vB
     DF_DA | DF_UB_WIDE,
 
     // 85 OP_LONG_TO_FLOAT vA, vB
-    DF_DA | DF_UB_WIDE,
+    DF_DA | DF_UB_WIDE | DF_FP_A,
 
     // 86 OP_LONG_TO_DOUBLE vA, vB
-    DF_DA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_FP_A,
 
     // 87 OP_FLOAT_TO_INT vA, vB
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_FP_B,
 
     // 88 OP_FLOAT_TO_LONG vA, vB
-    DF_DA_WIDE | DF_UB,
+    DF_DA_WIDE | DF_UB | DF_FP_B,
 
     // 89 OP_FLOAT_TO_DOUBLE vA, vB
-    DF_DA_WIDE | DF_UB,
+    DF_DA_WIDE | DF_UB | DF_FP_A | DF_FP_B,
 
     // 8A OP_DOUBLE_TO_INT vA, vB
-    DF_DA | DF_UB_WIDE,
+    DF_DA | DF_UB_WIDE | DF_FP_B,
 
     // 8B OP_DOUBLE_TO_LONG vA, vB
-    DF_DA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_FP_B,
 
     // 8C OP_DOUBLE_TO_FLOAT vA, vB
-    DF_DA | DF_UB_WIDE,
+    DF_DA | DF_UB_WIDE | DF_FP_A | DF_FP_B,
 
     // 8D OP_INT_TO_BYTE vA, vB
     DF_DA | DF_UB,
@@ -519,43 +519,43 @@ int dvmCompilerDataFlowAttributes[MIR_OP_LAST] = {
     DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
 
     // A3 OP_SHL_LONG vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC,
 
     // A4 OP_SHR_LONG vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC,
 
     // A5 OP_USHR_LONG vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC,
 
     // A6 OP_ADD_FLOAT vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC,
+    DF_DA | DF_UB | DF_UC | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // A7 OP_SUB_FLOAT vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC,
+    DF_DA | DF_UB | DF_UC | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // A8 OP_MUL_FLOAT vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC,
+    DF_DA | DF_UB | DF_UC | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // A9 OP_DIV_FLOAT vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC,
+    DF_DA | DF_UB | DF_UC | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // AA OP_REM_FLOAT vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC,
+    DF_DA | DF_UB | DF_UC | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // AB OP_ADD_DOUBLE vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // AC OP_SUB_DOUBLE vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // AD OP_MUL_DOUBLE vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // AE OP_DIV_DOUBLE vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // AF OP_REM_DOUBLE vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE,
+    DF_DA_WIDE | DF_UB_WIDE | DF_UC_WIDE | DF_FP_A | DF_FP_B | DF_FP_C,
 
     // B0 OP_ADD_INT_2ADDR vA, vB
     DF_DA | DF_UA | DF_UB,
@@ -615,43 +615,43 @@ int dvmCompilerDataFlowAttributes[MIR_OP_LAST] = {
     DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
 
     // C3 OP_SHL_LONG_2ADDR vA, vB
-    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB,
 
     // C4 OP_SHR_LONG_2ADDR vA, vB
-    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB,
 
     // C5 OP_USHR_LONG_2ADDR vA, vB
-    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB,
 
     // C6 OP_ADD_FLOAT_2ADDR vA, vB
-    DF_DA | DF_UA | DF_UB,
+    DF_DA | DF_UA | DF_UB | DF_FP_A | DF_FP_B,
 
     // C7 OP_SUB_FLOAT_2ADDR vA, vB
-    DF_DA | DF_UA | DF_UB,
+    DF_DA | DF_UA | DF_UB | DF_FP_A | DF_FP_B,
 
     // C8 OP_MUL_FLOAT_2ADDR vA, vB
-    DF_DA | DF_UA | DF_UB,
+    DF_DA | DF_UA | DF_UB | DF_FP_A | DF_FP_B,
 
     // C9 OP_DIV_FLOAT_2ADDR vA, vB
-    DF_DA | DF_UA | DF_UB,
+    DF_DA | DF_UA | DF_UB | DF_FP_A | DF_FP_B,
 
     // CA OP_REM_FLOAT_2ADDR vA, vB
-    DF_DA | DF_UA | DF_UB,
+    DF_DA | DF_UA | DF_UB | DF_FP_A | DF_FP_B,
 
     // CB OP_ADD_DOUBLE_2ADDR vA, vB
-    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE | DF_FP_A | DF_FP_B,
 
     // CC OP_SUB_DOUBLE_2ADDR vA, vB
-    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE | DF_FP_A | DF_FP_B,
 
     // CD OP_MUL_DOUBLE_2ADDR vA, vB
-    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE | DF_FP_A | DF_FP_B,
 
     // CE OP_DIV_DOUBLE_2ADDR vA, vB
-    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE | DF_FP_A | DF_FP_B,
 
     // CF OP_REM_DOUBLE_2ADDR vA, vB
-    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE,
+    DF_DA_WIDE | DF_UA_WIDE | DF_UB_WIDE | DF_FP_A | DF_FP_B,
 
     // D0 OP_ADD_INT_LIT16 vA, vB, #+CCCC
     DF_DA | DF_UB,
@@ -933,8 +933,8 @@ void dvmCompilerFindLiveIn(CompilationUnit *cUnit, BasicBlock *bb)
     MIR *mir;
     BitVector *useV, *defV, *liveInV;
 
-    if (bb->blockType != DALVIK_BYTECODE &&
-        bb->blockType != ENTRY_BLOCK) {
+    if (bb->blockType != kDalvikByteCode &&
+        bb->blockType != kEntryBlock) {
         return;
     }
 
@@ -1041,7 +1041,7 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
 {
     MIR *mir;
 
-    if (bb->blockType != DALVIK_BYTECODE && bb->blockType != ENTRY_BLOCK) {
+    if (bb->blockType != kDalvikByteCode && bb->blockType != kEntryBlock) {
         return;
     }
 
@@ -1084,6 +1084,7 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
         if (numUses) {
             mir->ssaRep->numUses = numUses;
             mir->ssaRep->uses = dvmCompilerNew(sizeof(int) * numUses, false);
+            mir->ssaRep->fpUse = dvmCompilerNew(sizeof(bool) * numUses, false);
         }
 
         int numDefs = 0;
@@ -1098,6 +1099,7 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
         if (numDefs) {
             mir->ssaRep->numDefs = numDefs;
             mir->ssaRep->defs = dvmCompilerNew(sizeof(int) * numDefs, false);
+            mir->ssaRep->fpDef = dvmCompilerNew(sizeof(bool) * numDefs, false);
         }
 
         DecodedInstruction *dInsn = &mir->dalvikInsn;
@@ -1105,27 +1107,38 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
         if (dfAttributes & DF_HAS_USES) {
             numUses = 0;
             if (dfAttributes & DF_UA) {
+                mir->ssaRep->fpUse[numUses] = dfAttributes & DF_FP_A;
                 handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vA, numUses++);
             } else if (dfAttributes & DF_UA_WIDE) {
+                mir->ssaRep->fpUse[numUses] = dfAttributes & DF_FP_A;
                 handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vA, numUses++);
+                mir->ssaRep->fpUse[numUses] = dfAttributes & DF_FP_A;
                 handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vA+1, numUses++);
             }
             if (dfAttributes & DF_UB) {
+                mir->ssaRep->fpUse[numUses] = dfAttributes & DF_FP_B;
                 handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vB, numUses++);
             } else if (dfAttributes & DF_UB_WIDE) {
+                mir->ssaRep->fpUse[numUses] = dfAttributes & DF_FP_B;
                 handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vB, numUses++);
+                mir->ssaRep->fpUse[numUses] = dfAttributes & DF_FP_B;
                 handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vB+1, numUses++);
             }
             if (dfAttributes & DF_UC) {
+                mir->ssaRep->fpUse[numUses] = dfAttributes & DF_FP_C;
                 handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vC, numUses++);
             } else if (dfAttributes & DF_UC_WIDE) {
+                mir->ssaRep->fpUse[numUses] = dfAttributes & DF_FP_C;
                 handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vC, numUses++);
+                mir->ssaRep->fpUse[numUses] = dfAttributes & DF_FP_C;
                 handleSSAUse(cUnit, mir->ssaRep->uses, dInsn->vC+1, numUses++);
             }
         }
         if (dfAttributes & DF_HAS_DEFS) {
+            mir->ssaRep->fpDef[0] = dfAttributes & DF_FP_A;
             handleSSADef(cUnit, mir->ssaRep->defs, dInsn->vA, 0);
             if (dfAttributes & DF_DA_WIDE) {
+                mir->ssaRep->fpDef[1] = dfAttributes & DF_FP_A;
                 handleSSADef(cUnit, mir->ssaRep->defs, dInsn->vA+1, 1);
             }
         }
@@ -1228,14 +1241,14 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
     GrowableList *ivList = cUnit->loopAnalysis->ivList;
     MIR *mir;
 
-    if (bb->blockType != DALVIK_BYTECODE &&
-        bb->blockType != ENTRY_BLOCK) {
+    if (bb->blockType != kDalvikByteCode &&
+        bb->blockType != kEntryBlock) {
         return;
     }
 
     /* If the bb doesn't have a phi it cannot contain an induction variable */
     if (bb->firstMIRInsn == NULL ||
-        bb->firstMIRInsn->dalvikInsn.opCode != MIR_OP_PHI) {
+        bb->firstMIRInsn->dalvikInsn.opCode != kMirOpPhi) {
         return;
     }
 
@@ -1254,7 +1267,7 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
          */
         MIR *phi;
         for (phi = bb->firstMIRInsn; phi; phi = phi->next) {
-            if (phi->dalvikInsn.opCode != MIR_OP_PHI) break;
+            if (phi->dalvikInsn.opCode != kMirOpPhi) break;
 
             if (phi->ssaRep->defs[0] == mir->ssaRep->uses[0] &&
                 phi->ssaRep->uses[1] == mir->ssaRep->defs[0]) {
@@ -1424,8 +1437,8 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
      */
     for (i = 0; i < cUnit->numBlocks; i++) {
         BasicBlock *bb = cUnit->blockList[i];
-        if (bb->blockType == DALVIK_BYTECODE ||
-            bb->blockType == ENTRY_BLOCK) {
+        if (bb->blockType == kDalvikByteCode ||
+            bb->blockType == kEntryBlock) {
             bb->dataFlowInfo = dvmCompilerNew(sizeof(BasicBlockDataFlow), true);
         }
     }

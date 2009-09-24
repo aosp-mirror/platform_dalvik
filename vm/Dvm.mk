@@ -209,6 +209,7 @@ ifeq ($(WITH_JIT),true)
 	compiler/IntermediateRep.c \
 	compiler/Dataflow.c \
 	compiler/Loop.c \
+	compiler/Ralloc.c \
 	interp/Jit.c
 endif
 
