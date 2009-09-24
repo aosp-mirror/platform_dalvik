@@ -1036,6 +1036,7 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
     default:
         LOGE("Unknown format %d in dvmGetExpandedRegisterMap\n", format);
         dvmAbort();
+        newMap = NULL;      // make gcc happy
     }
 
     if (newMap == NULL) {
