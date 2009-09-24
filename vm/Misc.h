@@ -263,12 +263,14 @@ bool dvmSetCloseOnExec(int fd);
 
 /*
  * Unconditionally abort the entire VM.  Try not to use this.
+ *
+ * NOTE: if this is marked ((noreturn)), gcc will merge multiple dvmAbort()
+ * calls in a single function together.  This is good, in that it reduces
+ * code size slightly, but also bad, because the native stack trace we
+ * get from the abort may point at the wrong call site.  Best to leave
+ * it undecorated.
  */
-void dvmAbort(void)
-#if defined(__GNUC__)
-    __attribute__ ((noreturn))
-#endif
-    ;
+void dvmAbort(void);
 
 #if (!HAVE_STRLCPY)
 /* Implementation of strlcpy() for platforms that don't already have it. */
