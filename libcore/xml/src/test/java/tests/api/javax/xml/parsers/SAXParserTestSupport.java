@@ -54,7 +54,7 @@ class SAXParserTestSupport {
     public static final String KEY_ERROR = "error";
     public static final String KEY_FATAL_ERROR = "fatalError";
     public static final String KEY_WARNING = "warning";
-    public static final String KEY_END_ELEMENT = "endEement";
+    public static final String KEY_END_ELEMENT = "endElement";
     public static final String KEY_END_PREFIX_MAPPING = "endPrefixMapping";
     public static final String KEY_IGNORABLE_WHITE_SPACE = 
         "ignorableWhitespace";
