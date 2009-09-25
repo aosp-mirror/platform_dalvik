@@ -472,6 +472,14 @@ static void checkObject(JNIEnv* env, jobject jobj, const char* func)
 
     JNI_ENTER();
 
+    if (dvmIsWeakGlobalRef(jobj)) {
+        /*
+         * Normalize and continue.  This will tell us if the PhantomReference
+         * object is valid.
+         */
+        jobj = dvmNormalizeWeakGlobalRef((jweak) jobj);
+    }
+
     if (dvmGetJNIRefType(env, jobj) == JNIInvalidRefType) {
         LOGW("JNI WARNING: %p is not a valid JNI reference\n", jobj);
         printWarn = true;

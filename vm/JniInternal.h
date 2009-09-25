@@ -201,4 +201,42 @@ DalvikJniReturnType dvmGetArgInfoReturnType(int jniArgInfo);
  */
 void dvmReleaseJniMonitors(Thread* self);
 
+
+/*
+ * This mask is applied to weak global reference values returned to
+ * native code.  The goal is to create an invalid pointer that will cause
+ * a crash if misused.  The mmap region for the virtual heap is typically
+ * around 0x40xxxxxx.
+ *
+ * To make weak global references easily distinguishable from other kinds
+ * of references when !USE_INDIRECT_REF, we XOR the low bits.  Assuming >=
+ * 64-bit alignment of objects, this changes the low 3 bits from all clear
+ * to all set.
+ */
+#define WEAK_GLOBAL_XOR 0x9e0fffff
+
+/*
+ * "Obfuscate" a weak global reference pointer.
+ */
+INLINE jweak dvmObfuscateWeakGlobalRef(jobject jobj) {
+    return (jweak) ((u4) jobj ^ WEAK_GLOBAL_XOR);
+}
+
+/*
+ * Undo the obfuscation.
+ */
+INLINE jobject dvmNormalizeWeakGlobalRef(jweak ref) {
+    return (jobject) ((u4) ref ^ WEAK_GLOBAL_XOR);
+}
+
+/*
+ * Returns "true" if this looks like a weak global reference.
+ *
+ * Relies on the low 3 bits being set instead of clear (the latter is
+ * guaranteed by 64-bit alignment of objects).
+ */
+INLINE bool dvmIsWeakGlobalRef(jobject jobj) {
+    return (((u4) jobj & 0x07) == 0x07);
+}
+
 #endif /*_DALVIK_JNIINTERNAL*/

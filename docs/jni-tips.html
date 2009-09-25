@@ -528,10 +528,11 @@ that use 64-bit pointers, <strong>you need to stash your native pointers in a
     Java bytecodes or class files, so passing in binary class data
     doesn't work.  Translation facilities may be added in a future
     version of the VM.</li>
-    <li><code>NewWeakGlobalRef</code> and <code>DeleteWeakGlobalRef</code>
-    are not implemented.  The
-    VM supports weak references, but not JNI "weak global" references.
-    These will be supported in a future release.</li>
+    <li>"Weak global" references are implemented, but may only be passed
+    to <code>NewLocalRef</code>, <code>NewGlobalRef</code>, and
+    <code>DeleteWeakGlobalRef</code>.  (The spec strongly encourages
+    programmers to create hard references to weak globals before doing
+    anything with them, so this should not be at all limiting.)</li>
     <li><code>GetObjectRefType</code> (new in 1.6) is implemented but not fully
     functional -- it can't always tell the difference between "local" and
     "global" references.</li>

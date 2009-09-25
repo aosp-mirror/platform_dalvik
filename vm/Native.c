@@ -746,7 +746,7 @@ static int findMethodInLib(void* vlib, void* vmethod)
     int len;
 
     if (meth->clazz->classLoader != pLib->classLoader) {
-        LOGD("+++ not scanning '%s' for '%s' (wrong CL)\n",
+        LOGV("+++ not scanning '%s' for '%s' (wrong CL)\n",
             pLib->pathName, meth->name);
         return 0;
     } else

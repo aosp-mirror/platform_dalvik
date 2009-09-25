@@ -349,6 +349,7 @@ void dvmHeapMarkRootSet()
     dvmMarkObjectNonNull(gDvm.outOfMemoryObj);
     dvmMarkObjectNonNull(gDvm.internalErrorObj);
     dvmMarkObjectNonNull(gDvm.noClassDefFoundErrorObj);
+    dvmMarkObject(gDvm.jniWeakGlobalRefQueue);
 //TODO: scan object references sitting in gDvm;  use pointer begin & end
 
     HPROF_CLEAR_GC_SCAN_STATE();
@@ -861,7 +862,21 @@ size_t numEnqueued = 0;
                  * (The referent will be marked outside of this loop,
                  * after handing all references of this strength, in
                  * case multiple references point to the same object.)
+                 *
+                 * One exception: JNI "weak global" references are handled
+                 * as a special case.  They're identified by the queue.
                  */
+                if (gDvm.jniWeakGlobalRefQueue != NULL) {
+                    Object* queue = dvmGetFieldObject(reference,
+                            gDvm.offJavaLangRefReference_queue);
+                    if (queue == gDvm.jniWeakGlobalRefQueue) {
+                        LOGV("+++ WGR: clearing + not queueing %p:%p\n",
+                            reference, referent);
+                        schedClear = clearReference(reference);
+                        schedEnqueue = false;
+                        break;
+                    }
+                }
                 schedClear = false;
 
                 /* A PhantomReference is only useful with a
@@ -926,6 +941,9 @@ LOGD_HEAP("dvmHeapHandleReferences(): cleared %zd, enqueued %zd %s references\n"
     /* Walk though the reference list again, and mark any non-clear/marked
      * referents.  Only PhantomReferences can have non-clear referents
      * at this point.
+     *
+     * (Could skip this for JNI weak globals, since we know they've been
+     * cleared.)
      */
     if (refType == REF_PHANTOM) {
         bool scanRequired = false;
