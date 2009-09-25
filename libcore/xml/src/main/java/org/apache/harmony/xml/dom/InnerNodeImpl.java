@@ -69,7 +69,7 @@ public abstract class InnerNodeImpl extends LeafNodeImpl {
     }
 
     public Node getNextSibling() {
-        if (parent == null || index >= parent.children.size()) {
+        if (parent == null || index + 1 >= parent.children.size()) {
             return null;
         }
 
