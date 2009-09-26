@@ -27,8 +27,9 @@ import java.io.IOException;
  * <code>android.os.Debug</code>.
  * 
  * @cts Please complete the spec.
- * 
- * @since Android 1.0
+ *
+ * @deprecated this is an internal Dalvik class that is not appropriate for
+ *      general use. It will be removed from the public API in a future release.
  */
 public final class VMDebug {
     /**

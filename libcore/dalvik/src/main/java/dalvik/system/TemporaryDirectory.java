@@ -25,8 +25,9 @@ import java.util.logging.Logger;
  * call into this class with an appropriate base directory during its
  * startup, as a reasonably easy way to get the standard property
  * <code>java.io.tmpdir</code> to point at something useful.
- * 
- * @since Android 1.0
+ *
+ * @deprecated this is an internal Dalvik class that is not appropriate for
+ *      general use. It will be removed from the public API in a future release.
  */
 public class TemporaryDirectory {
     /** system property name for the temporary directory */
