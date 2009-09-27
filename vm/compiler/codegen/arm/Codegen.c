@@ -994,7 +994,8 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
     int dataOffset = offsetof(ArrayObject, contents);
     int reg0, reg1, reg2, reg3;
 
-    reg0 = selectFirstRegister(cUnit, vArray, false);
+    reg0 = selectFirstRegister(cUnit, vArray,
+                               (size == LONG) || (size == DOUBLE));
     reg1 = NEXT_REG(reg0);
     reg2 = NEXT_REG(reg1);
     reg3 = NEXT_REG(reg2);
@@ -1086,7 +1087,8 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
     int dataOffset = offsetof(ArrayObject, contents);
     int reg0, reg1, reg2, reg3;
 
-    reg0 = selectFirstRegister(cUnit, vArray, false);
+    reg0 = selectFirstRegister(cUnit, vArray,
+                               (size == LONG) || (size == DOUBLE));
     reg1 = NEXT_REG(reg0);
     reg2 = NEXT_REG(reg1);
     reg3 = NEXT_REG(reg2);
