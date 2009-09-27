@@ -209,13 +209,6 @@ static void throwSocketException(JNIEnv *env, int errorCode) {
 }
 
 /**
- * Throws an IOException with the given message.
- */
-static void throwIOExceptionStr(JNIEnv *env, const char *message) {
-    jniThrowException(env, "java/io/IOException", message);
-}
-
-/**
  * Throws a NullPointerException.
  */
 static void throwNullPointerException(JNIEnv *env) {

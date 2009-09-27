@@ -1200,16 +1200,25 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
         } catch (IOException e) {
             // Expected.
         }
+        // BEGIN android-added
+        try {
+            // Android uses 32-bit off_t, so anything larger than a signed 32-bit int won't work.
+            raf.seek(((long) Integer.MAX_VALUE) + 1);
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        // END android-added
 
         raf.write(testString.getBytes(), 0, testLength);
         raf.seek(12);
-        assertEquals("Test 2: Seek failed to set file pointer.", 12, 
+        assertEquals("Test 3: Seek failed to set file pointer.", 12,
                 raf.getFilePointer());
         
         raf.close();
         try {
             raf.seek(1);
-            fail("Test 1: IOException expected.");
+            fail("Test 4: IOException expected.");
         } catch (IOException e) {
             // Expected.
         }
@@ -1296,10 +1305,21 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
         assertEquals("Test 7: Incorrect file length;", 
                 testLength + 2, raf.length());
         
+        // BEGIN android-added
+        // Exception testing.
+        try {
+            // Android uses 32-bit off_t, so anything larger than a signed 32-bit int won't work.
+            raf.setLength(((long) Integer.MAX_VALUE) + 1);
+            fail("Test 8: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        // END android-added
+
         // Exception testing.
         try {
             raf.setLength(-1);
-            fail("Test 8: IllegalArgumentException expected.");
+            fail("Test 9: IllegalArgumentException expected.");
         } catch (IllegalArgumentException e) {
             // Expected.
         }
@@ -1307,7 +1327,7 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
         raf.close();
         try {
             raf.setLength(truncLength);
-            fail("Test 9: IOException expected.");
+            fail("Test 10: IOException expected.");
         } catch (IOException e) {
             // Expected.
         }

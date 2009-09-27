@@ -14,179 +14,193 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+
+// BEGIN android-note
+// This file corresponds to harmony's OSFileSystem.c and OSFileSystemLinux32.c.
+// It has been greatly simplified by the assumption that the underlying
+// platform is always Linux.
+// END android-note
+
 /*
  * Common natives supporting the file system interface.
  */
 
 #define HyMaxPath 1024
-#define HyOpenRead    1       /* Values for HyFileOpen */
+
+/* Values for HyFileOpen */
+#define HyOpenRead    1
 #define HyOpenWrite   2
 #define HyOpenCreate  4
 #define HyOpenTruncate  8
 #define HyOpenAppend  16
 #define HyOpenText    32
-
 /* Use this flag with HyOpenCreate, if this flag is specified then
- * trying to create an existing file will fail 
+ * trying to create an existing file will fail
  */
 #define HyOpenCreateNew 64
-#define HyOpenSync		128
+#define HyOpenSync      128
 #define SHARED_LOCK_TYPE 1L
 
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
-#include <string.h>
-#include <stdio.h>
+#include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <sys/sendfile.h>
 #include <sys/uio.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
 
-typedef struct socket_struct {
-    int sock;
-    unsigned short family;
-} socket_struct;
+// An equivalent of the glibc macro of the same name.
+// We want to hide EINTR from Java by simply retrying directly in
+// the native code. We care about all other errors, though.
+#define EINTR_RETRY(exp) ({                   \
+    typeof (exp) _rc;                         \
+    do {                                      \
+        _rc = (exp);                          \
+    } while (_rc == -1 && errno == EINTR);    \
+    _rc; })
 
 static void convertToPlatform(char *path) {
     char *pathIndex;
 
     pathIndex = path;
     while (*pathIndex != '\0') {
-        if(*pathIndex == '\\') {
+        if (*pathIndex == '\\') {
             *pathIndex = '/';
         }
         pathIndex++;
     }
 }
 
-static int
-EsTranslateOpenFlags(int flags) {
+static int EsTranslateOpenFlags(int flags) {
     int realFlags = 0;
 
-    if(flags & HyOpenAppend) {
+    if (flags & HyOpenAppend) {
         realFlags |= O_APPEND;
     }
-    if(flags & HyOpenTruncate) {
+    if (flags & HyOpenTruncate) {
         realFlags |= O_TRUNC;
     }
-    if(flags & HyOpenCreate) {
+    if (flags & HyOpenCreate) {
         realFlags |= O_CREAT;
     }
-    if(flags & HyOpenCreateNew) {
+    if (flags & HyOpenCreateNew) {
         realFlags |= O_EXCL | O_CREAT;
     }
 #ifdef O_SYNC
-	if(flags & HyOpenSync) {
-		realFlags |= O_SYNC;
-	}
-#endif    
-    if(flags & HyOpenRead) {
-        if(flags & HyOpenWrite) {
+    if (flags & HyOpenSync) {
+        realFlags |= O_SYNC;
+    }
+#endif
+    if (flags & HyOpenRead) {
+        if (flags & HyOpenWrite) {
             return (O_RDWR | realFlags);
         }
         return (O_RDONLY | realFlags);
     }
-    if(flags & HyOpenWrite) {
+    if (flags & HyOpenWrite) {
         return (O_WRONLY | realFlags);
     }
     return -1;
 }
 
-/**
- * Lock the file identified by the given handle.
- * The range and lock type are given.
- */
-static jint harmony_io_lockImpl(JNIEnv * env, jobject thiz, jint handle, 
-        jlong start, jlong length, jint typeFlag, jboolean waitFlag) {
+// Checks whether we can safely treat the given jlong as an off_t without
+// accidental loss of precision.
+// TODO: this is bogus; we should use _FILE_OFFSET_BITS=64.
+static bool offsetTooLarge(JNIEnv* env, jlong longOffset) {
+    if (sizeof(off_t) >= sizeof(jlong)) {
+        // We're only concerned about the possibility that off_t is
+        // smaller than jlong. off_t is signed, so we don't need to
+        // worry about signed/unsigned.
+        return false;
+    }
 
-    int rc;
-    int waitMode = (waitFlag) ? F_SETLKW : F_SETLK;
+    // TODO: use std::numeric_limits<off_t>::max() and min() when we have them.
+    assert(sizeof(off_t) == sizeof(int));
+    static const off_t off_t_max = INT_MAX;
+    static const off_t off_t_min = INT_MIN;
+
+    if (longOffset > off_t_max || longOffset < off_t_min) {
+        // "Value too large for defined data type".
+        jniThrowIOException(env, EOVERFLOW);
+        return true;
+    }
+    return false;
+}
+
+static jlong translateLockLength(jlong length) {
+    // FileChannel.tryLock uses Long.MAX_VALUE to mean "lock the whole
+    // file", where POSIX would use 0. We can support that special case,
+    // even for files whose actual length we can't represent. For other
+    // out of range lengths, though, we want our range checking to fire.
+    return (length == 0x7fffffffffffffffLL) ? 0 : length;
+}
+
+static struct flock flockFromStartAndLength(jlong start, jlong length) {
     struct flock lock;
-
     memset(&lock, 0, sizeof(lock));
-
-    // If start or length overflow the max values we can represent, then max them out.
-    if(start > 0x7fffffffL) {
-        start = 0x7fffffffL;
-    }
-    if(length > 0x7fffffffL) {
-        length = 0x7fffffffL;
-    }
 
     lock.l_whence = SEEK_SET;
     lock.l_start = start;
     lock.l_len = length;
 
-    if((typeFlag & SHARED_LOCK_TYPE) == SHARED_LOCK_TYPE) {
+    return lock;
+}
+
+static jint harmony_io_lockImpl(JNIEnv* env, jobject, jint handle,
+        jlong start, jlong length, jint typeFlag, jboolean waitFlag) {
+
+    length = translateLockLength(length);
+    if (offsetTooLarge(env, start) || offsetTooLarge(env, length)) {
+        return -1;
+    }
+
+    struct flock lock(flockFromStartAndLength(start, length));
+
+    if ((typeFlag & SHARED_LOCK_TYPE) == SHARED_LOCK_TYPE) {
         lock.l_type = F_RDLCK;
     } else {
         lock.l_type = F_WRLCK;
     }
 
-    do {
-        rc = fcntl(handle, waitMode, &lock);
-    } while ((rc < 0) && (errno == EINTR));
-
-    return (rc == -1) ? -1 : 0;
+    int waitMode = (waitFlag) ? F_SETLKW : F_SETLK;
+    return EINTR_RETRY(fcntl(handle, waitMode, &lock));
 }
 
-/**
- * Unlocks the specified region of the file.
- */
-static jint harmony_io_unlockImpl(JNIEnv * env, jobject thiz, jint handle, 
+static void harmony_io_unlockImpl(JNIEnv* env, jobject, jint handle,
         jlong start, jlong length) {
 
-    int rc;
-    struct flock lock;
-
-    memset(&lock, 0, sizeof(lock));
-
-    // If start or length overflow the max values we can represent, then max them out.
-    if(start > 0x7fffffffL) {
-        start = 0x7fffffffL;
-    }
-    if(length > 0x7fffffffL) {
-        length = 0x7fffffffL;
+    length = translateLockLength(length);
+    if (offsetTooLarge(env, start) || offsetTooLarge(env, length)) {
+        return;
     }
 
-    lock.l_whence = SEEK_SET;
-    lock.l_start = start;
-    lock.l_len = length;
+    struct flock lock(flockFromStartAndLength(start, length));
     lock.l_type = F_UNLCK;
 
-    do {
-        rc = fcntl(handle, F_SETLKW, &lock);
-    } while ((rc < 0) && (errno == EINTR));
-
-    return (rc == -1) ? -1 : 0;
+    int rc = EINTR_RETRY(fcntl(handle, F_SETLKW, &lock));
+    if (rc == -1) {
+        jniThrowIOException(env, errno);
+    }
 }
 
 /**
  * Returns the granularity of the starting address for virtual memory allocation.
  * (It's the same as the page size.)
- * Class:     org_apache_harmony_luni_platform_OSFileSystem
- * Method:    getAllocGranularity
- * Signature: ()I
  */
-static jint harmony_io_getAllocGranularity(JNIEnv * env, jobject thiz) {
-    static int allocGranularity = 0;
-    if(allocGranularity == 0) {
-        allocGranularity = getpagesize();
-    }
+static jint harmony_io_getAllocGranularity(JNIEnv* env, jobject) {
+    static int allocGranularity = getpagesize();
     return allocGranularity;
 }
 
-/*
- * Class:     org_apache_harmony_luni_platform_OSFileSystem
- * Method:    readvImpl
- * Signature: (I[J[I[I)J
- */
-static jlong harmony_io_readvImpl(JNIEnv *env, jobject thiz, jint fd, 
+static jlong harmony_io_readv(JNIEnv* env, jobject, jint fd,
         jintArray jBuffers, jintArray jOffsets, jintArray jLengths, jint size) {
     iovec* vectors = new iovec[size];
     if (vectors == NULL) {
+        jniThrowException(env, "java/lang/OutOfMemoryError", "native heap");
         return -1;
     }
     jint *buffers = env->GetIntArrayElements(jBuffers, NULL);
@@ -201,18 +215,17 @@ static jlong harmony_io_readvImpl(JNIEnv *env, jobject thiz, jint fd,
     env->ReleaseIntArrayElements(jOffsets, offsets, JNI_ABORT);
     env->ReleaseIntArrayElements(jLengths, lengths, JNI_ABORT);
     delete[] vectors;
+    if (result == -1) {
+        jniThrowIOException(env, errno);
+    }
     return result;
 }
 
-/*
- * Class:     org_apache_harmony_luni_platform_OSFileSystem
- * Method:    writevImpl
- * Signature: (I[J[I[I)J
- */
-static jlong harmony_io_writevImpl(JNIEnv *env, jobject thiz, jint fd, 
+static jlong harmony_io_writev(JNIEnv* env, jobject, jint fd,
         jintArray jBuffers, jintArray jOffsets, jintArray jLengths, jint size) {
     iovec* vectors = new iovec[size];
     if (vectors == NULL) {
+        jniThrowException(env, "java/lang/OutOfMemoryError", "native heap");
         return -1;
     }
     jint *buffers = env->GetIntArrayElements(jBuffers, NULL);
@@ -227,82 +240,60 @@ static jlong harmony_io_writevImpl(JNIEnv *env, jobject thiz, jint fd,
     env->ReleaseIntArrayElements(jOffsets, offsets, JNI_ABORT);
     env->ReleaseIntArrayElements(jLengths, lengths, JNI_ABORT);
     delete[] vectors;
+    if (result == -1) {
+        jniThrowIOException(env, errno);
+    }
     return result;
 }
 
-/*
- * Class:     org_apache_harmony_luni_platform_OSFileSystem
- * Method:    transferImpl
- * Signature: (IJJ)J
- */
-static jlong harmony_io_transferImpl(JNIEnv *env, jobject thiz, jint fd, 
-        jobject sd, jlong offset, jlong count) {
+static jlong harmony_io_transfer(JNIEnv* env, jobject, jint fd, jobject sd,
+        jlong offset, jlong count) {
 
-    int socket;
-    off_t off;
-
-    socket = jniGetFDFromFileDescriptor(env, sd);
-    if(socket == 0 || socket == -1) {
+    int socket = jniGetFDFromFileDescriptor(env, sd);
+    if (socket == -1) {
         return -1;
     }
 
     /* Value of offset is checked in jint scope (checked in java layer)
        The conversion here is to guarantee no value lost when converting offset to off_t
      */
-    off = offset;
+    off_t off = offset;
 
-    return sendfile(socket,(int)fd,(off_t *)&off,(size_t)count);
+    ssize_t rc = sendfile(socket, fd, &off, count);
+    if (rc == -1) {
+        jniThrowIOException(env, errno);
+    }
+    return rc;
 }
 
-/*
- * Class:     org_apache_harmony_io
- * Method:    readDirectImpl
- * Signature: (IJI)J
- */
-static jlong harmony_io_readDirectImpl(JNIEnv * env, jobject thiz, jint fd, 
+static jlong harmony_io_readDirect(JNIEnv* env, jobject, jint fd,
         jint buf, jint offset, jint nbytes) {
-    jint result;
-    if(nbytes == 0) {
-        return (jlong) 0;
+    if (nbytes == 0) {
+        return 0;
     }
 
-    result = read(fd, (void *) ((jint *)(buf+offset)), (int) nbytes);
-    if(result == 0) {
-        return (jlong) -1;
-    } else {
-        return (jlong) result;
+    jbyte* dst = reinterpret_cast<jbyte*>(buf + offset);
+    jlong rc = EINTR_RETRY(read(fd, dst, nbytes));
+    if (rc == 0) {
+        return -1;
     }
+    if (rc == -1) {
+        jniThrowIOException(env, errno);
+    }
+    return rc;
 }
 
-/*
- * Class:     org_apache_harmony_io
- * Method:    writeDirectImpl
- * Signature: (IJI)J
- */
-static jlong harmony_io_writeDirectImpl(JNIEnv * env, jobject thiz, jint fd, 
+static jlong harmony_io_writeDirect(JNIEnv* env, jobject, jint fd,
         jint buf, jint offset, jint nbytes) {
-
-
-    int rc = 0;
-
-    /* write will just do the right thing for HYPORT_TTY_OUT and HYPORT_TTY_ERR */
-    rc = write (fd, (const void *) ((jint *)(buf+offset)), (int) nbytes);
-
-    if(rc == -1) {
-        jniThrowException(env, "java/io/IOException", strerror(errno));
-        return -2;
+    jbyte* src = reinterpret_cast<jbyte*>(buf + offset);
+    jlong rc = EINTR_RETRY(write(fd, src, nbytes));
+    if (rc == -1) {
+        jniThrowIOException(env, errno);
     }
-    return (jlong) rc;
-
+    return rc;
 }
 
-// BEGIN android-changed
-/*
- * Class:     org_apache_harmony_io
- * Method:    readImpl
- * Signature: (I[BII)J
- */
-static jlong harmony_io_readImpl(JNIEnv * env, jobject thiz, jint fd, 
+static jlong harmony_io_readImpl(JNIEnv* env, jobject, jint fd,
         jbyteArray byteArray, jint offset, jint nbytes) {
 
     if (nbytes == 0) {
@@ -310,67 +301,28 @@ static jlong harmony_io_readImpl(JNIEnv * env, jobject thiz, jint fd,
     }
 
     jbyte* bytes = env->GetByteArrayElements(byteArray, NULL);
-    jlong result;
-    for (;;) {
-        result = read(fd, (void *) (bytes + offset), (int) nbytes);
-
-        if ((result != -1) || (errno != EINTR)) {
-            break;
-        }
-
-        /*
-         * If we didn't break above, that means that the read() call
-         * returned due to EINTR. We shield Java code from this
-         * possibility by trying again. Note that this is different
-         * from EAGAIN, which should result in this code throwing
-         * an InterruptedIOException.
-         */
-    }
-
+    jlong rc = EINTR_RETRY(read(fd, bytes + offset, nbytes));
     env->ReleaseByteArrayElements(byteArray, bytes, 0);
 
-    if (result == 0) {
+    if (rc == 0) {
         return -1;
     }
-    
-    if (result == -1) {
+    if (rc == -1) {
         if (errno == EAGAIN) {
             jniThrowException(env, "java/io/InterruptedIOException",
                     "Read timed out");
         } else {
-            jniThrowException(env, "java/io/IOException", strerror(errno));
+            jniThrowIOException(env, errno);
         }
     }
-
-    return result;
+    return rc;
 }
 
-/*
- * Class:     org_apache_harmony_io
- * Method:    writeImpl
- * Signature: (I[BII)J
- */
-static jlong harmony_io_writeImpl(JNIEnv * env, jobject thiz, jint fd, 
+static jlong harmony_io_writeImpl(JNIEnv* env, jobject, jint fd,
         jbyteArray byteArray, jint offset, jint nbytes) {
 
     jbyte* bytes = env->GetByteArrayElements(byteArray, NULL);
-    jlong result;
-    for (;;) {
-        result = write(fd, (const char *) bytes + offset, (int) nbytes);
-        
-        if ((result != -1) || (errno != EINTR)) {
-            break;
-        }
-
-        /*
-         * If we didn't break above, that means that the read() call
-         * returned due to EINTR. We shield Java code from this
-         * possibility by trying again. Note that this is different
-         * from EAGAIN, which should result in this code throwing
-         * an InterruptedIOException.
-         */
-    }
-
+    jlong result = EINTR_RETRY(write(fd, bytes + offset, nbytes));
     env->ReleaseByteArrayElements(byteArray, bytes, JNI_ABORT);
 
     if (result == -1) {
@@ -378,159 +330,77 @@ static jlong harmony_io_writeImpl(JNIEnv * env, jobject thiz, jint fd,
             jniThrowException(env, "java/io/InterruptedIOException",
                     "Write timed out");
         } else {
-            jniThrowException(env, "java/io/IOException", strerror(errno));
+            jniThrowIOException(env, errno);
         }
     }
-
     return result;
 }
-// END android-changed
 
-/**
- * Seeks a file descriptor to a given file position.
- * 
- * @param env pointer to Java environment
- * @param thiz pointer to object receiving the message
- * @param fd handle of file to be seeked
- * @param offset distance of movement in bytes relative to whence arg
- * @param whence enum value indicating from where the offset is relative
- * The valid values are defined in fsconstants.h.
- * @return the new file position from the beginning of the file, in bytes;
- * or -1 if a problem occurs.
- */
-static jlong harmony_io_seekImpl(JNIEnv * env, jobject thiz, jint fd, 
-        jlong offset, jint whence) {
-
-    int mywhence = 0;
-
+static jlong harmony_io_seek(JNIEnv* env, jobject, jint fd, jlong offset,
+        jint javaWhence) {
     /* Convert whence argument */
-    switch (whence) {
-        case 1:
-                mywhence = 0;
-                break;
-        case 2:
-                mywhence = 1;
-                break;
-        case 4:
-                mywhence = 2;
-                break;
-        default:
-                return -1;
-    }
-
-
-    off_t localOffset = (int) offset;
-
-    if((mywhence < 0) || (mywhence > 2)) {
+    int nativeWhence = 0;
+    switch (javaWhence) {
+    case 1:
+        nativeWhence = SEEK_SET;
+        break;
+    case 2:
+        nativeWhence = SEEK_CUR;
+        break;
+    case 4:
+        nativeWhence = SEEK_END;
+        break;
+    default:
         return -1;
     }
 
-    /* If file offsets are 32 bit, truncate the seek to that range */
-    if(sizeof (off_t) < sizeof (jlong)) {
-        if(offset > 0x7FFFFFFF) {
-            localOffset = 0x7FFFFFFF;
-        } else if(offset < -0x7FFFFFFF) {
-            localOffset = -0x7FFFFFFF;
-        }
+    // If the offset is relative, lseek(2) will tell us whether it's too large.
+    // We're just worried about too large an absolute offset, which would cause
+    // us to lie to lseek(2).
+    if (offsetTooLarge(env, offset)) {
+        return -1;
     }
 
-    return (jlong) lseek(fd, localOffset, mywhence);
-}
-
-/**
- * Flushes a file state to disk.
- *
- * @param env pointer to Java environment
- * @param thiz pointer to object receiving the message
- * @param fd handle of file to be flushed
- * @param metadata if true also flush metadata, 
- *         otherwise just flush data is possible.
- * @return zero on success and -1 on failure
- *
- * Method:    fflushImpl
- * Signature: (IZ)I
- */
-static jint harmony_io_fflushImpl(JNIEnv * env, jobject thiz, jint fd, 
-        jboolean metadata) {
-    return (jint) fsync(fd);
-}
-
-// BEGIN android-changed
-/**
- * Closes the given file handle
- * 
- * @param env pointer to Java environment
- * @param thiz pointer to object receiving the message
- * @param fd handle of file to be closed
- * @return zero on success and -1 on failure
- *
- * Class:     org_apache_harmony_io
- * Method:    closeImpl
- * Signature: (I)I
- */
-static jint harmony_io_closeImpl(JNIEnv * env, jobject thiz, jint fd) {
-    jint result;
-
-    for (;;) {
-        result = (jint) close(fd);
-        
-        if ((result != -1) || (errno != EINTR)) {
-            break;
-        }
-
-        /*
-         * If we didn't break above, that means that the close() call
-         * returned due to EINTR. We shield Java code from this
-         * possibility by trying again.
-         */
+    jlong result = lseek(fd, offset, nativeWhence);
+    if (result == -1) {
+        jniThrowIOException(env, errno);
     }
-
     return result;
 }
-// END android-changed
 
-
-/*
- * Class:     org_apache_harmony_io
- * Method:    truncateImpl
- * Signature: (IJ)I
- */
-static jint harmony_io_truncateImpl(JNIEnv * env, jobject thiz, jint fd, 
-        jlong size) {
-
-    int rc;
-    off_t length = (off_t) size;
-
-    // If file offsets are 32 bit, truncate the newLength to that range
-    if(sizeof (off_t) < sizeof (jlong)) {
-        if(length > 0x7FFFFFFF) {
-            length = 0x7FFFFFFF;
-        } else if(length < -0x7FFFFFFF) {
-            length = -0x7FFFFFFF;
-        }
+// TODO: are we supposed to support the 'metadata' flag? (false => fdatasync.)
+static void harmony_io_fflush(JNIEnv* env, jobject, jint fd,
+        jboolean metadata) {
+    int rc = fsync(fd);
+    if (rc == -1) {
+        jniThrowIOException(env, errno);
     }
-
-  rc = ftruncate((int)fd, length);
-
-  return (jint) rc;
-
 }
 
-/*
- * Class:     org_apache_harmony_io
- * Method:    openImpl
- * Signature: ([BI)I
- */
-static jint harmony_io_openImpl(JNIEnv * env, jobject obj, jbyteArray path, 
-        jint jflags) {
-    
-    if (path == NULL) {
-        jniThrowException(env, "java/lang/NullPointerException", NULL);
+static jint harmony_io_close(JNIEnv* env, jobject, jint fd) {
+    jint rc = EINTR_RETRY(close(fd));
+    if (rc == -1) {
+        jniThrowIOException(env, errno);
+    }
+    return rc;
+}
+
+static jint harmony_io_truncate(JNIEnv* env, jobject, jint fd, jlong length) {
+    if (offsetTooLarge(env, length)) {
         return -1;
     }
-    
+
+    int rc = ftruncate(fd, length);
+    if (rc == -1) {
+        jniThrowIOException(env, errno);
+    }
+    return rc;
+}
+
+static jint harmony_io_openImpl(JNIEnv* env, jobject, jbyteArray path,
+        jint jflags) {
     int flags = 0;
-    int mode = 0; 
+    int mode = 0;
 
 // BEGIN android-changed
 // don't want default permissions to allow global access.
@@ -552,7 +422,7 @@ static jint harmony_io_openImpl(JNIEnv * env, jobject obj, jbyteArray path,
               mode = 0600;
               break;
       case 256:
-              flags = HyOpenWrite | HyOpenCreate | HyOpenAppend; 
+              flags = HyOpenWrite | HyOpenCreate | HyOpenAppend;
               mode = 0600;
               break;
     }
@@ -560,6 +430,7 @@ static jint harmony_io_openImpl(JNIEnv * env, jobject obj, jbyteArray path,
 
     flags = EsTranslateOpenFlags(flags);
 
+    // TODO: clean this up when we clean up the java.io.File equivalent.
     jsize length = env->GetArrayLength (path);
     length = length < HyMaxPath - 1 ? length : HyMaxPath - 1;
     char pathCopy[HyMaxPath];
@@ -567,104 +438,48 @@ static jint harmony_io_openImpl(JNIEnv * env, jobject obj, jbyteArray path,
     pathCopy[length] = '\0';
     convertToPlatform (pathCopy);
 
-    int cc;
-    do {
-        cc = open(pathCopy, flags, mode);
-    } while(cc < 0 && errno == EINTR);
-
-    if(cc < 0 && errno > 0) {
+    jint cc = EINTR_RETRY(open(pathCopy, flags, mode));
+    // TODO: chase up the callers of this and check they wouldn't rather
+    // have us throw a meaningful IOException right here.
+    if (cc < 0 && errno > 0) {
         cc = -errno;
     }
-
     return cc;
-
-
 }
 
-// BEGIN android-deleted
-#if 0
-/*
- * Answers the number of remaining chars in the stdin.
- *
- * Class:     org_apache_harmony_io
- * Method:    ttyAvailableImpl
- * Signature: ()J
- */
-static jlong harmony_io_ttyAvailableImpl(JNIEnv *env, jobject thiz) {
-  
-    int rc;
-    off_t curr, end;
-
-    int avail = 0;
-
-    // when redirected from a file
-    curr = lseek(STDIN_FILENO, 0L, 2);    /* don't use tell(), it doesn't exist on all platforms, i.e. linux */
-    if(curr != -1) {
-        end = lseek(STDIN_FILENO, 0L, 4);
-        lseek(STDIN_FILENO, curr, 1);
-        if(end >= curr) {
-            return (jlong) (end - curr);
-        }
-    }
-
-    /* ioctl doesn't work for files on all platforms (i.e. SOLARIS) */
-
-    rc = ioctl (STDIN_FILENO, FIONREAD, &avail);
-
-    /* 64 bit platforms use a 32 bit value, using IDATA fails on big endian */
-    /* Pass in IDATA because ioctl() is device dependent, some devices may write 64 bits */
-    if(rc != -1) {
-        return (jlong) *(jint *) & avail;
-    }
-    return (jlong) 0;
-}
-#endif
-// END android-deleted
-
-// BEGIN android-added
-/*
- * Answers the number of remaining bytes in a file descriptor
- * using IOCTL.
- *
- * Class:     org_apache_harmony_io
- * Method:    ioctlAvailable
- * Signature: ()I
- */
-static jint harmony_io_ioctlAvailable(JNIEnv *env, jobject thiz, jint fd) {
-    int avail = 0;
-    int rc = ioctl(fd, FIONREAD, &avail);
-
+static jint harmony_io_ioctlAvailable(JNIEnv*env, jobject, jint fd) {
     /*
      * On underlying platforms Android cares about (read "Linux"),
      * ioctl(fd, FIONREAD, &avail) is supposed to do the following:
-     * 
+     *
      * If the fd refers to a regular file, avail is set to
      * the difference between the file size and the current cursor.
      * This may be negative if the cursor is past the end of the file.
-     * 
+     *
      * If the fd refers to an open socket or the read end of a
      * pipe, then avail will be set to a number of bytes that are
      * available to be read without blocking.
-     * 
+     *
      * If the fd refers to a special file/device that has some concept
      * of buffering, then avail will be set in a corresponding way.
-     * 
+     *
      * If the fd refers to a special device that does not have any
      * concept of buffering, then the ioctl call will return a negative
      * number, and errno will be set to ENOTTY.
-     * 
+     *
      * If the fd refers to a special file masquerading as a regular file,
      * then avail may be returned as negative, in that the special file
      * may appear to have zero size and yet a previous read call may have
      * actually read some amount of data and caused the cursor to be
      * advanced.
      */
-
+    int avail = 0;
+    int rc = ioctl(fd, FIONREAD, &avail);
     if (rc >= 0) {
         /*
          * Success, but make sure not to return a negative number (see
          * above).
-         */ 
+         */
         if (avail < 0) {
             avail = 0;
         }
@@ -673,22 +488,13 @@ static jint harmony_io_ioctlAvailable(JNIEnv *env, jobject thiz, jint fd) {
         avail = 0;
     } else {
         /* Something strange is happening. */
-        jniThrowException(env, "java/io/IOException", strerror(errno));
-        avail = 0;
-    }  
+        jniThrowIOException(env, errno);
+    }
 
     return (jint) avail;
 }
-// END android-added
 
-/*
- * Reads the number of bytes from stdin.
- *
- * Class:     org_apache_harmony_io
- * Method:    ttyReadImpl
- * Signature: ([BII)J
- */
-static jlong harmony_io_ttyReadImpl(JNIEnv *env, jobject thiz, 
+static jlong harmony_io_ttyReadImpl(JNIEnv* env, jobject thiz,
         jbyteArray byteArray, jint offset, jint nbytes) {
     return harmony_io_readImpl(env, thiz, STDIN_FILENO, byteArray, offset, nbytes);
 }
@@ -698,32 +504,27 @@ static jlong harmony_io_ttyReadImpl(JNIEnv *env, jobject thiz,
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "lockImpl",           "(IJJIZ)I",   (void*) harmony_io_lockImpl },
-    { "getAllocGranularity","()I",     (void*) harmony_io_getAllocGranularity },
-    { "unlockImpl",         "(IJJ)I",     (void*) harmony_io_unlockImpl },
-    { "fflushImpl",         "(IZ)I",      (void*) harmony_io_fflushImpl },
-    { "seekImpl",           "(IJI)J",     (void*) harmony_io_seekImpl },
-    { "readDirectImpl",     "(IIII)J",    (void*) harmony_io_readDirectImpl },
-    { "writeDirectImpl",    "(IIII)J",    (void*) harmony_io_writeDirectImpl },
-    { "readImpl",           "(I[BII)J",   (void*) harmony_io_readImpl },
-    { "writeImpl",          "(I[BII)J",   (void*) harmony_io_writeImpl },
-    { "readvImpl",          "(I[I[I[II)J",(void*) harmony_io_readvImpl },
-    { "writevImpl",         "(I[I[I[II)J",(void*) harmony_io_writevImpl },
-    { "closeImpl",          "(I)I",       (void*) harmony_io_closeImpl },
-    { "truncateImpl",       "(IJ)I",      (void*) harmony_io_truncateImpl },
-    { "openImpl",           "([BI)I",     (void*) harmony_io_openImpl },
-    { "transferImpl",       "(ILjava/io/FileDescriptor;JJ)J", 
-    	    (void*) harmony_io_transferImpl },
-    // BEGIN android-deleted
-    //{ "ttyAvailableImpl",   "()J",        (void*) harmony_io_ttyAvailableImpl },
-    // END android-deleted
-    // BEGIN android-added
+    { "close",              "(I)V",       (void*) harmony_io_close },
+    { "fflush",             "(IZ)V",      (void*) harmony_io_fflush },
+    { "getAllocGranularity","()I",        (void*) harmony_io_getAllocGranularity },
     { "ioctlAvailable",     "(I)I",       (void*) harmony_io_ioctlAvailable },
-    // END android added
-    { "ttyReadImpl",        "([BII)J",    (void*) harmony_io_ttyReadImpl }
+    { "lockImpl",           "(IJJIZ)I",   (void*) harmony_io_lockImpl },
+    { "openImpl",           "([BI)I",     (void*) harmony_io_openImpl },
+    { "readDirect",         "(IIII)J",    (void*) harmony_io_readDirect },
+    { "readImpl",           "(I[BII)J",   (void*) harmony_io_readImpl },
+    { "readv",              "(I[I[I[II)J",(void*) harmony_io_readv },
+    { "seek",               "(IJI)J",     (void*) harmony_io_seek },
+    { "transfer",           "(ILjava/io/FileDescriptor;JJ)J",
+                                          (void*) harmony_io_transfer },
+    { "truncate",           "(IJ)V",      (void*) harmony_io_truncate },
+    { "ttyReadImpl",        "([BII)J",    (void*) harmony_io_ttyReadImpl },
+    { "unlockImpl",         "(IJJ)V",     (void*) harmony_io_unlockImpl },
+    { "writeDirect",        "(IIII)J",    (void*) harmony_io_writeDirect },
+    { "writeImpl",          "(I[BII)J",   (void*) harmony_io_writeImpl },
+    { "writev",             "(I[I[I[II)J",(void*) harmony_io_writev },
 };
-int register_org_apache_harmony_luni_platform_OSFileSystem(JNIEnv *_env) {
-	return jniRegisterNativeMethods(_env, 
-	        "org/apache/harmony/luni/platform/OSFileSystem", gMethods, 
-	        NELEM(gMethods));
+int register_org_apache_harmony_luni_platform_OSFileSystem(JNIEnv* _env) {
+    return jniRegisterNativeMethods(_env,
+            "org/apache/harmony/luni/platform/OSFileSystem", gMethods,
+            NELEM(gMethods));
 }

@@ -1155,6 +1155,25 @@ public class FileChannelTest extends TestCase {
         } catch (IllegalArgumentException e) {
             // expected
         }
+
+        // BEGIN android-added
+        // Android uses 32-bit off_t, so anything larger than a signed 32-bit int won't work...
+        // ...except for the special case of length == Long.MAX_VALUE, which is used to mean "the
+        // whole file". The special case is tested elsewhere.
+        long tooBig = ((long) Integer.MAX_VALUE) + 1;
+        try {
+            readWriteFileChannel.tryLock(tooBig, 1, false);
+            fail("should throw IOException");
+        } catch (IOException e) {
+            // expected
+        }
+        try {
+            readWriteFileChannel.tryLock(0, tooBig, false);
+            fail("should throw IOException");
+        } catch (IOException e) {
+            // expected
+        }
+        // END android-added
     }
 
     /**

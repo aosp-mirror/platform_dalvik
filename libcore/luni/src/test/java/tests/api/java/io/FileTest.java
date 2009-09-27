@@ -688,10 +688,7 @@ public class FileTest extends junit.framework.TestCase {
         method = "delete",
         args = {}
     )
-    @KnownFailure("Non empty directories are deleted on Android.")
     public void test_delete() {
-        // this test passes in the emulator, but it fails on the device
-
         // Test for method boolean java.io.File.delete()
         try {
             File dir = new File(System.getProperty("java.io.tmpdir"), platformId

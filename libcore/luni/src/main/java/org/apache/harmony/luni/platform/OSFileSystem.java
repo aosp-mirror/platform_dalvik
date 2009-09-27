@@ -69,7 +69,7 @@ class OSFileSystem implements IFileSystem {
      * Note that this value for Windows differs from the one for the
      * page size (64K and 4K respectively).
      */
-    public native int getAllocGranularity() throws IOException;
+    public native int getAllocGranularity();
 
     public boolean lock(int fileDescriptor, long start, long length, int type,
             boolean waitFlag) throws IOException {
@@ -79,160 +79,71 @@ class OSFileSystem implements IFileSystem {
         return result != -1;
     }
 
-    private native int unlockImpl(int fileDescriptor, long start, long length);
+    // BEGIN android-changed
+    private native void unlockImpl(int fileDescriptor, long start, long length) throws IOException;
 
     public void unlock(int fileDescriptor, long start, long length)
             throws IOException {
         // Validate arguments
         validateLockArgs(IFileSystem.SHARED_LOCK_TYPE, start, length);
-        int result = unlockImpl(fileDescriptor, start, length);
-        if (result == -1) {
-            throw new IOException();
-        }
+        unlockImpl(fileDescriptor, start, length);
     }
 
-    private native int fflushImpl(int fd, boolean metadata);
-
-    public void fflush(int fileDescriptor, boolean metadata)
-            throws IOException {
-        int result = fflushImpl(fileDescriptor, metadata);
-        if (result == -1) {
-            throw new IOException();
-        }
-    }
+    public native void fflush(int fileDescriptor, boolean metadata) throws IOException;
 
     /*
      * File position seeking.
      */
-
-    private native long seekImpl(int fd, long offset, int whence);
-
-    public long seek(int fileDescriptor, long offset, int whence)
-            throws IOException {
-        long pos = seekImpl(fileDescriptor, offset, whence);
-        if (pos == -1) {
-            throw new IOException();
-        }
-        return pos;
-    }
+    public native long seek(int fd, long offset, int whence) throws IOException;
 
     /*
      * Direct read/write APIs work on addresses.
      */
-    private native long readDirectImpl(int fileDescriptor, int address,
-            int offset, int length);
+    public native long readDirect(int fileDescriptor, int address, int offset, int length);
 
-    public long readDirect(int fileDescriptor, int address, int offset,
-            int length) throws IOException {
-        long bytesRead = readDirectImpl(fileDescriptor, address, offset, length);
-        if (bytesRead < -1) {
-            throw new IOException();
-        }
-        return bytesRead;
-    }
-
-    private native long writeDirectImpl(int fileDescriptor, int address,
-            int offset, int length);
-
-    public long writeDirect(int fileDescriptor, int address, int offset,
-            int length) throws IOException {
-        long bytesWritten = writeDirectImpl(fileDescriptor, address, offset,
-                length);
-        if (bytesWritten < 0) {
-            throw new IOException();
-        }
-        return bytesWritten;
-    }
+    public native long writeDirect(int fileDescriptor, int address, int offset, int length)
+            throws IOException;
 
     /*
      * Indirect read/writes work on byte[]'s
      */
     private native long readImpl(int fileDescriptor, byte[] bytes, int offset,
-            int length);
+            int length) throws IOException;
 
     public long read(int fileDescriptor, byte[] bytes, int offset, int length)
             throws IOException {
         if (bytes == null) {
             throw new NullPointerException();
         }
-        long bytesRead = readImpl(fileDescriptor, bytes, offset, length);
-        if (bytesRead < -1) {
-            /*
-             * TODO: bytesRead is never less than -1 so this code
-             * does nothing?
-             * The native code throws an exception in only one case
-             * so perhaps this should be 'bytesRead < 0' to handle
-             * any other cases.  But the other cases have been
-             * ignored until now so fixing this could break things
-             */
-            throw new IOException();
-        }
-        return bytesRead;
+        return readImpl(fileDescriptor, bytes, offset, length);
     }
 
     private native long writeImpl(int fileDescriptor, byte[] bytes,
-            int offset, int length);
+            int offset, int length) throws IOException;
 
     public long write(int fileDescriptor, byte[] bytes, int offset, int length)
             throws IOException {
-        long bytesWritten = writeImpl(fileDescriptor, bytes, offset, length);
-        if (bytesWritten < 0) {
-            throw new IOException();
+        if (bytes == null) {
+            throw new NullPointerException();
         }
-        return bytesWritten;
+        return writeImpl(fileDescriptor, bytes, offset, length);
     }
+    // END android-changed
 
     /*
      * Scatter/gather calls.
      */
-    public long readv(int fileDescriptor, int[] addresses, int[] offsets,
-            int[] lengths, int size) throws IOException {
-        long bytesRead = readvImpl(fileDescriptor, addresses, offsets, lengths,
-                size);
-        if (bytesRead < -1) {
-            throw new IOException();
-        }
-        return bytesRead;
-    }
+    public native long readv(int fileDescriptor, int[] addresses,
+            int[] offsets, int[] lengths, int size) throws IOException;
 
-    private native long readvImpl(int fileDescriptor, int[] addresses,
-            int[] offsets, int[] lengths, int size);
+    public native long writev(int fileDescriptor, int[] addresses, int[] offsets,
+            int[] lengths, int size) throws IOException;
 
-    public long writev(int fileDescriptor, int[] addresses, int[] offsets,
-            int[] lengths, int size) throws IOException {
-        long bytesWritten = writevImpl(fileDescriptor, addresses, offsets,
-                lengths, size);
-        if (bytesWritten < 0) {
-            throw new IOException();
-        }
-        return bytesWritten;
-    }
+    // BEGIN android-changed
+    public native void close(int fileDescriptor) throws IOException;
 
-    private native long writevImpl(int fileDescriptor, int[] addresses,
-            int[] offsets, int[] lengths, int size);
-
-    private native int closeImpl(int fileDescriptor);
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.harmony.luni.platform.IFileSystem#close(long)
-     */
-    public void close(int fileDescriptor) throws IOException {
-        int rc = closeImpl(fileDescriptor);
-        if (rc == -1) {
-            throw new IOException();
-        }
-    }
-
-    public void truncate(int fileDescriptor, long size) throws IOException {
-        int rc = truncateImpl(fileDescriptor, size);
-        if (rc < 0) {
-            throw new IOException();
-        }
-    }
-
-    private native int truncateImpl(int fileDescriptor, long size);
+    public native void truncate(int fileDescriptor, long size) throws IOException;
+    // END android-changed
 
     public int open(byte[] fileName, int mode) throws FileNotFoundException {
         if (fileName == null) {
@@ -254,16 +165,10 @@ class OSFileSystem implements IFileSystem {
 
     private native int openImpl(byte[] fileName, int mode);
 
-    public long transfer(int fileHandler, FileDescriptor socketDescriptor,
-            long offset, long count) throws IOException {
-        long result = transferImpl(fileHandler, socketDescriptor, offset, count);
-        if (result < 0)
-                throw new IOException();
-        return result;
-    }
-
-    private native long transferImpl(int fileHandler,
-            FileDescriptor socketDescriptor, long offset, long count);
+    // BEGIN android-changed
+    public native long transfer(int fd, FileDescriptor sd, long offset, long count)
+            throws IOException;
+    // END android-changed
 
     // BEGIN android-deleted
     // public long ttyAvailable() throws IOException {
@@ -277,17 +182,16 @@ class OSFileSystem implements IFileSystem {
     // private native long ttyAvailableImpl();
     // END android-deleted
 
+    // BEGIN android-changed
     public long ttyRead(byte[] bytes, int offset, int length) throws IOException {
-        long nChar = ttyReadImpl(bytes, offset, length);
-        // BEGIN android-changed
-        if (nChar < -1) {
-            throw new IOException();
+        if (bytes == null) {
+            throw new NullPointerException();
         }
-        // END android-changed
-        return nChar;
+        return ttyReadImpl(bytes, offset, length);
     }
 
-    private native long ttyReadImpl(byte[] bytes, int offset, int length);
+    private native long ttyReadImpl(byte[] bytes, int offset, int length) throws IOException;
+    // END android-changed
 
     // BEGIN android-added
     public native int ioctlAvailable(int fileDescriptor) throws IOException;

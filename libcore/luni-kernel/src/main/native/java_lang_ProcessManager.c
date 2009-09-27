@@ -64,8 +64,7 @@ static void java_lang_ProcessManager_close(JNIEnv* env,
         jclass clazz, jobject javaDescriptor) {
     int fd = (*env)->GetIntField(env, javaDescriptor, descriptorField);
     if (closeNow(fd) == -1) {
-        jclass ioException = (*env)->FindClass(env, "java/io/IOException");
-        (*env)->ThrowNew(env, ioException, strerror(errno));
+        jniThrowIOException(env, errno);
     }
 }
 
