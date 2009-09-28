@@ -810,7 +810,7 @@ static inline ArmLIR *genRegRegCheck(CompilationUnit *cUnit,
 {
     ArmLIR *res;
     res = opRegReg(cUnit, OP_CMP, reg1, reg2);
-    ArmLIR *branch = opImmImm(cUnit, OP_COND_BR, 0, cond);
+    ArmLIR *branch = opCondBranch(cUnit, cond);
     genCheckCommon(cUnit, dOffset, branch, pcrLabel);
     return res;
 }
@@ -1851,8 +1851,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
     /* Check if rechain limit is reached */
     opRegImm(cUnit, OP_CMP, r1, 0, rNone);
 
-    ArmLIR *bypassRechaining =
-        opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_GT);
+    ArmLIR *bypassRechaining = opCondBranch(cUnit, ARM_COND_GT);
 
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
                  jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
@@ -1936,7 +1935,7 @@ static ArmLIR *genCheckPredictedChain(CompilationUnit *cUnit,
     /* Check if r2 (predicted class) == r3 (actual class) */
     opRegReg(cUnit, OP_CMP, r2, r3);
 
-    return opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_EQ);
+    return opCondBranch(cUnit, ARM_COND_EQ);
 }
 
 /* Geneate a branch to go back to the interpreter */
@@ -1978,7 +1977,7 @@ static ArmLIR *genConditionalBranch(CompilationUnit *cUnit,
                                     ArmConditionCode cond,
                                     ArmLIR *target)
 {
-    ArmLIR *branch = opImmImm(cUnit, OP_COND_BR, 0, cond);
+    ArmLIR *branch = opCondBranch(cUnit, cond);
     branch->generic.target = (LIR *) target;
     return branch;
 }
@@ -2327,7 +2326,20 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             genExportPC(cUnit, mir, r2, r3 );
             loadConstant(cUnit, r1, ALLOC_DONT_TRACK);
             opReg(cUnit, OP_BLX, r4PC);
-            genZeroCheck(cUnit, r0, mir->offset, NULL);
+            /* generate a branch over if allocation is successful */
+            opRegImm(cUnit, OP_CMP, r0, 0, rNone); /* NULL? */
+            ArmLIR *branchOver = opCondBranch(cUnit, ARM_COND_NE);
+            /*
+             * OOM exception needs to be thrown here and cannot re-execute
+             */
+            loadConstant(cUnit, r0,
+                         (int) (cUnit->method->insns + mir->offset));
+            genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
+            /* noreturn */
+
+            ArmLIR *target = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
+            target->defMask = ENCODE_ALL;
+            branchOver->generic.target = (LIR *) target;
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
             break;
         }
@@ -2341,14 +2353,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r1, (int) classPtr );
             loadValue(cUnit, mir->dalvikInsn.vA, r0);  /* Ref */
             opRegImm(cUnit, OP_CMP, r0, 0, rNone);   /* Null? */
-            ArmLIR *branch1 =
-                opImmImm(cUnit, OP_COND_BR, 4, ARM_COND_EQ);
+            ArmLIR *branch1 = opCondBranch(cUnit, ARM_COND_EQ);
             /* r0 now contains object->clazz */
             loadWordDisp(cUnit, r0, offsetof(Object, clazz), r0);
             loadConstant(cUnit, r4PC, (int)dvmInstanceofNonTrivial);
             opRegReg(cUnit, OP_CMP, r0, r1);
-            ArmLIR *branch2 =
-                opImmImm(cUnit, OP_COND_BR, 2, ARM_COND_EQ);
+            ArmLIR *branch2 = opCondBranch(cUnit, ARM_COND_EQ);
             opReg(cUnit, OP_BLX, r4PC);
             /* check cast failed - punt to the interpreter */
             genZeroCheck(cUnit, r0, mir->offset, NULL);
@@ -2658,7 +2668,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
     int vSrc = mir->dalvikInsn.vB;
     int vDest = mir->dalvikInsn.vA;
     int lit = mir->dalvikInsn.vC;
-    OpKind op;
+    OpKind op = 0;      /* Make gcc happy */
     int reg0, reg1, regDest;
 
     reg0 = selectFirstRegister(cUnit, vSrc, false);
@@ -2800,13 +2810,29 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             loadValue(cUnit, mir->dalvikInsn.vB, r1);  /* Len */
             loadConstant(cUnit, r0, (int) classPtr );
             loadConstant(cUnit, r4PC, (int)dvmAllocArrayByClass);
+            /*
+             * "len < 0": bail to the interpreter to re-execute the
+             * instruction
+             */
             ArmLIR *pcrLabel =
                 genRegImmCheck(cUnit, ARM_COND_MI, r1, 0, mir->offset, NULL);
             genExportPC(cUnit, mir, r2, r3 );
             loadConstant(cUnit, r2, ALLOC_DONT_TRACK);
             opReg(cUnit, OP_BLX, r4PC);
-            /* Note: on failure, we'll bail and reinterpret */
-            genZeroCheck(cUnit, r0, mir->offset, pcrLabel);
+            /* generate a branch over if allocation is successful */
+            opRegImm(cUnit, OP_CMP, r0, 0, rNone); /* NULL? */
+            ArmLIR *branchOver = opCondBranch(cUnit, ARM_COND_NE);
+            /*
+             * OOM exception needs to be thrown here and cannot re-execute
+             */
+            loadConstant(cUnit, r0,
+                         (int) (cUnit->method->insns + mir->offset));
+            genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
+            /* noreturn */
+
+            ArmLIR *target = newLIR0(cUnit, ARM_PSEUDO_TARGET_LABEL);
+            target->defMask = ENCODE_ALL;
+            branchOver->generic.target = (LIR *) target;
             storeValue(cUnit, r0, mir->dalvikInsn.vA, r1);
             break;
         }
@@ -2819,13 +2845,13 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
 //TUNING: compare to 0 primative to allow use of CB[N]Z
             opRegImm(cUnit, OP_CMP, r0, 0, rNone); /* NULL? */
             /* When taken r0 has NULL which can be used for store directly */
-            ArmLIR *branch1 = opImmImm(cUnit, OP_COND_BR, 4, ARM_COND_EQ);
+            ArmLIR *branch1 = opCondBranch(cUnit, ARM_COND_EQ);
             /* r1 now contains object->clazz */
             loadWordDisp(cUnit, r0, offsetof(Object, clazz), r1);
             loadConstant(cUnit, r4PC, (int)dvmInstanceofNonTrivial);
             loadConstant(cUnit, r0, 1);                /* Assume true */
             opRegReg(cUnit, OP_CMP, r1, r2);
-            ArmLIR *branch2 = opImmImm(cUnit, OP_COND_BR, 2, ARM_COND_EQ);
+            ArmLIR *branch2 = opCondBranch(cUnit, ARM_COND_EQ);
             opRegReg(cUnit, OP_MOV, r0, r1);
             opRegReg(cUnit, OP_MOV, r1, r2);
             opReg(cUnit, OP_BLX, r4PC);
@@ -3345,8 +3371,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             /* Check if rechain limit is reached */
             opRegImm(cUnit, OP_CMP, r1, 0, rNone);
 
-            ArmLIR *bypassRechaining =
-                opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_GT);
+            ArmLIR *bypassRechaining = opCondBranch(cUnit, ARM_COND_GT);
 
             loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
                          jitToInterpEntries.dvmJitToPatchPredictedChain), r7);

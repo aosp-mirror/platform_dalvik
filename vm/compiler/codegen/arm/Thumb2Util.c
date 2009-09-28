@@ -68,8 +68,7 @@ static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask);
 
 static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op);
 static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value);
-static ArmLIR *opImmImm(CompilationUnit *cUnit, OpKind op, int value1,
-                        int value2);
+static ArmLIR *opCondBranch(CompilationUnit *cUnit, ArmConditionCode cc);
 static ArmLIR *opReg(CompilationUnit *cUnit, OpKind op, int rDestSrc);
 static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
                         int rSrc2);
@@ -795,18 +794,9 @@ static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
     return newLIR0(cUnit, opCode);
 }
 
-static ArmLIR *opImmImm(CompilationUnit *cUnit, OpKind op, int value1,
-                        int value2)
+static ArmLIR *opCondBranch(CompilationUnit *cUnit, ArmConditionCode cc)
 {
-    ArmOpCode opCode = THUMB_BKPT;
-    switch (op) {
-        case OP_COND_BR:
-            opCode = THUMB_B_COND;
-            break;
-        default:
-            assert(0);
-    }
-    return newLIR2(cUnit, opCode, value1, value2);
+    return newLIR2(cUnit, THUMB_B_COND, 0 /* offset to be patched */, cc);
 }
 
 static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
@@ -1210,10 +1200,10 @@ static void genCmpLong(CompilationUnit *cUnit, MIR *mir,
     /* Note: using hardcoded r7 & r4PC for now.  revisit */
     loadConstant(cUnit, r7, -1);
     opRegReg(cUnit, OP_CMP, op1hi, op2hi);
-    ArmLIR *branch1 = opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_LT);
-    ArmLIR *branch2 = opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_GT);
+    ArmLIR *branch1 = opCondBranch(cUnit, ARM_COND_LT);
+    ArmLIR *branch2 = opCondBranch(cUnit, ARM_COND_GT);
     opRegRegReg(cUnit, OP_SUB, r7, op1lo, op2lo);
-    ArmLIR *branch3 = opImmImm(cUnit, OP_COND_BR, 0, ARM_COND_EQ);
+    ArmLIR *branch3 = opCondBranch(cUnit, ARM_COND_EQ);
 
     // TODO: need assert mechanism to verify IT block size
     branch1->generic.target = (LIR *) genIT(cUnit, ARM_COND_HI, "E");

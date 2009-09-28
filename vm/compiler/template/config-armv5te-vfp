@@ -42,6 +42,7 @@ op-start armv5te-vfp
     op TEMPLATE_SHL_LONG armv5te
     op TEMPLATE_SHR_LONG armv5te
     op TEMPLATE_USHR_LONG armv5te
+    op TEMPLATE_THROW_EXCEPTION_COMMON armv5te
 
 op-end
 

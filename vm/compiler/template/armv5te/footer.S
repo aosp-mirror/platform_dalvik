@@ -31,15 +31,19 @@
     str     rFP, [r9, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
+    ldr     r0, [r10, #offStackSaveArea_savedPc] @ reload rPC
     bne     .LhandleException             @ no, handle exception
     bx      r2
 
-/* NOTE - this path can be exercised if the JIT threshold is set to 5 */
+/*
+ * On entry:
+ * r0  Faulting Dalvik PC
+ */
 .LhandleException:
-    ldr     r0, .LdvmMterpCommonExceptionThrown @ PIC way of getting &func
+    ldr     r1, .LdvmMterpCommonExceptionThrown @ PIC way of getting &func
     ldr     rIBASE, .LdvmAsmInstructionStart    @ same as above
-    ldr     rPC, [r10, #offStackSaveArea_savedPc] @ reload rPC
-    mov     pc, r0                  @ branch to dvmMterpCommonExceptionThrown
+    mov     rPC, r0                 @ reload the faulting Dalvik address
+    mov     pc, r1                  @ branch to dvmMterpCommonExceptionThrown
 
     .align  2
 .LdvmAsmInstructionStart:

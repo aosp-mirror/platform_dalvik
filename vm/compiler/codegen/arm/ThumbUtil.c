@@ -72,8 +72,7 @@ static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask);
 
 static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op);
 static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value);
-static ArmLIR *opImmImm(CompilationUnit *cUnit, OpKind op, int value1,
-                        int value2);
+static ArmLIR *opCondBranch(CompilationUnit *cUnit, ArmConditionCode cc);
 static ArmLIR *opReg(CompilationUnit *cUnit, OpKind op, int rDestSrc);
 static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
                         int rSrc2);
@@ -493,18 +492,9 @@ static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
     return newLIR0(cUnit, opCode);
 }
 
-static ArmLIR *opImmImm(CompilationUnit *cUnit, OpKind op, int value1,
-                        int value2)
+static ArmLIR *opCondBranch(CompilationUnit *cUnit, ArmConditionCode cc)
 {
-    ArmOpCode opCode = THUMB_BKPT;
-    switch (op) {
-        case OP_COND_BR:
-            opCode = THUMB_B_COND;
-            break;
-        default:
-            assert(0);
-    }
-    return newLIR2(cUnit, opCode, value1, value2);
+    return newLIR2(cUnit, THUMB_B_COND, 0 /* offset to be patched */, cc);
 }
 
 static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
