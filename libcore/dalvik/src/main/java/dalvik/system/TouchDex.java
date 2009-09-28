@@ -25,13 +25,8 @@ import java.io.FilenameFilter;
 /**
  * Induces optimization/verification of a set of DEX files.
  *
- * TODO: This class is public, so SystemServer can access it.  This is NOT
- * the correct long-term solution; once we have a real installer and/or
- * dalvik-cache manager, this class should be removed.
- * 
- * @cts See to-do about removing this class...
- * 
- * @since Android 1.0
+ * @deprecated this is an internal Dalvik class that is not appropriate for
+ *      general use. It will be removed from the public API in a future release.
  */
 public class TouchDex {
 

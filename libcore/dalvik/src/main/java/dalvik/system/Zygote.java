@@ -20,8 +20,9 @@ package dalvik.system;
  * Provides access to the Dalvik "zygote" feature, which allows a VM instance to
  * be partially initialized and then fork()'d from the partially initialized
  * state.
- * 
- * @since Android 1.0
+ *
+ * @deprecated this is an internal Dalvik class that is not appropriate for
+ *      general use. It will be removed from the public API in a future release.
  */
 public class Zygote {
     /*
