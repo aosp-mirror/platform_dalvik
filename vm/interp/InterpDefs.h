@@ -161,10 +161,11 @@ typedef struct InterpState {
 
     int currTraceRun;
     int totalTraceLen;        // Number of Dalvik insts in trace
-    const u2* currTraceHead;        // Start of the trace we're building
-    const u2* currRunHead;          // Start of run we're building
+    const u2* currTraceHead;  // Start of the trace we're building
+    const u2* currRunHead;    // Start of run we're building
     int currRunLen;           // Length of run in 16-bit words
     int lastThreshFilter;
+    const u2* lastPC;         // Stage the PC first for the threaded interpreter
 #if defined(WITH_SELF_VERIFICATION)
     struct HeapArgSpace heapArgSpace;
 #endif

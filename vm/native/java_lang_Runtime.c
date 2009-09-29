@@ -53,6 +53,9 @@ static void Dalvik_java_lang_Runtime_nativeExit(const u4* args,
         LOGW("JNI exit hook returned\n");
     }
     LOGD("Calling exit(%d)\n", status);
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+    dvmCompilerDumpStats();
+#endif
     exit(status);
 }
 
@@ -161,4 +164,3 @@ const DalvikNativeMethod dvm_java_lang_Runtime[] = {
         Dalvik_java_lang_Runtime_totalMemory },
     { NULL, NULL, NULL },
 };
-

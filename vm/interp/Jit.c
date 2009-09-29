@@ -515,25 +515,38 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
 #endif
             );
 
+    /* First instruction - just remember the PC and exit */
+    if (interpState->lastPC == NULL) {
+        interpState->lastPC = pc;
+        return switchInterp;
+    }
+
+    /* Prepare to handle last PC and stage the current PC */
+    const u2 *lastPC = interpState->lastPC;
+    interpState->lastPC = pc;
+
     switch (interpState->jitState) {
         char* nopStr;
         int target;
         int offset;
         DecodedInstruction decInsn;
         case kJitTSelect:
-            dexDecodeInstruction(gDvm.instrFormat, pc, &decInsn);
+            /* Grow the trace around the last PC if jitState is kJitTSelect */
+            dexDecodeInstruction(gDvm.instrFormat, lastPC, &decInsn);
 #if defined(SHOW_TRACE)
             LOGD("TraceGen: adding %s",getOpcodeName(decInsn.opCode));
 #endif
             flags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
-            len = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, pc);
-            offset = pc - interpState->method->insns;
-            if (pc != interpState->currRunHead + interpState->currRunLen) {
+            len = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, lastPC);
+            offset = lastPC - interpState->method->insns;
+            assert((unsigned) offset <
+                   dvmGetMethodInsnsSize(interpState->method));
+            if (lastPC != interpState->currRunHead + interpState->currRunLen) {
                 int currTraceRun;
                 /* We need to start a new trace run */
                 currTraceRun = ++interpState->currTraceRun;
                 interpState->currRunLen = 0;
-                interpState->currRunHead = (u2*)pc;
+                interpState->currRunHead = (u2*)lastPC;
                 interpState->trace[currTraceRun].frag.startOffset = offset;
                 interpState->trace[currTraceRun].frag.numInsts = 0;
                 interpState->trace[currTraceRun].frag.runEnd = false;
@@ -542,6 +555,12 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             interpState->trace[interpState->currTraceRun].frag.numInsts++;
             interpState->totalTraceLen++;
             interpState->currRunLen += len;
+
+            /* Will probably never hit this with the current trace buildier */
+            if (interpState->currTraceRun == (MAX_JIT_RUN_LEN - 1)) {
+                interpState->jitState = kJitTSelectEnd;
+            }
+
             if (  ((flags & kInstrUnconditional) == 0) &&
                   /* don't end trace on INVOKE_DIRECT_EMPTY  */
                   (decInsn.opCode != OP_INVOKE_DIRECT_EMPTY) &&
@@ -880,6 +899,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                  interpState->trace[0].frag.numInsts = 0;
                  interpState->trace[0].frag.runEnd = false;
                  interpState->trace[0].frag.hint = kJitHintNone;
+                 interpState->lastPC = 0;
                  break;
             case kJitTSelect:
             case kJitTSelectAbort:

@@ -2316,11 +2316,11 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
             assert(classPtr != NULL);
             assert(classPtr->status & CLASS_INITIALIZED);
-            if ((classPtr->accessFlags & (ACC_INTERFACE|ACC_ABSTRACT)) != 0) {
-                /* It's going to throw, just let the interp. deal with it. */
-                genInterpSingleStep(cUnit, mir);
-                return false;
-            }
+            /*
+             * If it is going to throw, it should not make to the trace to begin
+             * with.
+             */
+            assert((classPtr->accessFlags & (ACC_INTERFACE|ACC_ABSTRACT)) == 0);
             loadConstant(cUnit, r4PC, (int)dvmAllocObject);
             loadConstant(cUnit, r0, (int) classPtr);
             genExportPC(cUnit, mir, r2, r3 );

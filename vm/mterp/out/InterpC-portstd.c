@@ -3623,6 +3623,10 @@ GOTO_TARGET(exceptionThrown)
          */
         PERIODIC_CHECKS(kInterpEntryThrow, 0);
 
+#if defined(WITH_JIT)
+        // Something threw during trace selection - abort the current trace
+        interpState->jitState = kJitTSelectEnd;
+#endif
         /*
          * We save off the exception and clear the exception status.  While
          * processing the exception we might need to load some Throwable
