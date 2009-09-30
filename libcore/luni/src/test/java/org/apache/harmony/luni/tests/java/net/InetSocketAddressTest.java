@@ -324,7 +324,6 @@ public class InetSocketAddressTest extends TestCase {
         method = "!SerializationGolden",
         args = {}
     )
-    @KnownFailure("Problem with deserialization of Localhost vs. localhost")
     public void testSerializationCompatibility() throws Exception {
 
         Object[] testCases = {
