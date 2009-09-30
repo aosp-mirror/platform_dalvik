@@ -27,8 +27,6 @@
 #include <netdb.h>
 #include <errno.h>
 
-#include <cutils/properties.h>
-#include <cutils/adb_networking.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -65,33 +63,6 @@ static inline void logIpString(struct addrinfo* ai, const char* name)
 {
 }
 #endif
-
-static jobjectArray getAllByNameUsingAdb(JNIEnv* env, const char* name)
-{
-    struct in_addr outaddr;
-    jobjectArray addressArray = NULL;
-    jbyteArray byteArray;
-
-#if 0
-    LOGI("ADB networking: -gethostbyname err %d addr 0x%08x %u.%u.%u.%u",
-            err, (unsigned int)outaddr.a.s_addr,
-            outaddr.j[0],outaddr.j[1],
-            outaddr.j[2],outaddr.j[3]);
-#endif
-
-    if (adb_networking_gethostbyname(name, &outaddr) >= 0) {
-        addressArray = env->NewObjectArray(1, byteArrayClass, NULL);
-        byteArray = env->NewByteArray(4);
-        if (addressArray && byteArray) {
-            env->SetByteArrayRegion(byteArray, 0, 4, (jbyte*) &outaddr.s_addr);
-            env->SetObjectArrayElement(addressArray, 1, byteArray);
-        }
-    } else {
-        jniThrowException(env, "java/net/UnknownHostException", "adb error");
-    }
-
-    return addressArray;
-}
 
 static jobjectArray getAllByNameUsingDns(JNIEnv* env, const char* name, 
                                          jboolean preferIPv4Stack)
@@ -199,23 +170,7 @@ jobjectArray InetAddress_getallbyname(JNIEnv* env, jobject obj,
     }
 
     const char* name = env->GetStringUTFChars(javaName, NULL);
-    jobjectArray out = NULL;
-
-    char useAdbNetworkingProperty[PROPERTY_VALUE_MAX];
-    char adbConnected[PROPERTY_VALUE_MAX];
-    property_get("android.net.use-adb-networking",
-            useAdbNetworkingProperty, "");
-    property_get("adb.connected",
-            adbConnected, "");
-
-    // Any non-empty string value for use-adb-networking is considered "set"
-    if ((strlen(useAdbNetworkingProperty) > 0)
-            && (strlen(adbConnected) > 0) ) {
-        out = getAllByNameUsingAdb(env, name);
-    } else {
-        out = getAllByNameUsingDns(env, name, preferIPv4Stack);
-    }
-
+    jobjectArray out = getAllByNameUsingDns(env, name, preferIPv4Stack);
     env->ReleaseStringUTFChars(javaName, name);
     return out;
 }

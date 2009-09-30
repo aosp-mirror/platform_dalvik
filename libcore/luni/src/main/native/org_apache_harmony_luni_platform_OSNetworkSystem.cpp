@@ -39,8 +39,6 @@
 #include <sys/ioctl.h>
 #include <sys/un.h>
 
-#include <cutils/properties.h>
-#include <cutils/adb_networking.h>
 #include "AndroidSystemNatives.h"
 
 // Temporary hack to build on systems that don't have up-to-date libc headers.
@@ -186,8 +184,6 @@ struct CachedFields {
     jfieldID dpack_port;
     jfieldID dpack_length;
 } gCachedFields;
-
-static int useAdbNetworking = 0;
 
 /* needed for connecting with timeout */
 typedef struct selectFDSet {
@@ -698,18 +694,6 @@ static int isLocalHost(struct sockaddr_storage *address) {
 }
 
 /**
- * Decide whether to use ADB networking for the given socket address.
- *
- * @param address pointer to sockaddr_storage structure to check
- *
- * @return true if ADB networking should be used, false otherwise.
- */
-static bool useAdbNetworkingForAddress(struct sockaddr_storage *address) {
-    return useAdbNetworking && !isLocalHost(address) &&
-           address->ss_family == AF_INET;
-}
-
-/**
  * Answer the errorString corresponding to the errorNumber, if available.
  * This function will answer a default error string, if the errorNumber is not
  * recognized.
@@ -1176,28 +1160,18 @@ static int sockConnectWithTimeout(int handle, struct sockaddr_storage addr,
         context->sock = handle;
         context->nfds = handle + 1;
 
-        if (useAdbNetworkingForAddress(&addr)) {
-
-            // LOGD("+connect to address 0x%08x (via adb)",
-            //         addr.sin_addr.s_addr);
-            rc = adb_networking_connect_fd(handle, (struct sockaddr_in *) &addr);
-            // LOGD("-connect ret %d errno %d (via adb)", rc, errno);
-
-        } else {
-            /* set the socket to non-blocking */
-            int block = JNI_TRUE;
-            rc = ioctl(handle, FIONBIO, &block);
-            if (0 != rc) {
-                return convertError(rc);
-            }
-
-            // LOGD("+connect to address 0x%08x (via normal) on handle %d",
-            //         addr.sin_addr.s_addr, handle);
-            rc = doConnect(handle, &addr);
-            // LOGD("-connect to address 0x%08x (via normal) returned %d",
-            //         addr.sin_addr.s_addr, (int) rc);
-
+        /* set the socket to non-blocking */
+        int block = JNI_TRUE;
+        rc = ioctl(handle, FIONBIO, &block);
+        if (rc != 0) {
+            return convertError(rc);
         }
+        
+        // LOGD("+connect to address 0x%08x (via normal) on handle %d",
+        //         addr.sin_addr.s_addr, handle);
+        rc = doConnect(handle, &addr);
+        // LOGD("-connect to address 0x%08x (via normal) returned %d",
+        //         addr.sin_addr.s_addr, (int) rc);
 
         if (rc == -1) {
             rc = errno;
@@ -1574,17 +1548,6 @@ static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
         jboolean jcl_supports_ipv6) {
     // LOGD("ENTER oneTimeInitializationImpl of OSNetworkSystem");
 
-    char useAdbNetworkingProperty[PROPERTY_VALUE_MAX];
-    char adbConnectedProperty[PROPERTY_VALUE_MAX];
-
-    property_get("android.net.use-adb-networking", useAdbNetworkingProperty, "");
-    property_get("adb.connected", adbConnectedProperty, "");
-
-    if (strlen((char *)useAdbNetworkingProperty) > 0
-            && strlen((char *)adbConnectedProperty) > 0) {
-        useAdbNetworking = 1;
-    }
-
     memset(&gCachedFields, 0, sizeof(gCachedFields));
     struct CachedFields *c = &gCachedFields;
 
@@ -1914,12 +1877,6 @@ static jint osNetworkSystem_connectWithTimeoutSocketImpl(JNIEnv* env,
     if (result < 0)
         return result;
 
-    // Check if we're using adb networking and redirect in case it is used.
-    if (useAdbNetworkingForAddress(&address)) {
-        return osNetworkSystem_connectSocketImpl(env, clazz, fileDescriptor,
-                trafficClass, inetAddr, port);
-    }
-
     handle = jniGetFDFromFileDescriptor(env, fileDescriptor);
     if (handle == 0 || handle == -1) {
         throwSocketException(env, SOCKERR_BADDESC);
@@ -1988,16 +1945,6 @@ static void osNetworkSystem_connectStreamWithTimeoutSocketImpl(JNIEnv* env,
     result = inetAddressToSocketAddress(env, inetAddr, remotePort, &address);
     if (result < 0)  // Exception has already been thrown.
         return;
-
-    // Check if we're using adb networking and redirect in case it is used.
-    if (useAdbNetworkingForAddress(&address)) {
-        int retVal = osNetworkSystem_connectSocketImpl(env, clazz,
-                fileDescriptor, trafficClass, inetAddr, remotePort);
-        if (retVal != 0) {
-            throwSocketException(env, SOCKERR_BADSOCKET);
-        }
-        return;
-    }
 
     /*
      * we will be looping checking for when we are connected so allocate
@@ -2125,26 +2072,17 @@ static jint osNetworkSystem_connectSocketImpl(JNIEnv* env, jclass clazz,
         return -1;
     }
 
-    if (useAdbNetworkingForAddress(&address)) {
-
-        // LOGD("+connect to address 0x%08x port %d (via adb)",
-        //         address.sin_addr.s_addr, (int) port);
-        ret = adb_networking_connect_fd(handle, (struct sockaddr_in *) &address);
-        // LOGD("-connect ret %d errno %d (via adb)", ret, errno);
-
+    // call this method with a timeout of zero
+    osNetworkSystem_connectStreamWithTimeoutSocketImpl(env, clazz,
+            fileDescriptor, port, 0, trafficClass, inetAddr);
+    if (env->ExceptionOccurred() != 0) {
+        return -1;
     } else {
-
-        // call this method with a timeout of zero
-        osNetworkSystem_connectStreamWithTimeoutSocketImpl(env, clazz,
-                fileDescriptor, port, 0, trafficClass, inetAddr);
-        if (env->ExceptionOccurred() != 0) {
-            return -1;
-        } else {
-            return 0;
-        }
-
+        return 0;
     }
-
+    
+    // TODO: unreachable code!
+    
     if (ret < 0) {
         jniThrowException(env, "java/net/ConnectException",
                 netLookupErrorString(convertError(errno)));
