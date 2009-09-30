@@ -15,6 +15,8 @@
  */
 package com.google.coretests;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -134,10 +136,10 @@ public class CoreTestRunner extends TestRunner {
      * Prints a help screen on the console.
      */
     private void showHelp() {
-        System.out.println("Usage: run-core-tests {<param>} <test>");
+        System.out.println("Usage: run-core-tests [OPTION]... [TEST]...");
         System.out.println();
-        System.out.println("Where <test> is a class name, optionally followed");
-        System.out.println("by \"#\" and a method name, and <param> is one of");
+        System.out.println("Where each TEST is a class name, optionally followed");
+        System.out.println("by \"#\" and a method name, and each OPTION is one of");
         System.out.println("the following:");
         System.out.println();
         System.out.println("    --include-all");
@@ -185,26 +187,29 @@ public class CoreTestRunner extends TestRunner {
     }
 
     /**
-     * Tries to create a Test instance from a given string. The string might
+     * Tries to create a Test instance from the given strings. The strings might
      * either specify a class only or a class plus a method name, separated by
      * a "#".
      */
-    private Test createTest(String testCase) throws Exception {
-        int p = testCase.indexOf("#");
-        if (p != -1) {
-            String testName = testCase.substring(p + 1);
-            testCase = testCase.substring(0, p);
-
-            return TestSuite.createTest(Class.forName(testCase), testName);
-        } else {
-            return getTest(testCase);
+    private Test createTest(List<String> testCases) throws Exception {
+        TestSuite result = new TestSuite();
+        for (String testCase : testCases) {
+            int p = testCase.indexOf("#");
+            if (p != -1) {
+                String testName = testCase.substring(p + 1);
+                testCase = testCase.substring(0, p);
+                
+                result.addTest(TestSuite.createTest(Class.forName(testCase), testName));
+            } else {
+                result.addTest(getTest(testCase));
+            }
         }
-        
+        return result;
     }
     
     @Override
     protected TestResult start(String args[]) throws Exception {
-        String testName = null;
+        List<String> testNames = new ArrayList<String>();
         // String victimName = null;
         
         boolean wait = false;
@@ -269,12 +274,12 @@ public class CoreTestRunner extends TestRunner {
                     showHelp();
                     System.exit(1);
                 } else {
-                    System.err.println("Unknown argument " + args[i] + 
-                            ", try --help");
-                    System.exit(1);
+                    unknownArgument(args[i]);
                 }
+            } else if (args[i].startsWith("-")) {
+                unknownArgument(args[i]);
             } else {
-                testName = args[i];
+                testNames.add(args[i]);
             }
         }
         
@@ -288,7 +293,7 @@ public class CoreTestRunner extends TestRunner {
         System.out.println();
 
         try {
-            return doRun(createTest(testName), wait);
+            return doRun(createTest(testNames), wait);
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -296,4 +301,8 @@ public class CoreTestRunner extends TestRunner {
         }
     }
     
+    private static void unknownArgument(String arg) {
+        System.err.println("Unknown argument " + arg + ", try --help");
+        System.exit(1);
+    }
 }
