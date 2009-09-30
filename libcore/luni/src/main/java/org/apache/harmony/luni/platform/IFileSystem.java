@@ -108,9 +108,8 @@ public interface IFileSystem {
 
     // BEGIN android-deleted
     // public long ttyAvailable() throws IOException;
+    // public long ttyRead(byte[] bytes, int offset, int length) throws IOException;
     // END android-deleted
-    
-    public long ttyRead(byte[] bytes, int offset, int length) throws IOException;
     
     // BEGIN android-added
     public int ioctlAvailable(int fileDescriptor) throws IOException;

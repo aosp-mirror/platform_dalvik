@@ -182,16 +182,15 @@ class OSFileSystem implements IFileSystem {
     // private native long ttyAvailableImpl();
     // END android-deleted
 
-    // BEGIN android-changed
-    public long ttyRead(byte[] bytes, int offset, int length) throws IOException {
-        if (bytes == null) {
-            throw new NullPointerException();
-        }
-        return ttyReadImpl(bytes, offset, length);
-    }
-
-    private native long ttyReadImpl(byte[] bytes, int offset, int length) throws IOException;
-    // END android-changed
+    // BEGIN android-deleted
+    // public long ttyRead(byte[] bytes, int offset, int length) throws IOException {
+    //    if (bytes == null) {
+    //        throw new NullPointerException();
+    //    }
+    //    return ttyReadImpl(bytes, offset, length);
+    // }
+    // private native long ttyReadImpl(byte[] bytes, int offset, int length) throws IOException;
+    // END android-deleted
 
     // BEGIN android-added
     public native int ioctlAvailable(int fileDescriptor) throws IOException;

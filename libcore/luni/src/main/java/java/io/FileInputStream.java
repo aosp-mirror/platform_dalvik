@@ -312,25 +312,24 @@ public class FileInputStream extends InputStream implements Closeable {
         }
         openCheck();
         synchronized (repositioningLock) {
-            // stdin requires special handling
-            if (fd == FileDescriptor.in) {
-                return (int) fileSystem.ttyRead(buffer, offset, count);
-            }
+            // BEGIN android-changed
+            // If you only support Linux, there's nothing special about stdin.
             return (int) fileSystem.read(fd.descriptor, buffer, offset, count);
+            // END android-changed
         }
     }
 
     /**
      * Skips {@code count} number of bytes in this stream. Subsequent
-     * {@code read()}'s will not return these bytes unless {@code reset()} is
-     * used. This method may perform multiple reads to read {@code count} bytes.
+     * {@code read()}s will not return these bytes unless {@code reset()} is
+     * used. If the underlying stream is unseekable, an IOException is thrown.
      *
      * @param count
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
      * @throws IOException
-     *             if {@code count < 0}, this stream is closed or another
-     *             IOException occurs.
+     *             if {@code count < 0}, this stream is closed or unseekable,
+     *             or another IOException occurs.
      */
     @Override
     public long skip(long count) throws IOException {
@@ -344,29 +343,18 @@ public class FileInputStream extends InputStream implements Closeable {
             throw new IOException(Msg.getString("KA013")); //$NON-NLS-1$
         }
 
-        // stdin requires special handling
-        if (fd == FileDescriptor.in) {
-            // Read and discard count bytes in 8k chunks
-            long skipped = 0, numRead;
-            int chunk = count < 8192 ? (int) count : 8192;
-            byte[] buffer = new byte[chunk];
-            for (long i = count / chunk; i >= 0; i--) {
-                numRead = fileSystem.ttyRead(buffer, 0, chunk);
-                skipped += numRead;
-                if (numRead < chunk) {
-                    return skipped;
-                }
-            }
-            return skipped;
-        }
-
+        // BEGIN android-changed
+        // The RI doesn't treat stdin as special. It throws IOException for
+        // all non-seekable streams, so we do too. If you did want to support
+        // non-seekable streams, the best way to do it would be to recognize
+        // when lseek(2) fails with ESPIPE and call super.skip(count).
         synchronized (repositioningLock) {
-            final long currentPosition = fileSystem.seek(fd.descriptor, 0L,
-                    IFileSystem.SEEK_CUR);
-            final long newPosition = fileSystem.seek(fd.descriptor,
-                    currentPosition + count, IFileSystem.SEEK_SET);
-            return newPosition - currentPosition;
+            // Our seek returns the new offset, but we know it will throw an
+            // exception if it couldn't perform exactly the seek we asked for.
+            fileSystem.seek(fd.descriptor, count, IFileSystem.SEEK_CUR);
+            return count;
         }
+        // END android-changed
     }
 
     private synchronized void openCheck() throws IOException {

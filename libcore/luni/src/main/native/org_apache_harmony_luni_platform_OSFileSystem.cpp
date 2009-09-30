@@ -495,11 +495,6 @@ static jint harmony_io_ioctlAvailable(JNIEnv*env, jobject, jint fd) {
     return (jint) avail;
 }
 
-static jlong harmony_io_ttyReadImpl(JNIEnv* env, jobject thiz,
-        jbyteArray byteArray, jint offset, jint nbytes) {
-    return harmony_io_readImpl(env, thiz, STDIN_FILENO, byteArray, offset, nbytes);
-}
-
 /*
  * JNI registration
  */
@@ -518,7 +513,6 @@ static JNINativeMethod gMethods[] = {
     { "transfer",           "(ILjava/io/FileDescriptor;JJ)J",
                                           (void*) harmony_io_transfer },
     { "truncate",           "(IJ)V",      (void*) harmony_io_truncate },
-    { "ttyReadImpl",        "([BII)J",    (void*) harmony_io_ttyReadImpl },
     { "unlockImpl",         "(IJJ)V",     (void*) harmony_io_unlockImpl },
     { "writeDirect",        "(IIII)J",    (void*) harmony_io_writeDirect },
     { "writeImpl",          "(I[BII)J",   (void*) harmony_io_writeImpl },
