@@ -3102,7 +3102,7 @@ static jint RegisterNatives(JNIEnv* env, jclass jclazz,
     JNI_ENTER();
 
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
-    jint retval;
+    jint retval = JNI_OK;
     int i;
 
     if (gDvm.verboseJni) {
@@ -3115,12 +3115,9 @@ static jint RegisterNatives(JNIEnv* env, jclass jclazz,
                 methods[i].signature, methods[i].fnPtr))
         {
             retval = JNI_ERR;
-            goto bail;
         }
     }
-    retval = JNI_OK;
 
-bail:
     JNI_EXIT();
     return retval;
 }
@@ -4218,4 +4215,3 @@ bail:
     free(argv);
     return result;
 }
-
