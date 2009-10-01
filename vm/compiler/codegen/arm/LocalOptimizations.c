@@ -33,15 +33,14 @@ static inline bool isDalvikStore(ArmLIR *lir)
     return (lir->defMask != ~0ULL) && (lir->defMask & ENCODE_DALVIK_REG);
 }
 
-static inline bool isDalvikRegisterPartiallyClobbered(ArmLIR *lir1,
-                                                      ArmLIR *lir2)
+static inline bool isDalvikRegisterClobbered(ArmLIR *lir1, ArmLIR *lir2)
 {
   int reg1Lo = DECODE_ALIAS_INFO_REG(lir1->aliasInfo);
   int reg1Hi = reg1Lo + DECODE_ALIAS_INFO_WIDE(lir1->aliasInfo);
   int reg2Lo = DECODE_ALIAS_INFO_REG(lir2->aliasInfo);
   int reg2Hi = reg2Lo + DECODE_ALIAS_INFO_WIDE(lir2->aliasInfo);
 
-  return (reg1Lo == reg2Hi) || (reg1Hi == reg2Lo);
+  return (reg1Lo == reg2Lo) || (reg1Lo == reg2Hi) || (reg1Hi == reg2Lo);
 }
 
 static void dumpDependentInsnPair(ArmLIR *thisLIR, ArmLIR *checkLIR,
@@ -129,8 +128,7 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                     if (stopHere == false &&
                         ((checkLIR->useMask | checkLIR->defMask) &
                          ENCODE_DALVIK_REG)) {
-                        stopHere = isDalvikRegisterPartiallyClobbered(thisLIR,
-                                                                      checkLIR);
+                        stopHere = isDalvikRegisterClobbered(thisLIR, checkLIR);
                     }
 
                     /* Found a new place to put the store - move it here */
@@ -227,7 +225,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
 
                 /* Store data partially clobbers the Dalvik register */
                 if (isDalvikStore(checkLIR) &&
-                    isDalvikRegisterPartiallyClobbered(thisLIR, checkLIR)) {
+                    isDalvikRegisterClobbered(thisLIR, checkLIR)) {
                     break;
                 }
             }
@@ -279,8 +277,7 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                     /* Store data partially clobbers the Dalvik register */
                     if (stopHere == false &&
                         (checkLIR->defMask & ENCODE_DALVIK_REG)) {
-                        stopHere = isDalvikRegisterPartiallyClobbered(thisLIR,
-                                                                      checkLIR);
+                        stopHere = isDalvikRegisterClobbered(thisLIR, checkLIR);
                     }
 
                     /*
