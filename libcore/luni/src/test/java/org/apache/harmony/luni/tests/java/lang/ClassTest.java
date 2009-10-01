@@ -838,9 +838,6 @@ public class ClassTest extends junit.framework.TestCase {
         args = {}
     )
     public void test_getClassLoader() {
-        // this fails if ClassTest.class was loaded by the regular classloader,
-        // but passes if it was loaded by the boot class loader.
-
         assertEquals(ExtendTestClass.class.getClassLoader(),
                          PublicTestClass.class.getClassLoader());
 
@@ -861,8 +858,8 @@ public class ClassTest extends junit.framework.TestCase {
         System.setSecurityManager(sm);
         try {
             System.class.getClassLoader();
-        } catch (SecurityException e) {
-            fail("SecurityException should not be thrown.");
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException expected) {
         } finally {
             System.setSecurityManager(oldSm);
         }
