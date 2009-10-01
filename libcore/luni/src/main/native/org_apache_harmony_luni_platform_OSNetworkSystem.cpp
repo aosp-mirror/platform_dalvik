@@ -3316,8 +3316,9 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
             if ((anOption >> 16) & BROKEN_MULTICAST_IF) {
                 return;
             }
-            // This call is IPv4 only.
-            if (getSocketAddressFamily(handle) != AF_INET) {
+            // This call is IPv4 only. The socket may be IPv6, but the address
+            // that identifies the interface to join must be an IPv4 address.
+            if (sockVal.ss_family != AF_INET) {
                 throwSocketException(env, SOCKERR_BADAF);
                 return;
             }
