@@ -34,27 +34,7 @@
  * Throws an IOException with the given message.
  */
 static void throwSocketException(JNIEnv *env, const char *message) {
-    jclass exClass = (*env)->FindClass(env, "java/net/SocketException");
-
-    if(exClass == NULL) {
-        LOGE("Unable to find class java/net/SocketException");
-    } else {
-        (*env)->ThrowNew(env, exClass, message);
-    }
-}
-
-
-/**
- * Throws a NullPointerException.
- */
-static void throwNullPointerException(JNIEnv *env) {
-    jclass exClass = (*env)->FindClass(env, "java/lang/NullPointerException");
-
-    if(exClass == NULL) {
-        LOGE("Unable to find class java/lang/NullPointerException");
-    } else {
-        (*env)->ThrowNew(env, exClass, NULL);
-    }
+    jniThrowException(env, "java/net/SocketException", message);
 }
 
 /**
@@ -242,7 +222,7 @@ static int structInToJavaAddress(
         JNIEnv *env, struct in_addr *address, jbyteArray java_address) {
 
     if (java_address == NULL) {
-        throwNullPointerException(env);
+        jniThrowException(env, "java/lang/NullPointerException", NULL);
         return -1;
     }
 

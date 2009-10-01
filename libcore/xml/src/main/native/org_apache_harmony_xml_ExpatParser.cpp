@@ -327,15 +327,9 @@ static jstring internStringOfLength(JNIEnv* env, ParsingContext* parsingContext,
     return internString(env, parsingContext, nullTerminated);
 }
 
-/**
- * Throw an assertion error.
- *
- * @param message to show
- */
-static void fail(JNIEnv* env, const char* message) {
-    jclass clazz;
-    clazz = env->FindClass("java/lang/AssertionError");
-    env->ThrowNew(clazz, message);
+static void jniThrowExpatException(JNIEnv* env, XML_Error error) {
+    const char* message = XML_ErrorString(error);
+    jniThrowException(env, "org/apache/harmony/xml/ExpatException", message);
 }
 
 /**
@@ -1001,9 +995,7 @@ static void appendString(JNIEnv* env, jobject object, jint pointer, jstring xml,
 
     if (!XML_Parse(parser, (char*) characters, length, isFinal)
             && !env->ExceptionCheck()) {
-        jclass clazz = env->FindClass("org/apache/harmony/xml/ExpatException");
-        const char* errorMessage = XML_ErrorString(XML_GetErrorCode(parser));
-        env->ThrowNew(clazz, errorMessage);
+        jniThrowExpatException(env, XML_GetErrorCode(parser));
     }
 
     // We have to temporarily clear an exception before we can release local
@@ -1041,9 +1033,7 @@ static void appendCharacters(JNIEnv* env, jobject object, jint pointer,
 
     if (!XML_Parse(parser, ((char*) characters) + (offset << 1),
             length << 1, XML_FALSE) && !env->ExceptionCheck()) {
-        jclass clazz = env->FindClass("org/apache/harmony/xml/ExpatException");
-        const char* errorMessage = XML_ErrorString(XML_GetErrorCode(parser));
-        env->ThrowNew(clazz, errorMessage);
+        jniThrowExpatException(env, XML_GetErrorCode(parser));
     }
 
     // We have to temporarily clear an exception before we can release local
@@ -1081,9 +1071,7 @@ static void appendBytes(JNIEnv* env, jobject object, jint pointer,
 
     if (!XML_Parse(parser, ((char*) bytes) + offset, length, XML_FALSE)
             && !env->ExceptionCheck()) {
-        jclass clazz = env->FindClass("org/apache/harmony/xml/ExpatException");
-        const char* errorMessage = XML_ErrorString(XML_GetErrorCode(parser));
-        env->ThrowNew(clazz, errorMessage);
+        jniThrowExpatException(env, XML_GetErrorCode(parser));
     }
 
     // We have to temporarily clear an exception before we can release local
