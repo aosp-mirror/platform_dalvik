@@ -47,19 +47,6 @@ static jstring InetAddress_gethostname(JNIEnv* env, jobject obj)
     }
 }
 
-static void throwNullPointerException(JNIEnv* env)
-{
-    const char* className = "java/lang/NullPointerException";
-
-    jclass exClass = env->FindClass(className);
-
-    if (exClass == NULL) {
-        LOGE("Unable to find class %s", className);
-    } else {
-        env->ThrowNew(exClass, NULL);
-    }
-}
-
 #if LOG_DNS
 static void logIpString(struct addrinfo* ai, const char* name)
 {
@@ -207,7 +194,7 @@ jobjectArray InetAddress_getallbyname(JNIEnv* env, jobject obj,
                                       jboolean preferIPv4Stack)
 {
     if (javaName == NULL) {
-        throwNullPointerException(env);
+        jniThrowException(env, "java/lang/NullPointerException", NULL);
         return NULL;
     }
 
@@ -246,7 +233,7 @@ static jstring InetAddress_gethostbyaddr(JNIEnv* env, jobject obj,
                                          jbyteArray javaAddress)
 {
     if (javaAddress == NULL) {
-        throwNullPointerException(env);
+        jniThrowException(env, "java/lang/NullPointerException", NULL);
         return NULL;
     }
 

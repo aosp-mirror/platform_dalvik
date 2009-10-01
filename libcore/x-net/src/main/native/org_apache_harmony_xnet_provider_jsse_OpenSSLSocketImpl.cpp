@@ -1500,8 +1500,8 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_setenabledci
 
     if (ret == 0) {
         freeSslErrorState();
-        jclass exClass = env->FindClass("java/lang/IllegalArgumentException");
-        env->ThrowNew(exClass, "Illegal cipher suite strings.");
+        jniThrowException(env, "java/lang/IllegalArgumentException",
+                          "Illegal cipher suite strings.");
     }    
 }
 

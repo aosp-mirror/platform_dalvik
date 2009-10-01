@@ -41,20 +41,10 @@
 static jfieldID field_ssl_ctx;
 
 /**
- * Throws java.io.IOexception with the provided message.
+ * Throws java.io.IOException with the provided message.
  */
-static void throwIOExceptionStr(JNIEnv* env, const char* message)
-{
-    jclass exClass = env->FindClass("java/io/IOException");
-
-    if (exClass == NULL)
-    {
-        LOGE("Unable to find class java/io/IOException");
-    }
-    else
-    {
-        env->ThrowNew(exClass, message);
-    }
+static void throwIOExceptionStr(JNIEnv* env, const char* message) {
+    jniThrowException(env, "java/io/IOException", message);
 }
 
 /**
@@ -251,8 +241,8 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_setena
     ret = SSL_CTX_set_cipher_list(ctx, str);
 
     if(ret == 0) {
-        jclass exClass = env->FindClass("java/lang/IllegalArgumentException");
-        env->ThrowNew(exClass, "Illegal cipher suite strings.");
+        jniThrowException(env, "java/lang/IllegalArgumentException",
+                          "Illegal cipher suite strings.");
     }    
 }
 
