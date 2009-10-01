@@ -189,6 +189,9 @@ class BitLevel {
     }
 
     static BigInteger shiftLeftOneBit(BigInteger source) {
+        // BEGIN android-added
+        source.establishOldRepresentation("BitLevel.shiftLeftOneBit");
+        // END android-added
         int srcLen = source.numberLength;
         int resLen = srcLen + 1;
         int resDigits[] = new int[resLen];
