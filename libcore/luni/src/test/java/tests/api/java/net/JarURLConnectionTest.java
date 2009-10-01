@@ -34,6 +34,8 @@ import java.security.cert.Certificate;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -151,8 +153,7 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
       args = {}
     )
     public void test_getManifest() throws Exception {
-        
-        String [] expected = {"plus.bmp", "swt.dll"};
+
         //URL u = new URL("jar:"
         //        + BASE.toString()+"/lf.jar!/swt.dll");
         
@@ -161,15 +162,9 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         juc = (JarURLConnection) u.openConnection();
         Manifest manifest = juc.getManifest();
         Map<String, Attributes> attr = manifest.getEntries();
-        assertEquals(expected.length, attr.size());
-        Set<String> keys = attr.keySet();
-        String [] result = new String[expected.length];
-        keys.toArray(result);
+        assertEquals(new HashSet<String>(Arrays.asList("plus.bmp", "swt.dll")),
+                attr.keySet());
 
-        for(int i = 0; i < result.length; i++) {
-            assertEquals(expected[i], result[i]);
-        }
-        
         //URL invURL = new URL("jar:"
         //        + BASE.toString()+"/InvalidJar.jar!/Test.class");
         
