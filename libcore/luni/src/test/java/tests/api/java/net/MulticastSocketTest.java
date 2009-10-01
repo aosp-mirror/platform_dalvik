@@ -1099,7 +1099,6 @@ public class MulticastSocketTest extends SocketTestCase {
         method = "setNetworkInterface",
         args = {java.net.NetworkInterface.class}
     )
-    @KnownFailure("No interfaces if there's no debugger connected")
     public void test_setNetworkInterfaceLjava_net_NetworkInterface() 
                                     throws IOException, InterruptedException {
         String msg = null;

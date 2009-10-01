@@ -520,8 +520,9 @@ int sockGetNetworkInterfaces(struct NetworkInterfaceArray_struct * array) {
             /* since this function can return multiple entries for the same name, only do it for the first one with any given name */
             if((NULL == lastName) || (strncmp(lastName, ifc.ifc_req[counter].ifr_name, IFNAMSIZ) != 0)) {
 
-                /* get the index for the interface.  This is only truely necessary on platforms that support IPV6 */
-                interfaces[currentAdapterIndex].index = 0;
+                /* get the index for the interface */
+                interfaces[currentAdapterIndex].index =
+                        ifc.ifc_req[counter].ifr_ifindex;
                 /* get the name and display name for the adapter */
                 /* there only seems to be one name so use it for both the name and the display name */
                 nameLength = strlen(ifc.ifc_req[counter].ifr_name);
