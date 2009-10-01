@@ -1323,7 +1323,13 @@ public class ObjectInputStream extends InputStream implements ObjectInput,
                 }
                 if (fieldDesc != null) {
                     if (toSet != null) {
-                        Class<?> fieldType = fieldDesc.getType();
+                        // BEGIN android-changed
+                        // Get the field type from the local field rather than
+                        // from the stream's supplied data. That's the field
+                        // we'll be setting, so that's the one that needs to be
+                        // validated.
+                        Class<?> fieldType = field.getTypeInternal();
+                        // END android-added
                         Class<?> valueType = toSet.getClass();
                         if (!fieldType.isAssignableFrom(valueType)) {
                             throw new ClassCastException(Msg.getString(
