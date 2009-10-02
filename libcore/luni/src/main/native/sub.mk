@@ -13,7 +13,7 @@ LOCAL_SRC_FILES := \
 	java_lang_Math.c \
 	java_lang_StrictMath.c \
 	java_net_InetAddress.cpp \
-	java_net_NetworkInterface.c \
+	java_net_NetworkInterface.cpp \
 	cbigint.c \
 	commonDblParce.c \
 	org_apache_harmony_luni_util_fltparse.c \

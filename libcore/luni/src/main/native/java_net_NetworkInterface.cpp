@@ -15,6 +15,7 @@
  *  limitations under the License.
  */
 
+#include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 #include "jni.h"
 #include "errno.h"
@@ -109,7 +110,7 @@ static void throwSocketException(JNIEnv *env, const char *message) {
  * @return  a human readable error string
  */
 
-static char * netLookupErrorString(int anErrorNum) {
+static const char* netLookupErrorString(int anErrorNum) {
     switch(anErrorNum) {
         case SOCKERR_BADSOCKET:
             return "Bad socket";
@@ -226,13 +227,13 @@ static int structInToJavaAddress(
         return -1;
     }
 
-    if ((*env)->GetArrayLength(env, java_address) != sizeof(address->s_addr)) {
+    if (env->GetArrayLength(java_address) != sizeof(address->s_addr)) {
         jniThrowIOException(env, errno);
         return -1;
     }
 
     jbyte* src = (jbyte*)(&(address->s_addr));
-    (*env)->SetByteArrayRegion(env, java_address, 0, sizeof(address->s_addr), src);
+    env->SetByteArrayRegion(java_address, 0, sizeof(address->s_addr), src);
     return 0;
 }
 
@@ -240,7 +241,7 @@ static jobject structInToInetAddress(JNIEnv *env, struct in_addr *address) {
     jbyteArray bytes;
     int success;
 
-    bytes = (*env)->NewByteArray(env, 4);
+    bytes = env->NewByteArray(4);
 
     if(bytes == NULL) {
         return NULL;
@@ -252,7 +253,7 @@ static jobject structInToInetAddress(JNIEnv *env, struct in_addr *address) {
         return NULL;
     }
 
-    jclass iaddrclass = (*env)->FindClass(env, "java/net/InetAddress");
+    jclass iaddrclass = env->FindClass("java/net/InetAddress");
 
     if(iaddrclass == NULL) {
         LOGE("Can't find java/net/InetAddress");
@@ -260,7 +261,7 @@ static jobject structInToInetAddress(JNIEnv *env, struct in_addr *address) {
         return NULL;
     }
 
-    jmethodID iaddrgetbyaddress = (*env)->GetStaticMethodID(env, iaddrclass, "getByAddress", "([B)Ljava/net/InetAddress;");
+    jmethodID iaddrgetbyaddress = env->GetStaticMethodID(iaddrclass, "getByAddress", "([B)Ljava/net/InetAddress;");
 
     if(iaddrgetbyaddress == NULL) {
         LOGE("Can't find method InetAddress.getByAddress(byte[] val)");
@@ -268,7 +269,7 @@ static jobject structInToInetAddress(JNIEnv *env, struct in_addr *address) {
         return NULL;
     }
 
-    return (*env)->CallStaticObjectMethod(env, iaddrclass, iaddrgetbyaddress, bytes);
+    return env->CallStaticObjectMethod(iaddrclass, iaddrgetbyaddress, bytes);
 }
 //--------------------------------------------------------------------
 
@@ -494,7 +495,7 @@ int sockGetNetworkInterfaces(struct NetworkInterfaceArray_struct * array) {
     }
 
     /* now allocate the space for the hyNetworkInterface structs and fill it in */
-    interfaces = malloc(numAdapters * sizeof(NetworkInterface_struct));
+    interfaces = (NetworkInterface_struct*) malloc(numAdapters * sizeof(NetworkInterface_struct));
     if(NULL == interfaces) {
         free(ifc.ifc_buf);
         close(socketP);
@@ -526,7 +527,7 @@ int sockGetNetworkInterfaces(struct NetworkInterfaceArray_struct * array) {
                 /* get the name and display name for the adapter */
                 /* there only seems to be one name so use it for both the name and the display name */
                 nameLength = strlen(ifc.ifc_req[counter].ifr_name);
-                interfaces[currentAdapterIndex].name = malloc(nameLength + 1);
+                interfaces[currentAdapterIndex].name = (char*) malloc(nameLength + 1);
 
                 if(NULL == interfaces[currentAdapterIndex].name) {
                     free(ifc.ifc_buf);
@@ -537,7 +538,7 @@ int sockGetNetworkInterfaces(struct NetworkInterfaceArray_struct * array) {
                 strncpy(interfaces[currentAdapterIndex].name, ifc.ifc_req[counter].ifr_name, nameLength);
                 interfaces[currentAdapterIndex].name[nameLength] = 0;
                 nameLength = strlen(ifc.ifc_req[counter].ifr_name);
-                interfaces[currentAdapterIndex].displayName = malloc(nameLength + 1);
+                interfaces[currentAdapterIndex].displayName = (char*) malloc(nameLength + 1);
                 if(NULL == interfaces[currentAdapterIndex].displayName) {
                     free(ifc.ifc_buf);
                     sock_free_network_interface_struct(array);
@@ -561,7 +562,7 @@ int sockGetNetworkInterfaces(struct NetworkInterfaceArray_struct * array) {
 
                 /* allocate space for the addresses */
                 interfaces[currentAdapterIndex].numberAddresses = numAddresses;
-                interfaces[currentAdapterIndex].addresses = malloc(numAddresses * sizeof(ipAddress_struct));
+                interfaces[currentAdapterIndex].addresses = (ipAddress_struct*) malloc(numAddresses * sizeof(ipAddress_struct));
                 if(NULL == interfaces[currentAdapterIndex].addresses) {
                     free(ifc.ifc_buf);
                     sock_free_network_interface_struct(array);
@@ -696,32 +697,31 @@ static jobjectArray getNetworkInterfacesImpl(JNIEnv * env, jclass clazz) {
     unsigned int nameLength = 0;
 
     /* get the classes and methods that we need for later calls */
-    networkInterfaceClass = (*env)->FindClass(env, "java/net/NetworkInterface");
+    networkInterfaceClass = env->FindClass("java/net/NetworkInterface");
     if(networkInterfaceClass == NULL) {
         throwSocketException(env, netLookupErrorString(SOCKERR_NORECOVERY));
         return NULL;
     }
 
-    inetAddressClass = (*env)->FindClass(env, "java/net/InetAddress");
+    inetAddressClass = env->FindClass("java/net/InetAddress");
     if(inetAddressClass == NULL) {
         throwSocketException(env, netLookupErrorString(SOCKERR_NORECOVERY));
         return NULL;
     }
 
-    methodID = (*env)->GetMethodID(env, networkInterfaceClass, "<init>",
+    methodID = env->GetMethodID(networkInterfaceClass, "<init>",
             "(Ljava/lang/String;Ljava/lang/String;[Ljava/net/InetAddress;I)V");
     if(methodID == NULL) {
         throwSocketException(env, netLookupErrorString(SOCKERR_NORECOVERY));
         return NULL;
     }
 
-    utilClass = (*env)->FindClass(env, "org/apache/harmony/luni/util/Util");
+    utilClass = env->FindClass("org/apache/harmony/luni/util/Util");
     if(!utilClass) {
         return NULL;
     }
 
-    utilMid = ((*env)->GetStaticMethodID(env, utilClass, "toString",
-            "([BII)Ljava/lang/String;"));
+    utilMid = env->GetStaticMethodID(utilClass, "toString", "([BII)Ljava/lang/String;");
     if(!utilMid) {
         return NULL;
     }
@@ -743,32 +743,32 @@ static jobjectArray getNetworkInterfacesImpl(JNIEnv * env, jclass clazz) {
 
         if(networkInterfaceArray.elements[j].name != NULL) {
             nameLength = strlen(networkInterfaceArray.elements[j].name);
-            bytearray = (*env)->NewByteArray(env, nameLength);
+            bytearray = env->NewByteArray(nameLength);
             if(bytearray == NULL) {
                 /* NewByteArray should have thrown an exception */
                 return NULL;
             }
-            (*env)->SetByteArrayRegion(env, bytearray, (jint) 0, nameLength,
+            env->SetByteArrayRegion(bytearray, (jint) 0, nameLength,
                     (jbyte *)networkInterfaceArray.elements[j].name);
-            name = (*env)->CallStaticObjectMethod(env, utilClass, utilMid,
+            name = (jstring) env->CallStaticObjectMethod(utilClass, utilMid,
                     bytearray, (jint) 0, nameLength);
-            if((*env)->ExceptionCheck(env)) {
+            if(env->ExceptionCheck()) {
                 return NULL;
             }
         }
 
         if(networkInterfaceArray.elements[j].displayName != NULL) {
             nameLength = strlen(networkInterfaceArray.elements[j].displayName);
-            bytearray = (*env)->NewByteArray(env, nameLength);
+            bytearray = env->NewByteArray(nameLength);
             if(bytearray == NULL) {
                 /* NewByteArray should have thrown an exception */
                 return NULL;
             }
-            (*env)->SetByteArrayRegion(env, bytearray, (jint) 0, nameLength,
+            env->SetByteArrayRegion(bytearray, (jint) 0, nameLength,
                     (jbyte *)networkInterfaceArray.elements[j].displayName);
-            displayName = (*env)->CallStaticObjectMethod(env, utilClass, utilMid,
+            displayName = (jstring) env->CallStaticObjectMethod(utilClass, utilMid,
                     bytearray, (jint) 0, nameLength);
-            if((*env)->ExceptionCheck(env)) {
+            if(env->ExceptionCheck()) {
                 return NULL;
             }
         }
@@ -777,25 +777,25 @@ static jobjectArray getNetworkInterfacesImpl(JNIEnv * env, jclass clazz) {
         for(i = 0; i < networkInterfaceArray.elements[j].numberAddresses; i++) {
             element = structInToInetAddress(env, (struct in_addr *) &(networkInterfaceArray.elements[j].addresses[i].addr.inAddr));
             if(i == 0) {
-                addresses = (*env)->NewObjectArray(env,
+                addresses = env->NewObjectArray(
                         networkInterfaceArray.elements[j].numberAddresses,
                         inetAddressClass, element);
             } else {
-                (*env)->SetObjectArrayElement(env, addresses, i, element);
+                env->SetObjectArrayElement(addresses, i, element);
             }
         }
 
         /* now  create the NetworkInterface object for this interface and then add it it ot the arrary that will be returned */
-        currentInterface = (*env)->NewObject(env, networkInterfaceClass,
+        currentInterface = env->NewObject(networkInterfaceClass,
                 methodID, name, displayName, addresses,
                 networkInterfaceArray.elements[j].index);
 
         if(j == 0) {
-            networkInterfaces = (*env)->NewObjectArray(env,
+            networkInterfaces = env->NewObjectArray(
                     networkInterfaceArray.length, networkInterfaceClass,
                     currentInterface);
         } else {
-            (*env)->SetObjectArrayElement(env, networkInterfaces, j, currentInterface);
+            env->SetObjectArrayElement(networkInterfaces, j, currentInterface);
         }
     }
 
@@ -810,10 +810,9 @@ static jobjectArray getNetworkInterfacesImpl(JNIEnv * env, jclass clazz) {
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "getNetworkInterfacesImpl", "()[Ljava/net/NetworkInterface;", getNetworkInterfacesImpl }
+    { "getNetworkInterfacesImpl", "()[Ljava/net/NetworkInterface;", (void*) getNetworkInterfacesImpl },
 };
 int register_java_net_NetworkInterface(JNIEnv* env) {
     return jniRegisterNativeMethods(env, "java/net/NetworkInterface",
-        gMethods, NELEM(gMethods));
-
+            gMethods, NELEM(gMethods));
 }
