@@ -578,7 +578,9 @@ GOTO_TARGET(exceptionThrown)
 
 #if defined(WITH_JIT)
         // Something threw during trace selection - abort the current trace
-        interpState->jitState = kJitTSelectEnd;
+        if (interpState->jitState == kJitTSelect) {
+            interpState->jitState = kJitTSelectEnd;
+        }
 #endif
         /*
          * We save off the exception and clear the exception status.  While

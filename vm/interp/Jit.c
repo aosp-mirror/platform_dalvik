@@ -514,13 +514,6 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                           || gDvm.activeProfilers
 #endif
             );
-
-    /* First instruction - just remember the PC and exit */
-    if (interpState->lastPC == NULL) {
-        interpState->lastPC = pc;
-        return switchInterp;
-    }
-
     /* Prepare to handle last PC and stage the current PC */
     const u2 *lastPC = interpState->lastPC;
     interpState->lastPC = pc;
@@ -531,6 +524,8 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
         int offset;
         DecodedInstruction decInsn;
         case kJitTSelect:
+            /* First instruction - just remember the PC and exit */
+            if (lastPC == NULL) break;
             /* Grow the trace around the last PC if jitState is kJitTSelect */
             dexDecodeInstruction(gDvm.instrFormat, lastPC, &decInsn);
 #if defined(SHOW_TRACE)
