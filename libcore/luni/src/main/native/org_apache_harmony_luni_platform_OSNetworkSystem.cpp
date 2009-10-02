@@ -545,6 +545,7 @@ static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv *env, jclass clazz,
         jstring javaString) {
     if (javaString == NULL) {
         throwNullPointerException(env);
+        return NULL;
     }
 
     char ipString[INET6_ADDRSTRLEN];
@@ -559,10 +560,12 @@ static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv *env, jclass clazz,
     }
 
     jbyteArray result = NULL;
-    sockaddr_in sin;
-    addrinfo hints, *res;
+    addrinfo hints;
     memset(&hints, 0, sizeof(hints));
     hints.ai_flags = AI_NUMERICHOST;
+
+    sockaddr_in sin;
+    addrinfo *res = NULL;
     int ret = getaddrinfo(ipString, NULL, &hints, &res);
     if (ret == 0 && res) {
         // Convert mapped addresses to IPv4 addresses if necessary.
