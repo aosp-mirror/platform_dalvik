@@ -188,6 +188,7 @@ bool dvmDbgSetArrayElements(ObjectId arrayId, int firstIndex, int count,
     const u1* buf);
 
 ObjectId dvmDbgCreateString(const char* str);
+ObjectId dvmDbgCreateObject(RefTypeId classId);
 
 bool dvmDbgMatchType(RefTypeId instClassId, RefTypeId classId);
 
