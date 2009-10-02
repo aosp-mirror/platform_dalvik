@@ -47,6 +47,11 @@ static void Dalvik_java_lang_Throwable_nativeGetStackTrace(const u4* args,
     Object* stackState = (Object*) args[0];
     ArrayObject* elements = NULL;
 
+    if (stackState == NULL) {
+        LOGW("getStackTrace() called but no trace available\n");
+        RETURN_PTR(NULL);   /* could throw NPE; currently caller will do so */
+    }
+
     elements = dvmGetStackTrace(stackState);
     RETURN_PTR(elements);
 }
