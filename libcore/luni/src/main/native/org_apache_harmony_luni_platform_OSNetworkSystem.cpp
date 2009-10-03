@@ -304,13 +304,11 @@ static bool isJavaMappedAddress(jbyte *addressBytes) {
  *
  * @return a jobject representing an InetAddress
  */
-static jobject socketAddressToInetAddress(JNIEnv *env,
-        struct sockaddr_storage *sockaddress) {
-
-    jbyteArray byteArray = socketAddressToByteArray(env, sockaddress);
-    if (byteArray == NULL)  // Exception has already been thrown.
+jobject socketAddressToInetAddress(JNIEnv* env, sockaddr_storage* sockAddress) {
+    jbyteArray byteArray = socketAddressToByteArray(env, sockAddress);
+    if (byteArray == NULL) {
         return NULL;
-
+    }
     return env->CallStaticObjectMethod(gCachedFields.iaddr_class,
             gCachedFields.iaddr_getbyaddress, byteArray);
 }
