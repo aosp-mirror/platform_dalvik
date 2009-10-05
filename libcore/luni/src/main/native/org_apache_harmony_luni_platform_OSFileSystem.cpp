@@ -54,16 +54,6 @@
 #include <sys/sendfile.h>
 #include <sys/uio.h>
 
-// An equivalent of the glibc macro of the same name.
-// We want to hide EINTR from Java by simply retrying directly in
-// the native code. We care about all other errors, though.
-#define EINTR_RETRY(exp) ({                   \
-    typeof (exp) _rc;                         \
-    do {                                      \
-        _rc = (exp);                          \
-    } while (_rc == -1 && errno == EINTR);    \
-    _rc; })
-
 static void convertToPlatform(char *path) {
     char *pathIndex;
 
@@ -168,7 +158,7 @@ static jint harmony_io_lockImpl(JNIEnv* env, jobject, jint handle,
     }
 
     int waitMode = (waitFlag) ? F_SETLKW : F_SETLK;
-    return EINTR_RETRY(fcntl(handle, waitMode, &lock));
+    return TEMP_FAILURE_RETRY(fcntl(handle, waitMode, &lock));
 }
 
 static void harmony_io_unlockImpl(JNIEnv* env, jobject, jint handle,
@@ -182,7 +172,7 @@ static void harmony_io_unlockImpl(JNIEnv* env, jobject, jint handle,
     struct flock lock(flockFromStartAndLength(start, length));
     lock.l_type = F_UNLCK;
 
-    int rc = EINTR_RETRY(fcntl(handle, F_SETLKW, &lock));
+    int rc = TEMP_FAILURE_RETRY(fcntl(handle, F_SETLKW, &lock));
     if (rc == -1) {
         jniThrowIOException(env, errno);
     }
@@ -274,7 +264,7 @@ static jlong harmony_io_readDirect(JNIEnv* env, jobject, jint fd,
     }
 
     jbyte* dst = reinterpret_cast<jbyte*>(buf + offset);
-    jlong rc = EINTR_RETRY(read(fd, dst, nbytes));
+    jlong rc = TEMP_FAILURE_RETRY(read(fd, dst, nbytes));
     if (rc == 0) {
         return -1;
     }
@@ -287,7 +277,7 @@ static jlong harmony_io_readDirect(JNIEnv* env, jobject, jint fd,
 static jlong harmony_io_writeDirect(JNIEnv* env, jobject, jint fd,
         jint buf, jint offset, jint nbytes) {
     jbyte* src = reinterpret_cast<jbyte*>(buf + offset);
-    jlong rc = EINTR_RETRY(write(fd, src, nbytes));
+    jlong rc = TEMP_FAILURE_RETRY(write(fd, src, nbytes));
     if (rc == -1) {
         jniThrowIOException(env, errno);
     }
@@ -302,7 +292,7 @@ static jlong harmony_io_readImpl(JNIEnv* env, jobject, jint fd,
     }
 
     jbyte* bytes = env->GetByteArrayElements(byteArray, NULL);
-    jlong rc = EINTR_RETRY(read(fd, bytes + offset, nbytes));
+    jlong rc = TEMP_FAILURE_RETRY(read(fd, bytes + offset, nbytes));
     env->ReleaseByteArrayElements(byteArray, bytes, 0);
 
     if (rc == 0) {
@@ -323,7 +313,7 @@ static jlong harmony_io_writeImpl(JNIEnv* env, jobject, jint fd,
         jbyteArray byteArray, jint offset, jint nbytes) {
 
     jbyte* bytes = env->GetByteArrayElements(byteArray, NULL);
-    jlong result = EINTR_RETRY(write(fd, bytes + offset, nbytes));
+    jlong result = TEMP_FAILURE_RETRY(write(fd, bytes + offset, nbytes));
     env->ReleaseByteArrayElements(byteArray, bytes, JNI_ABORT);
 
     if (result == -1) {
@@ -379,7 +369,7 @@ static void harmony_io_fflush(JNIEnv* env, jobject, jint fd,
 }
 
 static jint harmony_io_close(JNIEnv* env, jobject, jint fd) {
-    jint rc = EINTR_RETRY(close(fd));
+    jint rc = TEMP_FAILURE_RETRY(close(fd));
     if (rc == -1) {
         jniThrowIOException(env, errno);
     }
@@ -439,7 +429,7 @@ static jint harmony_io_openImpl(JNIEnv* env, jobject, jbyteArray path,
     pathCopy[length] = '\0';
     convertToPlatform (pathCopy);
 
-    jint cc = EINTR_RETRY(open(pathCopy, flags, mode));
+    jint cc = TEMP_FAILURE_RETRY(open(pathCopy, flags, mode));
     // TODO: chase up the callers of this and check they wouldn't rather
     // have us throw a meaningful IOException right here.
     if (cc < 0 && errno > 0) {
