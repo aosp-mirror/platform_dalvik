@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-#include <stdlib.h>
-#include <unicode/ubidi.h>
-#include <string.h>
 #include "BidiWrapperInterface.h"
+#include "ErrorCode.h"
+#include "unicode/ubidi.h"
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     UBiDi *pBiDi;
     void *embeddingLevels;
 } BiDiData;
-
-void check_fail (JNIEnv * env, int err);
 
 JNIEXPORT jlong JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1open
   (JNIEnv * env, jclass clazz)
@@ -68,27 +67,27 @@ JNIEXPORT void JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1setPara
   ubidi_setPara ((*data).pBiDi, _text, length, paraLevel,
                  ((*data).embeddingLevels), &err);
   (*env)->ReleaseCharArrayElements (env, text, _text, 0);
-  check_fail (env, err);
-
   free(oldEmbeddingLevels);
+
+  icu4jni_error(env, err);
 }
 
 JNIEXPORT jlong JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1setLine
   (JNIEnv * env, jclass clazz, jlong pBiDi, jint start, jint limit)
 {
-  UErrorCode err = 0;
-  BiDiData *data = (BiDiData *)pBiDi;
-  BiDiData *lineData = (BiDiData *) malloc(sizeof(BiDiData));
-  (*lineData).embeddingLevels = NULL;
+    UErrorCode err = 0;
+    BiDiData *data = (BiDiData *)pBiDi;
+    BiDiData *lineData = (BiDiData *) malloc(sizeof(BiDiData));
+    (*lineData).embeddingLevels = NULL;
 
-  (*lineData).pBiDi = ubidi_openSized (limit - start, 0, &err);
-  check_fail (env, err);
+    (*lineData).pBiDi = ubidi_openSized (limit - start, 0, &err);
+    if (icu4jni_error(env, err)) {
+        return 0;
+    }
 
-  ubidi_setLine ((*data).pBiDi, start, limit, (*lineData).pBiDi,
-                 &err);
-  check_fail (env, err);
-
-  return (jlong) lineData;
+    ubidi_setLine ((*data).pBiDi, start, limit, (*lineData).pBiDi, &err);
+    icu4jni_error(env, err);
+    return (jlong) lineData;
 }
 
 JNIEXPORT jint JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1getDirection
@@ -115,76 +114,57 @@ JNIEXPORT jbyte JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1getParaL
 JNIEXPORT jbyteArray JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1getLevels
   (JNIEnv * env, jclass clazz, jlong pBiDi)
 {
-  UErrorCode err = 0;
-  const UBiDiLevel *levels = NULL;
-  jbyteArray result = NULL;
-  int len = 0;
-  BiDiData *data = (BiDiData *)pBiDi;
+    BiDiData *data = (BiDiData *)pBiDi;
 
-  levels = ubidi_getLevels ((*data).pBiDi, &err);
-  check_fail (env, err);
+    UErrorCode err = 0;
+    const UBiDiLevel* levels = ubidi_getLevels((*data).pBiDi, &err);
+    if (icu4jni_error(env, err)) {
+        return NULL;
+    }
 
-  len = ubidi_getLength ((*data).pBiDi);
-  result = (*env)->NewByteArray (env, len);
-  (*env)->SetByteArrayRegion (env, result, 0, len, (jbyte *) levels);
+    int len = ubidi_getLength((*data).pBiDi);
+    jbyteArray result = (*env)->NewByteArray(env, len);
+    (*env)->SetByteArrayRegion(env, result, 0, len, (jbyte*) levels);
 
-  return result;
+    return result;
 }
 
 JNIEXPORT jint JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1countRuns
   (JNIEnv * env, jclass clazz, jlong pBiDi)
 {
-  UErrorCode err = 0;
-  BiDiData *data = (BiDiData *)pBiDi;
+    BiDiData *data = (BiDiData *)pBiDi;
 
-  int count = ubidi_countRuns ((*data).pBiDi, &err);
-  check_fail (env, err);
-
-  return count;
+    UErrorCode err = 0;
+    int count = ubidi_countRuns ((*data).pBiDi, &err);
+    icu4jni_error(env, err);
+    return count;
 }
 
 JNIEXPORT jobjectArray JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1getRuns
   (JNIEnv * env, jclass clz, jlong pBiDi)
 {
-  int runCount = 0;
-  int start = 0;
-  int limit = 0;
-  int i = 0;
-  UBiDiLevel level = 0;
-  jclass run_clazz = 0;
-  jmethodID initID = 0;
-  jobject run = 0;
-  jobjectArray runs;
-  UErrorCode err = 0;
-  BiDiData *data = (BiDiData *)pBiDi;
+    BiDiData* data = (BiDiData*) pBiDi;
 
-  run_clazz = (*env)->FindClass (env, "org/apache/harmony/text/BidiRun");
-  initID = (*env)->GetMethodID (env, run_clazz, "<init>", "(III)V");
-
-  runCount = ubidi_countRuns ((*data).pBiDi, &err);
-  check_fail (env, err);
-  
-  runs = (*env)->NewObjectArray(env, runCount,run_clazz, NULL);  
-  for (i = 0; i < runCount; i++) {
-      ubidi_getLogicalRun((*data).pBiDi, start, &limit, &level);
-      run = (*env)->NewObject (env, run_clazz, initID, start, limit, level);
-      (*env)->SetObjectArrayElement(env, runs, i, run);
-      start = limit;
-  }
-  return runs;
-}
-
-void
-check_fail (JNIEnv * env, int err)
-{
-  char message[] = "ICU Internal Error:                     ";
-
-  if (U_FAILURE (err))
-    {
-      sprintf (message, "ICU Internal Error: %d", err);
-      jniThrowException(env, "java/lang/RuntimeException",
-                              message);
+    UErrorCode err = 0;
+    int runCount = ubidi_countRuns((*data).pBiDi, &err);
+    if (icu4jni_error(env, err)) {
+        return 0;
     }
+
+    jclass bidiRunClass = (*env)->FindClass(env, "org/apache/harmony/text/BidiRun");
+    jmethodID bidiRunConstructor = (*env)->GetMethodID(env, bidiRunClass, "<init>", "(III)V");
+    jobjectArray runs = (*env)->NewObjectArray(env, runCount, bidiRunClass, NULL);
+    UBiDiLevel level = 0;
+    int start = 0;
+    int limit = 0;
+    int i = 0; // TODO: switch this file to C++!
+    for (i = 0; i < runCount; ++i) {
+        ubidi_getLogicalRun((*data).pBiDi, start, &limit, &level);
+        jobject run = (*env)->NewObject(env, bidiRunClass, bidiRunConstructor, start, limit, level);
+        (*env)->SetObjectArrayElement(env, runs, i, run);
+        start = limit;
+    }
+    return runs;
 }
 
 JNIEXPORT jintArray JNICALL Java_org_apache_harmony_text_BidiWrapper_ubidi_1reorderVisual
