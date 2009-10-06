@@ -186,13 +186,13 @@ struct CachedFields {
 } gCachedFields;
 
 /* needed for connecting with timeout */
-typedef struct selectFDSet {
+struct selectFDSet {
   int nfds;
   int sock;
   fd_set writeSet;
   fd_set readSet;
   fd_set exceptionSet;
-} selectFDSet;
+};
 
 static const char * netLookupErrorString(int anErrorNum);
 
@@ -1071,12 +1071,9 @@ static int sockConnectWithTimeout(int handle, struct sockaddr_storage addr,
     int rc = 0;
     int errorVal;
     socklen_t errorValLen = sizeof(int);
-    struct selectFDSet *context = NULL;
+    selectFDSet* context = reinterpret_cast<selectFDSet*>(ctxt);
 
     if (SOCKET_STEP_START == step) {
-
-        context = (struct selectFDSet *) ctxt;
-
         context->sock = handle;
         context->nfds = handle + 1;
 
@@ -1111,8 +1108,6 @@ static int sockConnectWithTimeout(int handle, struct sockaddr_storage addr,
 
     } else if (SOCKET_STEP_CHECK == step) {
         /* now check if we have connected yet */
-
-        context = (struct selectFDSet *) ctxt;
 
         /*
          * set the timeout value to be used. Because on some unix platforms we
@@ -1788,23 +1783,19 @@ static jint osNetworkSystem_connectWithTimeoutSocketImpl(JNIEnv* env,
         jobject inetAddr, jint port, jint step, jbyteArray passContext) {
     // LOGD("ENTER connectWithTimeoutSocketImpl");
 
-    int handle;
-    int result = 0;
-    struct sockaddr_storage address;
-    jbyte *context = NULL;
-
-    result = inetAddressToSocketAddress(env, inetAddr, port, &address);
-    if (result < 0)
+    sockaddr_storage address;
+    int result = inetAddressToSocketAddress(env, inetAddr, port, &address);
+    if (result < 0) {
         return result;
+    }
 
-    handle = jniGetFDFromFileDescriptor(env, fileDescriptor);
-    if (handle == 0 || handle == -1) {
+    int handle = jniGetFDFromFileDescriptor(env, fileDescriptor);
+    if (handle == -1) {
         throwSocketException(env, SOCKERR_BADDESC);
         return -1;
     }
 
-    context = (jbyte *)env->GetPrimitiveArrayCritical(passContext, NULL);
-
+    jbyte* context = env->GetByteArrayElements(passContext, NULL);
     switch (step) {
         case SOCKET_CONNECT_STEP_START:
             result = sockConnectWithTimeout(handle, address, 0,
@@ -1815,10 +1806,9 @@ static jint osNetworkSystem_connectWithTimeoutSocketImpl(JNIEnv* env,
                     SOCKET_STEP_CHECK, context);
             break;
     }
+    env->ReleaseByteArrayElements(passContext, context, 0);
 
-    env->ReleasePrimitiveArrayCritical(passContext, context, JNI_ABORT);
-
-    if (0 == result) {
+    if (result == 0) {
         /* connected , so stop here */
         sockConnectWithTimeout(handle, address, 0, SOCKET_STEP_DONE, NULL);
     } else if (result != SOCKERR_NOTCONNECTED) {
