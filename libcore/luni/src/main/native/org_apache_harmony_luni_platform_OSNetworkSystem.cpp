@@ -284,18 +284,6 @@ static bool isMappedAddress(sockaddr *address) {
 }
 
 /**
- * Checks whether a 16-byte array represents an IPv4-mapped IPv6 address.
- *
- * @param addressBytes the address to check. Must be 16 bytes long.
- * @return true if address contains an IPv4-mapped address, false otherwise.
- */
-static bool isJavaMappedAddress(jbyte *addressBytes) {
-    static const unsigned char mappedBytes[] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
-    return !memcmp(mappedBytes, addressBytes, sizeof(mappedBytes));
-}
-
-/**
  * Converts a native address structure to an InetAddress object.
  * Throws a NullPointerException or an IOException in case of
  * error.
@@ -596,8 +584,7 @@ static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv *env, jclass clazz,
  *
  * @return  the new Boolean
  */
-
-jobject newJavaLangBoolean(JNIEnv * env, jint anInt) {
+static jobject newJavaLangBoolean(JNIEnv * env, jint anInt) {
     jclass tempClass;
     jmethodID tempMethod;
 
@@ -614,8 +601,7 @@ jobject newJavaLangBoolean(JNIEnv * env, jint anInt) {
  *
  * @return  the new Byte
  */
-
-jobject newJavaLangByte(JNIEnv * env, jbyte val) {
+static jobject newJavaLangByte(JNIEnv * env, jbyte val) {
     jclass tempClass;
     jmethodID tempMethod;
 
@@ -632,8 +618,7 @@ jobject newJavaLangByte(JNIEnv * env, jbyte val) {
  *
  * @return  the new Integer
  */
-
-jobject newJavaLangInteger(JNIEnv * env, jint anInt) {
+static jobject newJavaLangInteger(JNIEnv * env, jint anInt) {
     jclass tempClass;
     jmethodID tempMethod;
 
@@ -673,25 +658,6 @@ static int time_msec_clock() {
     struct timezone tzp;
     gettimeofday(&tp, &tzp);
     return toMs(tp);
-}
-
-/**
- * Check if the passed sockaddr_storage struct contains a localhost address
- *
- * @param address address pointer to the address to check
- *
- * @return 0 if the passed address isn't a localhost address
- */
-static int isLocalHost(struct sockaddr_storage *address) {
-    if (address->ss_family == AF_INET) {
-        struct sockaddr_in *sin = (struct sockaddr_in *) address;
-        return (sin->sin_addr.s_addr == htonl(INADDR_LOOPBACK));
-    } else if (address->ss_family == AF_INET6) {
-        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) address;
-        return IN6_IS_ADDR_LOOPBACK(&sin6->sin6_addr);
-    } else {
-        return 0;
-    }
 }
 
 /**
@@ -1025,53 +991,6 @@ static int getSocketAddressFamily(int socket) {
   } else {
     return ss.ss_family;
   }
-}
-
-/**
- * A helper method, to set the connect context to a Long object.
- *
- * @param env  pointer to the JNI library
- * @param longclass Java Long Object
- */
-void setConnectContext(JNIEnv *env,jobject longclass,jbyte * context) {
-    jclass descriptorCLS;
-    jfieldID descriptorFID;
-    descriptorCLS = env->FindClass("java/lang/Long");
-    descriptorFID = env->GetFieldID(descriptorCLS, "value", "J");
-    env->SetLongField(longclass, descriptorFID, (jlong)((jint)context));
-};
-
-/**
- * A helper method, to get the connect context.
- *
- * @param env  pointer to the JNI library
- * @param longclass Java Long Object
- */
-jbyte *getConnectContext(JNIEnv *env, jobject longclass) {
-    jclass descriptorCLS;
-    jfieldID descriptorFID;
-    descriptorCLS = env->FindClass("java/lang/Long");
-    descriptorFID = env->GetFieldID(descriptorCLS, "value", "J");
-    return (jbyte*) ((jint)env->GetLongField(longclass, descriptorFID));
-};
-
-// typical ip checksum
-unsigned short ip_checksum(unsigned short* buffer, int size) {
-    register unsigned short * buf = buffer;
-    register int bufleft = size;
-    register unsigned long sum = 0;
-
-    while (bufleft > 1) {
-        sum = sum + (*buf++);
-        bufleft = bufleft - sizeof(unsigned short );
-    }
-    if (bufleft) {
-        sum = sum + (*(unsigned char*)buf);
-    }
-    sum = (sum >> 16) + (sum & 0xffff);
-    sum += (sum >> 16);
-
-    return (unsigned short )(~sum);
 }
 
 /**
