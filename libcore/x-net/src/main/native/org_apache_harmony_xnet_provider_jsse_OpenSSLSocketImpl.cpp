@@ -1011,6 +1011,27 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_init(JNIEnv*
      */
     SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_NONE, NULL);
 
+    int mode = SSL_CTX_get_mode(ssl_ctx);
+    /*
+     * Turn on "partial write" mode. This means that SSL_write() will
+     * behave like Posix write() and possibly return after only
+     * writing a partial buffer. Note: The alternative, perhaps
+     * surprisingly, is not that SSL_write() always does full writes
+     * but that it will force you to retry write calls having
+     * preserved the full state of the original call. (This is icky
+     * and undesirable.)
+     */
+    mode |= SSL_MODE_ENABLE_PARTIAL_WRITE;
+#ifdef SSL_MODE_SMALL_BUFFERS
+    mode |= SSL_MODE_SMALL_BUFFERS;  /* lazily allocate record buffers; usually saves
+                                      * 44k over the default */
+#endif
+#ifdef SSL_MODE_HANDSHAKE_CUTTHROUGH
+    mode |= SSL_MODE_HANDSHAKE_CUTTHROUGH;  /* enable sending of client data as soon as
+                                             * ClientCCS and ClientFinished are sent */
+#endif
+    SSL_CTX_set_mode(ssl_ctx, mode);
+
     if (privatekey != NULL) {
         BIO* privatekeybio = stringToMemBuf(env, (jstring) privatekey);
         EVP_PKEY* privatekeyevp =
@@ -1113,17 +1134,6 @@ static jboolean org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_connect(
     }
 
     fd = jniGetFDFromFileDescriptor(env, fdObject);
-
-    /*
-     * Turn on "partial write" mode. This means that SSL_write() will
-     * behave like Posix write() and possibly return after only
-     * writing a partial buffer. Note: The alternative, perhaps
-     * surprisingly, is not that SSL_write() always does full writes
-     * but that it will force you to retry write calls having
-     * preserved the full state of the original call. (This is icky
-     * and undesirable.)
-     */
-    SSL_set_mode(ssl, SSL_MODE_ENABLE_PARTIAL_WRITE);
 
     ssl_session = (SSL_SESSION *) session;
 
