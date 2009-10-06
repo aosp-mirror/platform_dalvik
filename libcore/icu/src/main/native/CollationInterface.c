@@ -172,13 +172,11 @@ static jint getMaxExpansion(JNIEnv *env, jclass obj,
 static jint getNormalization(JNIEnv *env, jclass obj,
         jint address) {
 
-  UErrorCode status = U_ZERO_ERROR;
-  const UCollator *collator = (const UCollator *)(int)address;
-  if(U_FAILURE(status)){
-       icu4jni_error(env, status);
-  }
-  return (jint)ucol_getAttribute(collator,UCOL_NORMALIZATION_MODE,&status);
-
+    const UCollator* collator = (const UCollator*) address;
+    UErrorCode status = U_ZERO_ERROR;
+    jint result = ucol_getAttribute(collator, UCOL_NORMALIZATION_MODE, &status);
+    icu4jni_error(env, status);
+    return result;
 }
 
 /**
@@ -192,12 +190,10 @@ static jint getNormalization(JNIEnv *env, jclass obj,
 static void setNormalization(JNIEnv *env, jclass obj, jint address, 
         jint mode) {
 
+    const UCollator* collator = (const UCollator*) address;
     UErrorCode status = U_ZERO_ERROR;
-    const UCollator *collator = (const UCollator *)(int)address;
-    if(U_FAILURE(status)){
-        icu4jni_error(env, status);
-    }
-    ucol_setAttribute(collator,UCOL_NORMALIZATION_MODE,mode,&status);
+    ucol_setAttribute(collator, UCOL_NORMALIZATION_MODE, mode, &status);
+    icu4jni_error(env, status);
 }
 
 
@@ -324,12 +320,11 @@ static jint hashCode(JNIEnv *env, jclass obj, jint address) {
 *         error has occured or if the end of string has been reached
 */
 static jint next(JNIEnv *env, jclass obj, jint address) {
-  UCollationElements *iterator = (UCollationElements *)(int)address;
-  UErrorCode status = U_ZERO_ERROR;
-  jint result = ucol_next(iterator, &status);
-
-   icu4jni_error(env, status);
-  return result;
+    UCollationElements *iterator = (UCollationElements *) address;
+    UErrorCode status = U_ZERO_ERROR;
+    jint result = ucol_next(iterator, &status);
+    icu4jni_error(env, status);
+    return result;
 }
 
 /**
@@ -343,14 +338,10 @@ static jint next(JNIEnv *env, jclass obj, jint address) {
 * @exception thrown if creation of the UCollator fails
 */
 static jint openCollator__(JNIEnv *env, jclass obj) {
-  jint result;
-  UErrorCode status = U_ZERO_ERROR;
-
-  result = (jint)ucol_open(NULL, &status);
-  if ( icu4jni_error(env, status) != FALSE)
-    return 0;
- 
-  return result;
+    UErrorCode status = U_ZERO_ERROR;
+    jint result = ucol_open(NULL, &status);
+    icu4jni_error(env, status);
+    return result;
 }
 
 
@@ -368,19 +359,18 @@ static jint openCollator__(JNIEnv *env, jclass obj) {
 static jint openCollator__Ljava_lang_String_2(JNIEnv *env,
         jclass obj, jstring locale) {
 
-  /* this will be null terminated */
-  const char *localestr = (*env)->GetStringUTFChars(env, locale, 0);
-  jint result=0;
-  UErrorCode status = U_ZERO_ERROR;
+    /* this will be null terminated */
+    const char* localeStr = (*env)->GetStringUTFChars(env, locale, NULL);
+    if (localeStr == NULL) {
+        icu4jni_error(env, U_ILLEGAL_ARGUMENT_ERROR);
+        return 0;
+    }
 
-  if(localestr){
-      result = (jint)ucol_open(localestr, &status);
-      (*env)->ReleaseStringUTFChars(env, locale, localestr);
-      icu4jni_error(env, status);
-  }else{
-      icu4jni_error(env,U_ILLEGAL_ARGUMENT_ERROR);
-  }
-  return result;
+    UErrorCode status = U_ZERO_ERROR;
+    jint result = ucol_open(localeStr, &status);
+    (*env)->ReleaseStringUTFChars(env, locale, localeStr);
+    icu4jni_error(env, status);
+    return result;
 }
 
 /**
@@ -586,4 +576,3 @@ int register_com_ibm_icu4jni_text_NativeCollator(JNIEnv *_env) {
     return jniRegisterNativeMethods(_env, "com/ibm/icu4jni/text/NativeCollation",
                 gMethods, NELEM(gMethods));
 }
-
