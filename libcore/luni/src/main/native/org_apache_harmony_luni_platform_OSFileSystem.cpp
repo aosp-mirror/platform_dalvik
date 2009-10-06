@@ -187,53 +187,52 @@ static jint harmony_io_getAllocGranularity(JNIEnv* env, jobject) {
     return allocGranularity;
 }
 
-static jlong harmony_io_readv(JNIEnv* env, jobject, jint fd,
+// Translate three Java int[]s to a native iovec[] for readv and writev.
+static iovec* initIoVec(JNIEnv* env,
         jintArray jBuffers, jintArray jOffsets, jintArray jLengths, jint size) {
     iovec* vectors = new iovec[size];
     if (vectors == NULL) {
         jniThrowException(env, "java/lang/OutOfMemoryError", "native heap");
-        return -1;
+        return NULL;
     }
     jint *buffers = env->GetIntArrayElements(jBuffers, NULL);
     jint *offsets = env->GetIntArrayElements(jOffsets, NULL);
     jint *lengths = env->GetIntArrayElements(jLengths, NULL);
     for (int i = 0; i < size; ++i) {
-        vectors[i].iov_base = (void *)((int)(buffers[i]+offsets[i]));
+        vectors[i].iov_base = reinterpret_cast<void*>(buffers[i] + offsets[i]);
         vectors[i].iov_len = lengths[i];
     }
-    long result = readv(fd, vectors, size);
     env->ReleaseIntArrayElements(jBuffers, buffers, JNI_ABORT);
     env->ReleaseIntArrayElements(jOffsets, offsets, JNI_ABORT);
     env->ReleaseIntArrayElements(jLengths, lengths, JNI_ABORT);
-    delete[] vectors;
+    return vectors;
+}
+
+static jlong harmony_io_readv(JNIEnv* env, jobject, jint fd,
+        jintArray jBuffers, jintArray jOffsets, jintArray jLengths, jint size) {
+    iovec* vectors = initIoVec(env, jBuffers, jOffsets, jLengths, size);
+    if (vectors == NULL) {
+        return -1;
+    }
+    long result = readv(fd, vectors, size);
     if (result == -1) {
         jniThrowIOException(env, errno);
     }
+    delete[] vectors;
     return result;
 }
 
 static jlong harmony_io_writev(JNIEnv* env, jobject, jint fd,
         jintArray jBuffers, jintArray jOffsets, jintArray jLengths, jint size) {
-    iovec* vectors = new iovec[size];
+    iovec* vectors = initIoVec(env, jBuffers, jOffsets, jLengths, size);
     if (vectors == NULL) {
-        jniThrowException(env, "java/lang/OutOfMemoryError", "native heap");
         return -1;
     }
-    jint *buffers = env->GetIntArrayElements(jBuffers, NULL);
-    jint *offsets = env->GetIntArrayElements(jOffsets, NULL);
-    jint *lengths = env->GetIntArrayElements(jLengths, NULL);
-    for (int i = 0; i < size; ++i) {
-        vectors[i].iov_base = (void *)((int)(buffers[i]+offsets[i]));
-        vectors[i].iov_len = lengths[i];
-    }
     long result = writev(fd, vectors, size);
-    env->ReleaseIntArrayElements(jBuffers, buffers, JNI_ABORT);
-    env->ReleaseIntArrayElements(jOffsets, offsets, JNI_ABORT);
-    env->ReleaseIntArrayElements(jLengths, lengths, JNI_ABORT);
-    delete[] vectors;
     if (result == -1) {
         jniThrowIOException(env, errno);
     }
+    delete[] vectors;
     return result;
 }
 
