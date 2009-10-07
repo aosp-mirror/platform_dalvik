@@ -3,4 +3,4 @@
 
 #define CHECK_DEBUG_AND_PROF() ((void)0)
 
-#define CHECK_JIT() ((void)0)
+#define CHECK_JIT() (0)

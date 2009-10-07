@@ -28,7 +28,7 @@
         inst = FETCH(0);                                                    \
         CHECK_DEBUG_AND_PROF();                                             \
         CHECK_TRACKED_REFS();                                               \
-        CHECK_JIT();                                                        \
+        if (CHECK_JIT()) GOTO_bail_switch();                                \
         goto *handlerTable[INST_INST(inst)];                                \
     }
 #else
@@ -88,4 +88,3 @@
             GOTO_bail_switch();                                             \
         }                                                                   \
     }
-
