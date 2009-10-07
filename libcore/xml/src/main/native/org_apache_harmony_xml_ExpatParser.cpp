@@ -790,18 +790,7 @@ static void processingInstruction(void* data, const char* target,
     env->CallVoidMethod(javaParser, processingInstructionMethod, javaTarget,
         javaInstructionData);
 
-    // We have to temporarily clear an exception before we can release local
-    // references.
-    jthrowable exception = env->ExceptionOccurred();
-    if (exception != NULL) {
-        env->ExceptionClear();
-    }
-
     env->DeleteLocalRef(javaInstructionData);
-
-    if (exception != NULL) {
-        env->Throw(exception);
-    }
 }
 
 /**
@@ -998,16 +987,7 @@ static void appendString(JNIEnv* env, jobject object, jint pointer, jstring xml,
         jniThrowExpatException(env, XML_GetErrorCode(parser));
     }
 
-    // We have to temporarily clear an exception before we can release local
-    // references.
-    jthrowable exception = env->ExceptionOccurred();
-    if (exception) {
-        env->ExceptionClear();
-        env->ReleaseStringChars(xml, characters);
-        env->Throw(exception);
-    } else {
-        env->ReleaseStringChars(xml, characters);
-    }
+    env->ReleaseStringChars(xml, characters);
 
     context->object = NULL;
     context->env = NULL;
@@ -1036,16 +1016,7 @@ static void appendCharacters(JNIEnv* env, jobject object, jint pointer,
         jniThrowExpatException(env, XML_GetErrorCode(parser));
     }
 
-    // We have to temporarily clear an exception before we can release local
-    // references.
-    jthrowable exception = env->ExceptionOccurred();
-    if (exception) {
-        env->ExceptionClear();
-        env->ReleaseCharArrayElements(xml, characters, JNI_ABORT);
-        env->Throw(exception);
-    } else {
-        env->ReleaseCharArrayElements(xml, characters, JNI_ABORT);
-    }
+    env->ReleaseCharArrayElements(xml, characters, JNI_ABORT);
 
     context->object = NULL;
     context->env = NULL;
@@ -1074,16 +1045,7 @@ static void appendBytes(JNIEnv* env, jobject object, jint pointer,
         jniThrowExpatException(env, XML_GetErrorCode(parser));
     }
 
-    // We have to temporarily clear an exception before we can release local
-    // references.
-    jthrowable exception = env->ExceptionOccurred();
-    if (exception) {
-        env->ExceptionClear();
-        env->ReleaseByteArrayElements(xml, bytes, JNI_ABORT);
-        env->Throw(exception);
-    } else {
-        env->ReleaseByteArrayElements(xml, bytes, JNI_ABORT);
-    }
+    env->ReleaseByteArrayElements(xml, bytes, JNI_ABORT);
 
     context->object = NULL;
     context->env = NULL;
