@@ -26,10 +26,10 @@
 /**
  * Structure to hold together useful JNI variables.
  */
-typedef struct {
+struct mydata_t {
     JNIEnv* env;
     jobject object;
-} mydata_t;
+};
 
 /**
  * Gives an array back containing all the X509 certificate's bytes.
@@ -116,5 +116,8 @@ static int verify_callback(int preverify_ok, X509_STORE_CTX *x509_store_ctx)
 
     return 1;
 }
+
+extern jobjectArray makeCipherList(JNIEnv* env, SSL_CTX* ssl);
+extern void setEnabledCipherSuites(JNIEnv* env, jstring controlString, SSL_CTX* ssl_ctx);
 
 #endif

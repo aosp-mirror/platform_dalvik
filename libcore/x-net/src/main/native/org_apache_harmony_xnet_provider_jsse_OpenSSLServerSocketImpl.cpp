@@ -157,38 +157,13 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_setena
 static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_getsupportedciphersuites(JNIEnv* env,
         jobject object)
 {
-    SSL_CTX* ctx;
-    SSL* ssl;
-    STACK_OF(SSL_CIPHER) *sk;
-    jobjectArray ret;
-    int i;
-    const char *c;
-
-    ctx = SSL_CTX_new(SSLv23_server_method());
-    ssl = SSL_new(ctx);
-    sk=SSL_get_ciphers(ssl);
-
-    ret= (jobjectArray)env->NewObjectArray(5,
-         env->FindClass("java/lang/String"),
-         env->NewStringUTF(""));
-
-    i = 0;
-    while (SSL_get_cipher_list(ssl,i) != NULL) {
-        i++;
+    SSL_CTX* ssl_ctx = SSL_CTX_new(SSLv23_server_method());
+    if (ssl_ctx == NULL) {
+        return NULL;
     }
-
-    ret = (jobjectArray)env->NewObjectArray(i,
-        env->FindClass("java/lang/String"),
-        env->NewStringUTF(""));
-
-    for (i=0; ; i++) {
-        c=SSL_get_cipher_list(ssl,i);
-        if (c == NULL) break;
-
-        env->SetObjectArrayElement(ret,i,env->NewStringUTF(c));
-    }
-
-    return ret;
+    jobjectArray result = makeCipherList(env, ssl_ctx);
+    SSL_CTX_free(ssl_ctx);
+    return result;
 }
 
 /**
@@ -198,52 +173,20 @@ static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImp
 static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_getenabledciphersuites(JNIEnv* env,
         jobject object)
 {
-    SSL_CTX* ctx;
-    SSL* ssl;
-    jobjectArray ret;
-    int i;
-    const char *c;
-
-    ctx = (SSL_CTX*)env->GetIntField(object, field_ssl_ctx);
-    ssl = SSL_new(ctx);
-
-    i = 0;
-    while (SSL_get_cipher_list(ssl,i) != NULL) {
-        i++;
-    }
-
-    ret = (jobjectArray)env->NewObjectArray(i,
-        env->FindClass("java/lang/String"),
-        env->NewStringUTF(""));
-
-    for (i = 0; ; i++) {
-        c = SSL_get_cipher_list(ssl,i);
-        if (c == NULL) break;
-
-        env->SetObjectArrayElement(ret,i,env->NewStringUTF(c));
-    }
-
-    return ret;
+    SSL_CTX* ssl_ctx =
+            reinterpret_cast<SSL_CTX*>(env->GetIntField(object, field_ssl_ctx));
+    return makeCipherList(env, ssl_ctx);
 }
 
 /**
  * Sets the ciphers suites that are enabled in the OpenSSL server.
  */
 static void org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_setenabledciphersuites(JNIEnv* env,
-        jobject object, jstring controlstring)
+        jobject object, jstring controlString)
 {
-    SSL_CTX* ctx;
-    const char *str;
-    int ret;
-
-    ctx = (SSL_CTX*)env->GetIntField(object, field_ssl_ctx);
-    str = env->GetStringUTFChars(controlstring, 0);
-    ret = SSL_CTX_set_cipher_list(ctx, str);
-
-    if(ret == 0) {
-        jniThrowException(env, "java/lang/IllegalArgumentException",
-                          "Illegal cipher suite strings.");
-    }    
+    SSL_CTX* ssl_ctx =
+            reinterpret_cast<SSL_CTX*>(env->GetIntField(object, field_ssl_ctx));
+    setEnabledCipherSuites(env, controlString, ssl_ctx);
 }
 
 /**

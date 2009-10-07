@@ -1414,45 +1414,13 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_setenabledpr
 static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_getsupportedciphersuites(JNIEnv* env,
         jobject object)
 {
-    SSL_CTX* ssl_ctx;
-    SSL* ssl;
-    jobjectArray ret;
-    int i;
-    const char *c;
-
-    ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-
+    SSL_CTX* ssl_ctx = SSL_CTX_new(SSLv23_client_method());
     if (ssl_ctx == NULL) {
         return NULL;
     }
-
-    ssl = SSL_new(ssl_ctx);
-
-    if (ssl == NULL) {
-        SSL_CTX_free(ssl_ctx);
-        return NULL;
-    }
-    
-    i = 0;
-    while (SSL_get_cipher_list(ssl,i) != NULL) {
-        i++;
-    }
-
-    ret = (jobjectArray)env->NewObjectArray(i,
-        env->FindClass("java/lang/String"),
-        env->NewStringUTF(""));
-
-    for (i=0; ; i++) {
-        c=SSL_get_cipher_list(ssl,i);
-        if (c == NULL) break;
-
-        env->SetObjectArrayElement(ret,i,env->NewStringUTF(c));
-    }
-
-    SSL_free(ssl);
+    jobjectArray result = makeCipherList(env, ssl_ctx);
     SSL_CTX_free(ssl_ctx);
-
-    return ret;
+    return result;
 }
 
 /**
@@ -1462,57 +1430,66 @@ static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_gets
 static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_getenabledciphersuites(JNIEnv* env,
         jobject object)
 {
-    SSL_CTX* ssl_ctx;
-    SSL* ssl;
-    jobjectArray ret;
-    int i;
-    const char *c;
-
-    ssl = getSslPointer(env, object, false);
-    if (ssl == NULL) {
-        ssl_ctx = (SSL_CTX*)env->GetIntField(object, field_ssl_ctx);
-        ssl = SSL_new(ssl_ctx);
-        env->SetIntField(object, field_ssl, (int)ssl);
-    }
-
-    i = 0;
-    while (SSL_get_cipher_list(ssl,i) != NULL) {
-        i++;
-    }
-
-    ret = (jobjectArray)env->NewObjectArray(i,
-        env->FindClass("java/lang/String"),
-        env->NewStringUTF(""));
-
-    for (i = 0; ; i++) {
-        c = SSL_get_cipher_list(ssl,i);
-        if (c == NULL) break;
-
-        env->SetObjectArrayElement(ret,i,env->NewStringUTF(c));
-    }
-
-    return ret;
+    SSL_CTX* ssl_ctx =
+            reinterpret_cast<SSL_CTX*>(env->GetIntField(object, field_ssl_ctx));
+    return makeCipherList(env, ssl_ctx);
 }
 
 /**
  * Sets the ciphers suites that are enabled in the OpenSSL client.
  */
 static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_setenabledciphersuites(JNIEnv* env, jobject object,
-        jstring controlstring)
+        jstring controlString)
 {
-    SSL_CTX* ctx;
-    const char *str;
-    int ret;
+    SSL_CTX* ssl_ctx =
+            reinterpret_cast<SSL_CTX*>(env->GetIntField(object, field_ssl_ctx));
+    setEnabledCipherSuites(env, controlString, ssl_ctx);
+}
 
-    ctx = (SSL_CTX*)env->GetIntField(object, field_ssl_ctx);
-    str = env->GetStringUTFChars(controlstring, 0);
-    ret = SSL_CTX_set_cipher_list(ctx, str);
+static jobjectArray makeCipherList(JNIEnv* env, SSL* ssl) {
+    // Count the ciphers.
+    int cipherCount = 0;
+    while (SSL_get_cipher_list(ssl, cipherCount) != NULL) {
+        ++cipherCount;
+    }
 
-    if (ret == 0) {
+    // Create a String[].
+    jclass stringClass = env->FindClass("java/lang/String");
+    if (stringClass == NULL) {
+        return NULL;
+    }
+    jobjectArray array = env->NewObjectArray(cipherCount, stringClass, NULL);
+    if (array == NULL) {
+        return NULL;
+    }
+
+    // Fill in the cipher names.
+    for (int i = 0; i < cipherCount; ++i) {
+        const char* c = SSL_get_cipher_list(ssl, i);
+        env->SetObjectArrayElement(array, i, env->NewStringUTF(c));
+    }
+    return array;
+}
+
+jobjectArray makeCipherList(JNIEnv* env, SSL_CTX* ssl_ctx) {
+    SSL* ssl = SSL_new(ssl_ctx);
+    if (ssl == NULL) {
+        return NULL;
+    }
+    jobjectArray result = makeCipherList(env, ssl);
+    SSL_free(ssl);
+    return result;
+}
+
+void setEnabledCipherSuites(JNIEnv* env, jstring controlString, SSL_CTX* ssl_ctx) {
+    const char* str = env->GetStringUTFChars(controlString, NULL);
+    int rc = SSL_CTX_set_cipher_list(ssl_ctx, str);
+    env->ReleaseStringUTFChars(controlString, str);
+    if (rc == 0) {
         freeSslErrorState();
         jniThrowException(env, "java/lang/IllegalArgumentException",
                           "Illegal cipher suite strings.");
-    }    
+    }
 }
 
 #define SSL_AUTH_MASK           0x00007F00L
