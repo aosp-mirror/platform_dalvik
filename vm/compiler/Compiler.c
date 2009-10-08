@@ -100,13 +100,14 @@ void dvmCompilerDrainQueue(void)
 
 static void *compilerThreadStart(void *arg)
 {
+    dvmChangeStatus(NULL, THREAD_VMWAIT);
+
     dvmLockMutex(&gDvmJit.compilerLock);
     /*
      * Since the compiler thread will not touch any objects on the heap once
      * being created, we just fake its state as VMWAIT so that it can be a
      * bit late when there is suspend request pending.
      */
-    dvmChangeStatus(NULL, THREAD_VMWAIT);
     while (!gDvmJit.haltCompilerThread) {
         if (workQueueLength() == 0) {
             int cc;
@@ -142,6 +143,13 @@ static void *compilerThreadStart(void *arg)
     }
     pthread_cond_signal(&gDvmJit.compilerQueueEmpty);
     dvmUnlockMutex(&gDvmJit.compilerLock);
+
+    /*
+     * As part of detaching the thread we need to call into Java code to update
+     * the ThreadGroup, and we should not be in VMWAIT state while executing
+     * interpreted code.
+     */
+    dvmChangeStatus(NULL, THREAD_RUNNING);
 
     LOGD("Compiler thread shutting down\n");
     return NULL;
