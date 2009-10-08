@@ -163,7 +163,7 @@ bool dvmCompilerSetupCodeCache(void)
     /* Allocate the code cache */
     gDvmJit.codeCache = mmap(0, CODE_CACHE_SIZE,
                           PROT_READ | PROT_WRITE | PROT_EXEC,
-                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+                          MAP_PRIVATE | MAP_ANON, -1, 0);
     if (gDvmJit.codeCache == MAP_FAILED) {
         LOGE("Failed to create the code cache: %s\n", strerror(errno));
         return false;
