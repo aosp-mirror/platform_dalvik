@@ -69,6 +69,11 @@ public class CoreTestRunner extends TestRunner {
     private int fTimeout; 
 
     private int fStep = 1;
+
+    /**
+     * The path to write XML reports to, or {@code null} for no reports.
+     */
+    private String xmlReportsDirectory;
     
     /**
      * Creates a new instance of our CoreTestRunner.
@@ -127,11 +132,24 @@ public class CoreTestRunner extends TestRunner {
          * Make sure the original suite is unreachable after we have
          * created the new one, so GC can dispose terminated tests.
          */
-        suite = new CoreTestSuite(suite, fFlags, fStep, null);
-        
-        return super.doRun(suite, wait);
+        CoreTestSuite coreTestSuite = new CoreTestSuite(suite, fFlags, fStep, null);
+
+        XmlReportPrinter xmlReportPrinter = xmlReportsDirectory != null
+                ? new XmlReportPrinter(coreTestSuite)
+                : null;
+
+        TestResult result = super.doRun(suite, wait);
+
+        if (xmlReportPrinter != null) {
+            System.out.print("Printing XML Reports... ");
+            xmlReportPrinter.setResults(result);
+            int numFiles = xmlReportPrinter.generateReports(xmlReportsDirectory);
+            System.out.println(numFiles + " files written.");
+        }
+
+        return result;
     }
-    
+
     /**
      * Prints a help screen on the console.
      */
@@ -162,6 +180,7 @@ public class CoreTestRunner extends TestRunner {
         System.out.println("    --isolate-all");
         System.out.println("    --isolate-none");
         System.out.println("    --verbose");
+        System.out.println("    --xml-reports-directory <path>");
         System.out.println("    --help");
         System.out.println();
         System.out.println("Default parameters are:");
@@ -270,6 +289,8 @@ public class CoreTestRunner extends TestRunner {
                 //    victimName = args[++i];
                 } else if (args[i].equals("--dry-run")) {
                     fFlags = fFlags | CoreTestSuite.DRY_RUN;
+                } else if (args[i].equals("--xml-reports-directory")) {
+                    xmlReportsDirectory = args[++i];
                 } else if (args[i].equals("--help")) {
                     showHelp();
                     System.exit(1);

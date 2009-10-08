@@ -98,6 +98,8 @@ public class CoreTestSuite implements Test {
     public static final int REVERSE = 512;
 
     public static final int DRY_RUN = 1024;
+
+    private final String name;
     
     /**
      * The total number of tests in the original suite.
@@ -154,7 +156,8 @@ public class CoreTestSuite implements Test {
      */
     public CoreTestSuite(Test suite, int flags, int step, TestCase victim) {
         super();
-        
+
+        name = suite.toString();
         fStep = step;
         addAndFlatten(suite, flags);
         fVictim = victim;
@@ -269,27 +272,27 @@ public class CoreTestSuite implements Test {
     public void run(TestResult result) {
         // Run tests
         int i = 0;
-        
+
         while (fTests.size() != 0 && !result.shouldStop()) {
             TestCase test = (TestCase)fTests.elementAt(i);
             
             Thread.currentThread().setContextClassLoader(
                     test.getClass().getClassLoader());
-            
+
             test.run(result);
 
             /*
             if (fVictim != null) {
                 TestResult dummy = fVictim.run();
-                
+
                 if (dummy.failureCount() != 0) {
                     result.addError(fTests.elementAt(i), new RuntimeException(
-                            "Probable side effect",  
+                            "Probable side effect",
                             ((TestFailure)dummy.failures().nextElement()).
                             thrownException()));
                 } else if (dummy.errorCount() != 0) {
                     result.addError(fTests.elementAt(i), new RuntimeException(
-                            "Probable side effect",  
+                            "Probable side effect",
                             ((TestFailure)dummy.errors().nextElement()).
                             thrownException()));
                 }
@@ -352,4 +355,7 @@ public class CoreTestSuite implements Test {
         return fTests.size();
     }
 
+    @Override public String toString() {
+        return name;
+    }
 }
