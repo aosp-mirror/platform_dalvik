@@ -7,9 +7,9 @@ LOCAL_SRC_FILES := \
 	Filesystem.java \
 	Git.java \
 	Module.java \
-	Modules.java \
 	MappedDirectory.java \
 	PullHarmonyCode.java \
+	PushAndroidCode.java \
 	Svn.java
 
 LOCAL_MODULE:= integrate

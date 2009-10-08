@@ -102,8 +102,61 @@ public class PullHarmonyCode {
         }
     }
 
+
     public static void main(String[] args) {
-//        new PullHarmonyCode(527399, 802921).pull(Modules.CRYPTO);
-        new PullHarmonyCode(772995, 802921).pull(Modules.ARCHIVE);
+        if (args.length < 3) {
+            printUsage();
+            return;
+        }
+
+        int currentSvnRev = Integer.parseInt(args[0]);
+        int targetSvnRev = Integer.parseInt(args[1]);
+
+        if (currentSvnRev < 527399 || targetSvnRev <= currentSvnRev) {
+            System.out.println("Invalid SVN revision range: "
+                    + currentSvnRev + ".." + targetSvnRev);
+            return;
+        }
+
+        Module module = Module.VALUES.get(args[2]);
+        if (module == null) {
+            System.out.println("No such module: " + args[2]);
+            return;
+        }
+
+        PullHarmonyCode puller = new PullHarmonyCode(currentSvnRev, targetSvnRev);
+        puller.pull(module);
+    }
+
+    private static void printUsage() {
+        System.out.println("This tool will prepare a three-way merge between the latest Harmony");
+        System.out.println("the latest Dalvik, and their common ancestor. It downloads both old");
+        System.out.println("and new versions of Harmony code from SVN for better merge results.");
+        System.out.println();
+        System.out.println("Usage: PullHarmonyCode <current_rev> <target_rev> <module>...");
+        System.out.println();
+        System.out.println("  <current_rev>  is the SVN revision of the Harmony code that was");
+        System.out.println("                 most recently integrated into Dalvik. This should");
+        System.out.println("                 be a number greater than 527399. The current");
+        System.out.println("                 revision for each module is tracked at");
+        System.out.println("                 http://go/dalvik/harmony");
+        System.out.println();
+        System.out.println("    <target_rev> is the SVN revision of the Harmony code to be");
+        System.out.println("                 merged into Dalvik. This should be a number greater");
+        System.out.println("                 than <current_rev>. The latest Harmony revision is");
+        System.out.println("                 tracked at");
+        System.out.println("                 http://svn.apache.org/viewvc/harmony/?root=Apache-SVN");
+        System.out.println();
+        System.out.println("        <module> is one of " + Module.VALUES.keySet());
+        System.out.println();
+        System.out.println("This program must be executed from within the dalvik/libcore directory");
+        System.out.println("of an Android git client. Such a client must be synced and contain no");
+        System.out.println("uncommitted changes. Upon termination, a new Git branch with the");
+        System.out.println("integrated changes will be active. This branch may require some manual");
+        System.out.println("merging.");
+        System.out.println();
+        System.out.println("Example usage:");
+        System.out.println("  java -cp ../../out/host/linux-x86/framework/integrate.jar PullAndroidCode \\");
+        System.out.println("    527399  802921 security");
     }
 }

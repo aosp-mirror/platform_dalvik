@@ -14,13 +14,57 @@
  * limitations under the License.
  */
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * A logical unit of code shared between Apache Harmony and Dalvik.
  */
 class Module {
+
+    static final Map<String, Module> VALUES;
+    static {
+        Map<String, Module> valuesMutable = new LinkedHashMap<String, Module>();
+
+        String svnRoot = "http://svn.apache.org/repos/asf/harmony/enhanced/classlib/trunk/modules";
+        valuesMutable.put("archive", new Module.Builder(svnRoot, "archive")
+                .mapDirectory("archive/src/main/native/archive/shared",
+                        "archive/src/main/native")
+                .mapDirectory("archive/src/main/native/zip/shared",
+                        "archive/src/main/native")
+                .build());
+
+        valuesMutable.put("crypto", new Module.Builder(svnRoot, "crypto")
+                .mapDirectory("crypto/src/test/api/java.injected/javax",
+                        "crypto/src/test/java/org/apache/harmony/crypto/tests/javax")
+                .mapDirectory("crypto/src/test/api/java",
+                        "crypto/src/test/java")
+                .mapDirectory("crypto/src/test/resources/serialization",
+                        "crypto/src/test/java/serialization")
+                .mapDirectory("crypto/src/test/support/common/java",
+                        "crypto/src/test/java")
+                .build());
+
+        valuesMutable.put("regex", new Module.Builder(svnRoot, "regex").build());
+
+        valuesMutable.put("security", new Module.Builder(svnRoot, "security")
+                .mapDirectory("security/src/main/java/common",
+                        "security/src/main/java")
+                .mapDirectory("security/src/main/java/unix/org",
+                        "security/src/main/java/org")
+                .mapDirectory("security/src/test/api/java",
+                        "security/src/test/java")
+                .build());
+
+        valuesMutable.put("text", new Module.Builder(svnRoot, "text").build());
+
+        valuesMutable.put("x-net", new Module.Builder(svnRoot, "x-net").build());
+
+        VALUES = Collections.unmodifiableMap(valuesMutable);
+    }
 
     private final String svnBaseUrl;
     private final String path;

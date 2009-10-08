@@ -32,11 +32,28 @@ class Filesystem {
      * directory is nonempty.
      */
     public int moveContents(String source, String target) {
+        return copyContents(true, source, target);
+    }
+
+    /**
+     * Copies all of the files in {@code source} to {@code target}, one at a
+     * time. Unlike {@code move}, this approach works even if the target
+     * directory is nonempty.
+     */
+    public int copyContents(String source, String target) {
+        return copyContents(false, source, target);
+    }
+
+    private int copyContents(boolean move, String source, String target) {
         List<String> files = new Command("find", source, "-type", "f") .execute();
         for (String file : files) {
             String targetFile = target + "/" + file.substring(source.length());
             mkdir(parent(targetFile));
-            new Command("mv", "-i", file, targetFile).execute();
+            if (move) {
+                new Command("mv", "-i", file, targetFile).execute();
+            } else {
+                new Command("cp", file, targetFile).execute();
+            }
         }
         return files.size();
     }
