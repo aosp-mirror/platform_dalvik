@@ -22,11 +22,10 @@
 package java.text;
 
 import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.Vector;
-
-import org.apache.harmony.luni.util.PriviAction;
 
 /**
  * Performs locale-sensitive string comparison. A concrete subclass,
@@ -163,7 +162,11 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
     static {
         // CACHE_SIZE includes key and value, so needs to be double
         String cacheSize = AccessController
-                .doPrivileged(new PriviAction<String>("collator.cache")); //$NON-NLS-1$
+                .doPrivileged(new PrivilegedAction<String>() {
+                    public String run() {
+                        return System.getProperty("collator.cache"); //$NON-NLS-1$
+                    }
+                });
         if (cacheSize != null) {
             try {
                 CACHE_SIZE = Integer.parseInt(cacheSize);

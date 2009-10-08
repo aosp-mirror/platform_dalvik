@@ -555,8 +555,10 @@ public abstract class NumberFormat extends Format {
     public Number parse(String string) throws ParseException {
         ParsePosition pos = new ParsePosition(0);
         Number number = parse(string, pos);
-        if (pos.getErrorIndex() != -1 || pos.getIndex() == 0) {
-            throw new ParseException(null, pos.getErrorIndex());
+        if (pos.getIndex() == 0) {
+            // text.1D=Unparseable number: {0}
+            throw new ParseException(
+                    Messages.getString("text.1D", string), pos.getErrorIndex()); //$NON-NLS-1$
         }
         return number;
     }

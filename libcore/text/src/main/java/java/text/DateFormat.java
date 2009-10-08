@@ -666,7 +666,7 @@ public abstract class DateFormat extends Format {
     public Date parse(String string) throws ParseException {
         ParsePosition position = new ParsePosition(0);
         Date date = parse(string, position);
-        if (position.getErrorIndex() != -1 || position.getIndex() == 0) {
+        if (position.getIndex() == 0) {
             // text.19=Unparseable date: {0}
             throw new ParseException(
                     Messages.getString("text.19", string), position.getErrorIndex()); //$NON-NLS-1$

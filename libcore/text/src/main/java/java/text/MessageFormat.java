@@ -859,8 +859,10 @@ public class MessageFormat extends Format {
     public Object[] parse(String string) throws ParseException {
         ParsePosition position = new ParsePosition(0);
         Object[] result = parse(string, position);
-        if (position.getErrorIndex() != -1 || position.getIndex() == 0) {
-            throw new ParseException(null, position.getErrorIndex());
+        if (position.getIndex() == 0) {
+            // text.1B=MessageFormat.parseObject(String) parse failure
+            throw new ParseException(
+                    Messages.getString("text.1B"), position.getErrorIndex()); //$NON-NLS-1$
         }
         return result;
     }

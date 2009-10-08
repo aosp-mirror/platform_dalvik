@@ -37,15 +37,13 @@ public class ParseExceptionTest extends junit.framework.TestCase {
         args = {java.lang.String.class, int.class}
     )
     public void test_ConstructorLjava_lang_StringI() {
-        // Test for method java.text.ParseException(java.lang.String, int)
-        // SM
         try {
             DateFormat df = DateFormat.getInstance();
             df.parse("HelloWorld");
+            fail("ParseException not created/thrown.");
         } catch (ParseException e) {
-            return;
+            // expected
         }
-        fail("ParseException not created/thrown.");
     }
 
     /**
@@ -58,27 +56,11 @@ public class ParseExceptionTest extends junit.framework.TestCase {
         args = {}
     )
     public void test_getErrorOffset() {
-        // Test for method int java.text.ParseException.getErrorOffset()
-        // SM
         try {
             DateFormat df = DateFormat.getInstance();
             df.parse("1999HelloWorld");
         } catch (ParseException e) {
             assertEquals("getErrorOffsetFailed.", 4, e.getErrorOffset());
         }
-    }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
     }
 }
