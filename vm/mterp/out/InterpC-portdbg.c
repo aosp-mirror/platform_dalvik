@@ -421,11 +421,9 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     checkDebugAndProf(pc, fp, self, curMethod, &debugIsMethodEntry)
 
 #if defined(WITH_JIT)
-#define CHECK_JIT() \
-    if (dvmCheckJit(pc, self, interpState)) GOTO_bail_switch()
+#define CHECK_JIT() (dvmCheckJit(pc, self, interpState))
 #else
-#define CHECK_JIT() \
-    ((void)0)
+#define CHECK_JIT() (0)
 #endif
 
 /* File: portable/stubdefs.c */
@@ -459,7 +457,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         inst = FETCH(0);                                                    \
         CHECK_DEBUG_AND_PROF();                                             \
         CHECK_TRACKED_REFS();                                               \
-        CHECK_JIT();                                                        \
+        if (CHECK_JIT()) GOTO_bail_switch();                                \
         goto *handlerTable[INST_INST(inst)];                                \
     }
 #else
@@ -519,7 +517,6 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
             GOTO_bail_switch();                                             \
         }                                                                   \
     }
-
 
 /* File: c/opcommon.c */
 /* forward declarations of goto targets */
@@ -1546,6 +1543,7 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
         /* just fall through to instruction loop or threaded kickstart */
         break;
     case kInterpEntryReturn:
+        CHECK_JIT();
         goto returnFromMethod;
     case kInterpEntryThrow:
         goto exceptionThrown;

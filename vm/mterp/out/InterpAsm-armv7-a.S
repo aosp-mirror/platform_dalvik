@@ -9144,6 +9144,8 @@ common_updateProfile:
 common_selectTrace:
     mov     r2,#kJitTSelectRequest      @ ask for trace selection
     str     r2,[rGLUE,#offGlue_jitState]
+    mov     r2,#kInterpEntryInstr       @ normal entry reason
+    str     r2,[rGLUE,#offGlue_entryPoint]
     mov     r1,#1                       @ set changeInterp
     b       common_gotoBail
 
@@ -9232,6 +9234,9 @@ common_backwardBranch:
 common_periodicChecks:
     ldr     r3, [rGLUE, #offGlue_pSelfSuspendCount] @ r3<- &suspendCount
 
+    @ speculatively store r0 before it is clobbered by dvmCheckSuspendPending
+    str     r0, [rGLUE, #offGlue_entryPoint]
+
 #if defined(WITH_DEBUGGER)
     ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
 #endif
@@ -9272,7 +9277,6 @@ common_periodicChecks:
 
 3:  @ debugger/profiler enabled, bail out
     add     rPC, rPC, r9                @ update rPC
-    str     r0, [rGLUE, #offGlue_entryPoint]
     mov     r1, #1                      @ "want switch" = true
     b       common_gotoBail
 

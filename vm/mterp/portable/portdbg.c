@@ -5,9 +5,7 @@
     checkDebugAndProf(pc, fp, self, curMethod, &debugIsMethodEntry)
 
 #if defined(WITH_JIT)
-#define CHECK_JIT() \
-    if (dvmCheckJit(pc, self, interpState)) GOTO_bail_switch()
+#define CHECK_JIT() (dvmCheckJit(pc, self, interpState))
 #else
-#define CHECK_JIT() \
-    ((void)0)
+#define CHECK_JIT() (0)
 #endif

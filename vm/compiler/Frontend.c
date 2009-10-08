@@ -47,6 +47,8 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
     return insnWidth;
 }
 
+#define UNKNOWN_TARGET 0xffffffff
+
 /*
  * Identify block-ending instructions and collect supplemental information
  * regarding the following instructions.
@@ -63,6 +65,8 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
         case OP_RETURN_WIDE:
         case OP_RETURN_OBJECT:
         case OP_THROW:
+          *target = UNKNOWN_TARGET;
+          break;
         case OP_INVOKE_VIRTUAL:
         case OP_INVOKE_VIRTUAL_RANGE:
         case OP_INVOKE_INTERFACE:
@@ -146,7 +150,8 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
 
         default:
             return false;
-    } return true;
+    }
+    return true;
 }
 
 /*
@@ -524,7 +529,8 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
         /* Target block not included in the trace */
         if (curBB->taken == NULL &&
-            (isInvoke || (targetOffset != curOffset))) {
+            (isInvoke || (targetOffset != UNKNOWN_TARGET &&
+                          targetOffset != curOffset))) {
             BasicBlock *newBB;
             if (isInvoke) {
                 /* Monomorphic callee */

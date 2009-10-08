@@ -644,7 +644,11 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             break;
 #endif
         default:
-            dvmAbort();
+            if (!debugOrProfile) {
+                LOGE("Unexpected JIT state: %d", interpState->jitState);
+                dvmAbort();
+            }
+            break;
     }
     return switchInterp;
 }
@@ -908,6 +912,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 #endif
                 break;
             default:
+                LOGE("Unexpected JIT state: %d", interpState->jitState);
                 dvmAbort();
         }
     }
