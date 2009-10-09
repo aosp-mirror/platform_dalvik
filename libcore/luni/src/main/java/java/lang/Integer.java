@@ -526,7 +526,7 @@ public final class Integer extends Number implements Comparable<Integer> {
             int quot = positive_value;
             do {
                 int res = quot / 10;
-                int digit_value = quot - (res * 10);
+                int digit_value = quot - ((res << 3) + (res << 1));
                 digit_value += '0';
                 buffer[last_digit++] = (char) digit_value;
                 quot = res;

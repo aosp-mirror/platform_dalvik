@@ -17,9 +17,7 @@
 
 package java.io;
 
-// BEGIN android-added
 import org.apache.harmony.luni.util.Msg;
-// END android-added
 
 /**
  * Wraps an existing {@link InputStream} and counts the line terminators
@@ -171,19 +169,15 @@ public class LineNumberInputStream extends FilterInputStream {
      */
     @Override
     public int read(byte[] buffer, int offset, int length) throws IOException {
-        // BEGIN android-changed
-        if (buffer == null) {
-            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        // Force buffer null check first!
+        if (offset > buffer.length || offset < 0) {
+            // K002e=Offset out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
+        } 
+        if (length < 0 || length > buffer.length - offset) {
+            // K0031=Length out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
         }
-        // avoid int overflow
-        // Exception priorities (in case of multiple errors) differ from
-        // RI, but are spec-compliant.
-        // removed redundant check, used (offset | length) < 0
-        // instead of (offset < 0) || (length < 0) to safe one operation
-        if ((offset | length) < 0 || length > buffer.length - offset) {
-            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
-        }
-        // END android-changed
 
         for (int i = 0; i < length; i++) {
             int currentChar;

@@ -240,7 +240,7 @@ createFloat1 (JNIEnv * env, U_64 * f, IDATA length, jint e)
     }
   else if (e >= 0 && e < 39)
     {
-      result = (jfloat) (toDoubleHighPrecision (f, length) * pow (10.0, e));
+      result = (jfloat) (toDoubleHighPrecision (f, length) * pow (10.0, (double) e));
     }
   else if (e >= 39)
     {
@@ -260,7 +260,7 @@ createFloat1 (JNIEnv * env, U_64 * f, IDATA length, jint e)
       int dexp;
       U_32 fmant, fovfl;
       U_64 dmant;
-      dresult = toDoubleHighPrecision (f, length) / pow (10.0, -e);
+      dresult = toDoubleHighPrecision (f, length) / pow (10.0, (double) -e);
       if (IS_DENORMAL_DBL (dresult))
         {
           FLOAT_TO_INTBITS (result) = 0;

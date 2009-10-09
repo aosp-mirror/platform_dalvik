@@ -20,6 +20,8 @@ package java.util;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 
+import org.apache.harmony.luni.util.Msg;
+
 /**
  * {@code Arrays} contains static methods which operate on arrays.
  *
@@ -492,14 +494,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(byte[] array, int start, int end, byte value) {
-        // Check for null first
-        int length = array.length;
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        if (start < 0 || end > length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -536,14 +531,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(short[] array, int start, int end, short value) {
-        // Check for null first
-        int length = array.length;
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        if (start < 0 || end > length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -580,14 +568,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(char[] array, int start, int end, char value) {
-        // Check for null first
-        int length = array.length;
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        if (start < 0 || end > length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -624,14 +605,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(int[] array, int start, int end, int value) {
-        // Check for null first
-        int length = array.length;
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        if (start < 0 || end > length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -668,14 +642,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(long[] array, int start, int end, long value) {
-        // Check for null first
-        int length = array.length;
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        if (start < 0 || end > length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -712,14 +679,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(float[] array, int start, int end, float value) {
-        // Check for null first
-        int length = array.length;
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        if (start < 0 || end > length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -756,14 +716,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(double[] array, int start, int end, double value) {
-        // Check for null first
-        int length = array.length;
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        if (start < 0 || end > length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -800,14 +753,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(boolean[] array, int start, int end, boolean value) {
-        // Check for null first
-        int length = array.length;
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        if (start < 0 || end > length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -844,14 +790,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(Object[] array, int start, int end, Object value) {
-        // Check for null first
-        int length = array.length;
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        if (start < 0 || end > length) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
+        checkBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -1690,11 +1629,17 @@ public class Arrays {
 
     private static void checkBounds(int arrLength, int start, int end) {
         if (start > end) {
-            throw new IllegalArgumentException("start(" + start //$NON-NLS-1$
-                    + ") > end(" + end + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+            // K0033=Start index ({0}) is greater than end index ({1})
+            throw new IllegalArgumentException(Msg.getString("K0033", //$NON-NLS-1$
+                    Integer.valueOf(start), Integer.valueOf(end)));
         }
-        if (start < 0 || end > arrLength) {
-            throw new ArrayIndexOutOfBoundsException();
+        if (start < 0) {
+            // K0052=Array index out of range\: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K0052", start)); //$NON-NLS-1$
+        }
+        if (end > arrLength) {
+            // K0052=Array index out of range\: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K0052", end)); //$NON-NLS-1$
         }
     }
 

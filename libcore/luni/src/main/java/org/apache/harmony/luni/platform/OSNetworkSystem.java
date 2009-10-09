@@ -829,4 +829,28 @@ final class OSNetworkSystem implements INetworkSystem {
 
     static native int writeSocketDirectImpl(FileDescriptor fd, int address, int offset, int count)
             throws IOException;
+
+    // BEGIN android-removed
+    // /**
+    //  * Write given buffers to a socket. The given buffers is a Object array, the
+    //  * element of array must be direct buffer or a byte array to be written.
+    //  *
+    //  * @param fd
+    //  *            the socket on which to write the bytes
+    //  * @param buffers
+    //  *            the element of array must be direct buffer or a byte array to
+    //  *            be written
+    //  * @param offsets
+    //  *            the index of the first byte to be write
+    //  * @param counts
+    //  *            the maximum number of bytes to be written
+    //  * @param length
+    //  *            the size of buffer array
+    //  * @return the actual number of bytes written
+    //  * @throws IOException
+    //  *             if there is an underlying socket problem
+    //  */
+    // public native int writev(FileDescriptor fd, Object[] buffers,
+    //         int[] offsets, int[] counts, int length) throws IOException;
+    // END android-removed
 }

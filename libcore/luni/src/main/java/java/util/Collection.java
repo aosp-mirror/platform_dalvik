@@ -24,7 +24,7 @@ package java.util;
  * of {@code Collection}s.
  *
  * All direct or indirect implementations of {@code Collection} should implement at
- * least two constuctors. One with no parameters which creates an empty
+ * least two constructors. One with no parameters which creates an empty
  * collection and one with a parameter of type {@code Collection}. This second
  * constructor can be used to create a collection of different type as the
  * initial collection but with the same elements. Implementations of {@code Collection}
@@ -138,7 +138,7 @@ public interface Collection<E> extends Iterable<E> {
 
     /**
      * Tests whether this {@code Collection} contains all objects contained in the
-     * specified {@code Collection}. If an elemenet {@code elem} is contained several
+     * specified {@code Collection}. If an element {@code elem} is contained several
      * times in the specified {@code Collection}, the method returns {@code true} even
      * if {@code elem} is contained only once in this {@code Collection}.
      *

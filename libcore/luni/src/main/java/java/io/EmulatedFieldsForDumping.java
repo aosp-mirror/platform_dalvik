@@ -192,7 +192,6 @@ class EmulatedFieldsForDumping extends ObjectOutputStream.PutField {
      */
     @Override
     @Deprecated
-    @SuppressWarnings("deprecation")
     public void write(ObjectOutput output) throws IOException {
         EmulatedFields.ObjectSlot[] slots = emulatedFields.slots();
         for (int i = 0; i < slots.length; i++) {

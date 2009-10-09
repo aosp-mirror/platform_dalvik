@@ -25,7 +25,7 @@ import org.apache.harmony.luni.util.Msg;
 
 /**
  * The superclass of all enumerated types. Actual enumeration types inherit from
- * this class, but extending this class does not make a class an enumration
+ * this class, but extending this class does not make a class an enumeration
  * type, since the compiler needs to generate special information for it.
  */
 public abstract class Enum<E extends Enum<E>> implements Serializable,

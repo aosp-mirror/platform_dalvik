@@ -66,6 +66,11 @@ public interface INetworkSystem {
     public int writeDirect(FileDescriptor fd, int address, int offset, int count)
             throws IOException;
 
+    // BEGIN android-removed
+    // public int writev(FileDescriptor fd, Object[] buffers, int[] offsets,
+    //         int[] counts, int length) throws IOException;
+    // END android-removed
+
     public void setNonBlocking(FileDescriptor aFD, boolean block)
             throws IOException;
 

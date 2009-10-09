@@ -21,12 +21,15 @@
 
 package org.apache.harmony.luni.platform;
 
-
 /**
  * The platform address class is an unsafe virtualization of an OS memory block.
- * 
  */
 public class PlatformAddress implements ICommonDataTypes, Comparable {
+
+    /**
+     * This final field defines the sentinel for an unknown address value.
+     */
+    static final int UNKNOWN = -1;
 
     /**
      * This final field defines the size of an address on this platform.
@@ -38,11 +41,16 @@ public class PlatformAddress implements ICommonDataTypes, Comparable {
      */
     public static final PlatformAddress NULL = new PlatformAddress(0, 0);
 
+    /**
+     * INVALID is the canonical address with an invalid value
+     * (i.e. a non-address).
+     */
+    public static final PlatformAddress INVALID =
+            new PlatformAddress(UNKNOWN, UNKNOWN);
+
     public static final IMemorySpy memorySpy = new RuntimeMemorySpy();
 
     static final IMemorySystem osMemory = Platform.getMemorySystem();
-
-    static final long UNKNOWN = -1;
 
     final int osaddr;
     
@@ -65,7 +73,7 @@ public class PlatformAddress implements ICommonDataTypes, Comparable {
         memorySpy.autoFree(this);
     }
     
-    public PlatformAddress duplicate(){
+    public PlatformAddress duplicate() {
         return PlatformAddressFactory.on(osaddr, size);
     }
 
@@ -264,7 +272,7 @@ public class PlatformAddress implements ICommonDataTypes, Comparable {
         return "PlatformAddress[" + osaddr + "]"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public final long getSize(){
+    public final long getSize() {
         return size;
     }
 

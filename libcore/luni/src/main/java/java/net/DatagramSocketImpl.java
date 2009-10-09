@@ -104,17 +104,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
     }
 
     /**
-     * Gets the value for the specified socket option.
-     * 
-     * @param optID
-     *            the ID of the socket option to be retrieved.
-     * @return the requested option value.
-     * @throws SocketException
-     *                if an error occurs while accessing the option.
-     */
-    public abstract Object getOption(int optID) throws SocketException;
-
-    /**
      * Gets the time-to-live (TTL) for multicast packets sent on this socket.
      * 
      * @return the time-to-live option as a byte value.
@@ -230,19 +219,6 @@ public abstract class DatagramSocketImpl implements SocketOptions {
      *                if an error occurs while sending the packet.
      */
     protected abstract void send(DatagramPacket pack) throws IOException;
-
-    /**
-     * Sets the value for the specified socket option.
-     * 
-     * @param optID
-     *            the ID of the socket option to be set.
-     * @param val
-     *            the value of the option.
-     * @throws SocketException
-     *                if an error occurs while setting the option.
-     */
-    public abstract void setOption(int optID, Object val)
-            throws SocketException;
 
     /**
      * Sets the time-to-live (TTL) option for multicast packets sent on this

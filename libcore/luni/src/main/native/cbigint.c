@@ -253,6 +253,34 @@ simpleMultiplyAddHighPrecision (U_64 * arg1, IDATA length, U_64 arg2,
     }
 }
 
+#ifndef HY_LITTLE_ENDIAN
+void simpleMultiplyAddHighPrecisionBigEndianFix(U_64 *arg1, IDATA length, U_64 arg2, U_32 *result) {
+	/* Assumes result can hold the product and arg2 only holds 32 bits
+	   of information */
+	U_64 product;
+	IDATA index, resultIndex;
+
+	index = resultIndex = 0;
+	product = 0;
+
+	do {
+		product = HIGH_IN_U64(product) + result[halfAt(resultIndex)] + arg2 * LOW_U32_FROM_PTR(arg1 + index);
+		result[halfAt(resultIndex)] = LOW_U32_FROM_VAR(product);
+		++resultIndex;
+		product = HIGH_IN_U64(product) + result[halfAt(resultIndex)] + arg2 * HIGH_U32_FROM_PTR(arg1 + index);
+		result[halfAt(resultIndex)] = LOW_U32_FROM_VAR(product);
+		++resultIndex;
+	} while (++index < length);
+
+	result[halfAt(resultIndex)] += HIGH_U32_FROM_VAR(product);
+	if (result[halfAt(resultIndex)] < HIGH_U32_FROM_VAR(product)) {
+		/* must be careful with ++ operator and macro expansion */
+		++resultIndex;
+		while (++result[halfAt(resultIndex)] == 0) ++resultIndex;
+	}
+}
+#endif
+
 void
 multiplyHighPrecision (U_64 * arg1, IDATA length1, U_64 * arg2, IDATA length2,
                        U_64 * result, IDATA length)
@@ -281,10 +309,11 @@ multiplyHighPrecision (U_64 * arg1, IDATA length1, U_64 * arg2, IDATA length2,
     {
       simpleMultiplyAddHighPrecision (arg1, length1, LOW_IN_U64 (arg2[count]),
                                       resultIn32 + (++index));
-      simpleMultiplyAddHighPrecision (arg1, length1,
-                                      HIGH_IN_U64 (arg2[count]),
-                                      resultIn32 + (++index));
-
+#ifdef HY_LITTLE_ENDIAN
+      simpleMultiplyAddHighPrecision(arg1, length1, HIGH_IN_U64(arg2[count]), resultIn32 + (++index));
+#else
+      simpleMultiplyAddHighPrecisionBigEndianFix(arg1, length1, HIGH_IN_U64(arg2[count]), resultIn32 + (++index));
+#endif
     }
 }
 

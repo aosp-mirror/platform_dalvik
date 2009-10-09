@@ -1167,7 +1167,7 @@ public class URLClassLoader extends SecureClassLoader {
      */
     private ArrayList<URL> getInternalURLs(URL root, String classpath) {
         // Class-path attribute is composed of space-separated values.
-        StringTokenizer tokenizer = new java.util.StringTokenizer(classpath);
+        StringTokenizer tokenizer = new StringTokenizer(classpath);
         ArrayList<URL> addedURLs = new ArrayList<URL>();
         String file = root.getFile();
         int jarIndex = file.lastIndexOf("!/") - 1; //$NON-NLS-1$
@@ -1177,9 +1177,6 @@ public class URLClassLoader extends SecureClassLoader {
                     System.getProperty("file.separator"), jarIndex) + 1; //$NON-NLS-1$
         }
         file = file.substring(0, index);
-        String protocol = root.getProtocol();
-        String host = root.getHost();
-        int port = root.getPort();
         while (tokenizer.hasMoreElements()) {
             String element = tokenizer.nextToken();
             if (!element.equals("")) { //$NON-NLS-1$

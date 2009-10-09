@@ -2115,18 +2115,15 @@ public final class Formatter implements Closeable, Flushable {
 
             } else {
                 l = b.movePointRight(4).longValue();
-                b.movePointLeft(4);
                 if (d >= Math.pow(10, -4) && d < 1) {
                     requireScientificRepresentation = false;
                     precision += 4 - String.valueOf(l).length();
                     l = b.movePointRight(precision + 1).longValue();
-                    b.movePointLeft(precision + 1);
                     if (String.valueOf(l).length() <= formatToken
                             .getPrecision()) {
                         precision++;
                     }
                     l = b.movePointRight(precision).longValue();
-                    b.movePointLeft(precision);
                     if (l >= Math.pow(10, precision - 4)) {
                         formatToken.setPrecision(precision);
                     }

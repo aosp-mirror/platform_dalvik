@@ -103,7 +103,12 @@ public class PlatformAddressFactory {
         return addr;
     }
     
-    public static PlatformAddress allocMap(int fd, long start, long size, int mode) throws IOException{
+    public static PlatformAddress allocMap(int fd, long start, long size, int mode) throws IOException {
+        if (size == 0) {
+            // if size is 0, call to mmap has incorrect behaviour on 
+            // unix and windows, so return empty address
+            return mapOn(0, 0);
+        }
         int osAddress = PlatformAddress.osMemory.mmap(fd, start, size, mode);
         PlatformAddress newMemory = mapOn(osAddress, size);
         PlatformAddress.memorySpy.alloc(newMemory);

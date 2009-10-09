@@ -889,15 +889,15 @@ public final class URL implements java.io.Serializable {
     protected void set(String protocol, String host, int port,
             String authority, String userInfo, String path, String query,
             String ref) {
-        String file = path;
+        String filePart = path;
         if (query != null && !query.equals("")) { //$NON-NLS-1$
-            if (file != null) {
-                file = file + "?" + query; //$NON-NLS-1$
+            if (filePart != null) {
+                filePart = filePart + "?" + query; //$NON-NLS-1$
             } else {
-                file = "?" + query; //$NON-NLS-1$
+                filePart = "?" + query; //$NON-NLS-1$
             }
         }
-        set(protocol, host, port, file, ref);
+        set(protocol, host, port, filePart, ref);
         this.authority = authority;
         this.userInfo = userInfo;
         this.path = path;

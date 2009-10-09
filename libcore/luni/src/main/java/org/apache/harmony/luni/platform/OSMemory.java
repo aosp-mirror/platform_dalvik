@@ -73,29 +73,33 @@ final class OSMemory implements IMemorySystem {
         return singleton;
     }
 
-    /**
-     * This class is not designed to be publicly instantiated.
-     *
-     * @see #getOSMemory()
+    /*
+     * Native method to determine whether the underlying platform is little
+     * endian.
+     * 
+     * @return <code>true</code> if the platform is little endian or
+     * <code>false</code> if it is big endian.
      */
-    private OSMemory() {
-        super();
-    }
-
-    /**
-     * Returns whether the byte order of this machine is little endian or not..
-     *
-	 * @return <code>false</code> for Big Endian, and
-	 *         <code>true</code. for Little Endian.
-     */
-    // BEGIN android-changed
-    /*public*/
     private static native boolean isLittleEndianImpl();
-    // END android-changed
 
-    public boolean isLittleEndian() {
-        return isLittleEndianImpl();
-    }
+	/**
+	 * This class is not designed to be publicly instantiated.
+	 * 
+	 * @see #getOSMemory()
+	 */
+	private OSMemory() {
+		super();
+	}
+
+    /**
+     * Returns whether the byte order of this machine is little endian or not.
+     * 
+     * @return <code>false</code> for Big Endian, and
+     *         <code>true</code> for Little Endian.
+     */
+	public boolean isLittleEndian() {
+		return NATIVE_ORDER == Endianness.LITTLE_ENDIAN;
+	}
 
 	/**
 	 * Returns the natural byte order for this machine.
@@ -128,16 +132,8 @@ final class OSMemory implements IMemorySystem {
      * @return the address of the start of the memory block.
 	 * @throws OutOfMemoryError
 	 *             if the request cannot be satisfied.
-     */
-    // BEGIN android-changed
-    // public long malloc(long length) throws OutOfMemoryError
-    // {
-    //     OSResourcesMonitor.ensurePhysicalMemoryCapacity();
-    //     return mallocNative(length);
-    // }
-    // private native long mallocNative(long length) throws OutOfMemoryError;
+	 */
     public native int malloc(int length) throws OutOfMemoryError;
-    // END android-changed
 
     /**
      * Deallocates space for a memory block that was previously allocated by a
@@ -620,10 +616,8 @@ final class OSMemory implements IMemorySystem {
 
     public int mmap(int fileDescriptor, long alignment, long size,
             int mapMode) throws IOException {
+        // No need to check mmapImpl return as it throws IOException in error cases
         int address = mmapImpl(fileDescriptor, alignment, size, mapMode);
-        if (address == -1) {
-            throw new IOException();
-        }
         return address;
     }
 

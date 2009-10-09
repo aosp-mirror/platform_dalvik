@@ -177,21 +177,18 @@ public class PushbackInputStream extends FilterInputStream {
     @Override
     public int read(byte[] buffer, int offset, int length) throws IOException {
         if (buf == null) {
-            throw new IOException();
+            // K0059=Stream is closed
+            throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
         }
-        // BEGIN android-changed
-        if (buffer == null) {
-            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        // Force buffer null check first!
+        if (offset > buffer.length || offset < 0) {
+            // K002e=Offset out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
         }
-        // avoid int overflow
-        // Exception priorities (in case of multiple errors) differ from
-        // RI, but are spec-compliant.
-        // removed redundant check, used (offset | length) < 0
-        // instead of (offset < 0) || (length < 0) to safe one operation
-        if ((offset | length) < 0 || length > buffer.length - offset) {
-            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        if (length < 0 || length > buffer.length - offset) {
+            // K0031=Length out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
         }
-        // END android-changed
 
         int copiedBytes = 0, copyLength = 0, newOffset = offset;
         // Are there pushback bytes available?
@@ -296,27 +293,22 @@ public class PushbackInputStream extends FilterInputStream {
     public void unread(byte[] buffer, int offset, int length)
             throws IOException {
         if (length > pos) {
-            // Pushback buffer full
+            // K007e=Pushback buffer full
             throw new IOException(Msg.getString("K007e")); //$NON-NLS-1$
         }
-        // avoid int overflow
-        // BEGIN android-changed
-        // Exception priorities (in case of multiple errors) differ from
-        // RI, but are spec-compliant.
-        // removed redundant check, made implicit null check explicit
-        // used (offset | length) < 0 instead of (offset < 0) || (length < 0)
-        // to safe one operation
-        if (buffer == null) {
-            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        if (offset > buffer.length || offset < 0) {
+            // K002e=Offset out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
         }
-        if ((offset | length) < 0 || length > buffer.length - offset) {
-            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        if (length < 0 || length > buffer.length - offset) {
+            // K0031=Length out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
         }
-        // END android-changed
-
         if (buf == null) {
-            throw new IOException();
+            // K0059=Stream is closed
+            throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
         }
+
         System.arraycopy(buffer, offset, buf, pos - length, length);
         pos = pos - length;
     }
