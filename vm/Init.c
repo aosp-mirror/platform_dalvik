@@ -1368,8 +1368,10 @@ bool dvmInitAfterZygote(void)
         (int)(endJdwp-startJdwp), (int)(endJdwp-startHeap));
 
 #ifdef WITH_JIT
-    if (!dvmJitStartup())
-        return false;
+    if (gDvm.executionMode == kExecutionModeJit) {
+        if (!dvmJitStartup())
+            return false;
+    }
 #endif
 
     return true;
@@ -1558,8 +1560,10 @@ void dvmShutdown(void)
     dvmStdioConverterShutdown();
 
 #ifdef WITH_JIT
-    /* tell the compiler to shut down if it was started */
-    dvmJitShutdown();
+    if (gDvm.executionMode == kExecutionModeJit) {
+        /* shut down the compiler thread */
+        dvmJitShutdown();
+    }
 #endif
 
     /*
