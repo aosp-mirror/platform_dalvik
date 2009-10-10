@@ -21,10 +21,8 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
-
 import junit.framework.TestCase;
-
-import tests.support.Support_Exec;
+import static tests.support.Support_Exec.execAndGetOutput;
 import tests.support.resource.Support_Resources;
 
 import java.io.ByteArrayOutputStream;
@@ -32,49 +30,47 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import java.util.jar.JarFile;
 
 
 @TestTargetClass(JarOutputStream.class)
 @AndroidOnly("dalvik vm specific")
 public class DalvikExecTest extends TestCase {
 
-    String execDalvik1 (String classpath, String mainClass, String arg1)
+    String execDalvik1(String classpath, String mainClass, String arg1)
             throws IOException, InterruptedException {
 
-        ArrayList<String> cmdLine = new ArrayList<String>(10);
+        ProcessBuilder builder = new ProcessBuilder();
 
         String base = System.getenv("OUT");
-        cmdLine.add(base + "/system/bin/dalvikvm");
+        builder.command().add(base + "/system/bin/dalvikvm");
 
-        cmdLine.add("-Djava.io.tmpdir=/tmp/mc");
-        cmdLine.add("-Duser.language=en");
-        cmdLine.add("-Duser.region=US");
+        builder.command().add("-Djava.io.tmpdir=/tmp/mc");
+        builder.command().add("-Duser.language=en");
+        builder.command().add("-Duser.region=US");
 
         if ("true".equals(System.getenv("TARGET_SIMULATOR"))) {
             // Test against SIMULATOR:
 //            cmdLine.add("-Xmx512M");
 //            cmdLine.add("-Xcheck:jni");
-            cmdLine.add("-Xbootclasspath:" + System.getProperty("java.boot.class.path"));
+            builder.command().add("-Xbootclasspath:" + System.getProperty("java.boot.class.path"));
         } else {
             // Test against EMULATOR:
         }
 
-        cmdLine.add("-classpath");
-        cmdLine.add(classpath);
-        cmdLine.add(mainClass);
+        builder.command().add("-classpath");
+        builder.command().add(classpath);
+        builder.command().add(mainClass);
 
-        if (arg1 != null) cmdLine.add(arg1);
+        if (arg1 != null) {
+            builder.command().add(arg1);
+        }
 
-        Object[] res = Support_Exec.execAndDigestOutput(
-                cmdLine.toArray(new String[cmdLine.size()]),
-                null );
-        return Support_Exec.getProcessOutput(res, true);
+        return execAndGetOutput(builder);
     }
 
     String execDalvik (String classpath, String mainClass)

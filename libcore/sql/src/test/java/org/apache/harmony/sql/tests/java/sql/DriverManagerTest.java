@@ -19,12 +19,10 @@ package org.apache.harmony.sql.tests.java.sql;
 
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
@@ -37,9 +35,11 @@ import java.sql.SQLException;
 import java.sql.SQLPermission;
 import java.util.Enumeration;
 import java.util.Properties;
-import tests.support.Support_Exec;
 
 import junit.framework.TestCase;
+import static tests.support.Support_Exec.javaProcessBuilder;
+import static tests.support.Support_Exec.execAndGetOutput;
+
 @TestTargetClass(DriverManager.class)
 /**
  * JUnit Testcase for the java.sql.DriverManager class
@@ -715,10 +715,9 @@ public class DriverManagerTest extends TestCase {
      * Regression for HARMONY-4303
      */
     public void test_initClass() throws Exception {
-        String[] arg = new String[1];
-        arg[0] = "org/apache/harmony/sql/tests/java/sql/TestMainForDriver";
-        String result = Support_Exec.execJava(arg, null, true);
-        assertEquals("", result);
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("org/apache/harmony/sql/tests/java/sql/TestMainForDriver");
+        assertEquals("", execAndGetOutput(builder));
     }
 
     private static class BadDummyDriver extends DummyDriver {

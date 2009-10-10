@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import tests.support.Support_Exec;
+import static tests.support.Support_Exec.javaProcessBuilder;
 
 @TestTargetClass(Process.class) 
 public class Process2Test extends junit.framework.TestCase {
@@ -60,23 +61,12 @@ public class Process2Test extends junit.framework.TestCase {
         )
     })
     @AndroidOnly("dalvikvm specific")
-    public void test_isBufferedStreams() {
-        // Regression test for HARMONY-2735.
-        try {
-            Object[] execArgs = Support_Exec.execJava2(new String[0], null, true);
-            Process p = (Process) execArgs[0];
-            InputStream in = p.getInputStream();
-                  assertNotNull(in);
-                  in = p.getErrorStream();
-                  assertNotNull(in);
-                  OutputStream out = p.getOutputStream();
-                  assertNotNull(out);
-                  in.close();
-                  out.close();
-                  p.destroy();
-        } catch (Exception ex) {
-            fail("Unexpected exception got: " + ex);
-        }
+    public void test_streams()
+            throws IOException, InterruptedException {
+        Process p = javaProcessBuilder().start();
+        assertNotNull(p.getInputStream());
+        assertNotNull(p.getErrorStream());
+        assertNotNull(p.getOutputStream());
     }
     
     @TestTargetNew(

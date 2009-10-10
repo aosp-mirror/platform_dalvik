@@ -31,13 +31,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import tests.support.Support_Exec;
 import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
+import static tests.support.Support_Exec.javaProcessBuilder;
+import static tests.support.Support_Exec.execAndGetOutput;
 
 @TestTargetClass(File.class) 
 public class FileTest extends junit.framework.TestCase {
@@ -2465,12 +2466,14 @@ public class FileTest extends junit.framework.TestCase {
         assertTrue("could not find the path of the test jar/apk", idx > 0);
         classPath = classPath.substring(9, idx); // cutting off jar:file:
 
-        Support_Exec.execJava(new String[] {
-                "tests.support.Support_DeleteOnExitTest",
-                dir.getAbsolutePath(), subDir.getAbsolutePath() },
-                new String[] { System.getProperty("java.class.path"),
-                classPath }, false);
-        Thread.sleep(2000);
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-cp");
+        builder.command().add(System.getProperty("java.class.path"));
+        builder.command().add("tests.support.Support_DeleteOnExitTest");
+        builder.command().add(dir.getAbsolutePath());
+        builder.command().add(subDir.getAbsolutePath());
+        execAndGetOutput(builder);
+
         assertFalse(dir.exists());
         assertFalse(subDir.exists());
     }
