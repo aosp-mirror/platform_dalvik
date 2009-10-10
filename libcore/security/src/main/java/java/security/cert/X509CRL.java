@@ -44,16 +44,11 @@ import org.apache.harmony.security.internal.nls.Messages;
  * href
  * ="http://www.ietf.org/rfc/rfc2459.txt">http://www.ietf.org/rfc/rfc2459.txt
  * </a>.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class X509CRL extends CRL implements X509Extension {
 
     /**
      * Creates a new {@code X509CRL} instance.
-     * 
-     * @since Android 1.0
      */
     protected X509CRL() {
         super("X.509"); //$NON-NLS-1$
@@ -66,7 +61,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      *            the object to compare.
      * @return {@code true} if the specified object is equal to this, otherwise
      *         {@code false}.
-     * @since Android 1.0
      */
     public boolean equals(Object other) {
         if (other == this) {
@@ -87,7 +81,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * Returns the hashcode of this CRL instance.
      * 
      * @return the hashcode.
-     * @since Android 1.0
      */
     public int hashCode() {
         try {
@@ -108,7 +101,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * @return this CRL in ASN.1 DER encoded form.
      * @throws CRLException
      *             if encoding fails.
-     * @since Android 1.0
      */
     public abstract byte[] getEncoded() throws CRLException;
 
@@ -129,7 +121,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      *             if no provider can be found.
      * @throws SignatureException
      *             if errors occur on signatures.
-     * @since Android 1.0
      */
     public abstract void verify(PublicKey key)
                      throws CRLException, NoSuchAlgorithmException,
@@ -155,7 +146,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      *             if the specified provider cannot be found.
      * @throws SignatureException
      *             if errors occur on signatures.
-     * @since Android 1.0
      */
     public abstract void verify(PublicKey key, String sigProvider)
                      throws CRLException, NoSuchAlgorithmException,
@@ -166,7 +156,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * Returns the version number of this CRL.
      * 
      * @return the version number of this CRL.
-     * @since Android 1.0
      */
     public abstract int getVersion();
 
@@ -175,7 +164,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * the issuer as an implementation specific Principal object.
      * 
      * @return the issuer distinguished name.
-     * @since Android 1.0
      */
     public abstract Principal getIssuerDN();
 
@@ -183,7 +171,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * Returns the issuer distinguished name of this CRL.
      * 
      * @return the issuer distinguished name of this CRL.
-     * @since Android 1.0
      */
     public X500Principal getIssuerX500Principal() {
         try {
@@ -206,7 +193,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * Returns the {@code thisUpdate} value of this CRL.
      * 
      * @return the {@code thisUpdate} value of this CRL.
-     * @since Android 1.0
      */
     public abstract Date getThisUpdate();
 
@@ -215,7 +201,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * 
      * @return the {@code nextUpdate} value of this CRL, or {@code null} if none
      *         is present.
-     * @since Android 1.0
      */
     public abstract Date getNextUpdate();
 
@@ -226,7 +211,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      *            the certificate serial number to search for a CRL entry.
      * @return the entry for the specified certificate serial number, or {@code
      *         null} if not found.
-     * @since Android 1.0
      */
     public abstract X509CRLEntry getRevokedCertificate(BigInteger serialNumber);
 
@@ -237,7 +221,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      *            the certificate to search a CRL entry for.
      * @return the entry for the specified certificate, or {@code null} if not
      *         found.
-     * @since Android 1.0
      */
     public X509CRLEntry getRevokedCertificate(X509Certificate certificate) {
         if (certificate == null) {
@@ -251,7 +234,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * 
      * @return the set of revoked certificates, or {@code null} if no revoked
      *         certificates are in this CRL.
-     * @since Android 1.0
      */
     public abstract Set<? extends X509CRLEntry> getRevokedCertificates();
 
@@ -262,7 +244,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * @return the CRL information in DER encoded form.
      * @throws CRLException
      *             if encoding fails.
-     * @since Android 1.0
      */
     public abstract byte[] getTBSCertList() throws CRLException;
 
@@ -270,7 +251,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * Returns the signature bytes of this CRL.
      * 
      * @return the signature bytes of this CRL.
-     * @since Android 1.0
      */
     public abstract byte[] getSignature();
 
@@ -278,7 +258,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * Returns the name of the signature algorithm.
      * 
      * @return the name of the signature algorithm.
-     * @since Android 1.0
      */
     public abstract String getSigAlgName();
 
@@ -286,7 +265,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * Returns the OID of the signature algorithm.
      * 
      * @return the OID of the signature algorithm.
-     * @since Android 1.0
      */
     public abstract String getSigAlgOID();
 
@@ -295,7 +273,6 @@ public abstract class X509CRL extends CRL implements X509Extension {
      * 
      * @return the parameters of the signature algorithm in DER encoded form, or
      *         {@code null} if not present.
-     * @since Android 1.0
      */
     public abstract byte[] getSigAlgParams();
 }

@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.Serializable;
@@ -30,7 +25,6 @@ import java.io.Serializable;
  * 
  * @see PrivateKey
  * @see PublicKey
- * @since Android 1.0
  */
 public final class KeyPair implements Serializable {
 
@@ -41,12 +35,11 @@ public final class KeyPair implements Serializable {
     /**
      * Constructs a new instance of {@code KeyPair} with a public key and the
      * corresponding private key.
-     * 
+     *
      * @param publicKey
      *            the public key.
      * @param privateKey
      *            the private key.
-     * @since Android 1.0
      */
     public KeyPair(PublicKey publicKey, PrivateKey privateKey) {
         this.privateKey = privateKey;
@@ -55,9 +48,8 @@ public final class KeyPair implements Serializable {
 
     /**
      * Returns the private key.
-     * 
+     *
      * @return the private key.
-     * @since Android 1.0
      */
     public PrivateKey getPrivate() {
         return privateKey;
@@ -65,9 +57,8 @@ public final class KeyPair implements Serializable {
 
     /**
      * Returns the public key.
-     * 
+     *
      * @return the public key.
-     * @since Android 1.0
      */
     public PublicKey getPublic() {
         return publicKey;

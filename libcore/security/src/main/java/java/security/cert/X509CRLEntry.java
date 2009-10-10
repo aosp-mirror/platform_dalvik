@@ -29,14 +29,11 @@ import javax.security.auth.x500.X500Principal;
  * Abstract base class for entries in a certificate revocation list (CRL).
  * 
  * @see X509CRL
- * @since Android 1.0
  */
 public abstract class X509CRLEntry implements X509Extension {
 
     /**
      * Creates a new {@code X509CRLEntry} instance.
-     * 
-     * @since Android 1.0
      */
     public X509CRLEntry() {}
 
@@ -47,7 +44,6 @@ public abstract class X509CRLEntry implements X509Extension {
      *            the object to compare.
      * @return {@code true} if the specified object equals to this instance,
      *         otherwise {@code false}.
-     * @since Android 1.0
      */
     public boolean equals(Object other) {
         if (other == this) {
@@ -68,7 +64,6 @@ public abstract class X509CRLEntry implements X509Extension {
      * Returns the hashcode of this instance.
      * 
      * @return the hashcode of this instance.
-     * @since Android 1.0
      */
     public int hashCode() {
         int res = 0;
@@ -88,7 +83,6 @@ public abstract class X509CRLEntry implements X509Extension {
      * @return the encoded form of this entry.
      * @throws CRLException
      *             if encoding fails.
-     * @since Android 1.0
      */
     public abstract byte[] getEncoded() throws CRLException;
 
@@ -96,7 +90,6 @@ public abstract class X509CRLEntry implements X509Extension {
      * Returns the serial number of the revoked certificate.
      * 
      * @return the serial number of the revoked certificate.
-     * @since Android 1.0
      */
     public abstract BigInteger getSerialNumber();
 
@@ -105,7 +98,6 @@ public abstract class X509CRLEntry implements X509Extension {
      * 
      * @return the issuer of the revoked certificate, or {@code null} if the
      *         issuer is equal to the CRL issuer.
-     * @since Android 1.0
      */
     public X500Principal getCertificateIssuer() {
         return null;
@@ -115,7 +107,6 @@ public abstract class X509CRLEntry implements X509Extension {
      * Returns the date when the certificate is revoked.
      * 
      * @return the date when the certificate is revoked.
-     * @since Android 1.0
      */
     public abstract Date getRevocationDate();
 
@@ -124,7 +115,6 @@ public abstract class X509CRLEntry implements X509Extension {
      * 
      * @return {@code true} is this CRL entry has extensions, otherwise {@code
      *         false}.
-     * @since Android 1.0
      */
     public abstract boolean hasExtensions();
 
@@ -132,7 +122,6 @@ public abstract class X509CRLEntry implements X509Extension {
      * Returns a string representation of this instance.
      * 
      * @return a string representation of this instance.
-     * @since Android 1.0
      */
     public abstract String toString();
 }

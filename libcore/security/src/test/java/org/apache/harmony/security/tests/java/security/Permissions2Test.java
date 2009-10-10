@@ -55,7 +55,7 @@ public class Permissions2Test extends junit.framework.TestCase {
     public void test_Constructor() {
         // Test for method java.security.Permissions()
         new Permissions();
-    }
+	}
 
     /**
      * @tests java.security.Permissions#add(java.security.Permission)

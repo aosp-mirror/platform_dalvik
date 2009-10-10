@@ -87,7 +87,7 @@ public class CertificateIssuer extends ExtensionValue {
     /**
      * ASN.1 Encoder/Decoder.
      */
-    public static ASN1Type ASN1 = new ASN1Sequence(new ASN1Type[] {
+    public static final ASN1Type ASN1 = new ASN1Sequence(new ASN1Type[] {
         GeneralName.ASN1
     }) {
         public Object getDecodedObject(BerInputStream in) {

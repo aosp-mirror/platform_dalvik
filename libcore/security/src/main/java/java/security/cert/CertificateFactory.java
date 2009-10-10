@@ -36,9 +36,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * <p>
  * It defines methods for parsing certificate chains (certificate paths) and
  * <i>Certificate Revocation Lists</i> (CRLs).
- * </p>
- * 
- * @since Android 1.0
  */
 public class CertificateFactory {
 
@@ -59,14 +56,13 @@ public class CertificateFactory {
 
     /**
      * Creates a new {@code CertificateFactory} instance.
-     * 
+     *
      * @param certFacSpi
      *            the implementation delegate.
      * @param provider
      *            the associated provider.
      * @param type
      *            the certificate type.
-     * @since Android 1.0
      */
     protected CertificateFactory(CertificateFactorySpi certFacSpi,
             Provider provider, String type) {
@@ -87,7 +83,6 @@ public class CertificateFactory {
      *             installed provider.
      * @throws NullPointerException
      *             if {@code type} is {@code null}.
-     * @since Android 1.0
      */
     public static final CertificateFactory getInstance(String type)
             throws CertificateException {
@@ -124,7 +119,6 @@ public class CertificateFactory {
      *             if the specified provider name is {@code null} or empty.
      * @throws NullPointerException
      *             it {@code type} is {@code null}.
-     * @since Android 1.0
      */
     public static final CertificateFactory getInstance(String type,
             String provider) throws CertificateException,
@@ -156,7 +150,6 @@ public class CertificateFactory {
      *             if the specified provider is {@code null}.
      * @throws NullPointerException
      *             is {@code type} is {@code null}.
-     * @since Android 1.0
      */
     public static final CertificateFactory getInstance(String type,
             Provider provider) throws CertificateException {
@@ -182,7 +175,6 @@ public class CertificateFactory {
      * the certificate.
      * 
      * @return the provider of this certificate factory.
-     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
@@ -192,7 +184,6 @@ public class CertificateFactory {
      * Returns the Certificate type.
      * 
      * @return type of certificate being used.
-     * @since Android 1.0
      */
     public final String getType() {
         return type;
@@ -208,7 +199,6 @@ public class CertificateFactory {
      * @return an initialized Certificate.
      * @throws CertificateException
      *             if parsing problems are detected.
-     * @since Android 1.0
      */
     public final Certificate generateCertificate(InputStream inStream)
             throws CertificateException {
@@ -221,7 +211,6 @@ public class CertificateFactory {
      * 
      * @return an iterator over supported {@link CertPath} encodings (as
      *         Strings).
-     * @since Android 1.0
      */
     public final Iterator<String> getCertPathEncodings() {
         return spiImpl.engineGetCertPathEncodings();
@@ -236,7 +225,6 @@ public class CertificateFactory {
      * @return a {@code CertPath} initialized from the provided data.
      * @throws CertificateException
      *             if parsing problems are detected.
-     * @since Android 1.0
      */
     public final CertPath generateCertPath(InputStream inStream)
             throws CertificateException {
@@ -261,7 +249,6 @@ public class CertificateFactory {
      *             if parsing problems are detected.
      * @throws UnsupportedOperationException
      *             if the provider does not implement this method.
-     * @since Android 1.0
      */
     public final CertPath generateCertPath(InputStream inStream, String encoding)
             throws CertificateException {
@@ -280,7 +267,6 @@ public class CertificateFactory {
      *             if parsing problems are detected.
      * @throws UnsupportedOperationException
      *             if the provider does not implement this method.
-     * @since Android 1.0
      */
     public final CertPath generateCertPath(List<? extends Certificate> certificates)
             throws CertificateException {
@@ -297,7 +283,6 @@ public class CertificateFactory {
      * @return an initialized collection of certificates.
      * @throws CertificateException
      *             if parsing problems are detected.
-     * @since Android 1.0
      */
     public final Collection<? extends Certificate> generateCertificates(InputStream inStream)
             throws CertificateException {
@@ -313,7 +298,6 @@ public class CertificateFactory {
      * @return an initialized CRL.
      * @exception CRLException
      *                if parsing problems are detected.
-     * @since Android 1.0
      */
     public final CRL generateCRL(InputStream inStream) throws CRLException {
         return spiImpl.engineGenerateCRL(inStream);
@@ -328,7 +312,6 @@ public class CertificateFactory {
      * @return an initialized collection of CRLs.
      * @exception CRLException
      *                if parsing problems are detected.
-     * @since Android 1.0
      */
     public final Collection<? extends CRL> generateCRLs(InputStream inStream)
             throws CRLException {

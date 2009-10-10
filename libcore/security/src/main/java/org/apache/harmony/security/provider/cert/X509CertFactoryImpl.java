@@ -25,6 +25,7 @@ package org.apache.harmony.security.provider.cert;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.cert.CRL;
 import java.security.cert.CRLException;
 import java.security.cert.CertPath;
@@ -446,8 +447,8 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
     // ------------------------ Staff methods ------------------------------
     // ---------------------------------------------------------------------
 
-    private static byte[] pemBegin = "-----BEGIN".getBytes(); //$NON-NLS-1$
-    private static byte[] pemClose = "-----END".getBytes(); //$NON-NLS-1$
+    private static byte[] pemBegin;
+    private static byte[] pemClose;
     /**
      * Code describing free format for PEM boundary suffix:
      * "^-----BEGIN.*\n"         at the beginning, and<br>
@@ -459,8 +460,18 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
      * "^-----BEGIN CERTIFICATE-----\n"   at the beginning, and<br>
      * "\n-----END CERTIFICATE-----"   at the end.
      */
-    private static byte[] CERT_BOUND_SUFFIX = 
-        " CERTIFICATE-----".getBytes(); //$NON-NLS-1$
+    private static byte[] CERT_BOUND_SUFFIX;
+
+    static {
+        // Initialise statics
+        try {
+            pemBegin = "-----BEGIN".getBytes("UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
+            pemClose = "-----END".getBytes("UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
+            CERT_BOUND_SUFFIX = " CERTIFICATE-----".getBytes("UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 
     /**
      * Method retrieves the PEM encoded data from the stream 
@@ -515,9 +526,7 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
                 if (boundary_suffix[i] != inStream.read()) {
                     throw new IOException(
                         Messages.getString("security.15B", //$NON-NLS-1$
-                            ((boundary_suffix == null) 
-                                ? "" 
-                                : new String(boundary_suffix)))); //$NON-NLS-1$
+                            new String(boundary_suffix))); //$NON-NLS-1$
                 }
             }
             // read new line characters
@@ -574,9 +583,7 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
                 if (boundary_suffix[i] != inStream.read()) {
                     throw new IOException(
                         Messages.getString("security.15B1", //$NON-NLS-1$
-                            ((boundary_suffix == null) 
-                                ? "" 
-                                : new String(boundary_suffix)))); //$NON-NLS-1$
+                            new String(boundary_suffix))); //$NON-NLS-1$
                 }
             }
         }
@@ -932,4 +939,6 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
         }
     }
 }
+
+
 

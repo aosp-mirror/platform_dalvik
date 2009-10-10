@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.IOException;
@@ -37,14 +32,13 @@ public abstract class AlgorithmParametersSpi {
     /**
      * Initializes this {@code AlgorithmParametersSpi} with the specified
      * {@code AlgorithmParameterSpec}.
-     * 
+     *
      * @param paramSpec
      *            the parameter specification.
      * @throws InvalidParameterSpecException
      *             if this {@code AlgorithmParametersSpi} has already been
      *             initialized or the given {@code paramSpec} is not appropriate
      *             for initializing this {@code AlgorithmParametersSpi}.
-     * @since Android 1.0
      */
     protected abstract void engineInit(AlgorithmParameterSpec paramSpec)
             throws InvalidParameterSpecException;
@@ -53,20 +47,19 @@ public abstract class AlgorithmParametersSpi {
      * Initializes this {@code AlgorithmParametersSpi} with the specified
      * {@code byte[]} using the default decoding format for parameters. The
      * default encoding format is ASN.1.
-     * 
+     *
      * @param params
      *            the encoded parameters.
      * @throws IOException
      *             if this {@code AlgorithmParametersSpi} has already been
      *             initialized, or the parameter could not be encoded.
-     * @since Android 1.0
      */
     protected abstract void engineInit(byte[] params) throws IOException;
 
     /**
      * Initializes this {@code AlgorithmParametersSpi} with the specified
      * {@code byte[]} using the specified decoding format.
-     * 
+     *
      * @param params
      *            the encoded parameters.
      * @param format
@@ -74,7 +67,6 @@ public abstract class AlgorithmParametersSpi {
      * @throws IOException
      *             if this {@code AlgorithmParametersSpi} has already been
      *             initialized, or the parameter could not be encoded.
-     * @since Android 1.0
      */
     protected abstract void engineInit(byte[] params, String format)
             throws IOException;
@@ -82,7 +74,7 @@ public abstract class AlgorithmParametersSpi {
     /**
      * Returns the {@code AlgorithmParameterSpec} for this {@code
      * AlgorithmParametersSpi}.
-     * 
+     *
      * @param paramSpec
      *            the type of the parameter specification in which this
      *            parameters should be converted.
@@ -92,7 +84,6 @@ public abstract class AlgorithmParametersSpi {
      *             if this {@code AlgorithmParametersSpi} has already been
      *             initialized, or if this parameters could not be converted to
      *             the specified class.
-     * @since Android 1.0
      */
     protected abstract <T extends AlgorithmParameterSpec> T engineGetParameterSpec(
             Class<T> paramSpec) throws InvalidParameterSpecException;
@@ -100,25 +91,23 @@ public abstract class AlgorithmParametersSpi {
     /**
      * Returns the parameters in their default encoding format. The default
      * encoding format is ASN.1.
-     * 
+     *
      * @return the encoded parameters.
      * @throws IOException
      *             if this {@code AlgorithmParametersSpi} has already been
      *             initialized, or if this parameters could not be encoded.
-     * @since Android 1.0
      */
     protected abstract byte[] engineGetEncoded() throws IOException;
 
     /**
      * Returns the parameters in the specified encoding format.
-     * 
+     *
      * @param format
      *            the name of the encoding format.
      * @return the encoded parameters.
      * @throws IOException
      *             if this {@code AlgorithmParametersSpi} has already been
      *             initialized, or if this parameters could not be encoded.
-     * @since Android 1.0
      */
     protected abstract byte[] engineGetEncoded(String format)
             throws IOException;
@@ -126,10 +115,9 @@ public abstract class AlgorithmParametersSpi {
     /**
      * Returns a string containing a concise, human-readable description of this
      * {@code AlgorithmParametersSpi}.
-     * 
+     *
      * @return a printable representation for this {@code
      *         AlgorithmParametersSpi}.
-     * @since Android 1.0
      */
     protected abstract String engineToString();
 

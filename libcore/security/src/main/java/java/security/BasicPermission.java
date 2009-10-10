@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.IOException;
@@ -38,14 +33,13 @@ import org.apache.harmony.security.internal.nls.Messages;
  * For example:
  * 
  * <pre>
- * com.google.android.*  grants all permissions under the com.google.android permission hierarchy
- * *                     grants all permissions
+ * java.io.*  grants all permissions under the java.io permission hierarchy
+ * *          grants all permissions
  * </pre>
- * </p><p>
+ * <p>
  * While this class ignores the action list in the
  * {@link #BasicPermission(String, String)} constructor, subclasses may
  * implement actions on top of this class.
- * </p>
  */
 public abstract class BasicPermission extends Permission implements
     Serializable {
@@ -55,12 +49,11 @@ public abstract class BasicPermission extends Permission implements
     /**
      * Constructs a new instance of {@code BasicPermission} with the specified
      * name.
-     * 
+     *
      * @param name
      *            the name of the permission.
      * @throws NullPointerException if {@code name} is {@code null}.
      * @throws IllegalArgumentException if {@code name.length() == 0}.
-     * @since Android 1.0
      */
     public BasicPermission(String name) {
         super(name);
@@ -70,7 +63,7 @@ public abstract class BasicPermission extends Permission implements
     /**
      * Constructs a new instance of {@code BasicPermission} with the specified
      * name. The {@code action} parameter is ignored.
-     * 
+     *
      * @param name
      *            the name of the permission.
      * @param action
@@ -79,7 +72,6 @@ public abstract class BasicPermission extends Permission implements
      *             if {@code name} is {@code null}.
      * @throws IllegalArgumentException
      *             if {@code name.length() == 0}.
-     * @since Android 1.0
      */
     public BasicPermission(String name, String action) {
         super(name);
@@ -105,15 +97,14 @@ public abstract class BasicPermission extends Permission implements
      * <p>
      * The {@link #implies(Permission)} method should be used for making access
      * control checks.
-     * </p>
-     * 
+     *
      * @param obj
      *            object to be compared for equality with this {@code
      *            BasicPermission}.
      * @return {@code true} if the specified object is equal to this {@code
      *         BasicPermission}, otherwise {@code false}.
-     * @since Android 1.0
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
@@ -129,12 +120,12 @@ public abstract class BasicPermission extends Permission implements
      * Returns the hash code value for this {@code BasicPermission}. Returns the
      * same hash code for {@code BasicPermission}s that are equal to each other
      * as required by the general contract of {@link Object#hashCode}.
-     * 
+     *
      * @return the hash code value for this {@code BasicPermission}.
      * @see Object#equals(Object)
      * @see BasicPermission#equals(Object)
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         return getName().hashCode();
     }
@@ -142,23 +133,23 @@ public abstract class BasicPermission extends Permission implements
     /**
      * Returns the actions associated with this permission. Since {@code
      * BasicPermission} instances have no actions, an empty string is returned.
-     * 
+     *
      * @return an empty string.
-     * @since Android 1.0
      */
+    @Override
     public String getActions() {
         return ""; //$NON-NLS-1$
     }
 
     /**
      * Indicates whether the specified permission is implied by this permission.
-     * 
+     *
      * @param permission
      *            the permission to check against this permission.
      * @return {@code true} if the specified permission is implied by this
      *         permission, {@code false} otherwise.
-     * @since Android 1.0
      */
+    @Override
     public boolean implies(Permission permission) {
         if (permission != null && permission.getClass() == this.getClass()) {
             return nameImplies(getName(), permission.getName());
@@ -204,12 +195,11 @@ public abstract class BasicPermission extends Permission implements
      * stored in it when checking if the collection implies a permission.
      * Instead, it assumes that if the type of the permission is correct, and
      * the name of the permission is correct, there is a match.
-     * </p>
-     * 
+     *
      * @return an empty {@link PermissionCollection} for holding permissions.
      * @see BasicPermissionCollection
-     * @since Android 1.0
      */
+    @Override
     public PermissionCollection newPermissionCollection() {
         return new BasicPermissionCollection();
     }

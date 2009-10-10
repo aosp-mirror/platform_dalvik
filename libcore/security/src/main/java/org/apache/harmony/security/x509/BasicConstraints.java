@@ -105,7 +105,7 @@ public class BasicConstraints extends ExtensionValue {
     /**
      * ASN.1 Encoder/Decoder.
      */
-    public static ASN1Type ASN1 = new ASN1Sequence(new ASN1Type[] {
+    public static final ASN1Type ASN1 = new ASN1Sequence(new ASN1Type[] {
             ASN1Boolean.getInstance(), ASN1Integer.getInstance() }) {
         {
             setDefault(Boolean.FALSE, 0);

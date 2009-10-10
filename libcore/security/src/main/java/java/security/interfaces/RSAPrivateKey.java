@@ -22,15 +22,11 @@ import java.security.PrivateKey;
 
 /**
  * The interface for an PKCS#1 RSA private key.
- * 
- * @since Android 1.0
  */
 public interface RSAPrivateKey extends PrivateKey, RSAKey {
 
     /**
      * The serial version identifier.
-     * 
-     * @since Android 1.0
      */
     public static final long serialVersionUID = 5187144804936595022L;
 
@@ -38,7 +34,6 @@ public interface RSAPrivateKey extends PrivateKey, RSAKey {
      * Returns the private exponent {@code d}.
      * 
      * @return the private exponent {@code d}.
-     * @since Android 1.0
      */
     public BigInteger getPrivateExponent();
 }

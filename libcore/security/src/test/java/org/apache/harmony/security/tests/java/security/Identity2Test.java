@@ -20,6 +20,7 @@ package org.apache.harmony.security.tests.java.security;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.Certificate;
 import java.security.Identity;
 import java.security.IdentityScope;

@@ -35,8 +35,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * Abstract class to represent identity certificates. It represents a way to
  * verify the binding of a Principal and its public key. Examples are X.509,
  * PGP, and SDSI.
- * 
- * @since Android 1.0
  */
 public abstract class Certificate implements Serializable {
 
@@ -47,10 +45,9 @@ public abstract class Certificate implements Serializable {
 
     /**
      * Creates a new {@code Certificate} with the specified type.
-     * 
+     *
      * @param type
      *        the certificate type.
-     * @since Android 1.0
      */
     protected Certificate(String type) {
         this.type = type;
@@ -58,9 +55,8 @@ public abstract class Certificate implements Serializable {
 
     /**
      * Returns the certificate type.
-     * 
+     *
      * @return the certificate type.
-     * @since Android 1.0
      */
     public final String getType() {
         return type;
@@ -71,13 +67,12 @@ public abstract class Certificate implements Serializable {
      * represent the <em>same</em> object using a class specific comparison. The
      * implementation in Object returns {@code true} only if the argument is the
      * exact same object as the callee (==).
-     * 
+     *
      * @param other
      *            the object to compare with this object.
      * @return {@code true} if the object is the same as this object, {@code
      *         false} if it is different from this object.
      * @see #hashCode
-     * @since Android 1.0
      */
     public boolean equals(Object other) {
         // obj equal to itself
@@ -100,10 +95,9 @@ public abstract class Certificate implements Serializable {
      * Returns an integer hash code for the certificate. Any two objects which
      * return {@code true} when passed to {@code equals} must return the same
      * value for this method.
-     * 
+     *
      * @return the certificate's hash
      * @see #equals
-     * @since Android 1.0
      */
     public int hashCode() {
         try {
@@ -120,17 +114,16 @@ public abstract class Certificate implements Serializable {
 
     /**
      * Returns the encoded representation for this certificate.
-     * 
+     *
      * @return the encoded representation for this certificate.
      * @throws CertificateEncodingException
      *             if the encoding fails.
-     * @since Android 1.0
      */
     public abstract byte[] getEncoded() throws CertificateEncodingException;
 
     /**
      * Verifies that this certificate was signed with the given public key.
-     * 
+     *
      * @param key
      *            PublicKey public key for which verification should be
      *            performed.
@@ -144,7 +137,6 @@ public abstract class Certificate implements Serializable {
      *             if there is no default provider.
      * @throws SignatureException
      *             if signature errors are detected.
-     * @since Android 1.0
      */
     public abstract void verify(PublicKey key)
         throws CertificateException,
@@ -156,7 +148,7 @@ public abstract class Certificate implements Serializable {
     /**
      * Verifies that this certificate was signed with the given public key. It
      * Uses the signature algorithm given by the provider.
-     * 
+     *
      * @param key
      *            PublicKey public key for which verification should be
      *            performed.
@@ -172,7 +164,6 @@ public abstract class Certificate implements Serializable {
      *                if the specified provider does not exists.
      * @exception SignatureException
      *                if signature errors are detected.
-     * @since Android 1.0
      */
     public abstract void verify(PublicKey key, String sigProvider)
         throws CertificateException,
@@ -184,27 +175,24 @@ public abstract class Certificate implements Serializable {
     /**
      * Returns a string containing a concise, human-readable description of the
      * certificate.
-     * 
+     *
      * @return a printable representation for the certificate.
-     * @since Android 1.0
      */
     public abstract String toString();
 
     /**
      * Returns the public key corresponding to this certificate.
-     * 
+     *
      * @return the public key corresponding to this certificate.
-     * @since Android 1.0
      */
     public abstract PublicKey getPublicKey();
 
     /**
      * Returns an alternate object to be serialized.
-     * 
+     *
      * @return the object to serialize.
      * @throws ObjectStreamException
      *             if the creation of the alternate object fails.
-     * @since Android 1.0
      */
     protected Object writeReplace() throws ObjectStreamException {
         try {
@@ -217,9 +205,7 @@ public abstract class Certificate implements Serializable {
 
     /**
      * The alternate {@code Serializable} class to be used for serialization and
-     * deserialization of {@code Certificate} objects. 
-     * 
-     * @since Android 1.0
+     * deserialization of {@code Certificate} objects.
      */
     protected static class CertificateRep implements Serializable {
 
@@ -239,12 +225,11 @@ public abstract class Certificate implements Serializable {
         /**
          * Creates a new {@code CertificateRep} instance with the specified
          * certificate type and encoded data.
-         * 
+         *
          * @param type
          *            the certificate type.
          * @param data
          *            the encoded data.
-         * @since Android 1.0
          */
         protected CertificateRep(String type, byte[] data) {
             this.type = type;
@@ -254,11 +239,10 @@ public abstract class Certificate implements Serializable {
         /**
          * Deserializes a {@code Certificate} from a serialized {@code
          * CertificateRep} object.
-         * 
+         *
          * @return the deserialized {@code Certificate}.
          * @throws ObjectStreamException
          *             if deserialization fails.
-         * @since Android 1.0
          */
         protected Object readResolve() throws ObjectStreamException {
             try {

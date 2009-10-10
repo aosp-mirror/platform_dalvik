@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.security.spec.InvalidKeySpecException;
@@ -30,7 +25,6 @@ import java.security.spec.KeySpec;
  * {@link KeyFactory}.
  * 
  * @see KeyFactory
- * @since Android 1.0
  */
 public abstract class KeyFactorySpi {
     
@@ -43,7 +37,6 @@ public abstract class KeyFactorySpi {
      * @return the public key.
      * @throws InvalidKeySpecException
      *             if the specified {@code keySpec} is invalid.
-     * @since Android 1.0
      */
     protected abstract PublicKey engineGeneratePublic(KeySpec keySpec) 
                                     throws InvalidKeySpecException;
@@ -57,7 +50,6 @@ public abstract class KeyFactorySpi {
      * @return the private key.
      * @throws InvalidKeySpecException
      *             if the specified {@code keySpec} is invalid.
-     * @since Android 1.0
      */
     protected abstract PrivateKey engineGeneratePrivate(KeySpec keySpec)
                                     throws InvalidKeySpecException;
@@ -73,7 +65,6 @@ public abstract class KeyFactorySpi {
      * @throws InvalidKeySpecException
      *             if the key can not be processed, or the requested requested
      *             {@code KeySpec} is inappropriate for the given key.
-     * @since Android 1.0
      */
     protected abstract <T extends KeySpec> T engineGetKeySpec(Key key, Class<T> keySpec)
                                     throws InvalidKeySpecException;
@@ -88,7 +79,6 @@ public abstract class KeyFactorySpi {
      * @throws InvalidKeyException
      *             if the specified key can not be translated by this key
      *             factory.
-     * @since Android 1.0
      */
     protected abstract Key engineTranslateKey(Key key) throws InvalidKeyException;
 

@@ -22,15 +22,11 @@ import java.security.PublicKey;
 
 /**
  * The interface for an Elliptic Curve (EC) public key.
- * 
- * @since Android 1.0
  */
 public interface ECPublicKey extends PublicKey, ECKey {
 
     /**
      * The serial version identifier.
-     * 
-     * @since Android 1.0
      */
     public static final long serialVersionUID = -3314988629879632826L;
 
@@ -38,7 +34,6 @@ public interface ECPublicKey extends PublicKey, ECKey {
      * Returns the public point {@code W} on an elliptic curve (EC).
      * 
      * @return the public point {@code W} on an elliptic curve (EC).
-     * @since Android 1.0
      */
     public ECPoint getW();
 }

@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.File;
@@ -29,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
@@ -46,14 +42,12 @@ import org.apache.harmony.security.internal.nls.Messages;
  * {@code KeyStore} is responsible for maintaining cryptographic keys and their
  * owners.
  * <p>
- * The type of the system key store can be changed by setting the {@code 
+ * The type of the system key store can be changed by setting the {@code
  * 'keystore.type'} property in the file named {@code
  * JAVA_HOME/lib/security/java.security}.
- * </p>
- * 
+ *
  * @see Certificate
  * @see PrivateKey
- * @since Android 1.0
  */
 public class KeyStore {
 
@@ -88,14 +82,13 @@ public class KeyStore {
 
     /**
      * Constructs a new instance of {@code KeyStore} with the given arguments.
-     * 
+     *
      * @param keyStoreSpi
      *            the concrete key store.
      * @param provider
      *            the provider.
      * @param type
      *            the type of the {@code KeyStore} to be constructed.
-     * @since Android 1.0
      */
     protected KeyStore(KeyStoreSpi keyStoreSpi, Provider provider, String type) {
         this.type = type;
@@ -118,7 +111,7 @@ public class KeyStore {
 
     /**
      * Returns a new instance of {@code KeyStore} with the specified type.
-     * 
+     *
      * @param type
      *            the type of the returned {@code KeyStore}.
      * @return a new instance of {@code KeyStore} with the specified type.
@@ -128,7 +121,6 @@ public class KeyStore {
      * @throws NullPointerException
      *             if {@code type} is {@code null}.
      * @see #getDefaultType
-     * @since Android 1.0
      */
     public static KeyStore getInstance(String type) throws KeyStoreException {
         if (type == null) {
@@ -147,7 +139,7 @@ public class KeyStore {
     /**
      * Returns a new instance of {@code KeyStore} from the specified provider
      * with the given type.
-     * 
+     *
      * @param type
      *            the type of the returned {@code KeyStore}.
      * @param provider
@@ -161,8 +153,10 @@ public class KeyStore {
      *             if the specified provider is not available.
      * @throws IllegalArgumentException
      *             if {@code provider} is {@code null} or the empty string.
+     * @throws NullPointerException
+     *             if {@code type} is {@code null} (instead of
+     *             NoSuchAlgorithmException) as in 1.4 release
      * @see #getDefaultType
-     * @since Android 1.0
      */
     public static KeyStore getInstance(String type, String provider)
             throws KeyStoreException, NoSuchProviderException {
@@ -183,7 +177,7 @@ public class KeyStore {
     /**
      * Returns a new instance of {@code KeyStore} from the specified provider
      * with the given type.
-     * 
+     *
      * @param type
      *            the type of the returned {@code KeyStore}.
      * @param provider
@@ -195,8 +189,10 @@ public class KeyStore {
      *             KeyStore}.
      * @throws IllegalArgumentException
      *             if {@code provider} is {@code null} or the empty string.
+     * @throws NullPointerException
+     *             if {@code type} is {@code null} (instead of
+     *             NoSuchAlgorithmException) as in 1.4 release
      * @see #getDefaultType
-     * @since Android 1.0
      */
     public static KeyStore getInstance(String type, Provider provider)
             throws KeyStoreException {
@@ -225,10 +221,8 @@ public class KeyStore {
      * The default is specified in the {@code 'keystore.type'} property in the
      * file named {@code JAVA_HOME/lib/security/java.security}. If this property
      * is not set, {@code "jks"} will be used.
-     * </p>
-     * 
+     *
      * @return the default type for {@code KeyStore} instances
-     * @since Android 1.0
      */
     public static final String getDefaultType() {
         String dt = AccessController.doPrivileged(
@@ -243,9 +237,8 @@ public class KeyStore {
 
     /**
      * Returns the provider associated with this {@code KeyStore}.
-     * 
+     *
      * @return the provider associated with this {@code KeyStore}.
-     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
@@ -253,9 +246,8 @@ public class KeyStore {
 
     /**
      * Returns the type of this {@code KeyStore}.
-     * 
+     *
      * @return the type of this {@code KeyStore}.
-     * @since Android 1.0
      */
     public final String getType() {
         return type;
@@ -264,7 +256,7 @@ public class KeyStore {
     /**
      * Returns the key with the given alias, using the password to recover the
      * key from the store.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @param password
@@ -277,7 +269,6 @@ public class KeyStore {
      *             if the algorithm for recovering the key is not available.
      * @throws UnrecoverableKeyException
      *             if the key can not be recovered.
-     * @since Android 1.0
      */
     public final Key getKey(String alias, char[] password)
             throws KeyStoreException, NoSuchAlgorithmException,
@@ -292,14 +283,13 @@ public class KeyStore {
 
     /**
      * Returns the certificate chain for the entry with the given alias.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @return the certificate chain for the entry with the given alias, or
      *         {@code null} if the specified alias is not bound to an entry.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
      */
     public final Certificate[] getCertificateChain(String alias)
             throws KeyStoreException {
@@ -313,14 +303,13 @@ public class KeyStore {
 
     /**
      * Returns the trusted certificate for the entry with the given alias.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @return the trusted certificate for the entry with the given alias, or
      *         {@code null} if the specified alias is not bound to an entry.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
      */
     public final Certificate getCertificate(String alias)
             throws KeyStoreException {
@@ -334,14 +323,13 @@ public class KeyStore {
 
     /**
      * Returns the creation date of the entry with the given alias.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @return the creation date, or {@code null} if the specified alias is not
      *         bound to an entry.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
      */
     public final Date getCreationDate(String alias) throws KeyStoreException {
         if (!isInit) {
@@ -356,8 +344,7 @@ public class KeyStore {
      * Associates the given alias with the key, password and certificate chain.
      * <p>
      * If the specified alias already exists, it will be reassigned.
-     * </p>
-     * 
+     *
      * @param alias
      *            the alias for the key.
      * @param key
@@ -371,7 +358,8 @@ public class KeyStore {
      * @throws IllegalArgumentException
      *             if {@code key} is a {@code PrivateKey} and {@code chain} does
      *             not contain any certificates.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code alias} is {@code null}.
      */
     public final void setKeyEntry(String alias, Key key, char[] password,
             Certificate[] chain) throws KeyStoreException {
@@ -394,13 +382,11 @@ public class KeyStore {
      * Associates the given alias with a key and a certificate chain.
      * <p>
      * If the specified alias already exists, it will be reassigned.
-     * </p>
      * <p>
      * If this {@code KeyStore} is of type {@code "jks"}, {@code key} must be
      * encoded conform to the PKS#8 standard as an
      * {@link javax.crypto.EncryptedPrivateKeyInfo}.
-     * </p>
-     * 
+     *
      * @param alias
      *            the alias for the key.
      * @param key
@@ -408,11 +394,13 @@ public class KeyStore {
      * @param chain
      *            the certificate chain.
      * @throws KeyStoreException
-     *             if this {@code KeyStore} is not initialized.
+     *             if this {@code KeyStore} is not initialized or if {@code key}
+     *             is null.
      * @throws IllegalArgumentException
      *             if {@code key} is a {@code PrivateKey} and {@code chain}
      *             does.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code alias} is {@code null}.
      */
     public final void setKeyEntry(String alias, byte[] key, Certificate[] chain)
             throws KeyStoreException {
@@ -428,8 +416,7 @@ public class KeyStore {
      * Associates the given alias with a certificate.
      * <p>
      * If the specified alias already exists, it will be reassigned.
-     * </p>
-     * 
+     *
      * @param alias
      *            the alias for the certificate.
      * @param cert
@@ -438,7 +425,8 @@ public class KeyStore {
      *             if this {@code KeyStore} is not initialized, or an existing
      *             alias is not associated to an entry containing a trusted
      *             certificate, or this method fails for any other reason.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code alias} is {@code null}.
      */
     public final void setCertificateEntry(String alias, Certificate cert)
             throws KeyStoreException {
@@ -453,32 +441,35 @@ public class KeyStore {
     /**
      * Deletes the entry identified with the given alias from this {@code
      * KeyStore}.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized, or if the entry
      *             can not be deleted.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code alias} is {@code null}.
      */
     public final void deleteEntry(String alias) throws KeyStoreException {
-        // BEGIN android-changed
         if (!isInit) {
+            // BEGIN android-changed
             throwNotInitialized();
+            // END android-changed
         }
-        // END android-changed
+        if (alias == null) {
+            throw new NullPointerException(Messages.getString("security.3F")); //$NON-NLS-1$
+        }
         implSpi.engineDeleteEntry(alias);
     }
 
     /**
      * Returns an {@code Enumeration} over all alias names stored in this
      * {@code KeyStore}.
-     * 
+     *
      * @return an {@code Enumeration} over all alias names stored in this
      *         {@code KeyStore}.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
      */
     public final Enumeration<String> aliases() throws KeyStoreException {
         if (!isInit) {
@@ -491,13 +482,14 @@ public class KeyStore {
 
     /**
      * Indicates whether the given alias is present in this {@code KeyStore}.
-     * 
+     *
      * @param alias
      *            the alias of an entry.
      * @return {@code true} if the alias exists, {@code false} otherwise.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code alias} is {@code null}.
      */
     public final boolean containsAlias(String alias) throws KeyStoreException {
         if (!isInit) {
@@ -513,11 +505,10 @@ public class KeyStore {
 
     /**
      * Returns the number of entries stored in this {@code KeyStore}.
-     * 
+     *
      * @return the number of entries stored in this {@code KeyStore}.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
      */
     public final int size() throws KeyStoreException {
         if (!isInit) {
@@ -531,56 +522,63 @@ public class KeyStore {
     /**
      * Indicates whether the specified alias is associated with either a
      * {@link PrivateKeyEntry} or a {@link SecretKeyEntry}.
-     * 
+     *
      * @param alias
      *            the alias of an entry.
      * @return {@code true} if the given alias is associated with a key entry.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code alias} is {@code null}.
      */
     public final boolean isKeyEntry(String alias) throws KeyStoreException {
-        // BEGIN android-changed
         if (!isInit) {
+            // BEGIN android-changed
             throwNotInitialized();
+            // END android-changed
         }
-        // END android-changed
+        if (alias == null) {
+            throw new NullPointerException(Messages.getString("security.3F")); //$NON-NLS-1$
+        }
         return implSpi.engineIsKeyEntry(alias);
     }
 
     /**
      * Indicates whether the specified alias is associated with a
      * {@link TrustedCertificateEntry}.
-     * 
+     *
      * @param alias
      *            the alias of an entry.
      * @return {@code true} if the given alias is associated with a certificate
      *         entry.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code alias} is {@code null}.
      */
     public final boolean isCertificateEntry(String alias)
             throws KeyStoreException {
-        // BEGIN android-changed
         if (!isInit) {
+            // BEGIN android-changed
             throwNotInitialized();
+            // END android-changed
         }
-        // END android-changed
+        if (alias == null) {
+            throw new NullPointerException(Messages.getString("security.3F")); //$NON-NLS-1$
+        }
         return implSpi.engineIsCertificateEntry(alias);
     }
 
     /**
      * Returns the alias associated with the first entry whose certificate
      * matches the specified certificate.
-     * 
+     *
      * @param cert
      *            the certificate to find the associated entry's alias for.
      * @return the alias or {@code null} if no entry with the specified
      *         certificate can be found.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
      */
     public final String getCertificateAlias(Certificate cert)
             throws KeyStoreException {
@@ -596,7 +594,7 @@ public class KeyStore {
      * Writes this {@code KeyStore} to the specified {@code OutputStream}. The
      * data written to the {@code OutputStream} is protected by the specified
      * password.
-     * 
+     *
      * @param stream
      *            the {@code OutputStream} to write the store's data to.
      * @param password
@@ -610,7 +608,6 @@ public class KeyStore {
      * @throws CertificateException
      *             if an exception occurred while storing the certificates of
      *             this {@code KeyStore}.
-     * @since Android 1.0
      */
     public final void store(OutputStream stream, char[] password)
             throws KeyStoreException, IOException, NoSuchAlgorithmException,
@@ -620,23 +617,15 @@ public class KeyStore {
             throwNotInitialized();
             // END android-changed
         }
-        // BEGIN android-removed
-        // copied from a newer version of harmony
-        // Just delegate stream and password to implSpi
-        // if (stream == null) {
-        //     throw new IOException(Messages.getString("security.51")); //$NON-NLS-1$
-        // }
-        // if (password == null) {
-        //     throw new IOException(Messages.getString("security.50")); //$NON-NLS-1$
-        // }
-        // END android-removed
+
+        //Just delegate stream and password to implSpi
         implSpi.engineStore(stream, password);
     }
 
     /**
      * Stores this {@code KeyStore} using the specified {@code
      * LoadStoreParameter}.
-     * 
+     *
      * @param param
      *            the {@code LoadStoreParameter} that specifies how to store
      *            this {@code KeyStore}, maybe {@code null}.
@@ -651,7 +640,6 @@ public class KeyStore {
      *             this {@code KeyStore}.
      * @throws IllegalArgumentException
      *             if the given {@link LoadStoreParameter} is not recognized.
-     * @since Android 1.0
      */
     public final void store(LoadStoreParameter param) throws KeyStoreException,
             IOException, NoSuchAlgorithmException, CertificateException {
@@ -669,7 +657,7 @@ public class KeyStore {
      * {@code KeyStore} or to initialize a {@code KeyStore} which does not rely
      * on an {@code InputStream}. This {@code KeyStore} utilizes the given
      * password to verify the stored data.
-     * 
+     *
      * @param stream
      *            the {@code InputStream} to load this {@code KeyStore}'s data
      *            from or {@code null}.
@@ -682,7 +670,6 @@ public class KeyStore {
      * @throws CertificateException
      *             if an exception occurred while loading the certificates of
      *             this {@code KeyStore}.
-     * @since Android 1.0
      */
     public final void load(InputStream stream, char[] password)
             throws IOException, NoSuchAlgorithmException, CertificateException {
@@ -693,7 +680,7 @@ public class KeyStore {
     /**
      * Loads this {@code KeyStore} using the specified {@code
      * LoadStoreParameter}.
-     * 
+     *
      * @param param
      *            the {@code LoadStoreParameter} that specifies how to load this
      *            {@code KeyStore}, maybe {@code null}.
@@ -706,7 +693,6 @@ public class KeyStore {
      *             this {@code KeyStore}.
      * @throws IllegalArgumentException
      *             if the given {@link LoadStoreParameter} is not recognized.
-     * @since Android 1.0
      */
     public final void load(LoadStoreParameter param) throws IOException,
             NoSuchAlgorithmException, CertificateException {
@@ -717,7 +703,7 @@ public class KeyStore {
     /**
      * Returns the {@code Entry} with the given alias, using the specified
      * {@code ProtectionParameter}.
-     * 
+     *
      * @param alias
      *            the alias of the requested entry.
      * @param param
@@ -731,7 +717,8 @@ public class KeyStore {
      *             if the entry can not be recovered.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code alias} is {@code null}.
      */
     public final Entry getEntry(String alias, ProtectionParameter param)
             throws NoSuchAlgorithmException, UnrecoverableEntryException,
@@ -753,8 +740,7 @@ public class KeyStore {
      * specified {@code ProtectionParameter}.
      * <p>
      * If the specified alias already exists, it will be reassigned.
-     * </p>
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @param entry
@@ -763,7 +749,9 @@ public class KeyStore {
      *            the {@code ProtectionParameter} to protect the entry.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code alias} is {@code null} or {@code entry} is {@code
+     *             null}.
      */
     public final void setEntry(String alias, Entry entry,
             ProtectionParameter param) throws KeyStoreException {
@@ -784,7 +772,7 @@ public class KeyStore {
     /**
      * Indicates whether the entry for the given alias is assignable to the
      * provided {@code Class}.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @param entryClass
@@ -793,7 +781,6 @@ public class KeyStore {
      *         the specified {@code entryClass}.
      * @throws KeyStoreException
      *             if this {@code KeyStore} is not initialized.
-     * @since Android 1.0
      */
     public final boolean entryInstanceOf(String alias, 
             Class<? extends KeyStore.Entry> entryClass)
@@ -815,25 +802,20 @@ public class KeyStore {
 
     /**
      * {@code Builder} is used to construct new instances of {@code KeyStore}.
-     * 
-     * @since Android 1.0
      */
     public abstract static class Builder {
         /**
          * Constructs a new instance of {@code Builder}.
-         * 
-         * @since Android 1.0
          */
         protected Builder() {
         }
 
         /**
          * Returns the {@code KeyStore} created by this {@code Builder}.
-         * 
+         *
          * @return the {@code KeyStore} created by this {@code Builder}.
          * @throws KeyStoreException
          *             if an error occurred during construction.
-         * @since Android 1.0
          */
         public abstract KeyStore getKeyStore() throws KeyStoreException;
 
@@ -841,7 +823,7 @@ public class KeyStore {
          * Returns the {@code ProtectionParameter} to be used when a {@code
          * Entry} with the specified alias is requested. Before this method is
          * invoked, {@link #getKeyStore()} must be called.
-         * 
+         *
          * @param alias
          *            the alias for the entry.
          * @return the {@code ProtectionParameter} to be used when a {@code
@@ -854,18 +836,14 @@ public class KeyStore {
          *             invocation of this method.
          * @throws NullPointerException
          *             if {@code alias} is {@code null}.
-         * @since Android 1.0
          */
         public abstract ProtectionParameter getProtectionParameter(String alias)
                 throws KeyStoreException;
-        // BEGIN android-note
-        // renamed parameter
-        // END android-note
 
         /**
          * Returns a new {@code Builder} that holds the given {@code KeyStore}
          * and the given {@code ProtectionParameter}.
-         * 
+         *
          * @param keyStore
          *            the {@code KeyStore} to be held.
          * @param protectionParameter
@@ -878,7 +856,6 @@ public class KeyStore {
          *             {@code null}.
          * @throws IllegalArgumentException
          *             if the given {@code KeyStore} is not initialized.
-         * @since Android 1.0
          */
         public static Builder newInstance(KeyStore keyStore,
                 ProtectionParameter protectionParameter) {
@@ -903,8 +880,7 @@ public class KeyStore {
          * If {@code provider} is {@code null}, all installed providers are
          * searched, otherwise the key store from the specified provider is
          * used.
-         * </p>
-         * 
+         *
          * @param type
          *            the type of the {@code KeyStore} to be constructed.
          * @param provider
@@ -926,7 +902,6 @@ public class KeyStore {
          *             {@code PasswordProtection} or {@code
          *             CallbackHandlerProtection}, {@code file} is not a file or
          *             does not exist at all.
-         * @since Android 1.0
          */
         public static Builder newInstance(String type, Provider provider,
                 File file, ProtectionParameter protectionParameter) {
@@ -965,8 +940,7 @@ public class KeyStore {
          * If {@code provider} is {@code null}, all installed providers are
          * searched, otherwise the key store from the specified provider is
          * used.
-         * </p>
-         * 
+         *
          * @param type
          *            the type of the {@code KeyStore} to be constructed.
          * @param provider
@@ -985,7 +959,6 @@ public class KeyStore {
          *             {@code PasswordProtection} or {@code
          *             CallbackHandlerProtection}, {@code file} is not a file or
          *             does not exist at all.
-         * @since Android 1.0
          */
         public static Builder newInstance(String type, Provider provider,
                 ProtectionParameter protectionParameter) {
@@ -1062,6 +1035,7 @@ public class KeyStore {
             // 
             // Result KeyStore object is returned.
             //
+            @Override
             public synchronized KeyStore getKeyStore() throws KeyStoreException {
                 // If KeyStore was created but in final block some exception was
                 // thrown
@@ -1121,8 +1095,7 @@ public class KeyStore {
 
                     
                     isGetKeyStore = true;
-                    keyStore = ks;
-                    return keyStore;
+                    return ks;
                 } catch (KeyStoreException e) {
                     // Store exception
                     throw lastException = e;
@@ -1139,6 +1112,7 @@ public class KeyStore {
             // Return: ProtectionParameter to get Entry which was saved in
             // KeyStore with defined alias
             //
+            @Override
             public synchronized ProtectionParameter getProtectionParameter(
                     String alias) throws KeyStoreException {
                 if (alias == null) {
@@ -1151,13 +1125,8 @@ public class KeyStore {
             }
         }
 
-        // BEGIN android-note
-        // Added "static" to the class declaration below.
-        // END android-note
         /*
          * Implementation of LoadStoreParameter interface
-         * 
-         * @author Vera Petrashkova
          */
         private static class TmpLSParameter implements LoadStoreParameter {
 
@@ -1166,6 +1135,7 @@ public class KeyStore {
 
             /**
              * Creates TmpLoadStoreParameter object
+             * @param protPar protection parameter
              */
             public TmpLSParameter(ProtectionParameter protPar) {
                 this.protPar = protPar;
@@ -1183,8 +1153,6 @@ public class KeyStore {
     /**
      * {@code CallbackHandlerProtection} is a {@code ProtectionParameter} that
      * encapsulates a {@link CallbackHandler}.
-     * 
-     * @since Android 1.0
      */
     public static class CallbackHandlerProtection implements
             ProtectionParameter {
@@ -1194,12 +1162,11 @@ public class KeyStore {
         /**
          * Constructs a new instance of {@code CallbackHandlerProtection} with
          * the {@code CallbackHandler}.
-         * 
+         *
          * @param handler
          *            the {@code CallbackHandler}.
          * @throws NullPointerException
          *             if {@code handler} is {@code null}.
-         * @since Android 1.0
          */
         public CallbackHandlerProtection(CallbackHandler handler) {
             if (handler == null) {
@@ -1210,9 +1177,8 @@ public class KeyStore {
 
         /**
          * Returns the {@code CallbackHandler}.
-         * 
+         *
          * @return the {@code CallbackHandler}.
-         * @since Android 1.0
          */
         public CallbackHandler getCallbackHandler() {
             return callbackHandler;
@@ -1222,8 +1188,6 @@ public class KeyStore {
     /**
      * {@code Entry} is the common marker interface for a {@code KeyStore}
      * entry.
-     * 
-     * @since Android 1.0
      */
     public static interface Entry {
     }
@@ -1231,19 +1195,17 @@ public class KeyStore {
     /**
      * {@code LoadStoreParameter} represents a parameter that specifies how a
      * {@code KeyStore} can be loaded and stored.
-     * 
+     *
      * @see KeyStore#load(LoadStoreParameter)
      * @see KeyStore#store(LoadStoreParameter)
-     * @since Android 1.0
      */
     public static interface LoadStoreParameter {
         /**
          * Returns the {@code ProtectionParameter} which is used to protect data
          * in the {@code KeyStore}.
-         * 
+         *
          * @return the {@code ProtectionParameter} which is used to protect data
          *         in the {@code KeyStore}, maybe {@code null}.
-         * @since Android 1.0
          */
         public ProtectionParameter getProtectionParameter();
     }
@@ -1251,8 +1213,6 @@ public class KeyStore {
     /**
      * {@code PasswordProtection} is a {@code ProtectionParameter} that protects
      * a {@code KeyStore} using a password.
-     * 
-     * @since Android 1.0
      */
     public static class PasswordProtection implements ProtectionParameter,
             Destroyable {
@@ -1266,27 +1226,22 @@ public class KeyStore {
          * Constructs a new instance of {@code PasswordProtection} with a
          * password. A copy of the password is stored in the new {@code
          * PasswordProtection} object.
-         * 
+         *
          * @param password
          *            the password, maybe {@code null}.
-         * @since Android 1.0
          */
         public PasswordProtection(char[] password) {
-            // BEGIN android-changed
-            // copied from a newer version of harmony
-            if (password != null) {
-                this.password = password.clone();
-            }
-            // END android-changed
+        	if (password != null) {
+        		this.password = password.clone();
+        	}
         }
 
         /**
          * Returns the password.
-         * 
+         *
          * @return the password.
          * @throws IllegalStateException
          *             if the password has been destroyed.
-         * @since Android 1.0
          */
         public synchronized char[] getPassword() {
             if (isDestroyed) {
@@ -1297,10 +1252,9 @@ public class KeyStore {
 
         /**
          * Destroys / invalidates the password.
-         * 
+         *
          * @throws DestroyFailedException
          *             if the password could not be invalidated.
-         * @since Android 1.0
          */
         public synchronized void destroy() throws DestroyFailedException {
             isDestroyed = true;
@@ -1312,10 +1266,9 @@ public class KeyStore {
 
         /**
          * Indicates whether the password is invalidated.
-         * 
+         *
          * @return {@code true} if the password is invalidated, {@code false}
          *         otherwise.
-         * @since Android 1.0
          */
         public synchronized boolean isDestroyed() {
             return isDestroyed;
@@ -1326,8 +1279,6 @@ public class KeyStore {
      * {@code ProtectionParameter} is a marker interface for protection
      * parameters. A protection parameter is used to protect the content of a
      * {@code KeyStore}.
-     * 
-     * @since Android 1.0
      */
     public static interface ProtectionParameter {
     }
@@ -1335,8 +1286,6 @@ public class KeyStore {
     /**
      * {@code PrivateKeyEntry} represents a {@code KeyStore} entry that
      * holds a private key.
-     * 
-     * @since Android 1.0
      */
     public static final class PrivateKeyEntry implements Entry {
         // Store Certificate chain
@@ -1348,7 +1297,7 @@ public class KeyStore {
         /**
          * Constructs a new instance of {@code PrivateKeyEntry} with the given
          * {@code PrivateKey} and the provided certificate chain.
-         * 
+         *
          * @param privateKey
          *            the private key.
          * @param chain
@@ -1361,7 +1310,6 @@ public class KeyStore {
          *             private key does not match the algorithm of the public
          *             key of the first certificate or the certificates are not
          *             all of the same type.
-         * @since Android 1.0
          */
         public PrivateKeyEntry(PrivateKey privateKey, Certificate[] chain) {
             if (privateKey == null) {
@@ -1389,18 +1337,29 @@ public class KeyStore {
                 }
             }
             // clone chain - this.chain = (Certificate[])chain.clone();
-            // BEGIN android-changed
-            this.chain = new Certificate[chain.length];
-            // END android-changed
+            boolean isAllX509Certificates = true;
+            // assert chain length > 0
+            for(Certificate cert: chain){
+                if(!(cert instanceof X509Certificate)){
+                    isAllX509Certificates = false;
+                    break;
+                }
+            }
+            
+            if(isAllX509Certificates){
+                this.chain = new X509Certificate[chain.length];
+            }
+            else{
+                this.chain = new Certificate[chain.length];
+            }
             System.arraycopy(chain, 0, this.chain, 0, chain.length);
             this.privateKey = privateKey;
         }
 
         /**
          * Returns the private key.
-         * 
+         *
          * @return the private key.
-         * @since Android 1.0
          */
         public PrivateKey getPrivateKey() {
             return privateKey;
@@ -1408,22 +1367,17 @@ public class KeyStore {
 
         /**
          * Returns the certificate chain.
-         * 
+         *
          * @return the certificate chain.
-         * @since Android 1.0
          */
         public Certificate[] getCertificateChain() {
-            // BEGIN android-changed
-            // copied from a newer version of harmony
             return chain.clone();
-            // END android-changed
         }
 
         /**
          * Returns the certificate corresponding to the private key.
-         * 
+         *
          * @return the certificate corresponding to the private key.
-         * @since Android 1.0
          */
         public Certificate getCertificate() {
             return chain[0];
@@ -1432,12 +1386,12 @@ public class KeyStore {
         /**
          * Returns a string containing a concise, human-readable description of
          * this {@code PrivateKeyEntry}.
-         * 
+         *
          * @return a printable representation for this {@code PrivateKeyEntry}.
-         * @since Android 1.0
          */
+        @Override
         public String toString() {
-            StringBuffer sb = new StringBuffer(
+            StringBuilder sb = new StringBuilder(
                     "PrivateKeyEntry: number of elements in certificate chain is "); //$NON-NLS-1$
             sb.append(Integer.toString(chain.length));
             sb.append("\n"); //$NON-NLS-1$
@@ -1452,8 +1406,6 @@ public class KeyStore {
     /**
      * {@code SecretKeyEntry} represents a {@code KeyStore} entry that
      * holds a secret key.
-     * 
-     * @since Android 1.0
      */
     public static final class SecretKeyEntry implements Entry {
 
@@ -1463,12 +1415,11 @@ public class KeyStore {
         /**
          * Constructs a new instance of {@code SecretKeyEntry} with the given
          * {@code SecretKey}.
-         * 
+         *
          * @param secretKey
          *            the secret key.
          * @throws NullPointerException
          *             if {@code secretKey} is {@code null}.
-         * @since Android 1.0
          */
         public SecretKeyEntry(SecretKey secretKey) {
             if (secretKey == null) {
@@ -1479,9 +1430,8 @@ public class KeyStore {
 
         /**
          * Returns the secret key.
-         * 
+         *
          * @return the secret key.
-         * @since Android 1.0
          */
         public SecretKey getSecretKey() {
             return secretKey;
@@ -1490,13 +1440,13 @@ public class KeyStore {
         /**
          * Returns a string containing a concise, human-readable description of
          * this {@code SecretKeyEntry}.
-         * 
+         *
          * @return a printable representation for this {@code
          *         SecretKeyEntry}.
-         * @since Android 1.0
          */
+        @Override
         public String toString() {
-            StringBuffer sb = new StringBuffer("SecretKeyEntry: algorithm - "); //$NON-NLS-1$
+            StringBuilder sb = new StringBuilder("SecretKeyEntry: algorithm - "); //$NON-NLS-1$
             sb.append(secretKey.getAlgorithm());
             return sb.toString();
         }
@@ -1505,8 +1455,6 @@ public class KeyStore {
     /**
      * {@code TrustedCertificateEntry} represents a {@code KeyStore} entry that
      * holds a trusted certificate.
-     * 
-     * @since Android 1.0
      */
     public static final class TrustedCertificateEntry implements Entry {
 
@@ -1516,12 +1464,11 @@ public class KeyStore {
         /**
          * Constructs a new instance of {@code TrustedCertificateEntry} with the
          * given {@code Certificate}.
-         * 
+         *
          * @param trustCertificate
          *            the trusted certificate.
          * @throws NullPointerException
          *             if {@code trustCertificate} is {@code null}.
-         * @since Android 1.0
          */
         public TrustedCertificateEntry(Certificate trustCertificate) {
             if (trustCertificate == null) {
@@ -1532,9 +1479,8 @@ public class KeyStore {
 
         /**
          * Returns the trusted certificate.
-         * 
+         *
          * @return the trusted certificate.
-         * @since Android 1.0
          */
         public Certificate getTrustedCertificate() {
             return trustCertificate;
@@ -1543,11 +1489,11 @@ public class KeyStore {
         /**
          * Returns a string containing a concise, human-readable description of
          * this {@code TrustedCertificateEntry}.
-         * 
+         *
          * @return a printable representation for this {@code
          *         TrustedCertificateEntry}.
-         * @since Android 1.0
          */
+        @Override
         public String toString() {
             return "Trusted certificate entry:\n" + trustCertificate; //$NON-NLS-1$
         }

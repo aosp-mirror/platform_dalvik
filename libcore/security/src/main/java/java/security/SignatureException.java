@@ -15,18 +15,12 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  *{@code SignatureException} is a general {@code Signature} exception.
  * 
  * @see Signature
- * @since Android 1.0
  */
 public class SignatureException extends GeneralSecurityException {
 
@@ -35,10 +29,9 @@ public class SignatureException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code SignatureException} with the
      * given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public SignatureException(String msg) {
         super(msg);
@@ -46,8 +39,6 @@ public class SignatureException extends GeneralSecurityException {
 
     /**
      * Constructs a new instance of {@code SignatureException}.
-     * 
-     * @since Android 1.0
      */
     public SignatureException() {
     }
@@ -55,12 +46,11 @@ public class SignatureException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code SignatureException} with the
      * given message and the cause.
-     * 
+     *
      * @param message
      *            the detail message for this exception
      * @param cause
      *            the exception which is the cause for this exception
-     * @since Android 1.0
      */
     public SignatureException(String message, Throwable cause) {
         super(message, cause);
@@ -69,10 +59,9 @@ public class SignatureException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code SignatureException} with the
      * cause.
-     * 
+     *
      * @param cause
      *            the exception which is the cause for this exception
-     * @since Android 1.0
      */
     public SignatureException(Throwable cause) {
         super(cause);

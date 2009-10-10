@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.security.auth.x500.X500Principal;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.harmony.security.asn1.ASN1Constants;
 import org.apache.harmony.security.asn1.ASN1Oid;
@@ -38,6 +39,7 @@ import org.apache.harmony.security.asn1.BerInputStream;
 import org.apache.harmony.security.asn1.BerOutputStream;
 import org.apache.harmony.security.internal.nls.Messages;
 import org.apache.harmony.security.utils.ObjectIdentifier;
+import org.apache.harmony.security.Util;
 
 
 /**
@@ -284,7 +286,7 @@ public class AttributeTypeAndValue {
             this.oid = thisOid;
 
         } else {
-            this.oid = (ObjectIdentifier) KNOWN_NAMES.get(sOid.toUpperCase());
+            this.oid = (ObjectIdentifier) KNOWN_NAMES.get(Util.toUpperCase(sOid));
             if (this.oid == null) {
                 throw new IOException(Messages.getString("security.178", sOid)); //$NON-NLS-1$
             }
@@ -301,7 +303,7 @@ public class AttributeTypeAndValue {
     public void appendName(String attrFormat, StringBuffer buf) {
 
         boolean hexFormat = false;
-        if (attrFormat == X500Principal.RFC1779) {
+        if (X500Principal.RFC1779.equals(attrFormat)) {
             if (RFC1779_NAMES == oid.getGroup()) {
                 buf.append(oid.getName());
             } else {
@@ -311,7 +313,7 @@ public class AttributeTypeAndValue {
             buf.append('=');
             if (value.escapedString == value.getHexString()) {
                 //FIXME all chars in upper case
-                buf.append(value.getHexString().toUpperCase());
+                buf.append(Util.toUpperCase(value.getHexString()));
             } else if (value.escapedString.length() != value.rawString.length()) {
                 // was escaped
                 value.appendQEString(buf);
@@ -324,7 +326,7 @@ public class AttributeTypeAndValue {
             if (RFC1779_NAMES == group || RFC2253_NAMES == group) {
                 buf.append(oid.getName());
 
-                if (attrFormat == X500Principal.CANONICAL) {
+                if (X500Principal.CANONICAL.equals(attrFormat)) {
                     // only PrintableString and UTF8String in string format
                     // all others are output in hex format
                     // BEGIN android-changed
@@ -348,7 +350,7 @@ public class AttributeTypeAndValue {
             if (hexFormat) {
                 buf.append(value.getHexString());
             } else {
-                if (attrFormat == X500Principal.CANONICAL) {
+                if (X500Principal.CANONICAL.equals(attrFormat)) {
                     buf.append(value.makeCanonical());
                 } else {
                     buf.append(value.escapedString);
@@ -387,7 +389,7 @@ public class AttributeTypeAndValue {
      *  
      */
 
-    public static ASN1Type AttributeValue = new ASN1Type(
+    public static final ASN1Type attributeValue = new ASN1Type(
             ASN1Constants.TAG_PRINTABLESTRING) {
 
         public boolean checkTag(int tag) {
@@ -452,7 +454,11 @@ public class AttributeTypeAndValue {
                     av.bytes = (byte[]) out.content;
                     out.content = av;
                 } else {
-                    av.bytes = av.rawString.getBytes();
+                    try {
+                        av.bytes = av.rawString.getBytes("UTF-8"); //$NON-NLS-1$
+                    } catch (UnsupportedEncodingException e) {
+                        throw new RuntimeException(e.getMessage());
+                    }
                     out.length = av.bytes.length;
                 }
             }
@@ -476,7 +482,7 @@ public class AttributeTypeAndValue {
     };
 
     public static final ASN1Sequence ASN1 = new ASN1Sequence(new ASN1Type[] {
-            ASN1Oid.getInstance(), AttributeValue }) {
+            ASN1Oid.getInstance(), attributeValue }) {
 
         protected Object getDecodedObject(BerInputStream in) throws IOException {
             Object[] values = (Object[]) in.content;

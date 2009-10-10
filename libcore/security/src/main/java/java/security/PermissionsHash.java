@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.util.Enumeration;
@@ -30,28 +25,21 @@ import org.apache.harmony.security.internal.nls.Messages;
 /**
  * A default {@code PermissionCollection} implementation that uses a hashtable.
  * Each hashtable entry stores a Permission object as both the key and the
- * value. <br>
+ * value.
+ * <p>
  * This {@code PermissionCollection} is intended for storing &quot;neutral&quot;
- * permissions which do not require special collection. </br>
- * 
- * @since Android 1.0
+ * permissions which do not require special collection.
  */
 
 final class PermissionsHash extends PermissionCollection {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = -8491988220802933440L;
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private final Hashtable perms = new Hashtable();
 
     /**
      * Adds the argument to the collection.
-     * 
+     *
      * @param permission
      *            the permission to add to the collection.
      */
@@ -61,8 +49,7 @@ final class PermissionsHash extends PermissionCollection {
 
     /**
      * Returns an enumeration of the permissions in the receiver.
-     * 
-     * 
+     *
      * @return Enumeration the permissions in the receiver.
      */
     public Enumeration elements() {
@@ -72,8 +59,7 @@ final class PermissionsHash extends PermissionCollection {
     /**
      * Indicates whether the argument permission is implied by the permissions
      * contained in the receiver.
-     * 
-     * 
+     *
      * @return boolean <code>true</code> if the argument permission is implied
      *         by the permissions in the receiver, and <code>false</code> if
      *         it is not.

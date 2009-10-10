@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.Serializable;
@@ -29,8 +24,6 @@ import java.io.Serializable;
  * participate in the access control security framework around
  * {@link AccessController} and {@link AccessControlContext}. A permission
  * constitutes of a name and associated actions.
- * 
- * @since Android 1.0
  */
 public abstract class Permission implements Guard, Serializable {
 
@@ -45,46 +38,44 @@ public abstract class Permission implements Guard, Serializable {
      * <p>
      * The {@link #implies(Permission)} method should be used for making access
      * control checks.
-     * </p>
-     * 
+     *
      * @param obj
      *            object to be compared for equality with this {@code
      *            Permission}.
      * @return {@code true} if the specified object is equal to this {@code
      *         Permission}, otherwise {@code false}.
-     * @since Android 1.0
      */
+    @Override
     public abstract boolean equals(Object obj);
 
     /**
      * Returns the hash code value for this {@code Permission}. Returns the same
      * hash code for {@code Permission}s that are equal to each other as
      * required by the general contract of {@link Object#hashCode}.
-     * 
+     *
      * @return the hash code value for this {@code Permission}.
      * @see Object#equals(Object)
      * @see Permission#equals(Object)
-     * @since Android 1.0
      */
+    @Override
     public abstract int hashCode();
 
     /**
      * Returns a comma separated string identifying the actions associated with
      * this permission. The returned actions are in canonical form. For example:
-     * 
+     *
      * <pre>
-     * sp0 = new SocketPermission(&quot;www.google.com&quot;, &quot;connect,resolve&quot;)
-     * sp1 = new SocketPermission(&quot;www.google.com&quot;, &quot;resolve,connect&quot;)
+     * sp0 = new SocketPermission(&quot;www.example.com&quot;, &quot;connect,resolve&quot;)
+     * sp1 = new SocketPermission(&quot;www.example.com&quot;, &quot;resolve,connect&quot;)
      * sp0.getActions().equals(sp1.getActions()) //yields true
      * </pre>
-     * 
+     *
      * Both permissions return "connect,resolve" (in that order) if {@code
      * #getActions()} is invoked. Returns an empty String, if no actions are
      * associated with this permission.
-     * 
+     *
      * @return the actions associated with this permission or an empty string if
      *         no actions are associated with this permission.
-     * @since Android 1.0
      */
     public abstract String getActions();
 
@@ -92,21 +83,19 @@ public abstract class Permission implements Guard, Serializable {
      * Indicates whether the specified permission is implied by this permission.
      * The {@link AccessController} uses this method to check whether permission
      * protected access is allowed with the present policy.
-     * 
+     *
      * @param permission
      *            the permission to check against this permission.
      * @return {@code true} if the specified permission is implied by this
      *         permission, {@code false} otherwise.
-     * @since Android 1.0
      */
     public abstract boolean implies(Permission permission);
 
     /**
      * Constructs a new instance of {@code Permission} with its name.
-     * 
+     *
      * @param name
      *            the name of the permission.
-     * @since Android 1.0
      */
     public Permission(String name) {
         this.name = name;
@@ -114,9 +103,8 @@ public abstract class Permission implements Guard, Serializable {
 
     /**
      * Returns the name of this permission.
-     * 
+     *
      * @return the name of this permission.
-     * @since Android 1.0
      */
     public final String getName() {
         return name;
@@ -126,7 +114,7 @@ public abstract class Permission implements Guard, Serializable {
      * Invokes {@link SecurityManager#checkPermission(Permission)} with this
      * permission as its argument. This method implements the {@link Guard}
      * interface.
-     * 
+     *
      * @param obj
      *            as specified in {@link Guard#checkGuard(Object)} but ignored
      *            in this implementation.
@@ -134,7 +122,6 @@ public abstract class Permission implements Guard, Serializable {
      *             if this permission is not granted.
      * @see Guard
      * @see SecurityManager#checkPermission(Permission)
-     * @since Android 1.0
      */
     public void checkGuard(Object obj) throws SecurityException {
         SecurityManager sm = System.getSecurityManager();
@@ -150,11 +137,9 @@ public abstract class Permission implements Guard, Serializable {
      * <p>
      * Subclasses may override this method to return an appropriate collection
      * for the specific permissions they implement.
-     * </p>
-     * 
+     *
      * @return an empty {@link PermissionCollection} or {@code null} if any
      *         permission collection can be used.
-     * @since Android 1.0
      */
     public PermissionCollection newPermissionCollection() {
         return null;
@@ -163,10 +148,10 @@ public abstract class Permission implements Guard, Serializable {
     /**
      * Returns a string containing a concise, human-readable description of the
      * this {@code Permission} including its name and its actions.
-     * 
+     *
      * @return a printable representation for this {@code Permission}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         String actions = getActions();
         actions = (actions == null || actions.length() == 0) ? "" : " " //$NON-NLS-1$ //$NON-NLS-2$

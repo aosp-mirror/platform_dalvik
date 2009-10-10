@@ -22,8 +22,6 @@ import java.security.SecureRandom;
 
 /**
  * The interface for key generators that can generate DSA key pairs.
- * 
- * @since Android 1.0
  */
 public interface DSAKeyPairGenerator {
 
@@ -38,7 +36,6 @@ public interface DSAKeyPairGenerator {
      * @throws InvalidParameterException
      *             if the specified parameter values are {@code null} or
      *             invalid.
-     * @since Android 1.0
      */
     public void initialize(DSAParams params, SecureRandom random)
             throws InvalidParameterException;
@@ -53,7 +50,6 @@ public interface DSAKeyPairGenerator {
      * it will use the pre-calculated values for the specified modulus
      * length. Default parameters are available for modulus lengths of 512 and 1024
      * bits.
-     * </p>
      * 
      * @param modlen
      *            the length of the modulus in bits.
@@ -65,7 +61,6 @@ public interface DSAKeyPairGenerator {
      *             if the specified modulus length is not valid, or if there are
      *             no pre-calculated values and {@code genParams} is {@code
      *             false}.
-     * @since Android 1.0
      */
     public void initialize(int modlen, boolean genParams, SecureRandom random)
             throws InvalidParameterException;

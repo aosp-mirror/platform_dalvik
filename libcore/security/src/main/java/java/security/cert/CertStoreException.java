@@ -21,8 +21,6 @@ import java.security.GeneralSecurityException;
 
 /**
  * The exception that is thrown when an access to a {@code CertStore} fails.
- * 
- * @since Android 1.0
  */
 public class CertStoreException extends GeneralSecurityException {
 
@@ -36,7 +34,6 @@ public class CertStoreException extends GeneralSecurityException {
      *            the detail message for this exception.
      * @param cause
      *            the cause why the access to the certificate store failed.
-     * @since Android 1.0
      */
     public CertStoreException(String msg, Throwable cause) {
         super(msg, cause);
@@ -47,7 +44,6 @@ public class CertStoreException extends GeneralSecurityException {
      * 
      * @param cause
      *            the cause why the access to the certificate store failed.
-     * @since Android 1.0
      */
     public CertStoreException(Throwable cause) {
         super(cause);
@@ -58,7 +54,6 @@ public class CertStoreException extends GeneralSecurityException {
      * 
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public CertStoreException(String msg) {
         super(msg);
@@ -66,8 +61,6 @@ public class CertStoreException extends GeneralSecurityException {
 
     /**
      * Creates a new {@code CertStoreException}.
-     * 
-     * @since Android 1.0
      */
     public CertStoreException() {
     }

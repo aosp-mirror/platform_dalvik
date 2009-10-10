@@ -55,7 +55,7 @@ public class ReasonFlags {
     /**
      * The names of the reasons.
      */
-    public static final String[] REASONS = {
+    static final String[] REASONS = {
         "unused", //$NON-NLS-1$
         "keyCompromise", //$NON-NLS-1$
         "cACompromise", //$NON-NLS-1$
@@ -97,7 +97,7 @@ public class ReasonFlags {
     /**
      * ASN.1 Encoder/Decoder.
      */
-    public static ASN1BitString ASN1 = 
+    public static final ASN1BitString ASN1 = 
                             new ASN1BitString.ASN1NamedBitList(REASONS.length) {
         public Object getDecodedObject(BerInputStream in) throws IOException {
             return new ReasonFlags((boolean[]) super.getDecodedObject(in));

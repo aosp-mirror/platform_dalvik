@@ -19,8 +19,6 @@ package java.security.cert;
 
 /**
  * The exception that is thrown when a {@code Certificate} can not be parsed.
- * 
- * @since Android 1.0
  */
 public class CertificateParsingException extends CertificateException {
 
@@ -29,10 +27,9 @@ public class CertificateParsingException extends CertificateException {
     /**
      * Creates a new {@code CertificateParsingException} with the specified
      * message.
-     * 
+     *
      * @param msg
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public CertificateParsingException(String msg) {
         super(msg);
@@ -40,8 +37,6 @@ public class CertificateParsingException extends CertificateException {
 
     /**
      * Creates a new {@code CertificateParsingException}.
-     * 
-     * @since Android 1.0
      */
     public CertificateParsingException() {
     }
@@ -49,12 +44,11 @@ public class CertificateParsingException extends CertificateException {
     /**
      * Creates a new {@code CertificateParsingException} with the specified
      * message and cause.
-     * 
+     *
      * @param message
      *            the detail message for the exception.
      * @param cause
      *            the exception's source.
-     * @since Android 1.0
      */
     public CertificateParsingException(String message, Throwable cause) {
         super(message, cause);
@@ -63,10 +57,9 @@ public class CertificateParsingException extends CertificateException {
     /**
      * Creates a new {@code CertificateParsingException} with the specified
      * cause.
-     * 
+     *
      * @param cause
      *            the exception's source.
-     * @since Android 1.0
      */
     public CertificateParsingException(Throwable cause) {
         super(cause);

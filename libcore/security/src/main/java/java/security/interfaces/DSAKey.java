@@ -21,8 +21,6 @@ package java.security.interfaces;
 /**
  * The base interface for Digital Signature Algorithm (DSA) public or private
  * keys.
- * 
- * @since Android 1.0
  */
 public interface DSAKey {
 
@@ -30,7 +28,6 @@ public interface DSAKey {
      * Returns the DSA key parameters.
      * 
      * @return the DSA key parameters.
-     * @since Android 1.0
      */
     public DSAParams getParams();
 

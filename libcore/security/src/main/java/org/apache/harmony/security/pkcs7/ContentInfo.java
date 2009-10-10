@@ -93,7 +93,7 @@ public class ContentInfo {
     }
     
     public String toString() {
-        StringBuffer res = new StringBuffer();
+        StringBuilder res = new StringBuilder();
         res.append("==== ContentInfo:"); //$NON-NLS-1$
         res.append("\n== ContentType (OID): "); //$NON-NLS-1$
         for (int i = 0; i< oid.length; i++) {

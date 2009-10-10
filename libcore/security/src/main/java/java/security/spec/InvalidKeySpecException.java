@@ -22,15 +22,11 @@ import java.security.GeneralSecurityException;
 /**
  * The exception that is thrown when an invalid key specification is
  * encountered.
- * 
- * @since Android 1.0
  */
 public class InvalidKeySpecException extends GeneralSecurityException {
 
     /**
      * The serial version identifier.
-     * 
-     * @since Android 1.0
      */
     private static final long serialVersionUID = 3546139293998810778L;
 
@@ -39,7 +35,6 @@ public class InvalidKeySpecException extends GeneralSecurityException {
      * 
      * @param msg
      *            the detail message of this exception.
-     * @since Android 1.0
      */
     public InvalidKeySpecException(String msg) {
         super(msg);
@@ -47,8 +42,6 @@ public class InvalidKeySpecException extends GeneralSecurityException {
 
     /**
      * Creates a new {@code InvalidKeySpecException}.
-     * 
-     * @since Android 1.0
      */
     public InvalidKeySpecException() {
     }
@@ -61,7 +54,6 @@ public class InvalidKeySpecException extends GeneralSecurityException {
      *            the detail message of this exception.
      * @param cause
      *            the cause of this exception.
-     * @since Android 1.0
      */
     public InvalidKeySpecException(String message, Throwable cause) {
         super(message, cause);
@@ -72,7 +64,6 @@ public class InvalidKeySpecException extends GeneralSecurityException {
      * 
      * @param cause
      *            the cause of this exception.
-     * @since Android 1.0
      */
     public InvalidKeySpecException(Throwable cause) {
         super(cause);

@@ -22,7 +22,10 @@ import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
+import java.security.Security;
 
 @TestTargetClass(Provider.class)
 public class Provider2Test extends junit.framework.TestCase {
@@ -171,5 +174,45 @@ public class Provider2Test extends junit.framework.TestCase {
     public void test_toString() {
         // Regression for HARMONY-3734
         assertEquals("provTest version 1.2", provTest.toString());
+    }
+    
+    // Regression Test for Provider.Service.getAlias(), which is an package
+    // private method but will lead to NPE thrown at
+    // Secure.SecurityDorr.getAliases
+    public void test_getAlias() throws Exception {
+        MockProvider mockProvider = new MockProvider("MOCKNAME", 1.0,
+                "MOCKINFO");
+        Provider.Service service = new Provider.Service(mockProvider,
+                "MOCKTYPE", "MOCKALGORITHM", "TESTCLASSNAME", null, null);
+        mockProvider.putService(service);
+        Security.addProvider(mockProvider);
+        try {
+            MessageDigest messageDigest = MessageDigest
+                    .getInstance("NOTEXISTS");
+        }
+
+        catch (NoSuchAlgorithmException e) {
+            // expected
+        } finally {
+            Security.removeProvider("MOCKNAME");
+        }
+    }
+
+    public static class MockProvider extends Provider {
+
+        private static final long serialVersionUID = 1L;
+
+        public MockProvider(String name, double version, String info) {
+            super(name, version, info);
+
+        }
+
+        public void putService(Provider.Service service) {
+            super.putService(service);
+        }
+
+        public void removeService(Provider.Service service) {
+            super.removeService(service);
+        }
     }
 }

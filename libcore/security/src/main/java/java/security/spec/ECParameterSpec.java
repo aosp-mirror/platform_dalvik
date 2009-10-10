@@ -23,8 +23,6 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 /**
  * The parameter specification used with Elliptic Curve Cryptography (ECC). 
- * 
- * @since Android 1.0
  */
 public class ECParameterSpec implements AlgorithmParameterSpec {
     // Elliptic curve for which this is parameter
@@ -51,7 +49,6 @@ public class ECParameterSpec implements AlgorithmParameterSpec {
      *            the co-factor.
      * @throws IllegalArgumentException
      *             if {@code order <= zero} or {@code cofactor <= zero}.
-     * @since Android 1.0
      */
     public ECParameterSpec(EllipticCurve curve, ECPoint generator,
             BigInteger order, int cofactor) {
@@ -84,7 +81,6 @@ public class ECParameterSpec implements AlgorithmParameterSpec {
      * Returns the {@code cofactor}.
      * 
      * @return the {@code cofactor}.
-     * @since Android 1.0
      */
     public int getCofactor() {
         return cofactor;
@@ -94,7 +90,6 @@ public class ECParameterSpec implements AlgorithmParameterSpec {
      * Returns the elliptic curve.
      * 
      * @return the elliptic curve.
-     * @since Android 1.0
      */
     public EllipticCurve getCurve() {
         return curve;
@@ -104,7 +99,6 @@ public class ECParameterSpec implements AlgorithmParameterSpec {
      * Returns the generator (or base point).
      * 
      * @return the generator (or base point).
-     * @since Android 1.0
      */
     public ECPoint getGenerator() {
         return generator;
@@ -114,7 +108,6 @@ public class ECParameterSpec implements AlgorithmParameterSpec {
      * Returns the order of the generator.
      * 
      * @return the order of the generator.
-     * @since Android 1.0
      */
     public BigInteger getOrder() {
         return order;

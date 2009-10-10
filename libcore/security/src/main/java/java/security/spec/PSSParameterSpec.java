@@ -25,9 +25,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * Defined in the <a
  * href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">PKCS #1 v2.1</a>
  * standard.
- * </p>
- * 
- * @since Android 1.0
  */
 public class PSSParameterSpec implements AlgorithmParameterSpec {   
 
@@ -40,8 +37,6 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
      * <li>salt length: {@code 20}</li>
      * <li>trailer field: {@code -1}</li>
      * </ul>
-     * 
-     * @since Android 1.0
      */
     public static final PSSParameterSpec DEFAULT = new PSSParameterSpec(20);
 
@@ -64,7 +59,6 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
      *            the salt length (in bits).
      * @throws IllegalArgumentException
      *             if {@code saltLen} is negative.
-     * @since Android 1.0
      */
     public PSSParameterSpec(int saltLen) {
         if (saltLen < 0) {
@@ -94,7 +88,6 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
      *            the trailer field value.
      * @throws IllegalArgumentException
      *             if {@code saltLen} or {@code trailerField} is negative.
-     * @since Android 1.0
      */
     public PSSParameterSpec(String mdName, String mgfName,
             AlgorithmParameterSpec mgfSpec, int saltLen, int trailerField) {
@@ -122,7 +115,6 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
      * Returns the length of the salt (in bits).
      * 
      * @return the length of the salt (in bits).
-     * @since Android 1.0
      */
     public int getSaltLength() {
         return saltLen;
@@ -132,7 +124,6 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
      * Returns the name of the message digest algorithm.
      * 
      * @return the name of the message digest algorithm.
-     * @since Android 1.0
      */
     public String getDigestAlgorithm() {
         return mdName;
@@ -142,7 +133,6 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
      * Returns the name of the mask generation function algorithm.
      * 
      * @return the name of the mask generation function algorithm.
-     * @since Android 1.0
      */
     public String getMGFAlgorithm() {
         return mgfName;
@@ -153,7 +143,6 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
      * 
      * @return the parameter for the mask generation function algorithm, or
      *         {@code null} if none specified.
-     * @since Android 1.0
      */
     public AlgorithmParameterSpec getMGFParameters() {
         return mgfSpec;
@@ -163,7 +152,6 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
      * Returns the trailer field value.
      * 
      * @return the trailer field value.
-     * @since Android 1.0
      */
     public int getTrailerField() {
         return trailerField;

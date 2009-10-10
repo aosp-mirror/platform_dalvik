@@ -129,27 +129,9 @@ public class ProviderTest extends TestCase {
     )
     public final void testClear() {
         p.clear();
-        if (p.getProperty("MessageDigest.ASH-1") != null) {
-            fail("Provider contains properties");
-        }
+        assertNull(p.getProperty("MessageDigest.SHA-1"));
     }
     
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "clear",
-            args = {}
-        )
-    public final void testClear_SecurityManager() {
-        TestSecurityManager sm = new TestSecurityManager("clearProviderProperties.MyProvider");
-        System.setSecurityManager(sm);
-        p.clear();
-        assertTrue("Provider.clear must call checkPermission with "
-                + "SecurityPermission clearProviderProperties.NAME",
-                sm.called);
-        System.setSecurityManager(null);
-    }
-
     /*
      * Class under test for void Provider(String, double, String)
      */
@@ -161,22 +143,13 @@ public class ProviderTest extends TestCase {
     )
     public final void testProviderStringdoubleString() {
         Provider p = new MyProvider("Provider name", 123.456, "Provider info");
-        if (!p.getName().equals("Provider name") || p.getVersion() != 123.456
-                || !p.getInfo().equals("Provider info")) {
-            fail("Incorrect values");
-        }
+        assertEquals("Provider name", p.getName());
+        assertEquals(123.456, p.getVersion(), 0L);
+        assertEquals("Provider info", p.getInfo());
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getName",
-        args = {}
-    )
     public final void testGetName() {
-        if (!p.getName().equals("MyProvider")) {
-            fail("Incorrect provider name");
-        }
+        assertEquals("MyProvider", p.getName());
     }
 
     @TestTargetNew(
@@ -186,9 +159,7 @@ public class ProviderTest extends TestCase {
         args = {}
     )
     public final void testGetVersion() {
-        if (p.getVersion() != 1.0) {
-            fail("Incorrect provider version");
-        }
+        assertEquals(1.0, p.getVersion(), 0L);
     }
 
     @TestTargetNew(
@@ -198,9 +169,7 @@ public class ProviderTest extends TestCase {
         args = {}
     )
     public final void testGetInfo() {
-        if (!p.getInfo().equals("Provider for testing")) {
-            fail("Incorrect provider info");
-        }
+        assertEquals("Provider for testing", p.getInfo());
     }
 
     /*
@@ -213,19 +182,16 @@ public class ProviderTest extends TestCase {
         args = {java.util.Map.class}
     )
     public final void testPutAllMap() {
-        HashMap<String, String> hm = new HashMap<String, String>();
-        hm.put("MessageDigest.ASH-1", "aaa.bbb.ccc.ddd");
+        HashMap hm = new HashMap();
+        hm.put("MessageDigest.SHA-1", "aaa.bbb.ccc.ddd");
         hm.put("Property 1", "value 1");
         hm.put("serviceName.algName attrName", "attrValue");
-        hm.put("Alg.Alias.engineClassName.aliasName", "stanbdardName");
+        hm.put("Alg.Alias.engineClassName.aliasName", "standardName");
         p.putAll(hm);
-        if (!"value 1".equals(p.getProperty("Property 1").trim())
-                || !"attrValue".equals(p.getProperty(
-                        "serviceName.algName attrName").trim())
-                || !"stanbdardName".equals(p.getProperty(
-                        "Alg.Alias.engineClassName.aliasName").trim())
-                || !"aaa.bbb.ccc.ddd".equals(p.getProperty(
-                        "MessageDigest.ASH-1").trim())) {
+        if (!"value 1".equals(p.getProperty("Property 1").trim()) ||
+                !"attrValue".equals(p.getProperty("serviceName.algName attrName").trim()) ||
+                !"standardName".equals(p.getProperty("Alg.Alias.engineClassName.aliasName").trim()) ||
+                !"aaa.bbb.ccc.ddd".equals(p.getProperty("MessageDigest.SHA-1").trim()) ) {
             fail("Incorrect property value");
         }
     }
@@ -240,48 +206,43 @@ public class ProviderTest extends TestCase {
         args = {}
     )
     public final void testEntrySet() {
-        p.put("MessageDigest.ASH-256", "aaa.bbb.ccc.ddd");
-
-        Set<Map.Entry<Object, Object>> s = p.entrySet();
+        p.put("MessageDigest.SHA-256", "aaa.bbb.ccc.ddd");
+        
+        Set s = p.entrySet();
         try {
             s.clear();
             fail("Must return unmodifiable set");
         } catch (UnsupportedOperationException e) {
         }
-
+        
         assertEquals("Incorrect set size", 8, s.size());
-
-        for (Iterator<Entry<Object, Object>> it = s.iterator(); it.hasNext();) {
-            Entry<Object, Object> e = it.next();
-            String key = (String) e.getKey();
-            String val = (String) e.getValue();
-            if (key.equals("MessageDigest.ASH-1")
-                    && val.equals("SomeClassName")) {
+        
+        for (Iterator it = s.iterator(); it.hasNext();) {
+            Entry e = (Entry)it.next();
+            String key = (String)e.getKey();
+            String val = (String)e.getValue();
+            if (key.equals("MessageDigest.SHA-1") && val.equals("SomeClassName")) {
                 continue;
             }
-            if (key.equals("Alg.Alias.MessageDigest.ASH1")
-                    && val.equals("ASH-1")) {
+            if (key.equals("Alg.Alias.MessageDigest.SHA1") && val.equals("SHA-1")) {
                 continue;
             }
             if (key.equals("MessageDigest.abc") && val.equals("SomeClassName")) {
                 continue;
             }
-            if (key.equals("Provider.id className")
-                    && val.equals(p.getClass().getName())) {
+            if (key.equals("Provider.id className") && val.equals(p.getClass().getName())) {
                 continue;
             }
             if (key.equals("Provider.id name") && val.equals("MyProvider")) {
                 continue;
             }
-            if (key.equals("MessageDigest.ASH-256")
-                    && val.equals("aaa.bbb.ccc.ddd")) {
+            if (key.equals("MessageDigest.SHA-256") && val.equals("aaa.bbb.ccc.ddd")) {
                 continue;
             }
             if (key.equals("Provider.id version") && val.equals("1.0")) {
                 continue;
             }
-            if (key.equals("Provider.id info")
-                    && val.equals("Provider for testing")) {
+            if (key.equals("Provider.id info") && val.equals("Provider for testing")) {
                 continue;
             }
             fail("Incorrect set");
@@ -298,30 +259,27 @@ public class ProviderTest extends TestCase {
         args = {}
     )
     public final void testKeySet() {
-        p.put("MessageDigest.ASH-256", "aaa.bbb.ccc.ddd");
+        p.put("MessageDigest.SHA-256", "aaa.bbb.ccc.ddd");
 
         Set<Object> s = p.keySet();
         try {
             s.clear();
         } catch (UnsupportedOperationException e) {
         }
-        Set<Object> s1 = p.keySet();
-        if ((s == s1) || s1.isEmpty()) {
-            fail("Must return unmodifiable set");
-        }
-        if (s1.size() != 8) {
-            fail("Incorrect set size");
-        }
-        if (!s1.contains("MessageDigest.ASH-256")
-                || !s1.contains("MessageDigest.ASH-1")
-                || !s1.contains("Alg.Alias.MessageDigest.ASH1")
-                || !s1.contains("MessageDigest.abc")
-                || !s1.contains("Provider.id info")
-                || !s1.contains("Provider.id className")
-                || !s1.contains("Provider.id version")
-                || !s1.contains("Provider.id name")) {
-            fail("Incorrect set");
-        }
+        Set s1 = p.keySet();
+
+        assertNotSame(s, s1);
+        assertFalse(s1.isEmpty());
+        assertEquals(8, s1.size());
+
+        assertTrue(s1.contains("MessageDigest.SHA-256"));
+        assertTrue(s1.contains("MessageDigest.SHA-1"));
+        assertTrue(s1.contains("Alg.Alias.MessageDigest.SHA1"));
+        assertTrue(s1.contains("MessageDigest.abc"));
+        assertTrue(s1.contains("Provider.id info"));
+        assertTrue(s1.contains("Provider.id className"));
+        assertTrue(s1.contains("Provider.id version"));
+        assertTrue(s1.contains("Provider.id name"));
     }
 
     /*
@@ -341,19 +299,19 @@ public class ProviderTest extends TestCase {
             c.clear();
         } catch (UnsupportedOperationException e) {
         }
-        Collection<Object> c1 = p.values();
-        if ((c == c1) || c1.isEmpty()) {
-            fail("Must return unmodifiable set");
-        }
-        if (c1.size() != 8) {
-            fail("Incorrect set size " + c1.size());
-        }
-        if (!c1.contains("MyProvider") || !c1.contains("aaa.bbb.ccc.ddd")
-                || !c1.contains("Provider for testing") || !c1.contains("1.0")
-                || !c1.contains("SomeClassName") || !c1.contains("ASH-1")
-                || !c1.contains(p.getClass().getName())) {
-            fail("Incorrect set");
-        }
+        Collection c1 = p.values();
+
+        assertNotSame(c, c1);
+        assertFalse(c1.isEmpty());
+        assertEquals(8, c1.size());
+
+        assertTrue(c1.contains("MyProvider"));
+        assertTrue(c1.contains("aaa.bbb.ccc.ddd"));
+        assertTrue(c1.contains("Provider for testing"));
+        assertTrue(c1.contains("1.0"));
+        assertTrue(c1.contains("SomeClassName"));
+        assertTrue(c1.contains("SHA-1"));
+        assertTrue(c1.contains(p.getClass().getName()));
     }
 
     /*
@@ -366,38 +324,124 @@ public class ProviderTest extends TestCase {
         args = {java.lang.Object.class, java.lang.Object.class}
     )
     public final void testPutObjectObject() {
-        p.put("MessageDigest.ASH-1", "aaa.bbb.ccc.ddd");
+        p.put("MessageDigest.SHA-1", "aaa.bbb.ccc.ddd");
         p.put("Type.Algorithm", "className");
-        if (!"aaa.bbb.ccc.ddd".equals(p.getProperty("MessageDigest.ASH-1")
-                .trim())) {
-            fail("Incorrect property value");
-        }
-
-        Set<Service> services = p.getServices();
-        if (services.size() != 3) {
-            fail("incorrect size");
-        }
-        for (Iterator<Service> it = services.iterator(); it.hasNext();) {
-            Provider.Service s = it.next();
-            if ("Type".equals(s.getType())
-                    && "Algorithm".equals(s.getAlgorithm())
-                    && "className".equals(s.getClassName())) {
+        assertEquals("aaa.bbb.ccc.ddd", p.getProperty("MessageDigest.SHA-1")
+                .trim());
+        
+        Set services = p.getServices();
+        assertEquals(3, services.size());
+        
+        for (Iterator it = services.iterator(); it.hasNext();) {
+            Provider.Service s = (Provider.Service)it.next();
+            if ("Type".equals(s.getType()) &&
+                    "Algorithm".equals(s.getAlgorithm()) &&
+                    "className".equals(s.getClassName())) {
                 continue;
             }
-            if ("MessageDigest".equals(s.getType())
-                    && "ASH-1".equals(s.getAlgorithm())
-                    && "aaa.bbb.ccc.ddd".equals(s.getClassName())) {
+            if ("MessageDigest".equals(s.getType()) &&
+                    "SHA-1".equals(s.getAlgorithm()) &&
+                    "aaa.bbb.ccc.ddd".equals(s.getClassName())) {
                 continue;
             }
-            if ("MessageDigest".equals(s.getType())
-                    && "abc".equals(s.getAlgorithm())
-                    && "SomeClassName".equals(s.getClassName())) {
+            if ("MessageDigest".equals(s.getType()) &&
+                    "abc".equals(s.getAlgorithm()) &&
+                    "SomeClassName".equals(s.getClassName())) {
                 continue;
             }
             fail("Incorrect service");
         }
     }
 
+    /*
+     * Class under test for Object remove(Object)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
+    public final void testRemoveObject() {
+        Object o = p.remove("MessageDigest.SHA-1");
+
+        assertEquals("SomeClassName", o);
+        assertNull(p.getProperty("MessageDigest.SHA-1"));
+        assertEquals(1, p.getServices().size());
+    }
+ 
+    public final void testService1() {
+        p.put("MessageDigest.SHA-1", "AnotherClassName");
+        Provider.Service s = p.getService("MessageDigest", "SHA-1");
+
+        assertEquals("AnotherClassName", s.getClassName());
+    }
+
+    // Regression for HARMONY-2760.
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test: verifies constructor with two null parameters.",
+        method = "Provider",
+        args = {java.lang.String.class, double.class, java.lang.String.class}
+    )
+    public void testConstructor() {
+        MyProvider myProvider = new MyProvider(null, 1, null);
+        assertNull(myProvider.getName());
+        assertNull(myProvider.getInfo());
+        assertEquals("null", myProvider.getProperty("Provider.id name"));
+        assertEquals("null", myProvider.getProperty("Provider.id info"));
+    }
+
+    class MyProvider extends Provider {
+        MyProvider() {
+            super("MyProvider", 1.0, "Provider for testing");
+            put("MessageDigest.SHA-1", "SomeClassName");
+            put("MessageDigest.abc", "SomeClassName");
+            put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
+        }
+        
+        MyProvider(String name, double version, String info) {
+            super(name, version, info);
+        }
+        
+        // BEGIN android-added
+        public void putService(Provider.Service s) {
+            super.putService(s);
+        }
+        // END android-added
+        
+        // BEGIN android-added
+        public void removeService(Provider.Service s) {
+            super.removeService(s);
+        }
+        // END android-added
+        
+        // BEGIN android-added
+        public int getNumServices() {
+            return getServices().size();
+        }
+        // END android-added
+    }
+
+    // BEGIN android-added
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "clear",
+            args = {}
+        )
+    public final void testClear_SecurityManager() {
+        TestSecurityManager sm = new TestSecurityManager("clearProviderProperties.MyProvider");
+        System.setSecurityManager(sm);
+        p.clear();
+        assertTrue("Provider.clear must call checkPermission with "
+                + "SecurityPermission clearProviderProperties.NAME",
+                sm.called);
+        System.setSecurityManager(null);
+    }
+    // END android-added
+
+    // BEGIN android-added
     @TestTargetNew(
             level = TestLevel.PARTIAL_COMPLETE,
             notes = "",
@@ -414,39 +458,9 @@ public class ProviderTest extends TestCase {
                 + "SecurityPermission putProviderProperty.Name", sm.called);
         System.setSecurityManager(null);
     }
+    // END android-added
 
-    /*
-     * Class under test for Object remove(Object)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "remove",
-        args = {java.lang.Object.class}
-    )
-    public final void testRemoveObject() {
-        Object o = p.remove("MessageDigest.ASH-1");
-        if (!"SomeClassName".equals(o)) {
-            fail("Incorrect return value");
-        }
-        if (p.getProperty("MessageDigest.ASH-1") != null) {
-            fail("Provider contains properties");
-        }
-        if (p.getServices().size() != 1) {
-            fail("Service not removed");
-        }
-
-        try {
-            p.remove(null);
-            fail("expected NullPointerException");
-        } catch (NullPointerException e) {
-            // ok
-        }
-    }
-
-    /*
-     * Class under test for Object remove(Object)
-     */
+    // BEGIN android-added
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
         notes = "",
@@ -463,35 +477,9 @@ public class ProviderTest extends TestCase {
                 sm.called);
         System.setSecurityManager(null);
     }
+    // END android-added
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getService",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
-    public final void testService1() {
-        p.put("MessageDigest.ASH-1", "AnotherClassName");
-        Provider.Service s = p.getService("MessageDigest", "ASH-1");
-        if (!"AnotherClassName".equals(s.getClassName())) {
-            fail("Incorrect class name " + s.getClassName());
-        }
-        
-        try {
-           p.getService("MessageDigest", null);
-           fail("expected NullPointerException");
-        } catch (NullPointerException e)  {
-            // ok;
-        }
-        
-        try {
-            p.getService(null, "ASH-1");
-            fail("expected NullPointerException");
-        } catch (NullPointerException e) {
-            // ok
-        }
-    }
-
+    // BEGIN android-added
     @TestTargetNew(
             level = TestLevel.COMPLETE,
             notes = "",
@@ -516,23 +504,9 @@ public class ProviderTest extends TestCase {
         } catch (NoSuchAlgorithmException e) {
         }
     }
-     
+    // END android-added
 
-    // Regression for HARMONY-2760.
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Regression test: verifies constructor with two null parameters.",
-        method = "Provider",
-        args = {java.lang.String.class, double.class, java.lang.String.class}
-    )
-    public void testConstructor() {
-        MyProvider myProvider = new MyProvider(null, 1, null);
-        assertNull(myProvider.getName());
-        assertNull(myProvider.getInfo());
-        assertEquals("null", myProvider.getProperty("Provider.id name"));
-        assertEquals("null", myProvider.getProperty("Provider.id info"));
-    }
-
+    // BEGIN android-added
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
@@ -576,7 +550,9 @@ public class ProviderTest extends TestCase {
         assertTrue(!actual.contains(s[1]));
         assertTrue(actual.contains(s[2]));
     }
+    // END android-added
 
+    // BEGIN android-added
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
@@ -631,7 +607,9 @@ public class ProviderTest extends TestCase {
             // expected
         }
     }
+    // END android-added
 
+    // BEGIN android-added
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
@@ -703,10 +681,9 @@ public class ProviderTest extends TestCase {
             // expected
         }
     }
+    // END android-added
 
-    /*
-     * Class under test for void load(InputStream)
-     */
+    // BEGIN android-added
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
         notes = "",
@@ -735,7 +712,9 @@ public class ProviderTest extends TestCase {
             // expected
         }
     }
-    
+    // END android-added
+
+    // BEGIN android-added
     @TestTargetNew(
             level = TestLevel.PARTIAL_COMPLETE,
             notes = "",
@@ -755,11 +734,12 @@ public class ProviderTest extends TestCase {
             p.load(new TestInputStream());
             fail("expected IOException");
         } catch (IOException e) {
-            // ok
+            // expected
         }
-        
     }
+    // END android-added
 
+    // BEGIN android-added
     protected byte[] writeProperties() {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(bout);
@@ -769,34 +749,9 @@ public class ProviderTest extends TestCase {
         ps.close();
         return bout.toByteArray();
     }
+    // END android-added
 
-    class MyProvider extends Provider {
-       // private Set<Provider.Service> services = null;
-
-        MyProvider() {
-            super("MyProvider", 1.0, "Provider for testing");
-            put("MessageDigest.ASH-1", "SomeClassName");
-            put("MessageDigest.abc", "SomeClassName");
-            put("Alg.Alias.MessageDigest.ASH1", "ASH-1");
-        }
-
-        MyProvider(String name, double version, String info) {
-            super(name, version, info);
-        }
-
-        public void putService(Provider.Service s) {
-            super.putService(s);
-        }
-
-        public void removeService(Provider.Service s) {
-            super.removeService(s);
-        }
-
-        public int getNumServices() {
-            return getServices().size();
-        }
-    }
-    
+    // BEGIN android-added
     static class TestSecurityManager extends SecurityManager {
         boolean called = false;
         private final String permissionName;
@@ -814,4 +769,5 @@ public class ProviderTest extends TestCase {
             }
         }
     }
+    // END android-added
 }

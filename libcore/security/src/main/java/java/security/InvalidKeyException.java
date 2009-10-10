@@ -15,18 +15,11 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code InvalidKeyException} indicates exceptional conditions, caused by an
  * invalid key.
- * 
- * @since Android 1.0
  */
 public class InvalidKeyException extends KeyException {
 
@@ -35,10 +28,9 @@ public class InvalidKeyException extends KeyException {
     /**
      * Constructs a new instance of {@code InvalidKeyException} with the given
      * message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public InvalidKeyException(String msg) {
         super(msg);
@@ -46,8 +38,6 @@ public class InvalidKeyException extends KeyException {
 
     /**
      * Constructs a new instance of {@code InvalidKeyException}.
-     * 
-     * @since Android 1.0
      */
     public InvalidKeyException() {
     }
@@ -55,12 +45,11 @@ public class InvalidKeyException extends KeyException {
     /**
      * Constructs a new instance of {@code InvalidKeyException} with the given
      * message and the cause.
-     * 
+     *
      * @param message
      *            the detail message for this exception.
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public InvalidKeyException(String message, Throwable cause) {
         super(message, cause);
@@ -68,10 +57,9 @@ public class InvalidKeyException extends KeyException {
 
     /**
      * Constructs a new instance of {@code InvalidKeyException} with the cause.
-     * 
+     *
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public InvalidKeyException(Throwable cause) {
         super(cause);

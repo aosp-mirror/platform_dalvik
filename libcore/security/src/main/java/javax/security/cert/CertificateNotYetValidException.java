@@ -25,20 +25,20 @@ package javax.security.cert;
  * by JSSE (Java SSL package). All applications that do not have to be
  * compatible with older versions of JSSE (that is before Java SDK 1.5) should
  * only use java.security.cert.
- * </p>
- * @since Android 1.0
  */
 public class CertificateNotYetValidException extends CertificateException {
 
+    /**
+     * @serial
+     */
     private static final long serialVersionUID = -8976172474266822818L;
 
     /**
      * Creates a new {@code CertificateNotYetValidException} with the specified
      * message.
-     * 
+     *
      * @param msg
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public CertificateNotYetValidException(String msg) {
         super(msg);
@@ -46,8 +46,6 @@ public class CertificateNotYetValidException extends CertificateException {
 
     /**
      * Creates a new {@code CertificateNotYetValidException}.
-     * 
-     * @since Android 1.0
      */
     public CertificateNotYetValidException() {
     }

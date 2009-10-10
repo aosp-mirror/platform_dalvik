@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.FilterOutputStream;
@@ -34,8 +29,6 @@ public class DigestOutputStream extends FilterOutputStream {
 
     /**
      * The message digest for this stream.
-     * 
-     * @since Android 1.0
      */
     protected MessageDigest digest;
 
@@ -45,12 +38,11 @@ public class DigestOutputStream extends FilterOutputStream {
     /**
      * Constructs a new instance of this {@code DigestOutputStream}, using the
      * given {@code stream} and the {@code digest}.
-     * 
+     *
      * @param stream
      *            the output stream.
      * @param digest
      *            the message digest.
-     * @since Android 1.0
      */
     public DigestOutputStream(OutputStream stream, MessageDigest digest) {
         super(stream);
@@ -59,9 +51,8 @@ public class DigestOutputStream extends FilterOutputStream {
 
     /**
      * Returns the message digest for this stream.
-     * 
+     *
      * @return the message digest for this stream.
-     * @since Android 1.0
      */
     public MessageDigest getMessageDigest() {
         return digest;
@@ -69,10 +60,9 @@ public class DigestOutputStream extends FilterOutputStream {
 
     /**
      * Sets the message digest which this stream will use.
-     * 
+     *
      * @param digest
      *            the message digest which this stream will use.
-     * @since Android 1.0
      */
     public void setMessageDigest(MessageDigest digest) {
         this.digest = digest;
@@ -81,13 +71,13 @@ public class DigestOutputStream extends FilterOutputStream {
     /**
      * Writes the specified {@code int} to the stream. Updates the digest if
      * this function is {@link #on(boolean)}.
-     * 
+     *
      * @param b
      *            the byte to be written.
      * @throws IOException
      *             if writing to the stream causes a {@code IOException}
-     * @since Android 1.0
      */
+    @Override
     public void write(int b) throws IOException {
         // update digest only if digest functionality is on
         if (isOn) {
@@ -100,7 +90,7 @@ public class DigestOutputStream extends FilterOutputStream {
     /**
      * Writes {@code len} bytes into the stream, starting from the specified
      * offset. Updates the digest if this function is {@link #on(boolean)}.
-     * 
+     *
      * @param b
      *            the buffer to write to.
      * @param off
@@ -109,8 +99,8 @@ public class DigestOutputStream extends FilterOutputStream {
      *            the number of bytes in {@code b} to write.
      * @throws IOException
      *             if writing to the stream causes an {@code IOException}.
-     * @since Android 1.0
      */
+    @Override
     public void write(byte[] b, int off, int len) throws IOException {
         // update digest only if digest functionality is on
         if (isOn) {
@@ -122,11 +112,11 @@ public class DigestOutputStream extends FilterOutputStream {
 
     /**
      * Enables or disables the digest function (default is on).
-     * 
+     *
      * @param on
      *            {@code true} if the digest should be computed, {@code false}
      *            otherwise.
-     * @since Android 1.0
+	 * @see MessageDigest
      */
     public void on(boolean on) {
         isOn = on;
@@ -135,10 +125,10 @@ public class DigestOutputStream extends FilterOutputStream {
     /**
      * Returns a string containing a concise, human-readable description of this
      * {@code DigestOutputStream} including the digest.
-     * 
+     *
      * @return a printable representation for this {@code DigestOutputStream}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         return super.toString() + ", " + digest.toString() + //$NON-NLS-1$
             (isOn ? ", is on" : ", is off"); //$NON-NLS-1$ //$NON-NLS-2$

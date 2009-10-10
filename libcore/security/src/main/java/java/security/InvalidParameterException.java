@@ -15,18 +15,11 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code InvalidParameterException} indicates exceptional conditions, caused by
  * invalid parameters.
- * 
- * @since Android 1.0
  */
 public class InvalidParameterException extends IllegalArgumentException {
 
@@ -35,10 +28,9 @@ public class InvalidParameterException extends IllegalArgumentException {
     /**
      * Constructs a new instance of {@code InvalidParameterException} with the
      * given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public InvalidParameterException(String msg) {
         super(msg);
@@ -46,8 +38,6 @@ public class InvalidParameterException extends IllegalArgumentException {
 
     /**
      * Constructs a new instance of {@code InvalidParameterException}.
-     * 
-     * @since Android 1.0
      */
     public InvalidParameterException() {
     }

@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.Serializable;
@@ -31,8 +26,6 @@ import org.apache.harmony.security.internal.nls.Messages;
 /**
  * {@code Timestamp} represents a signed time stamp. {@code Timestamp} is
  * immutable.
- * 
- * @since Android 1.0
  */
 public final class Timestamp implements Serializable {
 
@@ -48,7 +41,7 @@ public final class Timestamp implements Serializable {
     /**
      * Constructs a new instance of {@code Timestamp} with the specified {@code
      * timestamp} and the given certificate path.
-     * 
+     *
      * @param timestamp
      *            date and time.
      * @param signerCertPath
@@ -56,7 +49,6 @@ public final class Timestamp implements Serializable {
      * @throws NullPointerException
      *             if {@code timestamp} is {@code null} or if {@code
      *             signerCertPath} is {@code null}.
-     * @since Android 1.0
      */
     public Timestamp(Date timestamp, CertPath signerCertPath) {
         if (timestamp == null) {
@@ -76,15 +68,15 @@ public final class Timestamp implements Serializable {
      * otherwise. The given object is equal to this {@code Timestamp}, if it is
      * an instance of {@code Timestamp}, the two timestamps have an equal date
      * and time and their certificate paths are equal.
-     * 
+     *
      * @param obj
      *            object to be compared for equality with this {@code
      *            Timestamp}.
      * @return {@code true} if the specified object is equal to this {@code
      *         Timestamp}, otherwise {@code false}.
      * @see #hashCode
-     * @since Android 1.0
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
@@ -99,9 +91,8 @@ public final class Timestamp implements Serializable {
 
     /**
      * Returns the certificate path of this {@code Timestamp}.
-     * 
+     *
      * @return the certificate path of this {@code Timestamp}.
-     * @since Android 1.0
      */
     public CertPath getSignerCertPath() {
         return signerCertPath;
@@ -109,15 +100,11 @@ public final class Timestamp implements Serializable {
 
     /**
      * Returns the date and time of this {@code Timestamp}.
-     * 
+     *
      * @return the date and time of this {@code Timestamp}.
-     * @since Android 1.0
      */
     public Date getTimestamp() {
-        // BEGIN android-changed
-        // copied from a newer version of harmony
         return (Date) timestamp.clone();
-        // END android-changed
     }
 
     /**
@@ -128,8 +115,8 @@ public final class Timestamp implements Serializable {
      * @return the hash code value for this {@code Timestamp}.
      * @see Object#equals(Object)
      * @see Timestamp#equals(Object)
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         if (hash == 0) {
             hash = timestamp.hashCode() ^ signerCertPath.hashCode();
@@ -140,12 +127,12 @@ public final class Timestamp implements Serializable {
     /**
      * Returns a string containing a concise, human-readable description of this
      * {@code Timestamp}.
-     * 
+     *
      * @return a printable representation for this {@code Timestamp}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer(256);
+        StringBuilder buf = new StringBuilder(256);
         // Dump only the first certificate
         buf.append("Timestamp [").append(timestamp).append(" certPath="); //$NON-NLS-1$ //$NON-NLS-2$
         buf.append(signerCertPath.getCertificates().get(0)).append("]"); //$NON-NLS-1$

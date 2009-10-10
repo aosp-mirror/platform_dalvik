@@ -20,18 +20,13 @@ package java.security.acl;
 /**
  * The exception, that is thrown when a reference to a non-existent <i>Access
  * Control List</i> (ACL) is made.
- * 
- * @since Android 1.0
  */
-
 public class AclNotFoundException extends Exception {
 
     private static final long serialVersionUID = 5684295034092681791L;
 
     /**
      * Creates a new {@code AclNotFoundException}.
-     * 
-     * @since Android 1.0
      */
     public AclNotFoundException() {
 

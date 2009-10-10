@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.FilterInputStream;
@@ -29,15 +24,11 @@ import java.io.InputStream;
 /**
  * {@code DigestInputStream} is a {@code FilterInputStream} which maintains an
  * associated message digest.
- * 
- * @since Android 1.0
  */
 public class DigestInputStream extends FilterInputStream {
 
     /**
      * The message digest for this stream.
-     * 
-     * @since Android 1.0
      */
     protected MessageDigest digest;
 
@@ -47,12 +38,11 @@ public class DigestInputStream extends FilterInputStream {
     /**
      * Constructs a new instance of this {@code DigestInputStream}, using the
      * given {@code stream} and the {@code digest}.
-     * 
+     *
      * @param stream
      *            the input stream.
      * @param digest
      *            the message digest.
-     * @since Android 1.0
      */
     public DigestInputStream(InputStream stream, MessageDigest digest) {
         super(stream);
@@ -61,9 +51,8 @@ public class DigestInputStream extends FilterInputStream {
 
     /**
      * Returns the message digest for this stream.
-     * 
+     *
      * @return the message digest for this stream.
-     * @since Android 1.0
      */
     public MessageDigest getMessageDigest() {
         return digest;
@@ -71,10 +60,9 @@ public class DigestInputStream extends FilterInputStream {
 
     /**
      * Sets the message digest which this stream will use.
-     * 
+     *
      * @param digest
      *            the message digest which this stream will use.
-     * @since Android 1.0
      */
     public void setMessageDigest(MessageDigest digest) {
         this.digest = digest;
@@ -85,13 +73,12 @@ public class DigestInputStream extends FilterInputStream {
      * for the byte if this function is {@link #on(boolean)}.
      * <p>
      * This operation is blocking.
-     * </p>
-     * 
+     *
      * @return the byte which was read or -1 at end of stream.
      * @throws IOException
      *             if reading the source stream causes an {@code IOException}.
-     * @since Android 1.0
      */
+    @Override
     public int read() throws IOException {
         // read the next byte
         int byteRead = in.read();
@@ -111,8 +98,7 @@ public class DigestInputStream extends FilterInputStream {
      * {@link #on(boolean)}.
      * <p>
      * This operation is blocking.
-     * </p>
-     * 
+     *
      * @param b
      *            the byte array in which to store the bytes
      * @param off
@@ -124,8 +110,8 @@ public class DigestInputStream extends FilterInputStream {
      *         filtered stream has been reached while reading
      * @throws IOException
      *             if reading the source stream causes an {@code IOException}
-     * @since Android 1.0
      */
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
         // read next up to len bytes
         int bytesRead = in.read(b, off, len);
@@ -141,11 +127,11 @@ public class DigestInputStream extends FilterInputStream {
 
     /**
      * Enables or disables the digest function (default is on).
-     * 
+     *
      * @param on
      *            {@code true} if the digest should be computed, {@code false}
      *            otherwise.
-     * @since Android 1.0
+	 * @see MessageDigest
      */
     public void on(boolean on) {
         isOn = on;
@@ -154,10 +140,10 @@ public class DigestInputStream extends FilterInputStream {
     /**
      * Returns a string containing a concise, human-readable description of this
      * {@code DigestInputStream} including the digest.
-     * 
+     *
      * @return a printable representation for this {@code DigestInputStream}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         return super.toString() + ", " + digest.toString() + //$NON-NLS-1$
             (isOn ? ", is on" : ", is off"); //$NON-NLS-1$ //$NON-NLS-2$

@@ -24,17 +24,15 @@ import java.util.Enumeration;
  * The <i>Access Control List</i> (<b>ACL</b>) interface definition.
  * <p>
  * An ACL is a set of {@link AclEntry} objects.
- * </p>
  * <p>
  * An {@code AclEntry} is a list of {@link Permission}s that are granted 
  * (<i>positive</i>) or denied
  * (<i>negative</i>) to a {@link Principal}.
- * </p>
  * <p>
- * An {@code Acl} has a list of owners ({@link Owner}) which are principals as well {@code
- * Principal}. Only those principals which are the {@code Acl}'s owners are allowed to modify the {@code
+ * An {@code Acl} has a list of owners ({@link Owner}) which are principals as
+ * well {@code Principal}. Only those principals which are the {@code Acl}'s
+ * owners are allowed to modify the {@code
  * Acl}.
- * </p>
  * <p>
  * The <i>ACL</i> has to conform to the following rules:
  * <ul>
@@ -49,9 +47,6 @@ import java.util.Enumeration;
  * <li>If there is no {@code AclEntry} associated with a specific {@code
  * Principal}, then it is interpreted as an empty list of permissions.</li>
  * </ul>
- * </p>
- * 
- * @since Android 1.0
  */
 public interface Acl extends Owner {
 
@@ -65,7 +60,6 @@ public interface Acl extends Owner {
      * @throws NotOwnerException
      *             if the invoking {@code Principal} is not an owner of this
      *             <i>ACL</i>.
-     * @since Android 1.0
      */
     void setName(Principal caller, String name) throws NotOwnerException;
 
@@ -73,7 +67,6 @@ public interface Acl extends Owner {
      * Returns the name of this <i>ACL</i> instance.
      * 
      * @return the name of this <i>ACL</i> instance.
-     * @since Android 1.0
      */
     String getName();
 
@@ -82,18 +75,16 @@ public interface Acl extends Owner {
      * <p>
      * If the <i>ACL</i> already has an {@code AclEntry} of the same type (<i>
      * positive</i> or <i>negative</i>) and principal, then the new entry is not added.
-     * </p>
-     * 
+     *
      * @param caller
      *            the invoking {@code Principal}.
      * @param entry
      *            the ACL entry to add.
-     * @return {@code true} if the entry is added, {@code false} if there is already an entry of
-     *         the same type for the same principal
+     * @return {@code true} if the entry is added, {@code false} if there is
+     *             already an entry of the same type for the same principal
      * @throws NotOwnerException
      *             if the invoking {@code Principal} is not an owner of this
      *             <i>ACL</i>.
-     * @since Android 1.0
      */
     boolean addEntry(Principal caller, AclEntry entry) throws NotOwnerException;
     
@@ -104,12 +95,11 @@ public interface Acl extends Owner {
      *            the invoking {@code Principal}.
      * @param entry
      *            the ACL entry to remove.
-     * @return {@code true} if the entry is removed, {@code false} if the entry is not in this
-     *         <i>ACL</i>.
+     * @return {@code true} if the entry is removed, {@code false} if the entry
+     *            is not in this <i>ACL</i>.
      * @throws NotOwnerException
      *             if the invoking {@code Principal} is not an owner of this
      *             <i>ACL</i>.
-     * @since Android 1.0
      */
     boolean removeEntry(Principal caller, AclEntry entry) 
                 throws NotOwnerException;
@@ -120,7 +110,6 @@ public interface Acl extends Owner {
      * <p>
      * If the specified principal has no entry in this ACL, an empty set is
      * returned.
-     * </p>
      * <p>
      * The allowed permissions are collected according to the following rules:
      * <ul>
@@ -136,12 +125,10 @@ public interface Acl extends Owner {
      * permissions override the group's negative permissions and the negative
      * individual permissions override the grpup's positive permissions.</li>
      * </ul>
-     * </p>
-     * 
+     *
      * @param user
      *            the principal to get the allowed permissions for.
      * @return the set of allowed permissions for the specified principal.
-     * @since Android 1.0
      */
     Enumeration<Permission> getPermissions(Principal user); 
     
@@ -151,7 +138,6 @@ public interface Acl extends Owner {
      * 
      * @return an {@code Enumeration} of the {@code AclEntry} of this
      *         <i>ACL</i>.
-     * @since Android 1.0
      */
     Enumeration<AclEntry> entries();
     
@@ -161,15 +147,14 @@ public interface Acl extends Owner {
      * <p>
      * The list of granted permissions is determined according to the rules
      * specified by {@code getPermissions}.
-     * </p>
-     * 
+     *
      * @param principal
      *            the principal the check the permissions for.
      * @param permission
      *            the permission to check for the principal.
-     * @return {@code true} if the principal is granted the permission, otherwise {@code false}.
+     * @return {@code true} if the principal is granted the permission,
+     *            otherwise {@code false}.
      * @see #getPermissions(Principal)
-     * @since Android 1.0
      */
     boolean checkPermission(Principal principal, Permission permission);
     
@@ -177,7 +162,6 @@ public interface Acl extends Owner {
      * Returns the string representation of this ACL.
      * 
      * @return the string representation of this ACL.
-     * @since Android 1.0
      */
     String toString();
 }

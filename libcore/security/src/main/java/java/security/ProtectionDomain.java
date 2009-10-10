@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
@@ -30,9 +25,6 @@ package java.security;
  * <p>
  * A class belongs to exactly one protection domain and the protection domain
  * can not be changed during the lifetime of the class.
- * </p>
- * 
- * @since Android 1.0
  */
 public class ProtectionDomain {
 
@@ -60,17 +52,13 @@ public class ProtectionDomain {
      * collection is made immutable by calling
      * {@link PermissionCollection#setReadOnly()} and it is considered as
      * granted statically to this {@code ProtectionDomain}.
-     * </p>
      * <p>
      * The policy will not be consulted by access checks against this {@code
      * ProtectionDomain}.
-     * </p>
      * <p>
-     * If {@code permissions} is {@code null}, the method
-     * {@link ProtectionDomain#implies(Permission)} always returns {@code false}
-     * .
-     * </p>
-     * 
+     * If {@code permissions} is {@code null}, the method {@link
+     * ProtectionDomain#implies(Permission)} always returns {@code false}.
+     *
      * @param cs
      *            the code source associated with this domain, maybe {@code
      *            null}.
@@ -78,7 +66,6 @@ public class ProtectionDomain {
      *            the {@code PermissionCollection} containing all permissions to
      *            be statically granted to this {@code ProtectionDomain}, maybe
      *            {@code null}.
-     * @since Android 1.0
      */
     public ProtectionDomain(CodeSource cs, PermissionCollection permissions) {
         this.codeSource = cs;
@@ -91,7 +78,6 @@ public class ProtectionDomain {
         //dynamicPerms = false;
     }
 
-
     /**
      * Constructs a new instance of {@code ProtectionDomain} with the specified
      * code source, the permissions, the class loader and the principals.
@@ -102,12 +88,10 @@ public class ProtectionDomain {
      * permissions} collection is made immutable by calling
      * {@link PermissionCollection#setReadOnly()}. If access checks are
      * performed, the policy and the provided permission collection are checked.
-     * </p>
      * <p>
      * External modifications of the provided {@code principals} array has no
      * impact on this {@code ProtectionDomain}.
-     * </p>
-     * 
+     *
      * @param cs
      *            the code source associated with this domain, maybe {@code
      *            null}.
@@ -118,9 +102,8 @@ public class ProtectionDomain {
      *            the class loader associated with this domain, maybe {@code
      *            null}.
      * @param principals
-     *            the principals associated with this domain, maybe {@code null}
-     *            .
-     * @since Android 1.0
+     *            the principals associated with this domain, maybe {@code
+     *            null}.
      */
     public ProtectionDomain(CodeSource cs, PermissionCollection permissions,
             ClassLoader cl, Principal[] principals) {
@@ -141,10 +124,9 @@ public class ProtectionDomain {
     /**
      * Returns the {@code ClassLoader} associated with this {@code
      * ProtectionDomain}.
-     * 
+     *
      * @return the {@code ClassLoader} associated with this {@code
      *         ProtectionDomain}, maybe {@code null}.
-     * @since Android 1.0
      */
     public final ClassLoader getClassLoader() {
         return classLoader;
@@ -152,10 +134,9 @@ public class ProtectionDomain {
 
     /**
      * Returns the {@code CodeSource} of this {@code ProtectionDomain}.
-     * 
+     *
      * @return the {@code CodeSource} of this {@code ProtectionDomain}, maybe
      *         {@code null}.
-     * @since Android 1.0
      */
     public final CodeSource getCodeSource() {
         return codeSource;
@@ -164,10 +145,9 @@ public class ProtectionDomain {
     /**
      * Returns the static permissions that are granted to this {@code
      * ProtectionDomain}.
-     * 
+     *
      * @return the static permissions that are granted to this {@code
      *         ProtectionDomain}, maybe {@code null}.
-     * @since Android 1.0
      */
     public final PermissionCollection getPermissions() {
         return permissions;
@@ -177,9 +157,8 @@ public class ProtectionDomain {
      * Returns the principals associated with this {@code ProtectionDomain}.
      * Modifications of the returned {@code Principal} array has no impact on
      * this {@code ProtectionDomain}.
-     * 
+     *
      * @return the principals associated with this {@code ProtectionDomain}.
-     * @since Android 1.0
      */
     public final Principal[] getPrincipals() {
         if( principals == null ) {
@@ -199,19 +178,16 @@ public class ProtectionDomain {
      * specified permission is only checked against the permission collection
      * provided in the constructor. If {@code null} was provided, {@code false}
      * is returned.
-     * </p>
      * <p>
      * If this {@code ProtectionDomain} was constructed with
      * {@link #ProtectionDomain(CodeSource, PermissionCollection, ClassLoader, Principal[])}
      * , the specified permission is checked against the policy and the
      * permission collection provided in the constructor.
-     * </p>
-     * 
+     *
      * @param permission
      *            the permission to check against the domain.
      * @return {@code true} if the specified {@code permission} is implied by
      *         this {@code ProtectionDomain}, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean implies(Permission permission) {
         // First, test with the Policy, as the default Policy.implies() 
@@ -232,13 +208,12 @@ public class ProtectionDomain {
     /**
      * Returns a string containing a concise, human-readable description of the
      * this {@code ProtectionDomain}.
-     * 
+     *
      * @return a printable representation for this {@code ProtectionDomain}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
-        //FIXME: 1.5 use StreamBuilder here
-        StringBuffer buf = new StringBuffer(200);
+        StringBuilder buf = new StringBuilder(200);
         buf.append("ProtectionDomain\n"); //$NON-NLS-1$
         buf.append("CodeSource=").append( //$NON-NLS-1$
                 codeSource == null ? "<null>" : codeSource.toString()).append( //$NON-NLS-1$

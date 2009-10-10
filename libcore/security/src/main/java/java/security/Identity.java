@@ -15,15 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
-// BEGIN android-note
-// Added Deprecated annotation.
-// END android-note
-
 package java.security;
 
 import java.io.Serializable;
@@ -34,11 +25,10 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 /**
  * {@code Identity} represents an identity like a person or a company.
- * 
+ *
  * @deprecated The functionality of this class has been replace by
  *             {@link Principal}, {@link KeyStore} and the {@code
  *             java.security.cert} package.
- * @since Android 1.0
  */
 @Deprecated
 public abstract class Identity implements Principal, Serializable {
@@ -56,18 +46,15 @@ public abstract class Identity implements Principal, Serializable {
 
     /**
      * Constructs a new instance of {@code Identity}.
-     * 
-     * @since Android 1.0
      */
     protected Identity() {
     }
 
     /**
      * Creates a new instance of {@code Identity} with the specified name.
-     * 
+     *
      * @param name
      *            the name of this {@code Identity}.
-     * @since Android 1.0
      */
     public Identity(String name) {
         this.name = name;
@@ -76,7 +63,7 @@ public abstract class Identity implements Principal, Serializable {
     /**
      * Creates a new instance of {@code Identity} with the specified name and
      * the scope of this {@code Identity}.
-     * 
+     *
      * @param name
      *            the name of this {@code Identity}.
      * @param scope
@@ -84,7 +71,6 @@ public abstract class Identity implements Principal, Serializable {
      * @throws KeyManagementException
      *             if an {@code Identity} with the same name is already present
      *             in the specified scope.
-     * @since Android 1.0
      */
     public Identity(String name, IdentityScope scope)
             throws KeyManagementException {
@@ -101,8 +87,7 @@ public abstract class Identity implements Principal, Serializable {
      * If a {@code SecurityManager} is installed, code calling this method needs
      * the {@code SecurityPermission} {@code addIdentityCertificate} to be
      * granted, otherwise a {@code SecurityException} will be thrown.
-     * </p>
-     * 
+     *
      * @param certificate
      *            the {@code Certificate} to be added to this {@code Identity}.
      * @throws KeyManagementException
@@ -110,7 +95,6 @@ public abstract class Identity implements Principal, Serializable {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public void addCertificate(Certificate certificate)
             throws KeyManagementException {
@@ -163,7 +147,7 @@ public abstract class Identity implements Principal, Serializable {
      * the {@code SecurityPermission} {@code "removeIdentityCertificate"} to be
      * granted, otherwise a {@code SecurityException} will be thrown.
      * <p>
-     * 
+     *
      * @param certificate
      *            the {@code Certificate} to be removed.
      * @throws KeyManagementException
@@ -171,7 +155,6 @@ public abstract class Identity implements Principal, Serializable {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public void removeCertificate(Certificate certificate)
             throws KeyManagementException {
@@ -196,9 +179,8 @@ public abstract class Identity implements Principal, Serializable {
      * Returns the certificates for this {@code Identity}. External
      * modifications of the returned array has no impact on this {@code
      * Identity}.
-     * 
+     *
      * @return the {@code Certificates} for this {@code Identity}
-     * @since Android 1.0
      */
     public Certificate[] certificates() {
         if (certificates == null) {
@@ -219,13 +201,11 @@ public abstract class Identity implements Principal, Serializable {
      * <p>
      * To be equal, two {@code Identity} objects need to have the same name and
      * the same public keys.
-     * </p>
-     * 
+     *
      * @param identity
      *            the identity to check for equality.
      * @return {@code true} if the {@code Identity} objects are equal, {@code
      *         false} otherwise.
-     * @since Android 1.0
      */
     protected boolean identityEquals(Identity identity) {
         if (!name.equals(identity.name)) {
@@ -245,12 +225,11 @@ public abstract class Identity implements Principal, Serializable {
     /**
      * Returns a string containing a concise, human-readable description of the
      * this {@code Identity}.
-     * 
+     *
      * @param detailed
      *            whether or not this method should return detailed information.
      * @return a printable representation for this {@code Permission}.
-     * @since Android 1.0
-     */  
+     */
     public String toString(boolean detailed) {
         String s = toString();
         if (detailed) {
@@ -264,9 +243,8 @@ public abstract class Identity implements Principal, Serializable {
 
     /**
      * Returns the {@code IdentityScope} of this {@code Identity}.
-     * 
+     *
      * @return the {@code IdentityScope} of this {@code Identity}.
-     * @since Android 1.0
      */
     public final IdentityScope getScope() {
         return scope;
@@ -281,8 +259,7 @@ public abstract class Identity implements Principal, Serializable {
      * If a {@code SecurityManager} is installed, code calling this method needs
      * the {@code SecurityPermission} {@code setIdentityPublicKey} to be
      * granted, otherwise a {@code SecurityException} will be thrown.
-     * </p>
-     * 
+     *
      * @param key
      *            the {@code PublicKey} to be set.
      * @throws KeyManagementException
@@ -291,7 +268,6 @@ public abstract class Identity implements Principal, Serializable {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public void setPublicKey(PublicKey key) throws KeyManagementException {
         SecurityManager sm = System.getSecurityManager();
@@ -315,9 +291,8 @@ public abstract class Identity implements Principal, Serializable {
 
     /**
      * Returns the {@code PublicKey} associated with this {@code Identity}.
-     * 
+     *
      * @return the {@code PublicKey} associated with this {@code Identity}.
-     * @since Android 1.0
      */
     public PublicKey getPublicKey() {
         return publicKey;
@@ -332,13 +307,12 @@ public abstract class Identity implements Principal, Serializable {
      * If a {@code SecurityManager} is installed, code calling this method needs
      * the {@code SecurityPermission} {@code setIdentityInfo} to be granted,
      * otherwise a {@code SecurityException} will be thrown.
-     * 
+     *
      * @param info
      *            the information to be set.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public void setInfo(String info) {
         SecurityManager sm = System.getSecurityManager();
@@ -353,9 +327,8 @@ public abstract class Identity implements Principal, Serializable {
 
     /**
      * Returns the information string of this {@code Identity}.
-     * 
+     *
      * @return the information string of this {@code Identity}.
-     * @since Android 1.0
      */
     public String getInfo() {
         return info;
@@ -369,14 +342,14 @@ public abstract class Identity implements Principal, Serializable {
      * returns {@code true} if the specified object is equal, {@code false}
      * otherwise. {@code Identity} objects are considered equal, if they have
      * the same name and are in the same scope.
-     * 
+     *
      * @param obj
      *            object to be compared for equality with this {@code
      *            Identity}.
      * @return {@code true} if the specified object is equal to this {@code
      *         Identity}, otherwise {@code false}.
-     * @since Android 1.0
      */
+    @Override
     public final boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -397,9 +370,8 @@ public abstract class Identity implements Principal, Serializable {
 
     /**
      * Returns the name of this {@code Identity}.
-     * 
+     *
      * @return the name of this {@code Identity}.
-     * @since Android 1.0
      */
     public final String getName() {
         return name;
@@ -412,12 +384,12 @@ public abstract class Identity implements Principal, Serializable {
      * Returns the hash code value for this {@code Identity}. Returns the same
      * hash code for {@code Identity}s that are equal to each other as required
      * by the general contract of {@link Object#hashCode}.
-     * 
+     *
      * @return the hash code value for this {@code Identity}.
      * @see Object#equals(Object)
      * @see Identity#equals(Object)
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         int hash = 0;
         if (name != null) {
@@ -439,22 +411,22 @@ public abstract class Identity implements Principal, Serializable {
      * If a {@code SecurityManager} is installed, code calling this method
      * needs the {@code SecurityPermission} {@code printIdentity} to be granted,
      * otherwise a {@code SecurityException} will be thrown.
-     * </p>
-     * 
+     *
      * @return a printable representation for this {@code Identity}.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
+    @Override
+    @SuppressWarnings("nls")
     public String toString() {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            sm.checkSecurityAccess("printIdentity"); //$NON-NLS-1$
+            sm.checkSecurityAccess("printIdentity");
         }
-        String s = (this.name == null? "" : this.name);
+        String s = (this.name == null ? "" : this.name);
         if (scope != null) {
-            s += " [" + scope.getName() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+            s += " [" + scope.getName() + "]";
         }
         return s;
     }

@@ -14,10 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
 
 package java.security;
 
@@ -31,14 +27,11 @@ import org.apache.harmony.security.internal.nls.Messages;
  * definition for {@link Signature}.
  * 
  * @see Signature
- * @since Android 1.0
  */
 public abstract class SignatureSpi {
 
     /**
      * Implementation specific source of randomness.
-     * 
-     * @since Android 1.0
      */
     protected SecureRandom appRandom;
 
@@ -46,12 +39,11 @@ public abstract class SignatureSpi {
      * Initializes this {@code SignatureSpi} instance for signature
      * verification, using the public key of the identity whose signature is
      * going to be verified.
-     * 
+     *
      * @param publicKey
      *            the public key.
      * @throws InvalidKeyException
      *             if {@code publicKey} is not valid.
-     * @since Android 1.0
      */
     protected abstract void engineInitVerify(PublicKey publicKey)
             throws InvalidKeyException;
@@ -59,12 +51,11 @@ public abstract class SignatureSpi {
     /**
      * Initializes this {@code SignatureSpi} instance for signing, using the
      * private key of the identity whose signature is going to be generated.
-     * 
+     *
      * @param privateKey
      *            the private key.
      * @throws InvalidKeyException
      *             if {@code privateKey} is not valid.
-     * @since Android 1.0
      */
     protected abstract void engineInitSign(PrivateKey privateKey)
             throws InvalidKeyException;
@@ -73,14 +64,13 @@ public abstract class SignatureSpi {
      * Initializes this {@code SignatureSpi} instance for signing, using the
      * private key of the identity whose signature is going to be generated and
      * the specified source of randomness.
-     * 
+     *
      * @param privateKey
      *            the private key.
      * @param random
      *            the {@code SecureRandom} to use.
      * @throws InvalidKeyException
      *             if {@code privateKey} is not valid.
-     * @since Android 1.0
      */
     protected void engineInitSign(PrivateKey privateKey, SecureRandom random)
             throws InvalidKeyException {
@@ -91,20 +81,19 @@ public abstract class SignatureSpi {
     /**
      * Updates the data to be verified or to be signed, using the specified
      * {@code byte}.
-     * 
+     *
      * @param b
      *            the byte to update with.
      * @throws SignatureException
      *             if this {@code SignatureSpi} instance is not initialized
      *             properly.
-     * @since Android 1.0
      */
     protected abstract void engineUpdate(byte b) throws SignatureException;
 
     /**
      * Updates the data to be verified or to be signed, using the given {@code
      * byte[]}, starting form the specified index for the specified length.
-     * 
+     *
      * @param b
      *            the byte array to update with.
      * @param off
@@ -114,7 +103,6 @@ public abstract class SignatureSpi {
      * @throws SignatureException
      *             if this {@code SignatureSpi} instance is not initialized
      *             properly.
-     * @since Android 1.0
      */
     protected abstract void engineUpdate(byte[] b, int off, int len)
             throws SignatureException;
@@ -130,7 +118,6 @@ public abstract class SignatureSpi {
      *             method it throws a {@code RuntimeException} if underlying
      *             {@link #engineUpdate(byte[], int, int)} throws {@code
      *             SignatureException}.
-     * @since Android 1.0
      */
     protected void engineUpdate(ByteBuffer input) {
         if (!input.hasRemaining()) {
@@ -165,13 +152,11 @@ public abstract class SignatureSpi {
      * This {@code SignatureSpi} instance is reset to the state of its last
      * initialization for signing and thus can be used for another signature
      * from the same identity.
-     * </p>
-     * 
+     *
      * @return the signature of all updated data.
      * @throws SignatureException
      *             if this {@code SignatureSpi} instance is not initialized
      *             properly.
-     * @since Android 1.0
      */
     protected abstract byte[] engineSign() throws SignatureException;
 
@@ -182,8 +167,7 @@ public abstract class SignatureSpi {
      * This {@code SignatureSpi} instance is reset to the state of its last
      * initialization for signing and thus can be used for another signature
      * from the same identity.
-     * </p>
-     * 
+     *
      * @param outbuf
      *            the buffer to store the signature.
      * @param offset
@@ -197,7 +181,6 @@ public abstract class SignatureSpi {
      * @throws IllegalArgumentException
      *             if {@code offset} or {@code len} are not valid in respect to
      *             {@code outbuf}.
-     * @since Android 1.0
      */
     protected int engineSign(byte[] outbuf, int offset, int len)
             throws SignatureException {
@@ -225,8 +208,7 @@ public abstract class SignatureSpi {
      * This {@code SignatureSpi} instance is reset to the state of its last
      * initialization for verifying and thus can be used to verify another
      * signature of the same signer.
-     * </p>
-     * 
+     *
      * @param sigBytes
      *            the signature to verify.
      * @return {@code true} if the signature was verified, {@code false}
@@ -234,7 +216,6 @@ public abstract class SignatureSpi {
      * @throws SignatureException
      *             if this {@code SignatureSpi} instance is not initialized
      *             properly.
-     * @since Android 1.0
      */
     protected abstract boolean engineVerify(byte[] sigBytes)
             throws SignatureException;
@@ -247,8 +228,7 @@ public abstract class SignatureSpi {
      * This {@code SignatureSpi} instance is reset to the state of its last
      * initialization for verifying and thus can be used to verify another
      * signature of the same signer.
-     * </p>
-     * 
+     *
      * @param sigBytes
      *            the {@code byte[]} containing the signature to verify.
      * @param offset
@@ -263,7 +243,6 @@ public abstract class SignatureSpi {
      * @throws IllegalArgumentException
      *             if {@code offset} or {@code length} are not valid in respect
      *             to {@code sigBytes}.
-     * @since Android 1.0
      */
     protected boolean engineVerify(byte[] sigBytes, int offset, int length)
             throws SignatureException {
@@ -274,7 +253,7 @@ public abstract class SignatureSpi {
 
     /**
      * Sets the specified parameter to the given value.
-     * 
+     *
      * @param param
      *            the name of the parameter.
      * @param value
@@ -283,7 +262,6 @@ public abstract class SignatureSpi {
      *             if the parameter is invalid, already set or is not allowed to
      *             be changed.
      * @deprecated Use {@link #engineSetParameter(AlgorithmParameterSpec)}
-     * @since Android 1.0
      */
     @Deprecated
     protected abstract void engineSetParameter(String param, Object value)
@@ -291,13 +269,12 @@ public abstract class SignatureSpi {
 
     /**
      * Sets the specified {@code AlgorithmParameterSpec}.
-     * 
+     *
      * @param params
      *            the parameter to set.
      * @throws InvalidAlgorithmParameterException
      *             if the parameter is invalid, already set or is not allowed to
      *             be changed.
-     * @since Android 1.0
      */
     protected void engineSetParameter(AlgorithmParameterSpec params)
             throws InvalidAlgorithmParameterException {
@@ -307,21 +284,17 @@ public abstract class SignatureSpi {
     /**
      * Returns the {@code AlgorithmParameters} of this {@link SignatureSpi}
      * instance.
-     * 
+     *
      * @return the {@code AlgorithmParameters} of this {@link SignatureSpi}
      *         instance, maybe {@code null}.
-     * @since Android 1.0
      */
     protected AlgorithmParameters engineGetParameters() {
         throw new UnsupportedOperationException();
     }
 
-    // BEGIN android-note
-    // added Deprecated annotation
-    // END android-note
     /**
      * Returns the value of the parameter with the specified name.
-     * 
+     *
      * @param param
      *            the name of the requested parameter value.
      * @return the value of the parameter with the specified name, maybe {@code
@@ -330,17 +303,16 @@ public abstract class SignatureSpi {
      *             if {@code param} is not a valid parameter for this {@code
      *             SignatureSpi} or an other error occurs.
      * @deprecated There is no generally accepted parameter naming convention.
-     * @since Android 1.0
      */
     @Deprecated
     protected abstract Object engineGetParameter(String param)
             throws InvalidParameterException;
 
+    @Override
     public Object clone() throws CloneNotSupportedException {
         if (this instanceof Cloneable) {
             return super.clone();
-        } else {
-            throw new CloneNotSupportedException();
         }
+        throw new CloneNotSupportedException();
     }
 }

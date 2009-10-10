@@ -138,22 +138,16 @@ public class ProviderServiceTest extends TestCase {
         method = "newInstance",
         args = {java.lang.Object.class}
     )
-    public void testNewInstance() {
+    public void testNewInstance() throws Exception {
         Provider p = new MyProvider();
         Provider.Service s = new Provider.Service(p, "SecureRandom",
-                "algorithm", "org.apache.harmony.security.tests.support.RandomImpl", null,
-                null);
-        Object o = null;
-        try {
-            o = s.newInstance(null);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            fail("newInstance() failed");
-        }
-        if (!(o instanceof RandomImpl)) {
-            fail("incorrect instance");
-        }
+                "algorithm",
+                "org.apache.harmony.security.tests.support.RandomImpl",
+                null, null);
 
+        Object o = s.newInstance(null);
+        assertTrue("incorrect instance", o instanceof RandomImpl);
+        
         try {
             o = s.newInstance(new Object());
             fail("No expected NoSuchAlgorithmException");

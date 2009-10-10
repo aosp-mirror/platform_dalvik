@@ -83,7 +83,7 @@ public class SHA1withDSA_SignatureImpl extends Signature {
         DSAParams params;
 
         // parameters and private key
-        BigInteger p, q, g, x;
+        BigInteger p, q, x;
 
         int n;
 
@@ -95,7 +95,6 @@ public class SHA1withDSA_SignatureImpl extends Signature {
         params = ((DSAPrivateKey) privateKey).getParams();
         p = params.getP();
         q = params.getQ();
-        g = params.getG();
         x = ((DSAPrivateKey) privateKey).getX();
 
         // checks described in DSA standard
@@ -129,7 +128,7 @@ public class SHA1withDSA_SignatureImpl extends Signature {
             throws InvalidKeyException {
 
         // parameters and public key
-        BigInteger p, q, g, y;
+        BigInteger p, q, y;
 
         int n1;
 
@@ -141,7 +140,6 @@ public class SHA1withDSA_SignatureImpl extends Signature {
         DSAParams params = ((DSAPublicKey) publicKey).getParams();
         p = params.getP();
         q = params.getQ();
-        g = params.getG();
         y = ((DSAPublicKey) publicKey).getY();
 
         // checks described in DSA standard
@@ -207,7 +205,6 @@ public class SHA1withDSA_SignatureImpl extends Signature {
 
         // various byte array being used in computing signature
         byte randomBytes[];
-        byte digest[];
         byte rBytes[], sBytes[], signature[];
 
         int n, n1, n2;

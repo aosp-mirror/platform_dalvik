@@ -28,16 +28,12 @@ import org.apache.harmony.security.internal.nls.Messages;
  * This class defines the <i>Service Provider Interface</i> (<b>SPI</b>) for the
  * {@code CertificateFactory} class. This SPI must be implemented for each
  * certificate type a security provider wishes to support.
- * 
- * @since Android 1.0
  */
 
 public abstract class CertificateFactorySpi {
 
     /**
      * Constructs a new instance of this class.
-     * 
-     * @since Android 1.0
      */
     public CertificateFactorySpi() {
     }
@@ -52,7 +48,6 @@ public abstract class CertificateFactorySpi {
      * @return an initialized certificate.
      * @exception CertificateException
      *                if parsing problems are detected.
-     * @since Android 1.0
      */
     public abstract Certificate engineGenerateCertificate(InputStream inStream)
             throws CertificateException;
@@ -66,7 +61,6 @@ public abstract class CertificateFactorySpi {
      * @return a collection of certificates.
      * @exception CertificateException
      *                if parsing problems are detected.
-     * @since Android 1.0
      */
     public abstract Collection<? extends Certificate> 
         engineGenerateCertificates(InputStream inStream) throws CertificateException;
@@ -80,7 +74,6 @@ public abstract class CertificateFactorySpi {
      * @return an CRL instance.
      * @exception CRLException
      *                if parsing problems are detected.
-     * @since Android 1.0
      */
     public abstract CRL engineGenerateCRL(InputStream inStream)
             throws CRLException;
@@ -94,7 +87,6 @@ public abstract class CertificateFactorySpi {
      * @return a collection of CRLs.
      * @exception CRLException
      *                if parsing problems are detected.
-     * @since Android 1.0
      */
     public abstract Collection<? extends CRL> 
         engineGenerateCRLs(InputStream inStream) throws CRLException;
@@ -108,7 +100,6 @@ public abstract class CertificateFactorySpi {
      * @return a {@code CertPath} initialized from the provided data.
      * @throws CertificateException
      *             if parsing problems are detected.
-     * @since Android 1.0
      */
     public CertPath engineGenerateCertPath(InputStream inStream)
             throws CertificateException {
@@ -130,7 +121,6 @@ public abstract class CertificateFactorySpi {
      *             if parsing problems are detected.
      * @throws UnsupportedOperationException
      *             if the provider does not implement this method.
-     * @since Android 1.0
      */
     public CertPath engineGenerateCertPath(InputStream inStream, String encoding)
             throws CertificateException {
@@ -150,7 +140,6 @@ public abstract class CertificateFactorySpi {
      *             if parsing problems are detected.
      * @throws UnsupportedOperationException
      *             if the provider does not implement this method.
-     * @since Android 1.0
      */
     public CertPath engineGenerateCertPath(List<? extends Certificate>  certificates) 
             throws CertificateException {
@@ -164,7 +153,6 @@ public abstract class CertificateFactorySpi {
      * 
      * @return an iterator over supported {@code CertPath} encodings (as
      *         Strings).
-     * @since Android 1.0
      */
     public Iterator<String> engineGetCertPathEncodings() {
         throw new UnsupportedOperationException(

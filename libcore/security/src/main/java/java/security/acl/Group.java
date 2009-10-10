@@ -24,8 +24,6 @@ import java.util.Enumeration;
  * A {@code Principal} that represents a group of principals.
  * 
  * @see Principal
- * 
- * @since Android 1.0
  */
 public interface Group extends Principal {
     
@@ -35,7 +33,6 @@ public interface Group extends Principal {
      * @param user
      *            the member to add.
      * @return {@code true} if the member was added, {@code false} if it was already a member.
-     * @since Android 1.0
      */
     boolean addMember(Principal user);
     
@@ -45,7 +42,6 @@ public interface Group extends Principal {
      * @param user
      *            the member to remove.
      * @return {@code true} if the member was removed, {@code false} if it was not a member.
-     * @since Android 1.0
      */
     boolean removeMember(Principal user);
     
@@ -55,7 +51,6 @@ public interface Group extends Principal {
      * @param member
      *            the principal to check.
      * @return {@code true} if the principal is a member, otherwise {@code false}.
-     * @since Android 1.0
      */
     boolean isMember(Principal member);
     
@@ -63,7 +58,6 @@ public interface Group extends Principal {
      * Returns the members of this group.
      * 
      * @return the members of this group.
-     * @since Android 1.0
      */
     Enumeration<? extends Principal> members();
     

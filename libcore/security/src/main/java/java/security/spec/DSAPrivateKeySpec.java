@@ -21,8 +21,6 @@ import java.math.BigInteger;
 
 /**
  * The parameters specifying a DSA private key.
- * 
- * @since Android 1.0
  */
 public class DSAPrivateKeySpec implements KeySpec {
     // Private key
@@ -46,7 +44,6 @@ public class DSAPrivateKeySpec implements KeySpec {
      *            the sub-prime {@code q}.
      * @param g
      *            the base {@code g}.
-     * @since Android 1.0
      */
     public DSAPrivateKeySpec(BigInteger x, BigInteger p,
             BigInteger q, BigInteger g) {
@@ -60,7 +57,6 @@ public class DSAPrivateKeySpec implements KeySpec {
      * Returns the base {@code g}.
      * 
      * @return the base {@code g}.
-     * @since Android 1.0
      */
     public BigInteger getG() {
         return g;
@@ -70,7 +66,6 @@ public class DSAPrivateKeySpec implements KeySpec {
      * Returns the prime {@code p}.
      * 
      * @return the prime {@code p}.
-     * @since Android 1.0
      */
     public BigInteger getP() {
         return p;
@@ -80,7 +75,6 @@ public class DSAPrivateKeySpec implements KeySpec {
      * Returns the sub-prime {@code q}.
      * 
      * @return the sub-prime {@code q}.
-     * @since Android 1.0
      */
     public BigInteger getQ() {
         return q;
@@ -90,7 +84,6 @@ public class DSAPrivateKeySpec implements KeySpec {
      * Returns the private key {@code x}.
      * 
      * @return the private key {@code x}.
-     * @since Android 1.0
      */
     public BigInteger getX() {
         return x;

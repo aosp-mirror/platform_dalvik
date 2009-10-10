@@ -130,7 +130,7 @@ public class SignerInfo {
 
     
     public String toString() {
-        StringBuffer res = new StringBuffer();
+        StringBuilder res = new StringBuilder();
         res.append("-- SignerInfo:"); //$NON-NLS-1$
         res.append("\n version : "); //$NON-NLS-1$
         res.append(version);

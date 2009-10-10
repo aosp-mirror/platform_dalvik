@@ -15,17 +15,17 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.Signature;
+import java.security.SignedObject;
+import java.util.Properties;
 
 import junit.framework.TestCase;
 
@@ -47,7 +47,6 @@ import java.util.Properties;
 @TestTargetClass(SignedObject.class)
 /**
  * Tests for <code>SignedObject</code> constructor and methods
- * 
  */
 public class SignedObjectTest extends TestCase {
 
@@ -83,17 +82,11 @@ public class SignedObjectTest extends TestCase {
             args = {java.security.PublicKey.class, java.security.Signature.class}
         )
     })
-    public void testSignedObject() {
-        Signature sig = null;
+    public void testSignedObject() throws Exception {
         TestKeyPair tkp = null;
         Properties prop;
-        
-        try {
-            sig = Signature.getInstance("SHA1withDSA");        
-        } catch (NoSuchAlgorithmException e) {
-            fail(e.toString());
-        }
-        
+        Signature sig = Signature.getInstance("SHA1withDSA");
+
         try {
             tkp = new TestKeyPair("DSA");
         } catch (NoSuchAlgorithmException e) {
@@ -102,133 +95,14 @@ public class SignedObjectTest extends TestCase {
         }
         prop = new Properties();
         prop.put("aaa", "bbb");
-        SignedObject so = null;
-        try {
-            so = new SignedObject(prop, tkp.getPrivate(), sig);
-        } catch (IOException e) {
-               fail(e.toString());  
-        } catch (SignatureException e) {   
-               fail(e.toString());  
-        } catch (InvalidKeyException e) {
-               fail(e.toString());  
-        } catch (InvalidKeySpecException e) {
-              fail(e.toString());
-        }
+
+        SignedObject so = new SignedObject(prop, tkp.getPrivate(), sig);
 
         assertEquals("SHA1withDSA", so.getAlgorithm());
- 
-        try {
-            assertEquals(so.getObject(), prop);          
-        } catch (ClassNotFoundException e) {
-               fail(e.toString());  
-        } catch (IOException e) {
-               fail(e.toString());  
-        }
-        try {
-            if (!so.verify(tkp.getPublic(), sig)) {
-                fail("verify() failed");
-            }    
-        } catch (SignatureException e) {
-            fail(e.toString());          
-        } catch (InvalidKeyException e) {
-               fail(e.toString());             
-        } catch (InvalidKeySpecException e) {
-               fail(e.toString()); 
-        }
-        
-        if (so.getSignature() == null) {
-            fail("signature is null");
-        }
-        
-        try {
-            TestKeyPair tkp2 = new TestKeyPair("DH");
-            so = new SignedObject(prop, tkp2.getPrivate(), sig);
-        } catch(InvalidKeyException e) {
-            // ok
-        } catch (NoSuchAlgorithmException e) {
-            fail(e.toString()); 
-        } catch (SignatureException e) {
-            fail(e.toString()); 
-        } catch (InvalidKeySpecException e) {
-            fail(e.toString()); 
-        } catch (IOException e) {
-            fail(e.toString()); 
-        }
-        
-        try {
-            new SignedObject(new Serializable() {
-                private void writeObject(ObjectOutputStream out) throws IOException {
-                    throw new IOException();
-                }
-            }, tkp.getPrivate(), sig);
-        } catch(InvalidKeyException e) {
-            fail(e.toString()); 
-        } catch (SignatureException e) {
-            fail(e.toString()); 
-        } catch (InvalidKeySpecException e) {
-            fail(e.toString()); 
-        } catch (IOException e) {
-            // ok 
-        } 
+        assertEquals(prop, so.getObject());
 
-        
-        try {
-            new SignedObject(prop, tkp.getPrivate(), new Signature("TST") {
-            
-                @Override
-                protected boolean engineVerify(byte[] sigBytes) throws SignatureException {
-                    throw new SignatureException();
-                }
-            
-                @Override
-                protected void engineUpdate(byte[] b, int off, int len)
-                        throws SignatureException {
-                    throw new SignatureException();
-                }
-            
-                @Override
-                protected void engineUpdate(byte b) throws SignatureException {
-                    throw new SignatureException();
-                }
-            
-                @Override
-                protected byte[] engineSign() throws SignatureException {
-                    throw new SignatureException();
-                }
-            
-                @Override
-                protected void engineSetParameter(String param, Object value)
-                        throws InvalidParameterException {
-            
-                }
-            
-                @Override
-                protected void engineInitVerify(PublicKey publicKey)
-                        throws InvalidKeyException {
-            
-                }
-            
-                @Override
-                protected void engineInitSign(PrivateKey privateKey)
-                        throws InvalidKeyException {
-            
-                }
-            
-                @Override
-                protected Object engineGetParameter(String param)
-                        throws InvalidParameterException {
-                    return null;
-                }
-            });
-        } catch(InvalidKeyException e) {
-            fail(e.toString()); 
-        } catch (SignatureException e) {
-            // ok 
-        } catch (InvalidKeySpecException e) {
-            fail(e.toString()); 
-        } catch (IOException e) {
-            fail(e.toString()); 
-        } 
-        
+        assertTrue("verify() failed", so.verify(tkp.getPublic(), sig));
+
+        assertNotNull("signature is null", so.getSignature());
     }
 }

@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
@@ -33,13 +28,11 @@ package java.security;
  * {@code AccessController#doPrivileged(PrivilegedExceptionAction,
  * AccessControlContext)} </br>
  * </ul>
- * </p>
- * 
+ *
  * @see PrivilegedExceptionAction
  * @see AccessController#doPrivileged(PrivilegedExceptionAction)
  * @see AccessController#doPrivileged(PrivilegedExceptionAction,
  *      AccessControlContext)
- * @since Android 1.0
  */
 public class PrivilegedActionException extends Exception {
 
@@ -50,10 +43,9 @@ public class PrivilegedActionException extends Exception {
     /**
      * Constructs a new instance of {@code PrivilegedActionException} with the
      * cause.
-     * 
+     *
      * @param ex
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public PrivilegedActionException(Exception ex) {
         super(ex);
@@ -63,10 +55,9 @@ public class PrivilegedActionException extends Exception {
     /**
      * Returns the exception that was thrown by a
      * {@code PrivilegedExceptionAction}.
-     * 
+     *
      * @return the exception that was thrown by a
      *         {@code PrivilegedExceptionAction}.
-     * @since Android 1.0
      */
     public Exception getException() {
         return exception; // return ( getCause() instanceof Exception ) ?
@@ -76,11 +67,11 @@ public class PrivilegedActionException extends Exception {
     /**
      * Returns the exception that was thrown by a
      * {@code PrivilegedExceptionAction}.
-     * 
+     *
      * @return the exception that was thrown by a
      *         {@code PrivilegedExceptionAction}.
-     * @since Android 1.0
      */
+    @Override
     public Throwable getCause() {
         return exception;
     }
@@ -88,11 +79,11 @@ public class PrivilegedActionException extends Exception {
     /**
      * Returns a string containing a concise, human-readable description of this
      * {@code PrivilegedActionException}.
-     * 
+     *
      * @return a printable representation for this {@code
      *         PrivilegedActionException}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         String s = getClass().getName();
         return exception == null ? s : s + ": " + exception; //$NON-NLS-1$

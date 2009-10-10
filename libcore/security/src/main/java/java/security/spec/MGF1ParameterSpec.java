@@ -26,17 +26,12 @@ import org.apache.harmony.security.internal.nls.Messages;
  * Defined in the <a
  * href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">PKCS #1 v2.1</a>
  * standard
- * </p>
- * 
- * @since Android 1.0
  */
 public class MGF1ParameterSpec implements AlgorithmParameterSpec {
 
     /**
      * The predefined MGF1 parameter specification with an "SHA-1" message
      * digest.
-     * 
-     * @since Android 1.0
      */
     public static final MGF1ParameterSpec SHA1 =
         new MGF1ParameterSpec("SHA-1"); //$NON-NLS-1$
@@ -44,8 +39,6 @@ public class MGF1ParameterSpec implements AlgorithmParameterSpec {
     /**
      * The predefined MGF1 parameter specification with an "SHA-256" message
      * digest.
-     * 
-     * @since Android 1.0
      */
     public static final MGF1ParameterSpec SHA256 =
         new MGF1ParameterSpec("SHA-256"); //$NON-NLS-1$
@@ -53,8 +46,6 @@ public class MGF1ParameterSpec implements AlgorithmParameterSpec {
     /**
      * The predefined MGF1 parameter specification with an "SHA-384" message
      * digest.
-     * 
-     * @since Android 1.0
      */
     public static final MGF1ParameterSpec SHA384 =
         new MGF1ParameterSpec("SHA-384"); //$NON-NLS-1$
@@ -62,8 +53,6 @@ public class MGF1ParameterSpec implements AlgorithmParameterSpec {
     /**
      * The predefined MGF1 parameter specification with an "SHA-512" message
      * digest.
-     * 
-     * @since Android 1.0
      */
     public static final MGF1ParameterSpec SHA512 =
         new MGF1ParameterSpec("SHA-512"); //$NON-NLS-1$
@@ -77,7 +66,6 @@ public class MGF1ParameterSpec implements AlgorithmParameterSpec {
      * 
      * @param mdName
      *            the name of the message digest algorithm.
-     * @since Android 1.0
      */
     public MGF1ParameterSpec(String mdName) {
         this.mdName = mdName;
@@ -90,7 +78,6 @@ public class MGF1ParameterSpec implements AlgorithmParameterSpec {
      * Returns the name of the message digest algorithm.
      * 
      * @return the name of the message digest algorithm.
-     * @since Android 1.0
      */
     public String getDigestAlgorithm() {
         return mdName;

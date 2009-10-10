@@ -15,19 +15,12 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.GeneralSecurityException;
 
 /**
  * The exception that is thrown if errors occur during handling of {@code CRL}s.
- * 
- * @since Android 1.0
  */
 public class CRLException extends GeneralSecurityException {
 
@@ -38,7 +31,6 @@ public class CRLException extends GeneralSecurityException {
      * 
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public CRLException(String msg) {
         super(msg);
@@ -46,8 +38,6 @@ public class CRLException extends GeneralSecurityException {
 
     /**
      * Creates a new {@code CRLException}.
-     * 
-     * @since Android 1.0
      */
     public CRLException() {
     }
@@ -59,7 +49,6 @@ public class CRLException extends GeneralSecurityException {
      *            the detail message for this exception.
      * @param cause
      *            the cause for this exception.
-     * @since Android 1.0
      */
     public CRLException(String message, Throwable cause) {
         super(message, cause);
@@ -70,7 +59,6 @@ public class CRLException extends GeneralSecurityException {
      * 
      * @param cause
      *            the cause for this exception.
-     * @since Android 1.0
      */
     public CRLException(Throwable cause) {
         super(cause);

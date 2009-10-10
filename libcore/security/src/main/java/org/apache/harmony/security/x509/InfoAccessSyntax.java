@@ -86,7 +86,7 @@ public class InfoAccessSyntax extends ExtensionValue {
     }
 
     public String toString() {
-        StringBuffer res = new StringBuffer();
+        StringBuilder res = new StringBuilder();
         res.append("\n---- InfoAccessSyntax:"); //$NON-NLS-1$
         if (accessDescriptions != null) {
             for (Iterator it = accessDescriptions.iterator(); it.hasNext();) {

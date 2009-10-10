@@ -25,9 +25,6 @@ import java.util.Enumeration;
  * <p>
  * An {@code AclEntry} is a list of the {@link Permission}s that are 
  *  granted (<i>positive</i>) or denied (<i>negative</i>) to a {@link Principal}.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface AclEntry extends Cloneable {
 
@@ -35,13 +32,11 @@ public interface AclEntry extends Cloneable {
      * Set the principal for this ACL entry.
      * <p>
      * The principal for an ACL entry can only be set once.
-     * </p>
-     * 
+     *
      * @param user
      *            the principal for this ACL entry.
      * @return {@code true} on success, {@code false} if there is a principal already set for
      *         this entry.
-     * @since Android 1.0
      */
     boolean setPrincipal(Principal user);
     
@@ -49,7 +44,6 @@ public interface AclEntry extends Cloneable {
      * Returns the principal of this ACL entry.
      * 
      * @return the principal of this ACL entry, or null if none is set.
-     * @since Android 1.0
      */
     Principal getPrincipal();
     
@@ -58,13 +52,9 @@ public interface AclEntry extends Cloneable {
      * <p>
      * The permissions in this ACL entry will be denied to the principal
      * associated with this entry.
-     * </p>
      * <p>
      * Note: An ACL entry is <i>positive</i> by default and can only become
      * <i>negative</i> by calling this method.
-     * </p>
-     * 
-     * @since Android 1.0
      */
     void setNegativePermissions();
     
@@ -72,7 +62,6 @@ public interface AclEntry extends Cloneable {
      * Returns whether this ACL entry is <i>negative</i>.
      * 
      * @return {@code true} if this ACL entry is negative, {@code false} if it's positive.
-     * @since Android 1.0
      */
     boolean isNegative();
     
@@ -83,7 +72,6 @@ public interface AclEntry extends Cloneable {
      *            the permission to be added.
      * @return {@code true} if the specified permission is added, {@code false} if the
      *         permission was already in this entry.
-     * @since Android 1.0
      */
     boolean addPermission(Permission permission);
     
@@ -94,7 +82,6 @@ public interface AclEntry extends Cloneable {
      *            the permission to be removed.
      * @return {@code true} if the permission is removed, {@code false} if the permission was
      *         not in this entry.
-     * @since Android 1.0
      */
     boolean removePermission(Permission permission);
     
@@ -104,7 +91,6 @@ public interface AclEntry extends Cloneable {
      * @param permission
      *            the permission to check.
      * @return {@code true} if the permission is in this entry, otherwise {@code false}.
-     * @since Android 1.0
      */
     boolean checkPermission(Permission permission);
     
@@ -112,7 +98,6 @@ public interface AclEntry extends Cloneable {
      * Returns the list of permissions of this ACL entry.
      * 
      * @return the list of permissions of this ACL entry,
-     * @since Android 1.0
      */
     Enumeration<Permission> permissions();
     
@@ -120,7 +105,6 @@ public interface AclEntry extends Cloneable {
      * Returns the string representation of this ACL entry.
      * 
      * @return the string representation of this ACL entry.
-     * @since Android 1.0
      */
     String toString();
     
@@ -128,7 +112,6 @@ public interface AclEntry extends Cloneable {
      * Clones this ACL entry instance.
      * 
      * @return a copy of this entry.
-     * @since Android 1.0
      */
     Object clone();
     

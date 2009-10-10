@@ -21,8 +21,6 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 /**
  * The parameter specification used to generate elliptic curve domain parameters. 
- * 
- * @since Android 1.0
  */
 public class ECGenParameterSpec implements AlgorithmParameterSpec {
     // Standard (or predefined) name for EC domain
@@ -35,7 +33,6 @@ public class ECGenParameterSpec implements AlgorithmParameterSpec {
      * 
      * @param name
      *            the name of the elliptic curve domain parameter.
-     * @since Android 1.0
      */
     public ECGenParameterSpec(String name) {
         this.name = name;
@@ -49,7 +46,6 @@ public class ECGenParameterSpec implements AlgorithmParameterSpec {
      * curve domain parameter.
      * 
      * @return the name
-     * @since Android 1.0
      */
     public String getName() {
         return name;

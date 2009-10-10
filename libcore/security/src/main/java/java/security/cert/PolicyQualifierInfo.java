@@ -27,8 +27,6 @@ import org.apache.harmony.security.utils.Array;
 /**
  * This class implements a policy qualifier as defined by the ASN.1
  * {@code PolicyQualifierInfo} structure.
- * 
- * @since Android 1.0
  */
 public class PolicyQualifierInfo {
     // This PolicyQualifierInfo DER encoding
@@ -48,7 +46,6 @@ public class PolicyQualifierInfo {
      *            the DER encoded policy qualifier.
      * @throws IOException
      *             the policy qualifier cannot be decoded.
-     * @since Android 1.0
      */
     public PolicyQualifierInfo(byte[] encoded) throws IOException {
         if (encoded == null) {
@@ -71,7 +68,6 @@ public class PolicyQualifierInfo {
      * Returns a ASN.1 DER encoded copy of policy qualifier info.
      * 
      * @return a ASN.1 DER encoded copy of policy qualifier info.
-     * @since Android 1.0
      */
     public final byte[] getEncoded() {
         byte[] ret = new byte[encoded.length];
@@ -83,7 +79,6 @@ public class PolicyQualifierInfo {
      * Returns the identifier (an OID) of this policy qualifier info.
      * 
      * @return the identifier of this policy qualifier info.
-     * @since Android 1.0
      */
     public final String getPolicyQualifierId() {
         return policyQualifierId;
@@ -95,7 +90,6 @@ public class PolicyQualifierInfo {
      * 
      * @return a ASN.1 DER encoded copy of the qualifier of this policy
      *         qualifier info.
-     * @since Android 1.0
      */
     public final byte[] getPolicyQualifier() {
         if (policyQualifier == null) {
@@ -112,11 +106,10 @@ public class PolicyQualifierInfo {
      * 
      * @return a string representation of this {@code PolicyQualifierInfo}
      *         instance.
-     * @since Android 1.0
      */
     public String toString() {
-        StringBuffer sb =
-            new StringBuffer("PolicyQualifierInfo: [\npolicyQualifierId: "); //$NON-NLS-1$
+        StringBuilder sb =
+            new StringBuilder("PolicyQualifierInfo: [\npolicyQualifierId: "); //$NON-NLS-1$
         sb.append(policyQualifierId);
         sb.append("\npolicyQualifier: \n"); //$NON-NLS-1$
         sb.append(Array.toString(policyQualifier, " ")); //$NON-NLS-1$

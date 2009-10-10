@@ -22,15 +22,11 @@ import java.security.PrivateKey;
 
 /**
  * The interface for a Digital Signature Algorithm (DSA) private key.
- * 
- * @since Android 1.0
  */
 public interface DSAPrivateKey extends DSAKey, PrivateKey {
 
     /**
      * The serial version identifier.
-     * 
-     * @since Android 1.0
      */
     public static final long serialVersionUID = 7776497482533790279L;
 
@@ -38,7 +34,6 @@ public interface DSAPrivateKey extends DSAKey, PrivateKey {
      * Returns the private key value {@code x}.
      * 
      * @return the private key value {@code x}.
-     * @since Android 1.0
      */
     public BigInteger getX();
 

@@ -15,18 +15,11 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code KeyManagementException} is a general exception, thrown to indicate an
  * exception during processing an operation concerning key management.
- * 
- * @since Android 1.0
  */
 public class KeyManagementException extends KeyException {
 
@@ -35,10 +28,9 @@ public class KeyManagementException extends KeyException {
     /**
      * Constructs a new instance of {@code KeyManagementException} with the
      * given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public KeyManagementException(String msg) {
         super(msg);
@@ -46,8 +38,6 @@ public class KeyManagementException extends KeyException {
 
     /**
      * Constructs a new instance of {@code KeyManagementException}.
-     * 
-     * @since Android 1.0
      */
     public KeyManagementException() {
     }
@@ -55,12 +45,11 @@ public class KeyManagementException extends KeyException {
     /**
      * Constructs a new instance of {@code KeyManagementException} with the
      * given message and the cause.
-     * 
+     *
      * @param message
      *            the detail message for this exception.
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public KeyManagementException(String message, Throwable cause) {
         super(message, cause);
@@ -69,10 +58,9 @@ public class KeyManagementException extends KeyException {
     /**
      * Constructs a new instance of {@code KeyManagementException} with the
      * cause.
-     * 
+     *
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public KeyManagementException(Throwable cause) {
         super(cause);

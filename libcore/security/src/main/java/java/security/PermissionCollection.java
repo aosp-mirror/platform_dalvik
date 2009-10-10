@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.Serializable;
@@ -37,12 +32,8 @@ import java.util.List;
  * method returns {@code null}, then a {@code PermissionCollection} of any type
  * can be used. If a collection is returned, it must be used for holding several
  * permissions of the particular type.
- * </p>
  * <p>
  * Subclasses must be implemented thread save.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class PermissionCollection implements Serializable {
 
@@ -57,7 +48,6 @@ public abstract class PermissionCollection implements Serializable {
      *            the {@code Permission} to add.
      * @throws IllegalStateException
      *             if the collection is read only.
-     * @since Android 1.0
      */
     public abstract void add(Permission permission);
 
@@ -66,7 +56,6 @@ public abstract class PermissionCollection implements Serializable {
      * {@code PermissionCollection}.
      * 
      * @return an enumeration over all {@link Permission}s.
-     * @since Android 1.0
      */
     public abstract Enumeration<Permission> elements();
 
@@ -78,7 +67,6 @@ public abstract class PermissionCollection implements Serializable {
      *            the permission to check.
      * @return {@code true} if the given permission is implied by the
      *         permissions in this collection, {@code false} otherwise.
-     * @since Android 1.0
      */
     public abstract boolean implies(Permission permission);
 
@@ -88,7 +76,6 @@ public abstract class PermissionCollection implements Serializable {
      * 
      * @return {@code true} if the receiver is read only, {@code false} if new
      *         elements can still be added to this {@code PermissionCollection}.
-     * @since Android 1.0
      */
     public boolean isReadOnly() {
         return readOnly;
@@ -97,8 +84,6 @@ public abstract class PermissionCollection implements Serializable {
     /**
      * Marks this {@code PermissionCollection} as read only, so that no new
      * permissions can be added to it.
-     * 
-     * @since Android 1.0
      */
     public void setReadOnly() {
         readOnly = true;
@@ -109,11 +94,11 @@ public abstract class PermissionCollection implements Serializable {
      * {@code PermissionCollection}.
      * 
      * @return a printable representation for this {@code PermissionCollection}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
-        List elist = new ArrayList(100);
-        Enumeration elenum = elements();
+        List<String> elist = new ArrayList<String>(100);
+        Enumeration<Permission> elenum = elements();
         String superStr = super.toString();
         int totalLength = superStr.length() + 5;
         if (elenum != null) {
@@ -125,12 +110,11 @@ public abstract class PermissionCollection implements Serializable {
         }
         int esize = elist.size();
         totalLength += esize * 4;
-        //FIXME StringBuffer --> StringBuilder
-        StringBuffer result = new StringBuffer(totalLength).append(superStr)
+        StringBuilder result = new StringBuilder(totalLength).append(superStr)
             .append(" ("); //$NON-NLS-1$
         for (int i = 0; i < esize; i++) {
-            result.append("\n  ").append(elist.get(i).toString()); //$NON-NLS-1$
+            result.append("\n ").append(elist.get(i).toString()); //$NON-NLS-1$
         }
-        return result.append("\n)").toString(); //$NON-NLS-1$
+        return result.append("\n)\n").toString(); //$NON-NLS-1$
     }
 }

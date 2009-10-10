@@ -31,8 +31,6 @@ import org.apache.harmony.security.internal.nls.Messages;
 /**
  * This class implements the functionality of a builder for an unverified
  * <i>Certification Path</i>s from a specified certificate to a trust anchor.
- * 
- * @since Android 1.0
  */
 public class CertPathBuilder {
 
@@ -60,14 +58,13 @@ public class CertPathBuilder {
 
     /**
      * Creates a new {@code CertPathBuilder}.
-     * 
+     *
      * @param builderSpi
      *            the implementation delegate.
      * @param provider
      *            the provider.
      * @param algorithm
      *            the desired algorithm available at the provider.
-     * @since Android 1.0
      */
     protected CertPathBuilder(CertPathBuilderSpi builderSpi, Provider provider,
             String algorithm) {
@@ -78,9 +75,8 @@ public class CertPathBuilder {
 
     /**
      * Returns the algorithm name of this instance.
-     * 
+     *
      * @return the algorithm name of this instance.
-     * @since Android 1.0
      */
     public final String getAlgorithm() {
         return algorithm;
@@ -88,9 +84,8 @@ public class CertPathBuilder {
 
     /**
      * Returns the provider of this instance.
-     * 
+     *
      * @return the provider of this instance.
-     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
@@ -107,7 +102,6 @@ public class CertPathBuilder {
      *             if the algorithm is {@code null}.
      * @throws NoSuchAlgorithmException
      *             if no installed provider can provide the algorithm.
-     * @since Android 1.0
      */
     public static CertPathBuilder getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -138,7 +132,6 @@ public class CertPathBuilder {
      *             if algorithm is {@code null}.
      * @throws IllegalArgumentException
      *             if provider is {@code null} or empty.
-     * @since Android 1.0
      */
     public static CertPathBuilder getInstance(String algorithm, String provider)
             throws NoSuchAlgorithmException, NoSuchProviderException {
@@ -168,7 +161,6 @@ public class CertPathBuilder {
      *             if provider is {@code null}.
      * @throws NullPointerException
      *             if algorithm is {@code null}.
-     * @since Android 1.0
      */
     public static CertPathBuilder getInstance(String algorithm,
             Provider provider) throws NoSuchAlgorithmException {
@@ -187,7 +179,7 @@ public class CertPathBuilder {
 
     /**
      * Builds a certification path with the specified algorithm parameters.
-     * 
+     *
      * @param params
      *            the algorithm parameters.
      * @return the built certification path.
@@ -197,7 +189,6 @@ public class CertPathBuilder {
      *             if the specified parameters cannot be used to build with this
      *             builder.
      * @see CertPathBuilderResult
-     * @since Android 1.0
      */
     public final CertPathBuilderResult build(CertPathParameters params)
             throws CertPathBuilderException, InvalidAlgorithmParameterException {
@@ -207,11 +198,10 @@ public class CertPathBuilder {
     /**
      * Returns the default {@code CertPathBuilder} type from the <i>Security
      * Properties</i>.
-     * 
+     *
      * @return the default {@code CertPathBuilder} type from the <i>Security
      *         Properties</i>, or the string "{@code PKIX}" if it cannot be
      *         determined.
-     * @since Android 1.0
      */
     public static final String getDefaultType() {
         String defaultType = AccessController

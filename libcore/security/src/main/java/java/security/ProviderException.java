@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
@@ -27,7 +22,6 @@ package java.security;
  * Providers}.
  * 
  * @see Provider
- * @since Android 1.0
  */
 public class ProviderException extends RuntimeException {
 
@@ -36,10 +30,9 @@ public class ProviderException extends RuntimeException {
     /**
      * Constructs a new instance of {@code ProviderException} with the given
      * message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public ProviderException(String msg) {
         super(msg);
@@ -47,8 +40,6 @@ public class ProviderException extends RuntimeException {
 
     /**
      * Constructs a new instance of {@code ProviderException}.
-     * 
-     * @since Android 1.0
      */
     public ProviderException() {
     }
@@ -56,12 +47,11 @@ public class ProviderException extends RuntimeException {
     /**
      * Constructs a new instance of {@code ProviderException} with the given
      * message and the cause.
-     * 
+     *
      * @param message
      *            the detail message for this exception.
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public ProviderException(String message, Throwable cause) {
         super(message, cause);
@@ -69,10 +59,9 @@ public class ProviderException extends RuntimeException {
 
     /**
      * Constructs a new instance of {@code ProviderException} with the cause.
-     * 
+     *
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public ProviderException(Throwable cause) {
         super(cause);

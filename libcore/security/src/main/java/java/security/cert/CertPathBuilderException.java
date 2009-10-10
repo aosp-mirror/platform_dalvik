@@ -21,8 +21,6 @@ import java.security.GeneralSecurityException;
 
 /**
  * The exception that is thrown when a {@code CertPathBuilder} method fails.
- * 
- * @since Android 1.0
  */
 public class CertPathBuilderException extends GeneralSecurityException {
 
@@ -36,7 +34,6 @@ public class CertPathBuilderException extends GeneralSecurityException {
      *            the detail message for the exception
      * @param cause
      *            why the building of the certification path failed.
-     * @since Android 1.0
      */
     public CertPathBuilderException(String msg, Throwable cause) {
         super(msg, cause);
@@ -47,7 +44,6 @@ public class CertPathBuilderException extends GeneralSecurityException {
      * 
      * @param cause
      *            why the building of the certification path failed.
-     * @since Android 1.0
      */
     public CertPathBuilderException(Throwable cause) {
         super(cause);
@@ -59,7 +55,6 @@ public class CertPathBuilderException extends GeneralSecurityException {
      * 
      * @param msg
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public CertPathBuilderException(String msg) {
         super(msg);
@@ -67,8 +62,6 @@ public class CertPathBuilderException extends GeneralSecurityException {
 
     /**
      * Creates a new {@code CertPathBuilderException}.
-     * 
-     * @since Android 1.0
      */
     public CertPathBuilderException() {
     }

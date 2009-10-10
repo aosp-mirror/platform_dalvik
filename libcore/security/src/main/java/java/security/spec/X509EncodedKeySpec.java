@@ -19,8 +19,6 @@ package java.security.spec;
 
 /**
  * The key specification of an X.509 encoded key in ASN.1 format.
- * 
- * @since Android 1.0
  */
 public class X509EncodedKeySpec extends EncodedKeySpec {
 
@@ -30,7 +28,6 @@ public class X509EncodedKeySpec extends EncodedKeySpec {
      * 
      * @param encodedKey
      *            the encoded key bytes.
-     * @since Android 1.0
      */
     public X509EncodedKeySpec(byte[] encodedKey) {
         // Super class' ctor makes defensive parameter copy
@@ -41,7 +38,6 @@ public class X509EncodedKeySpec extends EncodedKeySpec {
      * Returns the encoded key bytes.
      * 
      * @return the encoded key bytes.
-     * @since Android 1.0
      */
     public byte[] getEncoded() {
         // Super class' getEncoded() always returns a new array
@@ -53,7 +49,6 @@ public class X509EncodedKeySpec extends EncodedKeySpec {
      * specification.
      * 
      * @return the string "X.509".
-     * @since Android 1.0
      */
     public final String getFormat() {
         return "X.509"; //$NON-NLS-1$

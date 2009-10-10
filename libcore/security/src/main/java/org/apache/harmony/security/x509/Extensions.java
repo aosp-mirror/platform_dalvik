@@ -386,6 +386,14 @@ public class Extensions {
                 );
     }
     
+    public int hashCode() {
+    	int hashcode = 0;
+    	if (extensions != null) {
+    		hashcode = extensions.hashCode();
+    	}
+    	return hashcode;
+    }
+    
     /**
      * Places the string representation into the StringBuffer object.
      */

@@ -293,6 +293,9 @@ public class DNParser {
         case '#':
         case ';':
         case ' ':
+        case '*':
+        case '%':
+        case '_':
             //FIXME: escaping is allowed only for leading or trailing space char 
             return chars[pos];
         default:

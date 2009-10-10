@@ -328,6 +328,24 @@ public class GeneralName {
         return false;
     }
     
+	public int hashCode() {
+		switch(tag) {
+	        case RFC822_NAME:
+	        case DNS_NAME:
+	        case UR_ID:
+	        case REG_ID:
+	        case IP_ADDR: 
+	            return name.hashCode();
+	        case DIR_NAME: 
+	        case X400_ADDR:
+	        case OTHER_NAME:
+	        case EDIP_NAME:
+	            return getEncoded().hashCode();
+	        default:
+	            return super.hashCode();
+		}
+	}
+    
     /**
      * Checks if the other general name is acceptable by this object.
      * The name is acceptable if it has the same type name and its
@@ -562,16 +580,21 @@ public class GeneralName {
 
     /**
      * Checks the correctness of the string representation of DNS name.
-     * The correctness is checked as specified in RFC 1034 p. 10.
+     * The correctness is checked as specified in RFC 1034 p. 10, and modified
+     * by RFC 1123 (section 2.1).
      */
     public static void checkDNS(String dns) throws IOException {
-        byte[] bytes = dns.toLowerCase().getBytes();
+        byte[] bytes = dns.toLowerCase().getBytes("UTF-8"); //$NON-NLS-1$
         // indicates if it is a first letter of the label
         boolean first_letter = true;
         for (int i=0; i<bytes.length; i++) {
             byte ch = bytes[i];
             if (first_letter) {
-                if (ch > 'z' || ch < 'a') {
+                if ((bytes.length > 2) && (ch == '*') && (bytes[1] == '.')) {
+                    first_letter = false;
+                    continue;
+                }
+                if ((ch > 'z' || ch < 'a') && (ch < '0' || ch > '9')) {
                     throw new IOException(Messages.getString("security.184", //$NON-NLS-1$
                             (char)ch, dns));
                 }
@@ -585,7 +608,7 @@ public class GeneralName {
             if (ch == '.') {
                 // check the end of the previous label, it should not
                 // be '-' sign
-                if (bytes[i-i] == '-') {
+                if (bytes[i-1] == '-') {
                     throw new IOException(
                             Messages.getString("security.186", dns)); //$NON-NLS-1$
                 }
@@ -619,7 +642,7 @@ public class GeneralName {
      * Converts OID into array of bytes.
      */
     public static int[] oidStrToInts(String oid) throws IOException {
-        byte[] bytes = oid.getBytes();
+        byte[] bytes = oid.getBytes("UTF-8"); //$NON-NLS-1$
         if (bytes[bytes.length-1] == '.') {
             throw new IOException(Messages.getString("security.56", oid)); //$NON-NLS-1$
         }
@@ -673,7 +696,7 @@ public class GeneralName {
         }
         // the resulting array
         byte[] result = new byte[num_components];
-        byte[] ip_bytes = ip.getBytes();
+        byte[] ip_bytes = ip.getBytes("UTF-8"); //$NON-NLS-1$
         // number of address component to be read
         int component = 0;
         // if it is reading the second bound of a range

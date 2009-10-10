@@ -109,7 +109,7 @@ public class ExtendedKeyUsage extends ExtensionValue {
     /**
      * ASN.1 Encoder/Decoder.
      */
-    public static ASN1Type ASN1 =
+    public static final ASN1Type ASN1 =
         new ASN1SequenceOf(new ASN1Oid() {
 
             public Object getDecodedObject(BerInputStream in)

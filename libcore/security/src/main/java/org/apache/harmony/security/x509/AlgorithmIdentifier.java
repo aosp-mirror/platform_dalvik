@@ -143,6 +143,11 @@ public class AlgorithmIdentifier {
                     : Arrays.equals(parameters, algid.parameters));
     }
     
+    public int hashCode() {
+    	return algorithm.hashCode() * 37 + 
+    		(parameters != null ? parameters.hashCode() : 0);
+    }
+    
     /**
      * Places the string representation into the StringBuffer object.
      */

@@ -22,11 +22,12 @@ package java.security;
  * {@code AllPermission} represents the permission to perform any operation.
  * Since its {@link #implies(Permission)} method always returns {@code true},
  * granting this permission is equivalent to disabling security.
- * 
- * @since Android 1.0
  */
 public final class AllPermission extends Permission {
 
+    /**
+     * @serial
+     */
     private static final long serialVersionUID = -2916474571451318075L;
 
     // Permission name
@@ -40,12 +41,11 @@ public final class AllPermission extends Permission {
      * version is provided for class {@code Policy} so that it has a consistent
      * call pattern across all permissions. The name and action list are both
      * ignored.
-     * 
+     *
      * @param name
      *            ignored.
      * @param actions
      *            ignored.
-     * @since Android 1.0
      */
     public AllPermission(String name, String actions) {
         super(ALL_PERMISSIONS);
@@ -53,8 +53,6 @@ public final class AllPermission extends Permission {
 
     /**
      * Constructs a new instance of {@code AllPermission}.
-     * 
-     * @since Android 1.0
      */
     public AllPermission() {
         super(ALL_PERMISSIONS);
@@ -65,15 +63,15 @@ public final class AllPermission extends Permission {
      * equality and returns {@code true} if the specified object is equal,
      * {@code false} otherwise. To be equal, the given object needs to be an
      * instance of {@code AllPermission}.
-     * 
+     *
      * @param obj
      *            object to be compared for equality with this {@code
      *            AllPermission}.
      * @return {@code true} if the specified object is equal to this {@code
      *         AllPermission}, otherwise {@code false}.
-     * @since Android 1.0
      * @see #hashCode
      */
+    @Override
     public boolean equals(Object obj) {
         return (obj instanceof AllPermission);
     }
@@ -82,12 +80,12 @@ public final class AllPermission extends Permission {
      * Returns the hash code value for this {@code AllPermission}. Returns the
      * same hash code for {@code AllPermission}s that are equal to each other as
      * required by the general contract of {@link Object#hashCode}.
-     * 
+     *
      * @return the hash code value for this {@code AllPermission}.
      * @see Object#equals(Object)
      * @see AllPermission#equals(Object)
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         return 1;
     }
@@ -96,10 +94,10 @@ public final class AllPermission extends Permission {
      * Returns the actions associated with this {@code AllPermission}. Since
      * {@code AllPermission} objects allow all actions, this method returns
      * always the string "&lt;all actions&gt;".
-     * 
+     *
      * @return the actions associated with this {@code AllPermission}.
-     * @since Android 1.0
      */
+    @Override
     public String getActions() {
         return ALL_ACTIONS;
     }
@@ -107,12 +105,12 @@ public final class AllPermission extends Permission {
     /**
      * Indicates whether the given permission is implied by this permission.
      * {@code AllPermission} objects imply all other permissions.
-     * 
+     *
      * @return always {@code true}.
      * @param permission
      *            the permission to check.
-     * @since Android 1.0
      */
+    @Override
     public boolean implies(Permission permission) {
         return true;
     }
@@ -120,10 +118,10 @@ public final class AllPermission extends Permission {
     /**
      * Returns a new {@code PermissionCollection} for holding permissions of
      * this class.
-     * 
+     *
      * @return a new {@code PermissionCollection}.
-     * @since Android 1.0
      */
+    @Override
     public PermissionCollection newPermissionCollection() {
         return new AllPermissionCollection();
     }

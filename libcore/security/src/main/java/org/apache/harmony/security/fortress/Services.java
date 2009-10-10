@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.harmony.security.Util;
+
 
 /**
  * This class contains information about all registered providers and preferred
@@ -56,7 +58,7 @@ public class Services {
     /**
      * Refresh number
      */
-    public static int refreshNumber = 1;
+    static int refreshNumber = 1;
 
     // Registered providers
     private static final List<Provider> providers = new ArrayList<Provider>(20);
@@ -89,8 +91,10 @@ public class Services {
                 providers.add(p);
                 providersNames.put(p.getName(), p);
                 initServiceInfo(p);
-            } catch (Exception e) { // ignore
-            }
+            } catch (ClassNotFoundException e) { // ignore Exceptions
+            } catch (IllegalAccessException e) {
+			} catch (InstantiationException e) {
+			}
         }
         Engine.door.renumProviders();
     }
@@ -166,21 +170,21 @@ public class Services {
         String key;
         String type;
         String alias;
-        StringBuffer sb = new StringBuffer(128);
+        StringBuilder sb = new StringBuilder(128);
 
         for (Iterator<Provider.Service> it1 = p.getServices().iterator(); it1.hasNext();) {
             serv = it1.next();
             type = serv.getType();
             sb.delete(0, sb.length());
             key = sb.append(type).append(".").append( //$NON-NLS-1$
-                    serv.getAlgorithm().toUpperCase()).toString();
+                    Util.toUpperCase(serv.getAlgorithm())).toString();
             if (!services.containsKey(key)) {
                 services.put(key, serv);
             }
             for (Iterator<String> it2 = Engine.door.getAliases(serv); it2.hasNext();) {
                 alias = it2.next();
                 sb.delete(0, sb.length());
-                key = sb.append(type).append(".").append(alias.toUpperCase()) //$NON-NLS-1$
+                key = sb.append(type).append(".").append(Util.toUpperCase(alias)) //$NON-NLS-1$
                         .toString();
                 if (!services.containsKey(key)) {
                     services.put(key, serv);

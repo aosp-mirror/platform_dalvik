@@ -180,7 +180,7 @@ public class IssuingDistributionPoint extends ExtensionValue {
     /**
      * ASN.1 Encoder/Decoder.
      */
-    public static ASN1Type ASN1 = new ASN1Sequence(
+    public static final ASN1Type ASN1 = new ASN1Sequence(
             new ASN1Type[] {
                 // ASN.1 prohibits implicitly tagged CHOICE
                 new ASN1Explicit(0, DistributionPointName.ASN1),

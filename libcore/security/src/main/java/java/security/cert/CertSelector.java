@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 /**
@@ -28,11 +23,9 @@ package java.security.cert;
  * <p>
  * The implementations of this interface are typically used to define the
  * criteria for selecting {@code Certificate}s from a {@code CertStore}.
- * </p>
  * 
  * @see CertStore
  * @see Certificate
- * @since Android 1.0
  */
 public interface CertSelector extends Cloneable {
 
@@ -40,7 +33,6 @@ public interface CertSelector extends Cloneable {
      * Clones this {@code CertSelector} instance.
      * 
      * @return the cloned instance.
-     * @since Android 1.0
      */
     public Object clone();
 
@@ -52,7 +44,6 @@ public interface CertSelector extends Cloneable {
      *            the certificate to be evaluated.
      * @return {@code true} if the certificate matches the criteria, {@code
      *         false} otherwise.
-     * @since Android 1.0
      */
     public boolean match(Certificate cert);
 }

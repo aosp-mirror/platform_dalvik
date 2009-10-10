@@ -19,13 +19,11 @@ package java.security.acl;
 
 /**
  * The exception that is thrown when an action that requires ownership is
- * attempted by a principal that is not an owner of the object for which 
- * ownership is required. 
+ * attempted by a principal that is not an owner of the object for which
+ * ownership is required.
  * 
  * @see Acl
  * @see Owner
- * 
- * @since Android 1.0
  */
 public class NotOwnerException extends Exception {
 
@@ -33,8 +31,6 @@ public class NotOwnerException extends Exception {
 
     /**
      * Creates a new {@code NotOwnerException}.
-     * 
-     * @since Android 1.0
      */
     public NotOwnerException() {
     }

@@ -24,7 +24,6 @@ import java.security.Principal;
  * 
  * @see Acl
  * @see Principal
- * @since Android 1.0
  */
 public interface Owner {
     
@@ -38,7 +37,6 @@ public interface Owner {
      * @return {@code true} if the owner was added, {@code false} if it was already an owner.
      * @throws NotOwnerException
      *             if the invoking principal is not an owner.
-     * @since Android 1.0
      */
     boolean addOwner(Principal caller, Principal owner) 
                  throws NotOwnerException;
@@ -56,7 +54,6 @@ public interface Owner {
      * @throws LastOwnerException
      *             if the owner to be removed is the last owner and hence removing it
      *             would make this object owner-less.
-     * @since Android 1.0
      */
     boolean deleteOwner(Principal caller, Principal owner) 
                 throws NotOwnerException, LastOwnerException;
@@ -67,7 +64,6 @@ public interface Owner {
      * @param owner
      *            the principal to check.
      * @return {@code true} if the specified principal is an owner, otherwise {@code false}.
-     * @since Android 1.0
      */
     boolean isOwner(Principal owner);
 }

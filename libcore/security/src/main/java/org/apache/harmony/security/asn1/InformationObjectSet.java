@@ -95,7 +95,7 @@ public class InformationObjectSet {
         return intHash & 0x7FFFFFFF; // only positive
     }
 
-    private class Entry {
+    private static class Entry {
         public int[] oid;
 
         public Object object;

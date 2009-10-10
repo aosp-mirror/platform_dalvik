@@ -21,8 +21,6 @@ import java.security.GeneralSecurityException;
 
 /**
  * The base class for all {@code Certificate} related exceptions.
- * 
- * @since Android 1.0
  */
 public class CertificateException extends GeneralSecurityException {
 
@@ -33,7 +31,6 @@ public class CertificateException extends GeneralSecurityException {
      * 
      * @param msg
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public CertificateException(String msg) {
         super(msg);
@@ -41,8 +38,6 @@ public class CertificateException extends GeneralSecurityException {
 
     /**
      * Creates a new {@code CertificateException}.
-     * 
-     * @since Android 1.0
      */
     public CertificateException() {
     }
@@ -55,7 +50,6 @@ public class CertificateException extends GeneralSecurityException {
      *            the detail message for the exception.
      * @param cause
      *            the cause.
-     * @since Android 1.0
      */
     public CertificateException(String message, Throwable cause) {
         super(message, cause);
@@ -66,7 +60,6 @@ public class CertificateException extends GeneralSecurityException {
      * 
      * @param cause
      *            the cause
-     * @since Android 1.0
      */
     public CertificateException(Throwable cause) {
         super(cause);

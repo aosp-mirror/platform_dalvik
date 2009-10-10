@@ -21,8 +21,6 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 /**
  * The parameters specifying an Elliptic Curve (EC) public key. 
- * 
- * @since Android 1.0
  */
 public class ECPublicKeySpec implements KeySpec {
     // The public point
@@ -40,7 +38,6 @@ public class ECPublicKeySpec implements KeySpec {
      *            the domain parameter specification.
      * @throws IllegalArgumentException
      *             if the specified point {@code W} is at infinity.
-     * @since Android 1.0
      */
     public ECPublicKeySpec(ECPoint w, ECParameterSpec params) {
         this.w = w;
@@ -63,7 +60,6 @@ public class ECPublicKeySpec implements KeySpec {
      * Returns the domain parameter specification.
      * 
      * @return the domain parameter specification.
-     * @since Android 1.0
      */
     public ECParameterSpec getParams() {
         return params;
@@ -73,7 +69,6 @@ public class ECPublicKeySpec implements KeySpec {
      * Returns the public elliptic curve point {@code W}.
      * 
      * @return the public elliptic curve point {@code W}.
-     * @since Android 1.0
      */
     public ECPoint getW() {
         return w;

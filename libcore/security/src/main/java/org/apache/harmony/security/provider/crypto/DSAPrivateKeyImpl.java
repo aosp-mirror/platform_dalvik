@@ -27,6 +27,7 @@
 package org.apache.harmony.security.provider.crypto;
 
 import java.io.IOException;
+import java.io.NotActiveException;
 import java.math.BigInteger;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.DSAPrivateKey;
@@ -53,9 +54,9 @@ public class DSAPrivateKeyImpl extends PrivateKeyImpl implements DSAPrivateKey {
      */
     private static final long serialVersionUID = -4716227614104950081L;
 
-    private BigInteger x;
+    private BigInteger x, g, p, q;
 
-    private DSAParams params;
+    private transient DSAParams params;
 
     /**
      * Creates object from DSAPrivateKeySpec.
@@ -68,9 +69,9 @@ public class DSAPrivateKeyImpl extends PrivateKeyImpl implements DSAPrivateKey {
 
         PrivateKeyInfo pki;
 
-        BigInteger g = keySpec.getG();
-        BigInteger p = keySpec.getP();
-        BigInteger q = keySpec.getQ();
+        g = keySpec.getG();
+        p = keySpec.getP();
+        q = keySpec.getQ();
 
         ThreeIntegerSequence threeInts = new ThreeIntegerSequence(p
                 .toByteArray(), q.toByteArray(), g.toByteArray());
@@ -133,9 +134,10 @@ public class DSAPrivateKeyImpl extends PrivateKeyImpl implements DSAPrivateKey {
             throw new InvalidKeySpecException(Messages.getString(
                     "security.19B", e)); //$NON-NLS-1$
         }
-        params = new DSAParameterSpec(new BigInteger(threeInts.p),
-                new BigInteger(threeInts.q), new BigInteger(threeInts.g));
-
+        p = new BigInteger(threeInts.p);
+        q = new BigInteger(threeInts.q);
+        g = new BigInteger(threeInts.g);
+        params = new DSAParameterSpec(p, q, g);
         setEncoding(encoding);
 
         /* 
@@ -152,6 +154,11 @@ public class DSAPrivateKeyImpl extends PrivateKeyImpl implements DSAPrivateKey {
 
     public DSAParams getParams() {
         return params;
+    }
+    
+    private void readObject(java.io.ObjectInputStream in) throws NotActiveException, IOException, ClassNotFoundException {
+    	in.defaultReadObject();
+    	params = new DSAParameterSpec(p, q, g);    	
     }
 
 }

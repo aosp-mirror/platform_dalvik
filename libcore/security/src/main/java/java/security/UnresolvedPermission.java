@@ -15,27 +15,18 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InvalidObjectException;
 import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.ObjectStreamField;
 import java.io.Serializable;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.harmony.security.fortress.PolicyUtils;
 import org.apache.harmony.security.internal.nls.Messages;
@@ -46,24 +37,17 @@ import org.apache.harmony.security.internal.nls.Messages;
  * Policy}. {@code UnresolvedPermission}s contain all information to be replaced
  * by a concrete typed {@code Permission} right before the access checks are
  * performed.
- * 
- * @since Android 1.0
  */
 public final class UnresolvedPermission extends Permission
     implements Serializable {
 
     private static final long serialVersionUID = -4821973115467008846L;
 
-    private static final ObjectStreamField serialPersistentFields[] = {
-        new ObjectStreamField("type", String.class), //$NON-NLS-1$
-        new ObjectStreamField("name", String.class), //$NON-NLS-1$
-        new ObjectStreamField("actions", String.class), }; //$NON-NLS-1$
-
-    // Target name
-    private transient String targetName;
-
-    //Target actions
-    private transient String targetActions;
+    private String type;    
+    
+    private String name;
+    
+    private String actions;
 
     // The signer certificates 
     private transient Certificate[] targetCerts;
@@ -75,7 +59,7 @@ public final class UnresolvedPermission extends Permission
      * Constructs a new instance of {@code UnresolvedPermission}. The supplied
      * parameters are used when this instance is resolved to the concrete
      * {@code Permission}.
-     * 
+     *
      * @param type
      *            the fully qualified class name of the permission this class is
      *            resolved to.
@@ -90,26 +74,17 @@ public final class UnresolvedPermission extends Permission
      *            maybe {@code null}.
      * @throws NullPointerException
      *             if type is {@code null}.
-     * @since Android 1.0
      */
     public UnresolvedPermission(String type, String name, String actions,
                                 Certificate[] certs) {
         super(type);
         checkType(type);
-        targetName = name;
-        targetActions = actions;
-        if (certs != null && certs.length != 0) {
-            //TODO filter non-signer certificates ???
-            List tmp = new ArrayList();
-            for (int i = 0; i < certs.length; i++) {
-                if (certs[i] != null) {
-                    tmp.add(certs[i]);
-                }
-            }
-            if (tmp.size() != 0) {
-                targetCerts = (Certificate[])tmp.toArray(
-                                new Certificate[tmp.size()]);
-            }
+        this.type = type;
+        this.name = name;
+        this.actions = actions;
+        if (certs != null) {
+            this.targetCerts = new Certificate[certs.length];
+            System.arraycopy(certs, 0, targetCerts, 0, certs.length);
         }
         hash = 0;
     }
@@ -136,31 +111,84 @@ public final class UnresolvedPermission extends Permission
      * instance of {@code UnresolvedPermission}, the two {@code
      * UnresolvedPermission}s must refer to the same type and must have the same
      * name, the same actions and certificates.
-     * 
+     *
      * @param obj
      *            object to be compared for equality with this {@code
      *            UnresolvedPermission}.
      * @return {@code true} if the specified object is equal to this {@code
      *         UnresolvedPermission}, otherwise {@code false}.
-     * @since Android 1.0
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
         }
         if (obj instanceof UnresolvedPermission) {
-            UnresolvedPermission that = (UnresolvedPermission)obj;
+            UnresolvedPermission that = (UnresolvedPermission) obj;
             if (getName().equals(that.getName())
-                && (targetName == null ? that.targetName == null 
-                    : targetName.equals(that.targetName))
-                && (targetActions == null ? that.targetActions == null
-                    : targetActions.equals(that.targetActions))
-                && (PolicyUtils.matchSubset(targetCerts, that.targetCerts) 
-                    && PolicyUtils.matchSubset(that.targetCerts, targetCerts))) {
+                    && (name == null ? that.name == null : name
+                            .equals(that.name))
+                    && (actions == null ? that.actions == null : actions
+                            .equals(that.actions))
+                    && equalsCertificates(this.targetCerts, that.targetCerts)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /*
+     * check whether given array of certificates are equivalent
+     */
+    private boolean equalsCertificates(Certificate[] certs1,
+            Certificate[] certs2) {
+        if (certs1 == null || certs2 == null) {
+            return certs1 == certs2;
+        }
+
+        int length = certs1.length;
+        if (length != certs2.length) {
+            return false;
+        }
+
+        if (length > 0) {
+            boolean found;
+            for (int i = 0; i < length; i++) {
+            	// Skip the checking for null
+            	if(certs1[i] == null){
+            		continue;
+            	}
+                found = false;
+                for (int j = 0; j < length; j++) {
+                    if (certs1[i].equals(certs2[j])) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    return false;
+                }
+            }
+
+            for (int i = 0; i < length; i++) {
+            	if(certs2[i] == null){
+            		continue;
+            	}
+                found = false;
+                for (int j = 0; j < length; j++) {
+                    if (certs2[i].equals(certs1[j])) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -168,20 +196,20 @@ public final class UnresolvedPermission extends Permission
      * Returns the same hash code for {@code UnresolvedPermission}s that are
      * equal to each other as required by the general contract of
      * {@link Object#hashCode}.
-     * 
+     *
      * @return the hash code value for this {@code UnresolvedPermission}.
      * @see Object#equals(Object)
      * @see UnresolvedPermission#equals(Object)
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         if (hash == 0) {
             hash = getName().hashCode();
-            if (targetName != null) {
-                hash ^= targetName.hashCode();
+            if (name != null) {
+                hash ^= name.hashCode();
             }
-            if (targetActions != null) {
-                hash ^= targetActions.hashCode();
+            if (actions != null) {
+                hash ^= actions.hashCode();
             }
         }
         return hash;
@@ -191,10 +219,10 @@ public final class UnresolvedPermission extends Permission
      * Returns an empty string since there are no actions allowed for {@code
      * UnresolvedPermission}. The actions, specified in the constructor, are
      * used when the concrete permission is resolved and created.
-     * 
+     *
      * @return an empty string, indicating that there are no actions.
-     * @since Android 1.0
      */
+    @Override
     public String getActions() {
         return ""; //$NON-NLS-1$
     }
@@ -202,34 +230,31 @@ public final class UnresolvedPermission extends Permission
     /**
      * Returns the name of the permission this {@code UnresolvedPermission} is
      * resolved to.
-     * 
+     *
      * @return the name of the permission this {@code UnresolvedPermission} is
      *         resolved to.
-     * @since Android 1.0
      */
     public String getUnresolvedName() {
-        return targetName;
+        return name;
     }
 
     /**
      * Returns the actions of the permission this {@code UnresolvedPermission}
      * is resolved to.
-     * 
+     *
      * @return the actions of the permission this {@code UnresolvedPermission}
      *         is resolved to.
-     * @since Android 1.0
      */
     public String getUnresolvedActions() {
-        return targetActions;
+        return actions;
     }
 
     /**
      * Returns the fully qualified class name of the permission this {@code
      * UnresolvedPermission} is resolved to.
-     * 
+     *
      * @return the fully qualified class name of the permission this {@code
      *         UnresolvedPermission} is resolved to.
-     * @since Android 1.0
      */
     public String getUnresolvedType() {
         return super.getName();
@@ -238,10 +263,9 @@ public final class UnresolvedPermission extends Permission
     /**
      * Returns the certificates of the permission this {@code
      * UnresolvedPermission} is resolved to.
-     * 
+     *
      * @return the certificates of the permission this {@code
      *         UnresolvedPermission} is resolved to.
-     * @since Android 1.0
      */
     public Certificate[] getUnresolvedCerts() {
         if (targetCerts != null) {
@@ -261,13 +285,12 @@ public final class UnresolvedPermission extends Permission
      * UnresolvedPermissions (if any) against the passed instance. Successfully
      * resolved permissions (if any) are taken into account during further
      * processing.
-     * </p>
-     * 
+     *
      * @param permission
      *            the permission to check.
      * @return always {@code false}
-     * @since Android 1.0
      */
+    @Override
     public boolean implies(Permission permission) {
         return false;
     }
@@ -276,23 +299,23 @@ public final class UnresolvedPermission extends Permission
      * Returns a string containing a concise, human-readable description of this
      * {@code UnresolvedPermission} including its target name and its target
      * actions.
-     * 
+     *
      * @return a printable representation for this {@code UnresolvedPermission}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
-        return "(unresolved " + getName() + " " + targetName + " " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            + targetActions + ")"; //$NON-NLS-1$
+        return "(unresolved " + type + " " + name + " " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            + actions + ")"; //$NON-NLS-1$
     }
 
     /**
      * Returns a new {@code PermissionCollection} for holding {@code
      * UnresolvedPermission} objects.
-     * 
+     *
      * @return a new PermissionCollection for holding {@code
      *         UnresolvedPermission} objects.
-     * @since Android 1.0
      */
+    @Override
     public PermissionCollection newPermissionCollection() {
         return new UnresolvedPermissionCollection();
     }
@@ -306,16 +329,12 @@ public final class UnresolvedPermission extends Permission
      * per {@code getUnresolvedCerts()}) among the passed collection of signers.
      * If it does, a zero, one, and/or two-argument constructor is tried to
      * instantiate a new permission, which is then returned.
-     * </p>
      * <p>
      * If an appropriate constructor is not available or the class is improperly
      * signed, {@code null} is returned.
-     * </p>
-     * 
+     *
      * @param targetType
      *            - a target class instance, must not be {@code null}
-     * @param signers
-     *            - actual signers of the targetType
      * @return resolved permission or null
      */
     Permission resolve(Class targetType) {
@@ -323,8 +342,8 @@ public final class UnresolvedPermission extends Permission
         if (PolicyUtils.matchSubset(targetCerts, targetType.getSigners())) {
             try {
                 return PolicyUtils.instantiatePermission(targetType,
-                                                         targetName,
-                                                         targetActions);
+                                                         name,
+                                                         actions);
             } catch (Exception ignore) {
                 //TODO log warning?
             }
@@ -333,8 +352,6 @@ public final class UnresolvedPermission extends Permission
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     * 
      * Outputs {@code type},{@code name},{@code actions}
      * fields via default mechanism; next manually writes certificates in the
      * following format: <br>
@@ -353,11 +370,7 @@ public final class UnresolvedPermission extends Permission
      *  @see  <a href="http://java.sun.com/j2se/1.5.0/docs/api/serialized-form.html#java.security.UnresolvedPermission">Java Spec</a>
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
-        ObjectOutputStream.PutField fields = out.putFields();
-        fields.put("type", getUnresolvedType()); //$NON-NLS-1$
-        fields.put("name", getUnresolvedName()); //$NON-NLS-1$
-        fields.put("actions", getUnresolvedActions()); //$NON-NLS-1$
-        out.writeFields();
+        out.defaultWriteObject();
         if (targetCerts == null) {
             out.writeInt(0);
         } else {
@@ -378,19 +391,12 @@ public final class UnresolvedPermission extends Permission
     }
 
     /** 
-     * @com.intel.drl.spec_ref
-     * 
      * Reads the object from stream and checks target type for validity. 
      */
     private void readObject(ObjectInputStream in) throws IOException,
         ClassNotFoundException {
-        checkType(getUnresolvedType());
-        ObjectInputStream.GetField fields = in.readFields();
-        if (!getUnresolvedType().equals(fields.get("type", null))) { //$NON-NLS-1$
-            throw new InvalidObjectException(Messages.getString("security.31")); //$NON-NLS-1$
-        }
-        targetName = (String)fields.get("name", null); //$NON-NLS-1$
-        targetActions = (String)fields.get("actions", null); //$NON-NLS-1$
+        in.defaultReadObject();        
+        checkType(getUnresolvedType());      
         int certNumber = in.readInt();
         if (certNumber != 0) {
             targetCerts = new Certificate[certNumber];

@@ -22,8 +22,6 @@ import java.security.interfaces.DSAParams;
 
 /**
  * The parameter specification used with the Digital Signature Algorithm (DSA). 
- * 
- * @since Android 1.0
  */
 public class DSAParameterSpec implements AlgorithmParameterSpec, DSAParams {
     // Prime
@@ -43,7 +41,6 @@ public class DSAParameterSpec implements AlgorithmParameterSpec, DSAParams {
      *            the sub-prime {@code q}.
      * @param g
      *            the base {@code g};
-     * @since Android 1.0
      */
     public DSAParameterSpec(BigInteger p, BigInteger q, BigInteger g) {
         this.p = p;
@@ -55,7 +52,6 @@ public class DSAParameterSpec implements AlgorithmParameterSpec, DSAParams {
      * Returns the base {@code g}.
      * 
      * @return the base {@code g}.
-     * @since Android 1.0
      */
     public BigInteger getG() {
         return g;
@@ -65,7 +61,6 @@ public class DSAParameterSpec implements AlgorithmParameterSpec, DSAParams {
      * Returns the prime {@code p}.
      * 
      * @return the prime {@code p}.
-     * @since Android 1.0
      */
     public BigInteger getP() {
         return p;
@@ -73,8 +68,8 @@ public class DSAParameterSpec implements AlgorithmParameterSpec, DSAParams {
 
     /**
      * Returns the sub-prime {@code q}.
+     * 
      * @return the sub-prime {@code q}.
-     * @since Android 1.0
      */
     public BigInteger getQ() {
         return q;

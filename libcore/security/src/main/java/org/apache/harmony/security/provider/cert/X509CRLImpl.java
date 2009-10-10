@@ -201,7 +201,7 @@ public class X509CRLImpl extends X509CRL {
      * from the TBSCertList structure and converts them to the
      * X509CRLEntryImpl objects
      */
-    private void retirieveEntries() {
+    private void retrieveEntries() {
         entriesRetrieved = true;
         List rcerts = tbsCertList.getRevokedCertificates();
         if (rcerts == null) {
@@ -243,7 +243,7 @@ public class X509CRLImpl extends X509CRL {
             throw new NullPointerException();
         }
         if (!entriesRetrieved) {
-            retirieveEntries();
+            retrieveEntries();
         }
         if (entries == null) {
             return null;
@@ -295,7 +295,7 @@ public class X509CRLImpl extends X509CRL {
      */
     public X509CRLEntry getRevokedCertificate(BigInteger serialNumber) {
         if (!entriesRetrieved) {
-            retirieveEntries();
+            retrieveEntries();
         }
         if (entries == null) {
             return null;
@@ -315,7 +315,7 @@ public class X509CRLImpl extends X509CRL {
      */
     public Set<? extends X509CRLEntry> getRevokedCertificates() {
         if (!entriesRetrieved) {
-            retirieveEntries();
+            retrieveEntries();
         }
         if (entries == null) {
             return null;

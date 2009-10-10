@@ -36,11 +36,9 @@ import org.apache.harmony.security.internal.nls.Messages;
  * <p>
  * The parameters must be created with <i>trusted</i> certificate authorities
  * (trust anchors).
- * </p>
- * 
+ *
  * @see CertPathValidator
  * @see CertPathParameters
- * @since Android 1.0
  */
 public class PKIXParameters implements CertPathParameters {
     // Set of trust anchors - most trusted CAs
@@ -79,7 +77,6 @@ public class PKIXParameters implements CertPathParameters {
      *            the trusted CAs.
      * @throws InvalidAlgorithmParameterException
      *             if {@code trustAnchors} is empty.
-     * @since Android 1.0
      */
     public PKIXParameters(Set<TrustAnchor> trustAnchors)
         throws InvalidAlgorithmParameterException {
@@ -101,7 +98,6 @@ public class PKIXParameters implements CertPathParameters {
      * @throws InvalidAlgorithmParameterException
      *             if {@code keyStore} does not contained any trusted
      *             certificate entry.
-     * @since Android 1.0
      */
     public PKIXParameters(KeyStore keyStore)
         throws KeyStoreException,
@@ -137,7 +133,6 @@ public class PKIXParameters implements CertPathParameters {
      * Returns a unmodifiable set of the <i>trusted</i> certificate authorities.
      * 
      * @return a unmodifiable set of the <i>trusted</i> certificate authorities.
-     * @since Android 1.0
      */
     public Set<TrustAnchor> getTrustAnchors() {
         return Collections.unmodifiableSet(trustAnchors);
@@ -150,7 +145,6 @@ public class PKIXParameters implements CertPathParameters {
      *            the set of <i>trusted</i> certificate authorities.
      * @throws InvalidAlgorithmParameterException
      *             if {@code trustAnchors} is empty.
-     * @since Android 1.0
      */
     public void setTrustAnchors(Set<TrustAnchor> trustAnchors)
         throws InvalidAlgorithmParameterException {
@@ -169,7 +163,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @return {@code true} if the <i>any policy OID</i> will be inhibited,
      *         otherwise {@code false}.
-     * @since Android 1.0
      */
     public boolean isAnyPolicyInhibited() {
         return anyPolicyInhibited;
@@ -182,7 +175,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param anyPolicyInhibited
      *            {@code true} if the <i>any policy OID</i> should be inhibited,
      *            otherwise {@code false}.
-     * @since Android 1.0
      */
     public void setAnyPolicyInhibited(boolean anyPolicyInhibited) {
         this.anyPolicyInhibited = anyPolicyInhibited;
@@ -192,10 +184,8 @@ public class PKIXParameters implements CertPathParameters {
      * Returns the list of checkers for the certification path.
      * <p>
      * The list is unmodifiable and the entries in the list are cloned.
-     * </p>
-     * 
+     *
      * @return the list of checkers for the certification path.
-     * @since Android 1.0
      */
     public List<PKIXCertPathChecker> getCertPathCheckers() {
         if (certPathCheckers == null) {
@@ -222,12 +212,10 @@ public class PKIXParameters implements CertPathParameters {
      * Sets the list of checkers for the certification path.
      * <p>
      * The list is copied and the entries are cloned.
-     * </p>
      * 
      * @param certPathCheckers
      *            the list of checkers for the certification path, or {@code
      *            null} to clear the checkers.
-     * @since Android 1.0
      */
     public void setCertPathCheckers(List<PKIXCertPathChecker> certPathCheckers) {
         if (certPathCheckers == null || certPathCheckers.isEmpty()) {
@@ -254,7 +242,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param checker
      *            the {@code PKIXCertPathChecker} to add, if {@code null}, it
      *            will be ignored.
-     * @since Android 1.0
      */
     public void addCertPathChecker(PKIXCertPathChecker checker) {
         if (checker == null) {
@@ -274,7 +261,6 @@ public class PKIXParameters implements CertPathParameters {
      * and CRLs.
      * 
      * @return an immutable list of certificate stores.
-     * @since Android 1.0
      */
     public List<CertStore> getCertStores() {
         if (certStores == null) {
@@ -298,7 +284,6 @@ public class PKIXParameters implements CertPathParameters {
      * CRLs.
      * 
      * @param certStores the list of certificate stores.
-     * @since Android 1.0
      */
     public void setCertStores(List<CertStore> certStores) {
         if (certStores == null || certStores.isEmpty()) {
@@ -325,7 +310,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @param store
      *            the store to add, if {@code null}, it will be ignored.
-     * @since Android 1.0
      */
     public void addCertStore(CertStore store) {
         if (store == null) {
@@ -346,7 +330,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @return the time for the validation, or {@code null} for the current
      *         time.
-     * @since Android 1.0
      */
     public Date getDate() {
         return date == null ? null : (Date)date.clone();
@@ -359,7 +342,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param date
      *            the time for the validation, or {@code null} for the current
      *            time.
-     * @since Android 1.0
      */
     public void setDate(Date date) {
         this.date = (date == null ? null : new Date(date.getTime()));
@@ -371,7 +353,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @return {@code true} if an explicit policy is required, otherwise {@code
      *         false}.
-     * @since Android 1.0
      */
     public boolean isExplicitPolicyRequired() {
         return explicitPolicyRequired;
@@ -384,7 +365,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param explicitPolicyRequired
      *            {@code true} if an explicit policy is required, otherwise
      *            {@code false}.
-     * @since Android 1.0
      */
     public void setExplicitPolicyRequired(boolean explicitPolicyRequired) {
         this.explicitPolicyRequired = explicitPolicyRequired;
@@ -396,7 +376,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @return the unmodifiable list of policies, or an empty set if any policy
      *         is acceptable.
-     * @since Android 1.0
      */
     public Set<String> getInitialPolicies() {
         if (initialPolicies == null) {
@@ -421,7 +400,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param initialPolicies
      *            the list of policies, or an empty set or {@code null} if any
      *            policy is acceptable.
-     * @since Android 1.0
      */
     public void setInitialPolicies(Set<String> initialPolicies) {
         if (initialPolicies == null || initialPolicies.isEmpty()) {
@@ -448,7 +426,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @return {@code true} if policy mapping is inhibited, otherwise {@code
      *         false}.
-     * @since Android 1.0
      */
     public boolean isPolicyMappingInhibited() {
         return policyMappingInhibited;
@@ -460,7 +437,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param policyMappingInhibited
      *            {@code true} if policy mapping is to be inhibited, otherwise
      *            {@code false}.
-     * @since Android 1.0
      */
     public void setPolicyMappingInhibited(boolean policyMappingInhibited) {
         this.policyMappingInhibited = policyMappingInhibited;
@@ -472,7 +448,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @return {@code true} if the certificates should be rejected, otherwise
      *         {@code false}.
-     * @since Android 1.0
      */
     public boolean getPolicyQualifiersRejected() {
         return policyQualifiersRejected;
@@ -485,7 +460,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param policyQualifiersRejected
      *            {@code true} if the certificates should be rejected, otherwise
      *            {@code false}.
-     * @since Android 1.0
      */
     public void setPolicyQualifiersRejected(boolean policyQualifiersRejected) {
         this.policyQualifiersRejected = policyQualifiersRejected;
@@ -497,7 +471,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @return {@code true} if the default revocation checking mechanism is
      *         used, otherwise {@code false}.
-     * @since Android 1.0
      */
     public boolean isRevocationEnabled() {
         return revocationEnabled;
@@ -510,7 +483,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param revocationEnabled
      *            {@code true} id the default revocation checking mechanism
      *            should be used, otherwise {@code false}.
-     * @since Android 1.0
      */
     public void setRevocationEnabled(boolean revocationEnabled) {
         this.revocationEnabled = revocationEnabled;
@@ -521,7 +493,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @return the name of the signature provider, or {@code null} if none is
      *         set.
-     * @since Android 1.0
      */
     public String getSigProvider() {
         return sigProvider;
@@ -537,7 +508,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param sigProvider
      *            the name of the preferred signature provider, or {@code null}
      *            if none is preferred.
-     * @since Android 1.0
      */
     public void setSigProvider(String sigProvider) {
         this.sigProvider = sigProvider;
@@ -548,7 +518,6 @@ public class PKIXParameters implements CertPathParameters {
      * 
      * @return the constraints for the target certificate, or {@code null} if
      *         none are set.
-     * @since Android 1.0
      */
     public CertSelector getTargetCertConstraints() {
         return (targetCertConstraints == null ? null
@@ -561,7 +530,6 @@ public class PKIXParameters implements CertPathParameters {
      * @param targetCertConstraints
      *            the constraints for the target certificate, or {@code null} if
      *            none should be used.
-     * @since Android 1.0
      */
     public void setTargetCertConstraints(CertSelector targetCertConstraints) {
         this.targetCertConstraints = (targetCertConstraints == null ? null
@@ -572,7 +540,6 @@ public class PKIXParameters implements CertPathParameters {
      * Clones this {@code PKIXParameters} instance.
      * 
      * @return the cloned instance.
-     * @since Android 1.0
      */
     public Object clone() {
         try {
@@ -595,11 +562,10 @@ public class PKIXParameters implements CertPathParameters {
      * Returns a string representation of this {@code PKIXParameters} instance.
      * 
      * @return a string representation of this {@code PKIXParameters} instance.
-     * @since Android 1.0
      */
     public String toString() {
-        StringBuffer sb =
-            new StringBuffer("[\n Trust Anchors: "); //$NON-NLS-1$
+        StringBuilder sb =
+            new StringBuilder("[\n Trust Anchors: "); //$NON-NLS-1$
         sb.append(trustAnchors);
         sb.append("\n Revocation Enabled: "); //$NON-NLS-1$
         sb.append(revocationEnabled);

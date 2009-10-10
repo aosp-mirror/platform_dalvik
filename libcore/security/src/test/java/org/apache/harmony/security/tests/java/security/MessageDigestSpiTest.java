@@ -109,29 +109,29 @@ public class MessageDigestSpiTest extends TestCase {
     )
     public void test_engineDigestLB$LILI() throws Exception {
 
-        final int DIGEST_LENGHT = 2;
+        final int DIGEST_LENGTH = 2;
 
         MyMessageDigest md = new MyMessageDigest() {
 
             public int engineGetDigestLength() {
-                return DIGEST_LENGHT;
+                return DIGEST_LENGTH;
             }
 
             public byte[] engineDigest() {
-                return new byte[DIGEST_LENGHT]; // return non-null value
+                return new byte[DIGEST_LENGTH]; // return non-null value
             }
         };
 
         byte[] b = new byte[5];
         try {
             // test: null output buffer
-            md.engineDigest(null, 1, DIGEST_LENGHT);
+            md.engineDigest(null, 1, DIGEST_LENGTH);
             fail("No expected NullPointerException");
         } catch (NullPointerException e) {
         }
         try {
             //test: len param < digest length
-            md.engineDigest(b, 1, DIGEST_LENGHT - 1);
+            md.engineDigest(b, 1, DIGEST_LENGTH - 1);
             fail("No expected DigestException");
         } catch (DigestException e) {
         }
@@ -153,7 +153,7 @@ public class MessageDigestSpiTest extends TestCase {
             // ok
         }
 
-        assertEquals("incorrect result", DIGEST_LENGHT, md
+        assertEquals("incorrect result", DIGEST_LENGTH, md
                 .engineDigest(b, 1, 3));
         
         // Regression for HARMONY-3045
