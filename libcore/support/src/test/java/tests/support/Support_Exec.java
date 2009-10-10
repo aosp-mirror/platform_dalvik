@@ -73,32 +73,31 @@ public class Support_Exec extends TestCase {
     }
 
     /**
-     * Starts the specified process, collects its output from standard out, and
-     * returns. If the stream emits anything to standard err, an
-     * AssertionFailedError will be thrown.
+     * Starts the specified process, collects its output from standard out and
+     * standard err, and returns. If the stream emits anything to standard err,
+     * an AssertionFailedError will be thrown.
      *
      * <p>This method assumes the target process will complete within ten
      * seconds. If it does not, an AssertionFailedError will be thrown.
      */
     public static String execAndGetOutput(ProcessBuilder builder)
             throws IOException {
-        final Process process = builder.start();
-        ExecutorService executorService = Executors.newFixedThreadPool(1);
+        Process process = builder.start();
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
         try {
-            Future<Throwable> future = executorService.submit(new Callable<Throwable>() {
-                public Throwable call() throws Exception {
-                    String err = streamToString(process.getErrorStream());
-                    return err.length() > 0
-                            ? new AssertionFailedError("Unexpected err stream data:\n" + err)
-                            : null;
-                }
-            });
-
-            String out = streamToString(process.getInputStream());
+            Future<String> errFuture = executorService.submit(
+                    streamToStringCallable(process.getErrorStream()));
+            Future<String> outFuture = executorService.submit(
+                    streamToStringCallable(process.getInputStream()));
 
             Throwable failure;
+            String out = "";
             try {
-                failure = future.get(10, TimeUnit.SECONDS);
+                out = outFuture.get(10, TimeUnit.SECONDS);
+                String err = errFuture.get(10, TimeUnit.SECONDS);
+                failure = err.length() > 0
+                        ? new AssertionFailedError("Unexpected err stream data:\n" + err)
+                        : null;
             } catch (Exception e) {
                 failure = e;
             }
@@ -116,13 +115,17 @@ public class Support_Exec extends TestCase {
         }
     }
 
-    private static String streamToString(InputStream in) throws IOException {
-        StringWriter writer = new StringWriter();
-        Reader reader = new InputStreamReader(in);
-        int c;
-        while ((c = reader.read()) != -1) {
-            writer.write(c);
-        }
-        return writer.toString();
+    private static Callable<String> streamToStringCallable(final InputStream in) {
+        return new Callable<String>() {
+            public String call() throws Exception {
+                StringWriter writer = new StringWriter();
+                Reader reader = new InputStreamReader(in);
+                int c;
+                while ((c = reader.read()) != -1) {
+                    writer.write(c);
+                }
+                return writer.toString();
+            }
+        };
     }
 }
