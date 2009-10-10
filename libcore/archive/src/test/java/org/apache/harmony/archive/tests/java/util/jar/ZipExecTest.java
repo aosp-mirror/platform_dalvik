@@ -21,7 +21,8 @@ import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
-import tests.support.Support_Exec;
+import static tests.support.Support_Exec.javaProcessBuilder;
+import static tests.support.Support_Exec.execAndGetOutput;
 import tests.support.resource.Support_Resources;
 
 import java.io.File;
@@ -72,15 +73,12 @@ public class ZipExecTest extends junit.framework.TestCase {
         man.write(zout);
         zout.close();
 
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-jar");
+        builder.command().add(outputZip.getAbsolutePath());
 
-        // set up the VM parameters
-        String[] args = new String[] {"-jar", outputZip.getAbsolutePath()};
-
-        // execute the JAR and read the result
-        String res = Support_Exec.execJava(args, null, false);
-
-        assertTrue("Error executing ZIP : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        assertTrue("Error executing ZIP",
+                execAndGetOutput(builder).startsWith("FOOBAR"));
     }
 
     /**
@@ -124,13 +122,12 @@ public class ZipExecTest extends junit.framework.TestCase {
         zoutBar.write(getResource(resources, "hyts_Bar.ser"));
         zoutBar.close();
 
-        String[] args = new String[] {"-jar", fooZip.getAbsolutePath()};
-
         // execute the JAR and read the result
-        String res = Support_Exec.execJava(args, null, false);
-
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-jar");
+        builder.command().add(fooZip.getAbsolutePath());
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith( "FOOBAR"));
 
         // rewrite manifest so it contains not only reference to bar but useless
         // entries as well
@@ -142,9 +139,8 @@ public class ZipExecTest extends junit.framework.TestCase {
         zoutFoo.write(getResource(resources, "hyts_Foo.ser"));
         zoutFoo.close();
         // execute the JAR and read the result
-        res = Support_Exec.execJava(args, null, false);
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith("FOOBAR"));
 
 
         // play with relative file names - put relative path as ../<parent dir
@@ -159,9 +155,8 @@ public class ZipExecTest extends junit.framework.TestCase {
         zoutFoo.write(getResource(resources, "hyts_Foo.ser"));
         zoutFoo.close();
         // execute the ZIP and read the result
-        res = Support_Exec.execJava(args, null, false);
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith("FOOBAR"));
     }
 
 
@@ -199,13 +194,11 @@ public class ZipExecTest extends junit.framework.TestCase {
         zoutBar.write(getResource(resources, "hyts_Bar.ser"));
         zoutBar.close();
 
-        String[] args = new String[] {"-jar", fooJar.getAbsolutePath()};
-
-        // execute the JAR and read the result
-        String res = Support_Exec.execJava(args, null, false);
-
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-jar");
+        builder.command().add(fooJar.getAbsolutePath());
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith("FOOBAR"));
     }
 
     @TestTargetNew(
@@ -244,13 +237,12 @@ public class ZipExecTest extends junit.framework.TestCase {
         joutBar.write(getResource(resources, "hyts_Bar.ser"));
         joutBar.close();
 
-        String[] args = new String[] {"-jar", fooZip.getAbsolutePath()};
-
         // execute the JAR and read the result
-        String res = Support_Exec.execJava(args, null, false);
-
-        assertTrue("Error executing ZIP : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-jar");
+        builder.command().add(fooZip.getAbsolutePath());
+        assertTrue("Error executing ZIP", 
+                execAndGetOutput(builder).startsWith("FOOBAR"));
     }
 
     /**
@@ -296,13 +288,12 @@ public class ZipExecTest extends junit.framework.TestCase {
         zoutBar.write(getResource(resources, "hyts_Bar.ser"));
         zoutBar.close();
 
-        String[] args = new String[] {"-jar", barZip.getAbsolutePath()};
-
         // execute the JAR and read the result
-        String res = Support_Exec.execJava(args, null, false);
-
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-jar");
+        builder.command().add(barZip.getAbsolutePath());
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith("FOOBAR"));
     }
 
 

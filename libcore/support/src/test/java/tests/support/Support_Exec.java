@@ -17,204 +17,112 @@
 
 package tests.support;
 
-import java.io.ByteArrayOutputStream;
+import junit.framework.AssertionFailedError;
+import junit.framework.TestCase;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-
-import junit.framework.TestCase;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class Support_Exec extends TestCase {
 
-    static final boolean againstDalvik;
-    static {
-        String platform = System.getProperty("java.vendor");
-        againstDalvik = (platform.contains("Android"));
-    }
+    private static final boolean againstDalvik
+            = System.getProperty("java.vendor").contains("Android");
 
     /**
-     *  This function returns the output of the process as a string
+     * Returns a builder configured with the appropriate VM ("dalvikvm" or
+     * "java") and arguments (as specified by the system property
+     * {@code hy.test.vmargs}).
      */
-    public static String execJava(String[] args, String[] classpath,
-            boolean displayOutput) throws IOException, InterruptedException {
-        Object[] arr =
-                execJavaCommon(args, classpath, null, displayOutput, true);
-
-        return getProcessOutput(arr, displayOutput);
-    }
-
-    /**
-     * This function returns the output of the process as a string
-     */
-    public static String execJava(String[] args, String[] classpath, String[] envp,
-            boolean displayOutput) throws IOException, InterruptedException {
-        Object[] arr =
-                execJavaCommon(args, classpath, envp, displayOutput, false);
-
-        return getProcessOutput(arr, displayOutput);
-    }
-
-    public static String getProcessOutput(Object[] arr, boolean displayOutput)
+    public static ProcessBuilder javaProcessBuilder()
             throws IOException, InterruptedException {
-        Process proc = (Process) arr[0];
-        StringBuilder output = new StringBuilder();
-        InputStream in = proc.getInputStream();
-        int result;
-        byte[] bytes = new byte[1024];
-
-        while ((result = in.read(bytes)) != -1) {
-            output.append(new String(bytes, 0, result));
-
-            if (displayOutput) {
-                System.out.write(bytes, 0, result);
-            }
-        }
-
-        in.close();
-        proc.waitFor();
-        checkStderr(arr);
-        proc.destroy();
-
-        return output.toString();
-    }
-
-    public static void checkStderr(Object[] execArgs) {
-        StringBuilder errBuf = (StringBuilder) execArgs[1];
-
-        synchronized (errBuf) {
-            if (errBuf.length() > 0) {
-                fail(errBuf.toString());
-            }
-        }
-    }
-
-    public static Object[] execJava2(String[] args, String[] classpath,
-            boolean displayOutput) throws IOException, InterruptedException {
-        return execJavaCommon(args, classpath, null, displayOutput, true);
-    }
-
-    private static Object[] execJavaCommon(String[] args, String[] classpath,
-            String[] envp, boolean displayOutput, boolean appendToSystemClassPath)
-            throws IOException, InterruptedException {
-        // this function returns the resulting process from the exec
-        ArrayList<String> execArgs = null;
-        StringBuilder classPathString = new StringBuilder();
-        StringBuilder command;
-        String executable;
-        String testVMArgs;
-        StringTokenizer st;
-
-        execArgs = new ArrayList<String>(3 + args.length);
+        ProcessBuilder builder = new ProcessBuilder();
 
         // construct the name of executable file
-        if (againstDalvik) {
-            execArgs.add("dalvikvm");
-        } else {
-            execArgs.add("java");
-        }
-
-        // add classpath string
-        if (classpath != null) {
-            for (String element : classpath) {
-                classPathString.append(File.pathSeparator);
-                classPathString.append(element);
-            }
-        }
-        if (appendToSystemClassPath) {
-            execArgs.add("-cp");
-            execArgs.add(System.getProperty("java.class.path") +
-                    classPathString);
-        } else {
-            if (classpath != null) {
-                execArgs.add("-cp");
-                execArgs.add(classPathString.toString());
-            }
-        }
+        builder.command().add(againstDalvik ? "dalvikvm" : "java");
 
         // parse hy.test.vmargs if was given
-        testVMArgs = System.getProperty("hy.test.vmargs");
+        String testVMArgs = System.getProperty("hy.test.vmargs");
         if (testVMArgs != null) {
-            st = new StringTokenizer(testVMArgs, " ");
-
-            while (st.hasMoreTokens()) {
-                execArgs.add(st.nextToken());
-            }
+            builder.command().addAll(Arrays.asList(testVMArgs.split("\\s+")));
         }
 
-        // add custom args given as parameter
-        for (String arg : args) {
-            execArgs.add(arg);
-        }
-
-        if (displayOutput) {
-            // Construct command line string and print it to stdout.
-            command = new StringBuilder(execArgs.get(0));
-            for (int i = 1; i < execArgs.size(); i++) {
-                command.append(" ");
-                command.append(execArgs.get(i));
-            }
-        }
-
-        // execute java process
-        return execAndDigestOutput(execArgs.toArray(new String[execArgs.size()]), envp);
+        return builder;
     }
 
-    //
-    // mc: This looks like functionaly worth publicity:
-    //
-    public static Object[] execAndDigestOutput (String[] cmdLine, String[] envp)
-            throws IOException, InterruptedException {
+    /**
+     * Returns a command-line ready path formed by joining the path elements
+     * with the system path separator as a separator.
+     */
+    public static String createPath(String... elements) {
+        StringBuilder result = new StringBuilder();
+        for (String element : elements) {
+            result.append(File.pathSeparator);
+            result.append(element);
+        }
+        return result.toString();
+    }
 
-//        System.out.println("Commandline BEGIN");
-//        for (int i = 0; i < cmdLine.length; i++) {
-//            System.out.println(cmdLine[i]);
-//        }
-//        System.out.println("END");
-
-        final Process proc = Runtime.getRuntime().exec(cmdLine, envp);
-        final StringBuilder errBuf = new StringBuilder();
-
-        Thread errThread = new Thread(new Runnable() {
-            public void run() {
-                synchronized (errBuf) {
-                    InputStream err;
-                    int result;
-                    byte[] bytes = new byte[1024];
-
-                    synchronized (proc) {
-                        proc.notifyAll();
-                    }
-
-                    err = proc.getErrorStream();
-                    try {
-                        while ((result = err.read(bytes)) != -1) {
-                            System.err.write(bytes, 0, result);
-                            errBuf.append(new String(bytes));
-                        }
-                        err.close();
-                    } catch (IOException e) {
-                        ByteArrayOutputStream out = new ByteArrayOutputStream();
-                        PrintStream printer = new PrintStream(out);
-
-                        e.printStackTrace();
-                        e.printStackTrace(printer);
-                        printer.close();
-                        errBuf.append(new String(out.toByteArray()));
-                    }
+    /**
+     * Starts the specified process, collects its output from standard out, and
+     * returns. If the stream emits anything to standard err, an
+     * AssertionFailedError will be thrown.
+     *
+     * <p>This method assumes the target process will complete within ten
+     * seconds. If it does not, an AssertionFailedError will be thrown.
+     */
+    public static String execAndGetOutput(ProcessBuilder builder)
+            throws IOException {
+        final Process process = builder.start();
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
+        try {
+            Future<Throwable> future = executorService.submit(new Callable<Throwable>() {
+                public Throwable call() throws Exception {
+                    String err = streamToString(process.getErrorStream());
+                    return err.length() > 0
+                            ? new AssertionFailedError("Unexpected err stream data:\n" + err)
+                            : null;
                 }
+            });
+
+            String out = streamToString(process.getInputStream());
+
+            Throwable failure;
+            try {
+                failure = future.get(10, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                failure = e;
             }
-        });
 
-        synchronized (proc) {
-            errThread.start();
-            // wait for errThread to start
-            proc.wait();
+            if (failure != null) {
+                AssertionFailedError error = new AssertionFailedError(
+                        "Failed to execute " + builder.command() + "; output was:\n" + out);
+                error.initCause(failure);
+                throw error;
+            } else {
+                return out;
+            }
+        } finally {
+            executorService.shutdown();
         }
-
-        return new Object[] { proc, errBuf };
     }
 
+    private static String streamToString(InputStream in) throws IOException {
+        StringWriter writer = new StringWriter();
+        Reader reader = new InputStreamReader(in);
+        int c;
+        while ((c = reader.read()) != -1) {
+            writer.write(c);
+        }
+        return writer.toString();
+    }
 }

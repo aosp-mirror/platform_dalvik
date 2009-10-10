@@ -34,7 +34,6 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-import tests.support.Support_Exec;
 import tests.support.resource.Support_Resources;
 
 @TestTargetClass(JarOutputStream.class)

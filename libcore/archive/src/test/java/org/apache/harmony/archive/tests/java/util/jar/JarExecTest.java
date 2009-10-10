@@ -21,7 +21,8 @@ import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
-import tests.support.Support_Exec;
+import static tests.support.Support_Exec.execAndGetOutput;
+import static tests.support.Support_Exec.javaProcessBuilder;
 import tests.support.resource.Support_Resources;
 
 import java.io.File;
@@ -73,15 +74,12 @@ public class JarExecTest extends junit.framework.TestCase {
 
         jout.close();
 
-
-        // set up the VM parameters
-        String[] args = new String[] {"-jar", outputJar.getAbsolutePath()};
-
         // execute the JAR and read the result
-        String res = Support_Exec.execJava(args, null, false);
-
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-jar");
+        builder.command().add(outputJar.getAbsolutePath());
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith("FOOBAR"));
     }
 
     /**
@@ -123,13 +121,12 @@ public class JarExecTest extends junit.framework.TestCase {
         joutBar.write(getResource(resources, "hyts_Bar.ser"));
         joutBar.close();
 
-        String[] args = new String[] {"-jar", fooJar.getAbsolutePath()};
-
         // execute the JAR and read the result
-        String res = Support_Exec.execJava(args, null, false);
-
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-jar");
+        builder.command().add(fooJar.getAbsolutePath());
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith("FOOBAR"));
 
         // rewrite manifest so it contains not only reference to bar but useless
         // entries as well
@@ -139,10 +136,8 @@ public class JarExecTest extends junit.framework.TestCase {
         joutFoo.write(getResource(resources, "hyts_Foo.ser"));
         joutFoo.close();
         // execute the JAR and read the result
-        res = Support_Exec.execJava(args, null, false);
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
-
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith( "FOOBAR"));
 
         // play with relative file names - put relative path as ../<parent dir
         // name>/xx.jar
@@ -154,9 +149,8 @@ public class JarExecTest extends junit.framework.TestCase {
         joutFoo.write(getResource(resources, "hyts_Foo.ser"));
         joutFoo.close();
         // execute the JAR and read the result
-        res = Support_Exec.execJava(args, null, false);
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith( "FOOBAR"));
     }
 
     /**
@@ -199,13 +193,12 @@ public class JarExecTest extends junit.framework.TestCase {
         joutBar.write(getResource(resources, "hyts_Bar.ser"));
         joutBar.close();
 
-        String[] args = new String[] {"-jar", barJar.getAbsolutePath()};
-
         // execute the JAR and read the result
-        String res = Support_Exec.execJava(args, null, false);
-
-        assertTrue("Error executing JAR : result returned was incorrect.", res
-                .startsWith("FOOBAR"));
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-jar");
+        builder.command().add(barJar.getAbsolutePath());
+        assertTrue("Error executing JAR",
+                execAndGetOutput(builder).startsWith("FOOBAR"));
     }
 
     @TestTargetNew(
@@ -229,15 +222,13 @@ public class JarExecTest extends junit.framework.TestCase {
         joutFoo.write(getResource(resources, "hyts_Bar.ser"));
         joutFoo.close();
 
-        String[] args = new String[] {"foo.bar.execjartest.Foo"};
-
         // execute the JAR and read the result
-        String res = Support_Exec.execJava(args, null,
-                new String[] {"CLASSPATH=" + fooJar.getAbsolutePath()}, false);
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.environment().put("CLASSPATH", fooJar.getAbsolutePath());
+        builder.command().add("foo.bar.execjartest.Foo");
 
-        assertTrue(
-                "Error executing class from ClassPath : result returned was incorrect.",
-                res.startsWith("FOOBAR"));
+        assertTrue("Error executing class from ClassPath",
+                execAndGetOutput(builder).startsWith("FOOBAR"));
 
         // ok - next try - add -cp to path - it should override env
         File booJar = File.createTempFile("hyts_", ".jar");
@@ -257,13 +248,14 @@ public class JarExecTest extends junit.framework.TestCase {
         joutBoo.write(farBody.getBytes("iso-8859-1"));
         joutBoo.close();
 
-        res = Support_Exec.execJava(args, new String[] {booJar
-                .getAbsolutePath()}, new String[] {"CLASSPATH="
-                + fooJar.getAbsolutePath()}, false);
+        builder = javaProcessBuilder();
+        builder.environment().put("CLASSPATH", fooJar.getAbsolutePath());
+        builder.command().add("-cp");
+        builder.command().add(booJar.getAbsolutePath());
+        builder.command().add("foo.bar.execjartest.Foo");
 
-        assertTrue(
-                "Error executing class specified by -cp : result returned was incorrect.",
-                res.startsWith("BOOFAR"));
+        assertTrue("Error executing class specified by -cp",
+                execAndGetOutput(builder).startsWith("BOOFAR"));
 
         // now add -jar option - it should override env and classpath
         Manifest man = new Manifest();
@@ -288,15 +280,15 @@ public class JarExecTest extends junit.framework.TestCase {
         joutZoo.write(zarBody.getBytes("iso-8859-1"));
         joutZoo.close();
 
-        args = new String[] {"-jar", zooJar.getAbsolutePath()};
+        builder = javaProcessBuilder();
+        builder.environment().put("CLASSPATH", fooJar.getAbsolutePath());
+        builder.command().add("-cp");
+        builder.command().add(booJar.getAbsolutePath());
+        builder.command().add("-jar");
+        builder.command().add(zooJar.getAbsolutePath());
 
-        res = Support_Exec.execJava(args, new String[] {booJar
-                .getAbsolutePath()}, new String[] {"CLASSPATH="
-                + fooJar.getAbsolutePath()}, false);
-
-        assertTrue(
-                "Error executing class specified by -cp : result returned was incorrect.",
-                res.startsWith("ZOOZAR"));
+        assertTrue("Error executing class specified by -jar",
+                execAndGetOutput(builder).startsWith("ZOOZAR"));
     }
 
     private static byte[] getResource(File tempDir, String resourceName)

@@ -28,6 +28,8 @@ import java.security.SecurityPermission;
 import java.util.StringTokenizer;
 
 import tests.support.Support_Exec;
+import static tests.support.Support_Exec.javaProcessBuilder;
+import static tests.support.Support_Exec.execAndGetOutput;
 import tests.support.Support_GetLocal;
 import tests.support.resource.Support_Resources;
 import dalvik.annotation.KnownFailure;
@@ -168,17 +170,14 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
             }
         }
 
-        String classPath = new File(classURL.getFile()).getPath();
-
-        // Execute Support_PermissionCollection in another VM
-        String[] classPathArray = new String[2];
-        classPathArray[0] = classPath;
-        classPathArray[1] = jarFile.getPath();
-        String[] args = { "-Djava.security.policy=" + policyFile.toURL(),
-                "tests.support.Support_PermissionCollection",
-                signedBKS.toExternalForm() };
-
-        String result = Support_Exec.execJava(args, classPathArray, true);
+        ProcessBuilder builder = javaProcessBuilder();
+        builder.command().add("-cp");
+        builder.command().add(Support_Exec.createPath(
+                new File(classURL.getFile()).getPath(), jarFile.getPath()));
+        builder.command().add("-Djava.security.policy=" + policyFile.toURL());
+        builder.command().add("tests.support.Support_PermissionCollection");
+        builder.command().add(signedBKS.toExternalForm());
+        String result = execAndGetOutput(builder);
 
         StringTokenizer resultTokenizer = new StringTokenizer(result, ",");
 
