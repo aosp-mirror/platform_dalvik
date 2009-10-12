@@ -138,7 +138,7 @@ public class CoreTestRunner extends TestRunner {
                 ? new XmlReportPrinter(coreTestSuite)
                 : null;
 
-        TestResult result = super.doRun(suite, wait);
+        TestResult result = super.doRun(coreTestSuite, wait);
 
         if (xmlReportPrinter != null) {
             System.out.print("Printing XML Reports... ");
