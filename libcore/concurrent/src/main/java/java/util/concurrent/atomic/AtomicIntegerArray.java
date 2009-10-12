@@ -30,7 +30,10 @@ public class AtomicIntegerArray implements java.io.Serializable {
     private long rawIndex(int i) {
         if (i < 0 || i >= array.length)
             throw new IndexOutOfBoundsException("index " + i);
-        return base + i * scale;
+        // BEGIN android-changed
+        // avoid memory corruption
+        return base + (long) i * scale;
+        // END android-changed
     }
 
     /**
