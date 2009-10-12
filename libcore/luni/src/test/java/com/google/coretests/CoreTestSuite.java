@@ -183,17 +183,13 @@ public class CoreTestSuite implements Test {
                 }
             }
         } else if (test instanceof TestCase) {
-            TestCase caze = (TestCase)test;
+            TestCase testCase = (TestCase)test;
             boolean ignoreMe = false;
 
-            boolean isAndroidOnly = hasAnnotation(caze, 
-                    AndroidOnly.class);
-            boolean isBrokenTest = hasAnnotation(caze, 
-                    BrokenTest.class);
-            boolean isKnownFailure = hasAnnotation(caze, 
-                    KnownFailure.class);
-            boolean isSideEffect = hasAnnotation(caze, 
-                    SideEffect.class);
+            boolean isAndroidOnly = hasAnnotation(testCase, AndroidOnly.class);
+            boolean isBrokenTest = hasAnnotation(testCase, BrokenTest.class);
+            boolean isKnownFailure = hasAnnotation(testCase, KnownFailure.class);
+            boolean isSideEffect = hasAnnotation(testCase, SideEffect.class);
             boolean isNormalTest = 
                     !(isAndroidOnly || isBrokenTest || isKnownFailure ||
                       isSideEffect);
