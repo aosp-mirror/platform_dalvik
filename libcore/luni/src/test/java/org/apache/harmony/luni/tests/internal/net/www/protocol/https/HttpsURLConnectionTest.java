@@ -20,11 +20,21 @@ package org.apache.harmony.luni.tests.internal.net.www.protocol.https;
 import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
+import junit.framework.TestCase;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,22 +51,16 @@ import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.util.Arrays;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
-
-import junit.framework.TestCase;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation independent test for HttpsURLConnection.
@@ -994,7 +998,7 @@ public class HttpsURLConnectionTest extends TestCase {
      * Returns the file name of the key/trust store. The key store file 
      * (named as "key_store." + extension equals to the default KeyStore
      * type installed in the system in lower case) is searched in classpath.
-     * @throws AssertionFailedError if property was not set 
+     * @throws junit.framework.AssertionFailedError if property was not set
      * or file does not exist.
      */
     private static String getKeyStoreFileName() {
@@ -1145,28 +1149,19 @@ public class HttpsURLConnectionTest extends TestCase {
 
         ClientConnectionWork client = new ClientConnectionWork(clientConnection);
 
-        server.start();
-        client.start();
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        try {
+            Future<Void> serverFuture = executorService.submit(server);
+            Future<Void> clientFuture = executorService.submit(client);
 
-        client.join();
-        server.join();
+            serverFuture.get(30, TimeUnit.SECONDS);
+            clientFuture.get(30, TimeUnit.SECONDS);
+        } catch (ExecutionException e) {
+            throw e.getCause();
+        } finally {
+            executorService.shutdown();
+        }
 
-        if (client.thrown != null) {
-            if (responseCode != OK_CODE) { // not OK response expected
-                // it is probably expected exception, keep it as is
-                throw client.thrown;
-            }
-            if ((client.thrown instanceof SocketTimeoutException)
-                    && (server.thrown != null)) {
-                // server's exception is more informative in this case
-                throw new Exception(server.thrown);
-            } else {
-                throw new Exception(client.thrown);
-            }
-        }
-        if (server.thrown != null) {
-            throw server.thrown;
-        }
         return server.peerSocket;
     }
 
@@ -1190,7 +1185,7 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * The base class for mock Client and Server.
      */
-    static class Work extends Thread {
+    static class Work {
 
         /**
          * The header of OK HTTP response.
@@ -1242,11 +1237,6 @@ public class HttpsURLConnectionTest extends TestCase {
         static final String clientsData = "_.-^ Client's Data ^-._";
 
         /**
-         * The exception thrown during peers interaction.
-         */
-        protected Throwable thrown;
-
-        /**
          * The print stream used for debug log.
          * If it is null debug info will not be printed.
          */
@@ -1257,7 +1247,7 @@ public class HttpsURLConnectionTest extends TestCase {
          */
         public synchronized void log(String message) {
             if (DO_LOG && (out != null)) {
-                System.out.println("[" + getName() + "]: " + message);
+                out.println("[" + this + "]: " + message);
             }
         }
     }
@@ -1265,7 +1255,7 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * The class used for server side works.
      */
-    static class ServerWork extends Work {
+    static class ServerWork extends Work implements Callable<Void> {
 
         // the server socket used for connection
         private ServerSocket serverSocket;
@@ -1314,7 +1304,6 @@ public class HttpsURLConnectionTest extends TestCase {
                 this.actAsProxy = true;
             }
             this.actAsProxy = !(serverSocket instanceof SSLServerSocket);
-            setName(this.actAsProxy ? "Proxy Server" : "Server");
         }
 
         /**
@@ -1337,7 +1326,7 @@ public class HttpsURLConnectionTest extends TestCase {
          * If some exception occurs during the work it will be
          * stored in the <code>thrown</code> field.
          */
-        public void run() {
+        public Void call() throws Exception {
             // the buffer used for reading the messages
             byte[] buff = new byte[2048];
             // the number of bytes read into the buffer
@@ -1371,14 +1360,13 @@ public class HttpsURLConnectionTest extends TestCase {
                         assertEquals(clientsData, message);
                     }
                     // just send the response
-                    os
-                            .write(("HTTP/1.1 " + responseCode + "\n" + httpsResponseTail)
-                                    .getBytes());
+                    os.write(("HTTP/1.1 " + responseCode + "\n" + httpsResponseTail)
+                            .getBytes());
                     os.flush();
                     os.close();
                     // and return
                     log("Work is DONE !actAsProxy");
-                    return;
+                    return null;
                 }
 
                 // Do proxy work
@@ -1389,7 +1377,7 @@ public class HttpsURLConnectionTest extends TestCase {
                     // read response
                     num = is.read(buff);
                     if (num == -1) {
-                        // this connection was closed, 
+                        // this connection was closed,
                         // do clean up and create new one:
                         closeSocket(peerSocket);
                         peerSocket = serverSocket.accept();
@@ -1455,11 +1443,7 @@ public class HttpsURLConnectionTest extends TestCase {
                                     .getBytes());
                 }
                 log("Work is DONE actAsProxy");
-            } catch (Throwable e) {
-                if (DO_LOG) {
-                    e.printStackTrace();
-                }
-                thrown = e;
+                return null;
             } finally {
                 closeSocket(peerSocket);
                 try {
@@ -1467,13 +1451,17 @@ public class HttpsURLConnectionTest extends TestCase {
                 } catch (IOException e) {}
             }
         }
+
+        @Override public String toString() {
+            return actAsProxy ? "Proxy Server" : "Server";
+        }
     }
 
     /**
      * The class used for client side works. It could be used to test
      * both HttpURLConnection and HttpsURLConnection.
      */
-    static class ClientConnectionWork extends Work {
+    static class ClientConnectionWork extends Work implements Callable<Void> {
 
         // connection to be used to contact the server side
         private HttpURLConnection connection;
@@ -1484,7 +1472,6 @@ public class HttpsURLConnectionTest extends TestCase {
          */
         public ClientConnectionWork(HttpURLConnection connection) {
             this.connection = connection;
-            setName("Client Connection");
             log("Created over connection: " + connection.getClass());
         }
 
@@ -1493,42 +1480,41 @@ public class HttpsURLConnectionTest extends TestCase {
          * If some exception occurs during the work it will be
          * stored in the <code>thrown<code> field.
          */
-        public void run() {
-            try {
-                log("Opening the connection..");
-                connection.connect();
-                log("Connection has been ESTABLISHED, using proxy: "
-                        + connection.usingProxy());
-                if (connection.getDoOutput()) {
-                    // connection configured to post data, do so
-                    connection.getOutputStream().write(clientsData.getBytes());
-                }
-                // read the content of HTTP(s) response
-                InputStream is = connection.getInputStream();
-                log("Input Stream obtained");
-                byte[] buff = new byte[2048];
-                int num = 0;
-                int byt = 0;
-                while ((num < buff.length) && (is.available() > 0)
-                        && ((byt = is.read()) != -1)) {
-                    buff[num++] = (byte) byt;
-                }
-                String message = new String(buff, 0, num);
-                log("Got content:\n" + message);
-                log("------------------");
-                log("Response code: " + connection.getResponseCode());
-
-                if (connection instanceof HttpsURLConnection) {
-                    assertEquals(httpsResponseContent, message);
-                } else {
-                    assertEquals(plainResponseContent, message);
-                }
-            } catch (Throwable e) {
-                if (DO_LOG) {
-                    e.printStackTrace();
-                }
-                thrown = e;
+        public Void call() throws Exception {
+            log("Opening the connection..");
+            connection.connect();
+            log("Connection has been ESTABLISHED, using proxy: "
+                    + connection.usingProxy());
+            if (connection.getDoOutput()) {
+                // connection configured to post data, do so
+                connection.getOutputStream().write(clientsData.getBytes());
             }
+            // read the content of HTTP(s) response
+            InputStream is = connection.getInputStream();
+            log("Input Stream obtained");
+            byte[] buff = new byte[2048];
+            int num = 0;
+            int byt = 0;
+            while ((num < buff.length) && (is.available() > 0)
+                    && ((byt = is.read()) != -1)) {
+                buff[num++] = (byte) byt;
+            }
+            String message = new String(buff, 0, num);
+            log("Got content:\n" + message);
+            log("------------------");
+            log("Response code: " + connection.getResponseCode());
+
+            if (connection instanceof HttpsURLConnection) {
+                assertEquals(httpsResponseContent, message);
+            } else {
+                assertEquals(plainResponseContent, message);
+            }
+
+            return null;
+        }
+
+        @Override public String toString() {
+            return "Client Connection";
         }
     }
 }
