@@ -9728,6 +9728,8 @@ dvmJitSelfVerificationEnd:
     beq    1f
     mov    r2,#kJitSelfVerification      @ ask for self verification
     str    r2,[rGLUE,#offGlue_jitState]
+    mov    r2,#kInterpEntryInstr         @ normal entry reason
+    str    r2,[rGLUE,#offGlue_entryPoint]
     mov    r1,#1                         @ set changeInterp
     b      common_gotoBail
 

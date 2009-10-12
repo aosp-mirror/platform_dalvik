@@ -934,16 +934,18 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
                             ((1 << (encoder->fieldLoc[i].end + 1)) - 1);
                     bits |= value;
                     break;
-                case SFP:
+                case DFP: {
+                    int regName = (operand & FP_REG_MASK) >> 1;
                     /* Snag the 1-bit slice and position it */
-                    value = ((operand & 0x10) >> 4) <<
+                    value = ((regName & 0x10) >> 4) <<
                             encoder->fieldLoc[i].end;
                     /* Extract and position the 4-bit slice */
-                    value |= (operand & 0x0f) <<
+                    value |= (regName & 0x0f) <<
                             encoder->fieldLoc[i].start;
                     bits |= value;
                     break;
-                case DFP:
+                }
+                case SFP:
                     /* Snag the 1-bit slice and position it */
                     value = (operand & 0x1) <<
                             encoder->fieldLoc[i].end;
