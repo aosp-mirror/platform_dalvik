@@ -505,6 +505,8 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
     const char *digits = (isPositive ? valueChars : valueChars + 1);
     int length = strlen(digits);
 
+    DecimalFormat* fmt = reinterpret_cast<DecimalFormat*>(static_cast<uintptr_t>(addr));
+
     // The length of our digit list buffer must be the actual string length + 3,
     // because ICU will append some additional characters at the head and at the
     // tail of the string, in order to keep strtod() happy:
@@ -524,7 +526,8 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
 
     digitList.fDecimalAt = digitList.fCount - scale;
     digitList.fIsPositive = isPositive;
-    digitList.fRoundingMode = DecimalFormat::kRoundHalfUp;
+    digitList.fRoundingMode = fmt->getRoundingMode();
+    digitList.round(fmt->getMaximumFractionDigits() + digitList.fDecimalAt);
 
     UChar *result = NULL;
 
@@ -539,8 +542,6 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
     attrBuffer = (DecimalFormat::AttributeBuffer *) calloc(sizeof(DecimalFormat::AttributeBuffer), 1);
     attrBuffer->bufferSize = 128;
     attrBuffer->buffer = (char *) calloc(129 * sizeof(char), 1);
-
-    DecimalFormat *fmt = (DecimalFormat *)(int)addr;
 
     UnicodeString res;
 
