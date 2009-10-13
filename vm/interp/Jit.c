@@ -643,6 +643,9 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             }
             break;
 #endif
+        /* If JIT is off stay out of interpreter selections */
+        case kJitOff:
+            break;
         default:
             if (!debugOrProfile) {
                 LOGE("Unexpected JIT state: %d", interpState->jitState);
