@@ -665,8 +665,6 @@ static JdwpError handleRT_Interfaces(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     RefTypeId refTypeId;
-    u4 numInterfaces;
-    int i;
 
     refTypeId = dvmReadRefTypeId(&buf);
 
@@ -674,6 +672,25 @@ static JdwpError handleRT_Interfaces(JdwpState* state,
         dvmDbgGetClassDescriptor(refTypeId));
 
     dvmDbgOutputAllInterfaces(refTypeId, pReply);
+
+    return ERR_NONE;
+}
+
+/*
+ * Return the class object corresponding to this type.
+ */
+static JdwpError handleRT_ClassObject(JdwpState* state,
+    const u1* buf, int dataLen, ExpandBuf* pReply)
+{
+    RefTypeId refTypeId;
+    ObjectId classObjId;
+
+    refTypeId = dvmReadRefTypeId(&buf);
+    classObjId = dvmDbgGetClassObject(refTypeId);
+
+    LOGV("  RefTypeId %llx -> ObjectId %llx\n", refTypeId, classObjId);
+
+    expandBufAddObjectId(pReply, classObjId);
 
     return ERR_NONE;
 }
@@ -1980,7 +1997,7 @@ static const JdwpHandlerMap gHandlerMap[] = {
     //2,    8,  NestedTypes
     { 2,    9,  handleRT_Status,        "ReferenceType.Status" },
     { 2,    10, handleRT_Interfaces,    "ReferenceType.Interfaces" },
-    //2,    11, ClassObject
+    { 2,    11, handleRT_ClassObject,   "ReferenceType.ClassObject" },
     { 2,    12, handleRT_SourceDebugExtension,
                                         "ReferenceType.SourceDebugExtension" },
     { 2,    13, handleRT_SignatureWithGeneric,

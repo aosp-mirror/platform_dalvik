@@ -159,6 +159,7 @@ void dvmDbgExit(int status);
  * Class, Object, Array
  */
 const char* dvmDbgGetClassDescriptor(RefTypeId id);
+ObjectId dvmDbgGetClassObject(RefTypeId id);
 RefTypeId dvmDbgGetSuperclass(RefTypeId id);
 ObjectId dvmDbgGetClassLoader(RefTypeId id);
 u4 dvmDbgGetAccessFlags(RefTypeId id);

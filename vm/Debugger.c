@@ -512,6 +512,15 @@ const char* dvmDbgGetClassDescriptor(RefTypeId id)
 }
 
 /*
+ * Convert a RefTypeId to an ObjectId.
+ */
+ObjectId dvmDbgGetClassObject(RefTypeId id)
+{
+    ClassObject* clazz = refTypeIdToClassObject(id);
+    return objectToObjectId((Object*) clazz);
+}
+
+/*
  * Return the superclass of a class (will be NULL for java/lang/Object).
  */
 RefTypeId dvmDbgGetSuperclass(RefTypeId id)
