@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Handle messages from debugger.
  *
@@ -31,6 +32,7 @@
 
 #include "Bits.h"
 #include "Atomic.h"
+#include "DalvikVersion.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -209,8 +211,12 @@ bail:
 static JdwpError handleVM_Version(JdwpState* state, const u1* buf,
     int dataLen, ExpandBuf* pReply)
 {
+    char tmpBuf[128];
+
     /* text information on VM version */
-    expandBufAddUtf8String(pReply, (const u1*) "Android DalvikVM 1.0.1");
+    sprintf(tmpBuf, "Android DalvikVM %d.%d.%d",
+        DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
+    expandBufAddUtf8String(pReply, (const u1*) tmpBuf);
     /* JDWP version numbers */
     expandBufAdd4BE(pReply, 1);        // major
     expandBufAdd4BE(pReply, 5);        // minor

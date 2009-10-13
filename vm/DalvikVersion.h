@@ -24,7 +24,7 @@
  * The version we show to tourists.
  */
 #define DALVIK_MAJOR_VERSION    1
-#define DALVIK_MINOR_VERSION    1
+#define DALVIK_MINOR_VERSION    2
 #define DALVIK_BUG_VERSION      0
 
 /*
