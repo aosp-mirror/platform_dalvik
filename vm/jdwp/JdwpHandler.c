@@ -110,16 +110,22 @@ static void jdwpWriteValue(ExpandBuf* pReply, int width, u8 value)
 
 /*
  * Common code for *_InvokeMethod requests.
+ *
+ * If "isConstructor" is set, this returns "objectId" rather than the
+ * expected-to-be-void return value of the called function.
  */
 static JdwpError finishInvoke(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply,
-    ObjectId threadId, ObjectId objectId, RefTypeId classId, MethodId methodId)
+    ObjectId threadId, ObjectId objectId, RefTypeId classId, MethodId methodId,
+    bool isConstructor)
 {
     JdwpError err = ERR_NONE;
     u8* argArray = NULL;
     u4 numArgs;
     u4 options;     /* enum InvokeOptions bit flags */
     int i;
+
+    assert(!isConstructor || objectId != 0);
 
     numArgs = read4BE(&buf);
 
@@ -163,11 +169,16 @@ static JdwpError finishInvoke(JdwpState* state,
         goto bail;
 
     if (err == ERR_NONE) {
-        int width = dvmDbgGetTagWidth(resultTag);
+        if (isConstructor) {
+            expandBufAdd1(pReply, JT_OBJECT);
+            expandBufAddObjectId(pReply, objectId);
+        } else {
+            int width = dvmDbgGetTagWidth(resultTag);
 
-        expandBufAdd1(pReply, resultTag);
-        if (width != 0)
-            jdwpWriteValue(pReply, width, resultValue);
+            expandBufAdd1(pReply, resultTag);
+            if (width != 0)
+                jdwpWriteValue(pReply, width, resultValue);
+        }
         expandBufAdd1(pReply, JT_OBJECT);
         expandBufAddObjectId(pReply, exceptObjId);
 
@@ -400,8 +411,10 @@ static JdwpError handleVM_CreateString(JdwpState* state,
     LOGV("  Req to create string '%s'\n", str);
 
     stringId = dvmDbgCreateString(str);
-    expandBufAddObjectId(pReply, stringId);
+    if (stringId == 0)
+        return ERR_OUT_OF_MEMORY;
 
+    expandBufAddObjectId(pReply, stringId);
     return ERR_NONE;
 }
 
@@ -834,7 +847,36 @@ static JdwpError handleCT_InvokeMethod(JdwpState* state,
     methodId = dvmReadMethodId(&buf);
 
     return finishInvoke(state, buf, dataLen, pReply,
-            threadId, 0, classId, methodId);
+            threadId, 0, classId, methodId, false);
+}
+
+/*
+ * Create a new object of the requested type, and invoke the specified
+ * constructor.
+ *
+ * Example: in IntelliJ, create a watch on "new String(myByteArray)" to
+ * see the contents of a byte[] as a string.
+ */
+static JdwpError handleCT_NewInstance(JdwpState* state,
+    const u1* buf, int dataLen, ExpandBuf* pReply)
+{
+    RefTypeId classId;
+    ObjectId threadId;
+    MethodId methodId;
+    ObjectId objectId;
+    u4 numArgs;
+
+    classId = dvmReadRefTypeId(&buf);
+    threadId = dvmReadObjectId(&buf);
+    methodId = dvmReadMethodId(&buf);
+
+    LOGV("Creating instance of %s\n", dvmDbgGetClassDescriptor(classId));
+    objectId = dvmDbgCreateObject(classId);
+    if (objectId == 0)
+        return ERR_OUT_OF_MEMORY;
+
+    return finishInvoke(state, buf, dataLen, pReply,
+            threadId, objectId, classId, methodId, true);
 }
 
 /*
@@ -1011,7 +1053,7 @@ static JdwpError handleOR_InvokeMethod(JdwpState* state,
     methodId = dvmReadMethodId(&buf);
 
     return finishInvoke(state, buf, dataLen, pReply,
-            threadId, objectId, classId, methodId);
+            threadId, objectId, classId, methodId, false);
 }
 
 /*
@@ -1955,7 +1997,7 @@ static const JdwpHandlerMap gHandlerMap[] = {
     { 3,    1,  handleCT_Superclass,    "ClassType.Superclass" },
     { 3,    2,  handleCT_SetValues,     "ClassType.SetValues" },
     { 3,    3,  handleCT_InvokeMethod,  "ClassType.InvokeMethod" },
-    //3,    4,  NewInstance
+    { 3,    4,  handleCT_NewInstance,   "ClassType.NewInstance" },
 
     /* ArrayType command set (4) */
     //4,    1,  NewInstance

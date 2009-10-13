@@ -1117,6 +1117,19 @@ ObjectId dvmDbgCreateString(const char* str)
 }
 
 /*
+ * Allocate a new object of the specified type.
+ *
+ * Add it to the registry to prevent it from being GCed.
+ */
+ObjectId dvmDbgCreateObject(RefTypeId classId)
+{
+    ClassObject* clazz = refTypeIdToClassObject(classId);
+    Object* newObj = dvmAllocObject(clazz, ALLOC_DEFAULT);
+    dvmReleaseTrackedAlloc(newObj, NULL);
+    return objectToObjectId(newObj);
+}
+
+/*
  * Determine if "instClassId" is an instance of "classId".
  */
 bool dvmDbgMatchType(RefTypeId instClassId, RefTypeId classId)
@@ -2796,9 +2809,11 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
 
     /*
      * Translate the method through the vtable, unless we're calling a
-     * static method or the debugger wants to suppress it.
+     * direct method or the debugger wants to suppress it.
      */
-    if ((pReq->options & INVOKE_NONVIRTUAL) != 0 || pReq->obj == NULL) {
+    if ((pReq->options & INVOKE_NONVIRTUAL) != 0 || pReq->obj == NULL ||
+        dvmIsDirectMethod(pReq->method))
+    {
         meth = pReq->method;
     } else {
         meth = dvmGetVirtualizedMethod(pReq->clazz, pReq->method);
@@ -2809,8 +2824,8 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
 
     IF_LOGV() {
         char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
-        LOGV("JDWP invoking method %s.%s %s\n",
-            meth->clazz->descriptor, meth->name, desc);
+        LOGV("JDWP invoking method %p/%p %s.%s:%s\n",
+            pReq->method, meth, meth->clazz->descriptor, meth->name, desc);
         free(desc);
     }
 
@@ -2819,8 +2834,10 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq)
     pReq->exceptObj = objectToObjectId(dvmGetException(self));
     pReq->resultTag = resultTagFromSignature(meth);
     if (pReq->exceptObj != 0) {
-        LOGD("  JDWP invocation returning with exceptObj=%p\n",
-            dvmGetException(self));
+        Object* exc = dvmGetException(self);
+        LOGD("  JDWP invocation returning with exceptObj=%p (%s)\n",
+            exc, exc->clazz->descriptor);
+        //dvmLogExceptionStackTrace();
         dvmClearException(self);
         /*
          * Nothing should try to use this, but it looks like something is.
