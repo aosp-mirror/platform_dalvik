@@ -2698,6 +2698,30 @@ JdwpError dvmDbgInvokeMethod(ObjectId threadId, ObjectId objectId,
     }
 
     /*
+     * We currently have a bug where we don't successfully resume the
+     * target thread if the suspend count is too deep.  We're expected to
+     * require one "resume" for each "suspend", but when asked to execute
+     * a method we have to resume fully and then re-suspend it back to the
+     * same level.  (The easiest way to cause this is to type "suspend"
+     * multiple times in jdb.)
+     *
+     * It's unclear what this means when the event specifies "resume all"
+     * and some threads are suspended more deeply than others.  This is
+     * a rare problem, so for now we just prevent it from hanging forever
+     * by rejecting the method invocation request.  Without this, we will
+     * be stuck waiting on a suspended thread.
+     */
+    if (targetThread->suspendCount > 1) {
+        LOGW("threadid=%d: suspend count on threadid=%d is %d, too deep "
+             "for method exec\n",
+            dvmThreadSelf()->threadId, targetThread->threadId,
+            targetThread->suspendCount);
+        err = ERR_THREAD_SUSPENDED;     /* probably not expected here */
+        dvmUnlockThreadList();
+        goto bail;
+    }
+
+    /*
      * TODO: ought to screen the various IDs, and verify that the argument
      * list is valid.
      */
