@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.nio.ByteBuffer;
@@ -33,7 +28,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * a fingerprint for a stream of bytes.
  * 
  * @see MessageDigest
- * @since Android 1.0
  */
 public abstract class MessageDigestSpi {
     
@@ -42,7 +36,6 @@ public abstract class MessageDigestSpi {
      * implement this function {@code 0} is returned.
      * 
      * @return the digest length in bytes, or {@code 0}.
-     * @since Android 1.0
      */
     protected int engineGetDigestLength() {
         return 0;
@@ -54,10 +47,9 @@ public abstract class MessageDigestSpi {
      * @param input
      *            the {@code byte} to update this {@code MessageDigestSpi} with.
      * @see #engineReset()
-     * @since Android 1.0
      */
     protected abstract void engineUpdate(byte input);
-
+    
     /**
      * Updates this {@code MessageDigestSpi} using the given {@code byte[]}.
      * 
@@ -70,7 +62,6 @@ public abstract class MessageDigestSpi {
      * @throws IllegalArgumentException
      *             if {@code offset} or {@code len} are not valid in respect to
      *             {@code input}.
-     * @since Android 1.0
      */
     protected abstract void engineUpdate(byte[] input, int offset, int len);
     
@@ -79,7 +70,6 @@ public abstract class MessageDigestSpi {
      * 
      * @param input
      *            the {@code ByteBuffer}.
-     * @since Android 1.0
      */
     protected void engineUpdate(ByteBuffer input) {
         if (!input.hasRemaining()) {
@@ -107,7 +97,6 @@ public abstract class MessageDigestSpi {
      * 
      * @return the computed one way hash value.
      * @see #engineReset()
-     * @since Android 1.0
      */
     protected abstract byte[] engineDigest();
     
@@ -129,7 +118,6 @@ public abstract class MessageDigestSpi {
      *             if {@code offset} or {@code len} are not valid in respect to
      *             {@code buf}.
      * @see #engineReset()
-     * @since Android 1.0
      */
     protected int engineDigest(byte[] buf, int offset, int len)
                     throws DigestException {
@@ -156,11 +144,10 @@ public abstract class MessageDigestSpi {
     /**
      * Puts this {@code MessageDigestSpi} back in an initial state, such that it
      * is ready to compute a one way hash value.
-     * 
-     * @since Android 1.0
      */
     protected abstract void engineReset();
     
+    @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }

@@ -15,21 +15,15 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.Serializable;
 
 /**
  * {@code SecureRandomSpi} is the <i>Service Provider Interface</i> (<b>SPI</b>) definition
- * for {@link SecureRandom}. 
+ * for {@link SecureRandom}.
  * 
  * @see SecureRandom
- * @since Android 1.0
  */
 public abstract class SecureRandomSpi implements Serializable {
     
@@ -42,7 +36,6 @@ public abstract class SecureRandomSpi implements Serializable {
      * 
      * @param seed
      *            the new seed.
-     * @since Android 1.0
      */
     protected abstract void engineSetSeed(byte[] seed);
     
@@ -52,7 +45,6 @@ public abstract class SecureRandomSpi implements Serializable {
      * 
      * @param bytes
      *            the {@code byte[]} to be filled with random bytes.
-     * @since Android 1.0
      */
     protected abstract void engineNextBytes(byte[] bytes);
     
@@ -63,7 +55,6 @@ public abstract class SecureRandomSpi implements Serializable {
      * @param numBytes
      *            the number of seed bytes.
      * @return the seed bytes
-     * @since Android 1.0
      */
     protected abstract byte[] engineGenerateSeed(int numBytes);
 }

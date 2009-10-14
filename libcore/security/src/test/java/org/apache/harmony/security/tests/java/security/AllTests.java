@@ -47,33 +47,26 @@ public class AllTests {
         suite.addTestSuite(CodeSignerTest.class);
         suite.addTestSuite(CodeSource2Test.class);
         suite.addTestSuite(CodeSourceTest.class);
-        suite.addTestSuite(DigestException2Test.class);
         suite.addTestSuite(DigestExceptionTest.class);
         suite.addTestSuite(DigestInputStream2Test.class);
         suite.addTestSuite(DigestInputStreamTest.class);
         suite.addTestSuite(DigestOutputStreamTest.class);
-        suite.addTestSuite(GeneralSecurityException2Test.class);
         suite.addTestSuite(GeneralSecurityExceptionTest.class);
         suite.addTestSuite(GuardedObjectTest.class);
         suite.addTestSuite(Identity2Test.class);
         suite.addTestSuite(IdentityScope2Test.class);
         suite.addTestSuite(IdentityScopeTest.class);
-        suite.addTestSuite(InvalidAlgorithmParameterException2Test.class);
         suite.addTestSuite(InvalidAlgorithmParameterExceptionTest.class);
-        suite.addTestSuite(InvalidKeyException2Test.class);
         suite.addTestSuite(InvalidKeyExceptionTest.class);
-        suite.addTestSuite(InvalidParameterException2Test.class);
         suite.addTestSuite(InvalidParameterExceptionTest.class);
         suite.addTestSuite(KSCallbackHandlerProtectionTest.class);
         suite.addTestSuite(KSPasswordProtectionTest.class);
         suite.addTestSuite(KSPrivateKeyEntryTest.class);
         suite.addTestSuite(KSSecretKeyEntryTest.class);
         suite.addTestSuite(KSTrustedCertificateEntryTest.class);
-        suite.addTestSuite(KeyException2Test.class);
         suite.addTestSuite(KeyExceptionTest.class);
         suite.addTestSuite(KeyFactory2Test.class);
         suite.addTestSuite(KeyFactorySpiTest.class);
-        suite.addTestSuite(KeyManagementException2Test.class);
         suite.addTestSuite(KeyManagementExceptionTest.class);
         suite.addTestSuite(KeyPairGenerator1Test.class);
         suite.addTestSuite(KeyPairGenerator2Test.class);
@@ -86,7 +79,6 @@ public class AllTests {
         suite.addTestSuite(KeyStore2Test.class);
         suite.addTestSuite(KeyStore3Test.class);
         suite.addTestSuite(KeyStoreBuilderTest.class);
-        suite.addTestSuite(KeyStoreException2Test.class);
         suite.addTestSuite(KeyStoreExceptionTest.class);
         suite.addTestSuite(KeyStoreSpiTest.class);
         suite.addTestSuite(KeyStoreTest.class);
@@ -94,9 +86,7 @@ public class AllTests {
         suite.addTestSuite(MessageDigest1Test.class);
         suite.addTestSuite(MessageDigest2Test.class);
         suite.addTestSuite(MessageDigestSpiTest.class);
-        suite.addTestSuite(NoSuchAlgorithmException2Test.class);
         suite.addTestSuite(NoSuchAlgorithmExceptionTest.class);
-        suite.addTestSuite(NoSuchProviderException2Test.class);
         suite.addTestSuite(NoSuchProviderExceptionTest.class);
         suite.addTestSuite(Permission2Test.class);
         suite.addTestSuite(PermissionCollectionTest.class);
@@ -109,7 +99,6 @@ public class AllTests {
         suite.addTestSuite(PrivilegedActionExceptionTest.class);
         suite.addTestSuite(ProtectionDomainTest.class);
         suite.addTestSuite(Provider2Test.class);
-        suite.addTestSuite(ProviderException2Test.class);
         suite.addTestSuite(ProviderExceptionTest.class);
         suite.addTestSuite(ProviderServiceTest.class);
         suite.addTestSuite(ProviderTest.class);
@@ -121,7 +110,6 @@ public class AllTests {
         suite.addTestSuite(SecurityPermissionTest.class);
         suite.addTestSuite(SecurityTest.class);
         suite.addTestSuite(Signature2Test.class);
-        suite.addTestSuite(SignatureException2Test.class);
         suite.addTestSuite(SignatureExceptionTest.class);
         suite.addTestSuite(SignatureSpiTest.class);
         suite.addTestSuite(SignatureTest.class);
@@ -129,7 +117,6 @@ public class AllTests {
         suite.addTestSuite(SignerTest.class);
         suite.addTestSuite(TimestampTest.class);
         suite.addTestSuite(UnrecoverableEntryExceptionTest.class);
-        suite.addTestSuite(UnrecoverableKeyException2Test.class);
         suite.addTestSuite(UnrecoverableKeyExceptionTest.class);
         suite.addTestSuite(UnresolvedPermissionTest.class);
 

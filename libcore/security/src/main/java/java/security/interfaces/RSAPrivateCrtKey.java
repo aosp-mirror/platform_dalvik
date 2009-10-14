@@ -21,15 +21,11 @@ import java.math.BigInteger;
 
 /**
  * The interface for a PKCS#1 RSA private key using CRT information values.
- * 
- * @since Android 1.0
  */
 public interface RSAPrivateCrtKey extends RSAPrivateKey {
 
     /**
      * The serial version identifier.
-     * 
-     * @since Android 1.0
      */
     public static final long serialVersionUID = -5682214253527700368L;
 
@@ -37,7 +33,6 @@ public interface RSAPrivateCrtKey extends RSAPrivateKey {
      * Returns the CRT coefficient, {@code q^-1 mod p}.
      * 
      * @return the CRT coefficient.
-     * @since Android 1.0
      */
     public BigInteger getCrtCoefficient();
 
@@ -45,7 +40,6 @@ public interface RSAPrivateCrtKey extends RSAPrivateKey {
      * Returns the prime factor {@code p} of {@code n}.
      * 
      * @return the prime factor {@code p} of {@code n}.
-     * @since Android 1.0
      */
     public BigInteger getPrimeP();
 
@@ -53,7 +47,6 @@ public interface RSAPrivateCrtKey extends RSAPrivateKey {
      * Returns the prime factor {@code q} of {@code n}.
      * 
      * @return the prime factor {@code q} of {@code n}.
-     * @since Android 1.0
      */
     public BigInteger getPrimeQ();
 
@@ -61,7 +54,6 @@ public interface RSAPrivateCrtKey extends RSAPrivateKey {
      * Returns the CRT exponent of the primet {@code p}.
      * 
      * @return the CRT exponent of the prime {@code p}.
-     * @since Android 1.0
      */
     public BigInteger getPrimeExponentP();
 
@@ -69,7 +61,6 @@ public interface RSAPrivateCrtKey extends RSAPrivateKey {
      * Returns the CRT exponent of the prime {@code q}.
      * 
      * @return the CRT exponent of the prime {@code q}.
-     * @since Android 1.0
      */
     public BigInteger getPrimeExponentQ();
 
@@ -77,7 +68,6 @@ public interface RSAPrivateCrtKey extends RSAPrivateKey {
      * Returns the public exponent {@code e}.
      * 
      * @return the public exponent {@code e}.
-     * @since Android 1.0
      */
     public BigInteger getPublicExponent();
 }

@@ -19,8 +19,6 @@ package java.security.cert;
 
 /**
  * The parameters to initialize a LDAP {@code CertStore} instance.
- * 
- * @since Android 1.0
  */
 public class LDAPCertStoreParameters implements CertStoreParameters {
     // Default LDAP server name
@@ -36,14 +34,13 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
     /**
      * Creates a new {@code LDAPCertStoreParameters} instance with the specified
      * server name and port.
-     * 
+     *
      * @param serverName
      *            the LDAP server name.
      * @param port
      *            the port.
      * @throws NullPointerException
      *             is {@code serverName} is {@code null}.
-     * @since Android 1.0
      */
     public LDAPCertStoreParameters(String serverName, int port) {
         this.port = port;
@@ -58,9 +55,6 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
      * parameters.
      * <p>
      * The default parameters are server name "localhost" and port 389.
-     * </p>
-     * 
-     * @since Android 1.0
      */
     public LDAPCertStoreParameters() {
         this.serverName = DEFAULT_LDAP_SERVER_NAME;
@@ -70,12 +64,11 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
     /**
      * Creates a new {@code LDAPCertStoreParameters} instance with the specified
      * server name and default port 389.
-     * 
+     *
      * @param serverName
      *            the LDAP server name.
      * @throws NullPointerException
      *             if {@code serverName} is {@code null}.
-     * @since Android 1.0
      */
     public LDAPCertStoreParameters(String serverName) {
         this.port = DEFAULT_LDAP_PORT;
@@ -87,19 +80,21 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
 
     /**
      * Clones this {@code LDAPCertStoreParameters} instance.
-     * 
+     *
      * @return the cloned instance.
-     * @since Android 1.0
      */
     public Object clone() {
-        return new LDAPCertStoreParameters(serverName, port);
+    	try {
+			return super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
     }
 
     /**
      * Returns the LDAP server port.
-     * 
+     *
      * @return the LDAP server port.
-     * @since Android 1.0
      */
     public int getPort() {
         return port;
@@ -107,9 +102,8 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
 
     /**
      * Returns the LDAP server name.
-     * 
+     *
      * @return the LDAP server name.
-     * @since Android 1.0
      */
     public String getServerName() {
         return serverName;
@@ -118,14 +112,13 @@ public class LDAPCertStoreParameters implements CertStoreParameters {
     /**
      * Returns the string representation of this {@code LDAPCertStoreParameters}
      * instance.
-     * 
+     *
      * @return the string representation of this {@code LDAPCertStoreParameters}
      *         instance.
-     * @since Android 1.0
      */
     public String toString() {
-        StringBuffer sb =
-            new StringBuffer("LDAPCertStoreParameters: [\n serverName: "); //$NON-NLS-1$
+        StringBuilder sb =
+            new StringBuilder("LDAPCertStoreParameters: [\n serverName: "); //$NON-NLS-1$
         sb.append(getServerName());
         sb.append("\n port: "); //$NON-NLS-1$
         sb.append(getPort());

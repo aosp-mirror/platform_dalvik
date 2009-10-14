@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.IOException;
@@ -66,7 +61,6 @@ final class UnresolvedPermissionCollection extends PermissionCollection {
      * @throws IllegalArgumentException
      *             if {@code permission} is {@code null} or not an {@code
      *             UnresolvedPermission}.
-     * @since Android 1.0
      */
     public void add(Permission permission) {
         if (isReadOnly()) {
@@ -101,7 +95,6 @@ final class UnresolvedPermissionCollection extends PermissionCollection {
      * 
      * @return always {@code false}
      * @see UnresolvedPermission#implies(Permission).
-     * @since Android 1.0
      */
     public boolean implies(Permission permission) {
         return false;
@@ -159,15 +152,14 @@ final class UnresolvedPermissionCollection extends PermissionCollection {
     }
 
     /** 
-     * @com.intel.drl.spec_ref
-     * 
      * Output fields via default mechanism. 
      */
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         Hashtable permissions = new Hashtable();
-        for (Iterator iter = klasses.keySet().iterator(); iter.hasNext();) {
-            String key = (String)iter.next();
-            permissions.put(key, new Vector(((Collection)klasses.get(key))));
+        for (Iterator iter = klasses.entrySet().iterator(); iter.hasNext();) {
+        	Map.Entry entry = (Map.Entry) iter.next();
+            String key = (String) entry.getKey();
+            permissions.put(key, new Vector(((Collection) entry.getValue())));
         }
         ObjectOutputStream.PutField fields = out.putFields();
         fields.put("permissions", permissions); //$NON-NLS-1$
@@ -175,8 +167,6 @@ final class UnresolvedPermissionCollection extends PermissionCollection {
     }
 
     /** 
-     * @com.intel.drl.spec_ref
-     * 
      * Reads the object from stream and checks elements grouping for validity. 
      */
     private void readObject(java.io.ObjectInputStream in) throws IOException,
@@ -185,20 +175,23 @@ final class UnresolvedPermissionCollection extends PermissionCollection {
         Map permissions = (Map)fields.get("permissions", null); //$NON-NLS-1$
         klasses = new HashMap();
         synchronized (klasses) {
-            for (Iterator iter = permissions.keySet().iterator(); iter
-                .hasNext();) {
-                String key = (String)iter.next();
-                Collection values = (Collection)permissions.get(key);
-                for (Iterator iterator = values.iterator(); iterator.hasNext();) {
-                    UnresolvedPermission element = (UnresolvedPermission)iterator
-                        .next();
-                    if (!element.getName().equals(key)) {
-                        throw new InvalidObjectException(
-                            Messages.getString("security.22")); //$NON-NLS-1$
-                    }
-                }
-                klasses.put(key, new HashSet(values));
-            }
+            for (Iterator iter = permissions.entrySet().iterator(); iter
+            	.hasNext();) {
+            	Map.Entry entry = (Map.Entry) iter.next();
+	            String key = (String) entry.getKey();
+	            Collection values = (Collection) entry.getValue();
+
+	            for (Iterator iterator = values.iterator(); iterator.hasNext();) {
+	                UnresolvedPermission element =
+	                        (UnresolvedPermission) iterator.next();
+
+	                if (!element.getName().equals(key)) {
+	                    throw new InvalidObjectException(
+	                        Messages.getString("security.22")); //$NON-NLS-1$
+	                }
+	            }
+	            klasses.put(key, new HashSet(values));
+	        }
         }
     }
 }

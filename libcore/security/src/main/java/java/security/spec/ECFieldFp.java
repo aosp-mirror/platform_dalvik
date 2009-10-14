@@ -24,8 +24,6 @@ import org.apache.harmony.security.internal.nls.Messages;
 /**
  * The parameters specifying a <i>prime finite field</i> of an
  * elliptic curve.
- * 
- * @since Android 1.0
  */
 public class ECFieldFp implements ECField {
     // Prime
@@ -39,7 +37,6 @@ public class ECFieldFp implements ECField {
      *            the prime value {@code p}.
      * @throws IllegalArgumentException
      *             if {@code p <= zero}.
-     * @since Android 1.0
      */
     public ECFieldFp(BigInteger p) {
         this.p = p;
@@ -56,7 +53,6 @@ public class ECFieldFp implements ECField {
      * Returns the size of the finite field (in bits).
      * 
      * @return the size of the finite field (in bits).
-     * @since Android 1.0
      */
     public int getFieldSize() {
         return p.bitLength();
@@ -66,7 +62,6 @@ public class ECFieldFp implements ECField {
      * Returns the prime value {@code p} for this finite field.
      * 
      * @return the prime value {@code p} for this finite field.
-     * @since Android 1.0
      */
     public BigInteger getP() {
         return p;
@@ -79,7 +74,6 @@ public class ECFieldFp implements ECField {
      *            the object to compare to this finite field.
      * @return {@code true} if the specified object is equal to this finite field,
      *         otherwise {@code false}.
-     * @since Android 1.0
      */
     public boolean equals(Object obj) {
         // object equals itself
@@ -96,7 +90,6 @@ public class ECFieldFp implements ECField {
      * Returns the hashcode value for this finite field.
      * 
      * @return the hashcode value for this finite field.
-     * @since Android 1.0
      */
     public int hashCode() {
         return p.hashCode();

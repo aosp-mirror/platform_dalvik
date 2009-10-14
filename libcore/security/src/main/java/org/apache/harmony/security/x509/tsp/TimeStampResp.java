@@ -46,7 +46,7 @@ public class TimeStampResp {
     }
     
     public String toString(){
-        StringBuffer res = new StringBuffer();
+        StringBuilder res = new StringBuilder();
         res.append("-- TimeStampResp:");
         res.append("\nstatus:  ");
         res.append(status);

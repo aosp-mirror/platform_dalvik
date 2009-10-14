@@ -28,9 +28,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * Defined in the <a
  * href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">PKCS #1 v2.1</a>
  * standard.
- * </p>
- * 
- * @since Android 1.0
  */
 public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
     // Public Exponent
@@ -74,7 +71,6 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
      *            there are only the two primes ({@code p, q}).
      * @throws IllegalArgumentException
      *             if {@code otherPrimeInfo} is not null but empty.
-     * @since Android 1.0
      */
     public RSAMultiPrimePrivateCrtKeySpec(
             BigInteger modulus,
@@ -139,7 +135,6 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
      * Returns the CRT coefficient, {@code q^-1 mod p}.
      * 
      * @return the CRT coefficient, {@code q^-1 mod p}.
-     * @since Android 1.0
      */
     public BigInteger getCrtCoefficient() {
         return crtCoefficient;
@@ -150,7 +145,6 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
      * 
      * @return the information for the additional primes, or {@code null} if
      *         there are only the two primes ({@code p, q}).
-     * @since Android 1.0
      */
     public RSAOtherPrimeInfo[] getOtherPrimeInfo() {
         // Clone array (if not null) to prevent subsequent modification
@@ -168,7 +162,6 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
      * Returns the exponent of the prime {@code p}.
      * 
      * @return the exponent of the prime {@code p}.
-     * @since Android 1.0
      */
     public BigInteger getPrimeExponentP() {
         return primeExponentP;
@@ -178,7 +171,6 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
      * Returns the exponent of the prime {@code q}.
      * 
      * @return the exponent of the prime {@code q}.
-     * @since Android 1.0
      */
     public BigInteger getPrimeExponentQ() {
         return primeExponentQ;
@@ -188,7 +180,6 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
      * Returns the prime factor {@code p}.
      * 
      * @return the prime factor {@code p}.
-     * @since Android 1.0
      */
     public BigInteger getPrimeP() {
         return primeP;
@@ -198,7 +189,6 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
      * Returns the prime factor {@code q}.
      * 
      * @return the prime factor {@code q}.
-     * @since Android 1.0
      */
     public BigInteger getPrimeQ() {
         return primeQ;
@@ -208,7 +198,6 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
      * Returns the public exponent {@code e}.
      * 
      * @return the public exponent {@code e}.
-     * @since Android 1.0
      */
     public BigInteger getPublicExponent() {
         return publicExponent;

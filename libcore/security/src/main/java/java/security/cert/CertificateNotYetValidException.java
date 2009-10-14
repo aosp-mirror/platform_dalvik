@@ -20,8 +20,6 @@ package java.security.cert;
 /**
  * The exception that is thrown when a {@code Certificate} is not yet valid or
  * will not yet be valid on a specified date.
- * 
- * @since Android 1.0
  */
 public class CertificateNotYetValidException extends CertificateException {
 
@@ -33,7 +31,6 @@ public class CertificateNotYetValidException extends CertificateException {
      * 
      * @param msg
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public CertificateNotYetValidException(String msg) {
         super(msg);
@@ -41,8 +38,6 @@ public class CertificateNotYetValidException extends CertificateException {
 
     /**
      * Creates a new {@code CertificateNotYetValidException}.
-     * 
-     * @since Android 1.0
      */
     public CertificateNotYetValidException() {
     }

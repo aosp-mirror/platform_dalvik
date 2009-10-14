@@ -15,34 +15,26 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code PrivilegedAction} represents an action, that can be executed
  * privileged regarding access control. Instances of {@code PrivilegedAction}
  * can be executed invoking {@code AccessController.doPrivileged()}.
- * 
+ *
  * @see AccessController
  * @see AccessController#doPrivileged(PrivilegedExceptionAction)
  * @see AccessController#doPrivileged(PrivilegedExceptionAction,
  *      AccessControlContext)
  * @see PrivilegedAction
- * @since Android 1.0
  */
 public interface PrivilegedExceptionAction<T> {
-    
     /**
      * Returns the result of running the action.
-     * 
+     *
      * @return the result of running the action
      * @throws Exception
      *             if an exception occurred.
-     * @since Android 1.0
      */
     T run() throws Exception;
 }

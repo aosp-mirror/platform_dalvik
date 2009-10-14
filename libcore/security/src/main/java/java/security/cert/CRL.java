@@ -23,7 +23,6 @@ package java.security.cert;
  * expired and consequently has become invalid.
  * 
  * @see CertificateFactory
- * @since Android 1.0
  */
 public abstract class CRL {
     // The CRL type
@@ -31,10 +30,9 @@ public abstract class CRL {
 
     /**
      * Creates a new certificate revocation list of the specified type.
-     * 
+     *
      * @param type
      *            the type for the CRL.
-     * @since Android 1.0
      */
     protected CRL(String type) {
         this.type = type;
@@ -42,9 +40,8 @@ public abstract class CRL {
 
     /**
      * Returns the type of this CRL.
-     * 
+     *
      * @return the type of this CRL.
-     * @since Android 1.0
      */
     public final String getType() {
         return type;
@@ -52,20 +49,18 @@ public abstract class CRL {
 
     /**
      * Returns whether the specified certificate is revoked by this CRL.
-     * 
+     *
      * @param cert
      *            the certificate to check.
      * @return {@code true} if the certificate is revoked by this CRL, otherwise
      *         {@code false}.
-     * @since Android 1.0
      */
     public abstract boolean isRevoked(Certificate cert);
 
     /**
      * Returns the string representation of this instance.
-     * 
+     *
      * @return the string representation of this instance.
-     * @since Android 1.0
      */
     public abstract String toString();
 }

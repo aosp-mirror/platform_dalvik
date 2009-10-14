@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.ByteArrayInputStream;
@@ -48,10 +43,9 @@ import org.apache.harmony.security.internal.nls.Messages;
  * {@code CodeSource} encapsulates the location from where code is loaded and
  * the certificates that were used to verify that code. This information is used
  * by {@code SecureClassLoader} to define protection domains for loaded classes.
- * 
+ *
  * @see SecureClassLoader
  * @see ProtectionDomain
- * @since Android 1.0
  */
 public class CodeSource implements Serializable {
 
@@ -76,14 +70,13 @@ public class CodeSource implements Serializable {
     /**
      * Constructs a new instance of {@code CodeSource} with the specified
      * {@code URL} and the {@code Certificate}s.
-     * 
+     *
      * @param location
      *            the {@code URL} representing the location from where code is
      *            loaded, maybe {@code null}.
      * @param certs
      *            the {@code Certificate} used to verify the code, loaded from
      *            the specified {@code location}, maybe {@code null}.
-     * @since Android 1.0
      */
     public CodeSource(URL location, Certificate[] certs) {
         this.location = location;
@@ -96,14 +89,13 @@ public class CodeSource implements Serializable {
     /**
      * Constructs a new instance of {@code CodeSource} with the specified
      * {@code URL} and the {@code CodeSigner}s.
-     * 
+     *
      * @param location
      *            the {@code URL} representing the location from where code is
      *            loaded, maybe {@code null}.
      * @param signers
      *            the {@code CodeSigner}s of the code, loaded from the specified
      *            {@code location}. Maybe {@code null}.
-     * @since Android 1.0
      */
     public CodeSource(URL location, CodeSigner[] signers) {
         this.location = location;
@@ -119,14 +111,14 @@ public class CodeSource implements Serializable {
      * {@code CodeSource}, points to the same {@code URL} location and the two
      * code sources encapsulate the same {@code Certificate}s. The order of the
      * {@code Certificate}s is ignored by this method.
-     * 
+     *
      * @param obj
      *            object to be compared for equality with this {@code
      *            CodeSource}.
      * @return {@code true} if the specified object is equal to this {@code
      *         CodeSource}, otherwise {@code false}.
-     * @since Android 1.0
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
@@ -169,11 +161,9 @@ public class CodeSource implements Serializable {
      * <p>
      * External modifications of the returned {@code Certificate[]} has no
      * impact on this {@code CodeSource}.
-     * </p>
-     * 
+     *
      * @return the certificates of this {@code CodeSource} or {@code null} if
      *         there is none.
-     * @since Android 1.0
      */
     public final Certificate[] getCertificates() {
         getCertificatesNoClone();
@@ -213,10 +203,9 @@ public class CodeSource implements Serializable {
      * {@link #CodeSource(URL, Certificate[])} constructor was used to create
      * this instance, the signers are obtained from the supplied certificates.
      * Only X.509 certificates are analyzed.
-     * 
+     *
      * @return the signers of this {@code CodeSource}, or {@code null} if there
      *         is none.
-     * @since Android 1.0
      */
     public final CodeSigner[] getCodeSigners() {
         if (signers != null) {
@@ -308,9 +297,8 @@ public class CodeSource implements Serializable {
 
     /**
      * Returns the location of this {@code CodeSource}.
-     * 
+     *
      * @return the location of this {@code CodeSource}, maybe {@code null}.
-     * @since Android 1.0
      */
     public final URL getLocation() {
         return location;
@@ -321,12 +309,12 @@ public class CodeSource implements Serializable {
      * Returns the same hash code for {@code CodeSource}s that are
      * equal to each other as required by the general contract of
      * {@link Object#hashCode}.
-     * 
+     *
      * @return the hash code value for this {@code CodeSource}.
      * @see Object#equals(Object)
      * @see CodeSource#equals(Object)
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         //
         // hashCode() is undocumented there. Should we also use certs[i] to
@@ -385,21 +373,20 @@ public class CodeSource implements Serializable {
      * location file with the '/' appended to it.
      * </ul>
      * Examples for locations that imply the location
-     * "http://code.google.com/android/security.apk":
-     * 
+     * "http://harmony.apache.org/milestones/M9/apache-harmony.jar":
+     *
      * <pre>
      * http:
-     * http://&#42;/android/*
-     * http://*.google.com/android/*
-     * http://code.google.com/android/-
-     * http://code.google.com/android/security.apk
+     * http://&#42;/milestones/M9/*
+     * http://*.apache.org/milestones/M9/*
+     * http://harmony.apache.org/milestones/-
+     * http://harmony.apache.org/milestones/M9/apache-harmony.jar
      * </pre>
-     * 
+     *
      * @param cs
      *            the code source to check.
      * @return {@code true} if the argument code source is implied by this
      *         {@code CodeSource}, otherwise {@code false}.
-     * @since Android 1.0
      */
     public boolean implies(CodeSource cs) {
         //
@@ -551,10 +538,10 @@ public class CodeSource implements Serializable {
      * Returns a string containing a concise, human-readable description of the
      * this {@code CodeSource} including its location, its certificates and its
      * signers.
-     * 
+     *
      * @return a printable representation for this {@code CodeSource}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
         buf.append("CodeSource, url="); //$NON-NLS-1$

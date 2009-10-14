@@ -21,8 +21,6 @@ import java.math.BigInteger;
 
 /**
  * The base interface for PKCS#1 RSA public and private keys.
- * 
- * @since Android 1.0
  */
 public interface RSAKey {
 
@@ -30,7 +28,6 @@ public interface RSAKey {
      * Returns the modulus.
      * 
      * @return the modulus.
-     * @since Android 1.0
      */
     public BigInteger getModulus();
 }

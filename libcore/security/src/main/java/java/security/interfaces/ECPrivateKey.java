@@ -22,15 +22,11 @@ import java.security.PrivateKey;
 
 /**
  * The interface for an Elliptic Curve (EC) private key.
- * 
- * @since Android 1.0
  */
 public interface ECPrivateKey extends PrivateKey, ECKey {
 
     /**
      * The serial version identifier.
-     * 
-     * @since Android 1.0
      */
     public static final long serialVersionUID = -7896394956925609184L;
 
@@ -38,7 +34,6 @@ public interface ECPrivateKey extends PrivateKey, ECKey {
      * Returns the private value {@code S}.
      * 
      * @return the private value {@code S}.
-     * @since Android 1.0
      */
     public BigInteger getS();
 }

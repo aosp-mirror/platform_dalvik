@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.IOException;
@@ -44,8 +39,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * {@link Permission#newPermissionCollection()}. For permissions which do not
  * provide a dedicated {@code PermissionCollection}, a default permission
  * collection, based on a hash table, will be used.
- * 
- * @since Android 1.0
  */
 public final class Permissions extends PermissionCollection implements
     Serializable {
@@ -65,7 +58,7 @@ public final class Permissions extends PermissionCollection implements
      * Adds the given {@code Permission} to this heterogeneous {@code
      * PermissionCollection}. The {@code permission} is stored in its
      * appropriate {@code PermissionCollection}.
-     * 
+     *
      * @param permission
      *            the {@code Permission} to be added.
      * @throws SecurityException
@@ -73,7 +66,6 @@ public final class Permissions extends PermissionCollection implements
      *             {@code true}.
      * @throws NullPointerException
      *             if {@code permission} is {@code null}.
-     * @since Android 1.0
      */
     public void add(Permission permission) {
         if (isReadOnly()) {
@@ -223,9 +215,10 @@ public final class Permissions extends PermissionCollection implements
         Map perms = (Map)fields.get("perms", null); //$NON-NLS-1$
         klasses = new HashMap();
         synchronized (klasses) {
-            for (Iterator iter = perms.keySet().iterator(); iter.hasNext();) {
-                Class key = (Class)iter.next();
-                PermissionCollection pc = (PermissionCollection)perms.get(key);
+            for (Iterator iter = perms.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry entry = (Map.Entry)  iter.next();
+                Class key = (Class) entry.getKey();
+                PermissionCollection pc = (PermissionCollection) entry.getValue();
                 if (key != pc.elements().nextElement().getClass()) {
                     throw new InvalidObjectException(Messages.getString("security.22")); //$NON-NLS-1$
                 }

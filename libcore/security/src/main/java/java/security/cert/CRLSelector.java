@@ -23,11 +23,9 @@ package java.security.cert;
  * <p>
  * The implementations of this interface are typically used to define the
  * criteria for selecting {@code CRL}s from a {@code CertStore}.
- * </p>
  * 
  * @see CertStore
  * @see CRL
- * @since Android 1.0
  */
 public interface CRLSelector extends Cloneable {
 
@@ -35,7 +33,6 @@ public interface CRLSelector extends Cloneable {
      * Clones this {@code CRLSelector} instance.
      * 
      * @return the cloned instance.
-     * @since Android 1.0
      */
     public Object clone();
 
@@ -47,7 +44,6 @@ public interface CRLSelector extends Cloneable {
      *            the CRL to be evaluated.
      * @return {@code true} if the CRL matches the criteria, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean match(CRL crl);
 }

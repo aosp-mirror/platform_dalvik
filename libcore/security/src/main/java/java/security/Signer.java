@@ -15,16 +15,8 @@
  *  limitations under the License.
  */
 
-/**
- * @author Aleksei Y. Semenov
- * @version $Revision$
- */
-
 package java.security;
 
-// BEGIN android-note
-// added Deprecated annotation
-// END android-note
 /**
  * {@link Signer} represents an identity (individual or corporation) that owns a
  * private key and the corresponding public key.
@@ -32,7 +24,6 @@ package java.security;
  * @deprecated Replaced by behavior in {@link java.security.cert
  *             java.security.cert} package and {@link java.security.Principal
  *             Principal}
- * @since Android 1.0
  */
 @Deprecated
 public abstract class Signer extends Identity {
@@ -43,8 +34,6 @@ public abstract class Signer extends Identity {
 
     /**
      * Constructs a new instance of {@code Signer}.
-     * 
-     * @since Android 1.0
      */
     protected Signer() {
         super();
@@ -52,10 +41,9 @@ public abstract class Signer extends Identity {
 
     /**
      * Constructs a new instance of {@code Signer} with the given name.
-     * 
+     *
      * @param name
      *            the name of the signer.
-     * @since Android 1.0
      */
     public Signer(String name) {
         super(name);
@@ -64,7 +52,7 @@ public abstract class Signer extends Identity {
     /**
      * Constructs a new instance of {@code Signer} with the given name in the
      * given scope.
-     * 
+     *
      * @param name
      *            the name of the signer.
      * @param scope
@@ -72,7 +60,6 @@ public abstract class Signer extends Identity {
      * @throws KeyManagementException
      *             if a signer with the specified name already exists in the
      *             provided scope.
-     * @since Android 1.0
      */
     public Signer(String name, IdentityScope scope)
             throws KeyManagementException {
@@ -84,12 +71,11 @@ public abstract class Signer extends Identity {
      * SecurityManager} is installed, code calling this method needs the {@code
      * SecurityPermission} {@code "getSignerPrivateKey"} to be granted, otherwise
      * a {@code SecurityException} will be thrown.
-     * 
+     *
      * @return the private key of this {@code Signer}.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public PrivateKey getPrivateKey() {
         SecurityManager sm = System.getSecurityManager();
@@ -105,7 +91,7 @@ public abstract class Signer extends Identity {
      * SecurityManager} is installed, code calling this method needs the {@code
      * SecurityPermission} {@code getSignerPrivateKey} to be granted, otherwise
      * a {@code SecurityException} will be thrown.
-     * 
+     *
      * @param pair
      *            the key pair to associate with this {@code Signer}.
      * @throws InvalidParameterException
@@ -115,7 +101,6 @@ public abstract class Signer extends Identity {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public final void setKeyPair(KeyPair pair)
             throws InvalidParameterException, KeyException {
@@ -148,10 +133,10 @@ public abstract class Signer extends Identity {
     /**
      * Returns a string containing a concise, human-readable description of this
      * {@code Signer} including its name and its scope if present.
-     * 
+     *
      * @return a printable representation for this {@code Signer}.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         String s = "[Signer]" + getName(); //$NON-NLS-1$
         if (getScope() != null) {

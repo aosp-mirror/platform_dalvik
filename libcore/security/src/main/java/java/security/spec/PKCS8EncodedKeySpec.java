@@ -20,8 +20,6 @@ package java.security.spec;
 /**
  * The key specification for an encoded private key in ASN.1 format as defined
  * in the PKCS#8 standard.  
- * 
- * @since Android 1.0
  */
 public class PKCS8EncodedKeySpec extends EncodedKeySpec {    
 
@@ -31,7 +29,6 @@ public class PKCS8EncodedKeySpec extends EncodedKeySpec {
      * 
      * @param encodedKey
      *            the encoded key bytes.
-     * @since Android 1.0
      */
     public PKCS8EncodedKeySpec(byte[] encodedKey) {
         // Super class' ctor makes defensive parameter copy
@@ -42,7 +39,6 @@ public class PKCS8EncodedKeySpec extends EncodedKeySpec {
      * Returns a copy of the encoded key bytes.
      * 
      * @return a copy of the encoded key bytes.
-     * @since Android 1.0
      */
     public byte[] getEncoded() {
         // Super class' getEncoded() always returns a new array
@@ -54,7 +50,6 @@ public class PKCS8EncodedKeySpec extends EncodedKeySpec {
      * specification.
      * 
      * @return the string "PKCS#8".
-     * @since Android 1.0
      */
     public final String getFormat() {
         return "PKCS#8"; //$NON-NLS-1$

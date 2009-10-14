@@ -33,16 +33,15 @@ import org.apache.harmony.security.internal.nls.Messages;
 /**
  * {@code KeyStoreSpi} is the Service Provider Interface (SPI) definition for
  * {@link KeyStore}.
- * 
+ *
  * @see KeyStore
- * @since Android 1.0
  */
 public abstract class KeyStoreSpi {
 
     /**
      * Returns the key with the given alias, using the password to recover the
      * key from the store.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @param password
@@ -53,41 +52,37 @@ public abstract class KeyStoreSpi {
      *             if the algorithm for recovering the key is not available.
      * @throws UnrecoverableKeyException
      *             if the key can not be recovered.
-     * @since Android 1.0
      */
     public abstract Key engineGetKey(String alias, char[] password)
             throws NoSuchAlgorithmException, UnrecoverableKeyException;
 
     /**
      * Returns the certificate chain for the entry with the given alias.
-     * 
+     *
      * @param alias
      *            the alias for the entry
      * @return the certificate chain for the entry with the given alias, or
      *         {@code null} if the specified alias is not bound to an entry.
-     * @since Android 1.0
      */
     public abstract Certificate[] engineGetCertificateChain(String alias);
 
     /**
      * Returns the trusted certificate for the entry with the given alias.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @return the trusted certificate for the entry with the given alias, or
      *         {@code null} if the specified alias is not bound to an entry.
-     * @since Android 1.0
      */
     public abstract Certificate engineGetCertificate(String alias);
 
     /**
      * Returns the creation date of the entry with the given alias.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @return the creation date, or {@code null} if the specified alias is not
      *         bound to an entry.
-     * @since Android 1.0
      */
     public abstract Date engineGetCreationDate(String alias);
 
@@ -95,8 +90,7 @@ public abstract class KeyStoreSpi {
      * Associates the given alias with the key, password and certificate chain.
      * <p>
      * If the specified alias already exists, it will be reassigned.
-     * </p>
-     * 
+     *
      * @param alias
      *            the alias for the key.
      * @param key
@@ -111,7 +105,6 @@ public abstract class KeyStoreSpi {
      * @throws IllegalArgumentException
      *             if {@code key} is a {@code PrivateKey} and {@code chain} does
      *             not contain any certificates.
-     * @since Android 1.0
      */
     public abstract void engineSetKeyEntry(String alias, Key key,
             char[] password, Certificate[] chain) throws KeyStoreException;
@@ -120,8 +113,7 @@ public abstract class KeyStoreSpi {
      * Associates the given alias with a key and a certificate chain.
      * <p>
      * If the specified alias already exists, it will be reassigned.
-     * </p>
-     * 
+     *
      * @param alias
      *            the alias for the key.
      * @param key
@@ -133,7 +125,6 @@ public abstract class KeyStoreSpi {
      * @throws IllegalArgumentException
      *             if {@code key} is a {@code PrivateKey} and {@code chain}
      *             does.
-     * @since Android 1.0
      */
     public abstract void engineSetKeyEntry(String alias, byte[] key,
             Certificate[] chain) throws KeyStoreException;
@@ -142,8 +133,7 @@ public abstract class KeyStoreSpi {
      * Associates the given alias with a certificate.
      * <p>
      * If the specified alias already exists, it will be reassigned.
-     * </p>
-     * 
+     *
      * @param alias
      *            the alias for the certificate.
      * @param cert
@@ -152,7 +142,6 @@ public abstract class KeyStoreSpi {
      *             if an existing alias is not associated to an entry containing
      *             a trusted certificate, or this method fails for any other
      *             reason.
-     * @since Android 1.0
      */
     public abstract void engineSetCertificateEntry(String alias,
             Certificate cert) throws KeyStoreException;
@@ -160,12 +149,11 @@ public abstract class KeyStoreSpi {
     /**
      * Deletes the entry identified with the given alias from this {@code
      * KeyStoreSpi}.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @throws KeyStoreException
      *             if the entry can not be deleted.
-     * @since Android 1.0
      */
     public abstract void engineDeleteEntry(String alias)
             throws KeyStoreException;
@@ -173,63 +161,57 @@ public abstract class KeyStoreSpi {
     /**
      * Returns an {@code Enumeration} over all alias names stored in this
      * {@code KeyStoreSpi}.
-     * 
+     *
      * @return an {@code Enumeration} over all alias names stored in this
      *         {@code KeyStoreSpi}.
-     * @since Android 1.0
      */
     public abstract Enumeration<String> engineAliases();
 
     /**
      * Indicates whether the given alias is present in this {@code KeyStoreSpi}.
-     * 
+     *
      * @param alias
      *            the alias of an entry.
      * @return {@code true} if the alias exists, {@code false} otherwise.
-     * @since Android 1.0
      */
     public abstract boolean engineContainsAlias(String alias);
 
     /**
      * Returns the number of entries stored in this {@code KeyStoreSpi}.
-     * 
+     *
      * @return the number of entries stored in this {@code KeyStoreSpi}.
-     * @since Android 1.0
      */
     public abstract int engineSize();
 
     /**
      * Indicates whether the specified alias is associated with either a
      * {@link KeyStore.PrivateKeyEntry} or a {@link KeyStore.SecretKeyEntry}.
-     * 
+     *
      * @param alias
      *            the alias of an entry.
      * @return {@code true} if the given alias is associated with a key entry.
-     * @since Android 1.0
      */
     public abstract boolean engineIsKeyEntry(String alias);
 
     /**
      * Indicates whether the specified alias is associated with a
      * {@link KeyStore.TrustedCertificateEntry}.
-     * 
+     *
      * @param alias
      *            the alias of an entry.
      * @return {@code true} if the given alias is associated with a certificate
      *         entry.
-     * @since Android 1.0
      */
     public abstract boolean engineIsCertificateEntry(String alias);
 
     /**
      * Returns the alias associated with the first entry whose certificate
      * matches the specified certificate.
-     * 
+     *
      * @param cert
      *            the certificate to find the associated entry's alias for.
      * @return the alias or {@code null} if no entry with the specified
      *         certificate can be found.
-     * @since Android 1.0
      */
     public abstract String engineGetCertificateAlias(Certificate cert);
 
@@ -237,7 +219,7 @@ public abstract class KeyStoreSpi {
      * Writes this {@code KeyStoreSpi} to the specified {@code OutputStream}.
      * The data written to the {@code OutputStream} is protected by the
      * specified password.
-     * 
+     *
      * @param stream
      *            the {@code OutputStream} to write the store's data to.
      * @param password
@@ -249,7 +231,6 @@ public abstract class KeyStoreSpi {
      * @throws CertificateException
      *             if the an exception occurred while storing the certificates
      *             of this code {@code KeyStoreSpi}.
-     * @since Android 1.0
      */
     public abstract void engineStore(OutputStream stream, char[] password)
             throws IOException, NoSuchAlgorithmException, CertificateException;
@@ -257,7 +238,7 @@ public abstract class KeyStoreSpi {
     /**
      * Stores this {@code KeyStoreSpi} using the specified {@code
      * LoadStoreParameter}.
-     * 
+     *
      * @param param
      *            the {@code LoadStoreParameter} that specifies how to store
      *            this {@code KeyStoreSpi}, maybe {@code null}.
@@ -271,7 +252,6 @@ public abstract class KeyStoreSpi {
      * @throws IllegalArgumentException
      *             if the given {@link KeyStore.LoadStoreParameter} is not
      *             recognized.
-     * @since Android 1.0
      */
     public void engineStore(KeyStore.LoadStoreParameter param)
             throws IOException, NoSuchAlgorithmException, CertificateException {
@@ -281,7 +261,7 @@ public abstract class KeyStoreSpi {
     /**
      * Loads this {@code KeyStoreSpi} from the given {@code InputStream}.
      * Utilizes the given password to verify the stored data.
-     * 
+     *
      * @param stream
      *            the {@code InputStream} to load this {@code KeyStoreSpi}'s
      *            data from.
@@ -294,7 +274,6 @@ public abstract class KeyStoreSpi {
      * @throws CertificateException
      *             if the an exception occurred while loading the certificates
      *             of this code {@code KeyStoreSpi}.
-     * @since Android 1.0
      */
     public abstract void engineLoad(InputStream stream, char[] password)
             throws IOException, NoSuchAlgorithmException, CertificateException;
@@ -302,7 +281,7 @@ public abstract class KeyStoreSpi {
     /**
      * Loads this {@code KeyStoreSpi} using the specified {@code
      * LoadStoreParameter}.
-     * 
+     *
      * @param param
      *            the {@code LoadStoreParameter} that specifies how to load this
      *            {@code KeyStoreSpi}, maybe {@code null}.
@@ -316,7 +295,6 @@ public abstract class KeyStoreSpi {
      * @throws IllegalArgumentException
      *             if the given {@link KeyStore.LoadStoreParameter} is not
      *             recognized.
-     * @since Android 1.0
      */
     public void engineLoad(KeyStore.LoadStoreParameter param)
             throws IOException, NoSuchAlgorithmException, CertificateException {
@@ -351,7 +329,7 @@ public abstract class KeyStoreSpi {
     /**
      * Returns the {@code Entry} with the given alias, using the specified
      * {@code ProtectionParameter}.
-     * 
+     *
      * @param alias
      *            the alias of the requested entry.
      * @param protParam
@@ -365,7 +343,6 @@ public abstract class KeyStoreSpi {
      *             if the entry can not be recovered.
      * @throws KeyStoreException
      *             if this operation fails
-     * @since Android 1.0
      */
     public KeyStore.Entry engineGetEntry(String alias,
             KeyStore.ProtectionParameter protParam) throws KeyStoreException,
@@ -417,8 +394,7 @@ public abstract class KeyStoreSpi {
      * specified {@code ProtectionParameter}.
      * <p>
      * If the specified alias already exists, it will be reassigned.
-     * </p>
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @param entry
@@ -427,7 +403,6 @@ public abstract class KeyStoreSpi {
      *            the {@code ProtectionParameter} to protect the entry.
      * @throws KeyStoreException
      *             if this operation fails.
-     * @since Android 1.0
      */
     public void engineSetEntry(String alias, KeyStore.Entry entry,
             KeyStore.ProtectionParameter protParam) throws KeyStoreException {
@@ -486,14 +461,13 @@ public abstract class KeyStoreSpi {
     /**
      * Indicates whether the entry for the given alias is assignable to the
      * provided {@code Class}.
-     * 
+     *
      * @param alias
      *            the alias for the entry.
      * @param entryClass
      *            the type of the entry.
      * @return {@code true} if the {@code Entry} for the alias is assignable to
      *         the specified {@code entryClass}.
-     * @since Android 1.0
      */
     public boolean engineEntryInstanceOf(String alias,
             Class<? extends KeyStore.Entry> entryClass) {

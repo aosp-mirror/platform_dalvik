@@ -32,8 +32,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * This class provides the functionality for validating certification paths
  * (certificate chains) establishing a trust chain from a certificate to a trust
  * anchor.
- * 
- * @since Android 1.0
  */
 public class CertPathValidator {
     // Store CertPathValidator implementation service name
@@ -60,14 +58,13 @@ public class CertPathValidator {
 
     /**
      * Creates a new {@code CertPathValidator} instance.
-     * 
+     *
      * @param validatorSpi
      *            the implementation delegate.
      * @param provider
      *            the security provider.
      * @param algorithm
      *            the name of the algorithm.
-     * @since Android 1.0
      */
     protected CertPathValidator(CertPathValidatorSpi validatorSpi,
             Provider provider, String algorithm) {
@@ -78,9 +75,8 @@ public class CertPathValidator {
 
     /**
      * Returns the certification path algorithm name.
-     * 
+     *
      * @return the certification path algorithm name.
-     * @since Android 1.0
      */
     public final String getAlgorithm() {
         return algorithm;
@@ -88,9 +84,8 @@ public class CertPathValidator {
 
     /**
      * Returns the security provider.
-     * 
+     *
      * @return the provider.
-     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
@@ -106,7 +101,6 @@ public class CertPathValidator {
      *             if no installed provider provides the specified algorithm.
      * @throws NullPointerException
      *             if algorithm is {@code null}.
-     * @since Android 1.0
      */
     public static CertPathValidator getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -138,7 +132,6 @@ public class CertPathValidator {
      *             if algorithm is {@code null}.
      * @throws IllegalArgumentException
      *             if provider is {@code null} or empty.
-     * @since Android 1.0
      */
     public static CertPathValidator getInstance(String algorithm,
             String provider) throws NoSuchAlgorithmException,
@@ -169,7 +162,6 @@ public class CertPathValidator {
      *             if provider is {@code null}.
      * @throws NullPointerException
      *             if algorithm is {@code null}.
-     * @since Android 1.0
      */
     public static CertPathValidator getInstance(String algorithm,
             Provider provider) throws NoSuchAlgorithmException {
@@ -203,7 +195,6 @@ public class CertPathValidator {
      *             if the specified algorithm parameters cannot be used with
      *             this algorithm.
      * @see CertPathValidatorResult
-     * @since Android 1.0
      */
     public final CertPathValidatorResult validate(CertPath certPath,
             CertPathParameters params) throws CertPathValidatorException,
@@ -214,11 +205,10 @@ public class CertPathValidator {
     /**
      * Returns the default {@code CertPathValidator} type from the <i>Security
      * Properties</i>.
-     * 
+     *
      * @return the default {@code CertPathValidator} type from the <i>Security
      *         Properties</i>, or the string {@code "PKIX"} if it cannot be
      *         determined.
-     * @since Android 1.0
      */
     public static final String getDefaultType() {
         String defaultType = AccessController

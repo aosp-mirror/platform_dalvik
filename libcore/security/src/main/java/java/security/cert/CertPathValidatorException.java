@@ -28,9 +28,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * A {@code CertPathValidatorException} may optionally include the certification
  * path instance that failed the validation and the index of the failed
  * certificate.
- * </p>
- * 
- * @since Android 1.0
  */
 public class CertPathValidatorException extends GeneralSecurityException {
 
@@ -65,7 +62,6 @@ public class CertPathValidatorException extends GeneralSecurityException {
      * @throws IndexOutOfBoundsException
      *             if {@code certPath} is not {@code null} and index is not
      *             referencing an certificate in the certification path.
-     * @since Android 1.0
      */
     public CertPathValidatorException(String msg, Throwable cause,
             CertPath certPath, int index) {
@@ -91,7 +87,6 @@ public class CertPathValidatorException extends GeneralSecurityException {
      *            the detail message for this exception.
      * @param cause
      *            the cause why the path could not be validated.
-     * @since Android 1.0
      */
     public CertPathValidatorException(String msg, Throwable cause) {
         super(msg, cause);
@@ -103,7 +98,6 @@ public class CertPathValidatorException extends GeneralSecurityException {
      * 
      * @param cause
      *            the cause why the path could not be validated.
-     * @since Android 1.0
      */
     public CertPathValidatorException(Throwable cause) {
         super(cause);
@@ -115,7 +109,6 @@ public class CertPathValidatorException extends GeneralSecurityException {
      * 
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public CertPathValidatorException(String msg) {
         super(msg);
@@ -123,8 +116,6 @@ public class CertPathValidatorException extends GeneralSecurityException {
 
     /**
      * Creates a new {@code CertPathValidatorException}.
-     * 
-     * @since Android 1.0
      */
     public CertPathValidatorException() {
     }
@@ -134,7 +125,6 @@ public class CertPathValidatorException extends GeneralSecurityException {
      * 
      * @return the certification path that failed validation, or {@code null} if
      *         none was specified.
-     * @since Android 1.0
      */
     public CertPath getCertPath() {
         return certPath;
@@ -145,7 +135,6 @@ public class CertPathValidatorException extends GeneralSecurityException {
      * 
      * @return the index of the failed certificate in the certification path, or
      *         {@code -1} if none was specified.
-     * @since Android 1.0
      */
     public int getIndex() {
         return index;

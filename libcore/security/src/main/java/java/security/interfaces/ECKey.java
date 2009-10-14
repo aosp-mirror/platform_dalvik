@@ -21,8 +21,6 @@ import java.security.spec.ECParameterSpec;
 
 /**
  * The base interface for Elliptic Curve (EC) public or private keys.
- * 
- * @since Android 1.0
  */
 public interface ECKey {
 
@@ -30,7 +28,6 @@ public interface ECKey {
      * Returns the EC key parameters.
      * 
      * @return the EC key parameters.
-     * @since Android 1.0
      */
     public ECParameterSpec getParams();
 }

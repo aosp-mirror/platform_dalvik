@@ -25,7 +25,6 @@ package org.apache.harmony.security.fortress;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.File;
 import java.io.Reader;
 import java.net.URL;
 import java.security.cert.Certificate;
@@ -62,8 +61,7 @@ import org.apache.harmony.security.internal.nls.Messages;
  * a pluggable scanner and converts received tokens to a set of 
  * {@link org.apache.harmony.security.PolicyEntry PolicyEntries}. 
  * For details of policy format, see the 
- * {@link org.apache.harmony.security.fortress.DefaultPolicy default policy
- * description}.
+ * {@link org.apache.harmony.security.DefaultPolicy default policy description}.
  * <br>
  * For ordinary uses, this class has just one public method <code>parse()</code>, 
  * which performs the main task.
@@ -73,7 +71,7 @@ import org.apache.harmony.security.internal.nls.Messages;
  * This implementation is effectively thread-safe, as it has no field references 
  * to data being processed (that is, passes all the data as method parameters).
  * 
- * @see org.apache.harmony.security.fortress.DefaultPolicy
+ * @see org.apache.harmony.security.DefaultPolicy
  * @see org.apache.harmony.security.DefaultPolicyScanner
  * @see org.apache.harmony.security.PolicyEntry
  */
@@ -188,7 +186,7 @@ public class DefaultPolicyParser {
      * of the GrantEntry
      * @see DefaultPolicyScanner.PrincipalEntry
      * @see DefaultPolicyScanner.PermissionEntry
-     * @see org.apache.harmony.security.fortress.PolicyUtils
+     * @see org.apache.harmony.security.PolicyUtils
      */
     protected PolicyEntry resolveGrant(DefaultPolicyScanner.GrantEntry ge,
             KeyStore ks, Properties system, boolean resolve) throws Exception {
@@ -200,14 +198,6 @@ public class DefaultPolicyParser {
         if (ge.codebase != null) {
             codebase = new URL(resolve ? PolicyUtils.expandURL(ge.codebase,
                     system) : ge.codebase);
-            //Fix HARMONY-1963
-            if ("file".equals(codebase.getProtocol())) { //$NON-NLS-1$
-                File codeFile = new File(codebase.getFile());
-                if (codeFile.isAbsolute()) {
-                    codebase = new URL("file://" +  //$NON-NLS-1$
-                            codeFile.getAbsolutePath());                    
-                }
-            }
         }
         if (ge.signers != null) {
             if (resolve) {
@@ -342,7 +332,7 @@ public class DefaultPolicyParser {
             if ("self".equals(protocol)) { //$NON-NLS-1$
                 //need expanding to list of principals in grant clause 
                 if (ge.principals != null && ge.principals.size() != 0) {
-                    StringBuffer sb = new StringBuffer();
+                    StringBuilder sb = new StringBuilder();
                     for (Iterator<PrincipalEntry> iter = ge.principals.iterator(); iter
                             .hasNext();) {
                         DefaultPolicyScanner.PrincipalEntry pr = iter
@@ -385,7 +375,7 @@ public class DefaultPolicyParser {
         private String pc2str(Principal pc) {
             String klass = pc.getClass().getName();
             String name = pc.getName();
-            StringBuffer sb = new StringBuffer(klass.length() + name.length()
+            StringBuilder sb = new StringBuilder(klass.length() + name.length()
                     + 5);
             return sb.append(klass).append(" \"").append(name).append("\"") //$NON-NLS-1$ //$NON-NLS-2$
                     .toString();

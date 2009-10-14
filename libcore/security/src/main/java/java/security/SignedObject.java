@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.ByteArrayInputStream;
@@ -33,8 +28,6 @@ import java.io.Serializable;
  * A {@code SignedObject} instance acts as a container for another object. The
  * {@code SignedObject} contains the target in serialized form along with a
  * digital signature of the serialized data.
- * 
- * @since Android 1.0
  */
 public final class SignedObject implements Serializable {
 
@@ -75,7 +68,6 @@ public final class SignedObject implements Serializable {
      *             if the private key is not valid.
      * @throws SignatureException
      *             if signature generation failed.
-     * @since Android 1.0
      */
     public SignedObject(Serializable object, PrivateKey signingKey,
             Signature signingEngine) throws IOException, InvalidKeyException,
@@ -106,7 +98,6 @@ public final class SignedObject implements Serializable {
      *             if deserialization failed.
      * @throws ClassNotFoundException
      *             if the class of the encapsulated object can not be found.
-     * @since Android 1.0
      */
     public Object getObject() throws IOException, ClassNotFoundException {
         // deserialize our object
@@ -123,7 +114,6 @@ public final class SignedObject implements Serializable {
      * Returns the signature data of the encapsulated serialized object.
      * 
      * @return the signature data of the encapsulated serialized object.
-     * @since Android 1.0
      */
     public byte[] getSignature() {
         byte[] sig = new byte[signature.length];
@@ -135,7 +125,6 @@ public final class SignedObject implements Serializable {
      * Returns the name of the algorithm of this {@code SignedObject}.
      * 
      * @return the name of the algorithm of this {@code SignedObject}.
-     * @since Android 1.0
      */
     public String getAlgorithm() {
         return thealgorithm;
@@ -155,7 +144,6 @@ public final class SignedObject implements Serializable {
      *             if the public key is invalid.
      * @throws SignatureException
      *             if signature verification failed.
-     * @since Android 1.0
      */
     public boolean verify(PublicKey verificationKey,
             Signature verificationEngine) throws InvalidKeyException,

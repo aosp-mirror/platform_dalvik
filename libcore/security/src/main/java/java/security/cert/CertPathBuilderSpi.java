@@ -22,15 +22,11 @@ import java.security.InvalidAlgorithmParameterException;
 /**
  * The <i>Service Provider Interface</i> (<b>SPI</b>) for the {@code
  * CertPathBuilder} class to be implemented by security providers.
- * 
- * @since Android 1.0
  */
 public abstract class CertPathBuilderSpi {
 
     /**
      * Creates a new {@code CertPathBuilderSpi} instance.
-     * 
-     * @since Android 1.0
      */
     public CertPathBuilderSpi() {
     }
@@ -46,7 +42,6 @@ public abstract class CertPathBuilderSpi {
      * @throws InvalidAlgorithmParameterException
      *             if the specified parameters cannot be used to build the path
      *             with this builder.
-     * @since Android 1.0
      */
     public abstract CertPathBuilderResult engineBuild(CertPathParameters params)
             throws CertPathBuilderException, InvalidAlgorithmParameterException;

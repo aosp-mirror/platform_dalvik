@@ -15,18 +15,17 @@
  *  limitations under the License.
  */
 
-package java.security.cert;
+package org.apache.harmony.security;
 
-/**
- * The marker interface specifying the parameters used to initialize a {@code
- * CertStore} instance.
- */
-public interface CertStoreParameters extends Cloneable {
+public class Util {
 
-    /**
-     * Clones this {@code CertStoreParameters} instance.
-     * 
-     * @return the cloned instance.
-     */
-    public Object clone();
+    public static String toUpperCase(String s) {
+        return org.apache.harmony.luni.util.Util.toASCIIUpperCase(s);
+    }
+
+    public static boolean equalsIgnoreCase(String s1, String s2) {
+        s1 = org.apache.harmony.luni.util.Util.toASCIIUpperCase(s1);
+        s2 = org.apache.harmony.luni.util.Util.toASCIIUpperCase(s2);
+        return s1.equals(s2);
+    }
 }

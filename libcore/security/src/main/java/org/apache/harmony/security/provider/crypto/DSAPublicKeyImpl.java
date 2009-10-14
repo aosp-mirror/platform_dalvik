@@ -29,6 +29,7 @@
 package org.apache.harmony.security.provider.crypto;
 
 import java.io.IOException;
+import java.io.NotActiveException;
 
 import java.math.BigInteger;
 
@@ -45,12 +46,6 @@ import org.apache.harmony.security.x509.AlgorithmIdentifier;
 import org.apache.harmony.security.x509.SubjectPublicKeyInfo;
 
 import org.apache.harmony.security.asn1.ASN1Integer;
-//import org.apache.harmony.security.asn1.ASN1Sequence;
-//import org.apache.harmony.security.asn1.ASN1Type;
-//import org.apache.harmony.security.asn1.BerInputStream;
-//import org.apache.harmony.security.asn1.ASN1BitString;
-//import org.apache.harmony.security.asn1.BitString;
-//import org.apache.harmony.security.asn1.ASN1OctetString;
 
 import org.apache.harmony.security.internal.nls.Messages;
 
@@ -67,9 +62,9 @@ public class DSAPublicKeyImpl extends PublicKeyImpl implements DSAPublicKey {
      */
     private static final long serialVersionUID = -2279672131310978336L;
 
-    private BigInteger y;
+    private BigInteger y, g, p, q;
 
-    private DSAParams params;
+    private transient DSAParams params;
 
     /**
      * Creates object from DSAPublicKeySpec.
@@ -82,9 +77,9 @@ public class DSAPublicKeyImpl extends PublicKeyImpl implements DSAPublicKey {
 
         SubjectPublicKeyInfo spki;
 
-        BigInteger p = keySpec.getP();
-        BigInteger q = keySpec.getQ();
-        BigInteger g = keySpec.getG();
+        p = keySpec.getP();
+        q = keySpec.getQ();
+        g = keySpec.getG();
 
         ThreeIntegerSequence threeInts = new ThreeIntegerSequence(p
                 .toByteArray(), q.toByteArray(), g.toByteArray());
@@ -148,8 +143,10 @@ public class DSAPublicKeyImpl extends PublicKeyImpl implements DSAPublicKey {
             throw new InvalidKeySpecException(Messages.getString(
                     "security.19B", e)); //$NON-NLS-1$
         }
-        params = (DSAParams) (new DSAParameterSpec(new BigInteger(threeInts.p),
-                new BigInteger(threeInts.q), new BigInteger(threeInts.g)));
+        p = new BigInteger(threeInts.p);
+        q = new BigInteger(threeInts.q);
+        g = new BigInteger(threeInts.g);
+        params = (DSAParams) (new DSAParameterSpec(p, q, g));
 
         setEncoding(encoding);
 
@@ -175,6 +172,11 @@ public class DSAPublicKeyImpl extends PublicKeyImpl implements DSAPublicKey {
      */
     public DSAParams getParams() {
         return params;
+    }
+    
+    private void readObject(java.io.ObjectInputStream in) throws NotActiveException, IOException, ClassNotFoundException {
+    	in.defaultReadObject();
+    	params = new DSAParameterSpec(p, q, g);    	
     }
 
 }

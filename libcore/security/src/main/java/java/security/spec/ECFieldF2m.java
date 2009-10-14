@@ -25,8 +25,6 @@ import org.apache.harmony.security.internal.nls.Messages;
 /**
  * The parameters specifying a <i>characteristic 2 finite field</i> of an
  * elliptic curve.
- * 
- * @since Android 1.0
  */
 public class ECFieldF2m implements ECField {
     // Mid terms array length for trinomial basis
@@ -52,7 +50,6 @@ public class ECFieldF2m implements ECField {
      *            the exponent {@code m} for the number of elements.
      * @throws IllegalArgumentException
      *             if {@code m <= zero}.
-     * @since Android 1.0
      */
     public ECFieldF2m(int m) {
         this.m = m;
@@ -69,8 +66,7 @@ public class ECFieldF2m implements ECField {
      * <p>
      * The reduction polynomial must be either <i>trinomial</i> or
      * <i>pentanomial</i>.
-     * </p>
-     * 
+     *
      * @param m
      *            the exponent {@code m} for the number of elements.
      * @param rp
@@ -79,7 +75,6 @@ public class ECFieldF2m implements ECField {
      *            polynomial.
      * @throws IllegalArgumentException
      *             if {@code m <= zero} or the {@code rp} is invalid.
-     * @since Android 1.0
      */
     public ECFieldF2m(int m, BigInteger rp) {
         this.m = m;
@@ -117,7 +112,6 @@ public class ECFieldF2m implements ECField {
      * <p>
      * The reduction polynomial must be either <i>trinomial</i> or
      * <i>pentanomial</i>.
-     * </p>
      * 
      * @param m
      *            the exponent {@code m} for the number of elements.
@@ -127,7 +121,6 @@ public class ECFieldF2m implements ECField {
      * @throws IllegalArgumentException
      *             if {@code m <= zero} or the reduction polynomial is not
      *             valid.
-     * @since Android 1.0
      */
     public ECFieldF2m(int m, int[] ks) {
         this.m = m;
@@ -182,7 +175,6 @@ public class ECFieldF2m implements ECField {
      *            the object to compare to this finite field.
      * @return {@code true} if the specified object is equal to this finite field,
      *         otherwise {@code false}.
-     * @since Android 1.0
      */
     public boolean equals(Object obj) {
         // object equals to itself
@@ -214,7 +206,6 @@ public class ECFieldF2m implements ECField {
      * Returns the size of this finite field (in bits).
      * 
      * @return the size of this finite field (in bits).
-     * @since Android 1.0
      */
     public int getFieldSize() {
         return m;
@@ -225,7 +216,6 @@ public class ECFieldF2m implements ECField {
      * the number of elements.
      * 
      * @return the exponent {@code m} for this finite field
-     * @since Android 1.0
      */
     public int getM() {
         return m;
@@ -238,7 +228,6 @@ public class ECFieldF2m implements ECField {
      * @return a copy of the integer array containing the order of the middle
      *         term(s) of the reduction polynomial for a polynomial basis or
      *         {@code null} for a normal basis.
-     * @since Android 1.0
      */
     public int[] getMidTermsOfReductionPolynomial() {
         // Defensively copies private array
@@ -261,7 +250,6 @@ public class ECFieldF2m implements ECField {
      * @return the base of the reduction polynomial with the n-th bit
      *         corresponding to the n-th coefficient of the reduction polynomial
      *         for a polynomial basis or {@code null} for a normal basis.
-     * @since Android 1.0
      */
     public BigInteger getReductionPolynomial() {
         return rp;
@@ -271,7 +259,6 @@ public class ECFieldF2m implements ECField {
      * Returns the hashcode value for this finite field.
      * 
      * @return the hashcode value for this finite field.
-     * @since Android 1.0
      */
     public int hashCode() {
         return rp == null ? m : m + rp.hashCode();

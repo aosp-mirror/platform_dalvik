@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.security.spec.AlgorithmParameterSpec;
@@ -29,14 +24,11 @@ import java.security.spec.AlgorithmParameterSpec;
  * (SPI) definition for {@code AlgorithmParameterGenerator}.
  * 
  * @see AlgorithmParameterGenerator
- * @since Android 1.0
  */
 public abstract class AlgorithmParameterGeneratorSpi {
 
     /**
      * Constructs a new instance of {@code AlgorithmParameterGeneratorSpi} .
-     * 
-     * @since Android 1.0
      */
     public AlgorithmParameterGeneratorSpi() {
     }
@@ -45,26 +37,24 @@ public abstract class AlgorithmParameterGeneratorSpi {
      * Initializes this {@code AlgorithmParameterGeneratorSpi} with the given
      * size and the given {@code SecureRandom}. The default parameter set
      * will be used.
-     * 
+     *
      * @param size
      *            the size (in number of bits).
      * @param random
      *            the source of randomness.
-     * @since Android 1.0
      */
     protected abstract void engineInit(int size, SecureRandom random);
 
     /**
      * Initializes this {@code AlgorithmParameterGeneratorSpi} with the given
      * {@code AlgorithmParameterSpec} and the given {@code SecureRandom}.
-     * 
+     *
      * @param genParamSpec
      *            the parameters to use.
      * @param random
      *            the source of randomness.
      * @throws InvalidAlgorithmParameterException
      *             if the specified parameters are not supported.
-     * @since Android 1.0
      */
     protected abstract void engineInit(AlgorithmParameterSpec genParamSpec,
             SecureRandom random) throws InvalidAlgorithmParameterException;
@@ -72,9 +62,8 @@ public abstract class AlgorithmParameterGeneratorSpi {
     /**
      * Computes and returns {@code AlgorithmParameters} for this generator's
      * algorithm.
-     * 
+     *
      * @return {@code AlgorithmParameters} for this generator's algorithm.
-     * @since Android 1.0
      */
     protected abstract AlgorithmParameters engineGenerateParameters();
 }

@@ -126,7 +126,7 @@ public class AttributeValue {
                 }
             }
 
-            StringBuffer buf = new StringBuffer(encoded.length * 2 + 1);
+            StringBuilder buf = new StringBuilder(encoded.length * 2 + 1);
             buf.append('#');
 
             for (int i = 0, c; i < encoded.length; i++) {
@@ -180,7 +180,7 @@ public class AttributeValue {
         if (length == 0) {
             return name;
         }
-        StringBuffer buf = new StringBuffer(length * 2);
+        StringBuilder buf = new StringBuilder(length * 2);
 
         for (int index = 0; index < length; index++) {
 
@@ -223,7 +223,7 @@ public class AttributeValue {
         if (length == 0) {
             return rawString;
         }
-        StringBuffer buf = new StringBuffer(length * 2);
+        StringBuilder buf = new StringBuilder(length * 2);
 
         int index = 0;
         if (rawString.charAt(0) == '#') {

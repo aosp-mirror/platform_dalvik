@@ -28,9 +28,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * Defined in the <a
  * href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">PKCS #1 v2.1</a>
  * standard.
- * </p>
- * 
- * @since Android 1.0
  */
 public class RSAOtherPrimeInfo {
     // Prime
@@ -50,7 +47,6 @@ public class RSAOtherPrimeInfo {
      *            the prime exponent.
      * @param crtCoefficient
      *            the CRT coefficient.
-     * @since Android 1.0
      */
     public RSAOtherPrimeInfo(BigInteger prime,
             BigInteger primeExponent, BigInteger crtCoefficient) {
@@ -72,7 +68,6 @@ public class RSAOtherPrimeInfo {
      * Returns the CRT coefficient.
      * 
      * @return the CRT coefficient.
-     * @since Android 1.0
      */
     public final BigInteger getCrtCoefficient() {
         return crtCoefficient;
@@ -82,7 +77,6 @@ public class RSAOtherPrimeInfo {
      * Returns the prime factor.
      * 
      * @return the prime factor.
-     * @since Android 1.0
      */
     public final BigInteger getPrime() {
         return prime;
@@ -92,7 +86,6 @@ public class RSAOtherPrimeInfo {
      * Returns the exponent.
      * 
      * @return the exponent.
-     * @since Android 1.0
      */
     public final BigInteger getExponent() {
         return primeExponent;

@@ -37,7 +37,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * 
  * @see BasicPermission
  * @see PermissionCollection
- * @since Android 1.0
  */
 final class BasicPermissionCollection extends PermissionCollection {
 
@@ -63,6 +62,7 @@ final class BasicPermissionCollection extends PermissionCollection {
      * 
      * @see java.security.PermissionCollection#add(java.security.Permission)
      */
+    @Override
     public void add(Permission permission) {
         if (isReadOnly()) {
             throw new SecurityException(Messages.getString("security.15")); //$NON-NLS-1$
@@ -82,8 +82,6 @@ final class BasicPermissionCollection extends PermissionCollection {
                 permission));
         } else { 
             // this is the first element provided that another thread did not add
-            // BEGIN android-changed
-            // copied from a newer version of harmony
             synchronized (this) {
                 if (permClass != null && inClass != permClass) {
                     throw new IllegalArgumentException(Messages.getString("security.16", //$NON-NLS-1$
@@ -91,7 +89,6 @@ final class BasicPermissionCollection extends PermissionCollection {
                 }
                 permClass = inClass;
             }
-            // END android-changed
         }
 
         String name = permission.getName();
@@ -102,6 +99,7 @@ final class BasicPermissionCollection extends PermissionCollection {
     /**
      * Returns enumeration of contained elements.
      */
+    @Override
     public Enumeration<Permission> elements() {
         return Collections.enumeration(items.values());
     }
@@ -115,6 +113,7 @@ final class BasicPermissionCollection extends PermissionCollection {
      *            the permission to check.
      * @see Permission
      */
+    @Override
     public boolean implies(Permission permission) {
         if (permission == null || permission.getClass() != permClass) {
             return false;
@@ -162,16 +161,10 @@ final class BasicPermissionCollection extends PermissionCollection {
      * <dd>The class to which all {@code BasicPermission}s in this
      * BasicPermissionCollection belongs.
      * <dt>Hashtable&lt;K,V&gt; permissions
-     * <dd>The
-     * 
-     * <pre>
-     * BasicPermission
-     * </pre>
-     * 
-     * s in this {@code BasicPermissionCollection}. All {@code BasicPermission}s
-     * in the collection must belong to the same class. The Hashtable is indexed
-     * by the {@code BasicPermission} name; the value of the Hashtable entry is
-     * the permission.
+     * <dd>The {@code BasicPermission}s in this collection. All {@code
+     * BasicPermission}s in the collection must belong to the same class. The
+     * Hashtable is indexed by the {@code BasicPermission} name; the value of
+     * the Hashtable entry is the permission.
      * </dl>
      */
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
@@ -191,8 +184,6 @@ final class BasicPermissionCollection extends PermissionCollection {
         ObjectInputStream.GetField fields = in.readFields();
 
         items = new HashMap<String, Permission>();
-        // BEGIN android-changed
-        // copied from a newer version of harmony
         synchronized (this) {
             permClass = (Class<? extends Permission>)fields.get("permClass", null); //$NON-NLS-1$
             items.putAll((Hashtable<String, Permission>) fields.get(
@@ -207,6 +198,5 @@ final class BasicPermissionCollection extends PermissionCollection {
                 throw new InvalidObjectException(Messages.getString("security.25")); //$NON-NLS-1$
             }
         }
-        // END android-changed
     }
 }

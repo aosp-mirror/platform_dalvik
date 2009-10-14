@@ -102,7 +102,7 @@ public class TSTInfo {
     }
     
     public String toString() {
-        StringBuffer res = new StringBuffer();
+        StringBuilder res = new StringBuilder();
         res.append("-- TSTInfo:");
         res.append("\nversion:  ");
         res.append(version);

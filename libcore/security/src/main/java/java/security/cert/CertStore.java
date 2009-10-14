@@ -33,8 +33,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * This class provides the functionality to retrieve {@code Certificate}s and
  * {@code CRL}s from a read-only repository. This repository may be very large
  * and may store trusted as well as untrusted certificates.
- * 
- * @since Android 1.0
  */
 public class CertStore {
 
@@ -65,7 +63,7 @@ public class CertStore {
 
     /**
      * Creates a new {@code CertStore} instance.
-     * 
+     *
      * @param storeSpi
      *            the implementation delegate.
      * @param provider
@@ -74,7 +72,6 @@ public class CertStore {
      *            the certificate store type.
      * @param params
      *            the certificate store parameters (may be {@code null}.
-     * @since Android 1.0
      */
     protected CertStore(CertStoreSpi storeSpi, Provider provider, String type,
             CertStoreParameters params) {
@@ -101,7 +98,6 @@ public class CertStore {
      *             certificate store instance.
      * @throws NullPointerException
      *             if the {@code type} is {@code null}.
-     * @since Android 1.0
      */
     public static CertStore getInstance(String type, CertStoreParameters params)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
@@ -147,7 +143,6 @@ public class CertStore {
      *             if provider is null of empty.
      * @throws NullPointerException
      *             if {@code type} is {@code null}.
-     * @since Android 1.0
      */
     public static CertStore getInstance(String type,
             CertStoreParameters params, String provider)
@@ -183,7 +178,6 @@ public class CertStore {
      *             if provider is {@code null}.
      * @throws NullPointerException
      *             if {@code type} is {@code null}.
-     * @since Android 1.0
      */
     public static CertStore getInstance(String type,
             CertStoreParameters params, Provider provider)
@@ -212,9 +206,8 @@ public class CertStore {
 
     /**
      * Returns the certificate store type.
-     * 
+     *
      * @return the certificate store type.
-     * @since Android 1.0
      */
     public final String getType() {
         return type;
@@ -222,9 +215,8 @@ public class CertStore {
 
     /**
      * Returns the security provider.
-     * 
+     *
      * @return the security provider.
-     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
@@ -233,10 +225,9 @@ public class CertStore {
     /**
      * Returns a copy of the certificate store parameters that were used to
      * initialize this instance.
-     * 
+     *
      * @return a copy of the certificate store parameters or {@code null} if
      *         none were specified.
-     * @since Android 1.0
      */
     public final CertStoreParameters getCertStoreParameters() {
         if (certStoreParams == null) {
@@ -249,7 +240,7 @@ public class CertStore {
     /**
      * Returns the list of {@code Certificate}s for the specified {@code
      * CertSelector} from this certificate store.
-     * 
+     *
      * @param selector
      *            the selector containing the criteria to search for
      *            certificates in this certificate store.
@@ -257,7 +248,6 @@ public class CertStore {
      *         specified selector.
      * @throws CertStoreException
      *             if error(s) occur.
-     * @since Android 1.0
      */
     public final Collection<? extends Certificate> getCertificates(CertSelector selector)
             throws CertStoreException {
@@ -267,7 +257,7 @@ public class CertStore {
     /**
      * Returns the list of {@code CRL}s for the specified {@code CRLSelector}
      * from this certificate store.
-     * 
+     *
      * @param selector
      *            the selector containing the criteria to search for certificate
      *            revocation lists in this store.
@@ -275,7 +265,6 @@ public class CertStore {
      *         selector
      * @throws CertStoreException
      *             if error(s) occur.
-     * @since Android 1.0
      */
     public final Collection<? extends CRL> getCRLs(CRLSelector selector)
             throws CertStoreException {
@@ -285,12 +274,11 @@ public class CertStore {
     /**
      * Returns the default {@code CertStore} type from the <i>Security
      * Properties</i>.
-     * 
+     *
      * @return the default {@code CertStore} type from the <i>Security
      *         Properties</i>, or the string {@code "LDAP"} if it cannot be
      *         determined.
-     * @since Android 1.0
-     */    
+     */
     public static final String getDefaultType() {
         String defaultType = AccessController
                 .doPrivileged(new java.security.PrivilegedAction<String>() {

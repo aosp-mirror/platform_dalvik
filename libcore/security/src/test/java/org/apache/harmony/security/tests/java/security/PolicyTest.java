@@ -395,7 +395,7 @@ public class PolicyTest extends TestCase {
         
         String policyFile = getClass().getClassLoader().getResource(
                 "PolicyTest.txt").toString();
-        String oldSysProp = System.getProperty(JAVA_SECURITY_POLICY);
+        String oldJavaPolicy = System.getProperty(JAVA_SECURITY_POLICY);
         Policy oldPolicy = Policy.getPolicy();
 
         try {
@@ -404,12 +404,20 @@ public class PolicyTest extends TestCase {
             // test: absolute paths
             assertCodeBasePropertyExpansion("/11111/*", "/11111/-");
             assertCodeBasePropertyExpansion("/22222/../22222/*", "/22222/-");
+            assertCodeBasePropertyExpansion("/33333/*", "/33333/../33333/-");
+            assertCodeBasePropertyExpansion("/44444/../44444/-", "/44444/*");
+            assertCodeBasePropertyExpansion("/55555/../55555/-", "/55555/../55555/-");
+            assertCodeBasePropertyExpansion("/666 66 66/-", "/666 66 66/-");
 
             // test: relative paths
-            assertCodeBasePropertyExpansion("44444/*", "44444/-");
-            assertCodeBasePropertyExpansion("55555/../55555/*", "55555/-");
+            assertCodeBasePropertyExpansion("11111/*", "11111/-");
+            assertCodeBasePropertyExpansion("22222/../22222/*", "22222/-");
+            assertCodeBasePropertyExpansion("33333/*", "33333/../33333/-");
+            assertCodeBasePropertyExpansion("44444/../44444/-", "44444/*");
+            assertCodeBasePropertyExpansion("55555/../55555/-", "55555/../55555/-");
+            assertCodeBasePropertyExpansion("666 66 66/-", "666 66 66/-");
         } finally {
-            TestUtils.setSystemProperty(JAVA_SECURITY_POLICY, oldSysProp);
+            TestUtils.setSystemProperty(JAVA_SECURITY_POLICY, oldJavaPolicy);
             Policy.setPolicy(oldPolicy);
         }
     }

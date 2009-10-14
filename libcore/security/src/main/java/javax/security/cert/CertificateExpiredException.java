@@ -25,20 +25,20 @@ package javax.security.cert;
  * by JSSE (Java SSL package). All applications that do not have to be
  * compatible with older versions of JSSE (that is before Java SDK 1.5) should
  * only use java.security.cert.
- * </p>
- * @since Android 1.0
  */
 public class CertificateExpiredException extends CertificateException {
 
+    /**
+     * @serial
+     */
     private static final long serialVersionUID = 5091601212177261883L;
 
     /**
      * Creates a new {@code CertificateExpiredException} with the specified
      * message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception
-     * @since Android 1.0
      */
     public CertificateExpiredException(String msg) {
         super(msg);
@@ -46,8 +46,6 @@ public class CertificateExpiredException extends CertificateException {
 
     /**
      * Creates a new {@code CertificateExpiredException}.
-     * 
-     * @since Android 1.0
      */
     public CertificateExpiredException() {
     }

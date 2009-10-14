@@ -15,17 +15,10 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  *{@code DigestException} is a general message digest exception.
- *
- *@since Android 1.0
  */
 public class DigestException extends GeneralSecurityException {
 
@@ -34,10 +27,9 @@ public class DigestException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code DigestException} with the
      * given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public DigestException(String msg) {
         super(msg);
@@ -45,8 +37,6 @@ public class DigestException extends GeneralSecurityException {
 
     /**
      * Constructs a new instance of {@code DigestException}.
-     * 
-     * @since Android 1.0
      */
     public DigestException() {
     }
@@ -54,12 +44,11 @@ public class DigestException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code DigestException} with the
      * given message and the cause.
-     * 
+     *
      * @param message
      *            the detail message for this exception.
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public DigestException(String message, Throwable cause) {
         super(message, cause);
@@ -68,10 +57,9 @@ public class DigestException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code DigestException} with the
      * cause.
-     * 
+     *
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public DigestException(Throwable cause) {
         super(cause);

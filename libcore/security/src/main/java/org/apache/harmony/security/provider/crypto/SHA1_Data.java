@@ -82,10 +82,12 @@ public interface SHA1_Data {
     static final int DIGEST_LENGTH = 20;
 
 
-    /**
-     *  name of native library to use on Windows platform
-     */
-    static final String LIBRARY_NAME = "hysecurity";  //$NON-NLS-1$
+    // BEGIN android-removed
+//    /**
+//     *  name of native library to use on Windows platform
+//     */
+//    static final String LIBRARY_NAME = "hysecurity";  //$NON-NLS-1$
+    // END android-removed
 
 
     /**

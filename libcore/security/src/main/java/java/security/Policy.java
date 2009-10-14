@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.util.Enumeration;
@@ -36,12 +31,8 @@ import org.apache.harmony.security.fortress.PolicyUtils;
  * The system policy can be changed by setting the {@code 'policy.provider'}
  * property in the file named {@code JAVA_HOME/lib/security/java.security} to
  * the fully qualified class name of the desired {@code Policy}.
- * </p>
  * <p>
  * Only one instance of a {@code Policy} is active at any time.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class Policy {
     
@@ -68,20 +59,16 @@ public abstract class Policy {
      * domain (i.e. system classes). System classes are always given
      * full permissions (i.e. AllPermission). This can not be changed by
      * installing a new policy.
-     * </p>
-     * 
+     *
      * @param cs
      *            the {@code CodeSource} to compute the permissions for.
      * @return the permissions that are granted to the specified {@code
      *         CodeSource}.
-     * @since Android 1.0
      */
     public abstract PermissionCollection getPermissions(CodeSource cs);
 
     /**
      * Reloads the policy configuration for this {@code Policy} instance.
-     * 
-     * @since Android 1.0
      */
     public abstract void refresh();
 
@@ -94,13 +81,11 @@ public abstract class Policy {
      * system domain (i.e. system classes). System classes are always
      * given full permissions (i.e. AllPermission). This can not be changed by
      * installing a new policy.
-     * </p>
-     * 
+     *
      * @param domain
      *            the {@code ProtectionDomain} to compute the permissions for.
      * @return the permissions that are granted to the specified {@code
      *         CodeSource}.
-     * @since Android 1.0
      */
     public PermissionCollection getPermissions(ProtectionDomain domain) {
         if (domain != null) {
@@ -112,7 +97,7 @@ public abstract class Policy {
     /**
      * Indicates whether the specified {@code Permission} is implied by the
      * {@code PermissionCollection} of the specified {@code ProtectionDomain}.
-     * 
+     *
      * @param domain
      *            the {@code ProtectionDomain} for which the permission should
      *            be granted.
@@ -121,7 +106,6 @@ public abstract class Policy {
      *            verified.
      * @return {@code true} if the {@code Permission} is implied by the {@code
      *         ProtectionDomain}, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean implies(ProtectionDomain domain, Permission permission) {
         if (domain != null) {
@@ -130,8 +114,8 @@ public abstract class Policy {
             if (total == null) {
                 total = inherent;
             } else if (inherent != null) {
-                for (Enumeration en = inherent.elements(); en.hasMoreElements();) {
-                    total.add((Permission)en.nextElement());
+                for (Enumeration<Permission> en = inherent.elements(); en.hasMoreElements();) {
+                    total.add(en.nextElement());
                 }
             }
             if (total != null && total.implies(permission)) {
@@ -149,13 +133,11 @@ public abstract class Policy {
      * If a {@code SecurityManager} is installed, code calling this method needs
      * the {@code SecurityPermission} {@code getPolicy} to be granted, otherwise
      * a {@code SecurityException} will be thrown.
-     * </p>
-     * 
+     *
      * @return the current system security policy.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public static Policy getPolicy() {
         SecurityManager sm = System.getSecurityManager();
@@ -170,7 +152,7 @@ public abstract class Policy {
      // In case of any error, including undefined provider name, 
      // returns new instance of org.apache.harmony.security.FilePolicy provider. 
     private static Policy getDefaultProvider() {
-        final String defaultClass = (String) AccessController
+        final String defaultClass = AccessController
                 .doPrivileged(new PolicyUtils.SecurityPropertyAccessor(
                         POLICY_PROVIDER));
         if (defaultClass == null) {
@@ -235,14 +217,12 @@ public abstract class Policy {
      * If a {@code SecurityManager} is installed, code calling this method needs
      * the {@code SecurityPermission} {@code setPolicy} to be granted, otherwise
      * a {@code SecurityException} will be thrown.
-     * </p>
-     * 
+     *
      * @param policy
      *            the {@code Policy} to set.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public static void setPolicy(Policy policy) {
         SecurityManager sm = System.getSecurityManager();

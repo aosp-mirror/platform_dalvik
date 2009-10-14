@@ -15,18 +15,11 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code AccessControlException} is thrown if the access control infrastructure
  * denies protected access due to missing permissions.
- * 
- * @since Android 1.0
  */
 public class AccessControlException extends SecurityException {
 
@@ -37,10 +30,9 @@ public class AccessControlException extends SecurityException {
     /**
      * Constructs a new instance of {@code AccessControlException} with the
      * given message.
-     * 
+     *
      * @param message
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public AccessControlException(String message) {
         super(message);
@@ -49,12 +41,11 @@ public class AccessControlException extends SecurityException {
     /**
      * Constructs a new instance of {@code AccessControlException} with the
      * given message and the requested {@code Permission} which was not granted.
-     * 
+     *
      * @param message
      *            the detail message for the exception.
      * @param perm
      *            the requested {@code Permission} which was not granted.
-     * @since Android 1.0
      */
     public AccessControlException(String message, Permission perm) {
         super(message);
@@ -64,9 +55,8 @@ public class AccessControlException extends SecurityException {
     /**
      * Returns the requested permission that caused this Exception or {@code
      * null} if there is no corresponding {@code Permission}.
-     * 
+     *
      * @return the requested permission that caused this Exception, maybe {@code null}.
-     * @since Android 1.0
      */
     public Permission getPermission() {
         return perm;

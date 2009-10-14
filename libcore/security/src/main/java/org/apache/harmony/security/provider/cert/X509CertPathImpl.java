@@ -313,7 +313,7 @@ public class X509CertPathImpl extends CertPath {
     /**
      * ASN.1 DER Encoder/Decoder for PkiPath structure.
      */
-    public static ASN1SequenceOf ASN1 =
+    public static final ASN1SequenceOf ASN1 =
                                     new ASN1SequenceOf(ASN1Any.getInstance()) {
 
         /**

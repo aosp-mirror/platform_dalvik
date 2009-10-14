@@ -26,7 +26,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * 
  * @see CertPathValidator
  * @see CertPathValidator#validate(CertPath, CertPathParameters)
- * @since Android 1.0
  */
 public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
     // A trust anchor used during validation of certification path
@@ -48,7 +47,6 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
      *            the valid policy tree from the validation.
      * @param subjectPublicKey
      *            the subject public key from the validation.
-     * @since Android 1.0
      */
     public PKIXCertPathValidatorResult(TrustAnchor trustAnchor,
             PolicyNode policyTree, PublicKey subjectPublicKey) {
@@ -68,7 +66,6 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
      * Returns the valid policy tree from the validation.
      * 
      * @return the valid policy tree from the validation.
-     * @since Android 1.0
      */
     public PolicyNode getPolicyTree() {
         return policyTree;
@@ -78,7 +75,6 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
      * Returns the subject public key from the validation.
      * 
      * @return the subject public key from the validation.
-     * @since Android 1.0
      */
     public PublicKey getPublicKey() {
         return subjectPublicKey;
@@ -89,7 +85,6 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
      * served as trust anchor for this certification path.
      * 
      * @return the trust anchor.
-     * @since Android 1.0
      */
     public TrustAnchor getTrustAnchor() {
         return trustAnchor;
@@ -99,7 +94,6 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
      * Clones this {@code PKIXCertPathValidatorResult} instance.
      * 
      * @return the cloned instance.
-     * @since Android 1.0
      */
     public Object clone() {
         try {
@@ -116,10 +110,9 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
      * 
      * @return a string representation for this {@code
      *         PKIXCertPathValidatorResult} instance.
-     * @since Android 1.0
      */
     public String toString() {
-        StringBuffer sb = new StringBuffer(super.toString());
+        StringBuilder sb = new StringBuilder(super.toString());
         sb.append(": [\n Trust Anchor: "); //$NON-NLS-1$
         sb.append(trustAnchor.toString());
         sb.append("\n Policy Tree: "); //$NON-NLS-1$

@@ -265,6 +265,7 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
                 "testing permissionCollection-isREadOnly");
         assertNotNull("toString should have returned a string of elements",
                 permi.newPermissionCollection().toString());
+        assertTrue(permi.newPermissionCollection().toString().endsWith("\n"));
     }
 
     // FIXME move me to Support_Resources

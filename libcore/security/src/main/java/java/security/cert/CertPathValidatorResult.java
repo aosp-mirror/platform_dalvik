@@ -21,8 +21,6 @@ package java.security.cert;
  * The interface specification for certification path validation results.
  * <p>
  * This interface is for grouping purposes of validation result implementations.
- * </p>
- * @since Android 1.0
  */
 public interface CertPathValidatorResult extends Cloneable {
 
@@ -30,7 +28,6 @@ public interface CertPathValidatorResult extends Cloneable {
      * Clones this {@code CertPathValidatorResult} instance.
      * 
      * @return the cloned instance.
-     * @since Android 1.0
      */
     public Object clone();
 }

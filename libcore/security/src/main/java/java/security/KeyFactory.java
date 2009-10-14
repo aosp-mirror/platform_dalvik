@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.security.spec.InvalidKeySpecException;
@@ -33,8 +28,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * public and private key objects and convert keys between their external
  * representation, that can be easily transported and their internal
  * representation.
- * 
- * @since Android 1.0
  */
 public class KeyFactory {
     // The service name.
@@ -63,7 +56,6 @@ public class KeyFactory {
      *            the provider.
      * @param algorithm
      *            the algorithm to use.
-     * @since Android 1.0
      */
     protected KeyFactory(KeyFactorySpi keyFacSpi, 
                          Provider provider,
@@ -83,7 +75,6 @@ public class KeyFactory {
      *         algorithm.
      * @throws NoSuchAlgorithmException
      *             if no provider provides the requested algorithm.
-     * @since Android 1.0
      */
     public static KeyFactory getInstance(String algorithm)
                                 throws NoSuchAlgorithmException {
@@ -112,16 +103,16 @@ public class KeyFactory {
      *             if the requested provider is not available.
      * @throws IllegalArgumentException
      *             if {@code provider} is {@code null} or empty.
-     * @since Android 1.0
      */
+    @SuppressWarnings("nls")
     public static KeyFactory getInstance(String algorithm, String provider)
                                 throws NoSuchAlgorithmException, NoSuchProviderException {
         if ((provider == null) || (provider.length() == 0)) {
-            throw new IllegalArgumentException(Messages.getString("security.02")); //$NON-NLS-1$
+            throw new IllegalArgumentException(Messages.getString("security.02"));
         }
         Provider p = Security.getProvider(provider);
         if (p == null) {
-            throw new NoSuchProviderException(Messages.getString("security.03", provider));  //$NON-NLS-1$ //$NON-NLS-2$
+            throw new NoSuchProviderException(Messages.getString("security.03", provider));
         }
         return getInstance(algorithm, p);    
     }
@@ -138,7 +129,6 @@ public class KeyFactory {
      *         algorithm from the specified provider.
      * @throws NoSuchAlgorithmException
      *             if the provider does not provide the requested algorithm.
-     * @since Android 1.0
      */
     public static KeyFactory getInstance(String algorithm, Provider provider)
                                  throws NoSuchAlgorithmException {
@@ -158,19 +148,17 @@ public class KeyFactory {
      * Returns the provider associated with this {@code KeyFactory}.
      * 
      * @return the provider associated with this {@code KeyFactory}.
-     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * Returns the name of the algorithm associated with this {@code KeyFactory}
-     * .
+     * Returns the name of the algorithm associated with this {@code
+     * KeyFactory}.
      * 
-     * @return the name of the algorithm associated with this {@code KeyFactory}
-     *         .
-     * @since Android 1.0
+     * @return the name of the algorithm associated with this {@code
+     *         KeyFactory}.
      */
     public final String getAlgorithm() {
         return algorithm;
@@ -185,7 +173,6 @@ public class KeyFactory {
      * @return the public key
      * @throws InvalidKeySpecException
      *             if the specified {@code keySpec} is invalid
-     * @since Android 1.0
      */
     public final PublicKey generatePublic(KeySpec keySpec)
                                 throws InvalidKeySpecException {
@@ -201,7 +188,6 @@ public class KeyFactory {
      * @return the private key.
      * @throws InvalidKeySpecException
      *             if the specified {@code keySpec} is invalid.
-     * @since Android 1.0
      */
     public final PrivateKey generatePrivate(KeySpec keySpec)
                                 throws InvalidKeySpecException {
@@ -211,6 +197,9 @@ public class KeyFactory {
     /**
      * Returns the key specification for the specified key.
      * 
+     * @param <T>
+     *            The key type
+     * 
      * @param key
      *            the key from which the specification is requested.
      * @param keySpec
@@ -219,7 +208,6 @@ public class KeyFactory {
      * @throws InvalidKeySpecException
      *             if the key can not be processed, or the requested requested
      *             {@code KeySpec} is inappropriate for the given key.
-     * @since Android 1.0
      */
     public final <T extends KeySpec> T getKeySpec(Key key,
                                     Class<T> keySpec)
@@ -236,7 +224,6 @@ public class KeyFactory {
      * @throws InvalidKeyException
      *             if the specified key can not be translated by this key
      *             factory.
-     * @since Android 1.0
      */
     public final Key translateKey(Key key)
                         throws InvalidKeyException {

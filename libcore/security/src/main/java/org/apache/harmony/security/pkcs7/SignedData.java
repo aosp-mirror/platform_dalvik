@@ -105,7 +105,7 @@ public class SignedData {
     }
 
     public String toString() {
-        StringBuffer res = new StringBuffer();
+        StringBuilder res = new StringBuilder();
         res.append("---- SignedData:"); //$NON-NLS-1$
         res.append("\nversion: "); //$NON-NLS-1$
         res.append(version);

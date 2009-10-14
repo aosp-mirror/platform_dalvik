@@ -243,7 +243,7 @@ public final class ObjectIdentifier {
      * @return oid string representation
      */
     public static String toString(int[] oid) {
-        StringBuffer sb = new StringBuffer(3 * oid.length);
+        StringBuilder sb = new StringBuilder(3 * oid.length);
 
         for (int i = 0; i < oid.length - 1; ++i) {
             sb.append(oid[i]);

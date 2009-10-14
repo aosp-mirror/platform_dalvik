@@ -22,15 +22,11 @@ import java.security.PublicKey;
 
 /**
  * The interface for a Digital Signature Algorithm (DSA) public key. 
- * 
- * @since Android 1.0
  */
 public interface DSAPublicKey extends DSAKey, PublicKey {
 
     /**
      * The serial version identifier.
-     * 
-     * @since Android 1.0
      */
     public static final long serialVersionUID = 1234526332779022332L;
 
@@ -38,7 +34,6 @@ public interface DSAPublicKey extends DSAKey, PublicKey {
      * Returns the public key value {@code y}.
      * 
      * @return the public key value {@code y}.
-     * @since Android 1.0
      */
     public BigInteger getY();
 

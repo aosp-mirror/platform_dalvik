@@ -20,8 +20,6 @@ package java.security.spec;
 /**
  * The abstract key specification for a public or a private key in encoded
  * format.
- * 
- * @since Android 1.0
  */
 public abstract class EncodedKeySpec implements KeySpec {
     // Encoded key
@@ -32,7 +30,6 @@ public abstract class EncodedKeySpec implements KeySpec {
      * 
      * @param encodedKey
      *            the encoded key bytes.
-     * @since Android 1.0
      */
     public EncodedKeySpec(byte[] encodedKey) {
         // Defensively copies parameter
@@ -46,7 +43,6 @@ public abstract class EncodedKeySpec implements KeySpec {
      * Returns the encoded key bytes.
      * 
      * @return the encoded key bytes.
-     * @since Android 1.0
      */
     public byte[] getEncoded() {
         // Defensively copies private array
@@ -62,7 +58,6 @@ public abstract class EncodedKeySpec implements KeySpec {
      * 
      * @return the name of the encoding format of this encoded key
      *         specification.
-     * @since Android 1.0
      */
     public abstract String getFormat();
 }

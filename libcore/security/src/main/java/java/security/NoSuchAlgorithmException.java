@@ -15,18 +15,11 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code NoSuchAlgorithmException} indicates that a requested algorithm could
  * not be found.
- * 
- * @since Android 1.0
  */
 public class NoSuchAlgorithmException extends GeneralSecurityException {
 
@@ -35,10 +28,9 @@ public class NoSuchAlgorithmException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code NoSuchAlgorithmException} with the
      * given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public NoSuchAlgorithmException(String msg) {
         super(msg);
@@ -46,8 +38,6 @@ public class NoSuchAlgorithmException extends GeneralSecurityException {
 
     /**
      * Constructs a new instance of {@code NoSuchAlgorithmException}.
-     * 
-     * @since Android 1.0
      */
     public NoSuchAlgorithmException() {
     }
@@ -55,12 +45,11 @@ public class NoSuchAlgorithmException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code NoSuchAlgorithmException} with the
      * given message and the cause.
-     * 
+     *
      * @param message
      *            the detail message for this exception.
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public NoSuchAlgorithmException(String message, Throwable cause) {
         super(message, cause);
@@ -69,10 +58,9 @@ public class NoSuchAlgorithmException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code NoSuchAlgorithmException} with the
      * cause.
-     * 
+     *
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public NoSuchAlgorithmException(Throwable cause) {
         super(cause);

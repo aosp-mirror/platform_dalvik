@@ -33,16 +33,12 @@ import org.apache.harmony.security.internal.nls.Messages;
  * <p>
  * A {@code CertPath} can be represented as a byte array in at least one
  * supported encoding scheme (i.e. PkiPath or PKCS7) when serialized.
- * </p>
  * <p>
  * When a {@code List} of the certificates is obtained it must be immutable.
- * </p>
  * <p>
  * A {@code CertPath} must be thread-safe without requiring coordinated access.
- * </p>
- * 
+ *
  * @see Certificate
- * @since Android 1.0
  */
 public abstract class CertPath implements Serializable {
 
@@ -53,10 +49,9 @@ public abstract class CertPath implements Serializable {
     /**
      * Creates a new {@code CertPath} instance for the specified certificate
      * type.
-     * 
+     *
      * @param type
      *            the certificate type.
-     * @since Android 1.0
      */
     protected CertPath(String type) {
         this.type = type;
@@ -64,9 +59,8 @@ public abstract class CertPath implements Serializable {
 
     /**
      * Returns the type of {@code Certificate} in this instance.
-     * 
+     *
      * @return the certificate type.
-     * @since Android 1.0
      */
     public String getType() {
         return type;
@@ -76,13 +70,11 @@ public abstract class CertPath implements Serializable {
      * Returns {@code true} if {@code Certificate}s in the list are the same
      * type and the lists are equal (and by implication the certificates
      * contained within are the same).
-     * 
+     *
      * @param other
      *            {@code CertPath} to be compared for equality.
      * @return {@code true} if the object are equal, {@code false} otherwise.
-     * @since Android 1.0
      */
-    @Override
     public boolean equals(Object other) {
         if (this == other) {
             return true;
@@ -99,14 +91,14 @@ public abstract class CertPath implements Serializable {
     }
 
     /**
-     * Overrides {@code Object.hashCode()}. The function is defined as follows: <br>
+     * Overrides {@code Object.hashCode()}. The function is defined as follows:
+     * <pre>
      * {@code hashCode = 31 * path.getType().hashCode() +
-     * path.getCertificates().hashCode();}</br> </p>
-     * 
+     * path.getCertificates().hashCode();}
+     * </pre>
+     *
      * @return the hash code for this instance.
-     * @since Android 1.0
      */
-    @Override
     public int hashCode() {
         int hash = getType().hashCode();
         hash = hash*31 + getCertificates().hashCode();
@@ -115,13 +107,13 @@ public abstract class CertPath implements Serializable {
 
     /**
      * Returns a {@code String} representation of this {@code CertPath}
-     * instance.
-     * 
+     * instance. It is the result of calling {@code toString} on all {@code
+     * Certificate}s in the {@code List}.
+     *
      * @return a string representation of this instance.
-     * @since Android 1.0
      */
     public String toString() {
-        StringBuffer sb = new StringBuffer(getType());
+        StringBuilder sb = new StringBuilder(getType());
         sb.append(" Cert Path, len="); //$NON-NLS-1$
         sb.append(getCertificates().size());
         sb.append(": [\n"); //$NON-NLS-1$
@@ -144,7 +136,6 @@ public abstract class CertPath implements Serializable {
      * in the {@code CertPath}.
      * 
      * @return a list of {@code Certificate}s in the {@code CertPath}.
-     * @since Android 1.0
      */
     public abstract List<? extends Certificate> getCertificates();
 
@@ -154,7 +145,6 @@ public abstract class CertPath implements Serializable {
      * @return default encoding of the {@code CertPath}.
      * @throws CertificateEncodingException
      *             if the encoding fails.
-     * @since Android 1.0
      */
     public abstract byte[] getEncoded()
         throws CertificateEncodingException;
@@ -167,7 +157,6 @@ public abstract class CertPath implements Serializable {
      * @return default encoding of the {@code CertPath}.
      * @throws CertificateEncodingException
      *             if the encoding fails.
-     * @since Android 1.0
      */
     public abstract byte[] getEncoded(String encoding)
         throws CertificateEncodingException;
@@ -177,17 +166,15 @@ public abstract class CertPath implements Serializable {
      * representation of the certificate path.
      * 
      * @return {@code Iterator} over supported encodings (as {@code String}s).
-     * @since Android 1.0
      */
     public abstract Iterator<String> getEncodings();
 
     /**
      * Returns an alternate object to be serialized.
-     * 
+     *
      * @return an alternate object to be serialized.
      * @throws ObjectStreamException
      *             if the creation of the alternate object fails.
-     * @since Android 1.0
      */
     protected Object writeReplace() throws ObjectStreamException {
         try {
@@ -201,8 +188,6 @@ public abstract class CertPath implements Serializable {
     /**
      * The alternate {@code Serializable} class to be used for serialization and
      * deserialization on {@code CertPath} objects.
-     * 
-     * @since Android 1.0
      */
     protected static class CertPathRep implements Serializable {
 
@@ -222,12 +207,11 @@ public abstract class CertPath implements Serializable {
         /**
          * Creates a new {@code CertPathRep} instance with the specified type
          * and encoded data.
-         * 
+         *
          * @param type
          *            the certificate type.
          * @param data
          *            the encoded data.
-         * @since Android 1.0
          */
         protected CertPathRep(String type, byte[] data) {
             this.type = type;
@@ -237,11 +221,10 @@ public abstract class CertPath implements Serializable {
         /**
          * Deserializes a {@code CertPath} from a serialized {@code CertPathRep}
          * object.
-         * 
+         *
          * @return the deserialized {@code CertPath}.
          * @throws ObjectStreamException
          *             if deserialization fails.
-         * @since Android 1.0
          */
         protected Object readResolve() throws ObjectStreamException {
             try {

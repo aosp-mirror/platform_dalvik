@@ -26,9 +26,6 @@ import java.util.Set;
  * <p>
  * Instances of this class are one of the outputs of the PKIX certification path
  * validation algorithm.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface PolicyNode {
 
@@ -36,7 +33,6 @@ public interface PolicyNode {
      * Returns the list of children of this node as an {@code Iterator}.
      * 
      * @return the list of children of this node as an {@code Iterator}.
-     * @since Android 1.0
      */
     public Iterator<? extends PolicyNode> getChildren();
 
@@ -44,10 +40,8 @@ public interface PolicyNode {
      * Returns the depth of this node in the policy tree.
      * <p>
      * the depth is zero based.
-     * </p>
      * 
      * @return the depth of this node in the policy tree.
-     * @since Android 1.0
      */
     public int getDepth();
 
@@ -55,7 +49,6 @@ public interface PolicyNode {
      * Returns the expected policies for the next certificate to be valid.
      * 
      * @return the expected policies.
-     * @since Android 1.0
      */
     public Set<String> getExpectedPolicies();
 
@@ -63,7 +56,6 @@ public interface PolicyNode {
      * Returns the parent policy node.
      * 
      * @return the parent policy node.
-     * @since Android 1.0
      */
     public PolicyNode getParent();
 
@@ -71,7 +63,6 @@ public interface PolicyNode {
      * Returns the policy qualifiers associated with the policy of this node.
      * 
      * @return the policy qualifiers associated with the policy of this node.
-     * @since Android 1.0
      */
     public Set<? extends PolicyQualifierInfo> getPolicyQualifiers();
 
@@ -79,7 +70,6 @@ public interface PolicyNode {
      * Returns the valid policy of this node.
      * 
      * @return the valid policy of this node.
-     * @since Android 1.0
      */
     public String getValidPolicy();
 
@@ -89,7 +79,6 @@ public interface PolicyNode {
      * 
      * @return {@code true} if the extension is marked as critical, otherwise
      *         {@code false}.
-     * @since Android 1.0
      */
     public boolean isCritical();
 }

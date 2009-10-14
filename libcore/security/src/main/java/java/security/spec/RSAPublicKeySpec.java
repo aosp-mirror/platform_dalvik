@@ -25,8 +25,6 @@ import java.math.BigInteger;
  * Defined in the <a
  * href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">PKCS #1 v2.1</a>
  * standard.
- * </p>
- * @since Android 1.0
  */
 public class RSAPublicKeySpec implements KeySpec {
     // Modulus
@@ -42,7 +40,6 @@ public class RSAPublicKeySpec implements KeySpec {
      *            the modulus {@code n}.
      * @param publicExponent
      *            the public exponent {@code d}.
-     * @since Android 1.0
      */
     public RSAPublicKeySpec(BigInteger modulus, BigInteger publicExponent) {
         this.modulus = modulus;
@@ -53,7 +50,6 @@ public class RSAPublicKeySpec implements KeySpec {
      * Returns the modulus {@code n}.
      * 
      * @return the modulus {@code n}.
-     * @since Android 1.0
      */
     public BigInteger getModulus() {
         return modulus;
@@ -63,7 +59,6 @@ public class RSAPublicKeySpec implements KeySpec {
      * Returns the public exponent {@code d}.
      * 
      * @return the public exponent {@code d}.
-     * @since Android 1.0
      */
     public BigInteger getPublicExponent() {
         return publicExponent;

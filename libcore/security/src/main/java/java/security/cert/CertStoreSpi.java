@@ -23,8 +23,6 @@ import java.util.Collection;
 /**
  * The <i>Service Provider Interface</i> (<b>SPI</b>) definition for the {@code
  * CertStore} class to be implemented by security providers.
- * 
- * @since Android 1.0
  */
 public abstract class CertStoreSpi {
 
@@ -36,7 +34,6 @@ public abstract class CertStoreSpi {
      * @throws InvalidAlgorithmParameterException
      *             if the specified initialization parameters cannot be used to
      *             initialize this instance.
-     * @since Android 1.0
      */
     public CertStoreSpi(CertStoreParameters params)
             throws InvalidAlgorithmParameterException {
@@ -53,7 +50,6 @@ public abstract class CertStoreSpi {
      *         specified selector.
      * @throws CertStoreException
      *             if error(s) occur.
-     * @since Android 1.0
      */
     public abstract Collection<? extends Certificate> engineGetCertificates(CertSelector selector)
             throws CertStoreException;
@@ -69,7 +65,6 @@ public abstract class CertStoreSpi {
      *         selector
      * @throws CertStoreException
      *             if error(s) occur.
-     * @since Android 1.0
      */
     public abstract Collection<? extends CRL> engineGetCRLs(CRLSelector selector)
             throws CertStoreException;

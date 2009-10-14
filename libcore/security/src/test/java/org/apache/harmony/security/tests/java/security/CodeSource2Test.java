@@ -128,7 +128,7 @@ public class CodeSource2Test extends junit.framework.TestCase {
     public void test_hashCode() throws Exception {
         URL url = new java.net.URL("file:///test");
         CodeSource cs = new CodeSource(url, (Certificate[]) null);
-        assertTrue("Did not get expected hashCode!", cs.hashCode() == url
+        assertEquals("Did not get expected hashCode!", cs.hashCode(), url
                 .hashCode());
     }
 
@@ -163,6 +163,7 @@ public class CodeSource2Test extends junit.framework.TestCase {
                 (Certificate[]) null);
         assertEquals("Did not get expected location!", "file:/test", cs
                 .getLocation().toString());
+        assertNotNull("Host should not be null", cs.getLocation().getHost());
     }
 
     /**
@@ -187,7 +188,7 @@ public class CodeSource2Test extends junit.framework.TestCase {
                 (Certificate[]) null);
         cs2 = new CodeSource(new URL("file:/d:/somedir/"), (Certificate[]) null);
         assertTrue("null host should imply host", cs1.implies(cs2));
-        assertTrue("host should not imply null host", !cs2.implies(cs1));
-    }
+        assertFalse("host should not imply null host", cs2.implies(cs1));
+	}
 
 }

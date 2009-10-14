@@ -15,18 +15,11 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code NoSuchProviderException} indicates that a requested security provider
  * could not be found.
- * 
- * @since Android 1.0
  */
 public class NoSuchProviderException extends GeneralSecurityException {
 
@@ -35,10 +28,9 @@ public class NoSuchProviderException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code NoSuchProviderException} with the
      * given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public NoSuchProviderException(String msg) {
         super(msg);
@@ -46,8 +38,6 @@ public class NoSuchProviderException extends GeneralSecurityException {
 
     /**
      * Constructs a new instance of {@code NoSuchProviderException}.
-     * 
-     * @since Android 1.0
      */
     public NoSuchProviderException() {
     }

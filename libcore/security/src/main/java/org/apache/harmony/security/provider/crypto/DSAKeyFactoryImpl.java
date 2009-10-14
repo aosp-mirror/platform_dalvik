@@ -38,7 +38,7 @@ import org.apache.harmony.security.internal.nls.Messages;
 public class DSAKeyFactoryImpl extends KeyFactorySpi {
 
     /**
-     * The method generates a DSAPrivateKey object from the provided key specification. 
+     * This method generates a DSAPrivateKey object from the provided key specification. 
      *
      * @param
      *    keySpec - the specification (key material) for the DSAPrivateKey.
@@ -66,7 +66,7 @@ public class DSAKeyFactoryImpl extends KeyFactorySpi {
     }
 
     /**
-     * The method generates a DSAPublicKey object from the provided key specification. 
+     * This method generates a DSAPublicKey object from the provided key specification. 
      *
      * @param
      *    keySpec - the specification (key material) for the DSAPublicKey.
@@ -92,28 +92,23 @@ public class DSAKeyFactoryImpl extends KeyFactorySpi {
         }
         throw new InvalidKeySpecException(Messages.getString("security.19D")); //$NON-NLS-1$
     }
-
+    
     /**
-     * The method returns a specification (key material) of the given key object. 
-     * 'keySpec' identifies the specification class 
-     * in which the key material should be returned.
-     *
-     * If it is DSAPublicKeySpec.class, the key material should be returned 
-     * in an instance of the DSAPublicKeySpec class;
-     * if it is DSAPrivateKeySpec.class, the key material should be returned 
-     * in an instance of the DSAPrivateKeySpec class.
-     *
-     * @param
-     *    key - either DSAPrivateKey or DSAPublicKey
-     * @param
-     *    keySpec - either DSAPublicKeySpec.class or DSAPublicKeySpec.class
-     *
-     * @return
-     *    either DSAPublicKeySpec object or DSAPublicKeySpec object
-     *
+     * This method returns a specification for the supplied key.
+     * 
+     * The specification will be returned in the form of an object of the type
+     * specified by keySpec.
+     * 
+     * @param key -
+     *            either DSAPrivateKey or DSAPublicKey
+     * @param keySpec -
+     *            either DSAPrivateKeySpec.class or DSAPublicKeySpec.class
+     * 
+     * @return either a DSAPrivateKeySpec or a DSAPublicKeySpec
+     * 
      * @throws InvalidKeySpecException
-     *     if "keySpec" is not s specification for DSAPublicKey or DSAPrivateKey
-     *
+     *             if "keySpec" is not a specification for DSAPublicKey or
+     *             DSAPrivateKey
      */
     protected <T extends KeySpec> T engineGetKeySpec(Key key, Class<T> keySpec)
             throws InvalidKeySpecException {

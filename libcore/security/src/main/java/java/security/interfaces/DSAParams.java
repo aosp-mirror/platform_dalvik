@@ -21,8 +21,6 @@ import java.math.BigInteger;
 
 /**
  * The interface for Digital Signature Algorithm (DSA) specific parameters. 
- * 
- * @since Android 1.0
  */
 public interface DSAParams {
 
@@ -30,7 +28,6 @@ public interface DSAParams {
      * Returns the base ({@code g}) value.
      * 
      * @return the base ({@code g}) value.
-     * @since Android 1.0
      */
     public BigInteger getG();
 
@@ -38,7 +35,6 @@ public interface DSAParams {
      * Returns the prime ({@code p}) value.
      * 
      * @return the prime ({@code p}) value.
-     * @since Android 1.0
      */
     public BigInteger getP();
 
@@ -46,7 +42,6 @@ public interface DSAParams {
      * Returns the subprime ({@code q} value.
      * 
      * @return the subprime ({@code q} value.
-     * @since Android 1.0
      */
     public BigInteger getQ();
 

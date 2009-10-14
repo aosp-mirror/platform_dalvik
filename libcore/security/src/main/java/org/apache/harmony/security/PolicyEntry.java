@@ -22,6 +22,8 @@
 
 package org.apache.harmony.security;
 
+import java.net.URL;
+import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.security.Permission;
 import java.security.Principal;
@@ -29,7 +31,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.apache.harmony.security.fortress.PolicyUtils;
-
 
 /**
  * This class represents an elementary block of a security policy. It associates
@@ -55,7 +56,7 @@ public class PolicyEntry {
      */
     public PolicyEntry(CodeSource cs, Collection<? extends Principal> prs,
             Collection<? extends Permission> permissions) {
-        this.cs = cs;
+        this.cs = (cs != null) ? normalizeCodeSource(cs) : null;
         this.principals = (prs == null || prs.isEmpty()) ? null
                 : (Principal[]) prs.toArray(new Principal[prs.size()]);
         this.permissions = (permissions == null || permissions.isEmpty()) ? null
@@ -68,7 +69,31 @@ public class PolicyEntry {
      * imply() method.
      */
     public boolean impliesCodeSource(CodeSource codeSource) {
-        return (cs == null) ? true : cs.implies(codeSource);
+        if (cs == null) {
+            return true;
+        }
+
+        if (codeSource == null) {
+            return false;
+        }
+        return cs.implies(normalizeCodeSource(codeSource));
+    }
+
+    private CodeSource normalizeCodeSource(CodeSource codeSource) {
+        URL codeSourceURL = PolicyUtils.normalizeURL(codeSource.getLocation());
+        CodeSource result = codeSource;
+
+        if (codeSourceURL != codeSource.getLocation()) {
+            // URL was normalized - recreate codeSource with new URL
+            CodeSigner[] signers = codeSource.getCodeSigners();
+            if (signers == null) {
+                result = new CodeSource(codeSourceURL, codeSource
+                        .getCertificates());
+            } else {
+                result = new CodeSource(codeSourceURL, signers);
+            }
+        }
+        return result;
     }
 
     /**

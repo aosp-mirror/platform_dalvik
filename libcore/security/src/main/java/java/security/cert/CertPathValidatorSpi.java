@@ -22,15 +22,11 @@ import java.security.InvalidAlgorithmParameterException;
 /**
  * The <i>Service Provider Interface</i> (<b>SPI</b>) for the {@code
  * CertPathValidator} class to be implemented by security providers.
- * 
- * @since Android 1.0
  */
 public abstract class CertPathValidatorSpi {
 
     /**
      * Creates a new {@code CertPathValidatorSpi} instance.
-     * 
-     * @since Android 1.0
      */
     public CertPathValidatorSpi() {
     }
@@ -38,7 +34,7 @@ public abstract class CertPathValidatorSpi {
     /**
      * Validates the {@code CertPath} with the algorithm of this {@code
      * CertPathValidator} using the specified algorithm parameters.
-     * 
+     *
      * @param certPath
      *            the certification path to be validated.
      * @param params
@@ -51,7 +47,6 @@ public abstract class CertPathValidatorSpi {
      * @throws InvalidAlgorithmParameterException
      *             if the specified algorithm parameters cannot be used with
      *             this algorithm.
-     * @since Android 1.0
      */
     public abstract CertPathValidatorResult engineValidate(CertPath certPath,
             CertPathParameters params) throws CertPathValidatorException,

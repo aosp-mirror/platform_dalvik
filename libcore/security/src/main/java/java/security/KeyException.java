@@ -15,17 +15,10 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code KeyException} is the common superclass of all key related exceptions.
- * 
- * @since Android 1.0
  */
 public class KeyException extends GeneralSecurityException {
 
@@ -33,10 +26,9 @@ public class KeyException extends GeneralSecurityException {
 
     /**
      * Constructs a new instance of {@code KeyException} with the given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public KeyException(String msg) {
         super(msg);
@@ -44,8 +36,6 @@ public class KeyException extends GeneralSecurityException {
 
     /**
      * Constructs a new instance of {@code KeyException}.
-     * 
-     * @since Android 1.0
      */
     public KeyException() {
     }
@@ -53,12 +43,11 @@ public class KeyException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code KeyException} with the given message
      * and the cause.
-     * 
+     *
      * @param message
      *            the detail message for this exception.
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public KeyException(String message, Throwable cause) {
         super(message, cause);
@@ -66,10 +55,9 @@ public class KeyException extends GeneralSecurityException {
 
     /**
      * Constructs a new instance of {@code KeyException} with the cause.
-     * 
+     *
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public KeyException(Throwable cause) {
         super(cause);

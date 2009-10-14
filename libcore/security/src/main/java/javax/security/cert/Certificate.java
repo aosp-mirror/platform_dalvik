@@ -29,34 +29,30 @@ import javax.security.cert.CertificateException;
 /**
  * Abstract class to represent identity certificates. It represents a way to
  * verify the binding of a Principal and its public key. Examples are X.509,
- * PGP, and SDSI. 
+ * PGP, and SDSI.
  * <p>
  * Note: This package is provided only for compatibility reasons.
  * It contains a simplified version of the java.security.cert package that was
  * previously used by JSSE (Java SSL package). All applications that do not have
  * to be compatible with older versions of JSSE (that is before Java SDK 1.5)
  * should only use java.security.cert.
- * </p>
- * @since Android 1.0
  */
 public abstract class Certificate {
 
     /**
      * Creates a new {@code Certificate}.
-     * @since Android 1.0
      */
     public Certificate() {}
 
     /**
      * Compares the argument to this Certificate. If both have the same bytes
      * they are assumed to be equal.
-     * 
+     *
      * @param obj
      *            the {@code Certificate} to compare with this object
      * @return <code>true</code> if {@code obj} is the same as this
      *         {@code Certificate}, <code>false</code> otherwise
      * @see #hashCode
-     * @since Android 1.0
      */
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -77,10 +73,9 @@ public abstract class Certificate {
      * Returns an integer hash code for the receiver. Any two objects which
      * return <code>true</code> when passed to <code>equals</code> must answer
      * the same value for this method.
-     * 
+     *
      * @return the receiver's hash
      * @see #equals
-     * @since Android 1.0
      */
     public int hashCode() {
         int res = 0;
@@ -96,18 +91,17 @@ public abstract class Certificate {
 
     /**
      * Returns the encoded representation for this certificate.
-     * 
+     *
      * @return the encoded representation for this certificate.
      * @throws CertificateEncodingException
      *             if encoding fails.
-     * @since Android 1.0
      */
     public abstract byte[] getEncoded()
             throws CertificateEncodingException;
 
     /**
      * Verifies that this certificate was signed with the given public key.
-     * 
+     *
      * @param key
      *            public key for which verification should be performed.
      * @throws CertificateException
@@ -120,7 +114,6 @@ public abstract class Certificate {
      *             if there is no default provider
      * @throws SignatureException
      *             if signature errors are detected
-     * @since Android 1.0
      */
     public abstract void verify(PublicKey key)
             throws CertificateException, NoSuchAlgorithmException,
@@ -130,7 +123,7 @@ public abstract class Certificate {
     /**
      * Verifies that this certificate was signed with the given public key. Uses
      * the signature algorithm given by the provider.
-     * 
+     *
      * @param key
      *            public key for which verification should be performed.
      * @param sigProvider
@@ -145,7 +138,6 @@ public abstract class Certificate {
      *                if the specified provider does not exists.
      * @exception SignatureException
      *                if signature errors are detected
-     * @since Android 1.0
      */
     public abstract void verify(PublicKey key, String sigProvider)
             throws CertificateException, NoSuchAlgorithmException, 
@@ -155,17 +147,15 @@ public abstract class Certificate {
     /**
      * Returns a string containing a concise, human-readable description of the
      * receiver.
-     * 
+     *
      * @return a printable representation for the receiver.
-     * @since Android 1.0
      */
     public abstract String toString();
 
     /**
      * Returns the public key corresponding to this certificate.
-     * 
+     *
      * @return the public key corresponding to this certificate.
-     * @since Android 1.0
      */
     public abstract PublicKey getPublicKey();
 }

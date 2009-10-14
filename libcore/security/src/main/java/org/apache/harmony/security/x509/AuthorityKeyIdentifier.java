@@ -103,7 +103,7 @@ public class AuthorityKeyIdentifier extends ExtensionValue {
         buffer.append(prefix).append("]\n"); //$NON-NLS-1$
     }
 
-    public static ASN1Type ASN1 = new ASN1Sequence(
+    public static final ASN1Type ASN1 = new ASN1Sequence(
             new ASN1Type[] {
                 new ASN1Implicit(0, ASN1OctetString.getInstance()),
                 new ASN1Implicit(1, GeneralNames.ASN1),

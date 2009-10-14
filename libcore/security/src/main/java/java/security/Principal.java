@@ -15,40 +15,31 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security;
 
 
 /**
  * {@code Principal}s are objects which have identities. These can be
  * individuals, groups, corporations, unique program executions, etc.
- * 
- * @since Android 1.0
  */
 public interface Principal {
     /**
      * Compares the specified object with this {@code Principal} for equality
      * and returns {@code true} if the specified object is equal, {@code false}
      * otherwise.
-     * 
+     *
      * @param obj
      *            object to be compared for equality with this {@code
      *            Principal}.
      * @return {@code true} if the specified object is equal to this {@code
      *         Principal}, otherwise {@code false}.
-     * @since Android 1.0
      */
     public boolean equals( Object obj );
 
     /**
      * Returns the name of this {@code Principal}.
-     * 
+     *
      * @return the name of this {@code Principal}.
-     * @since Android 1.0
      */
     public String getName();
 
@@ -60,16 +51,14 @@ public interface Principal {
      * @return the hash code value for this {@code Principal}.
      * @see Object#equals(Object)
      * @see Principal#equals(Object)
-     * @since Android 1.0
      */
     public int hashCode();
-   
-    /** 
+
+    /**
      * Returns a string containing a concise, human-readable description of
      * this {@code Principal}.
      *
      * @return a printable representation for this {@code Principal}.
-     * @since Android 1.0
      */
     public String toString();
 }

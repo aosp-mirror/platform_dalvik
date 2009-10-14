@@ -22,6 +22,7 @@
 
 package org.apache.harmony.security.x501;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import org.apache.harmony.security.utils.ObjectIdentifier;
@@ -30,9 +31,11 @@ import org.apache.harmony.security.utils.ObjectIdentifier;
  * AttributeTypeAndValue comparator
  * 
  */
-public class AttributeTypeAndValueComparator implements Comparator {
+public class AttributeTypeAndValueComparator implements Comparator, Serializable {
 
-    /**
+	private static final long serialVersionUID = -1286471842007103132L;
+
+	/**
      * compares two AttributeTypeAndValues
      * 
      * @param obj1
@@ -63,14 +66,7 @@ public class AttributeTypeAndValueComparator implements Comparator {
 
         return compateOids(atav1.getType(), atav2.getType());
     }
-
-    /**
-     * @return false
-     */
-    public boolean equals(Object obj) {
-        return false;
-    }
-
+    
     /**
      * compares two Object identifiers
      * 

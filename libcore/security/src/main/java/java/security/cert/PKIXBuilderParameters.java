@@ -32,11 +32,9 @@ import org.apache.harmony.security.internal.nls.Messages;
  * <p>
  * The parameters must be created with <i>trusted</i> certificate authorities
  * and constraints for the target certificates.
- * </p>
- * 
+ *
  * @see CertPathBuilder
  * @see CertPathParameters
- * @since Android 1.0
  */
 public class PKIXBuilderParameters extends PKIXParameters {
     // Maximum certificate path length (5 by default)
@@ -55,7 +53,6 @@ public class PKIXBuilderParameters extends PKIXParameters {
      * @throws ClassCastException
      *             if one of the items in {@code trustAnchors} is not an
      *             instance of {@code java.security.cert.TrustAnchor}.
-     * @since Android 1.0
      */
     public PKIXBuilderParameters(Set<TrustAnchor> trustAnchors,
             CertSelector targetConstraints)
@@ -77,7 +74,6 @@ public class PKIXBuilderParameters extends PKIXParameters {
      * @throws InvalidAlgorithmParameterException
      *             if {@code keyStore} does not contained any trusted
      *             certificate entry.
-     * @since Android 1.0
      */
     public PKIXBuilderParameters(KeyStore keyStore,
             CertSelector targetConstraints)
@@ -92,11 +88,9 @@ public class PKIXBuilderParameters extends PKIXParameters {
      * <p>
      * This is the maximum number of non-self-signed certificates in a
      * certification path.
-     * </p>
-     * 
+     *
      * @return the maximum length of a certification path, or {@code -1} if it
      *         is unlimited.
-     * @since Android 1.0
      */
     public int getMaxPathLength() {
         return maxPathLength;
@@ -107,13 +101,11 @@ public class PKIXBuilderParameters extends PKIXParameters {
      * <p>
      * This is the maximum number of non-self-signed certificates in a
      * certification path.
-     * </p>
      * 
      * @param maxPathLength
      *            the maximum length of a certification path.
      * @throws InvalidParameterException
      *             if {@code maxPathLength} is less than {@code -1}.
-     * @since Android 1.0
      */
     public void setMaxPathLength(int maxPathLength) {
         if (maxPathLength < -1) {
@@ -129,10 +121,9 @@ public class PKIXBuilderParameters extends PKIXParameters {
      * 
      * @return a string representation of this {@code PKIXBuilderParameters}
      *         instance.
-     * @since Android 1.0
      */
     public String toString() {
-        StringBuffer sb = new StringBuffer("[\n"); //$NON-NLS-1$
+        StringBuilder sb = new StringBuilder("[\n"); //$NON-NLS-1$
         sb.append(super.toString());
         sb.append(" Max Path Length: "); //$NON-NLS-1$
         sb.append(maxPathLength);

@@ -19,8 +19,6 @@ package java.security.cert;
 
 /**
  * The exception that is thrown when a {@code Certificate} has expired.
- * 
- * @since Android 1.0
  */
 public class CertificateExpiredException extends CertificateException {
 
@@ -32,7 +30,6 @@ public class CertificateExpiredException extends CertificateException {
      * 
      * @param msg
      *            the detail message for this exception
-     * @since Android 1.0
      */
     public CertificateExpiredException(String msg) {
         super(msg);
@@ -40,8 +37,6 @@ public class CertificateExpiredException extends CertificateException {
 
     /**
      * Creates a new {@code CertificateExpiredException}.
-     * 
-     * @since Android 1.0
      */
     public CertificateExpiredException() {
     }

@@ -22,8 +22,6 @@ package java.security.cert;
  * <p>
  * This interface is for grouping purposes of {@code CertPath} parameter
  * implementations.
- * </p>
- * @since Android 1.0
  */
 public interface CertPathParameters extends Cloneable {
 
@@ -31,7 +29,6 @@ public interface CertPathParameters extends Cloneable {
      * Clones this {@code CertPathParameters} instance.
      * 
      * @return the cloned instance.
-     * @since Android 1.0
      */
     public Object clone();
 }

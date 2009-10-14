@@ -25,8 +25,6 @@ import org.apache.harmony.security.internal.nls.Messages;
 /**
  * The result of the PKIX certification path builder, returned by
  * {@link CertPathBuilder#build(CertPathParameters)}.
- * 
- * @since Android 1.0
  */
 public class PKIXCertPathBuilderResult extends PKIXCertPathValidatorResult
         implements CertPathBuilderResult {
@@ -49,7 +47,6 @@ public class PKIXCertPathBuilderResult extends PKIXCertPathValidatorResult
      * @throws NullPointerException
      *             if the {@code cerPath}, {@code trustAnchor} or {@code
      *             subjectPolicyKey} is {@code null}.
-     * @since Android 1.0
      */
     public PKIXCertPathBuilderResult(CertPath certPath, TrustAnchor trustAnchor,
             PolicyNode policyTree, PublicKey subjectPublicKey) {
@@ -64,7 +61,6 @@ public class PKIXCertPathBuilderResult extends PKIXCertPathValidatorResult
      * Returns the validated certification path.
      * 
      * @return the validated certification path.
-     * @since Android 1.0
      */
     public CertPath getCertPath() {
         return certPath;
@@ -76,10 +72,9 @@ public class PKIXCertPathBuilderResult extends PKIXCertPathValidatorResult
      * 
      * @return a string representation of this {@code PKIXCertPathBuilderResult}
      *         instance.
-     * @since Android 1.0
      */
     public String toString() {
-        StringBuffer sb = new StringBuffer(super.toString());
+        StringBuilder sb = new StringBuilder(super.toString());
         sb.append("\n Certification Path: "); //$NON-NLS-1$
         sb.append(certPath.toString());
         sb.append("\n]"); //$NON-NLS-1$

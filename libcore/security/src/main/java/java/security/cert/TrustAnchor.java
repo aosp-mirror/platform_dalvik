@@ -36,9 +36,6 @@ import org.apache.harmony.security.x509.NameConstraints;
  * of the CA, the CA's name and the constraints for the validation of
  * certification paths. The constructor also allows to specify a binary
  * representation of a so called "Name Constraints" extension as a byte array.
- * </p>
- * 
- * @since Android 1.0
  */
 public class TrustAnchor {
     // Most trusted CA as a X500Principal
@@ -58,8 +55,7 @@ public class TrustAnchor {
      * <p>
      * The name constraints will be used as additional constraints during the
      * validation of certification paths.
-     * </p>
-     * 
+     *
      * @param trustedCert
      *            the trusted certificate
      * @param nameConstraints
@@ -67,7 +63,6 @@ public class TrustAnchor {
      *            null} if none.
      * @throws IllegalArgumentException
      *             if the decoding of the name constraints fail.
-     * @since Android 1.0
      */
     public TrustAnchor(X509Certificate trustedCert, byte[] nameConstraints) {
         if (trustedCert == null) {
@@ -94,8 +89,7 @@ public class TrustAnchor {
      * <p>
      * The name constraints will be used as additional constraints during the
      * validation of certification paths.
-     * </p>
-     * 
+     *
      * @param caName
      *            the X.500 name of the certificate authority in RFC 2253
      *            {@code String} format.
@@ -107,7 +101,6 @@ public class TrustAnchor {
      * @throws IllegalArgumentException
      *             if the {@code caName} is empty or if decoding of the name
      *             constraints fail.
-     * @since Android 1.0
      */
     public TrustAnchor(String caName, PublicKey caPublicKey,
             byte[] nameConstraints) {
@@ -146,7 +139,6 @@ public class TrustAnchor {
      * <p>
      * The name constraints will be used as additional constraints during the
      * validation of certification paths.
-     * </p>
      * 
      * @param caPrincipal
      *            the name of the certificate authority as X500 principal.
@@ -157,7 +149,6 @@ public class TrustAnchor {
      *            null} if none.
      * @throws IllegalArgumentException
      *             if decoding of the name constraints fail.
-     * @since Android 1.0
      */
     public TrustAnchor(X500Principal caPrincipal,
             PublicKey caPublicKey, byte[] nameConstraints) {
@@ -187,7 +178,6 @@ public class TrustAnchor {
      * Returns a copy of the name constraints in ASN.1 DER encoded form.
      * 
      * @return a copy of the name constraints in ASN.1 DER encoded form.
-     * @since Android 1.0
      */
     public final byte[] getNameConstraints() {
         if (nameConstraints == null) {
@@ -204,7 +194,6 @@ public class TrustAnchor {
      * 
      * @return the certificate of this CA or {@code null}, if the trust anchor
      *         of this instance was not created with a certificate.
-     * @since Android 1.0
      */
     public final X509Certificate getTrustedCert() {
         return trustedCert;
@@ -216,7 +205,6 @@ public class TrustAnchor {
      * @return the name of the certificate authority or {@code null} if the
      *         trust anchor of this instance was not created with a {@code
      *         X500Principal}.
-     * @since Android 1.0
      */
     public final X500Principal getCA() {
         return caPrincipal;
@@ -229,7 +217,6 @@ public class TrustAnchor {
      * @return the name of the certificate authority as {@code String} in RFC
      *         2253 format or {@code null} if the trust anchor of this instance
      *         was not created with a CA name.
-     * @since Android 1.0
      */
     public final String getCAName() {
         return caName;
@@ -241,7 +228,6 @@ public class TrustAnchor {
      * @return the public key of the certificate authority or {@code null} if
      *         the trust anchor if this instance was not created with a public
      *         key.
-     * @since Android 1.0
      */
     public final PublicKey getCAPublicKey() {
         return caPublicKey;
@@ -251,10 +237,9 @@ public class TrustAnchor {
      * Returns a string representation of this {@code TrustAnchor} instance.
      * 
      * @return a string representation of this {@code TrustAnchor} instance.
-     * @since Android 1.0
      */
     public String toString() {
-        StringBuffer sb = new StringBuffer("TrustAnchor: [\n"); //$NON-NLS-1$
+        StringBuilder sb = new StringBuilder("TrustAnchor: [\n"); //$NON-NLS-1$
         if (trustedCert != null) {
             sb.append("Trusted CA certificate: "); //$NON-NLS-1$
             sb.append(trustedCert);

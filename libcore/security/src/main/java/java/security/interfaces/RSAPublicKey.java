@@ -22,15 +22,11 @@ import java.security.PublicKey;
 
 /**
  * The interface for a PKCS#1 RSA public key.
- * 
- * @since Android 1.0
  */
 public interface RSAPublicKey extends PublicKey, RSAKey {
 
     /**
      * The serial version identifier.
-     * 
-     * @since Android 1.0
      */
     public static final long serialVersionUID = -8727434096241101194L;
 
@@ -38,7 +34,6 @@ public interface RSAPublicKey extends PublicKey, RSAKey {
      * Returns the public exponent {@code e}.
      * 
      * @return the public exponent {@code e}.
-     * @since Android 1.0
      */
     public BigInteger getPublicExponent();
 

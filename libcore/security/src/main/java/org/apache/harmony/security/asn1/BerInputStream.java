@@ -25,7 +25,6 @@ package org.apache.harmony.security.asn1;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import org.apache.harmony.security.internal.nls.Messages;
 
@@ -132,8 +131,8 @@ public class BerInputStream {
         if (length != INDEFINIT_LENGTH) {
             // input stream has definite length encoding
             // check allocated length to avoid further reallocations
-            if (buffer.length < length) {
-                byte[] newBuffer = new byte[length];
+            if (buffer.length < (length + offset)) {
+                byte[] newBuffer = new byte[length + offset];
                 System.arraycopy(buffer, 0, newBuffer, 0, offset);
                 buffer = newBuffer;
             }
@@ -916,9 +915,22 @@ public class BerInputStream {
         if (in == null) {
             offset += length;
         } else {
-            if (in.read(buffer, offset, length) != length) {
-                throw new ASN1Exception(Messages.getString("security.13C")); //$NON-NLS-1$
+            int bytesRead = in.read(buffer, offset, length);
+
+            if (bytesRead != length) {
+                // if input stream didn't return all data at once
+                // try to read it in several blocks
+                int c = bytesRead;
+                do {
+                    if (c < 1 || bytesRead > length) {
+                        throw new ASN1Exception(Messages
+                                .getString("security.13C")); //$NON-NLS-1$
+                    }
+                    c = in.read(buffer, offset + bytesRead, length - bytesRead);
+                    bytesRead += c;
+                } while (bytesRead != length);
             }
+
             offset += length;
         }
     }

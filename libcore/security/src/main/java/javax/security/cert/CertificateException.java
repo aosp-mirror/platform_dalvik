@@ -26,19 +26,19 @@ package javax.security.cert;
  * by JSSE (Java SSL package). All applications that do not have to be
  * compatible with older versions of JSSE (that is before Java SDK 1.5) should
  * only use java.security.cert.
- * </p>
- * @since Android 1.0
  */
 public class CertificateException extends Exception {
 
+    /**
+     * @serial
+     */
     private static final long serialVersionUID = -5757213374030785290L;
 
     /**
      * Creates a new {@code CertificateException} with the specified message.
-     * 
+     *
      * @param msg
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public CertificateException(String msg) {
         super(msg);
@@ -46,8 +46,6 @@ public class CertificateException extends Exception {
 
     /**
      * Creates a new {@code CertificateException}.
-     * 
-     * @since Android 1.0
      */
     public CertificateException() {
     }

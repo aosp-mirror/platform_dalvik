@@ -22,15 +22,11 @@ import java.security.GeneralSecurityException;
 /**
  * The exception that is thrown when an invalid parameter specification is
  * encountered.
- * 
- * @since Android 1.0
  */
 public class InvalidParameterSpecException extends GeneralSecurityException {
 
     /**
      * The serial version identifier.
-     * 
-     * @since Android 1.0
      */
     private static final long serialVersionUID = -970468769593399342L;
 
@@ -40,7 +36,6 @@ public class InvalidParameterSpecException extends GeneralSecurityException {
      * 
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public InvalidParameterSpecException(String msg) {
         super(msg);
@@ -48,8 +43,6 @@ public class InvalidParameterSpecException extends GeneralSecurityException {
 
     /**
      * Creates a new {@code InvalidParameterSpecException}.
-     * 
-     * @since Android 1.0
      */
     public InvalidParameterSpecException() {
     }

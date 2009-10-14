@@ -18,12 +18,10 @@
 package java.security.acl;
 
 /**
- * The exception that is thrown when an attempt is made to remove the 
+ * The exception that is thrown when an attempt is made to remove the
  * the last {@code Owner} from an {@code Owner}.
- * 
+ *
  * @see Owner
- * 
- * @since Android 1.0
  */
 public class LastOwnerException extends Exception {
 
@@ -31,8 +29,6 @@ public class LastOwnerException extends Exception {
 
     /**
      * Creates a new {@code LastOwnerException}.
-     * 
-     * @since Android 1.0
      */
     public LastOwnerException() {
     }

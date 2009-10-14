@@ -118,21 +118,21 @@ public class Name {
         //
         // check X500Principal constants first
         //
-        if (format == X500Principal.RFC1779) {
+        if (X500Principal.RFC1779.equals(format)) {
 
             if (rfc1779String == null) {
                 rfc1779String = getName0(format);
             }
             return rfc1779String;
 
-        } else if (format == X500Principal.RFC2253) {
+        } else if (X500Principal.RFC2253.equals(format)) {
 
             if (rfc2253String == null) {
                 rfc2253String = getName0(format);
             }
             return rfc2253String;
 
-        } else if (format == X500Principal.CANONICAL) {
+        } else if (X500Principal.CANONICAL.equals(format)) {
 
             if (canonicalString == null) {
                 canonicalString = getName0(format);
@@ -217,7 +217,7 @@ public class Name {
         }
 
         String sName = name.toString();
-        if (format == X500Principal.CANONICAL) {
+        if (X500Principal.CANONICAL.equals(format)) {
             sName = sName.toLowerCase(Locale.US);
         }
         return sName;

@@ -39,6 +39,7 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.spec.DSAParameterSpec;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;

@@ -15,25 +15,17 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code PrivateKey} is the common interface for private keys.
  * 
  * @see PublicKey
- * @since Android 1.0
  */
 public interface PrivateKey extends Key {
-    
+
     /**
      * The {@code serialVersionUID} to be compatible with JDK1.1.
-     * 
-     * @since Android 1.0
      */
     public static final long serialVersionUID = 6034044314589513430L;
 }

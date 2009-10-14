@@ -42,6 +42,11 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 
 import tests.util.SerializationTester;
 
+import org.apache.harmony.testframework.serialization.SerializationTest;
+import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
+
+import tests.util.SerializationTester;
+
 import junit.framework.TestCase;
 
 @TestTargetClass(UnresolvedPermission.class)
@@ -111,7 +116,6 @@ public class UnresolvedPermissionTest extends TestCase {
         assertFalse(up.implies(new AllPermission()));
         assertFalse(up.implies(new SecurityPermission("a.b.c")));
     }
-
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
@@ -134,7 +138,6 @@ public class UnresolvedPermissionTest extends TestCase {
         assertEquals("actions", deserializedUp.getUnresolvedActions());
         assertNull(deserializedUp.getUnresolvedCerts());
     }
-
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
@@ -155,14 +158,11 @@ public class UnresolvedPermissionTest extends TestCase {
                 assertEquals("java.security.SecurityPermission", deserializedUp
                         .getUnresolvedType());
                 assertEquals("a.b.c", deserializedUp.getUnresolvedName());
-                assertEquals("action", deserializedUp.getUnresolvedActions());
-                Certificate[] certs = deserializedUp.getUnresolvedCerts();
-                assertNotNull(certs);
-                assertEquals(1, certs.length);
+                assertEquals("actions", deserializedUp.getUnresolvedActions());
+                assertNull(deserializedUp.getUnresolvedCerts());
             }
         });
     }
-
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",

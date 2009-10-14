@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.harmony.security.internal.nls.Messages;
@@ -269,12 +270,14 @@ public abstract class ASN1Choice extends ASN1Type {
         // fill identifiers array
         int size = map.size();
         identifiers = new int[2][size];
-        Iterator it = map.keySet().iterator();
+        Iterator it = map.entrySet().iterator();
+
         for (int i = 0; i < size; i++) {
-            BigInteger identifier = (BigInteger) it.next();
+        	Map.Entry entry = (Map.Entry) it.next();
+            BigInteger identifier = (BigInteger) entry.getKey();
 
             identifiers[0][i] = identifier.intValue();
-            identifiers[1][i] = ((BigInteger) map.get(identifier)).intValue();
+            identifiers[1][i] = ((BigInteger) entry.getValue()).intValue();
         }
 
         this.type = type;

@@ -22,9 +22,6 @@ package java.security.acl;
  * <p>
  * It can be granted or denied to a {@link java.security.Principal Principal} 
  * using an {@link Acl}. 
- * </p>
- * 
- * @since Android 1.0
  */
 public interface Permission {
 
@@ -36,7 +33,6 @@ public interface Permission {
      *            the permission object to compare to this permission.
      * @return true if the specified permission object is equal to this, false
      *         if not.
-     * @since Android 1.0
      */
     boolean equals(Object another);
     
@@ -44,7 +40,6 @@ public interface Permission {
      * Returns the string representation of this permission.
      * 
      * @return the string representation of this permission.
-     * @since Android 1.0
      */
     String toString();
 }

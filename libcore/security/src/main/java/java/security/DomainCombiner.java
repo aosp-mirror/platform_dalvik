@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
@@ -29,7 +24,6 @@ package java.security;
  * @see AccessControlContext
  * @see AccessControlContext#AccessControlContext(AccessControlContext,
  *      DomainCombiner)
- * @since Android 1.0
  */
 public interface DomainCombiner {
 
@@ -37,7 +31,7 @@ public interface DomainCombiner {
      * Returns a combination of the two provided {@code ProtectionDomain}
      * arrays. Implementers can simply merge the two arrays into one, remove
      * duplicates and perform other optimizations.
-     * 
+     *
      * @param current
      *            the protection domains of the current execution thread (since
      *            the most recent call to {@link AccessController#doPrivileged}
@@ -47,7 +41,6 @@ public interface DomainCombiner {
      *            null}.
      * @return a single {@code ProtectionDomain} array computed from the two
      *         provided arrays.
-     * @since Android 1.0
      */
     ProtectionDomain[] combine(ProtectionDomain[] current,
             ProtectionDomain[] assigned);

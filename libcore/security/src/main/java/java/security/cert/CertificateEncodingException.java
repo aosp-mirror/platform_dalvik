@@ -20,8 +20,6 @@ package java.security.cert;
 /**
  * The exception that is thrown when an error occurs while a {@code Certificate}
  * is being encoded.
- * 
- * @since Android 1.0
  */
 public class CertificateEncodingException extends CertificateException {
 
@@ -33,7 +31,6 @@ public class CertificateEncodingException extends CertificateException {
      * 
      * @param msg
      *            The detail message for the exception.
-     * @since Android 1.0
      */
     public CertificateEncodingException(String msg) {
         super(msg);
@@ -41,8 +38,6 @@ public class CertificateEncodingException extends CertificateException {
 
     /**
      * Creates a new {@code CertificateEncodingException}.
-     * 
-     * @since Android 1.0
      */
     public CertificateEncodingException() {
     }
@@ -55,7 +50,6 @@ public class CertificateEncodingException extends CertificateException {
      *            the detail message for the exception.
      * @param cause
      *            the cause.
-     * @since Android 1.0
      */
     public CertificateEncodingException(String message, Throwable cause) {
         super(message, cause);
@@ -67,7 +61,6 @@ public class CertificateEncodingException extends CertificateException {
      * 
      * @param cause
      *            the cause.
-     * @since Android 1.0
      */
     public CertificateEncodingException(Throwable cause) {
         super(cause);

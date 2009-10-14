@@ -158,7 +158,7 @@ public final class ObjectIdentifier {
      */
     public String toString() {
         if (soid == null) {
-            StringBuffer sb = new StringBuffer(4 * oid.length);
+            StringBuilder sb = new StringBuilder(4 * oid.length);
 
             for (int i = 0; i < oid.length - 1; ++i) {
                 sb.append(oid[i]);

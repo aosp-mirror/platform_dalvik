@@ -33,7 +33,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * <p>
  * This represents a standard way for accessing the attributes of X.509
  * certificates.
- * </p>
  * <p>
  * The basic X.509 v3 format described in ASN.1:
  * 
@@ -59,16 +58,12 @@ import org.apache.harmony.security.internal.nls.Messages;
  *                           -- If present, version must be v3
  *      }
  * </pre>
- * </p>
  * <p>
  * For more information consult RFC 2459
  * "Internet X.509 Public Key Infrastructure Certificate and CRL Profile" at <a
  * href
  * ="http://www.ietf.org/rfc/rfc2459.txt">http://www.ietf.org/rfc/rfc2459.txt
  * </a> .
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class X509Certificate
         extends Certificate implements X509Extension {
@@ -77,8 +72,6 @@ public abstract class X509Certificate
 
     /**
      * Creates a new {@code X509Certificate}.
-     * 
-     * @since Android 1.0
      */
     protected X509Certificate() {
         super("X.509"); //$NON-NLS-1$
@@ -101,13 +94,10 @@ public abstract class X509Certificate
      *      generalTime     GeneralizedTime }
      * </pre>
      * 
-     * </p>
-     * 
      * @throws CertificateExpiredException
      *             if the certificate has expired.
      * @throws CertificateNotYetValidException
      *             if the certificate is not yet valid.
-     * @since Android 1.0
      */
     public abstract void checkValidity()
             throws CertificateExpiredException, CertificateNotYetValidException;
@@ -122,7 +112,6 @@ public abstract class X509Certificate
      * @throws CertificateNotYetValidException
      *             if the certificate is not yet valid.
      * @see #checkValidity()
-     * @since Android 1.0
      */
     public abstract void checkValidity(Date date)
             throws CertificateExpiredException, CertificateNotYetValidException;
@@ -136,10 +125,7 @@ public abstract class X509Certificate
      * Version ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
      * </pre>
      * 
-     * </p>
-     * 
      * @return the version number.
-     * @since Android 1.0
      */
     public abstract int getVersion();
 
@@ -152,10 +138,7 @@ public abstract class X509Certificate
      * CertificateSerialNumber  ::=  INTEGER
      * </pre>
      * 
-     * </p>
-     * 
      * @return the serial number.
-     * @since Android 1.0
      */
     public abstract BigInteger getSerialNumber();
 
@@ -184,12 +167,10 @@ public abstract class X509Certificate
      *    AttributeValue ::= ANY DEFINED BY AttributeType
      * </pre>
      * 
-     * </p>
      * <b>replaced by:</b> {@link #getIssuerX500Principal()}.
      * 
      * @return the {@code issuer} as an implementation specific {@code
      *         Principal}.
-     * @since Android 1.0
      */
     public abstract Principal getIssuerDN() ;
 
@@ -198,7 +179,6 @@ public abstract class X509Certificate
      * X500Principal}.
      * 
      * @return the {@code issuer} (issuer distinguished name).
-     * @since Android 1.0
      */
     public X500Principal getIssuerX500Principal() {
 
@@ -243,13 +223,10 @@ public abstract class X509Certificate
      *    AttributeValue ::= ANY DEFINED BY AttributeType
      * </pre>
      * 
-     * </p>
      * <p>
      * <b>replaced by:</b> {@link #getSubjectX500Principal()}.
-     * </p>
-     * 
+     *
      * @return the {@code subject} (subject distinguished name).
-     * @since Android 1.0
      */
     public abstract Principal getSubjectDN();
 
@@ -258,7 +235,6 @@ public abstract class X509Certificate
      * X500Principal}.
      * 
      * @return the {@code subject} (subject distinguished name)
-     * @since Android 1.0
      */
     public X500Principal getSubjectX500Principal() {
 
@@ -283,7 +259,6 @@ public abstract class X509Certificate
      * certificate.
      * 
      * @return the start of the validity period.
-     * @since Android 1.0
      */
     public abstract Date getNotBefore();
 
@@ -292,7 +267,6 @@ public abstract class X509Certificate
      * certificate.
      * 
      * @return the end of the validity period.
-     * @since Android 1.0
      */
     public abstract Date getNotAfter();
 
@@ -303,7 +277,6 @@ public abstract class X509Certificate
      * @return the DER-encoded certificate information.
      * @throws CertificateEncodingException
      *             if an error occurs in encoding
-     * @since Android 1.0
      */
     public abstract byte[] getTBSCertificate()
                                     throws CertificateEncodingException;
@@ -312,7 +285,6 @@ public abstract class X509Certificate
      * Returns the raw signature bits from the certificate.
      * 
      * @return the raw signature bits from the certificate.
-     * @since Android 1.0
      */
     public abstract byte[] getSignature();
 
@@ -320,7 +292,6 @@ public abstract class X509Certificate
      * Returns the name of the algorithm for the certificate signature.
      * 
      * @return the signature algorithm name.
-     * @since Android 1.0
      */
     public abstract String getSigAlgName();
 
@@ -328,7 +299,6 @@ public abstract class X509Certificate
      * Returns the OID of the signature algorithm from the certificate.
      * 
      * @return the OID of the signature algorithm.
-     * @since Android 1.0
      */
     public abstract String getSigAlgOID();
 
@@ -337,7 +307,6 @@ public abstract class X509Certificate
      * 
      * @return the parameters of the signature algorithm, or {@code null} if
      *         none are used.
-     * @since Android 1.0
      */
     public abstract byte[] getSigAlgParams();
 
@@ -346,7 +315,6 @@ public abstract class X509Certificate
      * 
      * @return the {@code issuerUniqueID} or {@code null} if there's none in the
      *         certificate.
-     * @since Android 1.0
      */
     public abstract boolean[] getIssuerUniqueID();
 
@@ -355,7 +323,6 @@ public abstract class X509Certificate
      * 
      * @return the {@code subjectUniqueID} or null if there's none in the
      *         certificate.
-     * @since Android 1.0
      */
     public abstract boolean[] getSubjectUniqueID();
 
@@ -378,11 +345,8 @@ public abstract class X509Certificate
      * 
      * </pre>
      * 
-     * </p>
-     * 
      * @return the {@code KeyUsage} extension or {@code null} if there's none in
      *         the certificate.
-     * @since Android 1.0
      */
     public abstract boolean[] getKeyUsage();
 
@@ -394,7 +358,6 @@ public abstract class X509Certificate
      *         in the certificate.
      * @throws CertificateParsingException
      *             if the extension decoding fails.
-     * @since Android 1.0
      */
     public List<String> getExtendedKeyUsage()
                         throws CertificateParsingException {
@@ -408,7 +371,6 @@ public abstract class X509Certificate
      * @return the path length of the certificate constraints if the extension
      *         is present or {@code -1} if the extension is not present. {@code
      *         Integer.MAX_VALUE} if there's not limit.
-     * @since Android 1.0
      */
     public abstract int getBasicConstraints();
 
@@ -436,13 +398,10 @@ public abstract class X509Certificate
      * 
      * </pre>
      * 
-     * </p>
-     * 
      * @return the subject alternative names or {@code null} if there are none
      *         in the certificate.
      * @throws CertificateParsingException
      *             if decoding of the extension fails.
-     * @since Android 1.0
      */
     public Collection<List<?>> getSubjectAlternativeNames()
                                     throws CertificateParsingException {
@@ -473,13 +432,10 @@ public abstract class X509Certificate
      * 
      * </pre>
      * 
-     * </p>
-     * 
      * @return the issuer alternative names of {@code null} if there are none in
      *         the certificate.
      * @throws CertificateParsingException
      *             if decoding of the extension fails.
-     * @since Android 1.0
      */
     public Collection<List<?>> getIssuerAlternativeNames()
                                     throws CertificateParsingException {

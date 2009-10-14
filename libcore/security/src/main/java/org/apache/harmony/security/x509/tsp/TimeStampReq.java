@@ -82,7 +82,7 @@ public class TimeStampReq {
     }
 
     public String toString() {
-        StringBuffer res = new StringBuffer();
+        StringBuilder res = new StringBuilder();
         res.append("-- TimeStampReq:");
         res.append("\nversion : ");
         res.append(version);

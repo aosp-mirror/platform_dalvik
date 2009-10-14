@@ -153,6 +153,11 @@ public class TBSCertList {
                     ? rcert.crlEntryExtensions == null
                     : crlEntryExtensions.equals(rcert.crlEntryExtensions));
         }
+        
+        public int hashCode() {
+        	return userCertificate.hashCode() * 37 + (int)revocationDate.getTime() / 1000
+        	+ (crlEntryExtensions == null ? 0 : crlEntryExtensions.hashCode());
+        }
 
         /**
          * Places the string representation of extension value
@@ -171,7 +176,7 @@ public class TBSCertList {
             }
         }
         
-        public static ASN1Sequence ASN1 = new ASN1Sequence(
+        public static final ASN1Sequence ASN1 = new ASN1Sequence(
                 new ASN1Type[] {ASN1Integer.getInstance(), Time.ASN1,
                 Extensions.ASN1}) {
             {
@@ -357,6 +362,12 @@ public class TBSCertList {
             && ((crlExtensions == null)
                     ? tbscert.crlExtensions == null
                     : crlExtensions.equals(tbscert.crlExtensions));
+    }
+    
+    public int hashCode() {
+    	return ((version * 37 + signature.hashCode()) * 37
+    		+ issuer.getEncoded().hashCode()) * 37
+    		+ (int)thisUpdate.getTime() / 1000;
     }
 
     /**

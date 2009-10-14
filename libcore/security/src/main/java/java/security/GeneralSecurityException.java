@@ -15,18 +15,11 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code GeneralSecurityException} is a general security exception and the
  * superclass for all security specific exceptions.
- * 
- * @since Android 1.0
  */
 public class GeneralSecurityException extends Exception {
 
@@ -35,10 +28,9 @@ public class GeneralSecurityException extends Exception {
     /**
      * Constructs a new instance of {@code GeneralSecurityException} with the
      * given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public GeneralSecurityException(String msg) {
         super(msg);
@@ -46,8 +38,6 @@ public class GeneralSecurityException extends Exception {
 
     /**
      * Constructs a new instance of {@code GeneralSecurityException}.
-     * 
-     * @since Android 1.0
      */
     public GeneralSecurityException() {
     }
@@ -55,12 +45,11 @@ public class GeneralSecurityException extends Exception {
     /**
      * Constructs a new instance of {@code GeneralSecurityException} with the
      * given message and the cause.
-     * 
+     *
      * @param message
      *            the detail message for this exception.
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public GeneralSecurityException(String message, Throwable cause) {
         super(message, cause);
@@ -69,10 +58,9 @@ public class GeneralSecurityException extends Exception {
     /**
      * Constructs a new instance of {@code GeneralSecurityException} with the
      * cause.
-     * 
+     *
      * @param cause
      *            the exception which is the cause for this exception.
-     * @since Android 1.0
      */
     public GeneralSecurityException(Throwable cause) {
         super(cause);

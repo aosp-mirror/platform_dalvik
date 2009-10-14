@@ -23,8 +23,6 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 /**
  * The parameters specifying an Elliptic Curve (EC) private key. 
- * 
- * @since Android 1.0
  */
 public class ECPrivateKeySpec implements KeySpec {
     // Private value associated with this key
@@ -40,7 +38,6 @@ public class ECPrivateKeySpec implements KeySpec {
      *            the private value {@code S}.
      * @param params
      *            the domain parameter specification.
-     * @since Android 1.0
      */
     public ECPrivateKeySpec(BigInteger s, ECParameterSpec params) {
         this.s = s;
@@ -58,7 +55,6 @@ public class ECPrivateKeySpec implements KeySpec {
      * Returns the domain parameter specification.
      * 
      * @return the domain parameter specification.
-     * @since Android 1.0
      */
     public ECParameterSpec getParams() {
         return params;
@@ -68,7 +64,6 @@ public class ECPrivateKeySpec implements KeySpec {
      * Returns the private value {@code S}.
      * 
      * @return the private value {@code S}.
-     * @since Android 1.0
      */
     public BigInteger getS() {
         return s;

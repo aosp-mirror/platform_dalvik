@@ -127,9 +127,9 @@ public class DefaultPolicyScanner {
                 break parsing;
 
             case StreamTokenizer.TT_WORD:
-                if ("keystore".equalsIgnoreCase(st.sval)) { //$NON-NLS-1$
+                if (Util.equalsIgnoreCase("keystore", st.sval)) { //$NON-NLS-1$
                     keystoreEntries.add(readKeystoreEntry(st));
-                } else if ("grant".equalsIgnoreCase(st.sval)) { //$NON-NLS-1$
+                } else if (Util.equalsIgnoreCase("grant", st.sval)) { //$NON-NLS-1$
                     grantEntries.add(readGrantEntry(st));
                 } else {
                     handleUnexpectedToken(st, Messages.getString("security.89")); //$NON-NLS-1$
@@ -208,19 +208,19 @@ public class DefaultPolicyScanner {
             switch (st.nextToken()) {
 
             case StreamTokenizer.TT_WORD:
-                if ("signedby".equalsIgnoreCase(st.sval)) { //$NON-NLS-1$
+                if (Util.equalsIgnoreCase("signedby", st.sval)) { //$NON-NLS-1$
                     if (st.nextToken() == '"') {
                         ge.signers = st.sval;
                     } else {
                         handleUnexpectedToken(st, Messages.getString("security.8B")); //$NON-NLS-1$
                     }
-                } else if ("codebase".equalsIgnoreCase(st.sval)) { //$NON-NLS-1$
+                } else if (Util.equalsIgnoreCase("codebase", st.sval)) { //$NON-NLS-1$
                     if (st.nextToken() == '"') {
                         ge.codebase = st.sval;
                     } else {
                         handleUnexpectedToken(st, Messages.getString("security.8C")); //$NON-NLS-1$
                     }
-                } else if ("principal".equalsIgnoreCase(st.sval)) { //$NON-NLS-1$
+                } else if (Util.equalsIgnoreCase("principal", st.sval)) { //$NON-NLS-1$
                     ge.addPrincipal(readPrincipalEntry(st));
                 } else {
                     handleUnexpectedToken(st);
@@ -308,7 +308,7 @@ public class DefaultPolicyScanner {
             switch (st.nextToken()) {
 
             case StreamTokenizer.TT_WORD:
-                if ("permission".equalsIgnoreCase(st.sval)) { //$NON-NLS-1$
+                if (Util.equalsIgnoreCase("permission", st.sval)) { //$NON-NLS-1$
                     PermissionEntry pe = new PermissionEntry();
                     if (st.nextToken() == StreamTokenizer.TT_WORD) {
                         pe.klass = st.sval;
@@ -326,7 +326,7 @@ public class DefaultPolicyScanner {
                             }
                         }
                         if (st.ttype == StreamTokenizer.TT_WORD
-                                && "signedby".equalsIgnoreCase(st.sval)) { //$NON-NLS-1$
+                                && Util.equalsIgnoreCase("signedby", st.sval)) { //$NON-NLS-1$
                             if (st.nextToken() == '"') {
                                 pe.signers = st.sval;
                             } else {

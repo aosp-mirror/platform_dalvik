@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.IOException;
@@ -28,8 +23,6 @@ import java.io.Serializable;
 /**
  * {@code GuardedObject} controls access to an object, by checking all requests
  * for the object with a {@code Guard}.
- * 
- * @since Android 1.0
  */
 public class GuardedObject implements Serializable {
 
@@ -42,13 +35,12 @@ public class GuardedObject implements Serializable {
     /**
      * Constructs a new instance of {@code GuardedObject} which protects access
      * to the specified {@code Object} using the specified {@code Guard}.
-     * 
+     *
      * @param object
      *            the {@code Object} to protect.
      * @param guard
      *            the {@code Guard} which protects the specified {@code Object},
      *            maybe {@code null}.
-     * @since Android 1.0
      */
     public GuardedObject(Object object, Guard guard) {
         this.object = object;
@@ -59,11 +51,10 @@ public class GuardedObject implements Serializable {
      * Returns the guarded {@code Object} if the associated {@code Guard}
      * permits access. If access is not granted, then a {@code
      * SecurityException} is thrown.
-     * 
+     *
      * @return the guarded object.
      * @exception SecurityException
      *                if access is not granted to the guarded object.
-     * @since Android 1.0
      */
     public Object getObject() throws SecurityException {
         if (guard != null) {

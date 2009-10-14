@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import javax.security.auth.Subject;
@@ -29,11 +24,12 @@ import javax.security.auth.login.LoginException;
 /**
  * {@code AuthProvider} is an abstract superclass for Java Security {@code
  * Provider} which provide login and logout.
- * 
- * @since Android 1.0
  */
 public abstract class AuthProvider extends Provider {
 
+    /**
+     * @serial
+     */
     private static final long serialVersionUID = 4197859053084546461L;
 
     /**
@@ -46,7 +42,6 @@ public abstract class AuthProvider extends Provider {
      *            the version of the provider.
      * @param info
      *            a description of the provider.
-     * @since Android 1.0
      */
     protected AuthProvider(String name, double version, String info) {
         super(name, version, info); 
@@ -71,7 +66,6 @@ public abstract class AuthProvider extends Provider {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public abstract void login(Subject subject, CallbackHandler handler) throws LoginException;
     
@@ -82,14 +76,12 @@ public abstract class AuthProvider extends Provider {
      * the {@code SecurityPermission} {@code authProvider.NAME} (where NAME is
      * the provider name) to be granted, otherwise a {@code SecurityException}
      * will be thrown.
-     * </p>
-     * 
+     *
      * @throws LoginException
      *             if the logout fails.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public abstract void logout() throws LoginException;
     
@@ -101,20 +93,18 @@ public abstract class AuthProvider extends Provider {
      * If no handler is set, this {@code AuthProvider} uses the {@code
      * CallbackHandler} specified by the {@code
      * auth.login.defaultCallbackHandler} security property.
-     * </p><p>
+     * <p>
      * If a {@code SecurityManager} is installed, code calling this method needs
      * the {@code SecurityPermission} {@code authProvider.NAME} (where NAME is
      * the provider name) to be granted, otherwise a {@code SecurityException}
      * will be thrown.
-     * </p>
-     * 
+     *
      * @param handler
      *            the handler to obtain authentication information from the
      *            caller.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public abstract void setCallbackHandler(CallbackHandler handler);
 }

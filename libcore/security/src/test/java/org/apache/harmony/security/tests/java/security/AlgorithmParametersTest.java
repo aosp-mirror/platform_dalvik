@@ -709,8 +709,7 @@ public class AlgorithmParametersTest extends TestCase {
         params = AlgorithmParameters.getInstance("DSA");
         try {
             params.init(enc, "DOUGLASMAWSON");
-            params.init(enc, "DOUGLASMAWSON");
-            fail("IOException exception expected");
+            fail("unsupported format should have raised IOException");
         } catch (IOException e) {
             // expected
         }

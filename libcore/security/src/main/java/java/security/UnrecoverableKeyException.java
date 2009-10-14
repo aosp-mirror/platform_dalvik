@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
@@ -27,7 +22,6 @@ package java.security;
  * from a {@code KeyStore}.
  * 
  * @see KeyStore
- * @since Android 1.0
  */
 public class UnrecoverableKeyException extends GeneralSecurityException {
 
@@ -36,10 +30,9 @@ public class UnrecoverableKeyException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code UnrecoverableKeyException} with the
      * given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception
-     * @since Android 1.0
      */
     public UnrecoverableKeyException(String msg) {
         super(msg);
@@ -47,8 +40,6 @@ public class UnrecoverableKeyException extends GeneralSecurityException {
 
     /**
      * Constructs a new instance of {@code UnrecoverableKeyException}.
-     * 
-     * @since Android 1.0
      */
     public UnrecoverableKeyException() {
     }

@@ -15,18 +15,11 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code SecurityPermission} objects guard access to the mechanisms which
  * implement security. Security permissions have names, but not actions.
- * 
- * @since Android 1.0
  */
 public final class SecurityPermission extends BasicPermission {
 
@@ -35,10 +28,9 @@ public final class SecurityPermission extends BasicPermission {
     /**
      * Constructs a new instance of {@code SecurityPermission} with the given
      * name.
-     * 
+     *
      * @param name
      *            the name of the permission.
-     * @since Android 1.0
      */
     public SecurityPermission(String name) {
         super(name);
@@ -48,12 +40,11 @@ public final class SecurityPermission extends BasicPermission {
      * Constructs a new instance of {@code SecurityPermission} with the given
      * {@code name} and {@code action} list. The action list is ignored - it is
      * existing for compatibility reasons only.
-     * 
+     *
      * @param name
      *            the name of the permission.
      * @param action
      *            ignored.
-     * @since Android 1.0
      */
     public SecurityPermission(String name, String action) {
         super(name, action);

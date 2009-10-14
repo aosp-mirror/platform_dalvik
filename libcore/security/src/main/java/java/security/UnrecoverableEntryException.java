@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 
@@ -29,7 +24,6 @@ package java.security;
  * 
  * @see KeyStore
  * @see KeyStore.Entry
- * @since Android 1.0
  */
 public class UnrecoverableEntryException extends GeneralSecurityException {
 
@@ -37,8 +31,6 @@ public class UnrecoverableEntryException extends GeneralSecurityException {
 
     /**
      * Constructs a new instance of {@code UnrecoverableEntryException}.
-     * 
-     * @since Android 1.0
      */
     public UnrecoverableEntryException() {
     }
@@ -46,10 +38,9 @@ public class UnrecoverableEntryException extends GeneralSecurityException {
     /**
      * Constructs a new instance of {@code UnrecoverableEntryException} with the
      * given message.
-     * 
+     *
      * @param msg
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public UnrecoverableEntryException(String msg) {
         super(msg);

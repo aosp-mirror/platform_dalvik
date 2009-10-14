@@ -32,13 +32,9 @@ import org.apache.harmony.security.internal.nls.Messages;
  * single added instance.
  * 
  * @see AllPermission
- * @since Android 1.0
  */
 final class AllPermissionCollection extends PermissionCollection {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = -4023755556366636806L;
 
     private static final ObjectStreamField[] serialPersistentFields = { new ObjectStreamField(
@@ -50,6 +46,7 @@ final class AllPermissionCollection extends PermissionCollection {
     /**
      * Adds an {@code AllPermission} to the collection.
      */
+    @Override
     public void add(Permission permission) {
         if (isReadOnly()) {
             throw new SecurityException(Messages.getString("security.15")); //$NON-NLS-1$
@@ -64,6 +61,7 @@ final class AllPermissionCollection extends PermissionCollection {
     /**
      * Returns the enumeration of the collection.
      */
+    @Override
     public Enumeration<Permission> elements() {
         return new SingletonEnumeration<Permission>(all);
     }
@@ -78,6 +76,7 @@ final class AllPermissionCollection extends PermissionCollection {
 
         /**
          * Constructor taking the single element.
+         * @param single the element
          */
         public SingletonEnumeration(E single) {
             element = single;
@@ -112,6 +111,7 @@ final class AllPermissionCollection extends PermissionCollection {
      * @param permission
      *            the permission to check.
      */
+    @Override
     public boolean implies(Permission permission) {
         return all != null;
     }

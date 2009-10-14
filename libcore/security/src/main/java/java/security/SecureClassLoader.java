@@ -15,28 +15,20 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 
-
 /**
  * {@code SecureClassLoader} represents a {@code ClassLoader} which associates
  * the classes it loads with a code source and provide mechanisms to allow the
  * relevant permissions to be retrieved.
- * 
- * @since Android 1.0
  */
 public class SecureClassLoader extends ClassLoader {
 
     // A cache of ProtectionDomains for a given CodeSource
-    private HashMap pds = new HashMap();
+    private HashMap<CodeSource, ProtectionDomain> pds = new HashMap<CodeSource, ProtectionDomain>();
 
     /**
      * Constructs a new instance of {@code SecureClassLoader}. The default
@@ -45,12 +37,10 @@ public class SecureClassLoader extends ClassLoader {
      * If a {@code SecurityManager} is installed, code calling this constructor
      * needs the {@code SecurityPermission} {@code checkCreateClassLoader} to be
      * granted, otherwise a {@code SecurityException} will be thrown.
-     * </p>
-     * 
+     *
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this constructor.
-     * @since Android 1.0
      */
     protected SecureClassLoader() {
         super();
@@ -63,14 +53,12 @@ public class SecureClassLoader extends ClassLoader {
      * If a {@code SecurityManager} is installed, code calling this constructor
      * needs the {@code SecurityPermission} {@code checkCreateClassLoader} to be
      * granted, otherwise a {@code SecurityException} will be thrown.
-     * </p>
-     * 
+     *
      * @param parent
      *            the parent {@code ClassLoader}.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this constructor.
-     * @since Android 1.0
      */
     protected SecureClassLoader(ClassLoader parent) {
         super(parent);
@@ -79,12 +67,11 @@ public class SecureClassLoader extends ClassLoader {
     /**
      * Returns the {@code PermissionCollection} for the specified {@code
      * CodeSource}.
-     * 
+     *
      * @param codesource
      *            the code source.
      * @return the {@code PermissionCollection} for the specified {@code
      *         CodeSource}.
-     * @since Android 1.0
      */
     protected PermissionCollection getPermissions(CodeSource codesource) {
         // Do nothing by default, ProtectionDomain will take care about
@@ -95,7 +82,7 @@ public class SecureClassLoader extends ClassLoader {
     /**
      * Constructs a new class from an array of bytes containing a class
      * definition in class file format with an optional {@code CodeSource}.
-     * 
+     *
      * @param name
      *            the name of the new class.
      * @param b
@@ -116,7 +103,6 @@ public class SecureClassLoader extends ClassLoader {
      *             if the package to which this class is to be added, already
      *             contains classes which were signed by different certificates,
      *             or if the class name begins with "java."
-     * @since Android 1.0
      */
     protected final Class<?> defineClass(String name, byte[] b, int off, int len,
             CodeSource cs) {
@@ -127,7 +113,7 @@ public class SecureClassLoader extends ClassLoader {
     /**
      * Constructs a new class from an array of bytes containing a class
      * definition in class file format with an optional {@code CodeSource}.
-     * 
+     *
      * @param name
      *            the name of the new class.
      * @param b
@@ -141,7 +127,6 @@ public class SecureClassLoader extends ClassLoader {
      *             if the package to which this class is to be added, already
      *             contains classes which were signed by different certificates,
      *             or if the class name begins with "java."
-     * @since Android 1.0
      */
     protected final Class<?> defineClass(String name, ByteBuffer b, CodeSource cs) {
         //FIXME 1.5 - remove b.array(), call super.defineClass(,ByteBuffer,)
@@ -165,7 +150,7 @@ public class SecureClassLoader extends ClassLoader {
         // will have it's own ProtectionDomain, which does not look right.
         ProtectionDomain pd;
         synchronized (pds) {
-            if ((pd = (ProtectionDomain) pds.get(cs)) != null) {
+            if ((pd = pds.get(cs)) != null) {
                 return pd;
             }
             PermissionCollection perms = getPermissions(cs);

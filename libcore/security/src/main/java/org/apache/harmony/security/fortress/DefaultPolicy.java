@@ -163,7 +163,7 @@ public class DefaultPolicy extends Policy {
 
     // A flag indicating brand new instance which needs to be loaded
     // on the first appeal to it's data.
-    private boolean initiailized;
+    private boolean initialized;
 
     /**
      * Default constructor, equivalent to
@@ -180,7 +180,7 @@ public class DefaultPolicy extends Policy {
      */
     public DefaultPolicy(DefaultPolicyParser dpr) {
         parser = dpr;
-        initiailized = false;
+        initialized = false;
         refresh();
     }
 
@@ -191,9 +191,9 @@ public class DefaultPolicy extends Policy {
      * to be <code>null</code> if the domain is <code>null</code>.
      */
     public PermissionCollection getPermissions(ProtectionDomain pd) {
-        if (!initiailized) {
+        if (!initialized) {
             synchronized (this) {
-                if (!initiailized) {
+                if (!initialized) {
                     refresh();
                 }
             }
@@ -230,9 +230,9 @@ public class DefaultPolicy extends Policy {
      * The evaluation assumes that current principals are undefined.
      */
     public PermissionCollection getPermissions(CodeSource cs) {
-        if (!initiailized) {
+        if (!initialized) {
             synchronized (this) {
-                if (!initiailized) {
+                if (!initialized) {
                     refresh();
                 }
             }
@@ -306,6 +306,6 @@ public class DefaultPolicy extends Policy {
 
             cache.clear();
         }
-        initiailized = true;
+        initialized = true;
     }
 }

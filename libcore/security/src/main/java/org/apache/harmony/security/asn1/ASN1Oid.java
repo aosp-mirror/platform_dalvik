@@ -154,7 +154,7 @@ public class ASN1Oid extends ASN1Primitive {
 
         public Object getDecodedObject(BerInputStream in) throws IOException {
 
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
 
             int element;
 

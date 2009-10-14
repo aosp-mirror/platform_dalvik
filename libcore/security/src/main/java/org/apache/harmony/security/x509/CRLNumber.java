@@ -84,5 +84,5 @@ public class CRLNumber extends ExtensionValue {
     /**
      * ASN.1 Encoder/Decoder.
      */
-    public static ASN1Type ASN1 = ASN1Integer.getInstance();
+    public static final ASN1Type ASN1 = ASN1Integer.getInstance();
 }

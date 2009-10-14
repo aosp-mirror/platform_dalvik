@@ -70,7 +70,7 @@ public class AccessDescription {
     }
 
     public String toString() {
-        StringBuffer res = new StringBuffer();
+        StringBuilder res = new StringBuilder();
         res.append("\n-- AccessDescription:"); //$NON-NLS-1$
         res.append("\naccessMethod:  "); //$NON-NLS-1$
         res.append(accessMethod);

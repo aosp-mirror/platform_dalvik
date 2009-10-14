@@ -24,13 +24,9 @@ import java.util.Collections;
  * The parameters to initialize a <i>Collection</i> type {@code CertStore} instance.
  * <p>
  * It is used to specify the {@code Collection} where the {@code CertStore} will
- * retrieve the certificates and CRLs from. 
- * </p>
- * 
- * @since Android 1.0
+ * retrieve the certificates and CRLs from.
  */
 public class CollectionCertStoreParameters implements CertStoreParameters {
-    // BEGIN android-changed
     // Default empty and immutable collection.
     // Used if <code>CollectionCertStoreParameters</code>instance
     // created by the no arg constructor
@@ -38,14 +34,11 @@ public class CollectionCertStoreParameters implements CertStoreParameters {
     // A <code>Collection</code> of <code>Certificate</code>s
     // and <code>CRL</code>s
     private final Collection<?> collection;
-    // END android-changed
 
     /**
      * Creates a new {@code CollectionCertStoreParameters} without a collection.
      * <p>
      * The default collection is an empty and unmodifiable {@code Collection}.
-     * </p>
-     * @since Android 1.0
      */
     public CollectionCertStoreParameters() {
         this.collection = defaultCollection;
@@ -57,14 +50,12 @@ public class CollectionCertStoreParameters implements CertStoreParameters {
      * <p>
      * The specified collection is not copied and therefore may be modified at
      * any time.
-     * </p>
-     * 
+     *
      * @param collection
      *            the collection where the {@code Certificate}s and {@code CRL}s
      *            will be retrieved from.
      * @throws NullPointerException
      *             if {@code collection is null}.
-     * @since Android 1.0
      */
     public CollectionCertStoreParameters(Collection<?> collection) {
         this.collection = collection;
@@ -76,21 +67,23 @@ public class CollectionCertStoreParameters implements CertStoreParameters {
     /**
      * Clones this {@code CollectionCertStoreParameters} instance, but not the
      * underlying collection.
-     * 
+     *
      * @return the cloned instance.
-     * @since Android 1.0
      */
     public Object clone() {
-        return new CollectionCertStoreParameters(collection);
+        try {
+			return super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
     }
 
     /**
      * Returns the collection where the {@code Certificate}s and {@code CRL}s
      * are retrieved from.
-     * 
+     *
      * @return the collection where the {@code Certificate}s and {@code CRL}s
      *         will be retrieved from.
-     * @since Android 1.0
      */
     public Collection<?> getCollection() {
         return collection;
@@ -98,13 +91,12 @@ public class CollectionCertStoreParameters implements CertStoreParameters {
 
     /**
      * Returns the string representation of this instance.
-     * 
+     *
      * @return the string representation of this instance.
-     * @since Android 1.0
      */
     public String toString() {
-        StringBuffer sb =
-            new StringBuffer("CollectionCertStoreParameters: [\ncollection: "); //$NON-NLS-1$
+        StringBuilder sb =
+            new StringBuilder("CollectionCertStoreParameters: [\ncollection: "); //$NON-NLS-1$
         sb.append(getCollection().toString());
         sb.append("\n]"); //$NON-NLS-1$
         return sb.toString();

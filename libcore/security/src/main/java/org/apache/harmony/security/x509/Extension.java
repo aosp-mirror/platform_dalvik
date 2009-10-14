@@ -58,34 +58,34 @@ public class Extension {
     
     // constants: the extension OIDs
     // certificate extensions:
-    public static final int[] SUBJ_DIRECTORY_ATTRS = {2, 5, 29, 9};
-    public static final int[] SUBJ_KEY_ID = {2, 5, 29, 14};
-    public static final int[] KEY_USAGE = {2, 5, 29, 15};
-    public static final int[] PRIVATE_KEY_USAGE_PERIOD = {2, 5, 29, 16};
-    public static final int[] SUBJECT_ALT_NAME = {2, 5, 29, 17};
-    public static final int[] ISSUER_ALTERNATIVE_NAME = {2, 5, 29, 18};
-    public static final int[] BASIC_CONSTRAINTS = {2, 5, 29, 19};
-    public static final int[] NAME_CONSTRAINTS = {2, 5, 29, 30};
-    public static final int[] CRL_DISTR_POINTS = {2, 5, 29, 31};
-    public static final int[] CERTIFICATE_POLICIES = {2, 5, 29, 32};
-    public static final int[] POLICY_MAPPINGS = {2, 5, 29, 33};
-    public static final int[] AUTH_KEY_ID = {2, 5, 29, 35};
-    public static final int[] POLICY_CONSTRAINTS = {2, 5, 29, 36};
-    public static final int[] EXTENDED_KEY_USAGE = {2, 5, 29, 37};
-    public static final int[] FRESHEST_CRL = {2, 5, 29, 46};
-    public static final int[] INHIBIT_ANY_POLICY = {2, 5, 29, 54};
-    public static final int[] AUTHORITY_INFO_ACCESS =
+    static final int[] SUBJ_DIRECTORY_ATTRS = {2, 5, 29, 9};
+    static final int[] SUBJ_KEY_ID = {2, 5, 29, 14};
+    static final int[] KEY_USAGE = {2, 5, 29, 15};
+    static final int[] PRIVATE_KEY_USAGE_PERIOD = {2, 5, 29, 16};
+    static final int[] SUBJECT_ALT_NAME = {2, 5, 29, 17};
+    static final int[] ISSUER_ALTERNATIVE_NAME = {2, 5, 29, 18};
+    static final int[] BASIC_CONSTRAINTS = {2, 5, 29, 19};
+    static final int[] NAME_CONSTRAINTS = {2, 5, 29, 30};
+    static final int[] CRL_DISTR_POINTS = {2, 5, 29, 31};
+    static final int[] CERTIFICATE_POLICIES = {2, 5, 29, 32};
+    static final int[] POLICY_MAPPINGS = {2, 5, 29, 33};
+    static final int[] AUTH_KEY_ID = {2, 5, 29, 35};
+    static final int[] POLICY_CONSTRAINTS = {2, 5, 29, 36};
+    static final int[] EXTENDED_KEY_USAGE = {2, 5, 29, 37};
+    static final int[] FRESHEST_CRL = {2, 5, 29, 46};
+    static final int[] INHIBIT_ANY_POLICY = {2, 5, 29, 54};
+    static final int[] AUTHORITY_INFO_ACCESS =
                                             {1, 3, 6, 1, 5, 5, 7, 1, 1};
-    public static final int[] SUBJECT_INFO_ACCESS =
+    static final int[] SUBJECT_INFO_ACCESS =
                                             {1, 3, 6, 1, 5, 5, 7, 1, 11};
     // crl extensions:
-    public static final int[] ISSUING_DISTR_POINT = {2, 5, 29, 28};
+    static final int[] ISSUING_DISTR_POINT = {2, 5, 29, 28};
     // crl entry extensions:
-    public static final int[] CRL_NUMBER = {2, 5, 29, 20};
-    public static final int[] CERTIFICATE_ISSUER = {2, 5, 29, 29};
-    public static final int[] INVALIDITY_DATE = {2, 5, 29, 24};
-    public static final int[] REASON_CODE = {2, 5, 29, 21};
-    public static final int[] ISSUING_DISTR_POINTS = {2, 5, 29, 28};
+    static final int[] CRL_NUMBER = {2, 5, 29, 20};
+    static final int[] CERTIFICATE_ISSUER = {2, 5, 29, 29};
+    static final int[] INVALIDITY_DATE = {2, 5, 29, 24};
+    static final int[] REASON_CODE = {2, 5, 29, 21};
+    static final int[] ISSUING_DISTR_POINTS = {2, 5, 29, 28};
     
     // the value of extnID field of the structure
     private final int[] extnID;
@@ -237,6 +237,10 @@ public class Extension {
         return Arrays.equals(extnID, extn.extnID) 
             && (critical == extn.critical)
             && Arrays.equals(extnValue, extn.extnValue);
+    }
+    
+    public int hashCode() {
+    	return (extnID.hashCode() * 37 + (critical ? 1 : 0)) * 37 + extnValue.hashCode();
     }
 
     public ExtensionValue getDecodedExtensionValue() throws IOException {

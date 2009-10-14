@@ -205,9 +205,7 @@ public class SecurityTest extends TestCase {
             }
             assertEquals("Providers not removed", 0,
                     Security.getProviders().length);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally { // restore providers
+        } finally {    // restore providers
             for (int i = 0; i < providers.length; i++) {
                 Security.addProvider(providers[i]);
             }
@@ -453,6 +451,9 @@ public class SecurityTest extends TestCase {
             fail("No expected NullPointerException.");
         } catch (NullPointerException e) {
         }
+        
+        Security.setProperty("myprop","test white space    ");
+        assertEquals("test white space", Security.getProperty("myprop"));
     }
 
     /**

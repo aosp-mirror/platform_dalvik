@@ -15,17 +15,10 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexey V. Varlamov
-* @version $Revision$
-*/
-
 package java.security;
 
 /**
  * {@code Guard} implementors protect access to other objects.
- * 
- * @since Android 1.0
  */
 public interface Guard {
 
@@ -33,12 +26,11 @@ public interface Guard {
      * Checks whether access to the specified {@code Object} should be granted.
      * This method returns silently if access is granted, otherwise a {@code
      * SecurityException} is thrown.
-     * 
+     *
      * @param object
      *            the object to be protected by this {@code Guard}.
      * @throws SecurityException
      *             if access is not granted.
-     * @since Android 1.0
      */
     public void checkGuard(Object object) throws SecurityException;
 }

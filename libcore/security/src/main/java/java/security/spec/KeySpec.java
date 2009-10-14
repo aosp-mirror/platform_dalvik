@@ -20,8 +20,6 @@ package java.security.spec;
 /**
  * The marker interface for key specifications. The purpose is
  * to group key specifications for cryptographic keys.
- * 
- * @since Android 1.0
  */
 public interface KeySpec {
 }

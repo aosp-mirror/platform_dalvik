@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.util.Iterator;
@@ -35,8 +30,6 @@ import org.apache.harmony.security.provider.crypto.SHA1PRNG_SecureRandomImpl;
 /**
  * {@code SecureRandom} is an engine class which is capable of generating
  * cryptographically secure pseudo-random numbers.
- * 
- * @since Android 1.0
  */
 public class SecureRandom extends Random {
     
@@ -50,7 +43,7 @@ public class SecureRandom extends Random {
     
     private Provider provider;
     
-    private SecureRandomSpi secureRandomSpi; 
+    private SecureRandomSpi secureRandomSpi;
     
     private String algorithm;
     
@@ -69,8 +62,6 @@ public class SecureRandom extends Random {
      * Constructs a new instance of {@code SecureRandom}. An implementation for
      * the highest-priority provider is returned. The constructed instance will
      * not have been seeded.
-     * 
-     * @since Android 1.0
      */
     public SecureRandom() {
         super(0);
@@ -97,7 +88,6 @@ public class SecureRandom extends Random {
      * 
      * @param seed
      *            the seed for this generator.
-     * @since Android 1.0
      */
     public SecureRandom(byte[] seed) {
         this();
@@ -125,7 +115,6 @@ public class SecureRandom extends Random {
      *            the implementation.
      * @param provider
      *            the security provider.
-     * @since Android 1.0
      */
     protected SecureRandom(SecureRandomSpi secureRandomSpi,
                            Provider provider) {
@@ -154,7 +143,6 @@ public class SecureRandom extends Random {
      *             if the specified algorithm is not available.
      * @throws NullPointerException
      *             if {@code algorithm} is {@code null}.
-     * @since Android 1.0
      */
     public static SecureRandom getInstance(String algorithm)
                                 throws NoSuchAlgorithmException {
@@ -183,7 +171,6 @@ public class SecureRandom extends Random {
      *             if the specified provider is not available.
      * @throws NullPointerException
      *             if {@code algorithm} is {@code null}.
-     * @since Android 1.0
      */
     public static SecureRandom getInstance(String algorithm, String provider)
                                 throws NoSuchAlgorithmException, NoSuchProviderException {
@@ -212,7 +199,6 @@ public class SecureRandom extends Random {
      *             if the specified algorithm is not available.
      * @throws NullPointerException
      *             if {@code algorithm} is {@code null}.
-     * @since Android 1.0
      */
     public static SecureRandom getInstance(String algorithm, Provider provider)
                                 throws NoSuchAlgorithmException {
@@ -232,7 +218,6 @@ public class SecureRandom extends Random {
      * Returns the provider associated with this {@code SecureRandom}.
      * 
      * @return the provider associated with this {@code SecureRandom}.
-     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
@@ -242,7 +227,6 @@ public class SecureRandom extends Random {
      * Returns the name of the algorithm of this {@code SecureRandom}.
      * 
      * @return the name of the algorithm of this {@code SecureRandom}.
-     * @since Android 1.0
      */
     public String getAlgorithm() {
         return algorithm;
@@ -255,7 +239,6 @@ public class SecureRandom extends Random {
      * 
      * @param seed
      *            the new seed.
-     * @since Android 1.0
      */
     public synchronized void setSeed(byte[] seed) {
         secureRandomSpi.engineSetSeed(seed);
@@ -268,8 +251,8 @@ public class SecureRandom extends Random {
      * 
      * @param seed
      *            the new seed.
-     * @since Android 1.0
      */
+    @Override
     public void setSeed(long seed) {
         if (seed == 0) {    // skip call from Random
             return;
@@ -293,8 +276,8 @@ public class SecureRandom extends Random {
      * 
      * @param bytes
      *            the {@code byte[]} to be filled with random bytes.
-     * @since Android 1.0
      */
+    @Override
     public synchronized void nextBytes(byte[] bytes) {
         secureRandomSpi.engineNextBytes(bytes);
     }
@@ -307,8 +290,8 @@ public class SecureRandom extends Random {
      *            number of bits to be generated. An input value should be in
      *            the range [0, 32].
      * @return an {@code int} containing the specified number of random bits.
-     * @since Android 1.0
      */
+    @Override
     protected final int next(int numBits) {
         if (numBits < 0) {
             numBits = 0;
@@ -336,7 +319,6 @@ public class SecureRandom extends Random {
      * @param numBytes
      *            the number of seed bytes.
      * @return the seed bytes
-     * @since Android 1.0
      */
     public static byte[] getSeed(int numBytes) {
         if (internalSecureRandom == null) {
@@ -352,7 +334,6 @@ public class SecureRandom extends Random {
      * @param numBytes
      *            the number of seed bytes.
      * @return the seed bytes.
-     * @since Android 1.0
      */
     public byte[] generateSeed(int numBytes) {
         return secureRandomSpi.engineGenerateSeed(numBytes);

@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.nio.ByteBuffer;
@@ -31,12 +26,11 @@ import org.apache.harmony.security.internal.nls.Messages;
  * {@code MessageDigest} is an engine class which is capable of generating one
  * way hash values for arbitrary input, utilizing the algorithm it was
  * initialized with.
- * 
+ *
  * @see MessageDigestSpi
- * @since Android 1.0
  */
 public abstract class MessageDigest extends MessageDigestSpi {
-    
+
     // The service name
     private static final String SERVICE = "MessageDigest"; //$NON-NLS-1$
 
@@ -55,7 +49,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * 
      * @param algorithm
      *            the name of algorithm to use
-     * @since Android 1.0
      */
     protected MessageDigest(String algorithm) {
         this.algorithm = algorithm;
@@ -73,7 +66,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      *             if the specified algorithm is not available
      * @throws NullPointerException
      *             if {@code algorithm} is {@code null}
-     * @since Android 1.0
      */
     public static MessageDigest getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -88,11 +80,9 @@ public abstract class MessageDigest extends MessageDigestSpi {
                 result.algorithm = algorithm;
                 result.provider = engine.provider;
                 return result;
-            } else {
-                result = new MessageDigestImpl((MessageDigestSpi) engine.spi,
-                        engine.provider, algorithm);
-                return result;
             }
+            return new MessageDigestImpl((MessageDigestSpi) engine.spi,
+                    engine.provider, algorithm);
         }
     }
 
@@ -112,16 +102,17 @@ public abstract class MessageDigest extends MessageDigestSpi {
      *             if the specified provider is not available
      * @throws NullPointerException
      *             if {@code algorithm} is {@code null}
-     * @since Android 1.0
      */
     public static MessageDigest getInstance(String algorithm, String provider)
             throws NoSuchAlgorithmException, NoSuchProviderException {
         if ((provider == null) || (provider.length() == 0)) {
-            throw new IllegalArgumentException(Messages.getString("security.02")); //$NON-NLS-1$
+            throw new IllegalArgumentException(Messages
+                    .getString("security.02")); //$NON-NLS-1$
         }
         Provider p = Security.getProvider(provider);
         if (p == null) {
-            throw new NoSuchProviderException(Messages.getString("security.03", provider)); //$NON-NLS-1$
+            throw new NoSuchProviderException(Messages.getString(
+                    "security.03", provider)); //$NON-NLS-1$
         }
         return getInstance(algorithm, p);
     }
@@ -140,12 +131,12 @@ public abstract class MessageDigest extends MessageDigestSpi {
      *             if the specified algorithm is not available
      * @throws NullPointerException
      *             if {@code algorithm} is {@code null}
-     * @since Android 1.0
      */
     public static MessageDigest getInstance(String algorithm, Provider provider)
             throws NoSuchAlgorithmException {
         if (provider == null) {
-            throw new IllegalArgumentException(Messages.getString("security.04")); //$NON-NLS-1$
+            throw new IllegalArgumentException(Messages
+                    .getString("security.04")); //$NON-NLS-1$
         }
         if (algorithm == null) {
             throw new NullPointerException(Messages.getString("security.01")); //$NON-NLS-1$
@@ -158,19 +149,16 @@ public abstract class MessageDigest extends MessageDigestSpi {
                 result.algorithm = algorithm;
                 result.provider = provider;
                 return result;
-            } else {
-                result = new MessageDigestImpl((MessageDigestSpi) engine.spi,
-                        provider, algorithm);
-                return result;
             }
+            result = new MessageDigestImpl((MessageDigestSpi) engine.spi,
+                    provider, algorithm);
+            return result;
         }
     }
 
     /**
      * Puts this {@code MessageDigest} back in an initial state, such that it is
      * ready to compute a one way hash value.
-     * 
-     * @since Android 1.0
      */
     public void reset() {
         engineReset();
@@ -200,11 +188,10 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * @throws IllegalArgumentException
      *             if {@code offset} or {@code len} are not valid in respect to
      *             {@code input}
-     * @since Android 1.0
      */
     public void update(byte[] input, int offset, int len) {
         if (input == null ||
-                // offset < 0 || len < 0 ||
+        // offset < 0 || len < 0 ||
                 // checks for negative values are commented out intentionally
                 // see HARMONY-1120 for details
                 (long) offset + (long) len > input.length) {
@@ -221,7 +208,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      *            the {@code byte} array
      * @throws NullPointerException
      *             if {@code input} is {@code null}
-     * @since Android 1.0
      */
     public void update(byte[] input) {
         if (input == null) {
@@ -259,11 +245,10 @@ public abstract class MessageDigest extends MessageDigestSpi {
      *             if {@code offset} or {@code len} are not valid in respect to
      *             {@code buf}
      * @see #reset()
-     * @since Android 1.0
      */
     public int digest(byte[] buf, int offset, int len) throws DigestException {
         if (buf == null ||
-                // offset < 0 || len < 0 ||
+        // offset < 0 || len < 0 ||
                 // checks for negative values are commented out intentionally
                 // see HARMONY-1148 for details
                 (long) offset + (long) len > buf.length) {
@@ -282,7 +267,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      *            the {@code byte} array
      * @return the computed one way hash value
      * @see #reset()
-     * @since Android 1.0
      */
     public byte[] digest(byte[] input) {
         update(input);
@@ -294,8 +278,8 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * {@code MessageDigest} including the name of its algorithm.
      * 
      * @return a printable representation for this {@code MessageDigest}
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         return "MESSAGE DIGEST " + algorithm; //$NON-NLS-1$
     }
@@ -309,7 +293,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * @param digestb
      *            the second digest to be compared
      * @return {@code true} if the two hashes are equal, {@code false} otherwise
-     * @since Android 1.0
      */
     public static boolean isEqual(byte[] digesta, byte[] digestb) {
         if (digesta.length != digestb.length) {
@@ -327,7 +310,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * Returns the name of the algorithm of this {@code MessageDigest}.
      * 
      * @return the name of the algorithm of this {@code MessageDigest}
-     * @since Android 1.0
      */
     public final String getAlgorithm() {
         return algorithm;
@@ -337,7 +319,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * Returns the provider associated with this {@code MessageDigest}.
      * 
      * @return the provider associated with this {@code MessageDigest}
-     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
@@ -349,7 +330,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * {@code 0} is returned.
      * 
      * @return the digest length in bytes, or {@code 0}
-     * @since Android 1.0
      */
     public final int getDigestLength() {
         int l = engineGetDigestLength();
@@ -367,12 +347,12 @@ public abstract class MessageDigest extends MessageDigestSpi {
         }
     }
 
+    @Override
     public Object clone() throws CloneNotSupportedException {
         if (this instanceof Cloneable) {
             return super.clone();
-        } else {
-            throw new CloneNotSupportedException();
         }
+        throw new CloneNotSupportedException();
     }
 
     /**
@@ -380,7 +360,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * 
      * @param input
      *            the {@code ByteBuffer}
-     * @since Android 1.0
      */
     public final void update(ByteBuffer input) {
         engineUpdate(input);
@@ -392,7 +371,7 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * 
      */
     private static class MessageDigestImpl extends MessageDigest {
-        
+
         // MessageDigestSpi implementation
         private MessageDigestSpi spiImpl;
 
@@ -405,38 +384,44 @@ public abstract class MessageDigest extends MessageDigestSpi {
         }
 
         // engineReset() implementation
+        @Override
         protected void engineReset() {
             spiImpl.engineReset();
         }
 
         // engineDigest() implementation
+        @Override
         protected byte[] engineDigest() {
             return spiImpl.engineDigest();
         }
 
         // engineGetDigestLength() implementation
+        @Override
         protected int engineGetDigestLength() {
             return spiImpl.engineGetDigestLength();
         }
 
         // engineUpdate() implementation
+        @Override
         protected void engineUpdate(byte arg0) {
             spiImpl.engineUpdate(arg0);
         }
 
         // engineUpdate() implementation
+        @Override
         protected void engineUpdate(byte[] arg0, int arg1, int arg2) {
             spiImpl.engineUpdate(arg0, arg1, arg2);
         }
 
         // Returns a clone if the spiImpl is cloneable
+        @Override
         public Object clone() throws CloneNotSupportedException {
             if (spiImpl instanceof Cloneable) {
                 MessageDigestSpi spi = (MessageDigestSpi) spiImpl.clone();
                 return new MessageDigestImpl(spi, getProvider(), getAlgorithm());
-            } else {
-                throw new CloneNotSupportedException();
             }
+            
+            throw new CloneNotSupportedException();
         }
     }
 }

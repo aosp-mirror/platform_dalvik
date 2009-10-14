@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.BufferedInputStream;
@@ -39,7 +34,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Map.Entry;
 
+import org.apache.harmony.security.Util;
 import org.apache.harmony.security.fortress.Engine;
 import org.apache.harmony.security.fortress.PolicyUtils;
 import org.apache.harmony.security.fortress.SecurityAccess;
@@ -50,8 +47,6 @@ import org.apache.harmony.security.internal.nls.Messages;
  * {@code Security} is the central class in the Java Security API. It manages
  * the list of security {@code Provider} that have been installed into this
  * runtime environment.
- * 
- * @since Android 1.0
  */
 public final class Security {
 
@@ -87,57 +82,40 @@ public final class Security {
                 // END android-added
 
                 // BEGIN android-removed
-                // File f = new File(System.getProperty("java.home") //$NON-NLS-1$
-                //         + File.separator + "lib" + File.separator //$NON-NLS-1$
-                //         + "security" + File.separator + "java.security"); //$NON-NLS-1$ //$NON-NLS-2$
-                // if (f.exists()) {
-                //     try {
-                //         FileInputStream fis = new FileInputStream(f);
-                //         InputStream is = new BufferedInputStream(fis);
-                //         secprops.load(is);
-                //         loaded = true;
-                //         is.close();
-                //     } catch (IOException e) {
-                ////         System.err.println("Could not load Security properties file: "
-                ////                         + e);
-                //     }
-                // }
-                //
-                // if ("true".equalsIgnoreCase(secprops.getProperty("security.allowCustomPropertiesFile", "true"))) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                //     String securityFile = System.getProperty("java.security.properties"); //$NON-NLS-1$
-                //     if (securityFile != null) {
-                //         if (securityFile.startsWith("=")) { // overwrite //$NON-NLS-1$
-                //            secprops = new Properties();
-                //            loaded = false;
-                //            securityFile = securityFile.substring(1);
-                //         }
-                //         try {
-                //             securityFile = PolicyUtils.expand(securityFile, System.getProperties());
-                //         } catch (PolicyUtils.ExpansionFailedException e) {
-                ////            System.err.println("Could not load custom Security properties file "
-                ////                     + securityFile +": " + e);
-                //         }
-                //         f = new File(securityFile);
-                //         InputStream is;
-                //         try {
-                //             if (f.exists()) {
-                //                 FileInputStream fis = new FileInputStream(f);
-                //                 is = new BufferedInputStream(fis);
-                //             } else {
-                //                 URL url = new URL(securityFile);
-                //                 is = new BufferedInputStream(url.openStream());
-                //             }
-                //             secprops.load(is);
-                //             loaded = true;
-                //             is.close();
-                //         } catch (IOException e) {
-                // //             System.err.println("Could not load custom Security properties file "
-                // //                    + securityFile +": " + e);
-                //         }
-                //     }
-                // }
+//                if (Util.equalsIgnoreCase("true", secprops.getProperty("security.allowCustomPropertiesFile", "true"))) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+//                    String securityFile = System.getProperty("java.security.properties"); //$NON-NLS-1$
+//                    if (securityFile != null) {
+//                        if (securityFile.startsWith("=")) { // overwrite //$NON-NLS-1$
+//                            secprops = new Properties();
+//                            loaded = false;
+//                            securityFile = securityFile.substring(1);
+//                        }
+//                        try {
+//                            securityFile = PolicyUtils.expand(securityFile, System.getProperties());
+//                        } catch (PolicyUtils.ExpansionFailedException e) {
+////                            System.err.println("Could not load custom Security properties file "
+////                                    + securityFile +": " + e);
+//                        }
+//                        f = new File(securityFile);
+//                        InputStream is;
+//                        try {
+//                            if (f.exists()) {
+//                                FileInputStream fis = new FileInputStream(f);
+//                                is = new BufferedInputStream(fis);
+//                            } else {
+//                                URL url = new URL(securityFile);
+//                                is = new BufferedInputStream(url.openStream());
+//                            }
+//                            secprops.load(is);
+//                            loaded = true;
+//                            is.close();
+//                        } catch (IOException e) {
+// //                           System.err.println("Could not load custom Security properties file "
+// //                                   + securityFile +": " + e);
+//                        }
+//                    }
+//                }
                 // END android-removed
-
                 if (!loaded) {
                     registerDefaultProviders();
                 }
@@ -161,12 +139,9 @@ public final class Security {
         secprops.put("security.provider.4", "org.bouncycastle.jce.provider.BouncyCastleProvider");  //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    // BEGIN android-note
-    // added Deprecated annotation
-    // END android-note
     /**
      * Returns value for the specified algorithm with the specified name.
-     * 
+     *
      * @param algName
      *            the name of the algorithm.
      * @param propName
@@ -174,7 +149,6 @@ public final class Security {
      * @return value of the property.
      * @deprecated Use {@link AlgorithmParameters} and {@link KeyFactory}
      *             instead.
-     * @since Android 1.0
      */
     @Deprecated
     public static String getAlgorithmProperty(String algName, String propName) {
@@ -189,7 +163,7 @@ public final class Security {
             for (Enumeration e = providers[i].propertyNames(); e
                     .hasMoreElements();) {
                 String pname = (String) e.nextElement();
-                if (prop.equalsIgnoreCase(pname)) {
+                if (Util.equalsIgnoreCase(prop, pname)) {
                     return providers[i].getProperty(pname);
                 }
             }
@@ -206,8 +180,7 @@ public final class Security {
      * the {@code SecurityPermission} {@code insertProvider.NAME} (where NAME is
      * the provider name) to be granted, otherwise a {@code SecurityException}
      * will be thrown.
-     * </p>
-     * 
+     *
      * @param provider
      *            the provider to insert.
      * @param position
@@ -218,7 +191,6 @@ public final class Security {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public static synchronized int insertProviderAt(Provider provider,
             int position) {
@@ -246,8 +218,7 @@ public final class Security {
      * the {@code SecurityPermission} {@code insertProvider.NAME} (where NAME is
      * the provider name) to be granted, otherwise a {@code SecurityException}
      * will be thrown.
-     * </p>
-     * 
+     *
      * @param provider
      *            the provider to be added.
      * @return the actual position or {@code -1} if the given {@code provider}
@@ -255,7 +226,6 @@ public final class Security {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public static int addProvider(Provider provider) {
         return insertProviderAt(provider, 0);
@@ -269,20 +239,17 @@ public final class Security {
      * <p>
      * Returns silently if {@code name} is {@code null} or no provider with the
      * specified name is installed.
-     * </p>
      * <p>
      * If a {@code SecurityManager} is installed, code calling this method needs
      * the {@code SecurityPermission} {@code removeProvider.NAME} (where NAME is
      * the provider name) to be granted, otherwise a {@code SecurityException}
      * will be thrown.
-     * </p>
-     * 
+     *
      * @param name
      *            the name of the provider to remove.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public static synchronized void removeProvider(String name) {
         // It is not clear from spec.:
@@ -311,9 +278,8 @@ public final class Security {
     /**
      * Returns an array containing all installed providers. The providers are
      * ordered according their preference order.
-     * 
+     *
      * @return an array containing all installed providers.
-     * @since Android 1.0
      */
     public static synchronized Provider[] getProviders() {
         return Services.getProviders();
@@ -323,11 +289,10 @@ public final class Security {
      * Returns the {@code Provider} with the specified name. Returns {@code
      * null} if name is {@code null} or no provider with the specified name is
      * installed.
-     * 
+     *
      * @param name
      *            the name of the requested provider.
      * @return the provider with the specified name, maybe {@code null}.
-     * @since Android 1.0
      */
     public static synchronized Provider getProvider(String name) {
         return Services.getProvider(name);
@@ -337,15 +302,15 @@ public final class Security {
      * Returns the array of providers which meet the user supplied string
      * filter. The specified filter must be supplied in one of two formats:
      * <nl>
-     * <li> CRYPTO_SERVICE_NAME.ALGORITHM_OR_TYPE 
+     * <li> CRYPTO_SERVICE_NAME.ALGORITHM_OR_TYPE
      * <p>
-     * (for example: "MessageDigest.SHA") 
+     * (for example: "MessageDigest.SHA")
      * <li> CRYPTO_SERVICE_NAME.ALGORITHM_OR_TYPE
      * ATTR_NAME:ATTR_VALUE
      * <p>
-     * (for example: "Signature.MD5withRSA KeySize:512")
+     * (for example: "Signature.MD2withRSA KeySize:512")
      * </nl>
-     * 
+     *
      * @param filter
      *            case-insensitive filter.
      * @return the providers which meet the user supplied string filter {@code
@@ -355,7 +320,6 @@ public final class Security {
      *             if an unusable filter is supplied.
      * @throws NullPointerException
      *             if {@code filter} is {@code null}.
-     * @since Android 1.0
      */
     public static Provider[] getProviders(String filter) {
         if (filter == null) {
@@ -366,7 +330,7 @@ public final class Security {
                     Messages.getString("security.2B")); //$NON-NLS-1$
         }
         HashMap<String, String> hm = new HashMap<String, String>();
-        int i = filter.indexOf(":"); //$NON-NLS-1$
+        int i = filter.indexOf(':');
         if ((i == filter.length() - 1) || (i == 0)) {
             throw new InvalidParameterException(
                     Messages.getString("security.2B")); //$NON-NLS-1$
@@ -389,10 +353,10 @@ public final class Security {
      * be an empty string. <li> CRYPTO_SERVICE_NAME.ALGORITHM_OR_TYPE
      * ATTR_NAME:ATTR_VALUE
      * <p>
-     * for example: "Signature.MD5withRSA KeySize:512" where "KeySize:512" is
+     * for example: "Signature.MD2withRSA KeySize:512" where "KeySize:512" is
      * the value of the filter map entry.
      * </nl>
-     * 
+     *
      * @param filter
      *            case-insensitive filter.
      * @return the providers which meet the user supplied string filter {@code
@@ -402,7 +366,6 @@ public final class Security {
      *             if an unusable filter is supplied.
      * @throws NullPointerException
      *             if {@code filter} is {@code null}.
-     * @since Android 1.0
      */
     public static synchronized Provider[] getProviders(Map<String,String> filter) {
         if (filter == null) {
@@ -412,15 +375,15 @@ public final class Security {
             return null;
         }
         java.util.List<Provider> result = Services.getProvidersList();
-        Set keys = filter.entrySet();
-        Map.Entry entry;
-        for (Iterator it = keys.iterator(); it.hasNext();) {
-            entry = (Map.Entry) it.next();
-            String key = (String) entry.getKey();
-            String val = (String) entry.getValue();
+        Set<Entry<String, String>> keys = filter.entrySet();
+        Map.Entry<String, String> entry;
+        for (Iterator<Entry<String, String>> it = keys.iterator(); it.hasNext();) {
+            entry = it.next();
+            String key = entry.getKey();
+            String val = entry.getValue();
             String attribute = null;
-            int i = key.indexOf(" "); //$NON-NLS-1$
-            int j = key.indexOf("."); //$NON-NLS-1$
+            int i = key.indexOf(' ');
+            int j = key.indexOf('.');
             if (j == -1) {
                 throw new InvalidParameterException(
                         Messages.getString("security.2B")); //$NON-NLS-1$
@@ -451,7 +414,7 @@ public final class Security {
             Provider p;
             for (int k = 0; k < result.size(); k++) {
                 try {
-                    p = (Provider) result.get(k);
+                    p = result.get(k);
                 } catch (IndexOutOfBoundsException e) {
                     break;
                 }
@@ -463,9 +426,8 @@ public final class Security {
         }
         if (result.size() > 0) {
             return result.toArray(new Provider[result.size()]);
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -475,15 +437,13 @@ public final class Security {
      * the {@code SecurityPermission} {@code getProperty.KEY} (where KEY is the
      * specified {@code key}) to be granted, otherwise a {@code
      * SecurityException} will be thrown.
-     * </p>
-     * 
+     *
      * @param key
      *            the name of the requested security property.
      * @return the value of the security property.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public static String getProperty(String key) {
         if (key == null) {
@@ -493,7 +453,11 @@ public final class Security {
         if (sm != null) {
             sm.checkSecurityAccess("getProperty." + key); //$NON-NLS-1$
         }
-        return secprops.getProperty(key);
+        String property = secprops.getProperty(key);
+        if (property != null) {
+            property = property.trim();
+        }
+        return property;
     }
 
     /**
@@ -503,8 +467,7 @@ public final class Security {
      * the {@code SecurityPermission} {@code setProperty.KEY} (where KEY is the
      * specified {@code key}) to be granted, otherwise a {@code
      * SecurityException} will be thrown.
-     * </p>
-     * 
+     *
      * @param key
      *            the name of the security property.
      * @param datnum
@@ -512,7 +475,6 @@ public final class Security {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method.
-     * @since Android 1.0
      */
     public static void setProperty(String key, String datnum) {
         SecurityManager sm = System.getSecurityManager();
@@ -526,22 +488,27 @@ public final class Security {
      * Returns a {@code Set} of all registered algorithms for the specified
      * cryptographic service. {@code "Signature"}, {@code "Cipher"} and {@code
      * "KeyStore"} are examples for such kind of services.
-     * 
+     *
      * @param serviceName
      *            the case-insensitive name of the service.
      * @return a {@code Set} of all registered algorithms for the specified
      *         cryptographic service, or an empty {@code Set} if {@code
      *         serviceName} is {@code null} or if no registered provider
      *         provides the requested service.
-     * @since Android 1.0
      */
     public static Set<String> getAlgorithms(String serviceName) {
         Set<String> result = new HashSet<String>();
+        // BEGIN android-added
+        // compatibility with RI
+        if (serviceName == null) {
+            return result;
+        }
+        // END android-added
         Provider[] p = getProviders();
         for (int i = 0; i < p.length; i++) {
             for (Iterator it = p[i].getServices().iterator(); it.hasNext();) {
                 Provider.Service s = (Provider.Service) it.next();
-                if (s.getType().equalsIgnoreCase(serviceName)) {
+                if (Util.equalsIgnoreCase(s.getType(),serviceName)) {
                     result.add(s.getAlgorithm());
                 }
             }

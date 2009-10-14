@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security;
 
 import java.io.Serializable;
@@ -29,14 +24,11 @@ import java.io.Serializable;
  * 
  * @see PublicKey
  * @see PrivateKey
- * @since Android 1.0
  */
 public interface Key extends Serializable {
 
     /**
      * The {@code serialVersionUID} to be compatible with JDK1.1.
-     * 
-     * @since Android 1.0
      */
     public static final long serialVersionUID = 6603384152749567654L;
 
@@ -46,7 +38,6 @@ public interface Key extends Serializable {
      * 
      * @return the name of the algorithm of this key or {@code null} if the
      *         algorithm is unknown.
-     * @since Android 1.0
      */
     public String getAlgorithm();
 
@@ -56,7 +47,6 @@ public interface Key extends Serializable {
      * 
      * @return the name of the format used to encode this key, or {@code null}
      *         if it can not be encoded.
-     * @since Android 1.0
      */
     public String getFormat();
 
@@ -66,7 +56,6 @@ public interface Key extends Serializable {
      * 
      * @return the encoded form of this key, or {@code null} if encoding is not
      *         supported by this key.
-     * @since Android 1.0
      */
     public byte[] getEncoded();
 }
