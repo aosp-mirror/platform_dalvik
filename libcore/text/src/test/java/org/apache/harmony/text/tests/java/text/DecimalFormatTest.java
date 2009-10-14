@@ -78,6 +78,29 @@ public class DecimalFormatTest extends TestCase {
         String result;
         char current;
 
+        // For BigDecimal with multiplier test.
+        DecimalFormat df = new DecimalFormat();
+        df.setMultiplier(10);
+        iterator = df.formatToCharacterIterator(new BigDecimal("12345678901234567890"));
+        result = "123,456,789,012,345,678,900";
+        current = iterator.current();
+        for (int i = 0; i < result.length(); i++) {
+            assertEquals("wrong char @" + i, result.charAt(i), current);
+            current = iterator.next();
+        }
+
+        // For BigDecimal with multiplier test.
+        df = new DecimalFormat();
+        df.setMultiplier(-1);
+        df.setMaximumFractionDigits(20);
+        iterator = df.formatToCharacterIterator(new BigDecimal("1.23456789012345678901"));
+        result = "-1.23456789012345678901";
+        current = iterator.current();
+        for (int i = 0; i < result.length(); i++) {
+            assertEquals("wrong char @" + i, result.charAt(i), current);
+            current = iterator.next();
+        }
+
         iterator = new DecimalFormat()
                 .formatToCharacterIterator(new BigDecimal("1.23456789E1234"));
         runStarts = new int[] {0, 0, 2, 3, 3, 3, 6, 7, 7, 7, 10, 11, 11, 11, 14};
@@ -2546,5 +2569,120 @@ public class DecimalFormatTest extends TestCase {
         // Regression for HARMONY-1070
         DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance();
         format.setDecimalFormatSymbols(null);
+    }
+
+    private void assertBigDecimalWithFraction(
+            BigDecimal bd,
+            String expectedResult,
+            int fraction) {
+        NumberFormat pf = NumberFormat.getPercentInstance();
+        pf.setMaximumFractionDigits(fraction);
+        assertEquals(expectedResult, pf.format(bd));
+    }
+
+    private void assertDecFmtWithMultiplierAndFraction(
+            String value,
+            int multiplier,
+            int fraction,
+            String expectedResult) {
+
+        DecimalFormat df = (DecimalFormat)NumberFormat.getInstance();
+        df.setMultiplier(multiplier);
+        df.setMaximumFractionDigits(fraction);
+        BigDecimal d = new BigDecimal(value);
+        assertEquals(expectedResult, df.format(d));
+    }
+
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "Regression test for some existing bugs and crashes",
+        method = "format",
+        args = { String.class, Object[].class }
+    )
+    public void testBigDecimalBug1897917() {
+        // Bug1897917 : BigDecimal does not take into account multiplier.
+        // So the BigDecimal 0.17 formatted in PercentInstance is 0% instead of 17%.
+
+        NumberFormat pf = NumberFormat.getPercentInstance();
+
+        // Test bug 1897917 case.
+        assertEquals("17%", pf.format(BigDecimal.valueOf(0.17)));
+
+        // Test long decimal formatted in PercentInstance with various fractions.
+        String longDec = "11.2345678901234567890123456789012345678901234567890";
+        BigDecimal bd = new BigDecimal(longDec);
+        assertBigDecimalWithFraction(bd, "1,123.46%", 2);
+        assertBigDecimalWithFraction(bd, "1,123.45678901%", 8);
+        assertBigDecimalWithFraction(bd, "1,123.4567890123%", 10);
+        assertBigDecimalWithFraction(bd, "1,123.45678901234567890123%", 20);
+        assertBigDecimalWithFraction(bd, "1,123.456789012345678901234567890123%", 30);
+
+        // Test trailing zeros.
+        assertDecFmtWithMultiplierAndFraction("3333.33333333", 3, 4, "10,000");
+        assertDecFmtWithMultiplierAndFraction("3333.33333333", -3, 4, "-10,000");
+        assertDecFmtWithMultiplierAndFraction("0.00333333", 3, 4, "0.01");
+        assertDecFmtWithMultiplierAndFraction("3330000000000000000000000000000000", 3, 4,
+                                               "9,990,000,000,000,000,000,000,000,000,000,000");
+    }
+
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "Regression test for some existing bugs and crashes",
+        method = "format",
+        args = { String.class, Object[].class }
+    )
+    public void testBigDecimalTestBigIntWithMultiplier() {
+       // Big integer tests.
+       assertDecFmtWithMultiplierAndFraction("123456789012345", 10, 0, "1,234,567,890,123,450");
+       assertDecFmtWithMultiplierAndFraction("12345678901234567890", 10, 0,
+                                              "123,456,789,012,345,678,900");
+       assertDecFmtWithMultiplierAndFraction("98765432109876543210987654321", 10, 0,
+                                              "987,654,321,098,765,432,109,876,543,210");
+
+       assertDecFmtWithMultiplierAndFraction("123456789012345", -10, 0, "-1,234,567,890,123,450");
+       assertDecFmtWithMultiplierAndFraction("12345678901234567890", -10, 0,
+                                              "-123,456,789,012,345,678,900");
+       assertDecFmtWithMultiplierAndFraction("98765432109876543210987654321", -10, 0,
+                                              "-987,654,321,098,765,432,109,876,543,210");
+   }
+
+   @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "Regression test for some existing bugs and crashes",
+        method = "format",
+        args = { String.class, Object[].class }
+   )
+   public void testBigDecimalICUConsistency() {
+       DecimalFormat df = (DecimalFormat) NumberFormat.getInstance();
+       df.setMaximumFractionDigits(2);
+       df.setMultiplier(2);
+       assertEquals(df.format(BigDecimal.valueOf(0.16)),
+                    df.format(BigDecimal.valueOf(0.16).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(0.0293)),
+                    df.format(BigDecimal.valueOf(0.0293).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(0.006)),
+                    df.format(BigDecimal.valueOf(0.006).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(0.00283)),
+                    df.format(BigDecimal.valueOf(0.00283).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(1.60)),
+                    df.format(BigDecimal.valueOf(1.60).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(15)),
+                    df.format(BigDecimal.valueOf(15).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(170)),
+                    df.format(BigDecimal.valueOf(170).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(234.56)),
+                    df.format(BigDecimal.valueOf(234.56).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(0)),
+                    df.format(BigDecimal.valueOf(0).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(-1)),
+                    df.format(BigDecimal.valueOf(-1).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(-10000)),
+                    df.format(BigDecimal.valueOf(-10000).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(-0.001)),
+                    df.format(BigDecimal.valueOf(-0.001).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(1234567890.1234567)),
+                    df.format(BigDecimal.valueOf(1234567890.1234567).doubleValue()));
+       assertEquals(df.format(BigDecimal.valueOf(1.234567E100)),
+                    df.format(BigDecimal.valueOf(1.234567E100).doubleValue()));
     }
 }

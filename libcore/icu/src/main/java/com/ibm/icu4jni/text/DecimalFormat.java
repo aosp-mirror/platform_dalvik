@@ -48,6 +48,13 @@ public class DecimalFormat extends NumberFormat {
     private boolean posPrefNull;
     private boolean posSuffNull;
 
+    /**
+     * Cache the BigDecimal form of the multiplier. This is null until we've
+     * formatted a BigDecimal (with a multipler that is not 1), or the user has
+     * explicitly called {@link #setMultiplier(int)} with any multiplier.
+     */
+    private transient BigDecimal multiplierBigDecimal = null;
+
     public DecimalFormat(String pattern, DecimalFormatSymbols icuSymbols) {
         this.addr = icuSymbols.getAddr();
         this.symbols = icuSymbols;
@@ -118,6 +125,14 @@ public class DecimalFormat extends NumberFormat {
         return result;
     }
 
+    private BigDecimal applyMultiplier(BigDecimal valBigDecimal) {
+       if (multiplierBigDecimal == null) {
+           multiplierBigDecimal = BigDecimal.valueOf(getMultiplier());
+       }
+       // Get new value by multiplying multiplier.
+       return valBigDecimal.multiply(multiplierBigDecimal);
+    }
+
     @Override
     public StringBuffer format(Object value, StringBuffer buffer, FieldPosition field) {
 
@@ -139,6 +154,9 @@ public class DecimalFormat extends NumberFormat {
             return buffer.append(result);
         } else if(number instanceof BigDecimal) {
             BigDecimal valBigDecimal = (BigDecimal) number;
+            if (getMultiplier() != 1) {
+                valBigDecimal = applyMultiplier(valBigDecimal);
+            }
             StringBuilder val = new StringBuilder();
             val.append(valBigDecimal.unscaledValue().toString(10));
             int scale = valBigDecimal.scale();
@@ -233,6 +251,9 @@ public class DecimalFormat extends NumberFormat {
                     valBigInteger.toString(10), null, null, attributes, 0);
         } else if(number instanceof BigDecimal) {
             BigDecimal valBigDecimal = (BigDecimal) number;
+            if (getMultiplier() != 1) {
+                valBigDecimal = applyMultiplier(valBigDecimal);
+            }
             StringBuilder val = new StringBuilder();
             val.append(valBigDecimal.unscaledValue().toString(10));
             int scale = valBigDecimal.scale();
@@ -441,6 +462,8 @@ public class DecimalFormat extends NumberFormat {
     public void setMultiplier(int value) {
         NativeDecimalFormat.setAttribute(this.addr,
                 UNumberFormatAttribute.UNUM_MULTIPLIER.ordinal(), value);
+        // Update the cached BigDecimal for multiplier.
+        multiplierBigDecimal = BigDecimal.valueOf(value);
     }
 
     public void setNegativePrefix(String value) {
