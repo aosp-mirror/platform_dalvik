@@ -2794,13 +2794,12 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
     if (dalvikOpCode >= OP_IGET && dalvikOpCode <= OP_IPUT_SHORT) {
         InstField *pInstField = (InstField *)
             cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vC];
-        int fieldOffset;
 
         assert(pInstField != NULL);
         fieldOffset = pInstField->byteOffset;
     } else {
-        /* To make the compiler happy */
-        fieldOffset = 0;
+        /* Deliberately break the code while make the compiler happy */
+        fieldOffset = -1;
     }
     switch (dalvikOpCode) {
         case OP_NEW_ARRAY: {
