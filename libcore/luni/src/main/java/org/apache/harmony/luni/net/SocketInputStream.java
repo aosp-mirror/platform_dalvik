@@ -78,7 +78,8 @@ class SocketInputStream extends InputStream {
         }
 
         if (0 > offset || offset >= buffer.length) {
-            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e"));//$NON-NLS-1$
+            // K002e=Offset out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset));//$NON-NLS-1$
         }
         if (0 > count || offset + count > buffer.length) {
             throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f"));//$NON-NLS-1$

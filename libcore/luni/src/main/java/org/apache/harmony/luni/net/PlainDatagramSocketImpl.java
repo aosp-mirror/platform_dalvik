@@ -154,7 +154,6 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
         close();
     }
 
-    @Override
     public Object getOption(int optID) throws SocketException {
         if (optID == SocketOptions.SO_TIMEOUT) {
             return Integer.valueOf(receiveTimeout);
@@ -285,7 +284,6 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
      * @throws SocketException thrown if the option value is unsupported or
      *         invalid
      */
-    @Override
     public void setOption(int optID, Object val) throws SocketException {
         /*
          * for datagram sockets on some platforms we have to set both the

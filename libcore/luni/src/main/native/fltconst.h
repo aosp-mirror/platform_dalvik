@@ -140,16 +140,23 @@ typedef union u64u32dbl_tag {
 #define SET_PINF_SNGL_PTR(fltptr)  *U32P((fltptr)) = SINGLE_EXPONENT_MASK
 #define SET_NINF_SNGL_PTR(fltptr)  *U32P((fltptr)) = (SINGLE_EXPONENT_MASK | SINGLE_SIGN_MASK)
 
-/* on some platforms (HP720) we cannot reference an unaligned float.  Build them by hand, one U_32 at a time. */
-#if defined(ATOMIC_FLOAT_ACCESS)
-#define PTR_DOUBLE_STORE(dstPtr, aDoublePtr) HIGH_U32_FROM_DBL_PTR(dstPtr) = HIGH_U32_FROM_DBL_PTR(aDoublePtr); LOW_U32_FROM_DBL_PTR(dstPtr) = LOW_U32_FROM_DBL_PTR(aDoublePtr)
-#define PTR_DOUBLE_VALUE(dstPtr, aDoublePtr) HIGH_U32_FROM_DBL_PTR(aDoublePtr) = HIGH_U32_FROM_DBL_PTR(dstPtr); LOW_U32_FROM_DBL_PTR(aDoublePtr) = LOW_U32_FROM_DBL_PTR(dstPtr)
+#if defined(HY_WORD64)
+ #define PTR_DOUBLE_VALUE(dstPtr, aDoublePtr) ((U64U32DBL *)(aDoublePtr))->u64val = ((U64U32DBL *)(dstPtr))->u64val
+ #define PTR_DOUBLE_STORE(dstPtr, aDoublePtr) ((U64U32DBL *)(dstPtr))->u64val = ((U64U32DBL *)(aDoublePtr))->u64val
+ #define STORE_LONG(dstPtr, hi, lo) ((U64U32DBL *)(dstPtr))->u64val = (((U_64)(hi)) << 32) | (lo)
 #else
-#define PTR_DOUBLE_STORE(dstPtr, aDoublePtr) (*(dstPtr) = *(aDoublePtr))
-#define PTR_DOUBLE_VALUE(dstPtr, aDoublePtr) (*(aDoublePtr) = *(dstPtr))
-#endif
+ /* on some platforms (HP720) we cannot reference an unaligned float.  Build them by hand, one U_32 at a time. */
+ #if defined(ATOMIC_FLOAT_ACCESS)
+ #define PTR_DOUBLE_STORE(dstPtr, aDoublePtr) HIGH_U32_FROM_DBL_PTR(dstPtr) = HIGH_U32_FROM_DBL_PTR(aDoublePtr); LOW_U32_FROM_DBL_PTR(dstPtr) = LOW_U32_FROM_DBL_PTR(aDoublePtr)
+ #define PTR_DOUBLE_VALUE(dstPtr, aDoublePtr) HIGH_U32_FROM_DBL_PTR(aDoublePtr) = HIGH_U32_FROM_DBL_PTR(dstPtr); LOW_U32_FROM_DBL_PTR(aDoublePtr) = LOW_U32_FROM_DBL_PTR(dstPtr)
+ #else
+ #define PTR_DOUBLE_STORE(dstPtr, aDoublePtr) (*(dstPtr) = *(aDoublePtr))
+ #define PTR_DOUBLE_VALUE(dstPtr, aDoublePtr) (*(aDoublePtr) = *(dstPtr))
+ #endif
 
-#define STORE_LONG(dstPtr, hi, lo) HIGH_U32_FROM_LONG64_PTR(dstPtr) = (hi); LOW_U32_FROM_LONG64_PTR(dstPtr) = (lo)
+ #define STORE_LONG(dstPtr, hi, lo) HIGH_U32_FROM_LONG64_PTR(dstPtr) = (hi); LOW_U32_FROM_LONG64_PTR(dstPtr) = (lo)
+#endif /* HY_WORD64 */
+
 #define PTR_SINGLE_VALUE(dstPtr, aSinglePtr) (*U32P(aSinglePtr) = *U32P(dstPtr))
 #define PTR_SINGLE_STORE(dstPtr, aSinglePtr) *((U_32 *)(dstPtr)) = (*U32P(aSinglePtr))
 

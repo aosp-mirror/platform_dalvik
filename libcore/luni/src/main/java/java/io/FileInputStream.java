@@ -69,8 +69,13 @@ public class FileInputStream extends InputStream implements Closeable {
         super();
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
+            // For compatibility, nulls are passed to the manager.
             String filePath = (null == file ? null : file.getPath());
             security.checkRead(filePath);
+        }
+        if (file == null) {
+            // KA001=Argument must not be null
+            throw new NullPointerException(Msg.getString("KA001")); //$NON-NLS-1$
         }
         fd = new FileDescriptor();
         fd.readOnly = true;

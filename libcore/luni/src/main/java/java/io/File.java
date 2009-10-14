@@ -761,9 +761,8 @@ public class File implements Serializable, Comparable<File> {
      * Indicates if this file's pathname is absolute. Whether a pathname is
      * absolute is platform specific. On UNIX, absolute paths must start with
      * the character '/'; on Windows it is absolute if either it starts with
-     * '\', '/', '\\' (to represent a file server), or a letter followed by a
-     * colon.
-     *
+     * '\\' (to represent a file server), or a letter followed by a colon.
+     * 
      * @return {@code true} if this file's pathname is absolute, {@code false}
      *         otherwise.
      * @see #getPath
@@ -774,10 +773,6 @@ public class File implements Serializable, Comparable<File> {
         return path.length() > 0 && path.charAt(0) == separatorChar;
         // END android-changed
     }
-
-    // BEGIN android-removed
-    // private native boolean isAbsoluteImpl(byte[] filePath);
-    // END android-removed
 
     /**
      * Indicates if this file represents a <em>directory</em> on the
@@ -1358,8 +1353,10 @@ public class File implements Serializable, Comparable<File> {
         if (properPath != null) {
             return properPath;
         }
-        if(path.length() > 0 && path.charAt(0) == separatorChar) {
-            return properPath = Util.getBytes(path);
+
+        if (isAbsolute()) {
+            byte[] pathBytes = Util.getUTF8Bytes(path);
+            return properPath = pathBytes;
         }
         // Check security by getting user.dir when the path is not absolute
         String userdir;
@@ -1379,10 +1376,6 @@ public class File implements Serializable, Comparable<File> {
         return properPath = Util.getBytes(userdir + separator + path);
     }
     // END android-changed
-
-    // BEGIN android-removed
-    // private static native byte[] properPathImpl(byte[] path);
-    // END android-removed
 
     /**
      * Renames this file to the name represented by the {@code dest} file. This

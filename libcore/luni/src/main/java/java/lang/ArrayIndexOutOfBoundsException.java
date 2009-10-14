@@ -44,6 +44,7 @@ public class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException {
      *            the invalid index.
      */
     public ArrayIndexOutOfBoundsException(int index) {
+        // K0052=Array index out of range\: {0}
         super(Msg.getString("K0052", index)); //$NON-NLS-1$
     }
 

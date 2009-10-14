@@ -1320,6 +1320,10 @@ public class InetAddress extends Object implements Serializable {
         family = fields.get("family", 2); //$NON-NLS-1$
     }
 
+    /*
+     * The spec requires that if we encounter a generic InetAddress in
+     * serialized form then we should interpret it as an Inet4 address.
+     */
     private Object readResolve() throws ObjectStreamException {
         return new Inet4Address(ipaddress, hostName);
     }

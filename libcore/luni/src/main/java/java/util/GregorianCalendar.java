@@ -533,7 +533,6 @@ public class GregorianCalendar extends Calendar {
         fields[MINUTE] = (millis % 60);
         millis /= 60;
         fields[HOUR_OF_DAY] = (millis % 24);
-        millis /= 24;
         fields[AM_PM] = fields[HOUR_OF_DAY] > 11 ? 1 : 0;
         fields[HOUR] = fields[HOUR_OF_DAY] % 12;
 

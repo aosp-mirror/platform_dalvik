@@ -246,9 +246,7 @@ public final class Math {
      *            the value whose closest integer value has to be computed.
      * @return the ceiling of the argument.
      */
-    // BEGIN android-changed
     public static native double ceil(double d);
-    // END android-changed
 
     /**
      * Returns the closest double approximation of the cosine of the argument.
@@ -348,9 +346,7 @@ public final class Math {
      *            the value whose closest integer value has to be computed.
      * @return the floor of the argument.
      */
-    // BEGIN android-changed
     public static native double floor(double d);
-    // END android-changed
 
     /**
      * Returns {@code sqrt(}<i>{@code x}</i><sup>{@code 2}</sup>{@code +} <i>
@@ -731,9 +727,7 @@ public final class Math {
      *            the value to be rounded.
      * @return the closest integer to the argument (as a double).
      */
-    // BEGIN android-changed
     public static native double rint(double d);
-    // END android-changed
 
     /**
      * Returns the result of rounding the argument to an integer. The result is

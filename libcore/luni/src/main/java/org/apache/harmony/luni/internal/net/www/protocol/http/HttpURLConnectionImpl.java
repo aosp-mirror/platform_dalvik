@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.net.Authenticator;
 import java.net.CacheRequest;
 import java.net.CacheResponse;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
@@ -58,7 +59,7 @@ import org.apache.harmony.luni.util.PriviAction;
  * such as connecting, sending request and getting the content from the remote
  * server.
  */
-public class HttpURLConnection extends java.net.HttpURLConnection {
+public class HttpURLConnectionImpl extends HttpURLConnection {
     private static final String POST = "POST"; //$NON-NLS-1$
 
     private static final String GET = "GET"; //$NON-NLS-1$
@@ -280,13 +281,14 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
 
         @Override
         public int read(byte[] buf, int offset, int length) throws IOException {
-            if (buf == null) {
-                throw new NullPointerException();
+            // Force buf null check first, and avoid int overflow
+            if (offset < 0 || offset > buf.length) {
+                // K002e=Offset out of bounds \: {0}
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
             }
-            // avoid int overflow
-            if (offset < 0 || length < 0 || offset > buf.length
-                    || buf.length - offset < length) {
-                throw new ArrayIndexOutOfBoundsException();
+            if (length < 0 || buf.length - offset < length) {
+                // K0031=Length out of bounds \: {0}
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
             }
             if (bytesRemaining <= 0) {
                 disconnect(false);
@@ -421,13 +423,14 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
 
         @Override
         public int read(byte[] buf, int offset, int length) throws IOException {
-            if (buf == null) {
-                throw new NullPointerException();
+            // Force buf null check first, and avoid int overflow
+            if (offset > buf.length || offset < 0) {
+                // K002e=Offset out of bounds \: {0}
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
             }
-            // avoid int overflow
-            if (offset < 0 || length < 0 || offset > buf.length
-                    || buf.length - offset < length) {
-                throw new ArrayIndexOutOfBoundsException();
+            if (length < 0 || buf.length - offset < length) {
+                // K0031=Length out of bounds \: {0}
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
             }
             if (bytesRemaining <= 0) {
                 readChunkSize();
@@ -690,7 +693,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
      * @param url
      *            URL The URL this connection is connecting
      */
-    protected HttpURLConnection(URL url) {
+    protected HttpURLConnectionImpl(URL url) {
         this(url, 80);
     }
 
@@ -702,7 +705,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
      * @param port
      *            int The default connection port
      */
-    protected HttpURLConnection(URL url, int port) {
+    protected HttpURLConnectionImpl(URL url, int port) {
         super(url);
         defaultPort = port;
         reqHeader = (Header) defaultReqHeader.clone();
@@ -730,7 +733,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
      * @param proxy
      *            Proxy The proxy which is used to make the connection
      */
-    protected HttpURLConnection(URL url, int port, Proxy proxy) {
+    protected HttpURLConnectionImpl(URL url, int port, Proxy proxy) {
         this(url, port);
         this.proxy = proxy;
     }

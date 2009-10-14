@@ -102,7 +102,7 @@ public class FilterOutputStream extends OutputStream {
      *            the buffer to write.
      * @param offset
      *            the index of the first byte in {@code buffer} to write.
-     * @param count
+     * @param length
      *            the number of bytes in {@code buffer} to write.
      * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code count < 0}, or if
@@ -112,25 +112,20 @@ public class FilterOutputStream extends OutputStream {
      *             if an I/O error occurs while writing to this stream.
      */
     @Override
-    public void write(byte[] buffer, int offset, int count) throws IOException {
+    public void write(byte[] buffer, int offset, int length) throws IOException {
         // BEGIN android-note
         // changed array notation to be consistent with the rest of harmony
         // END android-note
-        // avoid int overflow, force null buffer check first
-        // BEGIN android-changed
-        // Exception priorities (in case of multiple errors) differ from
-        // RI, but are spec-compliant.
-        // removed redundant check, made implicit null check explicit,
-        // used (offset | count) < 0 instead of (offset < 0) || (count < 0)
-        // to safe one operation
-        if (buffer == null) {
-            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        // Force null buffer check first!
+        if (offset > buffer.length || offset < 0) {
+            // K002e=Offset out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
         }
-        if ((offset | count) < 0 || count > buffer.length - offset) {
-            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        if (length < 0 || length > buffer.length - offset) {
+            // K0031=Length out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
         }
-        // END android-changed
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < length; i++) {
             // Call write() instead of out.write() since subclasses could
             // override the write() method.
             write(buffer[offset + i]);

@@ -19,9 +19,9 @@ package java.io;
 
 /**
  * Signals that an object that is not serializable has been passed into the
- * {@code ObjectOutput.writeObject()} mthod. This can happen if the object does
- * not implement {@code Serializable} or {@code Externalizable}, or if it is
- * serializable but it overrides {@code writeObject(ObjectOutputStream)} and
+ * {@code ObjectOutput.writeObject()} method. This can happen if the object
+ * does not implement {@code Serializable} or {@code Externalizable}, or if it
+ * is serializable but it overrides {@code writeObject(ObjectOutputStream)} and
  * explicitly prevents serialization by throwing this type of exception.
  * 
  * @see ObjectOutput#writeObject(Object)

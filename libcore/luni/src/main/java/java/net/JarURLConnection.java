@@ -69,7 +69,7 @@ public abstract class JarURLConnection extends URLConnection {
         if ((sepIdx = file.indexOf("!/")) < 0) { //$NON-NLS-1$
             throw new MalformedURLException();
         }
-        fileURL = new URL(url.getFile().substring(0,sepIdx)); //$NON-NLS-1$
+        fileURL = new URL(url.getFile().substring(0,sepIdx));
         sepIdx += 2;
         if (file.length() == sepIdx) {
             return;

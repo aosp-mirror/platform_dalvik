@@ -213,20 +213,16 @@ public class CharArrayReader extends Reader {
         // BEGIN android-note
         // changed array notation to be consistent with the rest of harmony
         // END android-note
-        // avoid int overflow
-        // BEGIN android-changed
-        // Exception priorities (in case of multiple errors) differ from
-        // RI, but are spec-compliant.
-        // made implicit null check explicit,
-        // removed redundant check, used (offset | len) < 0 instead of
-        // (offset < 0) || (len < 0) to safe one operation
-        if (buffer == null) {
-            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        if (offset < 0 || offset > buffer.length) {
+            // K002e=Offset out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(
+                    Msg.getString("K002e", offset)); //$NON-NLS-1$
         }
-        if ((offset | len) < 0 || len > buffer.length - offset) {
-            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        if (len < 0 || len > buffer.length - offset) {
+            // K0031=Length out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(
+                    Msg.getString("K0031", len)); //$NON-NLS-1$
         }
-        // END android-changed
         synchronized (lock) {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K0060")); //$NON-NLS-1$

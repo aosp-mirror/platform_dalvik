@@ -40,7 +40,7 @@ public class FileCanonPathCache {
     }
 
     /**
-     * Max elemnts could be hold in the cache.
+     * Max elements could be hold in the cache.
      */
     public static final int CACHE_SIZE = 256;
 

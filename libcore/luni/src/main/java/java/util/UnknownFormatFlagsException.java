@@ -60,6 +60,7 @@ public class UnknownFormatFlagsException extends IllegalFormatException {
      */
     @Override
     public String getMessage() {
-        return Msg.getString("K034a", flags);
+        // K034a=The flags are {0}
+        return Msg.getString("K034a", flags); //$NON-NLS-1$
     }
 }

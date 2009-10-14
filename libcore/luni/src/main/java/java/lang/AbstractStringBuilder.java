@@ -120,21 +120,23 @@ abstract class AbstractStringBuilder {
         count = newSize;
     }
 
-    final void append0(char chars[], int start, int length) {
-        if (chars == null) {
-            throw new NullPointerException();
+    final void append0(char[] chars, int offset, int length) {
+        // Force null check of chars first!
+        if (offset > chars.length || offset < 0) {
+            // K002e=Offset out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
         }
-        // start + length could overflow, start/length maybe MaxInt
-        if (start >= 0 && 0 <= length && length <= chars.length - start) {
-            int newSize = count + length;
-            if (newSize > value.length) {
-                enlargeBuffer(newSize);
-            }
-            System.arraycopy(chars, start, value, count, length);
-            count = newSize;
-        } else {
-            throw new ArrayIndexOutOfBoundsException();
+        if (length < 0 || chars.length - offset < length) {
+            // K0031=Length out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
         }
+
+        int newSize = count + length;
+        if (newSize > value.length) {
+            enlargeBuffer(newSize);
+        }
+        System.arraycopy(chars, offset, value, count, length);
+        count = newSize;
     }
 
     final void append0(char ch) {

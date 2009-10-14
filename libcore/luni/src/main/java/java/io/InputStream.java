@@ -17,9 +17,7 @@
 
 package java.io;
 
-// BEGIN android-added
 import org.apache.harmony.luni.util.Msg;
-// END android-added
 
 /**
  * The base class for all input streams. An input stream is a means of reading
@@ -157,20 +155,15 @@ public abstract class InputStream extends Object implements Closeable {
         // BEGIN android-note
         // changed array notation to be consistent with the rest of harmony
         // END android-note
-        // avoid int overflow, check null b
-        // BEGIN android-changed
-        // Exception priorities (in case of multiple errors) differ from
-        // RI, but are spec-compliant.
-        // removed redundant check, made implicit null check explicit,
-        // used (offset | length) < 0 instead of (offset < 0) || (length < 0)
-        // to safe one operation
-        if (b == null) {
-            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        // Force null check for b first!
+        if (offset > b.length || offset < 0) {
+            // K002e=Offset out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
+        } 
+        if (length < 0 || length > b.length - offset) {
+            // K0031=Length out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
         }
-        if ((offset | length) < 0 || length > b.length - offset) {
-            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
-        }
-        // END android-changed
         for (int i = 0; i < length; i++) {
             int c;
             try {
@@ -224,11 +217,16 @@ public abstract class InputStream extends Object implements Closeable {
         }
         long skipped = 0;
         int toRead = n < 4096 ? (int) n : 4096;
-        if (skipBuf == null || skipBuf.length < toRead) {
-            skipBuf = new byte[toRead];
+        // We are unsynchronized, so take a local copy of the skipBuf at some
+        // point in time.
+        byte[] localBuf = skipBuf;
+        if (localBuf == null || localBuf.length < toRead) {
+            // May be lazily written back to the static. No matter if it
+            // overwrites somebody else's store.
+            skipBuf = localBuf = new byte[toRead];
         }
         while (skipped < n) {
-            int read = read(skipBuf, 0, toRead);
+            int read = read(localBuf, 0, toRead);
             if (read == -1) {
                 return skipped;
             }

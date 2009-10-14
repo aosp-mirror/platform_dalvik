@@ -414,9 +414,8 @@ public class SecurityManager {
                 .getSecurityProperty(property));
         if (list != null) {
             int plen = pkg.length();
-            StringTokenizer tokenizer = new StringTokenizer(list, ", "); //$NON-NLS-1$
-            while (tokenizer.hasMoreTokens()) {
-                String token = tokenizer.nextToken();
+            String[] tokens = list.split(", *"); //$NON-NLS-1$
+            for (String token : tokens) {
                 int tlen = token.length();
                 if (plen > tlen
                         && pkg.startsWith(token)

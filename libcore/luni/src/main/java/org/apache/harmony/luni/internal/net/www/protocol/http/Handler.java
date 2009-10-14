@@ -44,7 +44,7 @@ public class Handler extends URLStreamHandler {
      */
     @Override
     protected URLConnection openConnection(URL u) throws IOException {
-        return new HttpURLConnection(u, getDefaultPort());
+        return new HttpURLConnectionImpl(u, getDefaultPort());
     }
 
     /**
@@ -72,7 +72,7 @@ public class Handler extends URLStreamHandler {
         if (null == u || null == proxy) {
             throw new IllegalArgumentException(Msg.getString("K034b")); //$NON-NLS-1$
         }
-        return new HttpURLConnection(u, getDefaultPort(), proxy);
+        return new HttpURLConnectionImpl(u, getDefaultPort(), proxy);
     }
 
     /**

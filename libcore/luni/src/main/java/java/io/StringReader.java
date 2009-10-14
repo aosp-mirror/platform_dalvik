@@ -155,22 +155,18 @@ public class StringReader extends Reader {
         // BEGIN android-note
         // changed array notation to be consistent with the rest of harmony
         // END android-note
-        // BEGIN android-changed
-        // Exception priorities (in case of multiple errors) differ from
-        // RI, but are spec-compliant.
-        // removed redundant check, added null check, used (offset | len) < 0
-        // instead of (offset < 0) || (len < 0) to safe one operation
-        if (buf == null) {
-            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
-        }
         synchronized (lock) {
-            // avoid int overflow
-            if ((offset | len) < 0 || len > buf.length - offset) {
-                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
-            }
-            // END android-changed
             if (isClosed()) {
+                // K0083=StringReader is closed.
                 throw new IOException(Msg.getString("K0083")); //$NON-NLS-1$
+            }
+            if (offset < 0 || offset > buf.length) {
+                // K002e=Offset out of bounds \: {0}
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
+            }
+            if (len < 0 || len > buf.length - offset) {
+                // K0031=Length out of bounds \: {0}
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", len)); //$NON-NLS-1$
             }
             if (len == 0) {
                 return 0;

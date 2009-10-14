@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.Arrays;
 
 import org.apache.harmony.luni.internal.nls.Messages;
 
@@ -807,18 +808,19 @@ public class CollectionsTest extends junit.framework.TestCase {
         LinkedList ll2 = new LinkedList();
         ll2.addAll(ll);
         testShuffle(ll2, "Random Access", false);
+    }
 
-        Mock_ArrayList mal = new Mock_ArrayList();
-        
-        mal.add("First");
-        mal.add("Second");
-        
-        try {
-            Collections.shuffle(mal);
-            fail("UnsupportedOperationException expected");
-        } catch (UnsupportedOperationException e) {
-            //expected
-        }
+    public void testShuffleRandomAccessWithSeededRandom() {
+        List<String> list = Arrays.asList("A", "B", "C", "D", "E", "F", "G");
+        Collections.shuffle(list, new Random(0));
+        assertEquals(Arrays.asList("B", "A", "D", "C", "G", "E", "F"), list);
+    }
+
+    public void testShuffleWithSeededRandom() {
+        List<String> list = new LinkedList<String>(Arrays.asList(
+                "A", "B", "C", "D", "E", "F", "G"));
+        Collections.shuffle(list, new Random(0));
+        assertEquals(Arrays.asList("B", "A", "D", "C", "G", "E", "F"), list);
     }
 
     private void testShuffle(List list, String type, boolean random) {
@@ -837,15 +839,15 @@ public class CollectionsTest extends junit.framework.TestCase {
                 sorted = false;
             }
         }
-        assertTrue("Shuffling sorted " + type
-                + " list resulted in sorted list (should be unlikely)", !sorted);
+        assertFalse("Shuffling sorted " + type
+                + " list resulted in sorted list (should be unlikely)", sorted);
         for (int counter = 0; counter < 20; counter++) {
             index = 30031 * counter % (size + 1); // 30031 is a large prime
             if (list.get(index) != ll.get(index))
                 allMatch = false;
         }
-        assertTrue("Too many element positions match in shuffled " + type
-                + " list", !allMatch);
+        assertFalse("Too many element positions match in shuffled " + type
+                + " list", allMatch);
     }
 
     /**

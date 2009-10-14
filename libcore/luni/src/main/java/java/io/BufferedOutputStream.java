@@ -148,17 +148,16 @@ public class BufferedOutputStream extends FilterOutputStream {
             out.write(buffer, offset, length);
             return;
         }
-
-        // BEGIN android-changed
-        // Exception priorities (in case of multiple errors) differ from
-        // RI, but are spec-compliant.
-        // used (offset | length) < 0 instead of (offset < 0) || (length < 0)
-        // to safe one operation
-        if ((offset | length) < 0 || offset > buffer.length - length) {
-            // K002f=Arguments out of bounds
-            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        
+        if (offset < 0 || offset > buffer.length - length) {
+            // K002e=Offset out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
+        
         }
-        // END android-changed
+        if (length < 0) {
+            // K0031=Length out of bounds \: {0}
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
+        }
 
         // flush the internal buffer first if we have not enough space left
         if (length >= (buf.length - count)) {

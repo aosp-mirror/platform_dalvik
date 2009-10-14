@@ -1039,7 +1039,7 @@ public final class Scanner implements Iterator<String> {
      * Returns the next token if it matches the specified pattern. The token
      * will be both prefixed and postfixed by the delimiter that is currently
      * being used (or a string that matches the delimiter pattern). This method will block
-     * if input is being read. Calling this methos is equivalent to
+     * if input is being read. Calling this method is equivalent to
      * {@code next(Pattern.compile(pattern))}.
      *
      * @param pattern
@@ -1638,7 +1638,7 @@ public final class Scanner implements Iterator<String> {
      * Returns a string representation of this {@code Scanner}. The information
      * returned may be helpful for debugging. The format of the string is unspecified.
      *
-     * @return a string represendation of this {@code Scanner}.
+     * @return a string representation of this {@code Scanner}.
      */
     @Override
     public String toString() {

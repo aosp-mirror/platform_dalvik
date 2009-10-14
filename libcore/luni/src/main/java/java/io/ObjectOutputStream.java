@@ -1617,14 +1617,19 @@ public class ObjectOutputStream extends OutputStream implements ObjectOutput,
     private Integer writeNewString(String object, boolean unshared)
             throws IOException {
         long count = output.countUTFBytes(object);
+        byte[] buffer;
+        int offset = 0;
         if (count <= 0xffff) {
-            output.writeByte(TC_STRING);
-            output.writeShort((short) count);
+            buffer = new byte[(int)count+3];
+            buffer[offset++] = TC_STRING;
+            offset = output.writeShortToBuffer((short) count, buffer, offset);
         } else {
-            output.writeByte(TC_LONGSTRING);
-            output.writeLong(count);
+            buffer = new byte[(int)count+9];
+            buffer[offset++] = TC_LONGSTRING;
+            offset = output.writeLongToBuffer(count, buffer, offset);
         }
-        output.writeUTFBytes(object, count);
+        offset = output.writeUTFBytesToBuffer(object, buffer, offset);
+        output.write(buffer, 0, offset);
 
         Integer handle = nextHandle();
 
