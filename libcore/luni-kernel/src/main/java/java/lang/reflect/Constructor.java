@@ -161,12 +161,12 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
         appendArrayGenericType(sb, 
                 Types.getClonedTypeArray(genericParameterTypes));
         sb.append(')');
-        // append exeptions if any
-        Type[] genericEceptionTypeArray = 
+        // append exceptions if any
+        Type[] genericExceptionTypeArray = 
                 Types.getClonedTypeArray(genericExceptionTypes);
-        if (genericEceptionTypeArray.length > 0) {
+        if (genericExceptionTypeArray.length > 0) {
             sb.append(" throws ");
-            appendArrayGenericType(sb, genericEceptionTypeArray);
+            appendArrayGenericType(sb, genericExceptionTypeArray);
         }
         return sb.toString();
     }
@@ -314,7 +314,7 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     public Class<?>[] getExceptionTypes() {
         if (exceptionTypes == null)
             return new Class[0];
-        return exceptionTypes;
+        return exceptionTypes.clone();
     }
 
     /**
@@ -354,7 +354,7 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * @since Android 1.0
      */
     public Class<?>[] getParameterTypes() {
-        return parameterTypes;
+        return parameterTypes.clone();
     }
 
     /**

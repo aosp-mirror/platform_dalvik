@@ -383,7 +383,7 @@ public final class Method extends AccessibleObject implements GenericDeclaration
             return new Class[0];
         }
 
-        return exceptionTypes;
+        return exceptionTypes.clone();
     }
 
     /**
@@ -424,7 +424,7 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * @since Android 1.0
      */
     public Class<?>[] getParameterTypes() {
-        return parameterTypes;
+        return parameterTypes.clone();
     }
 
     /**
@@ -521,7 +521,7 @@ public final class Method extends AccessibleObject implements GenericDeclaration
         return invokeNative (receiver, args, declaringClass, parameterTypes, returnType, slot, flag);
     }
 
-    private native Object invokeNative(Object obj, Object[] args, Class<?> declaringClass, Class<?>[] parameterTYpes, Class<?> returnType, int slot, boolean noAccessCheck)
+    private native Object invokeNative(Object obj, Object[] args, Class<?> declaringClass, Class<?>[] parameterTypes, Class<?> returnType, int slot, boolean noAccessCheck)
     throws IllegalAccessException,
              IllegalArgumentException,
              InvocationTargetException;
