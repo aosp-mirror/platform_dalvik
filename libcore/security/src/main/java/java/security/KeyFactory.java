@@ -197,9 +197,6 @@ public class KeyFactory {
     /**
      * Returns the key specification for the specified key.
      * 
-     * @param <T>
-     *            The key type
-     * 
      * @param key
      *            the key from which the specification is requested.
      * @param keySpec
