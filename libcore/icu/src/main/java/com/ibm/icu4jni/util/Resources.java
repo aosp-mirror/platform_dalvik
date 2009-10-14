@@ -114,7 +114,7 @@ public class Resources {
             isoLanguages = getISOLanguagesNative();
         }
 
-        return isoLanguages;
+        return isoLanguages.clone();
     }
 
     /**
@@ -128,7 +128,7 @@ public class Resources {
             isoCountries = getISOCountriesNative();
         }
 
-        return isoCountries;
+        return isoCountries.clone();
     }
 
     /**
@@ -142,7 +142,7 @@ public class Resources {
             availableLocales = getAvailableLocalesNative();
         }
 
-        return availableLocales;
+        return availableLocales.clone();
     }
 
     /**
@@ -157,7 +157,7 @@ public class Resources {
             availableTimezones = TimeZone.getAvailableIDs();
         }
 
-        return availableTimezones;
+        return availableTimezones.clone();
     }
 
     /**
@@ -264,15 +264,23 @@ public class Resources {
         if (locale == null) {
             locale = defaultLocale;
         }
-
+        
         // If locale == default and the default locale hasn't changed since
         // DefaultTimeZones loaded, return the cached names.
         // TODO: We should force a reboot if the default locale changes.
         if (defaultLocale.equals(locale) && DefaultTimeZones.locale.equals(defaultLocale)) {
-            return DefaultTimeZones.names;
+            return clone2dStringArray(DefaultTimeZones.names);
         }
         
         return createTimeZoneNamesFor(locale);
+    }
+
+    private static String[][] clone2dStringArray(String[][] array) {
+        String[][] result = new String[array.length][];
+        for (int i = 0; i < array.length; ++i) {
+            result[i] = array[i].clone();
+        }
+        return result;
     }
 
     // --- Specialized ResourceBundle subclasses ------------------------------
