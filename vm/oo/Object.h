@@ -187,12 +187,23 @@ typedef enum PrimitiveType {
 #define CLASS_OFFSET_ALIGNMENT 4
 #define CLASS_HIGH_BIT ((unsigned int)1 << (CLASS_BITS_PER_WORD - 1))
 /*
- * Return a single bit, or zero if the encoding can't encode the offset.
+ * Given an offset, return the bit number which would encode that offset.
+ * Local use only.
+ */
+#define _CLASS_BIT_NUMBER_FROM_OFFSET(byteOffset) \
+    (((unsigned int)(byteOffset) - CLASS_SMALLEST_OFFSET) / \
+     CLASS_OFFSET_ALIGNMENT)
+/*
+ * Is the given offset too large to be encoded?
+ */
+#define CLASS_CAN_ENCODE_OFFSET(byteOffset) \
+    (_CLASS_BIT_NUMBER_FROM_OFFSET(byteOffset) < CLASS_BITS_PER_WORD)
+/*
+ * Return a single bit, encoding the offset.
+ * Undefined if the offset is too large, as defined above.
  */
 #define CLASS_BIT_FROM_OFFSET(byteOffset) \
-    (CLASS_HIGH_BIT >> \
-      (((unsigned int)(byteOffset) - CLASS_SMALLEST_OFFSET) / \
-       CLASS_OFFSET_ALIGNMENT))
+    (CLASS_HIGH_BIT >> _CLASS_BIT_NUMBER_FROM_OFFSET(byteOffset))
 /*
  * Return an offset, given a bit number as returned from CLZ.
  */
