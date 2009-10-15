@@ -15,13 +15,12 @@
  */
 
 /*
- * Android Notice 
+ * Android Notice
  * In this class the address length was changed from long to int.
  * This is due to performance optimizations for the device.
  */
 
 package org.apache.harmony.nio;
-
 
 import java.nio.channels.FileChannel;
 
@@ -37,20 +36,20 @@ import org.apache.harmony.luni.platform.IFileSystem;
  */
 public class FileChannelFactory {
     public static FileChannel getFileChannel(Object stream, int fd, int mode) {
-        switch(mode){
-        case IFileSystem.O_RDONLY:
-            return new ReadOnlyFileChannel(stream, fd);
-        case IFileSystem.O_WRONLY:
-            return new WriteOnlyFileChannel(stream, fd);
-        case IFileSystem.O_RDWR:
-            return new ReadWriteFileChannel(stream, fd);
-        case IFileSystem.O_RDWRSYNC:
-            return new ReadWriteFileChannel(stream, fd);
-        case IFileSystem.O_APPEND:
-            return new WriteOnlyFileChannel(stream, fd, true);
-        default:
-            // nio.09=Unknown file channel type: {0}
-            throw new RuntimeException(Messages.getString("nio.09", mode));  //$NON-NLS-1$
+        switch (mode) {
+            case IFileSystem.O_RDONLY:
+                return new ReadOnlyFileChannel(stream, fd);
+            case IFileSystem.O_WRONLY:
+                return new WriteOnlyFileChannel(stream, fd);
+            case IFileSystem.O_RDWR:
+                return new ReadWriteFileChannel(stream, fd);
+            case IFileSystem.O_RDWRSYNC:
+                return new ReadWriteFileChannel(stream, fd);
+            case IFileSystem.O_APPEND:
+                return new WriteOnlyFileChannel(stream, fd, true);
+            default:
+                // nio.09=Unknown file channel type: {0}
+                throw new RuntimeException(Messages.getString("nio.09", mode)); //$NON-NLS-1$
         }
     }
 }

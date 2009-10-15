@@ -546,54 +546,34 @@ final class OSNetworkSystem implements INetworkSystem {
             DatagramPacket packet, int address, int offset, int length,
             int receiveTimeout, boolean peek) throws IOException;
 
-    /**
-     * Select the given file descriptors for read and write operations.
-     *
-     * The file descriptors passed in as readFDs will be selected for read-ready
-     * operations, and those in the writeFDs will be selected for write-ready
-     * operations. A file descriptor can appear in either or both array, and
-     * must not be <code>null</code>. If the file descriptor is closed during
-     * the select the behavior depends upon the underlying OS.
-     *
-     * Upon return the result is a single array of length
-     * <code>readFDs.length</code> + <code>writeFDs.length</code> laid out as
-     * the result of the select operation on the corresponding file descriptors.
-     *
-     * @param readFDs
-     *            all sockets interested in read and accept
-     * @param writeFDs
-     *            all sockets interested in write and connect
-     * @param timeout
-     *            timeout in milliseconds
-     * @return each element describes the corresponding state of the descriptor
-     *         in the read and write arrays.
-     * @throws SocketException
-     */
-    public int[] select(FileDescriptor[] readFDs, FileDescriptor[] writeFDs,
-            long timeout) throws SocketException {
-        int countRead = readFDs.length;
-        int countWrite = writeFDs.length;
-        int result = 0;
-        if (0 == countRead + countWrite) {
-            return (new int[0]);
+    // BEGIN android-changed
+    //     copied from a newer version of Harmony
+    public boolean select(FileDescriptor[] readFDs, FileDescriptor[] writeFDs,
+            int numReadable, int numWritable, long timeout, int[] flags)
+            throws SocketException {
+        if (numReadable < 0 || numWritable < 0) {
+            throw new IllegalArgumentException();
         }
-        int[] flags = new int[countRead + countWrite];
 
-        assert validateFDs(readFDs, writeFDs) : "Invalid file descriptor arrays"; //$NON-NLS-1$
+        int total = numReadable + numWritable;
+        if (total == 0) {
+            return true;
+        }
+
+        assert validateFDs(readFDs, writeFDs, numReadable, numWritable) : "Invalid file descriptor arrays"; //$NON-NLS-1$
 
         // handle timeout in native
-        result = selectImpl(readFDs, writeFDs, countRead, countWrite, flags,
-                timeout);
-
-        if (0 <= result) {
-            return flags;
+        int result = selectImpl(readFDs, writeFDs, numReadable, numWritable, flags, timeout);
+        if (result >= 0) {
+            return true;
         }
-        if (ERRORCODE_SOCKET_TIMEOUT == result ||
-                ERRORCODE_SOCKET_INTERRUPTED == result) {
-            return new int[0];
+        if (result == ERRORCODE_SOCKET_TIMEOUT ||
+                result == ERRORCODE_SOCKET_INTERRUPTED) {
+            return false;
         }
         throw new SocketException();
     }
+    // END android-changed
 
     static native int selectImpl(FileDescriptor[] readfd,
             FileDescriptor[] writefd, int cread, int cwirte, int[] flags,
@@ -780,6 +760,25 @@ final class OSNetworkSystem implements INetworkSystem {
         }
         return true;
     }
+
+    // BEGIN android-changed
+    //     copied from a newer version of Harmony
+    private boolean validateFDs(FileDescriptor[] readFDs,
+            FileDescriptor[] writeFDs, int countRead, int countWrite) {
+        for (int i = 0; i < countRead; ++i) {
+            // Also checks fd not null
+            if (!readFDs[i].valid()) {
+                return false;
+            }
+        }
+        for (int i = 0; i < countWrite; ++i) {
+            if (!writeFDs[i].valid()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    // END android-changed
 
     /**
      * Write bytes from a byte array to a socket.

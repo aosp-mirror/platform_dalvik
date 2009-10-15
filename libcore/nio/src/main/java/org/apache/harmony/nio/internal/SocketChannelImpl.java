@@ -18,7 +18,6 @@
 package org.apache.harmony.nio.internal;
 
 // BEGIN android-note
-// Copied from a newer version of Harmony.
 // In this class the address length was changed from long to int.
 // END android-note
 
@@ -376,7 +375,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         if (!target.hasRemaining()) {
             return 0;
         }
-        
+
         int readCount;
         if (target.isDirect() || target.hasArray()) {
             readCount = readImpl(target);

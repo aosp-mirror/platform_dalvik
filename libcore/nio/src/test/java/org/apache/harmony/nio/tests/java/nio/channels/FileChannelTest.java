@@ -4581,6 +4581,52 @@ public class FileChannelTest extends TestCase {
         }
     }
 
+    /**
+     * Regression test for Harmony-3324
+     * Make sure we could delete the file after we called transferTo() method.
+     */
+    public void test_transferTo_couldDelete() throws Exception {
+        // init data in files
+        writeDataToFile(fileOfReadOnlyFileChannel);
+        writeDataToFile(fileOfWriteOnlyFileChannel);
+
+        // call transferTo() method
+        readOnlyFileChannel.transferTo(0 , 2, writeOnlyFileChannel);
+
+        // delete both files
+        readOnlyFileChannel.close();
+        writeOnlyFileChannel.close();
+        boolean rDel = fileOfReadOnlyFileChannel.delete();
+        boolean wDel = fileOfWriteOnlyFileChannel.delete();
+
+        // make sure both files were deleted
+        assertTrue("File " + readOnlyFileChannel + " exists", rDel);
+        assertTrue("File " + writeOnlyFileChannel + " exists", wDel);
+    }
+
+    /**
+     * Regression test for Harmony-3324
+     * Make sure we could delete the file after we called transferFrom() method.
+     */
+    public void test_transferFrom_couldDelete() throws Exception {
+        // init data in files
+        writeDataToFile(fileOfReadOnlyFileChannel);
+        writeDataToFile(fileOfWriteOnlyFileChannel);
+
+        // call transferTo() method
+        writeOnlyFileChannel.transferFrom(readOnlyFileChannel, 0 , 2);
+
+        // delete both files
+        readOnlyFileChannel.close();
+        writeOnlyFileChannel.close();
+        boolean rDel = fileOfReadOnlyFileChannel.delete();
+        boolean wDel = fileOfWriteOnlyFileChannel.delete();
+
+        // make sure both files were deleted
+        assertTrue("File " + readOnlyFileChannel + " exists", rDel);
+        assertTrue("File " + writeOnlyFileChannel + " exists", wDel);
+    }
+
     private class MockFileChannel extends FileChannel {
 
         private boolean isLockCalled = false;

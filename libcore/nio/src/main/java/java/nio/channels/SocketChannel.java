@@ -39,7 +39,6 @@ import org.apache.harmony.luni.platform.Platform;
  * connecting. {@code isConnectionPending()} indicates if the connection is
  * blocked or not; {@code isConnected()} indicates if the socket is finally
  * connected or not.
- * </p>
  * <p>
  * The input and output sides of a channel can be shut down independently and
  * asynchronously without closing the channel. The {@code shutdownInput} method
@@ -51,15 +50,11 @@ import org.apache.harmony.luni.platform.Platform;
  * {@link ClosedChannelException}. If the output is shut down and another thread
  * is blocked in a write operation, an {@link AsynchronousCloseException} will
  * be thrown to the pending thread.
- * </p>
  * <p>
  * Socket channels are thread-safe, no more than one thread can read or write at
  * any given time. The {@code connect(SocketAddress)} and {@code
  * finishConnect()} methods are synchronized against each other; when they are
  * processing, calls to {@code read} and {@code write} will block.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class SocketChannel extends AbstractSelectableChannel implements
         ByteChannel, ScatteringByteChannel, GatheringByteChannel {
@@ -67,13 +62,12 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
     static {
         Platform.getNetworkSystem().oneTimeInitialization(true);
     }
-    
+
     /**
      * Constructs a new {@code SocketChannel}.
      * 
      * @param selectorProvider
      *            an instance of SelectorProvider.
-     * @since Android 1.0
      */
     protected SocketChannel(SelectorProvider selectorProvider) {
         super(selectorProvider);
@@ -84,12 +78,10 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * <p>
      * This channel is created by calling {@code openSocketChannel()} of the
      * default {@link SelectorProvider} instance.
-     * </p>
-     * 
+     *
      * @return the new channel which is open but unconnected.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public static SocketChannel open() throws IOException {
         return SelectorProvider.provider().openSocketChannel();
@@ -100,8 +92,7 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * <p>
      * This method performs a call to {@code open()} followed by a call to
      * {@code connect(SocketAdress)}.
-     * </p>
-     * 
+     *
      * @param address
      *            the socket address to be connected to.
      * @return the new connected channel.
@@ -121,7 +112,6 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      *             if the address type is not supported.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public static SocketChannel open(SocketAddress address) throws IOException {
         SocketChannel socketChannel = open();
@@ -138,8 +128,8 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * 
      * @return the operations supported by this channel.
      * @see java.nio.channels.SelectableChannel#validOps()
-     * @since Android 1.0
      */
+    @Override
     public final int validOps() {
         return (SelectionKey.OP_CONNECT | SelectionKey.OP_READ | SelectionKey.OP_WRITE);
     }
@@ -149,7 +139,6 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * methods that are not declared in {@code Socket}.
      * 
      * @return the socket assigned to this channel.
-     * @since Android 1.0
      */
     public abstract Socket socket();
 
@@ -158,7 +147,6 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * 
      * @return {@code true} if this channel's socket is connected, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isConnected();
 
@@ -167,7 +155,6 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * 
      * @return {@code true} if the connection is initiated but not finished;
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isConnectionPending();
 
@@ -179,13 +166,11 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * this method will return {@code true} if the connection is finished at
      * once or return {@code false} when the connection must be finished later
      * by calling {@code finishConnect()}.
-     * </p>
      * <p>
      * This method can be called at any moment and can block other read and
      * write operations while connecting. It executes the same security checks
      * as the connect method of the {@code Socket} class.
-     * </p>
-     * 
+     *
      * @param address
      *            the address to connect with.
      * @return {@code true} if the connection is finished, {@code false}
@@ -213,7 +198,6 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      *             {@code address}.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract boolean connect(SocketAddress address) throws IOException;
 
@@ -224,17 +208,14 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * This method returns {@code true} if the connection is finished already
      * and returns {@code false} if the channel is non-blocking and the
      * connection is not finished yet.
-     * </p>
      * <p>
      * If this channel is in blocking mode, this method will suspend and return
      * {@code true} when the connection is finished. It closes this channel and
      * throws an exception if the connection fails.
-     * </p>
      * <p>
      * This method can be called at any moment and it can block other {@code
      * read} and {@code write} operations while connecting.
-     * </p>
-     * 
+     *
      * @return {@code true} if the connection is successfully finished, {@code
      *         false} otherwise.
      * @throws NoConnectionPendingException
@@ -251,7 +232,6 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      *             interrupt state set, and this channel is closed.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract boolean finishConnect() throws IOException;
 
@@ -261,16 +241,13 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * The maximum number of bytes that will be read is the remaining number of
      * bytes in the buffer when the method is invoked. The bytes will be copied
      * into the buffer starting at the buffer's current position.
-     * </p>
      * <p>
      * The call may block if other threads are also attempting to read from this
      * channel.
-     * </p>
      * <p>
      * Upon completion, the buffer's position is set to the end of the bytes
      * that have been read. The buffer's limit is not changed.
-     * </p>
-     * 
+     *
      * @param target
      *            the byte buffer to receive the bytes.
      * @return the number of bytes actually read.
@@ -286,22 +263,19 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      *             if this channel is closed.
      * @throws IOException
      *             if another I/O error occurs.
-     * @since Android 1.0
+     * @see java.nio.channels.ReadableByteChannel#read(java.nio.ByteBuffer)
      */
     public abstract int read(ByteBuffer target) throws IOException;
 
     /**
-     * Reads bytes from this socket channel and stores them in a subset of the
-     * specified array of buffers. The subset is defined by {@code offset} and
-     * {@code length}, indicating the first buffer and the number of buffers to
-     * use. This method attempts to read as many bytes as can be stored in the
-     * buffer subset from this channel and returns the number of bytes actually
-     * read.
+     * Reads bytes from this socket channel into a subset of the given buffers.
+     * This method attempts to read all {@code remaining()} bytes from {@code
+     * length} byte buffers, in order, starting at {@code targets[offset]}. The
+     * number of bytes actually read is returned.
      * <p>
      * If a read operation is in progress, subsequent threads will block until
      * the read is completed and will then contend for the ability to read.
-     * </p>
-     * 
+     *
      * @param targets
      *            the array of byte buffers into which the bytes will be copied.
      * @param offset
@@ -325,7 +299,8 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      *             if another I/O error occurs.
      * @throws NotYetConnectedException
      *             if this channel is not yet connected.
-     * @since Android 1.0
+     * @see java.nio.channels.ScatteringByteChannel#read(java.nio.ByteBuffer[],
+     *      int, int)
      */
     public abstract long read(ByteBuffer[] targets, int offset, int length)
             throws IOException;
@@ -338,12 +313,10 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * <p>
      * If a read operation is in progress, subsequent threads will block until
      * the read is completed and will then contend for the ability to read.
-     * </p>
      * <p>
      * Calling this method is equivalent to calling {@code read(targets, 0,
      * targets.length);}
-     * </p>
-     * 
+     *
      * @param targets
      *            the array of byte buffers into which the bytes will be copied.
      * @return the number of bytes actually read.
@@ -360,7 +333,6 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      *             if another I/O error occurs.
      * @throws NotYetConnectedException
      *             if this channel is not yet connected.
-     * @since Android 1.0
      */
     public synchronized final long read(ByteBuffer[] targets)
             throws IOException {
@@ -375,12 +347,10 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * <p>
      * The call may block if other threads are also attempting to write to the
      * same channel.
-     * </p>
      * <p>
      * Upon completion, the buffer's position is updated to the end of the bytes
      * that have been written. The buffer's limit is not changed.
-     * </p>
-     * 
+     *
      * @param source
      *            the byte buffer containing the bytes to be written.
      * @return the number of bytes actually written.
@@ -396,19 +366,19 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      *             if another I/O error occurs.
      * @throws NotYetConnectedException
      *             if this channel is not connected yet.
-     * @since Android 1.0
+     * @see java.nio.channels.WritableByteChannel#write(java.nio.ByteBuffer)
      */
     public abstract int write(ByteBuffer source) throws IOException;
 
     /**
-     * Writes bytes from a subset of the specified array of buffers into this
-     * socket channel. The subset is defined by {@code offset} and {@code
-     * length}, indicating the first buffer and the number of buffers to use.
+     * Attempts to write a subset of the given bytes from the buffers to this
+     * socket channel. This method attempts to write all {@code remaining()}
+     * bytes from {@code length} byte buffers, in order, starting at {@code
+     * sources[offset]}. The number of bytes actually written is returned.
      * <p>
      * If a write operation is in progress, subsequent threads will block until
      * the write is completed and then contend for the ability to write.
-     * </p>
-     * 
+     *
      * @param sources
      *            the array of byte buffers that is the source for bytes written
      *            to this channel.
@@ -434,7 +404,8 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      *             if another I/O error occurs.
      * @throws NotYetConnectedException
      *             if this channel is not yet connected.
-     * @since Android 1.0
+     * @see java.nio.channels.GatheringByteChannel#write(java.nio.ByteBuffer[],
+     *      int, int)
      */
     public abstract long write(ByteBuffer[] sources, int offset, int length)
             throws IOException;
@@ -444,8 +415,7 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      * <p>
      * Calling this method is equivalent to calling {@code write(sources, 0,
      * sources.length);}
-     * </p>
-     * 
+     *
      * @param sources
      *            the buffers containing bytes to write.
      * @return the number of bytes actually written.
@@ -462,7 +432,7 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
      *             if another I/O error occurs.
      * @throws NotYetConnectedException
      *             if this channel is not yet connected.
-     * @since Android 1.0
+     * @see java.nio.channels.GatheringByteChannel#write(java.nio.ByteBuffer[])
      */
     public synchronized final long write(ByteBuffer[] sources)
             throws IOException {

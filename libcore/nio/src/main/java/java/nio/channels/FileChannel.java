@@ -16,7 +16,6 @@
 
 package java.nio.channels;
 
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -30,7 +29,6 @@ import java.nio.channels.spi.AbstractInterruptibleChannel;
  * does not have a method for opening files, since this behavior has been
  * delegated to the {@link java.io.FileInputStream},
  * {@link java.io.FileOutputStream} and {@link java.io.RandomAccessFile} types.
- * </p>
  * <p>
  * FileChannels created from a {@code FileInputStream} or a
  * {@code RandomAccessFile} created in mode "r", are read-only. FileChannels
@@ -39,19 +37,16 @@ import java.nio.channels.spi.AbstractInterruptibleChannel;
  * FileChannels created from a {@code RandomAccessFile} that was opened in
  * append-mode will also be in append-mode -- meaning that each write will be
  * proceeded by a seek to the end of file.
- * </p>
  * <p>
  * FileChannels have a virtual pointer into the file which is referred to as a
  * file <em>position</em>. The position can be manipulated by moving it
  * within the file, and the current position can be queried.
- * </p>
  * <p>
  * FileChannels also have an associated <em>size</em>. The size of the file
  * is the number of bytes that it currently contains. The size can be
  * manipulated by adding more bytes to the end of the file (which increases the
  * size) or truncating the file (which decreases the size). The current size can
  * also be queried.
- * </p>
  * <p>
  * FileChannels have operations beyond the simple read, write, and close. They
  * can also:
@@ -65,55 +60,41 @@ import java.nio.channels.spi.AbstractInterruptibleChannel;
  * <li>read and write to the file at absolute byte offsets in a fashion that
  * does not modify the current position.</li>
  * </ul>
- * </p>
  * <p>
  * FileChannels are thread-safe. Only one operation involving manipulation of
  * the file position may be executed at the same time. Subsequent calls to such
  * operations will block, and one of those blocked will be freed to continue
  * when the first operation has completed. There is no ordered queue or fairness
  * applied to the blocked threads.
- * </p>
  * <p>
  * It is undefined whether operations that do not manipulate the file position
  * will also block when there are any other operations in-flight.
- * </p>
  * <p>
  * The logical view of the underlying file is consistent across all FileChannels
  * and I/O streams opened on the same file by the same virtual machine process.
  * Therefore, modifications performed via a channel will be visible to the
  * stream and vice versa; this includes modifications to the file position,
  * content, size, etc.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class FileChannel extends AbstractInterruptibleChannel
         implements GatheringByteChannel, ScatteringByteChannel, ByteChannel {
 
     /**
      * {@code MapMode} defines file mapping mode constants.
-     * 
-     * @since Android 1.0
      */
     public static class MapMode {
         /**
          * Private mapping mode (equivalent to copy on write).
-         * 
-         * @since Android 1.0
          */
         public static final MapMode PRIVATE = new MapMode("PRIVATE"); //$NON-NLS-1$
 
         /**
          * Read-only mapping mode.
-         * 
-         * @since Android 1.0
          */
         public static final MapMode READ_ONLY = new MapMode("READ_ONLY"); //$NON-NLS-1$
 
         /**
          * Read-write mapping mode.
-         * 
-         * @since Android 1.0
          */
         public static final MapMode READ_WRITE = new MapMode("READ_WRITE"); //$NON-NLS-1$
 
@@ -132,8 +113,8 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
          * Returns a string version of the mapping mode.
          * 
          * @return this map mode as string.
-         * @since Android 1.0
          */
+        @Override
         public String toString() {
             return displayName;
         }
@@ -141,8 +122,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
 
     /**
      * Protected default constructor.
-     * 
-     * @since Android 1.0
      */
     protected FileChannel() {
         super();
@@ -157,12 +136,10 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * local storage device. If the file is not hosted locally, for example on a
      * networked file system, then applications cannot be certain that the
      * modifications have been committed.
-     * </p>
      * <p>
      * There are no assurances given that changes made to the file using methods
      * defined elsewhere will be committed. For example, changes made via a
      * mapped byte buffer may not be committed.
-     * </p>
      * <p>
      * The <code>metadata</code> parameter indicates whether the update should
      * include the file's metadata such as last modification time, last access
@@ -177,7 +154,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             if this channel is already closed.
      * @throws IOException
      *             if another I/O error occurs.
-     * @since Android 1.0
      */
     public abstract void force(boolean metadata) throws IOException;
 
@@ -187,7 +163,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * This is a convenience method for acquiring a maximum length lock on a
      * file. It is equivalent to:
      * {@code fileChannel.lock(0L, Long.MAX_VALUE, false);}
-     * 
+     *
      * @return the lock object representing the locked file area.
      * @throws ClosedChannelException
      *             the file channel is closed.
@@ -206,7 +182,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * @throws IOException
      *             if another I/O error occurs while obtaining the requested
      *             lock.
-     * @since Android 1.0
      */
     public final FileLock lock() throws IOException {
         return lock(0L, Long.MAX_VALUE, false);
@@ -217,41 +192,34 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * <p>
      * This is the blocking version of lock acquisition, see also the
      * <code>tryLock()</code> methods.
-     * </p>
      * <p>
      * Attempts to acquire an overlapping lock region will fail. The attempt
      * will fail if the overlapping lock has already been obtained, or if
      * another thread is currently waiting to acquire the overlapping lock.
-     * </p>
      * <p>
      * If the request is not for an overlapping lock, the thread calling this
      * method will block until the lock is obtained (likely by no contention or
      * another process releasing a lock), or until this thread is interrupted or
      * the channel is closed.
-     * </p>
      * <p>
      * If the lock is obtained successfully then the {@link FileLock} object
      * returned represents the lock for subsequent operations on the locked
      * region.
-     * </p>
      * <p>
      * If the thread is interrupted while waiting for the lock, the thread is
      * set to the interrupted state and throws a
      * {@link FileLockInterruptionException}. If this channel is closed while
      * the thread is waiting to obtain the lock then the thread throws a
      * {@link AsynchronousCloseException}.
-     * </p>
      * <p>
      * There is no requirement for the position and size to be within the
      * current start and length of the file.
-     * </p>
      * <p>
      * Some platforms do not support shared locks, and if a request is made for
      * a shared lock on such a platform, this method will attempt to acquire an
      * exclusive lock instead. It is undefined whether the lock obtained is
      * advisory or mandatory.
-     * </p>
-     * 
+     *
      * @param position
      *            the starting position for the locked region.
      * @param size
@@ -280,7 +248,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             the desired file lock.
      * @throws IOException
      *             if another I/O error occurs.
-     * @since Android 1.0
      */
     public abstract FileLock lock(long position, long size, boolean shared)
             throws IOException;
@@ -291,8 +258,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * channel do not affect the other storage place.
      * <p>
      * Note: mapping a file into memory is usually expensive.
-     * </p>
-     * 
+     *
      * @param mode
      *            one of the three mapping modes.
      * @param position
@@ -312,7 +278,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             bigger than max integer.
      * @throws IOException
      *             if any I/O error occurs.
-     * @since Android 1.0
      */
     public abstract MappedByteBuffer map(FileChannel.MapMode mode,
             long position, long size) throws IOException;
@@ -326,7 +291,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             if this channel is closed.
      * @throws IOException
      *             if another I/O error occurs.
-     * @since Android 1.0
      */
     public abstract long position() throws IOException;
 
@@ -349,7 +313,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             if this channel is closed.
      * @throws IOException
      *             if another I/O error occurs.
-     * @since Android 1.0
      */
     public abstract FileChannel position(long offset) throws IOException;
 
@@ -359,16 +322,13 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * The maximum number of bytes that will be read is the remaining number of
      * bytes in the buffer when the method is invoked. The bytes will be copied
      * into the buffer starting at the buffer's current position.
-     * </p>
      * <p>
      * The call may block if other threads are also attempting to read from this
      * channel.
-     * </p>
      * <p>
      * Upon completion, the buffer's position is set to the end of the bytes
      * that have been read. The buffer's limit is not changed.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the byte buffer to receive the bytes.
      * @return the number of bytes actually read.
@@ -384,7 +344,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * @throws NonReadableChannelException
      *             if the channel has not been opened in a mode that permits
      *             reading.
-     * @since Android 1.0
      */
     public abstract int read(ByteBuffer buffer) throws IOException;
 
@@ -395,15 +354,12 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * The bytes are read starting at the given file position (up to the
      * remaining number of bytes in the buffer). The number of bytes actually
      * read is returned.
-     * </p>
      * <p>
      * If {@code position} is beyond the current end of file, then no bytes are
      * read.
-     * </p>
      * <p>
      * Note that the file position is unmodified by this method.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the buffer to receive the bytes.
      * @param position
@@ -425,7 +381,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * @throws NonReadableChannelException
      *             if the channel has not been opened in a mode that permits
      *             reading.
-     * @since Android 1.0
      */
     public abstract int read(ByteBuffer buffer, long position)
             throws IOException;
@@ -439,12 +394,10 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * <p>
      * If a read operation is in progress, subsequent threads will block until
      * the read is completed and will then contend for the ability to read.
-     * </p>
      * <p>
      * Calling this method is equivalent to calling
      * {@code read(buffers, 0, buffers.length);}
-     * </p>
-     * 
+     *
      * @param buffers
      *            the array of byte buffers into which the bytes will be copied.
      * @return the number of bytes actually read.
@@ -461,24 +414,21 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * @throws NonReadableChannelException
      *             if the channel has not been opened in a mode that permits
      *             reading.
-     * @since Android 1.0
      */
     public final long read(ByteBuffer[] buffers) throws IOException {
         return read(buffers, 0, buffers.length);
     }
 
     /**
-     * Reads bytes from this file channel and stores them in a subset of the
-     * specified array of buffers. The subset is defined by {@code start} and
-     * {@code number}, indicating the first buffer and the number of buffers to
-     * use. This method attempts to read as many bytes as can be stored in the
-     * buffer subset from this channel and returns the number of bytes actually
-     * read. It also increases the file position by the number of bytes read.
+     * Reads bytes from this file channel into a subset of the given buffers.
+     * This method attempts to read all {@code remaining()} bytes from {@code
+     * length} byte buffers, in order, starting at {@code targets[offset]}. It
+     * increases the file position by the number of bytes actually read. The
+     * number of bytes actually read is returned.
      * <p>
      * If a read operation is in progress, subsequent threads will block until
      * the read is completed and will then contend for the ability to read.
-     * </p>
-     * 
+     *
      * @param buffers
      *            the array of byte buffers into which the bytes will be copied.
      * @param start
@@ -503,7 +453,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * @throws NonReadableChannelException
      *             if the channel has not been opened in a mode that permits
      *             reading.
-     * @since Android 1.0
      */
     public abstract long read(ByteBuffer[] buffers, int start, int number)
             throws IOException;
@@ -516,7 +465,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             if this channel is closed.
      * @throws IOException
      *             if an I/O error occurs while getting the size of the file.
-     * @since Android 1.0
      */
     public abstract long size() throws IOException;
 
@@ -530,8 +478,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * buffer.
      * <p>
      * Note that this channel's position is not modified.
-     * </p>
-     * 
+     *
      * @param src
      *            the source channel to read bytes from.
      * @param position
@@ -554,7 +501,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             if the thread is interrupted during this operation.
      * @throws IOException
      *             if any I/O error occurs.
-     * @since Android 1.0
      */
     public abstract long transferFrom(ReadableByteChannel src, long position,
             long count) throws IOException;
@@ -569,8 +515,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * buffer.
      * <p>
      * Note that this channel's position is not modified.
-     * </p>
-     * 
+     *
      * @param position
      *            the non-negative position to begin.
      * @param count
@@ -593,7 +538,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             if the thread is interrupted during this operation.
      * @throws IOException
      *             if any I/O error occurs.
-     * @since Android 1.0
      */
     public abstract long transferTo(long position, long count,
             WritableByteChannel target) throws IOException;
@@ -605,8 +549,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * <p>
      * If the file position is currently greater than the given size, then it is
      * set to the new size.
-     * </p>
-     * 
+     *
      * @param size
      *            the maximum size of the underlying file.
      * @throws IllegalArgumentException
@@ -618,7 +561,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * @throws IOException
      *             if another I/O error occurs.
      * @return this channel.
-     * @since Android 1.0
      */
     public abstract FileChannel truncate(long size) throws IOException;
 
@@ -628,12 +570,10 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * This is a convenience method for attempting to acquire a maximum length
      * lock on the file. It is equivalent to:
      * {@code fileChannel.tryLock(0L, Long.MAX_VALUE, false);}
-     * </p>
      * <p>
      * The method returns {@code null} if the acquisition would result in an
      * overlapped lock with another OS process.
-     * </p>
-     * 
+     *
      * @return the file lock object, or {@code null} if the lock would overlap
      *         with an existing exclusive lock in another OS process.
      * @throws ClosedChannelException
@@ -644,7 +584,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             with this request.
      * @throws IOException
      *             if any I/O error occurs.
-     * @since Android 1.0
      */
     public final FileLock tryLock() throws IOException {
         return tryLock(0L, Long.MAX_VALUE, false);
@@ -659,8 +598,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * outside of the file's size. The size of the lock is fixed. If the file
      * grows outside of the lock that region of the file won't be locked by this
      * lock.
-     * </p>
-     * 
+     *
      * @param position
      *            the starting position.
      * @param size
@@ -679,7 +617,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             with this request.
      * @throws IOException
      *             if any I/O error occurs.
-     * @since Android 1.0
      */
     public abstract FileLock tryLock(long position, long size, boolean shared)
             throws IOException;
@@ -703,11 +640,11 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             if another thread closes the channel during the write.
      * @throws ClosedByInterruptException
      *             if another thread interrupts the calling thread while this
-     *             operation is in progress. The interrupt state of the calling 
+     *             operation is in progress. The interrupt state of the calling
      *             thread is set and the channel is closed.
      * @throws IOException
      *             if another I/O error occurs, details are in the message.
-     * @since Android 1.0
+     * @see java.nio.channels.WritableByteChannel#write(java.nio.ByteBuffer)
      */
     public abstract int write(ByteBuffer src) throws IOException;
 
@@ -718,16 +655,13 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * The bytes are written starting at the given file position (up to the
      * remaining number of bytes in the buffer). The number of bytes actually
      * written is returned.
-     * </p>
      * <p>
      * If the position is beyond the current end of file, then the file is first
      * extended up to the given position by the required number of unspecified
      * byte values.
-     * </p>
      * <p>
      * Note that the file position is not modified by this method.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the buffer containing the bytes to be written.
      * @param position
@@ -748,7 +682,6 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             thread is set and the channel is closed.
      * @throws IOException
      *             if another I/O error occurs.
-     * @since Android 1.0
      */
     public abstract int write(ByteBuffer buffer, long position)
             throws IOException;
@@ -763,8 +696,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      * <p>
      * Calling this method is equivalent to calling
      * {@code write(buffers, 0, buffers.length);}
-     * </p>
-     * 
+     *
      * @param buffers
      *            the buffers containing bytes to write.
      * @return the number of bytes actually written.
@@ -773,7 +705,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             operation.
      * @throws ClosedByInterruptException
      *             if another thread interrupts the calling thread while this
-     *             operation is in progress. The interrupt state of the calling 
+     *             operation is in progress. The interrupt state of the calling
      *             thread is set and the channel is closed.
      * @throws ClosedChannelException
      *             if this channel is closed.
@@ -781,21 +713,20 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             if another I/O error occurs; details are in the message.
      * @throws NonWritableChannelException
      *             if this channel was not opened for writing.
-     * @since Android 1.0
      */
     public final long write(ByteBuffer[] buffers) throws IOException {
         return write(buffers, 0, buffers.length);
     }
 
     /**
-     * Writes bytes from a subset of the specified array of buffers into this
-     * file channel. The subset is defined by {@code offset} and {@code length},
-     * indicating the first buffer and the number of buffers to use.
+     * Attempts to write a subset of the given bytes from the buffers to this
+     * file channel. This method attempts to write all {@code remaining()}
+     * bytes from {@code length} byte buffers, in order, starting at {@code
+     * sources[offset]}. The number of bytes actually written is returned.
      * <p>
      * If a write operation is in progress, subsequent threads will block until
      * the write is completed and then contend for the ability to write.
-     * </p>
-     * 
+     *
      * @param buffers
      *            the array of byte buffers that is the source for bytes written
      *            to this channel.
@@ -810,7 +741,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             operation.
      * @throws ClosedByInterruptException
      *             if another thread interrupts the calling thread while this
-     *             operation is in progress. The interrupt state of the calling 
+     *             operation is in progress. The interrupt state of the calling
      *             thread is set and the channel is closed.
      * @throws ClosedChannelException
      *             if this channel is closed.
@@ -822,9 +753,7 @@ public abstract class FileChannel extends AbstractInterruptibleChannel
      *             if another I/O error occurs; details are in the message.
      * @throws NonWritableChannelException
      *             if this channel was not opened for writing.
-     * @since Android 1.0
      */
     public abstract long write(ByteBuffer[] buffers, int offset, int length)
             throws IOException;
-
 }

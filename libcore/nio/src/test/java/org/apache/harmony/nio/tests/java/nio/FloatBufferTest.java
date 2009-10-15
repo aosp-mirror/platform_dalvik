@@ -290,8 +290,6 @@ public abstract class FloatBufferTest extends AbstractBufferTest {
         assertTrue(buf.compareTo(other) > 0);
         assertTrue(other.compareTo(buf) < 0);
 
-        // BEGIN android-added
-        // copied from a newer version of Harmony
         FloatBuffer fbuffer1 = FloatBuffer.wrap(new float[] { Float.NaN });
         FloatBuffer fbuffer2 = FloatBuffer.wrap(new float[] { Float.NaN });
         FloatBuffer fbuffer3 = FloatBuffer.wrap(new float[] { 42f });
@@ -302,7 +300,6 @@ public abstract class FloatBufferTest extends AbstractBufferTest {
                 .compareTo(fbuffer1));
         assertEquals("Failed greater than comparison with NaN entry", 1, fbuffer1
                 .compareTo(fbuffer3));
-        // END android-added
     }
 
     @TestTargetNew(

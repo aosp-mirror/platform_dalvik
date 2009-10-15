@@ -31,6 +31,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  */
 @TestTargetClass(UnresolvedAddressException.class)
 public class UnresolvedAddressExceptionTest extends TestCase {
+    
+    /**
+     * @tests {@link java.nio.channels.UnresolvedAddressException#UnresolvedAddressException()}
+     */
+    public void test_Constructor() {
+        UnresolvedAddressException e = new UnresolvedAddressException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
 
     /**
      * @tests serialization/deserialization compatibility.

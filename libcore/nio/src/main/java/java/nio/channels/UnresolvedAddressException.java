@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * An {@code UnresolvedAddressException} is thrown when trying to use an
  * unresolved network address in a network operation.
- * 
- * @since Android 1.0
  */
 public class UnresolvedAddressException extends IllegalArgumentException {
 
@@ -29,8 +26,6 @@ public class UnresolvedAddressException extends IllegalArgumentException {
 
     /**
      * Constructs an {@code UnresolvedAddressException}.
-     * 
-     * @since Android 1.0
      */
     public UnresolvedAddressException() {
         super();

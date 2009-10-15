@@ -77,8 +77,6 @@ public class BufferUnderflowExceptionTest extends TestCase {
         SerializationTest.verifyGolden(this, new BufferUnderflowException());
     }
 
-    // BEGIN android-added
-    // copied from newer version of harmony
     /**
      *@tests {@link java.nio.BufferUnderflowException#BufferUnderflowException()}
      */
@@ -94,5 +92,4 @@ public class BufferUnderflowExceptionTest extends TestCase {
         assertNull(exception.getLocalizedMessage());
         assertNull(exception.getCause());
     }
-    // END android-added
 }

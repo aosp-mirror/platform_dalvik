@@ -16,7 +16,6 @@
 
 package java.nio.channels;
 
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -24,8 +23,6 @@ import java.nio.ByteBuffer;
  * The interface for channels that can read data into a set of buffers in a
  * single operation. The corresponding interface for writes is
  * {@link GatheringByteChannel}.
- * 
- * @since Android 1.0
  */
 public interface ScatteringByteChannel extends ReadableByteChannel {
 
@@ -33,8 +30,7 @@ public interface ScatteringByteChannel extends ReadableByteChannel {
      * Reads bytes from this channel into the specified array of buffers.
      * <p>
      * This method is equivalent to {@code read(buffers, 0, buffers.length);}
-     * </p>
-     * 
+     *
      * @param buffers
      *            the array of byte buffers to store the bytes being read.
      * @return the number of bytes actually read.
@@ -43,7 +39,7 @@ public interface ScatteringByteChannel extends ReadableByteChannel {
      *             operation.
      * @throws ClosedByInterruptException
      *             if another thread interrupts the calling thread while the
-     *             operation is in progress. The interrupt state of the calling 
+     *             operation is in progress. The interrupt state of the calling
      *             thread is set and the channel is closed.
      * @throws ClosedChannelException
      *             if the channel is closed.
@@ -52,21 +48,16 @@ public interface ScatteringByteChannel extends ReadableByteChannel {
      * @throws NonWritableChannelException
      *             if the channel has not been opened in a mode that permits
      *             reading.
-     * @since Android 1.0
      */
     public long read(ByteBuffer[] buffers) throws IOException;
 
     /**
-     * Reads bytes from this channel and stores them in a subset of the
-     * specified array of buffers. The subset is defined by {@code offset} and
-     * {@code length}, indicating the first buffer and the number of buffers to
-     * use. This method attempts to read as many bytes as can be stored in the
-     * buffer subset from the channel and returns the number of bytes actually
-     * read.
+     * Attempts to read all {@code remaining()} bytes from {@code length} byte
+     * buffers, in order, starting at {@code buffers[offset]}. The number of
+     * bytes actually read is returned.
      * <p>
      * If a read operation is in progress, subsequent threads will block until
      * the read is completed and will then contend for the ability to read.
-     * </p>
      * 
      * @param buffers
      *            the array of byte buffers into which the bytes will be copied.
@@ -80,7 +71,7 @@ public interface ScatteringByteChannel extends ReadableByteChannel {
      *             operation.
      * @throws ClosedByInterruptException
      *             if another thread interrupts the calling thread while the
-     *             operation is in progress. The interrupt state of the calling 
+     *             operation is in progress. The interrupt state of the calling
      *             thread is set and the channel is closed.
      * @throws ClosedChannelException
      *             if the channel is closed.
@@ -93,9 +84,7 @@ public interface ScatteringByteChannel extends ReadableByteChannel {
      * @throws NonWritableChannelException
      *             if the channel has not been opened in a mode that permits
      *             reading.
-     * @since Android 1.0
      */
     public long read(ByteBuffer[] buffers, int offset, int length)
             throws IOException;
-
 }

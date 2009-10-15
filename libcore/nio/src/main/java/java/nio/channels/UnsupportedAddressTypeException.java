@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * An {@code UnsupportedAddressTypeException} is thrown when connecting or
  * binding to an unsupported address type.
- * 
- * @since Android 1.0
  */
 public class UnsupportedAddressTypeException extends IllegalArgumentException {
 
@@ -29,8 +26,6 @@ public class UnsupportedAddressTypeException extends IllegalArgumentException {
 
     /**
      * Constructs an {@code UnsupportedAddressTypeException}.
-     * 
-     * @since Android 1.0
      */
     public UnsupportedAddressTypeException() {
         super();

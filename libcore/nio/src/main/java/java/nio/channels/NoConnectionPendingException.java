@@ -16,15 +16,12 @@
 
 package java.nio.channels;
 
-
 /**
  * A {@code NoConnectionPendingException} is thrown if {@code SocketChannel}'s
  * {@link SocketChannel#finishConnect() finishConnect} method is called before
- * the {@code SocketChannel}'s
- * {@link SocketChannel#connect(SocketAddress) connect} method completed without
- * error.
- * 
- * @since Android 1.0
+ * the {@code SocketChannel}'s {@link
+ * SocketChannel#connect(java.net.SocketAddress)} connect} method completed
+ * without error.
  */
 public class NoConnectionPendingException extends IllegalStateException {
 
@@ -32,8 +29,6 @@ public class NoConnectionPendingException extends IllegalStateException {
 
     /**
      * Constructs a {@code NoConnectionPendingException}.
-     * 
-     * @since Android 1.0
      */
     public NoConnectionPendingException() {
         super();

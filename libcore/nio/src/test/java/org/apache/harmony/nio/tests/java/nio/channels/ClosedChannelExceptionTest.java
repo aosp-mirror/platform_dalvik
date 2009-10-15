@@ -31,6 +31,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  */
 @TestTargetClass(ClosedChannelException.class)
 public class ClosedChannelExceptionTest extends TestCase {
+    
+    /**
+     * @tests {@link java.nio.channels.ClosedChannelException#ClosedChannelException()}
+     */
+    public void test_Constructor() {
+        ClosedChannelException e = new ClosedChannelException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
 
     /**
      * @tests serialization/deserialization compatibility.

@@ -31,6 +31,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  */
 @TestTargetClass(NoConnectionPendingException.class)
 public class NoConnectionPendingExceptionTest extends TestCase {
+    
+    /**
+     * @tests {@link java.nio.channels.NoConnectionPendingException#NoConnectionPendingException()}
+     */
+    public void test_Constructor() {
+        NoConnectionPendingException e = new NoConnectionPendingException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
 
     /**
      * @tests serialization/deserialization compatibility.

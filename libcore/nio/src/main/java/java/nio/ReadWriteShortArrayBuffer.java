@@ -54,10 +54,12 @@ final class ReadWriteShortArrayBuffer extends ShortArrayBuffer {
         super(capacity, backingArray, arrayOffset);
     }
 
+    @Override
     public ShortBuffer asReadOnlyBuffer() {
         return ReadOnlyShortArrayBuffer.copy(this, mark);
     }
 
+    @Override
     public ShortBuffer compact() {
         System.arraycopy(backingArray, position + offset, backingArray, offset,
                 remaining());
@@ -67,26 +69,32 @@ final class ReadWriteShortArrayBuffer extends ShortArrayBuffer {
         return this;
     }
 
+    @Override
     public ShortBuffer duplicate() {
         return copy(this, mark);
     }
 
+    @Override
     public boolean isReadOnly() {
         return false;
     }
 
+    @Override
     protected short[] protectedArray() {
         return backingArray;
     }
 
+    @Override
     protected int protectedArrayOffset() {
         return offset;
     }
 
+    @Override
     protected boolean protectedHasArray() {
         return true;
     }
 
+    @Override
     public ShortBuffer put(short c) {
         if (position == limit) {
             throw new BufferOverflowException();
@@ -95,6 +103,7 @@ final class ReadWriteShortArrayBuffer extends ShortArrayBuffer {
         return this;
     }
 
+    @Override
     public ShortBuffer put(int index, short c) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -103,19 +112,21 @@ final class ReadWriteShortArrayBuffer extends ShortArrayBuffer {
         return this;
     }
 
+    @Override
     public ShortBuffer put(short[] src, int off, int len) {
         int length = src.length;
-        if (off < 0 || len < 0 || (long)off + (long)len > length) {
+        if (off < 0 || len < 0 || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
         if (len > remaining()) {
             throw new BufferOverflowException();
         }
-        System.arraycopy(src, off, backingArray, offset+position, len);
+        System.arraycopy(src, off, backingArray, offset + position, len);
         position += len;
         return this;
     }
-    
+
+    @Override
     public ShortBuffer slice() {
         return new ReadWriteShortArrayBuffer(remaining(), backingArray, offset
                 + position);

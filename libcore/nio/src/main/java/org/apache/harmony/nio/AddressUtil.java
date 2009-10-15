@@ -1,5 +1,4 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
+/* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -16,7 +15,7 @@
  */
 
 /*
- * Android Notice 
+ * Android Notice
  * In this class the address length was changed from long to int.
  * This is due to performance optimizations for the device.
  */
@@ -26,6 +25,10 @@ package org.apache.harmony.nio;
 import java.io.FileDescriptor;
 import java.nio.Buffer;
 import java.nio.channels.Channel;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 
 import org.apache.harmony.luni.platform.FileDescriptorHandler;
 import org.apache.harmony.nio.internal.DirectBuffer;
@@ -54,16 +57,17 @@ public class AddressUtil {
         }
         return ((DirectBuffer) buf).getEffectiveAddress().toInt();
     }
-    
+
     /**
-     * Gets the address of native resource held by the given channel, if has
+     * Gets the address of native resource held by the given channel, if it has
      * any.
      * 
-     * For network related channel, including SocketChannel, ServerSocketChannel
-     * and DatagramChannel, this method returns a int of Socket handler in Linux
-     * while returns a SOCKET (UINT_PTR) in windows.
+     * For network related channel, including {@link SocketChannel},
+     * {@link ServerSocketChannel} and {@link DatagramChannel}, this method
+     * returns the Socket handle (long) in Linux, and returns a SOCKET
+     * (UINT_PTR) in windows.
      * 
-     * For FileChannel, this method returns the native file descriptor.
+     * For {@link FileChannel}, this method returns the native file descriptor.
      * 
      * For other channels, this method return 0, which means unsupported
      * operation.
@@ -74,10 +78,10 @@ public class AddressUtil {
      *         otherwise return 0
      */
     public static int getChannelAddress(Channel channel){
-        if(channel instanceof FileDescriptorHandler){
-            return getFDAddress(((FileDescriptorHandler) channel).getFD());    
-        }else if(channel instanceof FileChannelImpl){
-            return ((FileChannelImpl) channel).getHandle();    
+        if (channel instanceof FileDescriptorHandler) {
+            return getFDAddress(((FileDescriptorHandler) channel).getFD());
+        } else if (channel instanceof FileChannelImpl) {
+            return ((FileChannelImpl) channel).getHandle();
         }
         return 0;
     }

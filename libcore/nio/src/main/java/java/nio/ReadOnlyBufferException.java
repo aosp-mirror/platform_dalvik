@@ -16,12 +16,9 @@
 
 package java.nio;
 
-
 /**
  * A {@code ReadOnlyBufferException} is thrown when some write operation is
  * called on a read-only buffer.
- * 
- * @since Android 1.0
  */
 public class ReadOnlyBufferException extends UnsupportedOperationException {
 
@@ -29,8 +26,6 @@ public class ReadOnlyBufferException extends UnsupportedOperationException {
 
     /**
      * Constructs a {@code ReadOnlyBufferException}.
-     * 
-     * @since Android 1.0
      */
     public ReadOnlyBufferException() {
         super();

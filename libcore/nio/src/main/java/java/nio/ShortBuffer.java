@@ -21,7 +21,6 @@ package java.nio;
  * A buffer of shorts.
  * <p>
  * A short buffer can be created in either of the following ways:
- * </p>
  * <ul>
  * <li>{@link #allocate(int) Allocate} a new short array and create a buffer
  * based on it;</li>
@@ -30,10 +29,9 @@ package java.nio;
  * <li>Use {@link java.nio.ByteBuffer#asShortBuffer() ByteBuffer.asShortBuffer}
  * to create a short buffer based on a byte buffer.</li>
  * </ul>
- * 
- * @since Android 1.0
  */
-public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuffer> {
+public abstract class ShortBuffer extends Buffer implements
+        Comparable<ShortBuffer> {
 
     /**
      * Creates a short buffer based on a newly allocated short array.
@@ -43,7 +41,6 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * @return the created short buffer.
      * @throws IllegalArgumentException
      *             if {@code capacity} is less than zero.
-     * @since Android 1.0
      */
     public static ShortBuffer allocate(int capacity) {
         if (capacity < 0) {
@@ -57,12 +54,10 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * <p>
      * Calling this method has the same effect as
      * {@code wrap(array, 0, array.length)}.
-     * </p>
-     * 
+     *
      * @param array
      *            the short array which the new buffer will be based on.
      * @return the created short buffer.
-     * @since Android 1.0
      */
     public static ShortBuffer wrap(short[] array) {
         return wrap(array, 0, array.length);
@@ -73,8 +68,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * <p>
      * The new buffer's position will be {@code start}, limit will be
      * {@code start + len}, capacity will be the length of the array.
-     * </p>
-     * 
+     *
      * @param array
      *            the short array which the new buffer will be based on.
      * @param start
@@ -86,15 +80,14 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * @return the created short buffer.
      * @exception IndexOutOfBoundsException
      *                if either {@code start} or {@code len} is invalid.
-     * @since Android 1.0
      */
     public static ShortBuffer wrap(short[] array, int start, int len) {
-                if (array == null) {
-                        throw new NullPointerException();
-                }
-                if (start< 0 || len < 0 || (long)start + (long)len > array.length) {
-                        throw new IndexOutOfBoundsException();
-                }
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        if (start < 0 || len < 0 || (long) start + (long) len > array.length) {
+            throw new IndexOutOfBoundsException();
+        }
 
         ShortBuffer buf = BufferFactory.newShortBuffer(array);
         buf.position = start;
@@ -124,7 +117,6 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *                if this buffer is based on an array, but it is read-only.
      * @exception UnsupportedOperationException
      *                if this buffer is not based on an array.
-     * @since Android 1.0
      */
     public final short[] array() {
         return protectedArray();
@@ -136,14 +128,12 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * <p>
      * The offset is the index of the array corresponding to the zero position
      * of the buffer.
-     * </p>
-     * 
+     *
      * @return the offset of the short array which this buffer is based on.
      * @exception ReadOnlyBufferException
      *                if this buffer is based on an array, but it is read-only.
      * @exception UnsupportedOperationException
      *                if this buffer is not based on an array.
-     * @since Android 1.0
      */
     public final int arrayOffset() {
         return protectedArrayOffset();
@@ -171,15 +161,12 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * The returned buffer is guaranteed to be a new instance, even if this
      * buffer is read-only itself. The new buffer's position, limit, capacity
      * and mark are the same as this buffer's.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means this
      * buffer's change of content will be visible to the new buffer. The two
      * buffer's position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a read-only version of this buffer.
-     * @since Android 1.0
      */
     public abstract ShortBuffer asReadOnlyBuffer();
 
@@ -189,12 +176,10 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * The remaining shorts will be moved to the head of the buffer, starting
      * from position zero. Then the position is set to {@code remaining()}; the
      * limit is set to capacity; the mark is cleared.
-     * </p>
-     * 
+     *
      * @return this buffer.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ShortBuffer compact();
 
@@ -209,7 +194,6 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *         greater than {@code otherBuffer}.
      * @exception ClassCastException
      *                if {@code otherBuffer} is not a short buffer.
-     * @since Android 1.0
      */
     public int compareTo(ShortBuffer otherBuffer) {
         int compareRemaining = (remaining() < otherBuffer.remaining()) ? remaining()
@@ -236,15 +220,12 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * The duplicated buffer's position, limit, capacity and mark are the same
      * as this buffer. The duplicated buffer's read-only property and byte order
      * are the same as this buffer's.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a duplicated buffer that shares its content with this buffer.
-     * @since Android 1.0
      */
     public abstract ShortBuffer duplicate();
 
@@ -254,14 +235,13 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * If {@code other} is not a short buffer then {@code false} is returned.
      * Two short buffers are equal if and only if their remaining shorts are
      * exactly the same. Position, limit, capacity and mark are not considered.
-     * </p>
-     * 
+     *
      * @param other
      *            the object to compare with this short buffer.
      * @return {@code true} if this short buffer is equal to {@code other},
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
+    @Override
     public boolean equals(Object other) {
         if (!(other instanceof ShortBuffer)) {
             return false;
@@ -289,7 +269,6 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * @return the short at the current position.
      * @exception BufferUnderflowException
      *                if the position is equal or greater than limit.
-     * @since Android 1.0
      */
     public abstract short get();
 
@@ -299,14 +278,12 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * <p>
      * Calling this method has the same effect as
      * {@code get(dest, 0, dest.length)}.
-     * </p>
-     * 
+     *
      * @param dest
      *            the destination short array.
      * @return this buffer.
      * @exception BufferUnderflowException
      *                if {@code dest.length} is greater than {@code remaining()}.
-     * @since Android 1.0
      */
     public ShortBuffer get(short[] dest) {
         return get(dest, 0, dest.length);
@@ -330,11 +307,10 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *                if either {@code off} or {@code len} is invalid.
      * @exception BufferUnderflowException
      *                if {@code len} is greater than {@code remaining()}.
-     * @since Android 1.0
      */
     public ShortBuffer get(short[] dest, int off, int len) {
         int length = dest.length;
-        if (off < 0 || len < 0 || (long)off + (long)len > length) {
+        if (off < 0 || len < 0 || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
         if (len > remaining()) {
@@ -354,17 +330,15 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * @return a short at the specified index.
      * @exception IndexOutOfBoundsException
      *                if index is invalid.
-     * @since Android 1.0
      */
     public abstract short get(int index);
 
     /**
      * Indicates whether this buffer is based on a short array and is
      * read/write.
-     * 
+     *
      * @return {@code true} if this buffer is based on a short array and
      *         provides read/write access, {@code false} otherwise.
-     * @since Android 1.0
      */
     public final boolean hasArray() {
         return protectedHasArray();
@@ -373,10 +347,10 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
     /**
      * Calculates this buffer's hash code from the remaining chars. The
      * position, limit, capacity and mark don't affect the hash code.
-     * 
+     *
      * @return the hash code calculated from the remaining shorts.
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         int myPosition = position;
         int hash = 0;
@@ -393,10 +367,8 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * <p>
      * A short buffer is direct if it is based on a byte buffer and the byte
      * buffer is direct.
-     * </p>
-     * 
+     *
      * @return {@code true} if this buffer is direct, {@code false} otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isDirect();
 
@@ -406,11 +378,9 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * <p>
      * If this buffer is not based on a byte buffer, then always return the
      * platform's native byte order.
-     * </p>
-     * 
+     *
      * @return the byte order used by this buffer when converting shorts from/to
      *         bytes.
-     * @since Android 1.0
      */
     public abstract ByteOrder order();
 
@@ -446,7 +416,6 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *                if position is equal or greater than limit.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ShortBuffer put(short s);
 
@@ -456,8 +425,7 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * <p>
      * Calling this method has the same effect as
      * {@code put(src, 0, src.length)}.
-     * </p>
-     * 
+     *
      * @param src
      *            the source short array.
      * @return this buffer.
@@ -465,7 +433,6 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *                if {@code remaining()} is less than {@code src.length}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public final ShortBuffer put(short[] src) {
         return put(src, 0, src.length);
@@ -491,14 +458,13 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *                if either {@code off} or {@code len} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public ShortBuffer put(short[] src, int off, int len) {
         int length = src.length;
-        if (off < 0 || len < 0 || (long)off + (long)len > length) {
+        if (off < 0 || len < 0 || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         if (len > remaining()) {
             throw new BufferOverflowException();
         }
@@ -523,7 +489,6 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *                if {@code src} is this buffer.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public ShortBuffer put(ShortBuffer src) {
         if (src == this) {
@@ -551,7 +516,6 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      *                if index is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ShortBuffer put(int index, short s);
 
@@ -563,15 +527,12 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * The new buffer's position will be 0, limit will be its capacity, and its
      * mark is cleared. The new buffer's read-only property and byte order are
      * same as this buffer's.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
      * 
      * @return a sliced buffer that shares its content with this buffer.
-     * @since Android 1.0
      */
     public abstract ShortBuffer slice();
 
@@ -579,10 +540,10 @@ public abstract class ShortBuffer extends Buffer implements Comparable<ShortBuff
      * Returns a string representing the state of this short buffer.
      * 
      * @return a string representing the state of this short buffer.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append(getClass().getName());
         buf.append(", status: capacity="); //$NON-NLS-1$
         buf.append(capacity());

@@ -108,7 +108,7 @@ final class PipeImpl extends Pipe {
             super(provider);
             sourceServer = provider.openServerSocketChannel();
             sourceServer.socket().bind(
-                    new InetSocketAddress(InetAddress.getLocalHost(), 0));
+                new InetSocketAddress(InetAddress.getByName(null), 0));
             serverPort = sourceServer.socket().getLocalPort();
         }
 
@@ -161,8 +161,8 @@ final class PipeImpl extends Pipe {
         }
 
         public boolean finishConnect() throws IOException {
-            return sinkSocket.connect(new InetSocketAddress(InetAddress
-                    .getLocalHost(), serverPort));
+            return sinkSocket.connect(
+                new InetSocketAddress(InetAddress.getByName(null), serverPort));
         }
 
         protected void implCloseSelectableChannel() throws IOException {

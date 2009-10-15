@@ -178,8 +178,17 @@ public class AbstractSelectableChannelTest extends TestCase {
         assertSame(sc, acceptKey.channel());
 
         //test that sc.register invokes Selector.register()
-        sc.register(acceptSelector2, SelectionKey.OP_READ, null);
+        acceptKey = sc.register(acceptSelector2, SelectionKey.OP_READ, null);
         assertTrue(((MockAbstractSelector)acceptSelector2).isRegisterCalled);
+
+        // Regression test to ensure acceptance of a selector with empty
+        // interest set.
+        SocketChannel channel = SocketChannel.open();
+        channel.configureBlocking(false);
+        Selector selector = Selector.open();
+        channel.register(selector, 0);
+        selector.close();
+        channel.close();
     }
 
     /**

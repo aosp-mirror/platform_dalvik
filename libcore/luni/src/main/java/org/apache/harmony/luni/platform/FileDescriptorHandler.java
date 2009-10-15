@@ -20,14 +20,14 @@ package org.apache.harmony.luni.platform;
 import java.io.FileDescriptor;
 
 /**
- * This interface declares method to get wrapped <code>FileDescritpor</code>.
+ * This interface declares method to get wrapped <code>FileDescriptor</code>.
  */
 public interface FileDescriptorHandler {
 
     /**
-     * Get the wrapped <code>FileDescritpor</code>.
+     * Get the wrapped <code>FileDescriptor</code>.
      * 
-     * @return the wrapped <code>FileDescritpor</code>.
+     * @return the wrapped <code>FileDescriptor</code>.
      */
     FileDescriptor getFD();
 

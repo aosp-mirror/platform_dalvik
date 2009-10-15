@@ -44,50 +44,62 @@ final class ReadOnlyIntArrayBuffer extends IntArrayBuffer {
         super(capacity, backingArray, arrayOffset);
     }
 
+    @Override
     public IntBuffer asReadOnlyBuffer() {
         return duplicate();
     }
 
+    @Override
     public IntBuffer compact() {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public IntBuffer duplicate() {
         return copy(this, mark);
     }
 
+    @Override
     public boolean isReadOnly() {
         return true;
     }
 
+    @Override
     protected int[] protectedArray() {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     protected int protectedArrayOffset() {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     protected boolean protectedHasArray() {
         return false;
     }
 
+    @Override
     public IntBuffer put(int c) {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public IntBuffer put(int index, int c) {
         throw new ReadOnlyBufferException();
     }
-    
+
+    @Override
     public IntBuffer put(IntBuffer buf) {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public final IntBuffer put(int[] src, int off, int len) {
         throw new ReadOnlyBufferException();
     }
-    
+
+    @Override
     public IntBuffer slice() {
         return new ReadOnlyIntArrayBuffer(remaining(), backingArray, offset
                 + position);

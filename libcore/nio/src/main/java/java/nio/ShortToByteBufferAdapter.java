@@ -16,11 +16,8 @@
 
 package java.nio;
 
-// BEGIN android-added
-// Copied from newer version of harmony
 import org.apache.harmony.nio.internal.DirectBuffer;
 import org.apache.harmony.luni.platform.PlatformAddress;
-// END android-added
 
 /**
  * This class wraps a byte buffer to be a short buffer.
@@ -33,12 +30,9 @@ import org.apache.harmony.luni.platform.PlatformAddress;
  * The adapter extends Buffer, thus has its own position and limit.</li>
  * </ul>
  * </p>
- * 
  */
-// BEGIN android-changed
-// Copied from newer version of harmony
-final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer {
-// END android-changed
+final class ShortToByteBufferAdapter extends ShortBuffer implements
+        DirectBuffer {
 
     static ShortBuffer wrap(ByteBuffer byteBuffer) {
         return new ShortToByteBufferAdapter(byteBuffer.slice());
@@ -52,15 +46,12 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
         this.byteBuffer.clear();
     }
 
-// BEGIN android-added
-// Copied from newer version of harmony
     public int getByteCapacity() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).getByteCapacity();
-        } else {
-            assert false : byteBuffer;
-            return -1;
-        }            
+            return ((DirectBuffer) byteBuffer).getByteCapacity();
+        }
+        assert false : byteBuffer;
+        return -1;
     }
 
     public PlatformAddress getEffectiveAddress() {
@@ -70,47 +61,44 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
             effectiveDirectAddress = addr.toInt();
             return addr;
             // END android-changed
-        } else {
-            assert false : byteBuffer;
-            return null;
         }
+        assert false : byteBuffer;
+        return null;
     }
 
     public PlatformAddress getBaseAddress() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).getBaseAddress();
-        } else {
-            assert false : byteBuffer;
-            return null;
+            return ((DirectBuffer) byteBuffer).getBaseAddress();
         }
+        assert false : byteBuffer;
+        return null;
     }
-            
+
     public boolean isAddressValid() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).isAddressValid();
-        } else {
-            assert false : byteBuffer;
-            return false;
+            return ((DirectBuffer) byteBuffer).isAddressValid();
         }
+        assert false : byteBuffer;
+        return false;
     }
 
     public void addressValidityCheck() {
         if (byteBuffer instanceof DirectBuffer) {
-           ((DirectBuffer)byteBuffer).addressValidityCheck();
+            ((DirectBuffer) byteBuffer).addressValidityCheck();
         } else {
             assert false : byteBuffer;
         }
     }
-            
+
     public void free() {
         if (byteBuffer instanceof DirectBuffer) {
-            ((DirectBuffer)byteBuffer).free();
+            ((DirectBuffer) byteBuffer).free();
         } else {
             assert false : byteBuffer;
-        }   
+        }
     }
-    // END android-added
 
+    @Override
     public ShortBuffer asReadOnlyBuffer() {
         ShortToByteBufferAdapter buf = new ShortToByteBufferAdapter(byteBuffer
                 .asReadOnlyBuffer());
@@ -120,6 +108,7 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
         return buf;
     }
 
+    @Override
     public ShortBuffer compact() {
         if (byteBuffer.isReadOnly()) {
             throw new ReadOnlyBufferException();
@@ -134,6 +123,7 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
         return this;
     }
 
+    @Override
     public ShortBuffer duplicate() {
         ShortToByteBufferAdapter buf = new ShortToByteBufferAdapter(byteBuffer
                 .duplicate());
@@ -143,6 +133,7 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
         return buf;
     }
 
+    @Override
     public short get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -150,6 +141,7 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
         return byteBuffer.getShort(position++ << 1);
     }
 
+    @Override
     public short get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -157,30 +149,37 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
         return byteBuffer.getShort(index << 1);
     }
 
+    @Override
     public boolean isDirect() {
         return byteBuffer.isDirect();
     }
 
+    @Override
     public boolean isReadOnly() {
         return byteBuffer.isReadOnly();
     }
 
+    @Override
     public ByteOrder order() {
         return byteBuffer.order();
     }
 
+    @Override
     protected short[] protectedArray() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected int protectedArrayOffset() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected boolean protectedHasArray() {
         return false;
     }
 
+    @Override
     public ShortBuffer put(short c) {
         if (position == limit) {
             throw new BufferOverflowException();
@@ -189,6 +188,7 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
         return this;
     }
 
+    @Override
     public ShortBuffer put(int index, short c) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -196,7 +196,7 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
         byteBuffer.putShort(index << 1, c);
         return this;
     }
-    
+
     // BEGIN android-added
     @Override
     public ShortBuffer put(short[] s, int off, int len) {
@@ -212,6 +212,7 @@ final class ShortToByteBufferAdapter extends ShortBuffer implements DirectBuffer
     }
     // END android-added
 
+    @Override
     public ShortBuffer slice() {
         byteBuffer.limit(limit << 1);
         byteBuffer.position(position << 1);

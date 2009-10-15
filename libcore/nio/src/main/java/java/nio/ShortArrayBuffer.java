@@ -49,6 +49,7 @@ abstract class ShortArrayBuffer extends ShortBuffer {
         this.offset = offset;
     }
 
+    @Override
     public final short get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -56,6 +57,7 @@ abstract class ShortArrayBuffer extends ShortBuffer {
         return backingArray[offset + position++];
     }
 
+    @Override
     public final short get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -63,24 +65,26 @@ abstract class ShortArrayBuffer extends ShortBuffer {
         return backingArray[offset + index];
     }
 
+    @Override
     public final ShortBuffer get(short[] dest, int off, int len) {
         int length = dest.length;
-        if (off < 0 || len < 0 || (long)off + (long)len > length) {
+        if (off < 0 || len < 0 || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
         if (len > remaining()) {
             throw new BufferUnderflowException();
         }
-        System.arraycopy(backingArray, offset + position, dest,
-                off, len);
+        System.arraycopy(backingArray, offset + position, dest, off, len);
         position += len;
         return this;
     }
-    
+
+    @Override
     public final boolean isDirect() {
         return false;
     }
 
+    @Override
     public final ByteOrder order() {
         return ByteOrder.nativeOrder();
     }

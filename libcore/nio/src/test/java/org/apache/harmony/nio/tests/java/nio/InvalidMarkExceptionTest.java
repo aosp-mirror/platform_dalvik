@@ -56,8 +56,6 @@ public class InvalidMarkExceptionTest extends TestCase {
         SerializationTest.verifyGolden(this, new InvalidMarkException());
     }
 
-    // BEGIN android-added
-    // copied from newer version of harmony
     /**
      *@tests {@link java.nio.InvalidMarkException#InvalidMarkException()}
      */
@@ -73,5 +71,4 @@ public class InvalidMarkExceptionTest extends TestCase {
         assertNull(exception.getLocalizedMessage());
         assertNull(exception.getCause());
     }
-    // END android-added
 }

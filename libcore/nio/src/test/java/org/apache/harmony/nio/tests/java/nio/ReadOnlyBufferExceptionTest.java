@@ -73,8 +73,6 @@ public class ReadOnlyBufferExceptionTest extends TestCase {
         SerializationTest.verifyGolden(this, new ReadOnlyBufferException());
     }
 
-    // BEGIN android-added
-    // copied from newer version of harmony
     /**
      *@tests {@link java.nio.ReadOnlyBufferException#ReadOnlyBufferException()}
      */
@@ -90,5 +88,4 @@ public class ReadOnlyBufferExceptionTest extends TestCase {
         assertNull(exception.getLocalizedMessage());
         assertNull(exception.getCause());
     }
-    // END android-added
 }

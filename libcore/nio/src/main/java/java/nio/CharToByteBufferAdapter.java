@@ -16,11 +16,8 @@
 
 package java.nio;
 
-// BEGIN android-added
-// Copied from newer version of harmony
 import org.apache.harmony.nio.internal.DirectBuffer;
 import org.apache.harmony.luni.platform.PlatformAddress;
-// END android-added
 
 /**
  * This class wraps a byte buffer to be a char buffer.
@@ -35,10 +32,7 @@ import org.apache.harmony.luni.platform.PlatformAddress;
  * </p>
  * 
  */
-// BEGIN android-changed
-// Copied from newer version of harmony
 final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
-// END android-changed
 
     static CharBuffer wrap(ByteBuffer byteBuffer) {
         return new CharToByteBufferAdapter(byteBuffer.slice());
@@ -51,18 +45,15 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
         this.byteBuffer = byteBuffer;
         this.byteBuffer.clear();
     }
-        
-    // BEGIN android-added
-    // Copied from newer version of harmony
+
     public int getByteCapacity() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).getByteCapacity();
-        } else {
-            assert false : byteBuffer;
-            return -1;
-        }            
+            return ((DirectBuffer) byteBuffer).getByteCapacity();
+        }
+        assert false : byteBuffer;
+        return -1;
     }
-        
+
     public PlatformAddress getEffectiveAddress() {
         if (byteBuffer instanceof DirectBuffer) {
             // BEGIN android-changed
@@ -70,47 +61,44 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
             effectiveDirectAddress = addr.toInt();
             return addr;
             // END android-changed
-        } else {
-            assert false : byteBuffer;
-            return null;
         }
+        assert false : byteBuffer;
+        return null;
     }
 
     public PlatformAddress getBaseAddress() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).getBaseAddress();
-        } else {
-            assert false : byteBuffer;
-            return null;
+            return ((DirectBuffer) byteBuffer).getBaseAddress();
         }
+        assert false : byteBuffer;
+        return null;
     }
-            
+
     public boolean isAddressValid() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).isAddressValid();
-        } else {
-            assert false : byteBuffer;
-            return false;
+            return ((DirectBuffer) byteBuffer).isAddressValid();
         }
+        assert false : byteBuffer;
+        return false;
     }
 
     public void addressValidityCheck() {
         if (byteBuffer instanceof DirectBuffer) {
-            ((DirectBuffer)byteBuffer).addressValidityCheck();
+            ((DirectBuffer) byteBuffer).addressValidityCheck();
         } else {
             assert false : byteBuffer;
         }
     }
-          
+
     public void free() {
         if (byteBuffer instanceof DirectBuffer) {
-            ((DirectBuffer)byteBuffer).free();
+            ((DirectBuffer) byteBuffer).free();
         } else {
             assert false : byteBuffer;
-        }   
+        }
     }
-    // END android-added
 
+    @Override
     public CharBuffer asReadOnlyBuffer() {
         CharToByteBufferAdapter buf = new CharToByteBufferAdapter(byteBuffer
                 .asReadOnlyBuffer());
@@ -120,6 +108,7 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
         return buf;
     }
 
+    @Override
     public CharBuffer compact() {
         if (byteBuffer.isReadOnly()) {
             throw new ReadOnlyBufferException();
@@ -134,6 +123,7 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
         return this;
     }
 
+    @Override
     public CharBuffer duplicate() {
         CharToByteBufferAdapter buf = new CharToByteBufferAdapter(byteBuffer
                 .duplicate());
@@ -143,6 +133,7 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
         return buf;
     }
 
+    @Override
     public char get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -150,6 +141,7 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
         return byteBuffer.getChar(position++ << 1);
     }
 
+    @Override
     public char get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -157,30 +149,37 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
         return byteBuffer.getChar(index << 1);
     }
 
+    @Override
     public boolean isDirect() {
         return byteBuffer.isDirect();
     }
 
+    @Override
     public boolean isReadOnly() {
         return byteBuffer.isReadOnly();
     }
 
+    @Override
     public ByteOrder order() {
         return byteBuffer.order();
     }
 
+    @Override
     protected char[] protectedArray() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected int protectedArrayOffset() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected boolean protectedHasArray() {
         return false;
     }
 
+    @Override
     public CharBuffer put(char c) {
         if (position == limit) {
             throw new BufferOverflowException();
@@ -189,6 +188,7 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
         return this;
     }
 
+    @Override
     public CharBuffer put(int index, char c) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -197,6 +197,7 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
         return this;
     }
 
+    @Override
     public CharBuffer slice() {
         byteBuffer.limit(limit << 1);
         byteBuffer.position(position << 1);
@@ -205,11 +206,12 @@ final class CharToByteBufferAdapter extends CharBuffer implements DirectBuffer {
         return result;
     }
 
+    @Override
     public CharSequence subSequence(int start, int end) {
         if (start < 0 || end < start || end > remaining()) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         CharBuffer result = duplicate();
         result.limit(position + end);
         result.position(position + start);

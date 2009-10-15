@@ -2796,6 +2796,42 @@ public class SocketChannelTest extends TestCase {
         }
     }
 
+    public void testReadByteBuffer_Direct2() throws IOException {
+        byte[] request = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        ByteBuffer buffer = ByteBuffer.allocateDirect(128);
+
+        ServerSocketChannel server = ServerSocketChannel.open();
+        server.socket().bind(
+                new InetSocketAddress(InetAddress.getLocalHost(), 0), 5);
+        Socket client = new Socket(InetAddress.getLocalHost(), server.socket()
+                .getLocalPort());
+        client.setTcpNoDelay(false);
+        Socket worker = server.socket().accept();
+        SocketChannel workerChannel = worker.getChannel();
+
+        OutputStream out = client.getOutputStream();
+        out.write(request);
+        out.close();
+
+        buffer.limit(5);
+        int bytesRead = workerChannel.read(buffer);
+        assertEquals(5, bytesRead);
+        assertEquals(5, buffer.position());
+
+        buffer.limit(request.length);
+        bytesRead = workerChannel.read(buffer);
+        assertEquals(6, bytesRead);
+
+        buffer.flip();
+        assertEquals(request.length, buffer.limit());
+
+        assertEquals(ByteBuffer.wrap(request), buffer);
+
+        client.close();
+        worker.close();
+        server.close();
+    }
+
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
         notes = "",
@@ -3279,6 +3315,20 @@ public class SocketChannelTest extends TestCase {
      * ==========================================================================
      */
 
+
+    /**
+     * @tests java.nio.channels.SocketChannel#read(ByteBuffer[])
+     */
+    public void test_read$LByteBuffer() throws IOException {
+        MockSocketChannel sc = new MockSocketChannel(null);
+        ByteBuffer [] byteBufferArray = { ByteBuffer.allocate(1), ByteBuffer.allocate(1)};
+        // Verify that calling read(ByteBuffer[]) leads to the method
+        // read(ByteBuffer[], int, int) being called with a 0 for the
+        // second parameter and targets.length as the third parameter.
+        sc.read(byteBufferArray);
+        assertTrue(sc.isReadCalled);
+    }
+
     /**
      * @tests java.nio.channels.SocketChannel#read(ByteBuffer[],int,int)
      */
@@ -3521,6 +3571,19 @@ public class SocketChannelTest extends TestCase {
         for (int i = CAPACITY_NORMAL; i < CAPACITY_NORMAL * 2; i++) {
             assertEquals(writeContents[1].get(), readContent[i]);
         }
+    }
+
+    /**
+     * @tests java.nio.channels.SocketChannel#write(ByteBuffer[])
+     */
+    public void test_write$LByteBuffer() throws IOException {
+        MockSocketChannel sc = new MockSocketChannel(null);
+        ByteBuffer [] byteBufferArray = { ByteBuffer.allocate(1), ByteBuffer.allocate(1)};
+        // Verify that calling write(ByteBuffer[]) leads to the method
+        // write(ByteBuffer[], int, int) being called with a 0 for the
+        // second parameter and sources.length as the third parameter.
+        sc.write(byteBufferArray);
+        assertTrue(sc.isWriteCalled);
     }
 
     /**
@@ -4114,6 +4177,39 @@ public class SocketChannelTest extends TestCase {
         if (lastByte != -1) {
             fail("Server received too long sequence. Expected 1 byte.");
         }
+    }
+
+    public void testSocket_setOptions() throws IOException {
+        channel1.connect(localAddr1);
+        Socket socket = channel1.socket();
+
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[] {1, 2, 3});
+        socket.setKeepAlive(true);
+        channel1.write(buffer);
+
+        socket.setOOBInline(true);
+        channel1.write(buffer);
+
+        socket.setReceiveBufferSize(100);
+        channel1.write(buffer);
+
+        socket.setReuseAddress(true);
+        channel1.write(buffer);
+
+        socket.setSendBufferSize(100);
+        channel1.write(buffer);
+
+        socket.setSoLinger(true, 100);
+        channel1.write(buffer);
+
+        socket.setSoTimeout(1000);
+        channel1.write(buffer);
+
+        socket.setTcpNoDelay(true);
+        channel1.write(buffer);
+
+        socket.setTrafficClass(10);
+        channel1.write(buffer);
     }
 
     /**

@@ -16,25 +16,18 @@
 
 package java.nio.channels;
 
-
 /**
  * A {@code ClosedSelectorException} is thrown when a {@link Selector selector}
  * is closed and an I/O operation is attempted.
- * 
- * @since Android 1.0
  */
 public class ClosedSelectorException extends IllegalStateException {
 
     private static final long serialVersionUID = 6466297122317847835L;
-    
+
     /**
      * Constructs a {@code ClosedSelectorException}.
-     * 
-     * @since Android 1.0
      */
     public ClosedSelectorException() {
         super();
     }
 }
-
-

@@ -126,15 +126,17 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
                 synchronized (blockingLock()) {
                     boolean isBlocking = isBlocking();
                     if (!isBlocking) {
-                        // for non blocking mode, use select to see whether
-                        // there are any pending connections.
-                        int[] tryResult = Platform.getNetworkSystem().select(
+                        // BEGIN android-changed
+                        //     copied from a newer version of Harmony
+                        int[] tryResult = new int[1];
+                        boolean success = Platform.getNetworkSystem().select(
                                 new FileDescriptor[] { this.fd },
-                                new FileDescriptor[0], 0);
-                        if (0 == tryResult.length || 0 == tryResult[0]) {
+                                new FileDescriptor[0], 1, 0, 0, tryResult);
+                        if (!success || 0 == tryResult[0]) {
                             // no pending connections, returns immediately.
                             return null;
                         }
+                        // END android-changed
                     }
                     // do accept.
                     do {

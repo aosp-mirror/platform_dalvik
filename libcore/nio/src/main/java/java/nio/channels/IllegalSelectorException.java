@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * An {@code IllegalSelectorException} is thrown when a call is made to register
  * a channel on a selector that has been created by a different provider.
- * 
- * @since Android 1.0
  */
 public class IllegalSelectorException extends IllegalArgumentException {
 
@@ -29,11 +26,8 @@ public class IllegalSelectorException extends IllegalArgumentException {
 
     /**
      * Constructs a {@code IllegalSelectorException}.
-     * 
-     * @since Android 1.0
      */
     public IllegalSelectorException() {
         super();
     }
-
 }

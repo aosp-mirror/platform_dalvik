@@ -22,17 +22,16 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * {@code AbstractSelector} is the base implementation class for selectors.
  * It realizes the interruption of selection by {@code begin} and
  * {@code end}. It also holds the cancellation and the deletion of the key
  * set.
- * 
- * @since Android 1.0
  */
 public abstract class AbstractSelector extends Selector {
-    private volatile boolean isOpen = true;
+    private final AtomicBoolean isOpen = new AtomicBoolean(true);
 
     private SelectorProvider provider = null;
 
@@ -46,7 +45,6 @@ public abstract class AbstractSelector extends Selector {
      * 
      * @param selectorProvider
      *            the selector provider that creates this selector.
-     * @since Android 1.0
      */
     protected AbstractSelector(SelectorProvider selectorProvider) {
         provider = selectorProvider;
@@ -59,11 +57,10 @@ public abstract class AbstractSelector extends Selector {
      * 
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
-    public synchronized final void close() throws IOException {
-        if (isOpen) {
-            isOpen = false;
+    @Override
+    public final void close() throws IOException {
+        if (isOpen.getAndSet(false)) {
             implCloseSelector();
         }
     }
@@ -73,27 +70,26 @@ public abstract class AbstractSelector extends Selector {
      * 
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     protected abstract void implCloseSelector() throws IOException;
 
     /**
      * Indicates whether this selector is open.
-     * 
+     *
      * @return {@code true} if this selector is not closed, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
+    @Override
     public final boolean isOpen() {
-        return isOpen;
+        return isOpen.get();
     }
 
     /**
      * Gets this selector's provider.
      * 
      * @return the provider of this selector.
-     * @since Android 1.0
      */
+    @Override
     public final SelectorProvider provider() {
         return provider;
     }
@@ -102,7 +98,6 @@ public abstract class AbstractSelector extends Selector {
      * Returns this channel's set of canceled selection keys.
      * 
      * @return the set of canceled selection keys.
-     * @since Android 1.0
      */
     protected final Set<SelectionKey> cancelledKeys() {
         return cancelledKeysSet;
@@ -118,7 +113,6 @@ public abstract class AbstractSelector extends Selector {
      * @param attachment
      *            the attachment for the selection key.
      * @return the key related to the channel and this selector.
-     * @since Android 1.0
      */
     protected abstract SelectionKey register(AbstractSelectableChannel channel,
             int operations, Object attachment);
@@ -128,7 +122,6 @@ public abstract class AbstractSelector extends Selector {
      * 
      * @param key
      *            the key.
-     * @since Android 1.0
      */
     protected final void deregister(AbstractSelectionKey key) {
         ((AbstractSelectableChannel) key.channel()).deregister(key);
@@ -139,8 +132,6 @@ public abstract class AbstractSelector extends Selector {
      * Indicates the beginning of a code section that includes an I/O operation
      * that is potentially blocking. After this operation, the application
      * should invoke the corresponding {@code end(boolean)} method.
-     * 
-     * @since Android 1.0
      */
     protected final void begin() {
         // FIXME: be accommodate before VM actually provides
@@ -162,8 +153,6 @@ public abstract class AbstractSelector extends Selector {
     /**
      * Indicates the end of a code section that has been started with
      * {@code begin()} and that includes a potentially blocking I/O operation.
-     * 
-     * @since Android 1.0
      */
     protected final void end() {
         // FIXME: be accommodate before VM actually provides

@@ -44,7 +44,6 @@ import org.apache.harmony.niochar.internal.nls.Messages;
  * <li>invoking the {@link #flush(CharBuffer) flush} method to flush the
  * output.</li>
  * </ol>
- * </p>
  * <p>
  * The {@link #decode(ByteBuffer, CharBuffer, boolean) decode} method will
  * convert as many bytes as possible, and the process won't stop until the input
@@ -53,14 +52,12 @@ import org.apache.harmony.niochar.internal.nls.Messages;
  * indicate the stop reason, and the invoker can identify the result and choose
  * further action, which includes filling the input buffer, flushing the output
  * buffer or recovering from an error and trying again.
- * </p>
  * <p>
  * There are two common decoding errors. One is named malformed and it is
  * returned when the input byte sequence is illegal for the current specific
  * charset, the other is named unmappable character and it is returned when a
  * problem occurs mapping a legal input byte sequence to its Unicode character
  * equivalent.
- * </p>
  * <p>
  * Both errors can be handled in three ways, the default one is to report the
  * error to the invoker by a {@link CoderResult CoderResult} instance, and the
@@ -72,7 +69,6 @@ import org.apache.harmony.niochar.internal.nls.Messages;
  * {@link #onMalformedInput(CodingErrorAction) onMalformedInput} method and
  * {@link #onUnmappableCharacter(CodingErrorAction) onUnmappableCharacter}
  * method.
- * </p>
  * <p>
  * This is an abstract class and encapsulates many common operations of the
  * decoding process for all charsets. Decoders for a specific charset should
@@ -81,20 +77,14 @@ import org.apache.harmony.niochar.internal.nls.Messages;
  * decoding. If a subclass maintains an internal state, it should override the
  * {@link #implFlush(CharBuffer) implFlush} method and the
  * {@link #implReset() implReset} method in addition.
- * </p>
  * <p>
  * This class is not thread-safe.
- * </p>
- * 
+ *
  * @see java.nio.charset.Charset
  * @see java.nio.charset.CharsetEncoder
- * @since Android 1.0
  */
 public abstract class CharsetDecoder {
-    /*
-     * --------------------------------------- Consts
-     * ---------------------------------------
-     */
+
     /*
      * internal status consts
      */
@@ -106,10 +96,6 @@ public abstract class CharsetDecoder {
 
     private static final int FLUSH = 3;
 
-    /*
-     * --------------------------------------- Instance variables
-     * ---------------------------------------
-     */
     // average number of chars for one byte
     private float averChars;
 
@@ -131,10 +117,6 @@ public abstract class CharsetDecoder {
     // the current status
     private int status;
 
-    /*
-     * --------------------------------------- Constructor
-     * ---------------------------------------
-     */
     /**
      * Constructs a new <code>CharsetDecoder</code> using the given
      * <code>Charset</code>, average number and maximum number of characters
@@ -152,7 +134,6 @@ public abstract class CharsetDecoder {
      * @throws IllegalArgumentException
      *             if <code>averageCharsPerByte</code> or
      *             <code>maxCharsPerByte</code> is negative.
-     * @since Android 1.0
      */
     protected CharsetDecoder(Charset charset, float averageCharsPerByte,
             float maxCharsPerByte) {
@@ -173,17 +154,12 @@ public abstract class CharsetDecoder {
         replace = "\ufffd"; //$NON-NLS-1$
     }
 
-    /*
-     * --------------------------------------- Methods
-     * ---------------------------------------
-     */
     /**
      * Gets the average number of characters created by this decoder for a
      * single input byte.
      * 
      * @return the average number of characters created by this decoder for a
      *         single input byte.
-     * @since Android 1.0
      */
     public final float averageCharsPerByte() {
         return averChars;
@@ -193,7 +169,6 @@ public abstract class CharsetDecoder {
      * Gets the <code>Charset</code> which this decoder uses.
      * 
      * @return the <code>Charset</code> which this decoder uses.
-     * @since Android 1.0
      */
     public final Charset charset() {
         return cs;
@@ -205,12 +180,10 @@ public abstract class CharsetDecoder {
      * This method decodes the remaining byte sequence of the given byte buffer
      * into a new character buffer. This method performs a complete decoding
      * operation, resets at first, then decodes, and flushes at last.
-     * </p>
      * <p>
      * This method should not be invoked while another {@code decode} operation
      * is ongoing.
-     * </p>
-     * 
+     *
      * @param in
      *            the input buffer.
      * @return a new <code>CharBuffer</code> containing the the characters
@@ -233,7 +206,6 @@ public abstract class CharsetDecoder {
      *             sequence.
      * @throws CharacterCodingException
      *             if another exception happened during the decode operation.
-     * @since Android 1.0
      */
     public final CharBuffer decode(ByteBuffer in)
             throws CharacterCodingException {
@@ -303,7 +275,6 @@ public abstract class CharsetDecoder {
      * <p>
      * The buffers' position will be changed with the reading and writing
      * operation, but their limits and marks will be kept intact.
-     * </p>
      * <p>
      * A <code>CoderResult</code> instance will be returned according to
      * following rules:
@@ -332,7 +303,6 @@ public abstract class CharsetDecoder {
      * only if the unmappable character action is
      * {@link CodingErrorAction#REPORT CodingErrorAction.REPORT}. </li>
      * </ul>
-     * </p>
      * <p>
      * The <code>endOfInput</code> parameter indicates that the invoker cannot
      * provide further input. This parameter is true if and only if the bytes in
@@ -341,13 +311,11 @@ public abstract class CharsetDecoder {
      * then can't provide more input, while it may cause an error if the invoker
      * always sets true in several consecutive invocations. This would make the
      * remaining input to be treated as malformed input.
-     * </p>
      * <p>
      * This method invokes the
      * {@link #decodeLoop(ByteBuffer, CharBuffer) decodeLoop} method to
      * implement the basic decode logic for a specific charset.
-     * </p>
-     * 
+     *
      * @param in
      *            the input buffer.
      * @param out
@@ -363,7 +331,6 @@ public abstract class CharsetDecoder {
      *             if the {@link #decodeLoop(ByteBuffer, CharBuffer) decodeLoop}
      *             method threw an <code>BufferUnderflowException</code> or
      *             <code>BufferOverflowException</code>.
-     * @since Android 1.0
      */
     public final CoderResult decode(ByteBuffer in, CharBuffer out,
             boolean endOfInput) {
@@ -397,7 +364,10 @@ public abstract class CharsetDecoder {
                 status = endOfInput ? END : ONGOING;
                 if (endOfInput && remaining > 0) {
                     result = CoderResult.malformedForLength(remaining);
+                    // BEGIN android-added
+                    // needed to adjust for the changed call to position() below
                     in.position(in.position() + result.length());
+                    // END android-added
                 } else {
                     return result;
                 }
@@ -420,12 +390,14 @@ public abstract class CharsetDecoder {
                 if (action != CodingErrorAction.IGNORE)
                     return result;
             }
+            // BEGIN android-changed
+            // the condition is removed in Harmony revision 518047. However,
+            // making the conditional statement unconditional leads to
+            // misbehavior when using REPLACE on malformedInput.
             if (!result.isMalformed()) {
-                // Note: the following condition is removed in Harmony revision 518047
-                // However, making the conditional statement unconditional
-                // leads to misbehavior when using REPLACE on malformedInput.
                 in.position(in.position() + result.length());
             }
+            // END android-changed
         }
     }
 
@@ -445,25 +417,21 @@ public abstract class CharsetDecoder {
      * {@link #decode(ByteBuffer, CharBuffer, boolean) decode} method, and some
      * performance optimized implementation may handle the exception and
      * implement the error action itself.
-     * </p>
      * <p>
      * The buffers are scanned from their current positions, and their positions
      * will be modified accordingly, while their marks and limits will be
      * intact. At most {@link ByteBuffer#remaining() in.remaining()} characters
      * will be read, and {@link CharBuffer#remaining() out.remaining()} bytes
      * will be written.
-     * </p>
      * <p>
      * Note that some implementations may pre-scan the input buffer and return a
      * <code>CoderResult.UNDERFLOW</code> until it receives sufficient input.
-     * </p>
      * 
      * @param in
      *            the input buffer.
      * @param out
      *            the output buffer.
      * @return a <code>CoderResult</code> instance indicating the result.
-     * @since Android 1.0
      */
     protected abstract CoderResult decodeLoop(ByteBuffer in, CharBuffer out);
 
@@ -473,17 +441,14 @@ public abstract class CharsetDecoder {
      * If implementing an auto-detecting charset, then this decoder returns the
      * detected charset from this method when it is available. The returned
      * charset will be the same for the rest of the decode operation.
-     * </p>
      * <p>
      * If insufficient bytes have been read to determine the charset, an
      * <code>IllegalStateException</code> will be thrown.
-     * </p>
      * <p>
      * The default implementation always throws
      * <code>UnsupportedOperationException</code>, so it should be overridden
      * by a subclass if needed.
-     * </p>
-     * 
+     *
      * @return the charset detected by this decoder, or null if it is not yet
      *         determined.
      * @throws UnsupportedOperationException
@@ -491,7 +456,6 @@ public abstract class CharsetDecoder {
      * @throws IllegalStateException
      *             if insufficient bytes have been read to determine the
      *             charset.
-     * @since Android 1.0
      */
     public Charset detectedCharset() {
         throw new UnsupportedOperationException();
@@ -513,11 +477,10 @@ public abstract class CharsetDecoder {
      * space. Otherwise this method will return
      * <code>CoderResult.UNDERFLOW</code>, which means one decoding process
      * has been completed successfully.
-     * </p>
      * <p>
      * During the flush, the output buffer's position will be changed
      * accordingly, while its mark and limit will be intact.
-     * </p>
+     *
      * @param out
      *            the given output buffer.
      * @return <code>CoderResult.UNDERFLOW</code> or
@@ -529,7 +492,6 @@ public abstract class CharsetDecoder {
      *             calling {@link #decode(ByteBuffer, CharBuffer, boolean)
      *             decode(ByteBuffer, CharBuffer, boolean)} with true as value
      *             for the last boolean parameter.
-     * @since Android 1.0
      */
     public final CoderResult flush(CharBuffer out) {
         if (status != END && status != INIT) {
@@ -551,7 +513,6 @@ public abstract class CharsetDecoder {
      *            the output buffer.
      * @return <code>CoderResult.UNDERFLOW</code> or
      *         <code>CoderResult.OVERFLOW</code>.
-     * @since Android 1.0
      */
     protected CoderResult implFlush(CharBuffer out) {
         return CoderResult.UNDERFLOW;
@@ -564,7 +525,6 @@ public abstract class CharsetDecoder {
      * 
      * @param newAction
      *            the new action.
-     * @since Android 1.0
      */
     protected void implOnMalformedInput(CodingErrorAction newAction) {
         // default implementation is empty
@@ -577,7 +537,6 @@ public abstract class CharsetDecoder {
      * 
      * @param newAction
      *            the new action.
-     * @since Android 1.0
      */
     protected void implOnUnmappableCharacter(CodingErrorAction newAction) {
         // default implementation is empty
@@ -589,7 +548,6 @@ public abstract class CharsetDecoder {
      * 
      * @param newReplacement
      *            the new replacement string.
-     * @since Android 1.0
      */
     protected void implReplaceWith(String newReplacement) {
         // default implementation is empty
@@ -598,8 +556,6 @@ public abstract class CharsetDecoder {
     /**
      * Reset this decoder's charset related state. The default implementation
      * does nothing; this method can be overridden if needed.
-     * 
-     * @since Android 1.0
      */
     protected void implReset() {
         // default implementation is empty
@@ -610,7 +566,6 @@ public abstract class CharsetDecoder {
      * 
      * @return <code>true</code> if this decoder implements an auto-detecting
      *         charset.
-     * @since Android 1.0
      */
     public boolean isAutoDetecting() {
         return false;
@@ -625,24 +580,20 @@ public abstract class CharsetDecoder {
      * charset has been detected in the input bytes and that the charset can be
      * retrieved by invoking the {@link #detectedCharset() detectedCharset}
      * method.
-     * </p>
      * <p>
      * Note that a decoder that implements an auto-detecting charset may still
      * succeed in decoding a portion of the given input even when it is unable
      * to detect the charset. For this reason users should be aware that a
      * <code>false</code> return value does not indicate that no decoding took
      * place.
-     * </p>
      * <p>
      * The default implementation always throws an
      * <code>UnsupportedOperationException</code>; it should be overridden by
      * a subclass if needed.
-     * </p>
      * 
      * @return <code>true</code> if this decoder has detected a charset.
      * @throws UnsupportedOperationException
      *             if this decoder doesn't implement an auto-detecting charset.
-     * @since Android 1.0
      */
     public boolean isCharsetDetected() {
         throw new UnsupportedOperationException();
@@ -654,7 +605,6 @@ public abstract class CharsetDecoder {
      * 
      * @return this decoder's <code>CodingErrorAction</code> when malformed
      *         input occurred during the decoding process.
-     * @since Android 1.0
      */
     public CodingErrorAction malformedInputAction() {
         return malformAction;
@@ -666,7 +616,6 @@ public abstract class CharsetDecoder {
      * 
      * @return the maximum number of characters which can be created by this
      *         decoder for one input byte, must be positive.
-     * @since Android 1.0
      */
     public final float maxCharsPerByte() {
         return maxChars;
@@ -684,7 +633,6 @@ public abstract class CharsetDecoder {
      * @return this decoder.
      * @throws IllegalArgumentException
      *             if {@code newAction} is {@code null}.
-     * @since Android 1.0
      */
     public final CharsetDecoder onMalformedInput(CodingErrorAction newAction) {
         if (null == newAction) {
@@ -707,7 +655,6 @@ public abstract class CharsetDecoder {
      * @return this decoder.
      * @throws IllegalArgumentException
      *             if {@code newAction} is {@code null}.
-     * @since Android 1.0
      */
     public final CharsetDecoder onUnmappableCharacter(
             CodingErrorAction newAction) {
@@ -723,7 +670,6 @@ public abstract class CharsetDecoder {
      * Gets the replacement string, which is never null or empty.
      * 
      * @return the replacement string, cannot be null or empty.
-     * @since Android 1.0
      */
     public final String replacement() {
         return replace;
@@ -744,7 +690,6 @@ public abstract class CharsetDecoder {
      * @throws IllegalArgumentException
      *             if the given replacement cannot satisfy the requirement
      *             mentioned above.
-     * @since Android 1.0
      */
     public final CharsetDecoder replaceWith(String newReplacement) {
         if (null == newReplacement || newReplacement.length() == 0) {
@@ -767,7 +712,6 @@ public abstract class CharsetDecoder {
      * specific charset.
      * 
      * @return this decoder.
-     * @since Android 1.0
      */
     public final CharsetDecoder reset() {
         status = INIT;
@@ -781,7 +725,6 @@ public abstract class CharsetDecoder {
      * 
      * @return this decoder's <code>CodingErrorAction</code> when an
      *         unmappable character error occurred during the decoding process.
-     * @since Android 1.0
      */
     public CodingErrorAction unmappableCharacterAction() {
         return unmapAction;

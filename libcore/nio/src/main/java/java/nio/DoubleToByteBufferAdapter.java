@@ -16,11 +16,8 @@
 
 package java.nio;
 
-// BEGIN android-added
-// Copied from newer version of harmony
 import org.apache.harmony.nio.internal.DirectBuffer;
 import org.apache.harmony.luni.platform.PlatformAddress;
-// END android-added
 
 /**
  * This class wraps a byte buffer to be a double buffer.
@@ -35,10 +32,8 @@ import org.apache.harmony.luni.platform.PlatformAddress;
  * </p>
  * 
  */
-// BEGIN android-changed
-// Copied from newer version of harmony
-final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuffer {
-// END android-changed
+final class DoubleToByteBufferAdapter extends DoubleBuffer implements
+        DirectBuffer {
 
     static DoubleBuffer wrap(ByteBuffer byteBuffer) {
         return new DoubleToByteBufferAdapter(byteBuffer.slice());
@@ -52,15 +47,12 @@ final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuff
         this.byteBuffer.clear();
     }
 
-    // BEGIN android-added
-    // Copied from newer version of harmony
     public int getByteCapacity() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).getByteCapacity();
-        } else {
-            assert false : byteBuffer;
-            return -1;
-        }            
+            return ((DirectBuffer) byteBuffer).getByteCapacity();
+        }
+        assert false : byteBuffer;
+        return -1;
     }
 
     public PlatformAddress getEffectiveAddress() {
@@ -70,47 +62,44 @@ final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuff
             effectiveDirectAddress = addr.toInt();
             return addr;
             // END android-changed
-        } else {
-            assert false : byteBuffer;
-            return null;
         }
+        assert false : byteBuffer;
+        return null;
     }
 
     public PlatformAddress getBaseAddress() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).getBaseAddress();
-        } else {
-            assert false : byteBuffer;
-            return null;
+            return ((DirectBuffer) byteBuffer).getBaseAddress();
         }
+        assert false : byteBuffer;
+        return null;
     }
-            
+
     public boolean isAddressValid() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).isAddressValid();
-        } else {
-            assert false : byteBuffer;
-            return false;
+            return ((DirectBuffer) byteBuffer).isAddressValid();
         }
+        assert false : byteBuffer;
+        return false;
     }
 
     public void addressValidityCheck() {
         if (byteBuffer instanceof DirectBuffer) {
-            ((DirectBuffer)byteBuffer).addressValidityCheck();
+            ((DirectBuffer) byteBuffer).addressValidityCheck();
         } else {
             assert false : byteBuffer;
         }
     }
-            
+
     public void free() {
         if (byteBuffer instanceof DirectBuffer) {
-            ((DirectBuffer)byteBuffer).free();
+            ((DirectBuffer) byteBuffer).free();
         } else {
             assert false : byteBuffer;
-        }   
+        }
     }
-    // END android-added
-        
+
+    @Override
     public DoubleBuffer asReadOnlyBuffer() {
         DoubleToByteBufferAdapter buf = new DoubleToByteBufferAdapter(
                 byteBuffer.asReadOnlyBuffer());
@@ -120,6 +109,7 @@ final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuff
         return buf;
     }
 
+    @Override
     public DoubleBuffer compact() {
         if (byteBuffer.isReadOnly()) {
             throw new ReadOnlyBufferException();
@@ -134,6 +124,7 @@ final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuff
         return this;
     }
 
+    @Override
     public DoubleBuffer duplicate() {
         DoubleToByteBufferAdapter buf = new DoubleToByteBufferAdapter(
                 byteBuffer.duplicate());
@@ -143,6 +134,7 @@ final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuff
         return buf;
     }
 
+    @Override
     public double get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -150,6 +142,7 @@ final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuff
         return byteBuffer.getDouble(position++ << 3);
     }
 
+    @Override
     public double get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -157,30 +150,37 @@ final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuff
         return byteBuffer.getDouble(index << 3);
     }
 
+    @Override
     public boolean isDirect() {
         return byteBuffer.isDirect();
     }
 
+    @Override
     public boolean isReadOnly() {
         return byteBuffer.isReadOnly();
     }
 
+    @Override
     public ByteOrder order() {
         return byteBuffer.order();
     }
 
+    @Override
     protected double[] protectedArray() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected int protectedArrayOffset() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected boolean protectedHasArray() {
         return false;
     }
 
+    @Override
     public DoubleBuffer put(double c) {
         if (position == limit) {
             throw new BufferOverflowException();
@@ -189,6 +189,7 @@ final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuff
         return this;
     }
 
+    @Override
     public DoubleBuffer put(int index, double c) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -197,6 +198,7 @@ final class DoubleToByteBufferAdapter extends DoubleBuffer implements DirectBuff
         return this;
     }
 
+    @Override
     public DoubleBuffer slice() {
         byteBuffer.limit(limit << 3);
         byteBuffer.position(position << 3);

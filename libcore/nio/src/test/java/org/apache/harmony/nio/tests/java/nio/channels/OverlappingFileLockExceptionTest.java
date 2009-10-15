@@ -31,6 +31,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  */
 @TestTargetClass(OverlappingFileLockException.class)
 public class OverlappingFileLockExceptionTest extends TestCase {
+    
+    /**
+     * @tests {@link java.nio.channels.OverlappingFileLockException#OverlappingFileLockException()}
+     */
+    public void test_Constructor() {
+        OverlappingFileLockException e = new OverlappingFileLockException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
 
     /**
      * @tests serialization/deserialization compatibility.

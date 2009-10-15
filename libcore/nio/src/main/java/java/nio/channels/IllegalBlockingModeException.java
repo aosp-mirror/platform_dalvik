@@ -16,13 +16,10 @@
 
 package java.nio.channels;
 
-
 /**
  * An {@code IllegalBlockingModeException} is thrown when an operation that
  * requires a specific blocking mode is invoked on a channel that is in a
  * different blocking mode.
- * 
- * @since Android 1.0
  */
 public class IllegalBlockingModeException extends IllegalStateException {
 
@@ -30,8 +27,6 @@ public class IllegalBlockingModeException extends IllegalStateException {
 
     /**
      * Constructs a {@code IllegalBlockingModeException}.
-     * 
-     * @since Android 1.0
      */
     public IllegalBlockingModeException() {
         super();

@@ -31,6 +31,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  */
 @TestTargetClass(IllegalBlockingModeException.class)
 public class IllegalBlockingModeExceptionTest extends TestCase {
+    
+    /**
+     * @tests {@link java.nio.channels.IllegalBlockingModeException#IllegalBlockingModeException()}
+     */
+    public void test_Constructor() {
+        IllegalBlockingModeException e = new IllegalBlockingModeException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
 
     /**
      * @tests serialization/deserialization compatibility.

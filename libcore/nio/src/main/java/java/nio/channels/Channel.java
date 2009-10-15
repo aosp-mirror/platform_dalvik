@@ -16,7 +16,6 @@
 
 package java.nio.channels;
 
-
 import java.io.Closeable;
 import java.io.IOException;
 
@@ -27,13 +26,9 @@ import java.io.IOException;
  * Channels are open upon creation, and can be closed explicitly. Once a channel
  * is closed it cannot be re-opened, and any attempts to perform I/O operations
  * on the closed channel result in a <code>ClosedChannelException</code>.
- * </p>
  * <p>
  * Particular implementations or sub-interfaces of {@code Channel} dictate
  * whether they are thread-safe or not.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface Channel extends Closeable {
 
@@ -41,7 +36,6 @@ public interface Channel extends Closeable {
      * Returns whether this channel is open or not.
      * 
      * @return true if the channel is open, otherwise returns false.
-     * @since Android 1.0
      */
     public boolean isOpen();
 
@@ -53,16 +47,13 @@ public interface Channel extends Closeable {
      * <p>
      * If an attempt is made to perform an operation on a closed channel then a
      * {@link ClosedChannelException} will be thrown on that attempt.
-     * </p>
      * <p>
      * If multiple threads attempt to simultaneously close a channel, then only
      * one thread will run the closure code, and others will be blocked until
      * the first returns.
-     * </p>
-     * 
+     *
      * @throws IOException
      *             if a problem occurs closing the channel.
-     * @since Android 1.0
      */
     public void close() throws IOException;
 }

@@ -20,8 +20,6 @@ package java.nio.charset;
 /**
  * A {@code CoderMalfunctionError} is thrown when the encoder/decoder is
  * malfunctioning.
- * 
- * @since Android 1.0
  */
 public class CoderMalfunctionError extends Error {
 
@@ -36,7 +34,6 @@ public class CoderMalfunctionError extends Error {
      * 
      * @param ex
      *            the original exception thrown by the encoder/decoder.
-     * @since Android 1.0
      */
     public CoderMalfunctionError(Exception ex) {
         super(ex);

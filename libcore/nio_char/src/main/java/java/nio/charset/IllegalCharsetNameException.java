@@ -22,8 +22,6 @@ import org.apache.harmony.niochar.internal.nls.Messages;
 /**
  * An {@code IllegalCharsetNameException} is thrown when an illegal charset name
  * is encountered.
- * 
- * @since Android 1.0
  */
 public class IllegalCharsetNameException extends IllegalArgumentException {
 
@@ -42,7 +40,6 @@ public class IllegalCharsetNameException extends IllegalArgumentException {
      * 
      * @param charset
      *            the encountered illegal charset name.
-     * @since Android 1.0
      */
     public IllegalCharsetNameException(String charset) {
         // niochar.0F=The illegal charset name is "{0}".
@@ -54,7 +51,6 @@ public class IllegalCharsetNameException extends IllegalArgumentException {
      * Gets the encountered illegal charset name.
      * 
      * @return the encountered illegal charset name.
-     * @since Android 1.0
      */
     public String getCharsetName() {
         return this.charsetName;

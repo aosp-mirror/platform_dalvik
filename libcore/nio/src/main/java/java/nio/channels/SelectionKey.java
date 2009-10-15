@@ -32,36 +32,26 @@ import java.nio.channels.Selector;
  * <h4>Ready set</h4>
  * The ready set is an operation set that shows the operations that a
  * {@code channel} is ready to execute.
- * 
- * @since Android 1.0
  */
 public abstract class SelectionKey {
 
     /**
      * Interest set mask bit for socket-accept operations.
-     * 
-     * @since Android 1.0
      */
     public static final int OP_ACCEPT = 16;
 
     /**
      * Interest set mask bit for socket-connect operations.
-     * 
-     * @since Android 1.0
      */
     public static final int OP_CONNECT = 8;
 
     /**
      * Interesting operation mask bit for read operations.
-     * 
-     * @since Android 1.0
      */
     public static final int OP_READ = 1;
 
     /**
      * Interest set mask bit for write operations.
-     * 
-     * @since Android 1.0
      */
     public static final int OP_WRITE = 4;
 
@@ -69,8 +59,6 @@ public abstract class SelectionKey {
 
     /**
      * Constructs a new {@code SelectionKey}.
-     * 
-     * @since Android 1.0
      */
     protected SelectionKey() {
         super();
@@ -85,7 +73,6 @@ public abstract class SelectionKey {
      *            attachment.
      * @return the last attached object or {@code null} if no object has been
      *         attached.
-     * @since Android 1.0
      */
     public final Object attach(Object anObject) {
         Object oldAttachment = attachment;
@@ -98,7 +85,6 @@ public abstract class SelectionKey {
      * 
      * @return the attached object or {@code null} if no object has been
      *         attached.
-     * @since Android 1.0
      */
     public final Object attachment() {
         return attachment;
@@ -109,7 +95,6 @@ public abstract class SelectionKey {
      * <p>
      * A key that has been canceled is no longer valid. Calling this method on
      * an already canceled key does nothing.
-     * </p>
      * <p>
      * Calling this method is safe at any time. The call might block until
      * another ongoing call to a method of this selector has finished. The
@@ -117,9 +102,6 @@ public abstract class SelectionKey {
      * this call finishes, the key will have been added to the selectors
      * canceled-keys set and will not be included in any future selects of this
      * selector.
-     * </p>
-     * 
-     * @since Android 1.0
      */
     public abstract void cancel();
 
@@ -127,7 +109,6 @@ public abstract class SelectionKey {
      * Gets the channel of this key.
      * 
      * @return the channel of this key.
-     * @since Android 1.0
      */
     public abstract SelectableChannel channel();
 
@@ -138,7 +119,6 @@ public abstract class SelectionKey {
      * @return the interest set of this key.
      * @throws CancelledKeyException
      *             if the key has already been canceled.
-     * @since Android 1.0
      */
     public abstract int interestOps();
 
@@ -154,7 +134,6 @@ public abstract class SelectionKey {
      *             key's channel.
      * @throws CancelledKeyException
      *             if the key has already been canceled.
-     * @since Android 1.0
      */
     public abstract SelectionKey interestOps(int operations);
 
@@ -167,7 +146,6 @@ public abstract class SelectionKey {
      *         and is ready to accept new connections, {@code false} otherwise.
      * @throws CancelledKeyException
      *             if the key has already been canceled.
-     * @since Android 1.0
      */
     public final boolean isAcceptable() {
         return (readyOps() & OP_ACCEPT) == OP_ACCEPT;
@@ -182,8 +160,7 @@ public abstract class SelectionKey {
      *         operation and is ready to connect, {@code false} otherwise.
      * @throws CancelledKeyException
      *             if the key has already been canceled.
-     * @since Android 1.0
-     */    
+     */
     public final boolean isConnectable() {
         return (readyOps() & OP_CONNECT) == OP_CONNECT;
     }
@@ -197,7 +174,6 @@ public abstract class SelectionKey {
      *         and is ready to read, {@code false} otherwise.
      * @throws CancelledKeyException
      *             if the key has already been canceled.
-     * @since Android 1.0
      */
     public final boolean isReadable() {
         return (readyOps() & OP_READ) == OP_READ;
@@ -209,7 +185,6 @@ public abstract class SelectionKey {
      * 
      * @return {@code true} if this key has not been canceled, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isValid();
 
@@ -222,7 +197,6 @@ public abstract class SelectionKey {
      *         and is ready to write, {@code false} otherwise.
      * @throws CancelledKeyException
      *             if the key has already been canceled.
-     * @since Android 1.0
      */
     public final boolean isWritable() {
         return (readyOps() & OP_WRITE) == OP_WRITE;
@@ -235,7 +209,6 @@ public abstract class SelectionKey {
      * @return the operations for which this key's channel is ready.
      * @throws CancelledKeyException
      *             if the key has already been canceled.
-     * @since Android 1.0
      */
     public abstract int readyOps();
 
@@ -243,7 +216,6 @@ public abstract class SelectionKey {
      * Gets the selector for which this key's channel is registered.
      * 
      * @return the related selector.
-     * @since Android 1.0
      */
     public abstract Selector selector();
 }

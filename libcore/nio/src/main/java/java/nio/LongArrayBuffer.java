@@ -49,6 +49,7 @@ abstract class LongArrayBuffer extends LongBuffer {
         this.offset = offset;
     }
 
+    @Override
     public final long get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -56,6 +57,7 @@ abstract class LongArrayBuffer extends LongBuffer {
         return backingArray[offset + position++];
     }
 
+    @Override
     public final long get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -63,23 +65,26 @@ abstract class LongArrayBuffer extends LongBuffer {
         return backingArray[offset + index];
     }
 
+    @Override
     public final LongBuffer get(long[] dest, int off, int len) {
         int length = dest.length;
-        if (off < 0 || len < 0 || (long)len + (long)off > length) {
+        if (off < 0 || len < 0 || (long) len + (long) off > length) {
             throw new IndexOutOfBoundsException();
         }
         if (len > remaining()) {
             throw new BufferUnderflowException();
         }
-        System.arraycopy(backingArray, offset+position, dest, off, len);
+        System.arraycopy(backingArray, offset + position, dest, off, len);
         position += len;
         return this;
     }
-    
+
+    @Override
     public final boolean isDirect() {
         return false;
     }
 
+    @Override
     public final ByteOrder order() {
         return ByteOrder.nativeOrder();
     }

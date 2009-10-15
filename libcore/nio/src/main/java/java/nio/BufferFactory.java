@@ -17,7 +17,6 @@
 
 package java.nio;
 
-
 /**
  * Provide factory service of buffer classes.
  * <p>
@@ -25,7 +24,6 @@ package java.nio;
  * this factory is the only entrance to access buffer functions from outside of
  * the impl package.
  * </p>
- * 
  */
 final class BufferFactory {
 

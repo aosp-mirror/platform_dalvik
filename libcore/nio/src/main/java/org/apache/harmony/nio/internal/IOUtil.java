@@ -29,33 +29,19 @@ import java.nio.charset.CoderResult;
 import org.apache.harmony.nio.Util;
 import org.apache.harmony.nio.internal.nls.Messages;
 
-
-/*
+/**
  * Static methods for I/O util. Used by io package and nio package.
- * 
  */
 public final class IOUtil {
 
-    // -------------------------------------------------------------------
-    // Class variables
-    // -------------------------------------------------------------------
-
     private static final int DEFAULT_BUFFER_SIZE = 8192;
 
-    // -------------------------------------------------------------------
-    // Constructor
-    // -------------------------------------------------------------------
-
     /*
-     * No instance.
+     * Not designed to be instantiated.
      */
     private IOUtil() {
         super();
     }
-
-    // -------------------------------------------------------------------
-    // Routine methods.
-    // -------------------------------------------------------------------
 
     /*
      * Read method for InputStreamReader and Channels.
@@ -125,7 +111,7 @@ public final class IOUtil {
     }
 
     /*
-     * refill the buffer from wrapped InputStream
+     * Refill the buffer from wrapped InputStream.
      */
     private static void fillBuf(InputStream in, ByteBuffer bytes,
             CharBuffer chars, CharsetDecoder decoder) throws IOException {
@@ -211,7 +197,7 @@ public final class IOUtil {
     }
 
     /*
-     * convert function used in write.
+     * Convert function used in write.
      */
     private static void convert(Object lock, CharsetEncoder encoder,
             ByteBuffer bytes, CharBuffer chars, OutputStream out)

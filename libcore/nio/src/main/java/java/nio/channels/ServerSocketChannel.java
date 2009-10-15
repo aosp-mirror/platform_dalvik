@@ -33,9 +33,6 @@ import java.nio.channels.spi.SelectorProvider;
  * open()} method. Calling {@code accept} before bound will cause a
  * {@link NotYetBoundException}. It can be bound by calling the bind method of a
  * related {@code ServerSocket} instance.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class ServerSocketChannel extends AbstractSelectableChannel {
 
@@ -44,7 +41,6 @@ public abstract class ServerSocketChannel extends AbstractSelectableChannel {
      * 
      * @param selectorProvider
      *            an instance of SelectorProvider.
-     * @since Android 1.0
      */
     protected ServerSocketChannel(SelectorProvider selectorProvider) {
         super(selectorProvider);
@@ -55,12 +51,10 @@ public abstract class ServerSocketChannel extends AbstractSelectableChannel {
      * <p>
      * This channel is created by calling {@code openServerSocketChannel} method
      * of the default {@code SelectorProvider} instance.
-     * </p>
-     * 
+     *
      * @return the new channel which is open but unbound.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public static ServerSocketChannel open() throws IOException {
         return SelectorProvider.provider().openServerSocketChannel();
@@ -73,8 +67,8 @@ public abstract class ServerSocketChannel extends AbstractSelectableChannel {
      * 
      * @see java.nio.channels.SelectableChannel#validOps()
      * @return the operations supported by this channel.
-     * @since Android 1.0
      */
+    @Override
     public final int validOps() {
         return SelectionKey.OP_ACCEPT;
     }
@@ -84,7 +78,6 @@ public abstract class ServerSocketChannel extends AbstractSelectableChannel {
      * any public methods that are not declared in {@code ServerSocket}.
      * 
      * @return the server-socket assigned to this channel.
-     * @since Android 1.0
      */
     public abstract ServerSocket socket();
 
@@ -95,11 +88,9 @@ public abstract class ServerSocketChannel extends AbstractSelectableChannel {
      * connection is available, otherwise it blocks until a new connection is
      * available or an I/O error occurs. The socket channel returned by this
      * method will always be in blocking mode.
-     * </p>
      * <p>
      * This method just executes the same security checks as the {@code
      * accept()} method of the {@link ServerSocket} class.
-     * </p>
      * 
      * @return the accepted {@code SocketChannel} instance, or {@code null} if
      *         the channel is non-blocking and no connection is available.
@@ -119,8 +110,6 @@ public abstract class ServerSocketChannel extends AbstractSelectableChannel {
      * @throws SecurityException
      *             if there is a security manager and it does not permit to
      *             access the new connection.
-     * @since Android 1.0
      */
     public abstract SocketChannel accept() throws IOException;
-
 }

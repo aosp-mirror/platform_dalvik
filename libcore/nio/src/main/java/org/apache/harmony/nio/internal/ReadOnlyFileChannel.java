@@ -16,7 +16,7 @@
  */
 
 /*
- * Android Notice 
+ * Android Notice
  * In this class the address length was changed from long to int.
  * This is due to performance optimizations for the device.
  */
@@ -40,10 +40,10 @@ public final class ReadOnlyFileChannel extends FileChannelImpl {
     }
 
     public final int write(ByteBuffer buffer, long position) throws IOException {
-        if (null == buffer){
+        if (null == buffer) {
             throw new NullPointerException();
         }
-        if (position < 0){
+        if (position < 0) {
             throw new IllegalArgumentException();
         }
         throw new NonWritableChannelException();

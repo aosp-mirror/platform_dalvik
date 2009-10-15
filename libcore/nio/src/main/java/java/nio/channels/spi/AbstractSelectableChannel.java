@@ -32,8 +32,6 @@ import java.util.List;
  * {@code AbstractSelectableChannel} is the base implementation class for
  * selectable channels. It declares methods for registering, unregistering and
  * closing selectable channels. It is thread-safe.
- * 
- * @since Android 1.0
  */
 public abstract class AbstractSelectableChannel extends SelectableChannel {
 
@@ -44,7 +42,8 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      */
     private List<SelectionKey> keyList = new ArrayList<SelectionKey>();
 
-    private class BlockingLock {
+    // Marker class so lock type shows up in profilers
+    static private class BlockingLock {
     }
 
     private final Object blockingLock = new BlockingLock();
@@ -56,7 +55,6 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      * 
      * @param selectorProvider
      *            the selector provider that creates this channel.
-     * @since Android 1.0
      */
     protected AbstractSelectableChannel(SelectorProvider selectorProvider) {
         super();
@@ -68,32 +66,32 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      * 
      * @see java.nio.channels.SelectableChannel#provider()
      * @return this channel's selector provider.
-     * @since Android 1.0
      */
+    @Override
     public final SelectorProvider provider() {
         return provider;
     }
 
     /**
      * Indicates whether this channel is registered with one or more selectors.
-     * 
+     *
      * @return {@code true} if this channel is registered with a selector,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
+    @Override
     synchronized public final boolean isRegistered() {
         return !keyList.isEmpty();
     }
 
     /**
      * Gets this channel's selection key for the specified selector.
-     * 
+     *
      * @param selector
      *            the selector with which this channel has been registered.
      * @return the selection key for the channel or {@code null} if this channel
      *         has not been registered with {@code selector}.
-     * @since Android 1.0
      */
+    @Override
     synchronized public final SelectionKey keyFor(Selector selector) {
         for (int i = 0; i < keyList.size(); i++) {
             SelectionKey key = keyList.get(i);
@@ -130,8 +128,8 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      * @throws IllegalSelectorException
      *             if this channel does not have the same provider as the given
      *             selector.
-     * @since Android 1.0
      */
+    @Override
     public final SelectionKey register(Selector selector, int interestSet,
             Object attachment) throws ClosedChannelException {
         if (!isOpen()) {
@@ -152,10 +150,6 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
                 }
                 // throw NPE exactly to keep consistency
                 throw new NullPointerException();
-            }
-            if (0 == interestSet) {
-                // throw ISE exactly to keep consistency
-                throw new IllegalSelectorException();
             }
             SelectionKey key = keyFor(selector);
             if (null == key) {
@@ -181,8 +175,8 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      * 
      * @throws IOException
      *             if a problem occurs while closing the channel.
-     * @since Android 1.0
      */
+    @Override
     synchronized protected final void implCloseChannel() throws IOException {
         implCloseSelectableChannel();
         for (int i = 0; i < keyList.size(); i++) {
@@ -199,17 +193,16 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      * 
      * @throws IOException
      *             if an I/O exception occurs.
-     * @since Android 1.0
      */
     protected abstract void implCloseSelectableChannel() throws IOException;
 
     /**
      * Indicates whether this channel is in blocking mode.
-     * 
+     *
      * @return {@code true} if this channel is blocking, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
+    @Override
     public final boolean isBlocking() {
         synchronized (blockingLock) {
             return isBlocking;
@@ -219,10 +212,10 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
     /**
      * Gets the object used for the synchronization of {@code register} and
      * {@code configureBlocking}.
-     * 
+     *
      * @return the synchronization object.
-     * @since Android 1.0
      */
+    @Override
     public final Object blockingLock() {
         return blockingLock;
     }
@@ -233,6 +226,7 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      * actual setting of the mode is done by calling
      * {@code implConfigureBlocking(boolean)}.
      * 
+     * @see java.nio.channels.SelectableChannel#configureBlocking(boolean)
      * @param blockingMode
      *            {@code true} for setting this channel's mode to blocking,
      *            {@code false} to set it to non-blocking.
@@ -244,8 +238,8 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      *             registered with at least one selector.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
+    @Override
     public final SelectableChannel configureBlocking(boolean blockingMode)
             throws IOException {
         if (isOpen()) {
@@ -253,7 +247,7 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
                 if (isBlocking == blockingMode) {
                     return this;
                 }
-                if (blockingMode && isRegistered()) {
+                if (blockingMode && containsValidKeys()) {
                     throw new IllegalBlockingModeException();
                 }
                 implConfigureBlocking(blockingMode);
@@ -262,7 +256,6 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
             return this;
         }
         throw new ClosedChannelException();
-
     }
 
     /**
@@ -273,7 +266,6 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
      *            {@code false} to set it to non-blocking.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     protected abstract void implConfigureBlocking(boolean blockingMode)
             throws IOException;
@@ -287,4 +279,17 @@ public abstract class AbstractSelectableChannel extends SelectableChannel {
         }
     }
 
+    /**
+     * Returns true if the keyList contains at least 1 valid key and false
+     * otherwise.
+     */
+    private synchronized boolean containsValidKeys() {
+        for (int i = 0; i < keyList.size(); i++) {
+            SelectionKey key = keyList.get(i);
+            if (key != null && key.isValid()) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

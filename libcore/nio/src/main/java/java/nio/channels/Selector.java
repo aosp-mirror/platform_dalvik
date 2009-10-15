@@ -32,9 +32,6 @@ import java.util.Set;
  * canceled keys. During the select operation, the channels registered with this
  * selector are checked to see whether they are ready for operation according to
  * their {@link SelectionKey interest set}.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class Selector {
 
@@ -46,7 +43,6 @@ public abstract class Selector {
      * @return a new selector.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public static Selector open() throws IOException {
         return SelectorProvider.provider().openSelector();
@@ -54,8 +50,6 @@ public abstract class Selector {
 
     /**
      * Constructs a new {@code Selector}.
-     * 
-     * @since Android 1.0
      */
     protected Selector() {
         super();
@@ -71,11 +65,9 @@ public abstract class Selector {
      * Any further attempt of using this selector after this method has been
      * called (except calling {@link #close()} or {@link #wakeup()}) results in
      * a {@link ClosedSelectorException} being thrown.
-     * </p>
-     * 
+     *
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract void close() throws IOException;
 
@@ -84,7 +76,6 @@ public abstract class Selector {
      * 
      * @return {@code true} if this selector is not closed, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isOpen();
 
@@ -93,7 +84,6 @@ public abstract class Selector {
      * safe.
      * 
      * @return the set of registered keys.
-     * @since Android 1.0
      */
     public abstract Set<SelectionKey> keys();
 
@@ -101,7 +91,6 @@ public abstract class Selector {
      * Gets the provider of this selector.
      * 
      * @return the provider of this selector.
-     * @since Android 1.0
      */
     public abstract SelectorProvider provider();
 
@@ -116,7 +105,6 @@ public abstract class Selector {
      *             if an I/O error occurs.
      * @throws ClosedSelectorException
      *             if the selector is closed.
-     * @since Android 1.0
      */
     public abstract int select() throws IOException;
 
@@ -137,7 +125,6 @@ public abstract class Selector {
      *             if the given timeout argument is less than zero.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract int select(long timeout) throws IOException;
 
@@ -149,7 +136,6 @@ public abstract class Selector {
      * @return the selection keys whose channels are ready for operation.
      * @throws ClosedSelectorException
      *             if the selector is closed.
-     * @since Android 1.0
      */
     public abstract Set<SelectionKey> selectedKeys();
 
@@ -164,7 +150,6 @@ public abstract class Selector {
      *             if an I/O error occurrs.
      * @throws ClosedSelectorException
      *             if the selector is closed.
-     * @since Android 1.0
      */
     public abstract int selectNow() throws IOException;
 
@@ -176,12 +161,10 @@ public abstract class Selector {
      * be undone by a call to {@code selectNow()}; after calling
      * {@code selectNow()}, a subsequent call of {@code select} can block
      * again.
-     * </p>
-     * 
+     *
      * @return this selector.
      * @throws ClosedSelectorException
      *             if the selector is closed.
-     * @since Android 1.0
      */
     public abstract Selector wakeup();
 }

@@ -21,7 +21,6 @@ package java.nio;
  * A buffer of floats.
  * <p>
  * A float buffer can be created in either of the following ways:
- * </p>
  * <ul>
  * <li>{@link #allocate(int) Allocate} a new float array and create a buffer
  * based on it;</li>
@@ -30,10 +29,9 @@ package java.nio;
  * <li>Use {@link java.nio.ByteBuffer#asFloatBuffer() ByteBuffer.asFloatBuffer}
  * to create a float buffer based on a byte buffer.</li>
  * </ul>
- * 
- * @since Android 1.0
  */
-public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuffer> {
+public abstract class FloatBuffer extends Buffer implements
+        Comparable<FloatBuffer> {
 
     /**
      * Creates a float buffer based on a newly allocated float array.
@@ -43,7 +41,6 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * @return the created float buffer.
      * @throws IllegalArgumentException
      *             if {@code capacity} is less than zero.
-     * @since Android 1.0
      */
     public static FloatBuffer allocate(int capacity) {
         if (capacity < 0) {
@@ -57,12 +54,10 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * <p>
      * Calling this method has the same effect as
      * {@code wrap(array, 0, array.length)}.
-     * </p>
-     * 
+     *
      * @param array
      *            the float array which the new buffer will be based on.
      * @return the created float buffer.
-     * @since Android 1.0
      */
     public static FloatBuffer wrap(float[] array) {
         return wrap(array, 0, array.length);
@@ -73,8 +68,7 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * <p>
      * The new buffer's position will be {@code start}, limit will be
      * {@code start + len}, capacity will be the length of the array.
-     * </p>
-     * 
+     *
      * @param array
      *            the float array which the new buffer will be based on.
      * @param start
@@ -88,15 +82,14 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      *                if either {@code start} or {@code len} is invalid.
      * @exception NullPointerException
      *                if {@code array} is null.
-     * @since Android 1.0
      */
     public static FloatBuffer wrap(float[] array, int start, int len) {
-                if (array == null) {
-                        throw new NullPointerException();
-                }
-                if (start < 0 || len < 0 || (long)start + (long)len > array.length) {
-                        throw new IndexOutOfBoundsException();
-                }
+        if (array == null) {
+            throw new NullPointerException();
+        }
+        if (start < 0 || len < 0 || (long) start + (long) len > array.length) {
+            throw new IndexOutOfBoundsException();
+        }
 
         FloatBuffer buf = BufferFactory.newFloatBuffer(array);
         buf.position = start;
@@ -125,7 +118,6 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      *                if this buffer is based on an array, but it is read-only.
      * @exception UnsupportedOperationException
      *                if this buffer is not based on an array.
-     * @since Android 1.0
      */
     public final float[] array() {
         return protectedArray();
@@ -137,14 +129,12 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * <p>
      * The offset is the index of the array and corresponds to the zero position
      * of the buffer.
-     * </p>
-     * 
+     *
      * @return the offset of the float array which this buffer is based on.
      * @exception ReadOnlyBufferException
      *                if this buffer is based on an array, but it is read-only.
      * @exception UnsupportedOperationException
      *                if this buffer is not based on an array.
-     * @since Android 1.0
      */
     public final int arrayOffset() {
         return protectedArrayOffset();
@@ -172,15 +162,12 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * The returned buffer is guaranteed to be a new instance, even if this
      * buffer is read-only itself. The new buffer's position, limit, capacity
      * and mark are the same as this buffer.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means this
      * buffer's change of content will be visible to the new buffer. The two
      * buffer's position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a read-only version of this buffer.
-     * @since Android 1.0
      */
     public abstract FloatBuffer asReadOnlyBuffer();
 
@@ -190,12 +177,10 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * The remaining floats will be moved to the head of the buffer, starting
      * from position zero. Then the position is set to {@code remaining()}; the
      * limit is set to capacity; the mark is cleared.
-     * </p>
-     * 
+     *
      * @return this buffer.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract FloatBuffer compact();
 
@@ -210,14 +195,12 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      *         greater than {@code otherBuffer}.
      * @exception ClassCastException
      *                if {@code otherBuffer} is not a float buffer.
-     * @since Android 1.0
      */
     public int compareTo(FloatBuffer otherBuffer) {
         int compareRemaining = (remaining() < otherBuffer.remaining()) ? remaining()
                 : otherBuffer.remaining();
         int thisPos = position;
         int otherPos = otherBuffer.position;
-        // BEGIN android-changed
         float thisFloat, otherFloat;
         while (compareRemaining > 0) {
             thisFloat = get(thisPos);
@@ -231,7 +214,6 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
             otherPos++;
             compareRemaining--;
         }
-        // END android-changed
         return remaining() - otherBuffer.remaining();
     }
 
@@ -241,15 +223,12 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * The duplicated buffer's position, limit, capacity and mark are the same
      * as this buffer. The duplicated buffer's read-only property and byte order
      * are same as this buffer too.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a duplicated buffer that shares its content with this buffer.
-     * @since Android 1.0
      */
     public abstract FloatBuffer duplicate();
 
@@ -259,14 +238,13 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * If {@code other} is not a float buffer then {@code false} is returned.
      * Two float buffers are equal if and only if their remaining floats are
      * exactly the same. Position, limit, capacity and mark are not considered.
-     * </p>
-     * 
+     *
      * @param other
      *            the object to compare with this float buffer.
      * @return {@code true} if this float buffer is equal to {@code other},
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
+    @Override
     public boolean equals(Object other) {
         if (!(other instanceof FloatBuffer)) {
             return false;
@@ -294,7 +272,6 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * @return the float at the current position.
      * @exception BufferUnderflowException
      *                if the position is equal or greater than limit.
-     * @since Android 1.0
      */
     public abstract float get();
 
@@ -304,14 +281,12 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * <p>
      * Calling this method has the same effect as
      * {@code get(dest, 0, dest.length)}.
-     * </p>
-     * 
+     *
      * @param dest
      *            the destination float array.
      * @return this buffer.
      * @exception BufferUnderflowException
      *                if {@code dest.length} is greater than {@code remaining()}.
-     * @since Android 1.0
      */
     public FloatBuffer get(float[] dest) {
         return get(dest, 0, dest.length);
@@ -335,14 +310,13 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      *                if either {@code off} or {@code len} is invalid.
      * @exception BufferUnderflowException
      *                if {@code len} is greater than {@code remaining()}.
-     * @since Android 1.0
      */
     public FloatBuffer get(float[] dest, int off, int len) {
         int length = dest.length;
-        if (off < 0 || len < 0 || (long)off + (long)len > length) {
+        if (off < 0 || len < 0 || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         if (len > remaining()) {
             throw new BufferUnderflowException();
         }
@@ -360,17 +334,15 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * @return a float at the specified index.
      * @exception IndexOutOfBoundsException
      *                if index is invalid.
-     * @since Android 1.0
      */
     public abstract float get(int index);
 
     /**
      * Indicates whether this buffer is based on a float array and is
      * read/write.
-     * 
+     *
      * @return {@code true} if this buffer is based on a float array and
      *         provides read/write access, {@code false} otherwise.
-     * @since Android 1.0
      */
     public final boolean hasArray() {
         return protectedHasArray();
@@ -379,10 +351,10 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
     /**
      * Calculates this buffer's hash code from the remaining chars. The
      * position, limit, capacity and mark don't affect the hash code.
-     * 
+     *
      * @return the hash code calculated from the remaining floats.
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         int myPosition = position;
         int hash = 0;
@@ -399,10 +371,8 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * <p>
      * A float buffer is direct if it is based on a byte buffer and the byte
      * buffer is direct.
-     * </p>
-     * 
+     *
      * @return {@code true} if this buffer is direct, {@code false} otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isDirect();
 
@@ -412,11 +382,9 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * <p>
      * If this buffer is not based on a byte buffer, then always return the
      * platform's native byte order.
-     * </p>
-     * 
+     *
      * @return the byte order used by this buffer when converting floats from/to
      *         bytes.
-     * @since Android 1.0
      */
     public abstract ByteOrder order();
 
@@ -452,7 +420,6 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      *                if position is equal or greater than limit.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract FloatBuffer put(float f);
 
@@ -462,8 +429,7 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * <p>
      * Calling this method has the same effect as
      * {@code put(src, 0, src.length)}.
-     * </p>
-     * 
+     *
      * @param src
      *            the source float array.
      * @return this buffer.
@@ -471,7 +437,6 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      *                if {@code remaining()} is less than {@code src.length}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public final FloatBuffer put(float[] src) {
         return put(src, 0, src.length);
@@ -497,14 +462,13 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      *                if either {@code off} or {@code len} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public FloatBuffer put(float[] src, int off, int len) {
         int length = src.length;
         if (off < 0 || len < 0 || (long)off + (long)len > length) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         if (len > remaining()) {
             throw new BufferOverflowException();
         }
@@ -529,7 +493,6 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      *                if {@code src} is this buffer.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public FloatBuffer put(FloatBuffer src) {
         if (src == this) {
@@ -557,7 +520,6 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      *                if index is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract FloatBuffer put(int index, float f);
 
@@ -569,15 +531,12 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * The new buffer's position will be 0, limit will be its capacity, and its
      * mark is cleared. The new buffer's read-only property and byte order are
      * same as this buffer's.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
      * 
      * @return a sliced buffer that shares its content with this buffer.
-     * @since Android 1.0
      */
     public abstract FloatBuffer slice();
 
@@ -585,10 +544,10 @@ public abstract class FloatBuffer extends Buffer implements Comparable<FloatBuff
      * Returns a string representing the state of this float buffer.
      * 
      * @return a string representing the state of this float buffer.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append(getClass().getName());
         buf.append(", status: capacity="); //$NON-NLS-1$
         buf.append(capacity());

@@ -40,8 +40,6 @@ import org.apache.harmony.niochar.internal.nls.Messages;
  * result by calling <code>CoderResult.unmappableForLength(int)</code> with
  * the input sequence size indicating the identity of the unmappable character.
  * </ol>
- * 
- * @since Android 1.0
  */
 public class CoderResult {
 
@@ -60,8 +58,6 @@ public class CoderResult {
     /**
      * Result object indicating that there is insufficient data in the
      * encoding/decoding buffer or that additional data is required.
-     * 
-     * @since Android 1.0
      */
     public static final CoderResult UNDERFLOW = new CoderResult(TYPE_UNDERFLOW,
             0);
@@ -69,8 +65,6 @@ public class CoderResult {
     /**
      * Result object used to indicate that the output buffer does not have
      * enough space available to store the result of the encoding/decoding.
-     * 
-     * @since Android 1.0
      */
     public static final CoderResult OVERFLOW = new CoderResult(TYPE_OVERFLOW, 0);
 
@@ -116,7 +110,6 @@ public class CoderResult {
      *         error.
      * @throws IllegalArgumentException
      *             if <code>length</code> is non-positive.
-     * @since Android 1.0
      */
     public static synchronized CoderResult malformedForLength(int length)
             throws IllegalArgumentException {
@@ -147,7 +140,6 @@ public class CoderResult {
      *         character error.
      * @throws IllegalArgumentException
      *             if <code>length</code> is non-positive.
-     * @since Android 1.0
      */
     public static synchronized CoderResult unmappableForLength(int length)
             throws IllegalArgumentException {
@@ -171,7 +163,6 @@ public class CoderResult {
      * Returns true if this result is an underflow condition.
      * 
      * @return true if an underflow, otherwise false.
-     * @since Android 1.0
      */
     public boolean isUnderflow() {
         return this.type == TYPE_UNDERFLOW;
@@ -181,9 +172,8 @@ public class CoderResult {
      * Returns true if this result represents a malformed-input error or an
      * unmappable-character error.
      * 
-     * @return true if this is a malformed-input error or an 
+     * @return true if this is a malformed-input error or an
      *         unmappable-character error, otherwise false.
-     * @since Android 1.0
      */
     public boolean isError() {
         return this.type == TYPE_MALFORMED_INPUT
@@ -194,7 +184,6 @@ public class CoderResult {
      * Returns true if this result represents a malformed-input error.
      * 
      * @return true if this is a malformed-input error, otherwise false.
-     * @since Android 1.0
      */
     public boolean isMalformed() {
         return this.type == TYPE_MALFORMED_INPUT;
@@ -204,7 +193,6 @@ public class CoderResult {
      * Returns true if this result is an overflow condition.
      * 
      * @return true if this is an overflow, otherwise false.
-     * @since Android 1.0
      */
     public boolean isOverflow() {
         return this.type == TYPE_OVERFLOW;
@@ -214,7 +202,6 @@ public class CoderResult {
      * Returns true if this result represents an unmappable-character error.
      * 
      * @return true if this is an unmappable-character error, otherwise false.
-     * @since Android 1.0
      */
     public boolean isUnmappable() {
         return this.type == TYPE_UNMAPPABLE_CHAR;
@@ -227,7 +214,6 @@ public class CoderResult {
      * @return the length, as an integer, of this object's erroneous input.
      * @throws UnsupportedOperationException
      *             if this result is an overflow or underflow.
-     * @since Android 1.0
      */
     public int length() throws UnsupportedOperationException {
         if (this.type == TYPE_MALFORMED_INPUT
@@ -253,7 +239,6 @@ public class CoderResult {
      *             in case this is a malformed-input error.
      * @throws CharacterCodingException
      *             the default exception.
-     * @since Android 1.0
      */
     public void throwException() throws BufferUnderflowException,
             BufferOverflowException, UnmappableCharacterException,
@@ -272,18 +257,12 @@ public class CoderResult {
         }
     }
 
-    /*
-     * -------------------------------------------------------------------
-     * Methods overriding parent class Object
-     * -------------------------------------------------------------------
-     */
-
     /**
      * Returns a text description of this result.
      * 
      * @return a text description of this result.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         String dsc = null;
         switch (this.type) {

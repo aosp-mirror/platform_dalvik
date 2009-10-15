@@ -23,6 +23,8 @@ import dalvik.annotation.TestTargetClass;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
@@ -30,8 +32,12 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.Pipe;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Set;
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import junit.framework.TestCase;
 import tests.support.Support_PortManager;
@@ -331,29 +337,6 @@ public class SelectorTest extends TestCase {
     }
 
     /**
-     * @test java.nio.channels.Selector#select(long)
-     */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies select(long) method for empty selection keys.",
-        method = "select",
-        args = {long.class}
-    )
-    public void test_selectJ_Empty_Keys() throws IOException {
-        // regression test, see HARMONY-3888.
-        // make sure select(long) does wait for specified amount of
-        // time if keys.size() == 0 (initial state of selector).
-
-        final long SELECT_TIMEOUT = 1000;
-
-        long time1 = System.currentTimeMillis();
-        selector.select(SELECT_TIMEOUT);
-        long time2 = System.currentTimeMillis();
-        assertEquals("elapsed time", SELECT_TIMEOUT, (time2 - time1),
-                     SELECT_TIMEOUT * 0.05); // 5% accuracy
-    }
-
-    /**
      * @tests java.nio.channel.Selector#select(long)
      */
     @TestTargetNew(
@@ -397,6 +380,29 @@ public class SelectorTest extends TestCase {
     public void test_selectJ_Timeout() throws IOException {
         // make sure select(timeout) doesn't block
         selector.select(WAIT_TIME);
+    }
+
+    /**
+     * @test java.nio.channels.Selector#select(long)
+     */
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies select(long) method for empty selection keys.",
+            method = "select",
+            args = {long.class}
+    )
+    public void test_selectJ_Empty_Keys() throws IOException {
+        // regression test, see HARMONY-3888.
+        // make sure select(long) does wait for specified amount of
+        // time if keys.size() == 0 (initial state of selector).
+
+        final long SELECT_TIMEOUT = 2000;
+
+        long time1 = System.currentTimeMillis();
+        selector.select(SELECT_TIMEOUT);
+        long time2 = System.currentTimeMillis();
+        assertEquals("elapsed time", SELECT_TIMEOUT, (time2 - time1),
+                SELECT_TIMEOUT * 0.05); // 5% accuracy
     }
 
     /**
@@ -446,6 +452,69 @@ public class SelectorTest extends TestCase {
             }
         }.start();
         selectOnce(SelectType.TIMEOUT, 0);
+    }
+
+    public void test_keySetViewsModifications() throws IOException {
+        Set<SelectionKey> keys = selector.keys();
+
+        SelectionKey key1 = ssc.register(selector, SelectionKey.OP_ACCEPT);
+
+        assertTrue(keys.contains(key1));
+
+        SocketChannel sc = SocketChannel.open();
+        sc.configureBlocking(false);
+        SelectionKey key2 = sc.register(selector, SelectionKey.OP_READ);
+
+        assertTrue(keys.contains(key1));
+        assertTrue(keys.contains(key2));
+
+        key1.cancel();
+        assertTrue(keys.contains(key1));
+
+        selector.selectNow();
+        assertFalse(keys.contains(key1));
+        assertTrue(keys.contains(key2));
+     }
+
+    /**
+     * This test cancels a key while selecting to verify that the cancelled
+     * key set is processed both before and after the call to the underlying
+     * operating system.
+     */
+    public void test_cancelledKeys() throws Exception {
+        final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+        final AtomicBoolean complete = new AtomicBoolean();
+
+        final Pipe pipe = Pipe.open();
+        pipe.source().configureBlocking(false);
+        final SelectionKey key = pipe.source().register(selector, SelectionKey.OP_READ);
+
+        Thread thread = new Thread() {
+            public void run() {
+                try {
+                    // make sure to call key.cancel() while the main thread is selecting
+                    Thread.sleep(500);
+                    key.cancel();
+                    assertFalse(key.isValid());
+                    pipe.sink().write(ByteBuffer.allocate(4)); // unblock select()
+                } catch (Throwable e) {
+                    failure.set(e);
+                } finally {
+                    complete.set(true);
+                }
+            }
+        };
+        assertTrue(key.isValid());
+
+        thread.start();
+        do {
+            assertEquals(0, selector.select(5000)); // blocks
+            assertEquals(0, selector.selectedKeys().size());
+        } while (!complete.get()); // avoid spurious interrupts
+        assertFalse(key.isValid());
+
+        thread.join();
+        assertNull(failure.get());
     }
 
     private void assert_select_SelectorClosed(SelectType type, int timeout)

@@ -37,13 +37,9 @@ import org.apache.harmony.luni.platform.Platform;
  * status until it is disconnected or closed. The benefit of a connected channel
  * is the reduced effort of security checks during send and receive. When
  * invoking {@code read} or {@code write}, a connected channel is required.
- * </p>
  * <p>
  * Datagram channels are thread-safe; only one thread can read or write at the
  * same time.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class DatagramChannel extends AbstractSelectableChannel
         implements ByteChannel, ScatteringByteChannel, GatheringByteChannel {
@@ -51,13 +47,12 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
     static {
         Platform.getNetworkSystem().oneTimeInitialization(true);
     }
-    
+
     /**
      * Constructs a new {@code DatagramChannel}.
      * 
      * @param selectorProvider
      *            an instance of SelectorProvider.
-     * @since Android 1.0
      */
     protected DatagramChannel(SelectorProvider selectorProvider) {
         super(selectorProvider);
@@ -68,12 +63,10 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * <p>
      * This channel is created by calling the <code>openDatagramChannel</code>
      * method of the default {@link SelectorProvider} instance.
-     * </p>
-     * 
+     *
      * @return the new channel which is open but not connected.
      * @throws IOException
      *             if some I/O error occurs.
-     * @since Android 1.0
      */
     public static DatagramChannel open() throws IOException {
         return SelectorProvider.provider().openDatagramChannel();
@@ -86,8 +79,8 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * 
      * @see java.nio.channels.SelectableChannel#validOps()
      * @return valid operations in bit-set.
-     * @since Android 1.0
      */
+    @Override
     public final int validOps() {
         return (SelectionKey.OP_READ | SelectionKey.OP_WRITE);
     }
@@ -98,7 +91,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * {@link DatagramSocket}.
      * 
      * @return the related DatagramSocket instance.
-     * @since Android 1.0
      */
     public abstract DatagramSocket socket();
 
@@ -107,7 +99,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * 
      * @return <code>true</code> if this channel's socket is connected;
      *         <code>false</code> otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isConnected();
 
@@ -120,12 +111,10 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * write operations being processed at the time the method is called. The
      * connection status does not change until the channel is disconnected or
      * closed.
-     * </p>
      * <p>
      * This method executes the same security checks as the connect method of
      * the {@link DatagramSocket} class.
-     * </p>
-     * 
+     *
      * @param address
      *            the address to be connected to.
      * @return this channel.
@@ -143,7 +132,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      *             permitted to be accessed.
      * @throws IOException
      *             if some other I/O error occurrs.
-     * @since Android 1.0
      */
     public abstract DatagramChannel connect(SocketAddress address)
             throws IOException;
@@ -155,12 +143,10 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * This method can be called at any time without affecting the read and
      * write operations being underway. It does not have any effect if the
      * socket is not connected or the channel is closed.
-     * </p>
-     * 
+     *
      * @return this channel.
      * @throws IOException
      *             some other I/O error occurs.
-     * @since Android 1.0
      */
     public abstract DatagramChannel disconnect() throws IOException;
 
@@ -174,16 +160,13 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * immediately. The transfer starts at the current position of the buffer,
      * and if there is not enough space remaining in the buffer to store the
      * datagram then the part of the datagram that does not fit is discarded.
-     * </p>
      * <p>
      * This method can be called at any time and it will block if there is
      * another thread that has started a read operation on the channel.
-     * </p>
      * <p>
      * This method executes the same security checks as the receive method of
      * the {@link DatagramSocket} class.
-     * </p>
-     * 
+     *
      * @param target
      *            the byte buffer to store the received datagram.
      * @return the address of the datagram if the transfer is performed, or null
@@ -203,7 +186,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      *             permitted to be accessed.
      * @throws IOException
      *             some other I/O error occurs.
-     * @since Android 1.0
      */
     public abstract SocketAddress receive(ByteBuffer target) throws IOException;
 
@@ -216,16 +198,13 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * in non-blocking mode then the datagram is only sent if there is enough
      * space in the underlying output buffer at that moment. The transfer action
      * is just like a regular write operation.
-     * </p>
      * <p>
      * This method can be called at any time and it will block if another thread
      * has started a send operation on this channel.
-     * </p>
      * <p>
      * This method executes the same security checks as the send method of the
      * {@link DatagramSocket} class.
-     * </p>
-     * 
+     *
      * @param source
      *            the byte buffer with the datagram to be sent.
      * @param address
@@ -248,7 +227,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      *             permitted to access.
      * @throws IOException
      *             some other I/O error occurs.
-     * @since Android 1.0
      */
     public abstract int send(ByteBuffer source, SocketAddress address)
             throws IOException;
@@ -262,8 +240,7 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * not fit in the buffer is discarded. Otherwise, this method has the same
      * behavior as the {@code read} method in the {@link ReadableByteChannel}
      * interface.
-     * </p>
-     * 
+     *
      * @see java.nio.channels.ReadableByteChannel#read(java.nio.ByteBuffer)
      * @param target
      *            the byte buffer to store the received datagram.
@@ -282,7 +259,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      *             interrupt state set and the channel will be closed.
      * @throws IOException
      *             some other I/O error occurs.
-     * @since Android 1.0
      */
     public abstract int read(ByteBuffer target) throws IOException;
 
@@ -295,8 +271,7 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * datagram that does not fit in the buffers is discarded. Otherwise, this
      * method has the same behavior as the {@code read} method in the
      * {@link ScatteringByteChannel} interface.
-     * </p>
-     * 
+     *
      * @see java.nio.channels.ScatteringByteChannel#read(java.nio.ByteBuffer[],
      *      int, int)
      * @param targets
@@ -324,7 +299,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      *             interrupt state set and the channel will be closed.
      * @throws IOException
      *             some other I/O error occurs.
-     * @since Android 1.0
      */
     public abstract long read(ByteBuffer[] targets, int offset, int length)
             throws IOException;
@@ -338,8 +312,7 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * datagram that does not fit in the buffers is discarded. Otherwise, this
      * method has the same behavior as the {@code read} method in the
      * {@link ScatteringByteChannel} interface.
-     * </p>
-     * 
+     *
      * @see java.nio.channels.ScatteringByteChannel#read(java.nio.ByteBuffer[])
      * @param targets
      *            the byte buffers to store the received datagram.
@@ -358,7 +331,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      *             interrupt state set and the channel will be closed.
      * @throws IOException
      *             some other I/O error occurs.
-     * @since Android 1.0
      */
     public synchronized final long read(ByteBuffer[] targets)
             throws IOException {
@@ -372,8 +344,7 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      * and the datagram is sent to the connected address. Otherwise, this method
      * has the same behavior as the {@code write} method in the
      * {@link WritableByteChannel} interface.
-     * </p>
-     * 
+     *
      * @see java.nio.channels.WritableByteChannel#write(java.nio.ByteBuffer)
      * @param source
      *            the byte buffer as the source of the datagram.
@@ -391,7 +362,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      *             interrupt state set and the channel will be closed.
      * @throws IOException
      *             some other I/O error occurs.
-     * @since Android 1.0
      */
     public abstract int write(ByteBuffer source) throws IOException;
 
@@ -432,7 +402,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      *             interrupt state set and the channel will be closed.
      * @throws IOException
      *             some other I/O error occurs.
-     * @since Android 1.0
      */
     public abstract long write(ByteBuffer[] sources, int offset, int length)
             throws IOException;
@@ -465,7 +434,6 @@ public abstract class DatagramChannel extends AbstractSelectableChannel
      *             interrupt state set and the channel will be closed.
      * @throws IOException
      *             some other I/O error occurs.
-     * @since Android 1.0
      */
     public synchronized final long write(ByteBuffer[] sources)
             throws IOException {

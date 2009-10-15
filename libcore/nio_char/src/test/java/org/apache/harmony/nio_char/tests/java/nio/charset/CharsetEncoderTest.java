@@ -21,6 +21,7 @@ import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
+import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -202,5 +203,23 @@ public class CharsetEncoderTest extends TestCase {
         result = encoder.encode(in2, out, true);
         assertEquals(4, out.remaining());
         assertTrue(result.isMalformed());
+    }
+
+    /**
+     * @tests {@link java.nio.charset.Charset#encode(java.nio.CharBuffer)
+     */
+    public void testUtf8Encoding() throws IOException {
+        byte[] orig = new byte[] { (byte) 0xed, (byte) 0xa0,
+                (byte) 0x80 };
+        String s = new String(orig, "UTF-8");
+        assertEquals(1, s.length());
+        assertEquals(55296, s.charAt(0));
+        Charset.forName("UTF-8").encode(CharBuffer.wrap(s));
+//        ByteBuffer buf = <result>
+//        for (byte o : orig) {
+//            byte b = 0;
+//            buf.get(b);
+//            assertEquals(o, b);
+//        }
     }
 }

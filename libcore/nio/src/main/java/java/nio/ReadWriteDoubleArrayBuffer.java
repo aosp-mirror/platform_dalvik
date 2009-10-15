@@ -54,10 +54,12 @@ final class ReadWriteDoubleArrayBuffer extends DoubleArrayBuffer {
         super(capacity, backingArray, arrayOffset);
     }
 
+    @Override
     public DoubleBuffer asReadOnlyBuffer() {
         return ReadOnlyDoubleArrayBuffer.copy(this, mark);
     }
 
+    @Override
     public DoubleBuffer compact() {
         System.arraycopy(backingArray, position + offset, backingArray, offset,
                 remaining());
@@ -67,26 +69,32 @@ final class ReadWriteDoubleArrayBuffer extends DoubleArrayBuffer {
         return this;
     }
 
+    @Override
     public DoubleBuffer duplicate() {
         return copy(this, mark);
     }
 
+    @Override
     public boolean isReadOnly() {
         return false;
     }
 
+    @Override
     protected double[] protectedArray() {
         return backingArray;
     }
 
+    @Override
     protected int protectedArrayOffset() {
         return offset;
     }
 
+    @Override
     protected boolean protectedHasArray() {
         return true;
     }
 
+    @Override
     public DoubleBuffer put(double c) {
         if (position == limit) {
             throw new BufferOverflowException();
@@ -95,6 +103,7 @@ final class ReadWriteDoubleArrayBuffer extends DoubleArrayBuffer {
         return this;
     }
 
+    @Override
     public DoubleBuffer put(int index, double c) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -103,20 +112,21 @@ final class ReadWriteDoubleArrayBuffer extends DoubleArrayBuffer {
         return this;
     }
 
+    @Override
     public DoubleBuffer put(double[] src, int off, int len) {
         int length = src.length;
-        if (off < 0 || len < 0 || (long)off + (long)len > length) {
+        if (off < 0 || len < 0 || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
         if (len > remaining()) {
             throw new BufferOverflowException();
         }
-        System.arraycopy(src, off, backingArray, offset
-                + position, len);
+        System.arraycopy(src, off, backingArray, offset + position, len);
         position += len;
         return this;
     }
-    
+
+    @Override
     public DoubleBuffer slice() {
         return new ReadWriteDoubleArrayBuffer(remaining(), backingArray, offset
                 + position);

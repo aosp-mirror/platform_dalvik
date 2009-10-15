@@ -16,7 +16,6 @@
 
 package java.nio.channels;
 
-
 import java.io.IOException;
 import java.nio.channels.spi.AbstractInterruptibleChannel;
 import java.nio.channels.spi.SelectorProvider;
@@ -31,16 +30,12 @@ import java.nio.channels.spi.SelectorProvider;
  * <p>
  * A channel may be registered with several selectors at the same time but only
  * once for any given selector.
- * </p>
- * @since Android 1.0
  */
 public abstract class SelectableChannel extends AbstractInterruptibleChannel
         implements Channel {
 
     /**
      * Constructs a new {@code SelectableChannel}.
-     * 
-     * @since Android 1.0
      */
     protected SelectableChannel() {
         super();
@@ -51,7 +46,6 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      * and {@code register} methods.
      * 
      * @return the blocking object as lock.
-     * @since Android 1.0
      */
     public abstract Object blockingLock();
 
@@ -74,7 +68,6 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      *             registered with at least one selector.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract SelectableChannel configureBlocking(boolean block)
             throws IOException;
@@ -84,7 +77,6 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      * 
      * @return {@code true} if this channel is blocking, undefined if this
      *         channel is closed.
-     * @since Android 1.0
      */
     public abstract boolean isBlocking();
 
@@ -93,7 +85,6 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      * 
      * @return {@code true} if this channel is registered, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isRegistered();
 
@@ -104,7 +95,6 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      *            the selector with which this channel has been registered.
      * @return the selection key for the channel or {@code null} if this channel
      *         has not been registered with {@code sel}.
-     * @since Android 1.0
      */
     public abstract SelectionKey keyFor(Selector sel);
 
@@ -112,7 +102,6 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      * Gets the provider of this channel.
      * 
      * @return the provider of this channel.
-     * @since Android 1.0
      */
     public abstract SelectorProvider provider();
 
@@ -129,12 +118,10 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      * blocked until the other call finishes. After that, it will synchronize on
      * the key set of the selector and thus may again block if other threads
      * also hold locks on the key set of the same selector.
-     * </p>
      * <p>
      * Calling this method is equivalent to calling
      * {@code register(selector, operations, null)}.
-     * </p>
-     * 
+     *
      * @param selector
      *            the selector with which to register this channel.
      * @param operations
@@ -151,7 +138,6 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      *             if this channel is registered but its key has been canceled.
      * @throws IllegalArgumentException
      *             if the operation given is not supported by this channel.
-     * @since Android 1.0
      */
     public final SelectionKey register(Selector selector, int operations)
             throws ClosedChannelException {
@@ -171,8 +157,7 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      * blocked until the other call finishes. After that, it will synchronize on
      * the key set of the selector and thus may again block if other threads
      * also hold locks on the key set of the same selector.
-     * </p>
-     * 
+     *
      * @param sel
      *            the selector with which to register this channel.
      * @param ops
@@ -191,18 +176,15 @@ public abstract class SelectableChannel extends AbstractInterruptibleChannel
      *             selector.
      * @throws CancelledKeyException
      *             if this channel is registered but its key has been canceled.
-     * @since Android 1.0
      */
     public abstract SelectionKey register(Selector sel, int ops, Object att)
             throws ClosedChannelException;
 
     /**
      * Gets the set of valid {@link SelectionKey operations} of this channel.
-     * Instances of a concrete channel class always return the same value. 
-     * 
+     * Instances of a concrete channel class always return the same value.
+     *
      * @return the set of operations that this channel supports.
-     * @since Android 1.0
      */
     public abstract int validOps();
-
 }

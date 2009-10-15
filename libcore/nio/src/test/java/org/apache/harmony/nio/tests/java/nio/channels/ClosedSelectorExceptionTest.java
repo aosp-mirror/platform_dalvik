@@ -31,6 +31,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  */
 @TestTargetClass(ClosedSelectorException.class)
 public class ClosedSelectorExceptionTest extends TestCase {
+    
+    /**
+     * @tests {@link java.nio.channels.ClosedSelectorException#ClosedSelectorException()}
+     */
+    public void test_Constructor() {
+        ClosedSelectorException e = new ClosedSelectorException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
 
     /**
      * @tests serialization/deserialization compatibility.

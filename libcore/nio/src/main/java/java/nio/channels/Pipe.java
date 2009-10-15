@@ -25,13 +25,11 @@ import java.nio.channels.spi.SelectorProvider;
  * is the readable source channel. When bytes are written into the writable
  * channel they can be read from the readable channel. The order of these bytes
  * remains unchanged.
- * @since Android 1.0
  */
 public abstract class Pipe {
 
     /**
      * Writable sink channel used to write to a pipe.
-     * @since Android 1.0
      */
     public static abstract class SinkChannel extends AbstractSelectableChannel
             implements WritableByteChannel, GatheringByteChannel {
@@ -41,7 +39,6 @@ public abstract class Pipe {
          * 
          * @param provider
          *            the provider of the channel.
-         * @since Android 1.0
          */
         protected SinkChannel(SelectorProvider provider) {
             super(provider);
@@ -51,8 +48,8 @@ public abstract class Pipe {
          * Indicates that this channel only supports writing.
          * 
          * @return a static value of OP_WRITE.
-         * @since Android 1.0
          */
+        @Override
         public final int validOps() {
             return SelectionKey.OP_WRITE;
         }
@@ -60,7 +57,6 @@ public abstract class Pipe {
 
     /**
      * Readable source channel used to read from a pipe.
-     * @since Android 1.0
      */
     public static abstract class SourceChannel extends
             AbstractSelectableChannel implements ReadableByteChannel,
@@ -71,7 +67,6 @@ public abstract class Pipe {
          * 
          * @param provider
          *            the provider of the channel.
-         * @since Android 1.0
          */
         protected SourceChannel(SelectorProvider provider) {
             super(provider);
@@ -81,8 +76,8 @@ public abstract class Pipe {
          * Indicates that this channel only supports reading.
          * 
          * @return a static value of OP_READ.
-         * @since Android 1.0
          */
+        @Override
         public final int validOps() {
             return SelectionKey.OP_READ;
         }
@@ -96,7 +91,6 @@ public abstract class Pipe {
      * 
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public static Pipe open() throws IOException {
         return SelectorProvider.provider().openPipe();
@@ -104,8 +98,6 @@ public abstract class Pipe {
 
     /**
      * The protected default constructor.
-     * 
-     * @since Android 1.0
      */
     protected Pipe() {
         super();
@@ -115,7 +107,6 @@ public abstract class Pipe {
      * Returns the sink channel of the pipe.
      * 
      * @return a writable sink channel of the pipe.
-     * @since Android 1.0
      */
     public abstract SinkChannel sink();
 
@@ -123,7 +114,6 @@ public abstract class Pipe {
      * Returns the source channel of the pipe.
      * 
      * @return a readable source channel of the pipe.
-     * @since Android 1.0
      */
     public abstract SourceChannel source();
 

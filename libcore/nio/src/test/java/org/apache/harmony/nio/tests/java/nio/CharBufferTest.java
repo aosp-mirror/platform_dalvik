@@ -1342,6 +1342,30 @@ public abstract class CharBufferTest extends AbstractBufferTest {
         }
     }
 
+    public void testRead_scenario1() throws Exception {
+        char[] charArray = new char[] { 'a', 'b' };
+        CharBuffer charBuffer = CharBuffer.wrap(charArray);
+        try {
+            charBuffer.read(charBuffer);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        charBuffer.put(charArray);
+        assertEquals(-1, charBuffer.read(charBuffer));
+    }
+
+    public void testRead_scenario2() throws Exception {
+        CharBuffer charBufferA = CharBuffer.allocate(0);
+        CharBuffer allocateBuffer = CharBuffer.allocate(1);
+        CharBuffer charBufferB = CharBuffer.wrap(allocateBuffer);
+        assertEquals(-1, charBufferA.read(charBufferB));
+
+        allocateBuffer.append(allocateBuffer);
+        charBufferB = CharBuffer.wrap(allocateBuffer);
+        assertEquals(-1, charBufferA.read(charBufferB));
+    }
+
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
         notes = "Abstract method.",

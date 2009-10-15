@@ -16,7 +16,6 @@
 
 package java.nio.channels;
 
-
 import java.io.IOException;
 
 /**
@@ -24,9 +23,6 @@ import java.io.IOException;
  * interrupted while waiting to acquire a file lock.
  * <p>
  * Note that the thread will also be in the 'interrupted' state.
- * </p>
- * 
- * @since Android 1.0
  */
 public class FileLockInterruptionException extends IOException {
 
@@ -34,8 +30,6 @@ public class FileLockInterruptionException extends IOException {
 
     /**
      * Constructs a {@code FileLockInterruptionException}.
-     * 
-     * @since Android 1.0
      */
     public FileLockInterruptionException() {
         super();

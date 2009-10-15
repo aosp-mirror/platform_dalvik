@@ -16,7 +16,6 @@
 
 package java.nio;
 
-
 /**
  * A buffer is a list of elements of a specific primitive type.
  * <p>
@@ -40,14 +39,10 @@ package java.nio;
  * take advantage of native memory APIs and it may not stay in the Java heap,
  * thus it is not affected by garbage collection.</li>
  * </ul>
- * </p>
  * <p>
  * Buffers are not thread-safe. If concurrent access to a buffer instance is
  * required, then the callers are responsible to take care of the
  * synchronization issues.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class Buffer {
 
@@ -125,9 +120,9 @@ public abstract class Buffer {
 
     /**
      * Construct a buffer with the specified capacity.
-     *
+     * 
      * @param capacity
-     *            the capacity of this buffer.
+     *            The capacity of this buffer
      */
     Buffer(int capacity) {
         super();
@@ -141,7 +136,6 @@ public abstract class Buffer {
      * Returns the capacity of this buffer.
      * 
      * @return the number of elements that are contained in this buffer.
-     * @since Android 1.0
      */
     public final int capacity() {
         return capacity;
@@ -154,10 +148,8 @@ public abstract class Buffer {
      * changes take place: the current position is reset back to the start of
      * the buffer, the value of the buffer limit is made equal to the capacity
      * and mark is cleared.
-     * </p>
-     * 
+     *
      * @return this buffer.
-     * @since Android 1.0
      */
     public final Buffer clear() {
         position = 0;
@@ -171,13 +163,10 @@ public abstract class Buffer {
      * <p>
      * The limit is set to the current position, then the position is set to
      * zero, and the mark is cleared.
-     * </p>
      * <p>
      * The content of this buffer is not changed.
-     * </p>
-     * 
+     *
      * @return this buffer.
-     * @since Android 1.0
      */
     public final Buffer flip() {
         limit = position;
@@ -192,7 +181,6 @@ public abstract class Buffer {
      * 
      * @return {@code true} if there are elements remaining in this buffer,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public final boolean hasRemaining() {
         return position < limit;
@@ -203,7 +191,6 @@ public abstract class Buffer {
      * 
      * @return {@code true} if this buffer is read-only, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isReadOnly();
 
@@ -211,7 +198,6 @@ public abstract class Buffer {
      * Returns the limit of this buffer.
      * 
      * @return the limit of this buffer.
-     * @since Android 1.0
      */
     public final int limit() {
         return limit;
@@ -224,15 +210,13 @@ public abstract class Buffer {
      * <code>newLimit</code> then, on returning from this call, it will have
      * been adjusted to be equivalent to <code>newLimit</code>. If the mark
      * is set and is greater than the new limit, then it is cleared.
-     * </p>
-     * 
+     *
      * @param newLimit
      *            the new limit, must not be negative and not greater than
      *            capacity.
      * @return this buffer.
      * @exception IllegalArgumentException
      *                if <code>newLimit</code> is invalid.
-     * @since Android 1.0
      */
     public final Buffer limit(int newLimit) {
         if (newLimit < 0 || newLimit > capacity) {
@@ -254,7 +238,6 @@ public abstract class Buffer {
      * later by calling <code>reset()</code>.
      * 
      * @return this buffer.
-     * @since Android 1.0
      */
     public final Buffer mark() {
         mark = position;
@@ -265,7 +248,6 @@ public abstract class Buffer {
      * Returns the position of this buffer.
      * 
      * @return the value of this buffer's current position.
-     * @since Android 1.0
      */
     public final int position() {
         return position;
@@ -276,15 +258,13 @@ public abstract class Buffer {
      * <p>
      * If the mark is set and it is greater than the new position, then it is
      * cleared.
-     * </p>
-     * 
+     *
      * @param newPosition
      *            the new position, must be not negative and not greater than
      *            limit.
      * @return this buffer.
      * @exception IllegalArgumentException
      *                if <code>newPosition</code> is invalid.
-     * @since Android 1.0
      */
     public final Buffer position(int newPosition) {
         if (newPosition < 0 || newPosition > limit) {
@@ -303,7 +283,6 @@ public abstract class Buffer {
      * {@code limit - position}.
      * 
      * @return the number of remaining elements in this buffer.
-     * @since Android 1.0
      */
     public final int remaining() {
         return limit - position;
@@ -315,7 +294,6 @@ public abstract class Buffer {
      * @return this buffer.
      * @exception InvalidMarkException
      *                if the mark is not set.
-     * @since Android 1.0
      */
     public final Buffer reset() {
         if (mark == UNSET_MARK) {
@@ -330,10 +308,8 @@ public abstract class Buffer {
      * <p>
      * The position is set to zero, and the mark is cleared. The content of this
      * buffer is not changed.
-     * </p>
-     * 
+     *
      * @return this buffer.
-     * @since Android 1.0
      */
     public final Buffer rewind() {
         position = 0;
