@@ -9695,17 +9695,14 @@ common_selectTrace:
  * before jumping to native translation.
  */
 dvmJitSelfVerificationStart:
-    sub     sp,sp,#4                    @ allocate stack space
-    str     r0,[sp,#0]                  @ save out dvmJitGetCodeAddr(rPC)
+    mov     r10, r0                     @ r10 <- dvmJitGetCodeAddr(rPC)
     mov     r0,rPC                      @ r0<- program counter
     mov     r1,rFP                      @ r1<- frame pointer
     mov     r2,rGLUE                    @ r2<- InterpState pointer
     bl      dvmSelfVerificationSaveState @ save registers to shadow space
-    ldr     rFP,[r0,#20]                @ rFP<- fp in shadow space
-    add     rGLUE,r0,#24                @ rGLUE<- pointer in shadow space
-    ldr     r0,[sp,#0]                  @ r0<- dvmJitGetCodeAddr(rPC)
-    add     sp,sp,#4                    @ restore stack
-    bx      r0                          @ jump to the translation
+    ldr     rFP,[r0,#offShadowSpace_shadowFP] @ rFP<- fp in shadow space
+    add     rGLUE,r0,#offShadowSpace_interpState @ rGLUE<- rGLUE in shadow space
+    bx      r10                         @ jump to the translation
 
 /*
  * Restore PC, registers, and interpState to original values
@@ -9714,10 +9711,10 @@ dvmJitSelfVerificationStart:
 dvmJitSelfVerificationEnd:
     mov    r1,rFP                        @ pass ending fp
     bl     dvmSelfVerificationRestoreState @ restore pc and fp values
-    ldr    rPC,[r0,#0]                   @ restore PC
-    ldr    rFP,[r0,#4]                   @ restore FP
-    ldr    rGLUE,[r0,#8]                 @ restore InterpState
-    ldr    r1,[r0,#12]                   @ get exitPoint
+    ldr    rPC,[r0,#offShadowSpace_startPC] @ restore PC
+    ldr    rFP,[r0,#offShadowSpace_fp]   @ restore FP
+    ldr    rGLUE,[r0,#offShadowSpace_glue] @ restore InterpState
+    ldr    r1,[r0,#offShadowSpace_svState] @ get self verification state
     cmp    r1,#0                         @ check for punt condition
     beq    1f
     mov    r2,#kJitSelfVerification      @ ask for self verification

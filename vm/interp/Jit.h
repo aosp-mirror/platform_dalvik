@@ -43,7 +43,7 @@ typedef struct InstructionTrace {
 typedef struct ShadowSpace {
     const u2* startPC;          /* starting pc of jitted region */
     const void* fp;             /* starting fp of jitted region */
-    void* glue;                 /* starting glue ptr of jitted region */
+    const void* glue;           /* starting glue of jitted region */
     SelfVerificationState selfVerificationState;  /* self verification state */
     const u2* endPC;            /* ending pc of jitted region */
     void* shadowFP;       /* pointer to fp in shadow space */
@@ -55,6 +55,7 @@ typedef struct ShadowSpace {
     const void* endShadowFP;    /* ending fp in shadow space */
     InstructionTrace trace[JIT_MAX_TRACE_LEN]; /* opcode trace for debugging */
     int traceLength;            /* counter for current trace length */
+    const Method* method;       /* starting method of jitted region */
 } ShadowSpace;
 
 /*
@@ -63,7 +64,7 @@ typedef struct ShadowSpace {
 void* dvmSelfVerificationShadowSpaceAlloc(Thread* self);
 void dvmSelfVerificationShadowSpaceFree(Thread* self);
 void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
-                                   void* interpStatePtr);
+                                   InterpState* interpState);
 void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
                                       SelfVerificationState exitPoint);
 #endif

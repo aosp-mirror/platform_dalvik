@@ -36,14 +36,16 @@ typedef enum JitInstructionSetType {
 
 /* Description of a compiled trace. */
 typedef struct JitTranslationInfo {
-    void     *codeAddress;
+    void *codeAddress;
     JitInstructionSetType instructionSet;
+    bool discardResult;          // Used for debugging divergence
 } JitTranslationInfo;
 
 typedef enum WorkOrderKind {
     kWorkOrderInvalid = 0,      // Should never see by the backend
     kWorkOrderMethod = 1,       // Work is to compile a whole method
     kWorkOrderTrace = 2,        // Work is to compile code fragment(s)
+    kWorkOrderTraceDebug = 3,   // Work is to compile/debug code fragment(s)
 } WorkOrderKind;
 
 typedef struct CompilerWorkOrder {
@@ -154,9 +156,11 @@ void dvmCompilerDoConstantPropagation(struct CompilationUnit *cUnit,
                                       struct BasicBlock *bb);
 void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
                                        struct BasicBlock *bb);
+char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn);
 char *dvmCompilerGetSSAString(struct CompilationUnit *cUnit,
                               struct SSARepresentation *ssaRep);
 void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,
                 void (*func)(struct CompilationUnit *, struct BasicBlock *));
+JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc);
 
 #endif /* _DALVIK_VM_COMPILER */

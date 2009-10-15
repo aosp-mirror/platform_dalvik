@@ -276,7 +276,7 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             break;
         case ARM_PSEUDO_DALVIK_BYTECODE_BOUNDARY:
             LOGD("-------- dalvik offset: 0x%04x @ %s\n", dest,
-                   getOpcodeName(lir->operands[1]));
+                 (char *) lir->operands[1]);
             break;
         case ARM_PSEUDO_EXIT_BLOCK:
             LOGD("-------- exit offset: 0x%04x\n", dest);

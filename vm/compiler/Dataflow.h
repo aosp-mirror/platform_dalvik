@@ -68,6 +68,10 @@ typedef enum DataFlowAttributePos {
                                  DF_NULL_N_RANGE_CHECK_1 | \
                                  DF_NULL_N_RANGE_CHECK_2)
 
+#define DF_A_IS_REG             (DF_UA | DF_UA_WIDE | DF_DA | DF_DA_WIDE)
+#define DF_B_IS_REG             (DF_UB | DF_UB_WIDE)
+#define DF_C_IS_REG             (DF_UC | DF_UC_WIDE)
+
 extern int dvmCompilerDataFlowAttributes[MIR_OP_LAST];
 
 typedef struct BasicBlockDataFlow {
