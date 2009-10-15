@@ -207,6 +207,10 @@ public class Deflater {
      * methods will typically throw an {@code IllegalStateException}.
      */
     public synchronized void end() {
+        endImpl();
+    }
+
+    private void endImpl() {
         if (streamHandle != -1) {
             endImpl(streamHandle);
             inputBuffer = null;
@@ -216,7 +220,10 @@ public class Deflater {
 
     @Override
     protected void finalize() {
-        end();
+        synchronized (this) {
+            end(); // to allow overriding classes to clean up
+            endImpl(); // in case those classes don't call super.end()
+        }
     }
 
     /**
