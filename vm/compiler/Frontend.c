@@ -16,7 +16,6 @@
 
 #include "Dalvik.h"
 #include "libdex/OpCode.h"
-#include "dexdump/OpCodeNames.h"
 #include "interp/Jit.h"
 #include "CompilerInternals.h"
 
@@ -42,7 +41,8 @@ static inline int parseInsn(const u2 *codePtr, DecodedInstruction *decInsn,
 
     dexDecodeInstruction(gDvm.instrFormat, codePtr, decInsn);
     if (printMe) {
-        LOGD("%p: %#06x %s\n", codePtr, opcode, getOpcodeName(opcode));
+        char *decodedString = dvmCompilerGetDalvikDisassembly(decInsn);
+        LOGD("%p: %#06x %s\n", codePtr, opcode, decodedString);
     }
     return insnWidth;
 }

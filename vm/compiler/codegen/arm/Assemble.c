@@ -1027,7 +1027,6 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     ChainCellCounts chainCellCounts;
     int descSize = jitTraceDescriptionSize(cUnit->traceDesc);
 
-    info->codeAddress = NULL;
     info->instructionSet = cUnit->instructionSet;
 
     /* Beginning offset needs to allow space for chain cell offset */
@@ -1109,6 +1108,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
         return;
     }
 
+    /* Don't go all the way if the goal is just to get the verbose output */
+    if (info->discardResult) return;
 
     cUnit->baseAddr = (char *) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed;
     gDvmJit.codeCacheByteUsed += offset;
@@ -1137,7 +1138,6 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 
     /* Record code entry point and instruction set */
     info->codeAddress = (char*)cUnit->baseAddr + cUnit->headerSize;
-    info->instructionSet = cUnit->instructionSet;
     /* If applicable, mark low bit to denote thumb */
     if (info->instructionSet != DALVIK_JIT_ARM)
         info->codeAddress = (char*)info->codeAddress + 1;
@@ -1475,6 +1475,31 @@ static int dumpTraceProfile(JitEntry *p)
     free(methodDesc);
 
     return *pExecutionCount;
+}
+
+/* Create a copy of the trace descriptor of an existing compilation */
+JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc)
+{
+    JitEntry *jitEntry = dvmFindJitEntry(pc);
+    if (jitEntry == NULL) return NULL;
+
+    /* Find out the startint point */
+    char *traceBase = getTraceBase(jitEntry);
+
+    /* Then find out the starting point of the chaining cell */
+    u2 *pCellOffset = (u2*) (traceBase + 4);
+    ChainCellCounts *pCellCounts =
+        (ChainCellCounts*) ((char *)pCellOffset + *pCellOffset);
+
+    /* From there we can find out the starting point of the trace descriptor */
+    JitTraceDescription *desc =
+        (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
+
+    /* Now make a copy and return */
+    int descSize = jitTraceDescriptionSize(desc);
+    JitTraceDescription *newCopy = (JitTraceDescription *) malloc(descSize);
+    memcpy(newCopy, desc, descSize);
+    return newCopy;
 }
 
 /* Handy function to retrieve the profile count */

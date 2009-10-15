@@ -169,6 +169,16 @@ MTERP_OFFSET(offStackSaveArea_returnAddr, StackSaveArea, returnAddr, 16)
 MTERP_SIZEOF(sizeofStackSaveArea,       StackSaveArea, 20)
 #endif
 
+  /* ShadowSpace fields */
+#if defined(WITH_JIT) && defined(WITH_SELF_VERIFICATION)
+MTERP_OFFSET(offShadowSpace_startPC, ShadowSpace, startPC, 0)
+MTERP_OFFSET(offShadowSpace_fp, ShadowSpace, fp, 4)
+MTERP_OFFSET(offShadowSpace_glue, ShadowSpace, glue, 8)
+MTERP_OFFSET(offShadowSpace_svState, ShadowSpace, selfVerificationState, 12)
+MTERP_OFFSET(offShadowSpace_shadowFP, ShadowSpace, shadowFP, 20)
+MTERP_OFFSET(offShadowSpace_interpState, ShadowSpace, interpState, 24)
+#endif
+
 /* InstField fields */
 #ifdef PROFILE_FIELD_ACCESS
 MTERP_OFFSET(offInstField_byteOffset,   InstField, byteOffset, 24)

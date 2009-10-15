@@ -60,11 +60,10 @@ void dvmSelfVerificationShadowSpaceFree(Thread* self)
  * Return a pointer to the shadow space for JIT to use.
  */
 void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
-                                   void* interpStatePtr)
+                                   InterpState* interpState)
 {
     Thread *self = dvmThreadSelf();
     ShadowSpace *shadowSpace = self->shadowSpace;
-    InterpState *interpState = (InterpState *) interpStatePtr;
     int preBytes = interpState->method->outsSize*4 + sizeof(StackSaveArea);
     int postBytes = interpState->method->registersSize*4;
 
@@ -75,7 +74,7 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
         LOGD("~~~ Save: INCORRECT PREVIOUS STATE(%d): %d",
             self->threadId, shadowSpace->selfVerificationState);
         LOGD("********** SHADOW STATE DUMP **********");
-        LOGD("* PC: 0x%x FP: 0x%x", (int)pc, (int)fp);
+        LOGD("PC: 0x%x FP: 0x%x", (int)pc, (int)fp);
     }
     shadowSpace->selfVerificationState = kSVSStart;
 
@@ -90,12 +89,18 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
     // Remember original state
     shadowSpace->startPC = pc;
     shadowSpace->fp = fp;
-    shadowSpace->glue = interpStatePtr;
+    shadowSpace->glue = interpState;
+    /*
+     * Store the original method here in case the trace ends with a
+     * return/invoke, the last method.
+     */
+    shadowSpace->method = interpState->method;
     shadowSpace->shadowFP = shadowSpace->registerSpace +
                             shadowSpace->registerSpaceSize - postBytes/4;
 
     // Create a copy of the InterpState
-    memcpy(&(shadowSpace->interpState), interpStatePtr, sizeof(InterpState));
+    //shadowSpace->interpState = *interpState;
+    memcpy(&(shadowSpace->interpState), interpState, sizeof(InterpState));
     shadowSpace->interpState.fp = shadowSpace->shadowFP;
     shadowSpace->interpState.interpStackEnd = (u1*)shadowSpace->registerSpace;
 
@@ -132,10 +137,10 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
         LOGD("~~~ Restore: INCORRECT PREVIOUS STATE(%d): %d",
             self->threadId, shadowSpace->selfVerificationState);
         LOGD("********** SHADOW STATE DUMP **********");
-        LOGD("* Dalvik PC: 0x%x endPC: 0x%x", (int)shadowSpace->startPC,
+        LOGD("Dalvik PC: 0x%x endPC: 0x%x", (int)shadowSpace->startPC,
             (int)shadowSpace->endPC);
-        LOGD("* Interp FP: 0x%x", (int)shadowSpace->fp);
-        LOGD("* Shadow FP: 0x%x endFP: 0x%x", (int)shadowSpace->shadowFP,
+        LOGD("Interp FP: 0x%x", (int)shadowSpace->fp);
+        LOGD("Shadow FP: 0x%x endFP: 0x%x", (int)shadowSpace->shadowFP,
             (int)shadowSpace->endShadowFP);
     }
 
@@ -150,11 +155,12 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
 }
 
 /* Print contents of virtual registers */
-static void selfVerificationPrintRegisters(int* addr, int numWords)
+static void selfVerificationPrintRegisters(int* addr, int* addrRef,
+                                           int numWords)
 {
     int i;
     for (i = 0; i < numWords; i++) {
-        LOGD("* 0x%x: (v%d) 0x%8x", (int)(addr+i), i, *(addr+i));
+        LOGD("(v%d) 0x%8x%s", i, addr[i], addr[i] != addrRef[i] ? " X" : "");
     }
 }
 
@@ -174,19 +180,19 @@ static void selfVerificationDumpState(const u2* pc, Thread* self)
         frameBytes2 = (int) shadowSpace->fp - (int) self->curFrame - localRegs;
     }
     LOGD("********** SHADOW STATE DUMP **********");
-    LOGD("* CurrentPC: 0x%x, Offset: 0x%04x", (int)pc,
+    LOGD("CurrentPC: 0x%x, Offset: 0x%04x", (int)pc,
         (int)(pc - stackSave->method->insns));
-    LOGD("* Class: %s Method: %s", stackSave->method->clazz->descriptor,
-        stackSave->method->name);
-    LOGD("* Dalvik PC: 0x%x endPC: 0x%x", (int)shadowSpace->startPC,
+    LOGD("Class: %s", shadowSpace->method->clazz->descriptor);
+    LOGD("Method: %s", shadowSpace->method->name);
+    LOGD("Dalvik PC: 0x%x endPC: 0x%x", (int)shadowSpace->startPC,
         (int)shadowSpace->endPC);
-    LOGD("* Interp FP: 0x%x endFP: 0x%x", (int)shadowSpace->fp,
+    LOGD("Interp FP: 0x%x endFP: 0x%x", (int)shadowSpace->fp,
         (int)self->curFrame);
-    LOGD("* Shadow FP: 0x%x endFP: 0x%x", (int)shadowSpace->shadowFP,
+    LOGD("Shadow FP: 0x%x endFP: 0x%x", (int)shadowSpace->shadowFP,
         (int)shadowSpace->endShadowFP);
-    LOGD("* Frame1 Bytes: %d Frame2 Local: %d Bytes: %d", frameBytes,
+    LOGD("Frame1 Bytes: %d Frame2 Local: %d Bytes: %d", frameBytes,
         localRegs, frameBytes2);
-    LOGD("* Trace length: %d State: %d", shadowSpace->traceLength,
+    LOGD("Trace length: %d State: %d", shadowSpace->traceLength,
         shadowSpace->selfVerificationState);
 }
 
@@ -204,15 +210,18 @@ static void selfVerificationDumpTrace(const u2* pc, Thread* self)
         offset =  (int)((u2*)addr - stackSave->method->insns);
         decInsn = &(shadowSpace->trace[i].decInsn);
         /* Not properly decoding instruction, some registers may be garbage */
-        LOGD("* 0x%x: (0x%04x) %s v%d, v%d, v%d", addr, offset,
-            getOpcodeName(decInsn->opCode), decInsn->vA, decInsn->vB,
-            decInsn->vC);
+        LOGD("0x%x: (0x%04x) %s", addr, offset, getOpcodeName(decInsn->opCode));
     }
 }
 
 /* Code is forced into this spin loop when a divergence is detected */
-static void selfVerificationSpinLoop()
+static void selfVerificationSpinLoop(ShadowSpace *shadowSpace)
 {
+    const u2 *startPC = shadowSpace->startPC;
+    JitTraceDescription* desc = dvmCopyTraceDescriptor(startPC);
+    if (desc) {
+        dvmCompilerWorkEnqueue(startPC, kWorkOrderTraceDebug, desc);
+    }
     gDvmJit.selfVerificationSpin = true;
     while(gDvmJit.selfVerificationSpin) sleep(10);
 }
@@ -254,17 +263,20 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
                          shadowSpace->registerSpaceSize*4 -
                          (int) shadowSpace->shadowFP;
         if (memcmp(shadowSpace->fp, shadowSpace->shadowFP, frameBytes)) {
-            LOGD("~~~ DbgIntp(%d): REGISTERS UNEQUAL!", self->threadId);
+            LOGD("~~~ DbgIntp(%d): REGISTERS DIVERGENCE!", self->threadId);
             selfVerificationDumpState(pc, self);
             selfVerificationDumpTrace(pc, self);
             LOGD("*** Interp Registers: addr: 0x%x bytes: %d",
                 (int)shadowSpace->fp, frameBytes);
-            selfVerificationPrintRegisters((int*)shadowSpace->fp, frameBytes/4);
+            selfVerificationPrintRegisters((int*)shadowSpace->fp,
+                                           (int*)shadowSpace->shadowFP,
+                                           frameBytes/4);
             LOGD("*** Shadow Registers: addr: 0x%x bytes: %d",
                 (int)shadowSpace->shadowFP, frameBytes);
             selfVerificationPrintRegisters((int*)shadowSpace->shadowFP,
-                frameBytes/4);
-            selfVerificationSpinLoop();
+                                           (int*)shadowSpace->fp,
+                                           frameBytes/4);
+            selfVerificationSpinLoop(shadowSpace);
         }
         /* Check new frame if it exists (invokes only) */
         if (self->curFrame < shadowSpace->fp) {
@@ -275,19 +287,21 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
                               (int) self->curFrame - localRegs;
             if (memcmp(((char*)self->curFrame)+localRegs,
                 ((char*)shadowSpace->endShadowFP)+localRegs, frameBytes2)) {
-                LOGD("~~~ DbgIntp(%d): REGISTERS (FRAME2) UNEQUAL!",
+                LOGD("~~~ DbgIntp(%d): REGISTERS (FRAME2) DIVERGENCE!",
                     self->threadId);
                 selfVerificationDumpState(pc, self);
                 selfVerificationDumpTrace(pc, self);
                 LOGD("*** Interp Registers: addr: 0x%x l: %d bytes: %d",
                     (int)self->curFrame, localRegs, frameBytes2);
                 selfVerificationPrintRegisters((int*)self->curFrame,
-                    (frameBytes2+localRegs)/4);
+                                               (int*)shadowSpace->endShadowFP,
+                                               (frameBytes2+localRegs)/4);
                 LOGD("*** Shadow Registers: addr: 0x%x l: %d bytes: %d",
                     (int)shadowSpace->endShadowFP, localRegs, frameBytes2);
                 selfVerificationPrintRegisters((int*)shadowSpace->endShadowFP,
-                    (frameBytes2+localRegs)/4);
-                selfVerificationSpinLoop();
+                                               (int*)self->curFrame,
+                                               (frameBytes2+localRegs)/4);
+                selfVerificationSpinLoop(shadowSpace);
             }
         }
 
@@ -298,25 +312,25 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
              heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
             int memData = *((unsigned int*) heapSpacePtr->addr);
             if (heapSpacePtr->data != memData) {
-                LOGD("~~~ DbgIntp(%d): MEMORY UNEQUAL!", self->threadId);
-                LOGD("* Addr: 0x%x Intrp Data: 0x%x Jit Data: 0x%x",
+                LOGD("~~~ DbgIntp(%d): MEMORY DIVERGENCE!", self->threadId);
+                LOGD("Addr: 0x%x Intrp Data: 0x%x Jit Data: 0x%x",
                     heapSpacePtr->addr, memData, heapSpacePtr->data);
                 selfVerificationDumpState(pc, self);
                 selfVerificationDumpTrace(pc, self);
                 memDiff = true;
             }
         }
-        if (memDiff) selfVerificationSpinLoop();
+        if (memDiff) selfVerificationSpinLoop(shadowSpace);
         return true;
 
     /* If end not been reached, make sure max length not exceeded */
     } else if (shadowSpace->traceLength >= JIT_MAX_TRACE_LEN) {
         LOGD("~~~ DbgIntp(%d): CONTROL DIVERGENCE!", self->threadId);
-        LOGD("* startPC: 0x%x endPC: 0x%x currPC: 0x%x",
+        LOGD("startPC: 0x%x endPC: 0x%x currPC: 0x%x",
             (int)shadowSpace->startPC, (int)shadowSpace->endPC, (int)pc);
         selfVerificationDumpState(pc, self);
         selfVerificationDumpTrace(pc, self);
-        selfVerificationSpinLoop();
+        selfVerificationSpinLoop(shadowSpace);
 
         return true;
     }
@@ -656,7 +670,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
     return switchInterp;
 }
 
-static inline JitEntry *findJitEntry(const u2* pc)
+JitEntry *dvmFindJitEntry(const u2* pc)
 {
     int idx = dvmJitHash(pc);
 
@@ -672,11 +686,6 @@ static inline JitEntry *findJitEntry(const u2* pc)
         }
     }
     return NULL;
-}
-
-JitEntry *dvmFindJitEntry(const u2* pc)
-{
-    return findJitEntry(pc);
 }
 
 /*

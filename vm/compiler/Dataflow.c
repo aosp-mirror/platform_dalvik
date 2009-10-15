@@ -17,6 +17,7 @@
 #include "Dalvik.h"
 #include "Dataflow.h"
 #include "Loop.h"
+#include "dexdump/OpCodeNames.h"
 
 /*
  * Main table containing data flow attributes for each bytecode. The first
@@ -810,6 +811,59 @@ int dvmCompilerDataFlowAttributes[MIR_OP_LAST] = {
 int dvmConvertSSARegToDalvik(CompilationUnit *cUnit, int ssaReg)
 {
       return GET_ELEM_N(cUnit->ssaToDalvikMap, int, ssaReg);
+}
+
+/*
+ * Utility function to convert encoded SSA register value into Dalvik register
+ * and subscript pair. Each SSA register can be used to index the
+ * ssaToDalvikMap list to get the subscript[31..16]/dalvik_reg[15..0] mapping.
+ */
+char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn)
+{
+    char buffer[256];
+    int opcode = insn->opCode;
+    int dfAttributes = dvmCompilerDataFlowAttributes[opcode];
+    char *ret;
+
+    buffer[0] = 0;
+    strcpy(buffer, getOpcodeName(opcode));
+
+    if (dfAttributes & DF_FORMAT_35C) {
+        unsigned int i;
+        for (i = 0; i < insn->vA; i++) {
+            if (i != 0) strcat(buffer, ",");
+            sprintf(buffer + strlen(buffer), " v%d", insn->arg[i]);
+        }
+    }
+    else if (dfAttributes & DF_FORMAT_3RC) {
+        sprintf(buffer + strlen(buffer),
+                " v%d..v%d", insn->vC, insn->vC + insn->vA - 1);
+    }
+    else {
+        if (dfAttributes & DF_A_IS_REG) {
+            sprintf(buffer + strlen(buffer), " v%d", insn->vA);
+        }
+        if (dfAttributes & DF_B_IS_REG) {
+            sprintf(buffer + strlen(buffer),
+                    ", v%d", insn->vB);
+        }
+        else {
+            sprintf(buffer + strlen(buffer),
+                    ", (#%d)", insn->vB);
+        }
+        if (dfAttributes & DF_C_IS_REG) {
+            sprintf(buffer + strlen(buffer),
+                    ", v%d", insn->vC);
+        }
+        else {
+            sprintf(buffer + strlen(buffer),
+                    ", (#%d)", insn->vC);
+        }
+    }
+    int length = strlen(buffer) + 1;
+    ret = dvmCompilerNew(length, false);
+    memcpy(ret, buffer, length);
+    return ret;
 }
 
 /*

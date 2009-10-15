@@ -3997,7 +3997,9 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 dexGetInstrFormat(gDvm.instrFormat, dalvikOpCode);
             ArmLIR *boundaryLIR =
                 newLIR2(cUnit, ARM_PSEUDO_DALVIK_BYTECODE_BOUNDARY,
-                        mir->offset, dalvikOpCode);
+                        mir->offset,
+                        (int) dvmCompilerGetDalvikDisassembly(&mir->dalvikInsn)
+                       );
             if (mir->ssaRep) {
                 char *ssaString = dvmCompilerGetSSAString(cUnit, mir->ssaRep);
                 newLIR1(cUnit, ARM_PSEUDO_SSA_REP, (int) ssaString);
@@ -4209,25 +4211,33 @@ gen_fallthrough:
 /* Accept the work and start compiling */
 bool dvmCompilerDoWork(CompilerWorkOrder *work)
 {
-   bool res;
+    bool res;
 
-   if (gDvmJit.codeCacheFull) {
-       return false;
-   }
+    if (gDvmJit.codeCacheFull) {
+        return false;
+    }
 
-   switch (work->kind) {
-       case kWorkOrderMethod:
-           res = dvmCompileMethod(work->info, &work->result);
-           break;
-       case kWorkOrderTrace:
-           /* Start compilation with maximally allowed trace length */
-           res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result);
-           break;
-       default:
-           res = false;
-           dvmAbort();
-   }
-   return res;
+    switch (work->kind) {
+        case kWorkOrderMethod:
+            res = dvmCompileMethod(work->info, &work->result);
+            break;
+        case kWorkOrderTrace:
+            /* Start compilation with maximally allowed trace length */
+            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result);
+            break;
+        case kWorkOrderTraceDebug: {
+            bool oldPrintMe = gDvmJit.printMe;
+            gDvmJit.printMe = true;
+            /* Start compilation with maximally allowed trace length */
+            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result);
+            gDvmJit.printMe = oldPrintMe;;
+            break;
+        }
+        default:
+            res = false;
+            dvmAbort();
+    }
+    return res;
 }
 
 /* Architectural-specific debugging helpers go here */

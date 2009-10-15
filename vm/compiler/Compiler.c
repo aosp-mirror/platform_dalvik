@@ -73,9 +73,14 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
             i = 0;
     }
 
-    gDvmJit.compilerWorkQueue[gDvmJit.compilerWorkEnqueueIndex].pc = pc;
-    gDvmJit.compilerWorkQueue[gDvmJit.compilerWorkEnqueueIndex].kind = kind;
-    gDvmJit.compilerWorkQueue[gDvmJit.compilerWorkEnqueueIndex].info = info;
+    CompilerWorkOrder *newOrder =
+        &gDvmJit.compilerWorkQueue[gDvmJit.compilerWorkEnqueueIndex];
+    newOrder->pc = pc;
+    newOrder->kind = kind;
+    newOrder->info = info;
+    newOrder->result.codeAddress = NULL;
+    newOrder->result.discardResult =
+        (kind == kWorkOrderTraceDebug) ? true : false;
     gDvmJit.compilerWorkEnqueueIndex++;
     if (gDvmJit.compilerWorkEnqueueIndex == COMPILER_WORK_QUEUE_SIZE)
         gDvmJit.compilerWorkEnqueueIndex = 0;
