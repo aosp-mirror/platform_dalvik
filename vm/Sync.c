@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Fundamental synchronization mechanisms.
  *
@@ -985,8 +986,10 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
         LOG_THIN("(%d) lock 0x%08x fattened by wait() to count %d\n",
                  self->threadId, (uint)&obj->lock, mon->lockCount);
 
+
         /* Make the monitor public now that it's in the right state.
          */
+        MEM_BARRIER();
         obj->lock.mon = mon;
     }
 
