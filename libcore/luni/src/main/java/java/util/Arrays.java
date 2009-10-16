@@ -2575,7 +2575,7 @@ public class Arrays {
         if (array.length == 0) {
             return "[]"; //$NON-NLS-1$
         }
-        StringBuilder sb = new StringBuilder(2 + array.length * 5);
+        StringBuilder sb = new StringBuilder(array.length * 7); // android-changed
         sb.append('[');
         sb.append(array[0]);
         for (int i = 1; i < array.length; i++) {
@@ -2605,7 +2605,7 @@ public class Arrays {
         if (array.length == 0) {
             return "[]"; //$NON-NLS-1$
         }
-        StringBuilder sb = new StringBuilder(2 + array.length * 3);
+        StringBuilder sb = new StringBuilder(array.length * 6); // android-changed
         sb.append('[');
         sb.append(array[0]);
         for (int i = 1; i < array.length; i++) {
@@ -2635,7 +2635,7 @@ public class Arrays {
         if (array.length == 0) {
             return "[]"; //$NON-NLS-1$
         }
-        StringBuilder sb = new StringBuilder(2 + array.length * 2);
+        StringBuilder sb = new StringBuilder(array.length * 3); // android-changed
         sb.append('[');
         sb.append(array[0]);
         for (int i = 1; i < array.length; i++) {
@@ -2665,7 +2665,7 @@ public class Arrays {
         if (array.length == 0) {
             return "[]"; //$NON-NLS-1$
         }
-        StringBuilder sb = new StringBuilder(2 + array.length * 5);
+        StringBuilder sb = new StringBuilder(array.length * 7); // android-changed
         sb.append('[');
         sb.append(array[0]);
         for (int i = 1; i < array.length; i++) {
@@ -2695,7 +2695,7 @@ public class Arrays {
         if (array.length == 0) {
             return "[]"; //$NON-NLS-1$
         }
-        StringBuilder sb = new StringBuilder(2 + array.length * 5);
+        StringBuilder sb = new StringBuilder(array.length * 7); // android-changed
         sb.append('[');
         sb.append(array[0]);
         for (int i = 1; i < array.length; i++) {
@@ -2725,7 +2725,7 @@ public class Arrays {
         if (array.length == 0) {
             return "[]"; //$NON-NLS-1$
         }
-        StringBuilder sb = new StringBuilder(2 + array.length * 4);
+        StringBuilder sb = new StringBuilder(array.length * 6); // android-changed
         sb.append('[');
         sb.append(array[0]);
         for (int i = 1; i < array.length; i++) {
@@ -2755,7 +2755,7 @@ public class Arrays {
         if (array.length == 0) {
             return "[]"; //$NON-NLS-1$
         }
-        StringBuilder sb = new StringBuilder(2 + array.length * 4);
+        StringBuilder sb = new StringBuilder(array.length * 6); // android-changed
         sb.append('[');
         sb.append(array[0]);
         for (int i = 1; i < array.length; i++) {
@@ -2785,7 +2785,7 @@ public class Arrays {
         if (array.length == 0) {
             return "[]"; //$NON-NLS-1$
         }
-        StringBuilder sb = new StringBuilder(2 + array.length * 4);
+        StringBuilder sb = new StringBuilder(array.length * 6); // android-changed
         sb.append('[');
         sb.append(array[0]);
         for (int i = 1; i < array.length; i++) {
@@ -2815,7 +2815,7 @@ public class Arrays {
         if (array.length == 0) {
             return "[]"; //$NON-NLS-1$
         }
-        StringBuilder sb = new StringBuilder(2 + array.length * 5);
+        StringBuilder sb = new StringBuilder(array.length * 7); // android-changed
         sb.append('[');
         sb.append(array[0]);
         for (int i = 1; i < array.length; i++) {
@@ -2849,7 +2849,7 @@ public class Arrays {
             return "null"; //$NON-NLS-1$
         }
         // delegate this to the recursive method
-        StringBuilder buf = new StringBuilder(2 + array.length * 5);
+        StringBuilder buf = new StringBuilder(array.length * 9); // android-changed
         deepToStringImpl(array, new Object[] { array }, buf);
         return buf.toString();
     }
