@@ -343,6 +343,3 @@ endif
 LOCAL_SHARED_LIBRARIES += \
 	libnativehelper \
 	libz
-
-LOCAL_STATIC_LIBRARIES += \
-	libdex

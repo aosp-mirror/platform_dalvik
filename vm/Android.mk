@@ -40,9 +40,13 @@ dvm_simulator := $(TARGET_SIMULATOR)
 
 include $(LOCAL_PATH)/Dvm.mk
 
-# liblog and libcutils are shared for target.
+# liblog and libcutils are shared in this case.
 LOCAL_SHARED_LIBRARIES += \
 	liblog libcutils
+
+# libdex is static in this case. (That is, on device, we only include
+# whatever we specifically need from it directly in libdvm.)
+LOCAL_STATIC_LIBRARIES += libdex
 
 LOCAL_MODULE := libdvm
 
@@ -65,9 +69,14 @@ ifeq ($(WITH_HOST_DALVIK),true)
 
     include $(LOCAL_PATH)/Dvm.mk
 
-    # liblog and libcutils are static for host.
-    LOCAL_STATIC_LIBRARIES += \
-        liblog libcutils
+    # And we need to include all of liblog, libcutils, and libdex:
+    # The result itself is a static library, and LOCAL_STATIC_LIBRARIES
+    # doesn't actually cause any code from the specified libraries to
+    # be included. No I'm not entirely sure what LOCAL_STATIC_LIBRARIES
+    # is even supposed to mean in this context, but it is in fact
+    # meaningfully used in other parts of the build.
+    LOCAL_WHOLE_STATIC_LIBRARIES += \
+	libdex liblog libcutils
 
     # libffi is called libffi-host on the host and should be staticly
     # linked. Similarly libnativehelper.
