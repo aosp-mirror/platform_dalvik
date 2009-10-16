@@ -402,7 +402,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
             l.addAll(this);
             return l;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

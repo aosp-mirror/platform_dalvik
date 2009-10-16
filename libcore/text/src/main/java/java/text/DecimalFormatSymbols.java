@@ -115,7 +115,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
             symbols.patternChars = patternChars.clone();
             return symbols;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

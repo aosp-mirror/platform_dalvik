@@ -88,7 +88,7 @@ public class Header implements Cloneable {
             }
             return clone;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

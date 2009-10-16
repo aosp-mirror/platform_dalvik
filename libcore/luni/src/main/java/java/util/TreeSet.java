@@ -160,7 +160,7 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>,
             }
             return clone;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

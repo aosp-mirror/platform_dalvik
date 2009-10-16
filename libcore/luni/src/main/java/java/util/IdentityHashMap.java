@@ -758,7 +758,7 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
                     elementData.length);
             return cloneHashMap;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

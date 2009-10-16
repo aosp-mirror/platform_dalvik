@@ -277,7 +277,7 @@ public final class Locale implements Cloneable, Serializable {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

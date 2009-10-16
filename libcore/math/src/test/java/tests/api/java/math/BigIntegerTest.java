@@ -1299,7 +1299,7 @@ public class BigIntegerTest extends junit.framework.TestCase {
             try {
                 return super.clone();
             } catch (CloneNotSupportedException e) {
-                return null;
+                throw new AssertionError(e); // android-changed
             }
         }
     }

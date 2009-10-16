@@ -61,7 +61,7 @@ class MapEntry implements Map.Entry<K, V>, Cloneable {
 	        try {
 	            return super.clone();
 	        } catch (CloneNotSupportedException e) {
-	            return null;
+                throw new AssertionError(e); // android-changed
 	        }
 	    }
 
@@ -1065,7 +1065,7 @@ class MapEntry implements Map.Entry<K, V>, Cloneable {
             }
             return clone;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

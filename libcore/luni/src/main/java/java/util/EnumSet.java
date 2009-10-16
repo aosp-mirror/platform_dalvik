@@ -322,7 +322,7 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
             Object set = super.clone();
             return (EnumSet<E>) set;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

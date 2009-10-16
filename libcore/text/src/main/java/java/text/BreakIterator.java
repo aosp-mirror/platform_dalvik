@@ -524,7 +524,7 @@ public abstract class BreakIterator implements Cloneable {
             cloned.wrapped = (com.ibm.icu4jni.text.BreakIterator) wrapped.clone();
             return cloned;
         } catch (CloneNotSupportedException e) {
-            throw new InternalError(e.getMessage());
+            throw new AssertionError(e); // android-changed
         }
     }
 

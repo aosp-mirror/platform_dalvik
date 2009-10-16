@@ -99,8 +99,7 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
-            // Actually, the exception will not be thrown out.
-            throw new Error(e);
+            throw new AssertionError(e); // android-changed
         }
     }
 

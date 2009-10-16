@@ -37,7 +37,7 @@ public class MyCertStoreParameters implements CertStoreParameters {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 }

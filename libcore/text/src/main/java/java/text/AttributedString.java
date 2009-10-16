@@ -107,7 +107,7 @@ public class AttributedString {
                 }
                 return clone;
             } catch (CloneNotSupportedException e) {
-                return null;
+                throw new AssertionError(e); // android-changed
             }
         }
 

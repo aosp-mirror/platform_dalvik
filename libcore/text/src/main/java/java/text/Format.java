@@ -84,7 +84,7 @@ public abstract class Format implements Serializable, Cloneable {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

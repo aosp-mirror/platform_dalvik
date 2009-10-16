@@ -790,7 +790,7 @@ public abstract class Calendar implements Serializable, Cloneable,
             clone.zone = (TimeZone) zone.clone();
             return clone;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

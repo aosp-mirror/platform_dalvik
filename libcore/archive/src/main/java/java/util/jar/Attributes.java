@@ -437,7 +437,7 @@ public class Attributes implements Cloneable, Map<Object, Object> {
         try {
             clone = (Attributes) super.clone();
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
         clone.map = (Map<Object, Object>) ((HashMap) map).clone();
         return clone;

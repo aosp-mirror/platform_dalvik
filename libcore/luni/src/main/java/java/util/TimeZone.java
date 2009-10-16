@@ -149,7 +149,7 @@ public abstract class TimeZone implements Serializable, Cloneable {
             TimeZone zone = (TimeZone) super.clone();
             return zone;
         } catch (CloneNotSupportedException e) {
-            return null;
+            throw new AssertionError(e); // android-changed
         }
     }
 

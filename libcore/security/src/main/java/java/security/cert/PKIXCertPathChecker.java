@@ -55,7 +55,7 @@ public abstract class PKIXCertPathChecker implements Cloneable {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new Error(e);
+            throw new AssertionError(e); // android-changed
         }
     }
 
