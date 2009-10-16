@@ -16,17 +16,14 @@
 
 package java.nio.channels;
 
-
 /**
  * A ByteChannel is both readable and writable.
  * <p>
  * The methods for the byte channel are precisely those defined by readable and
  * writable byte channels.
- * </p>
- * 
+ *
  * @see ReadableByteChannel
  * @see WritableByteChannel
- * @since Android 1.0
  */
 public interface ByteChannel extends ReadableByteChannel, WritableByteChannel {
     // No methods defined.

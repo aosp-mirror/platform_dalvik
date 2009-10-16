@@ -22,8 +22,6 @@ import org.apache.harmony.niochar.internal.nls.Messages;
 /**
  * An {@code UnsupportedCharsetException} is thrown when an unsupported charset
  * name is encountered.
- * 
- * @since Android 1.0
  */
 public class UnsupportedCharsetException extends IllegalArgumentException {
 
@@ -37,11 +35,11 @@ public class UnsupportedCharsetException extends IllegalArgumentException {
     private String charsetName;
 
     /**
-     * Constructs a new {@code UnsupportedCharsetException} with the supplied charset name.
+     * Constructs a new {@code UnsupportedCharsetException} with the supplied
+     * charset name.
      * 
      * @param charset
      *            the encountered unsupported charset name.
-     * @since Android 1.0
      */
     public UnsupportedCharsetException(String charset) {
         // niochar.04=The unsupported charset name is "{0}".
@@ -53,7 +51,6 @@ public class UnsupportedCharsetException extends IllegalArgumentException {
      * Gets the encountered unsupported charset name.
      * 
      * @return the encountered unsupported charset name.
-     * @since Android 1.0
      */
     public String getCharsetName() {
         return this.charsetName;

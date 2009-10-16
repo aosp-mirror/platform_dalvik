@@ -62,9 +62,10 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
      * 
      * @see java.nio.ByteBuffer#get(byte[], int, int)
      */
+    @Override
     public final ByteBuffer get(byte[] dest, int off, int len) {
         int length = dest.length;
-        if (off < 0 || len < 0 || (long)off + (long)len > length) {
+        if (off < 0 || len < 0 || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
         if (len > remaining()) {
@@ -74,7 +75,8 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
         position += len;
         return this;
     }
-    
+
+    @Override
     public final byte get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -82,6 +84,7 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
         return backingArray[offset + position++];
     }
 
+    @Override
     public final byte get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -89,22 +92,27 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
         return backingArray[offset + index];
     }
 
+    @Override
     public final double getDouble() {
         return Double.longBitsToDouble(getLong());
     }
 
+    @Override
     public final double getDouble(int index) {
         return Double.longBitsToDouble(getLong(index));
     }
 
+    @Override
     public final float getFloat() {
         return Float.intBitsToFloat(getInt());
     }
 
+    @Override
     public final float getFloat(int index) {
         return Float.intBitsToFloat(getInt(index));
     }
 
+    @Override
     public final int getInt() {
         int newPosition = position + 4;
         if (newPosition > limit) {
@@ -115,6 +123,7 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
         return result;
     }
 
+    @Override
     public final int getInt(int index) {
         if (index < 0 || index + 4 > limit) {
             throw new IndexOutOfBoundsException();
@@ -122,6 +131,7 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
         return loadInt(index);
     }
 
+    @Override
     public final long getLong() {
         int newPosition = position + 8;
         if (newPosition > limit) {
@@ -132,6 +142,7 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
         return result;
     }
 
+    @Override
     public final long getLong(int index) {
         if (index < 0 || index + 8 > limit) {
             throw new IndexOutOfBoundsException();
@@ -139,6 +150,7 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
         return loadLong(index);
     }
 
+    @Override
     public final short getShort() {
         int newPosition = position + 2;
         if (newPosition > limit) {
@@ -149,6 +161,7 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
         return result;
     }
 
+    @Override
     public final short getShort(int index) {
         if (index < 0 || index + 2 > limit) {
             throw new IndexOutOfBoundsException();
@@ -156,6 +169,7 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
         return loadShort(index);
     }
 
+    @Override
     public final boolean isDirect() {
         return false;
     }
@@ -163,12 +177,12 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
     protected final int loadInt(int index) {
         int baseOffset = offset + index;
         int bytes = 0;
-        if(order == Endianness.BIG_ENDIAN){
+        if (order == Endianness.BIG_ENDIAN) {
             for (int i = 0; i < 4; i++) {
                 bytes = bytes << 8;
                 bytes = bytes | (backingArray[baseOffset + i] & 0xFF);
-            }    
-        }else{
+            }
+        } else {
             for (int i = 3; i >= 0; i--) {
                 bytes = bytes << 8;
                 bytes = bytes | (backingArray[baseOffset + i] & 0xFF);
@@ -180,12 +194,12 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
     protected final long loadLong(int index) {
         int baseOffset = offset + index;
         long bytes = 0;
-        if(order == Endianness.BIG_ENDIAN){
+        if (order == Endianness.BIG_ENDIAN) {
             for (int i = 0; i < 8; i++) {
                 bytes = bytes << 8;
                 bytes = bytes | (backingArray[baseOffset + i] & 0xFF);
-            }    
-        }else{
+            }
+        } else {
             for (int i = 7; i >= 0; i--) {
                 bytes = bytes << 8;
                 bytes = bytes | (backingArray[baseOffset + i] & 0xFF);
@@ -196,12 +210,12 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
 
     protected final short loadShort(int index) {
         int baseOffset = offset + index;
-        short bytes  = 0;
-        if(order == Endianness.BIG_ENDIAN){
+        short bytes = 0;
+        if (order == Endianness.BIG_ENDIAN) {
             bytes = (short) (backingArray[baseOffset] << 8);
-            bytes |= (backingArray[baseOffset + 1] & 0xFF);   
-        }else{
-            bytes = (short) (backingArray[baseOffset+1] << 8);
+            bytes |= (backingArray[baseOffset + 1] & 0xFF);
+        } else {
+            bytes = (short) (backingArray[baseOffset + 1] << 8);
             bytes |= (backingArray[baseOffset] & 0xFF);
         }
         return bytes;
@@ -243,7 +257,7 @@ abstract class HeapByteBuffer extends BaseByteBuffer {
             backingArray[baseOffset] = (byte) ((value >> 8) & 0xFF);
             backingArray[baseOffset + 1] = (byte) (value & 0xFF);
         } else {
-            backingArray[baseOffset+1] = (byte) ((value >> 8) & 0xFF);
+            backingArray[baseOffset + 1] = (byte) ((value >> 8) & 0xFF);
             backingArray[baseOffset] = (byte) (value & 0xFF);
         }
     }

@@ -22,8 +22,6 @@ import org.apache.harmony.niochar.internal.nls.Messages;
 /**
  * A {@code MalformedInputException} is thrown when a malformed input is
  * encountered, for example if a byte sequence is illegal for the given charset.
- * 
- * @since Android 1.0
  */
 public class MalformedInputException extends CharacterCodingException {
 
@@ -41,7 +39,6 @@ public class MalformedInputException extends CharacterCodingException {
      * 
      * @param length
      *            the length of the malformed input.
-     * @since Android 1.0
      */
     public MalformedInputException(int length) {
         this.inputLength = length;
@@ -51,7 +48,6 @@ public class MalformedInputException extends CharacterCodingException {
      * Gets the length of the malformed input.
      * 
      * @return the length of the malformed input.
-     * @since Android 1.0
      */
     public int getInputLength() {
         return this.inputLength;
@@ -61,8 +57,8 @@ public class MalformedInputException extends CharacterCodingException {
      * Gets a message describing this exception.
      * 
      * @return a message describing this exception.
-     * @since Android 1.0
      */
+    @Override
     public String getMessage() {
         // niochar.05=Malformed input length is {0}.
         return Messages.getString("niochar.05", this.inputLength); //$NON-NLS-1$

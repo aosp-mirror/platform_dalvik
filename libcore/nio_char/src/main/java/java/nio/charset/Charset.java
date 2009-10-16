@@ -37,8 +37,11 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.Vector;
 
+// BEGIN android-changed
 import com.ibm.icu4jni.charset.CharsetProviderICU;
+// END android-changed
 
 /**
  * A charset defines a mapping between a Unicode character sequence and a byte
@@ -50,11 +53,9 @@ import com.ibm.icu4jni.charset.CharsetProviderICU;
  * also has one or more aliases. The name string can only consist of the
  * following characters: '0' - '9', 'A' - 'Z', 'a' - 'z', '.', ':'. '-' and '_'.
  * The first character of the name must be a digit or a letter.
- * </p>
  * <p>
  * The following charsets should be supported by any java platform: US-ASCII,
  * ISO-8859-1, UTF-8, UTF-16BE, UTF-16LE, UTF-16.
- * </p>
  * <p>
  * Additional charsets can be made available by configuring one or more charset
  * providers through provider configuration files. Such files are always named
@@ -68,57 +69,38 @@ import com.ibm.icu4jni.charset.CharsetProviderICU;
  * comments, are both ignored. Duplicates of names already found are also
  * ignored. Both the configuration files and the provider classes will be loaded
  * using the thread context class loader.
- * </p>
  * <p>
  * This class is thread-safe.
- * </p>
- * 
+ *
  * @see java.nio.charset.spi.CharsetProvider
- * @since Android 1.0
  */
 public abstract class Charset implements Comparable<Charset> {
 
     /*
-     * --------------------------------------------------------------------
-     * Constants
-     * --------------------------------------------------------------------
-     */
-
-    /*
-     * the name of configuration files where charset provider class names can be
+     * The name of configuration files where charset provider class names can be
      * specified.
      */
     private static final String PROVIDER_CONFIGURATION_FILE_NAME = "META-INF/services/java.nio.charset.spi.CharsetProvider"; //$NON-NLS-1$
 
     /*
-     * the encoding of configuration files
+     * The encoding of configuration files
      */
     private static final String PROVIDER_CONFIGURATION_FILE_ENCODING = "UTF-8"; //$NON-NLS-1$
 
     /*
-     * the comment string used in configuration files
+     * The comment string used in configuration files
      */
     private static final String PROVIDER_CONFIGURATION_FILE_COMMENT = "#"; //$NON-NLS-1$
 
     private static ClassLoader systemClassLoader;
 
-    /*
-     * --------------------------------------------------------------------
-     * Class variables
-     * --------------------------------------------------------------------
-     */
-
     // built in provider instance, assuming thread-safe
-    private static CharsetProviderICU _builtInProvider = null;
+    // BEGIN android-changed
+    private static final CharsetProviderICU _builtInProvider;
+    // END android-changed
 
     // cached built in charsets
     private static TreeMap<String, Charset> _builtInCharsets = null;
-
-    /*
-     * --------------------------------------------------------------------
-     * Instance variables
-     * --------------------------------------------------------------------
-     */
 
     private final String canonicalName;
 
@@ -126,37 +108,22 @@ public abstract class Charset implements Comparable<Charset> {
     private final HashSet<String> aliasesSet;
 
     // cached Charset table
-    private static HashMap<String, Charset> cachedCharsetTable = new HashMap<String, Charset>();
+    private final static HashMap<String, Charset> cachedCharsetTable = new HashMap<String, Charset>();
 
-    // cached CharsetDecoder table
-    private static HashMap<String, CharsetDecoder> cachedCharsetDecoderTable = new HashMap<String, CharsetDecoder>();
+    private static boolean inForNameInternal = false;
 
-    // cached CharsetEncoder table
-    private static HashMap<String, CharsetEncoder> cachedCharsetEncoderTable = new HashMap<String, CharsetEncoder>();
-
-    /*
-     * -------------------------------------------------------------------
-     * Global initialization
-     * -------------------------------------------------------------------
-     */
     static {
         /*
-         * create built-in charset provider even if no privilege to access
+         * Create built-in charset provider even if no privilege to access
          * charset provider.
          */
         _builtInProvider = AccessController
                 .doPrivileged(new PrivilegedAction<CharsetProviderICU>() {
                     public CharsetProviderICU run() {
-                        return new CharsetProviderICU();
-                    }
+                         return new CharsetProviderICU();
+                   }
                 });
     }
-
-    /*
-     * -------------------------------------------------------------------
-     * Constructors
-     * -------------------------------------------------------------------
-     */
 
     /**
      * Constructs a <code>Charset</code> object. Duplicated aliases are
@@ -170,11 +137,8 @@ public abstract class Charset implements Comparable<Charset> {
      *             on an illegal value being supplied for either
      *             <code>canonicalName</code> or for any element of
      *             <code>aliases</code>.
-     * @since Android 1.0
      */
-    protected Charset(String canonicalName, String[] aliases)
-            throws IllegalCharsetNameException {
-        // throw IllegalArgumentException if name is null
+    protected Charset(String canonicalName, String[] aliases) {
         if (null == canonicalName) {
             throw new NullPointerException();
         }
@@ -190,12 +154,6 @@ public abstract class Charset implements Comparable<Charset> {
             }
         }
     }
-
-    /*
-     * -------------------------------------------------------------------
-     * Methods
-     * -------------------------------------------------------------------
-     */
 
     /*
      * Checks whether a character is a special character that can be used in
@@ -361,16 +319,22 @@ public abstract class Charset implements Comparable<Charset> {
      * Gets a map of all available charsets supported by the runtime.
      * <p>
      * The returned map contains mappings from canonical names to corresponding
-     * instances of <code>Charset</code>. The canonical names can be
-     * considered as case-insensitive.
-     * </p>
-     * 
+     * instances of <code>Charset</code>. The canonical names can be considered
+     * as case-insensitive.
+     *
      * @return an unmodifiable map of all available charsets supported by the
-     *         runtime.
-     * @since Android 1.0
+     *         runtime
      */
     @SuppressWarnings("unchecked")
     public static SortedMap<String, Charset> availableCharsets() {
+        // BEGIN android-removed
+        // // workaround: conflicted Charsets with icu4j 4.0
+        // Charset.forName("TIS-620");
+        // Charset.forName("windows-1258");
+        // Charset.forName("cp856");
+        // Charset.forName("cp922");
+        // END android-removed
+
         // Initialize the built-in charsets map cache if necessary
         if (null == _builtInCharsets) {
             synchronized (Charset.class) {
@@ -480,53 +444,66 @@ public abstract class Charset implements Comparable<Charset> {
     }
 
     /*
-     * Gets a <code> Charset </code> instance for the specified charset name. If
+     * Gets a <code>Charset</code> instance for the specified charset name. If
      * the charset is not supported, returns null instead of throwing an
      * exception.
      */
-    private static Charset forNameInternal(String charsetName)
+    private synchronized static Charset forNameInternal(String charsetName)
             throws IllegalCharsetNameException {
+        Charset cs = cachedCharsetTable.get(charsetName);
+        if (null != cs) {
+            return cs;
+        }
+
         if (null == charsetName) {
             throw new IllegalArgumentException();
         }
         checkCharsetName(charsetName);
-        synchronized (Charset.class) {
-            // Try to get Charset from cachedCharsetTable
-            Charset cs = getCachedCharset(charsetName);
-            if (null != cs) {
-                return cs;
-            }
-            // Try built-in charsets
-            cs = _builtInProvider.charsetForName(charsetName);
-            if (null != cs) {
-                cacheCharset(cs);
-                return cs;
-            }
+        // try built-in charsets
+        // BEGIN android-removed
+        // if (_builtInProvider == null) {
+        //     _builtInProvider = new CharsetProviderICU();
+        // }
+        // END android-removed
+        cs = _builtInProvider.charsetForName(charsetName);
+        if (null != cs) {
+            cacheCharset(cs);
+            return cs;
+        }
 
-            // Collect all charsets provided by charset providers
-            ClassLoader contextClassLoader = getContextClassLoader();
-            Enumeration<URL> e = null;
-            try {
-                if (null != contextClassLoader) {
-                    e = contextClassLoader
-                            .getResources(PROVIDER_CONFIGURATION_FILE_NAME);
+        // collect all charsets provided by charset providers
+        ClassLoader contextClassLoader = getContextClassLoader();
+        Enumeration<URL> e = null;
+        try {
+            if (null != contextClassLoader) {
+                e = contextClassLoader
+                        .getResources(PROVIDER_CONFIGURATION_FILE_NAME);
+            } else {
+                getSystemClassLoader();
+                if (systemClassLoader == null) {
+                    // Non available during class library start-up phase
+                    e = new Vector<URL>().elements();
                 } else {
-                    getSystemClassLoader();
                     e = systemClassLoader
                             .getResources(PROVIDER_CONFIGURATION_FILE_NAME);
                 }
-                // Examine each configuration file
-                while (e.hasMoreElements()) {
-                    cs = searchConfiguredCharsets(charsetName,
-                            contextClassLoader, e.nextElement());
-                    if (null != cs) {
-                        cacheCharset(cs);
-                        return cs;
-                    }
-                }
-            } catch (IOException ex) {
-                // Unexpected ClassLoader exception, ignore
             }
+
+            // examine each configuration file
+            while (e.hasMoreElements()) {
+			     inForNameInternal = true;
+			     cs = searchConfiguredCharsets(charsetName, contextClassLoader,
+                        e.nextElement());
+				 inForNameInternal = false;
+                if (null != cs) {
+                    cacheCharset(cs);
+                    return cs;
+                }
+            }
+        } catch (IOException ex) {
+            // Unexpected ClassLoader exception, ignore
+        } finally {
+		    inForNameInternal = false;
         }
         return null;
     }
@@ -535,22 +512,19 @@ public abstract class Charset implements Comparable<Charset> {
      * save charset into cachedCharsetTable
      */
     private static void cacheCharset(Charset cs) {
-        cachedCharsetTable.put(cs.name(), cs);
+        if (!cachedCharsetTable.containsKey(cs.name())){
+            cachedCharsetTable.put(cs.name(), cs);  
+        }
         Set<String> aliasesSet = cs.aliases();
         if (null != aliasesSet) {
             Iterator<String> iter = aliasesSet.iterator();
             while (iter.hasNext()) {
                 String alias = iter.next();
-                cachedCharsetTable.put(alias, cs);
+                if (!cachedCharsetTable.containsKey(alias)) {
+                    cachedCharsetTable.put(alias, cs); 
+                }
             }
         }
-    }
-
-    /*
-     * get cached charset reference by name
-     */
-    private static Charset getCachedCharset(String name) {
-        return cachedCharsetTable.get(name);
     }
 
     /**
@@ -563,10 +537,8 @@ public abstract class Charset implements Comparable<Charset> {
      *             if the specified charset name is illegal.
      * @throws UnsupportedCharsetException
      *             if the desired charset is not supported by this runtime.
-     * @since Android 1.0
      */
-    public static Charset forName(String charsetName)
-            throws IllegalCharsetNameException, UnsupportedCharsetException {
+    public static Charset forName(String charsetName) {
         Charset c = forNameInternal(charsetName);
         if (null == c) {
             throw new UnsupportedCharsetException(charsetName);
@@ -582,12 +554,36 @@ public abstract class Charset implements Comparable<Charset> {
      * @return true if the specified charset is supported, otherwise false.
      * @throws IllegalCharsetNameException
      *             if the specified charset name is illegal.
-     * @since Android 1.0
      */
-    public static boolean isSupported(String charsetName)
-            throws IllegalCharsetNameException {
-        Charset cs = forNameInternal(charsetName);
-        return (null != cs);
+    public static synchronized boolean isSupported(String charsetName) {
+        if (inForNameInternal) {
+            Charset cs = cachedCharsetTable.get(charsetName);
+            if (null != cs) {
+                return true;
+            }
+
+            if (null == charsetName) {
+                throw new IllegalArgumentException();
+            }
+            checkCharsetName(charsetName);
+
+            // Try built-in charsets
+            // BEGIN android-removed
+            // if (_builtInProvider == null) {
+            //     _builtInProvider = new CharsetProviderICU();
+            // }
+            // END android-removed
+            cs = _builtInProvider.charsetForName(charsetName);
+            if (null != cs) {
+                cacheCharset(cs);
+                return true;
+            }
+            return false;
+        } else {
+            Charset cs = forNameInternal(charsetName);
+            return (null != cs);
+        }
+
     }
 
     /**
@@ -598,7 +594,6 @@ public abstract class Charset implements Comparable<Charset> {
      * @return true if this charset is a super set of the given charset,
      *         false if it's unknown or this charset is not a superset of
      *         the given charset.
-     * @since Android 1.0
      */
     public abstract boolean contains(Charset charset);
 
@@ -606,7 +601,6 @@ public abstract class Charset implements Comparable<Charset> {
      * Gets a new instance of an encoder for this charset.
      * 
      * @return a new instance of an encoder for this charset.
-     * @since Android 1.0
      */
     public abstract CharsetEncoder newEncoder();
 
@@ -614,7 +608,6 @@ public abstract class Charset implements Comparable<Charset> {
      * Gets a new instance of a decoder for this charset.
      * 
      * @return a new instance of a decoder for this charset.
-     * @since Android 1.0
      */
     public abstract CharsetDecoder newDecoder();
 
@@ -622,7 +615,6 @@ public abstract class Charset implements Comparable<Charset> {
      * Gets the canonical name of this charset.
      * 
      * @return this charset's name in canonical form.
-     * @since Android 1.0
      */
     public final String name() {
         return this.canonicalName;
@@ -632,7 +624,6 @@ public abstract class Charset implements Comparable<Charset> {
      * Gets the set of this charset's aliases.
      * 
      * @return an unmodifiable set of this charset's aliases.
-     * @since Android 1.0
      */
     public final Set<String> aliases() {
         return Collections.unmodifiableSet(this.aliasesSet);
@@ -641,12 +632,10 @@ public abstract class Charset implements Comparable<Charset> {
     /**
      * Gets the name of this charset for the default locale.
      * 
-     * This is the default implementation of this method which always returns
-     * the canonical name of this charset. Subclasses overriding this Method
-     * may return a display name that was localized.
-     * 
+     * <p>The default implementation returns the canonical name of this charset.
+     * Subclasses may return a localized display name.
+     *
      * @return the name of this charset for the default locale.
-     * @since Android 1.0
      */
     public String displayName() {
         return this.canonicalName;
@@ -654,15 +643,13 @@ public abstract class Charset implements Comparable<Charset> {
 
     /**
      * Gets the name of this charset for the specified locale.
-     * 
-     * This is the default implementation of this method which always returns
-     * the canonical name of this charset. Subclasses overriding this Method
-     * may return a display name that was localized.
-     * 
+     *
+     * <p>The default implementation returns the canonical name of this charset.
+     * Subclasses may return a localized display name.
+     *
      * @param l
      *            a certain locale
-     * @return the name of this charset for the specified locale.
-     * @since Android 1.0
+     * @return the name of this charset for the specified locale
      */
     public String displayName(Locale l) {
         return this.canonicalName;
@@ -674,7 +661,6 @@ public abstract class Charset implements Comparable<Charset> {
      * 
      * @return true if the charset is known to be registered, otherwise returns
      *         false.
-     * @since Android 1.0
      */
     public final boolean isRegistered() {
         return !canonicalName.startsWith("x-") //$NON-NLS-1$
@@ -685,7 +671,6 @@ public abstract class Charset implements Comparable<Charset> {
      * Returns true if this charset supports encoding, false otherwise.
      * 
      * @return true if this charset supports encoding, false otherwise.
-     * @since Android 1.0
      */
     public boolean canEncode() {
         return true;
@@ -697,38 +682,20 @@ public abstract class Charset implements Comparable<Charset> {
      * <p>
      * The default action in case of encoding errors is
      * <code>CodingErrorAction.REPLACE</code>.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the character buffer containing the content to be encoded.
      * @return the result of the encoding.
-     * @since Android 1.0
      */
-    synchronized public final ByteBuffer encode(CharBuffer buffer) {
-        CharsetEncoder e = getCachedCharsetEncoder(canonicalName);
+    public final ByteBuffer encode(CharBuffer buffer) {
         try {
-            synchronized (e) {
-                return e.encode(buffer);
-            }
+            return this.newEncoder()
+                    .onMalformedInput(CodingErrorAction.REPLACE)
+                    .onUnmappableCharacter(CodingErrorAction.REPLACE).encode(
+                            buffer);
+
         } catch (CharacterCodingException ex) {
             throw new Error(ex.getMessage(), ex);
-        }
-    }
-
-    /*
-     * get cached CharsetEncoder by canonical name
-     */
-    private CharsetEncoder getCachedCharsetEncoder(String name) {
-        synchronized (cachedCharsetEncoderTable) {
-            CharsetEncoder e = cachedCharsetEncoderTable
-                    .get(name);
-            if (null == e) {
-                e = this.newEncoder();
-                e.onMalformedInput(CodingErrorAction.REPLACE);
-                e.onUnmappableCharacter(CodingErrorAction.REPLACE);
-                cachedCharsetEncoderTable.put(name, e);
-            }
-            return e;
         }
     }
 
@@ -737,12 +704,10 @@ public abstract class Charset implements Comparable<Charset> {
      * <p>
      * The default action in case of encoding errors is
      * <code>CodingErrorAction.REPLACE</code>.
-     * </p>
-     * 
+     *
      * @param s
      *            the string to be encoded.
      * @return the result of the encoding.
-     * @since Android 1.0
      */
     public final ByteBuffer encode(String s) {
         return encode(CharBuffer.wrap(s));
@@ -754,38 +719,21 @@ public abstract class Charset implements Comparable<Charset> {
      * <p>
      * The default action in case of decoding errors is
      * <code>CodingErrorAction.REPLACE</code>.
-     * </p>
      * 
      * @param buffer
      *            the byte buffer containing the content to be decoded.
      * @return a character buffer containing the output of the decoding.
-     * @since Android 1.0
      */
     public final CharBuffer decode(ByteBuffer buffer) {
-        CharsetDecoder d = getCachedCharsetDecoder(canonicalName);
+
         try {
-            synchronized (d) {
-                return d.decode(buffer);
-            }
+            return this.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPLACE)
+                    .onUnmappableCharacter(CodingErrorAction.REPLACE).decode(
+                            buffer);
+
         } catch (CharacterCodingException ex) {
             throw new Error(ex.getMessage(), ex);
-        }
-    }
-
-    /*
-     * get cached CharsetDecoder by canonical name
-     */
-    private CharsetDecoder getCachedCharsetDecoder(String name) {
-        synchronized (cachedCharsetDecoderTable) {
-            CharsetDecoder d = cachedCharsetDecoderTable
-                    .get(name);
-            if (null == d) {
-                d = this.newDecoder();
-                d.onMalformedInput(CodingErrorAction.REPLACE);
-                d.onUnmappableCharacter(CodingErrorAction.REPLACE);
-                cachedCharsetDecoderTable.put(name, d);
-            }
-            return d;
         }
     }
 
@@ -803,7 +751,6 @@ public abstract class Charset implements Comparable<Charset> {
      *            the given object to be compared with.
      * @return a negative integer if less than the given object, a positive
      *         integer if larger than it, or 0 if equal to it.
-     * @since Android 1.0
      */
     public final int compareTo(Charset charset) {
         return this.canonicalName.compareToIgnoreCase(charset.canonicalName);
@@ -822,7 +769,6 @@ public abstract class Charset implements Comparable<Charset> {
      * @param obj
      *            the given object to be compared with.
      * @return true if they have the same canonical name, otherwise false.
-     * @since Android 1.0
      */
     @Override
     public final boolean equals(Object obj) {
@@ -837,7 +783,6 @@ public abstract class Charset implements Comparable<Charset> {
      * Gets the hash code of this charset.
      * 
      * @return the hash code of this charset.
-     * @since Android 1.0
      */
     @Override
     public final int hashCode() {
@@ -849,7 +794,6 @@ public abstract class Charset implements Comparable<Charset> {
      * canonical name of the charset.
      * 
      * @return a string representation of this charset.
-     * @since Android 1.0
      */
     @Override
     public final String toString() {
@@ -860,7 +804,6 @@ public abstract class Charset implements Comparable<Charset> {
      * Gets the system default charset from the virtual machine.
      * 
      * @return the default charset.
-     * @since Android 1.0
      */
     public static Charset defaultCharset() {
         Charset defaultCharset = null;

@@ -21,7 +21,6 @@ import org.apache.harmony.luni.platform.MappedPlatformAddress;
 import org.apache.harmony.luni.platform.PlatformAddress;
 import org.apache.harmony.nio.internal.DirectBuffer;
 
-
 /**
  * {@code MappedByteBuffer} is a special kind of direct byte buffer which maps a
  * region of file to memory.
@@ -30,15 +29,11 @@ import org.apache.harmony.nio.internal.DirectBuffer;
  * {@link java.nio.channels.FileChannel#map(java.nio.channels.FileChannel.MapMode, long, long) FileChannel.map}.
  * Once created, the mapping between the byte buffer and the file region remains
  * valid until the byte buffer is garbage collected.
- * </p>
  * <p>
  * All or part of a {@code MappedByteBuffer}'s content may change or become
  * inaccessible at any time, since the mapped file region can be modified by
  * another thread or process at any time. If this happens, the behavior of the
  * {@code MappedByteBuffer} is undefined.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class MappedByteBuffer extends ByteBuffer {
 
@@ -59,15 +54,15 @@ public abstract class MappedByteBuffer extends ByteBuffer {
         super(capa);
         mapMode = mode;
         switch (mapMode) {
-        case IMemorySystem.MMAP_READ_ONLY:
-            wrapped = new ReadOnlyDirectByteBuffer(addr, capa, offset);
-            break;
-        case IMemorySystem.MMAP_READ_WRITE:
-        case IMemorySystem.MMAP_WRITE_COPY:
-            wrapped = new ReadWriteDirectByteBuffer(addr, capa, offset);
-            break;
-        default:
-            throw new IllegalArgumentException();
+            case IMemorySystem.MMAP_READ_ONLY:
+                wrapped = new ReadOnlyDirectByteBuffer(addr, capa, offset);
+                break;
+            case IMemorySystem.MMAP_READ_WRITE:
+            case IMemorySystem.MMAP_WRITE_COPY:
+                wrapped = new ReadWriteDirectByteBuffer(addr, capa, offset);
+                break;
+            default:
+                throw new IllegalArgumentException();
         }
         addr.autoFree();
     }
@@ -79,10 +74,10 @@ public abstract class MappedByteBuffer extends ByteBuffer {
      * 
      * @return {@code true} if this buffer's content is loaded, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public final boolean isLoaded() {
-        return ((MappedPlatformAddress)((DirectBuffer) wrapped).getBaseAddress()).mmapIsLoaded();
+        return ((MappedPlatformAddress) ((DirectBuffer) wrapped)
+                .getBaseAddress()).mmapIsLoaded();
     }
 
     /**
@@ -90,10 +85,10 @@ public abstract class MappedByteBuffer extends ByteBuffer {
      * succeed.
      * 
      * @return this buffer.
-     * @since Android 1.0
      */
     public final MappedByteBuffer load() {
-        ((MappedPlatformAddress)((DirectBuffer) wrapped).getBaseAddress()).mmapLoad();
+        ((MappedPlatformAddress) ((DirectBuffer) wrapped).getBaseAddress())
+                .mmapLoad();
         return this;
     }
 
@@ -104,11 +99,11 @@ public abstract class MappedByteBuffer extends ByteBuffer {
      * a remote device.
      * 
      * @return this buffer.
-     * @since Android 1.0
      */
     public final MappedByteBuffer force() {
         if (mapMode == IMemorySystem.MMAP_READ_WRITE) {
-            ((MappedPlatformAddress)((DirectBuffer) wrapped).getBaseAddress()).mmapFlush();
+            ((MappedPlatformAddress) ((DirectBuffer) wrapped).getBaseAddress())
+                    .mmapFlush();
         }
         return this;
     }

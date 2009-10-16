@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * An {@code OverlappingFileLockException} is thrown when attempting to acquire
  * a lock that overlaps an existing or pending lock held by this process.
- * 
- * @since Android 1.0
  */
 public class OverlappingFileLockException extends IllegalStateException {
 
@@ -29,8 +26,6 @@ public class OverlappingFileLockException extends IllegalStateException {
 
     /**
      * Constructs a {@code OverlappingFileLockException}.
-     * 
-     * @since Android 1.0
      */
     public OverlappingFileLockException() {
         super();

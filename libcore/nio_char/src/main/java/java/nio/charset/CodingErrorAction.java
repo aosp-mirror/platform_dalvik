@@ -20,15 +20,11 @@ package java.nio.charset;
  * Used to indicate what kind of actions to take in case of encoding/decoding
  * errors. Currently three actions are defined: {@code IGNORE}, {@code REPLACE}
  * and {@code REPORT}.
- * 
- * @since Android 1.0
  */
 public class CodingErrorAction {
 
     /**
      * Denotes the action to ignore any errors.
-     * 
-     * @since Android 1.0
      */
     public static final CodingErrorAction IGNORE = new CodingErrorAction(
             "IGNORE"); //$NON-NLS-1$
@@ -36,8 +32,6 @@ public class CodingErrorAction {
     /**
      * Denotes the action to fill in the output with a replacement character
      * when malformed input or an unmappable character is encountered.
-     * 
-     * @since Android 1.0
      */
     public static final CodingErrorAction REPLACE = new CodingErrorAction(
             "REPLACE"); //$NON-NLS-1$
@@ -46,8 +40,6 @@ public class CodingErrorAction {
      * Denotes the action to report the encountered error in an appropriate
      * manner, for example to throw an exception or return an informative
      * result.
-     * 
-     * @since Android 1.0
      */
     public static final CodingErrorAction REPORT = new CodingErrorAction(
             "REPORT"); //$NON-NLS-1$
@@ -66,8 +58,8 @@ public class CodingErrorAction {
      * Returns a text description of this action indication.
      * 
      * @return a text description of this action indication.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         return "Action: " + this.action; //$NON-NLS-1$
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package java.nio; 
+package java.nio;
 
 import org.apache.harmony.luni.platform.PlatformAddress;
 
@@ -31,13 +31,11 @@ class DirectByteBuffers {
      * If the memory is known to already have been freed then this is a no-op.
      * Once the memory has been freed then operations requiring access to the
      * memory will throw an <code>IllegalStateException</code>.
-     * </p>
      * <p>
      * Note this is is possible that the memory is freed by code that reaches
      * into the address and explicitly frees it 'beneith' us -- this is bad
      * form.
-     * </p>
-     * 
+     *
      * @param directBuffer
      *            the direct byte buffer memory to free
      * @throws IllegalArgumentException
@@ -61,8 +59,7 @@ class DirectByteBuffers {
      * If you can guarantee that you want to free the underlying memory call the
      * #free() method on this instance -- generally applications will rely on
      * the garbage collector to autofree this memory.
-     * </p>
-     * 
+     *
      * @param directBuffer
      *            the direct byte buffer
      * @return the effective address of the start of the buffer.

@@ -16,11 +16,8 @@
 
 package java.nio;
 
-// BEGIN android-added
-// copied from newer version of harmony
 import org.apache.harmony.nio.internal.DirectBuffer;
 import org.apache.harmony.luni.platform.PlatformAddress;
-// END android-added
 
 /**
  * This class wraps a byte buffer to be a int buffer.
@@ -35,10 +32,7 @@ import org.apache.harmony.luni.platform.PlatformAddress;
  * </p>
  * 
  */
-// BEGIN android-changed
-// copied from newer version of harmony
 final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
-// END android-changed
 
     static IntBuffer wrap(ByteBuffer byteBuffer) {
         return new IntToByteBufferAdapter(byteBuffer.slice());
@@ -52,15 +46,12 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
         this.byteBuffer.clear();
     }
 
-    // BEGIN android-added
-    // copied from newer version of harmony
     public int getByteCapacity() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).getByteCapacity();
-        } else {
-            assert false : byteBuffer;
-            return -1;
-        }            
+            return ((DirectBuffer) byteBuffer).getByteCapacity();
+        }
+        assert false : byteBuffer;
+        return -1;
     }
 
     public PlatformAddress getEffectiveAddress() {
@@ -70,47 +61,44 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
             effectiveDirectAddress = addr.toInt();
             return addr;
             // END android-changed
-        } else {
-            assert false : byteBuffer;
-            return null;
         }
+        assert false : byteBuffer;
+        return null;
     }
-            
+
     public PlatformAddress getBaseAddress() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).getBaseAddress();
-        } else {
-            assert false : byteBuffer;
-            return null;
+            return ((DirectBuffer) byteBuffer).getBaseAddress();
         }
+        assert false : byteBuffer;
+        return null;
     }
-            
+
     public boolean isAddressValid() {
         if (byteBuffer instanceof DirectBuffer) {
-            return ((DirectBuffer)byteBuffer).isAddressValid();
-        } else {
-            assert false : byteBuffer;
-            return false;
+            return ((DirectBuffer) byteBuffer).isAddressValid();
         }
+        assert false : byteBuffer;
+        return false;
     }
 
     public void addressValidityCheck() {
         if (byteBuffer instanceof DirectBuffer) {
-            ((DirectBuffer)byteBuffer).addressValidityCheck();
+            ((DirectBuffer) byteBuffer).addressValidityCheck();
         } else {
             assert false : byteBuffer;
         }
     }
-            
+
     public void free() {
         if (byteBuffer instanceof DirectBuffer) {
-            ((DirectBuffer)byteBuffer).free();
+            ((DirectBuffer) byteBuffer).free();
         } else {
             assert false : byteBuffer;
-        }   
+        }
     }
-    // END android-added
 
+    @Override
     public IntBuffer asReadOnlyBuffer() {
         IntToByteBufferAdapter buf = new IntToByteBufferAdapter(byteBuffer
                 .asReadOnlyBuffer());
@@ -120,6 +108,7 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
         return buf;
     }
 
+    @Override
     public IntBuffer compact() {
         if (byteBuffer.isReadOnly()) {
             throw new ReadOnlyBufferException();
@@ -134,6 +123,7 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
         return this;
     }
 
+    @Override
     public IntBuffer duplicate() {
         IntToByteBufferAdapter buf = new IntToByteBufferAdapter(byteBuffer
                 .duplicate());
@@ -143,6 +133,7 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
         return buf;
     }
 
+    @Override
     public int get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -150,6 +141,7 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
         return byteBuffer.getInt(position++ << 2);
     }
 
+    @Override
     public int get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -157,30 +149,37 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
         return byteBuffer.getInt(index << 2);
     }
 
+    @Override
     public boolean isDirect() {
         return byteBuffer.isDirect();
     }
 
+    @Override
     public boolean isReadOnly() {
         return byteBuffer.isReadOnly();
     }
 
+    @Override
     public ByteOrder order() {
         return byteBuffer.order();
     }
 
+    @Override
     protected int[] protectedArray() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected int protectedArrayOffset() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected boolean protectedHasArray() {
         return false;
     }
 
+    @Override
     public IntBuffer put(int c) {
         if (position == limit) {
             throw new BufferOverflowException();
@@ -189,6 +188,7 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
         return this;
     }
 
+    @Override
     public IntBuffer put(int index, int c) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -212,6 +212,7 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
     }
     // END android-added
 
+    @Override
     public IntBuffer slice() {
         byteBuffer.limit(limit << 2);
         byteBuffer.position(position << 2);

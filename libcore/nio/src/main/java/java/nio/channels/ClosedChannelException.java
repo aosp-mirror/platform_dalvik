@@ -16,14 +16,11 @@
 
 package java.nio.channels;
 
-
 import java.io.IOException;
 
 /**
  * A {@code ClosedChannelException} is thrown when a channel is closed for the
  * type of operation attempted.
- * 
- * @since Android 1.0
  */
 public class ClosedChannelException extends IOException {
 
@@ -31,11 +28,8 @@ public class ClosedChannelException extends IOException {
 
     /**
      * Constructs a {@code ClosedChannelException}.
-     * 
-     * @since Android 1.0
      */
     public ClosedChannelException() {
         super();
     }
-
 }

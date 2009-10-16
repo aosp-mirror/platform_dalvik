@@ -18,8 +18,7 @@ package org.apache.harmony.nio.internal;
 import org.apache.harmony.luni.platform.PlatformAddress;
 
 public interface DirectBuffer {
-    // BEGIN android-changed
-    // Copied from a newer version of harmony
+    
     PlatformAddress getEffectiveAddress();
     
     PlatformAddress getBaseAddress();
@@ -31,5 +30,4 @@ public interface DirectBuffer {
     void free();
     
     int getByteCapacity();
-    // END android-changed
 }

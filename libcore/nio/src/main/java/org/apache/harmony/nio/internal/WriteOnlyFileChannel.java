@@ -16,7 +16,7 @@
  */
 
 /*
- * Android Notice 
+ * Android Notice
  * In this class the address length was changed from long to int.
  * This is due to performance optimizations for the device.
  */
@@ -43,9 +43,10 @@ public final class WriteOnlyFileChannel extends FileChannelImpl {
         super(stream, handle);
         append = isAppend;
     }
-    
+
     /*
      * (non-Javadoc)
+     * 
      * @see org.apache.harmony.nio.internal.FileChannelImpl#position()
      */
     public long position() throws IOException {
@@ -62,7 +63,7 @@ public final class WriteOnlyFileChannel extends FileChannelImpl {
     }
 
     public long read(ByteBuffer[] buffers, int offset, int length)
-            throws IOException {        
+            throws IOException {
         if (offset < 0 || length < 0 || offset + length > buffers.length) {
             throw new IndexOutOfBoundsException();
         }
@@ -75,11 +76,11 @@ public final class WriteOnlyFileChannel extends FileChannelImpl {
         throw new NonReadableChannelException();
     }
 
-    public int read(ByteBuffer buffer, long position) throws IOException {        
+    public int read(ByteBuffer buffer, long position) throws IOException {
         if (null == buffer) {
             throw new NullPointerException();
         }
-        if (position < 0){
+        if (position < 0) {
             throw new IllegalArgumentException();
         }
         throw new NonReadableChannelException();
@@ -111,5 +112,4 @@ public final class WriteOnlyFileChannel extends FileChannelImpl {
         }
         return super.basicLock(position, size, shared, wait);
     }
-
 }

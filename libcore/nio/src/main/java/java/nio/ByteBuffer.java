@@ -17,14 +17,12 @@
 
 package java.nio;
 
-
 import org.apache.harmony.luni.platform.Endianness;
 
 /**
  * A buffer for bytes.
  * <p>
  * A byte buffer can be created in either one of the following ways:
- * </p>
  * <ul>
  * <li>{@link #allocate(int) Allocate} a new byte array and create a buffer
  * based on it;</li>
@@ -33,9 +31,10 @@ import org.apache.harmony.luni.platform.Endianness;
  * <li>{@link #wrap(byte[]) Wrap} an existing byte array to create a new
  * buffer.</li>
  * </ul>
- * @since Android 1.0
+ *
  */
-public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer> {
+public abstract class ByteBuffer extends Buffer implements
+        Comparable<ByteBuffer> {
 
     /**
      * Creates a byte buffer based on a newly allocated byte array.
@@ -45,7 +44,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * @return the created byte buffer.
      * @throws IllegalArgumentException
      *             if {@code capacity < 0}.
-     * @since Android 1.0
      */
     public static ByteBuffer allocate(int capacity) {
         if (capacity < 0) {
@@ -62,7 +60,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * @return the created byte buffer.
      * @throws IllegalArgumentException
      *             if {@code capacity < 0}.
-     * @since Android 1.0
      */
     public static ByteBuffer allocateDirect(int capacity) {
         if (capacity < 0) {
@@ -76,12 +73,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * Calling this method has the same effect as
      * {@code wrap(array, 0, array.length)}.
-     * </p>
-     * 
+     *
      * @param array
      *            the byte array which the new buffer will be based on
      * @return the created byte buffer.
-     * @since Android 1.0
      */
     public static ByteBuffer wrap(byte[] array) {
         return BufferFactory.newByteBuffer(array);
@@ -92,8 +87,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The new buffer's position will be {@code start}, limit will be
      * {@code start + len}, capacity will be the length of the array.
-     * </p>
-     * 
+     *
      * @param array
      *            the byte array which the new buffer will be based on.
      * @param start
@@ -105,7 +99,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * @return the created byte buffer.
      * @exception IndexOutOfBoundsException
      *                if either {@code start} or {@code len} is invalid.
-     * @since Android 1.0
      */
     public static ByteBuffer wrap(byte[] array, int start, int len) {
         int length = array.length;
@@ -130,7 +123,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * 
      * @param capacity
      *            the capacity of the buffer.
-     * @since Android 1.0
      */
     ByteBuffer(int capacity) {
         super(capacity);
@@ -147,7 +139,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if this buffer is based on a read-only array.
      * @exception UnsupportedOperationException
      *                if this buffer is not based on an array.
-     * @since Android 1.0
      */
     public final byte[] array() {
         return protectedArray();
@@ -159,21 +150,19 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The offset is the index of the array which corresponds to the zero
      * position of the buffer.
-     * </p>
-     * 
+     *
      * @return the offset of the byte array which this buffer is based on.
      * @exception ReadOnlyBufferException
      *                if this buffer is based on a read-only array.
      * @exception UnsupportedOperationException
      *                if this buffer is not based on an array.
-     * @since Android 1.0
      */
     public final int arrayOffset() {
         return protectedArrayOffset();
     }
 
     // BEGIN android-added
-    @Override 
+    @Override
     Object _array() {
         if (hasArray()) {
             return array();
@@ -181,7 +170,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
         return null;
     }
 
-    @Override 
+    @Override
     int _arrayOffset() {
         if (hasArray()) {
             return arrayOffset();
@@ -198,15 +187,12 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * of remaining bytes divided by two, and its mark is not set. The new
      * buffer's read-only property and byte order are the same as this buffer's.
      * The new buffer is direct if this byte buffer is direct.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a char buffer which is based on the content of this byte buffer.
-     * @since Android 1.0
      */
     public abstract CharBuffer asCharBuffer();
 
@@ -218,16 +204,13 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * of remaining bytes divided by eight, and its mark is not set. The new
      * buffer's read-only property and byte order are the same as this buffer's.
      * The new buffer is direct if this byte buffer is direct.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a double buffer which is based on the content of this byte
      *         buffer.
-     * @since Android 1.0
      */
     public abstract DoubleBuffer asDoubleBuffer();
 
@@ -239,15 +222,12 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * of remaining bytes divided by four, and its mark is not set. The new
      * buffer's read-only property and byte order are the same as this buffer's.
      * The new buffer is direct if this byte buffer is direct.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a float buffer which is based on the content of this byte buffer.
-     * @since Android 1.0
      */
     public abstract FloatBuffer asFloatBuffer();
 
@@ -259,15 +239,12 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * of remaining bytes divided by four, and its mark is not set. The new
      * buffer's read-only property and byte order are the same as this buffer's.
      * The new buffer is direct if this byte buffer is direct.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a int buffer which is based on the content of this byte buffer.
-     * @since Android 1.0
      */
     public abstract IntBuffer asIntBuffer();
 
@@ -279,15 +256,12 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * of remaining bytes divided by eight, and its mark is not set. The new
      * buffer's read-only property and byte order are the same as this buffer's.
      * The new buffer is direct if this byte buffer is direct.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a long buffer which is based on the content of this byte buffer.
-     * @since Android 1.0
      */
     public abstract LongBuffer asLongBuffer();
 
@@ -297,15 +271,12 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * The returned buffer is guaranteed to be a new instance, even if this
      * buffer is read-only itself. The new buffer's position, limit, capacity
      * and mark are the same as this buffer.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means this
      * buffer's change of content will be visible to the new buffer. The two
      * buffer's position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a read-only version of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer asReadOnlyBuffer();
 
@@ -317,15 +288,12 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * of remaining bytes divided by two, and its mark is not set. The new
      * buffer's read-only property and byte order are the same as this buffer's.
      * The new buffer is direct if this byte buffer is direct.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a short buffer which is based on the content of this byte buffer.
-     * @since Android 1.0
      */
     public abstract ShortBuffer asShortBuffer();
 
@@ -336,12 +304,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * buffer, starting from position zero. Then the position is set to
      * {@code remaining()}; the limit is set to capacity; the mark is
      * cleared.
-     * </p>
-     * 
+     *
      * @return this buffer.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer compact();
 
@@ -356,7 +322,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *         than {@code other}.
      * @exception ClassCastException
      *                if {@code other} is not a byte buffer.
-     * @since Android 1.0
      */
     public int compareTo(ByteBuffer otherBuffer) {
         int compareRemaining = (remaining() < otherBuffer.remaining()) ? remaining()
@@ -383,15 +348,12 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * The duplicated buffer's position, limit, capacity and mark are the same
      * as this buffer's. The duplicated buffer's read-only property and byte
      * order are the same as this buffer's too.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a duplicated buffer that shares its content with this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer duplicate();
 
@@ -401,14 +363,13 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * If {@code other} is not a byte buffer then {@code false} is returned. Two
      * byte buffers are equal if and only if their remaining bytes are exactly
      * the same. Position, limit, capacity and mark are not considered.
-     * </p>
-     * 
+     *
      * @param other
      *            the object to compare with this byte buffer.
      * @return {@code true} if this byte buffer is equal to {@code other},
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
+    @Override
     public boolean equals(Object other) {
         if (!(other instanceof ByteBuffer)) {
             return false;
@@ -435,7 +396,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * @return the byte at the current position.
      * @exception BufferUnderflowException
      *                if the position is equal or greater than limit.
-     * @since Android 1.0
      */
     public abstract byte get();
 
@@ -445,14 +405,12 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * Calling this method has the same effect as
      * {@code get(dest, 0, dest.length)}.
-     * </p>
-     * 
+     *
      * @param dest
      *            the destination byte array.
      * @return this buffer.
      * @exception BufferUnderflowException
      *                if {@code dest.length} is greater than {@code remaining()}.
-     * @since Android 1.0
      */
     public ByteBuffer get(byte[] dest) {
         return get(dest, 0, dest.length);
@@ -476,11 +434,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if either {@code off} or {@code len} is invalid.
      * @exception BufferUnderflowException
      *                if {@code len} is greater than {@code remaining()}.
-     * @since Android 1.0
      */
     public ByteBuffer get(byte[] dest, int off, int len) {
         int length = dest.length;
-        if ((off < 0 ) || (len < 0) || ((long)off + (long)len > length)) {
+        if ((off < 0) || (len < 0) || ((long) off + (long) len > length)) {
             throw new IndexOutOfBoundsException();
         }
 
@@ -501,7 +458,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * @return the byte at the specified index.
      * @exception IndexOutOfBoundsException
      *                if index is invalid.
-     * @since Android 1.0
      */
     public abstract byte get(int index);
 
@@ -510,12 +466,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The 2 bytes starting at the current position are composed into a char
      * according to the current byte order and returned.
-     * </p>
-     * 
+     *
      * @return the char at the current position.
      * @exception BufferUnderflowException
      *                if the position is greater than {@code limit - 2}.
-     * @since Android 1.0
      */
     public abstract char getChar();
 
@@ -525,7 +479,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * The 2 bytes starting from the specified index are composed into a char
      * according to the current byte order and returned. The position is not
      * changed.
-     * </p>
      * 
      * @param index
      *            the index, must not be negative and equal or less than
@@ -533,7 +486,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * @return the char at the specified index.
      * @exception IndexOutOfBoundsException
      *                if {@code index} is invalid.
-     * @since Android 1.0
      */
     public abstract char getChar(int index);
 
@@ -542,13 +494,11 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * 8.
      * <p>
      * The 8 bytes starting from the current position are composed into a double
-     * according to the current byte order and returned. 
-     * </p>
-     * 
+     * according to the current byte order and returned.
+     *
      * @return the double at the current position.
      * @exception BufferUnderflowException
      *                if the position is greater than {@code limit - 8}.
-     * @since Android 1.0
      */
     public abstract double getDouble();
 
@@ -558,15 +508,13 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * The 8 bytes starting at the specified index are composed into a double
      * according to the current byte order and returned. The position is not
      * changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 8}.
      * @return the double at the specified index.
      * @exception IndexOutOfBoundsException
      *                if {@code index} is invalid.
-     * @since Android 1.0
      */
     public abstract double getDouble(int index);
 
@@ -576,12 +524,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The 4 bytes starting at the current position are composed into a float
      * according to the current byte order and returned.
-     * </p>
-     * 
+     *
      * @return the float at the current position.
      * @exception BufferUnderflowException
      *                if the position is greater than {@code limit - 4}.
-     * @since Android 1.0
      */
     public abstract float getFloat();
 
@@ -591,15 +537,13 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * The 4 bytes starting at the specified index are composed into a float
      * according to the current byte order and returned. The position is not
      * changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 4}.
      * @return the float at the specified index.
      * @exception IndexOutOfBoundsException
      *                if {@code index} is invalid.
-     * @since Android 1.0
      */
     public abstract float getFloat(int index);
 
@@ -608,12 +552,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The 4 bytes starting at the current position are composed into a int
      * according to the current byte order and returned.
-     * </p>
-     * 
+     *
      * @return the int at the current position.
      * @exception BufferUnderflowException
      *                if the position is greater than {@code limit - 4}.
-     * @since Android 1.0
      */
     public abstract int getInt();
 
@@ -623,15 +565,13 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * The 4 bytes starting at the specified index are composed into a int
      * according to the current byte order and returned. The position is not
      * changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 4}.
      * @return the int at the specified index.
      * @exception IndexOutOfBoundsException
      *                if {@code index} is invalid.
-     * @since Android 1.0
      */
     public abstract int getInt(int index);
 
@@ -640,12 +580,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The 8 bytes starting at the current position are composed into a long
      * according to the current byte order and returned.
-     * </p>
-     * 
+     *
      * @return the long at the current position.
      * @exception BufferUnderflowException
      *                if the position is greater than {@code limit - 8}.
-     * @since Android 1.0
      */
     public abstract long getLong();
 
@@ -655,7 +593,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * The 8 bytes starting at the specified index are composed into a long
      * according to the current byte order and returned. The position is not
      * changed.
-     * </p>
      *
      * @param index
      *            the index, must not be negative and equal or less than
@@ -663,7 +600,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * @return the long at the specified index.
      * @exception IndexOutOfBoundsException
      *                if {@code index} is invalid.
-     * @since Android 1.0
      */
     public abstract long getLong(int index);
 
@@ -672,12 +608,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The 2 bytes starting at the current position are composed into a short
      * according to the current byte order and returned.
-     * </p>
-     * 
+     *
      * @return the short at the current position.
      * @exception BufferUnderflowException
      *                if the position is greater than {@code limit - 2}.
-     * @since Android 1.0
      */
     public abstract short getShort();
 
@@ -687,15 +621,13 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * The 2 bytes starting at the specified index are composed into a short
      * according to the current byte order and returned. The position is not
      * changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 2}.
      * @return the short at the specified index.
      * @exception IndexOutOfBoundsException
      *                if {@code index} is invalid.
-     * @since Android 1.0
      */
     public abstract short getShort(int index);
 
@@ -705,7 +637,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * 
      * @return {@code true} if this buffer is based on a byte array and provides
      *         read/write access, {@code false} otherwise.
-     * @since Android 1.0
      */
     public final boolean hasArray() {
         return protectedHasArray();
@@ -714,10 +645,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     /**
      * Calculates this buffer's hash code from the remaining chars. The
      * position, limit, capacity and mark don't affect the hash code.
-     * 
+     *
      * @return the hash code calculated from the remaining bytes.
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         int myPosition = position;
         int hash = 0;
@@ -729,9 +660,8 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
 
     /**
      * Indicates whether this buffer is direct.
-     * 
+     *
      * @return {@code true} if this buffer is direct, {@code false} otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isDirect();
 
@@ -741,11 +671,9 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The default byte order of byte buffer is always
      * {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}
-     * </p>
-     * 
+     *
      * @return the byte order used by this buffer when converting bytes from/to
      *         other primitive types.
-     * @since Android 1.0
      */
     public final ByteOrder order() {
         return order == Endianness.BIG_ENDIAN ? ByteOrder.BIG_ENDIAN
@@ -760,7 +688,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *            will be {@link ByteOrder#LITTLE_ENDIAN LITTLE_ENDIAN}.
      * @return this buffer.
      * @see ByteOrder
-     * @since Android 1.0
      */
     public final ByteBuffer order(ByteOrder byteOrder) {
         return orderImpl(byteOrder);
@@ -776,7 +703,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * Child class implements this method to realize {@code array()}.
      * 
      * @see #array()
-     * @since Android 1.0
      */
     abstract byte[] protectedArray();
 
@@ -784,7 +710,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * Child class implements this method to realize {@code arrayOffset()}.
      * 
      * @see #arrayOffset()
-     * @since Android 1.0
      */
     abstract int protectedArrayOffset();
 
@@ -792,7 +717,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * Child class implements this method to realize {@code hasArray()}.
      * 
      * @see #hasArray()
-     * @since Android 1.0
      */
     abstract boolean protectedHasArray();
 
@@ -807,7 +731,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if position is equal or greater than limit.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer put(byte b);
 
@@ -817,8 +740,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * Calling this method has the same effect as
      * {@code put(src, 0, src.length)}.
-     * </p>
-     * 
+     *
      * @param src
      *            the source byte array.
      * @return this buffer.
@@ -826,7 +748,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if {@code remaining()} is less than {@code src.length}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public final ByteBuffer put(byte[] src) {
         return put(src, 0, src.length);
@@ -852,7 +773,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if either {@code off} or {@code len} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public ByteBuffer put(byte[] src, int off, int len) {
         int length = src.length;
@@ -884,7 +804,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if {@code src} is this buffer.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public ByteBuffer put(ByteBuffer src) {
         if (src == this) {
@@ -912,7 +831,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer put(int index, byte b);
 
@@ -921,8 +839,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * by 2.
      * <p>
      * The char is converted to bytes using the current byte order.
-     * </p>
-     * 
+     *
      * @param value
      *            the char to write.
      * @return this buffer.
@@ -930,7 +847,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if position is greater than {@code limit - 2}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putChar(char value);
 
@@ -939,8 +855,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The char is converted to bytes using the current byte order. The position
      * is not changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 2}.
@@ -951,7 +866,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putChar(int index, char value);
 
@@ -960,8 +874,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * by 8.
      * <p>
      * The double is converted to bytes using the current byte order.
-     * </p>
-     * 
+     *
      * @param value
      *            the double to write.
      * @return this buffer.
@@ -969,7 +882,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if position is greater than {@code limit - 8}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putDouble(double value);
 
@@ -978,8 +890,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The double is converted to bytes using the current byte order. The
      * position is not changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 8}.
@@ -990,7 +901,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putDouble(int index, double value);
 
@@ -999,8 +909,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * by 4.
      * <p>
      * The float is converted to bytes using the current byte order.
-     * </p>
-     * 
+     *
      * @param value
      *            the float to write.
      * @return this buffer.
@@ -1008,7 +917,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if position is greater than {@code limit - 4}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putFloat(float value);
 
@@ -1017,8 +925,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The float is converted to bytes using the current byte order. The
      * position is not changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 4}.
@@ -1029,7 +936,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putFloat(int index, float value);
 
@@ -1038,8 +944,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * 4.
      * <p>
      * The int is converted to bytes using the current byte order.
-     * </p>
-     * 
+     *
      * @param value
      *            the int to write.
      * @return this buffer.
@@ -1047,7 +952,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if position is greater than {@code limit - 4}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putInt(int value);
 
@@ -1056,8 +960,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The int is converted to bytes using the current byte order. The position
      * is not changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 4}.
@@ -1068,7 +971,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putInt(int index, int value);
 
@@ -1077,8 +979,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * by 8.
      * <p>
      * The long is converted to bytes using the current byte order.
-     * </p>
-     * 
+     *
      * @param value
      *            the long to write.
      * @return this buffer.
@@ -1086,7 +987,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if position is greater than {@code limit - 8}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putLong(long value);
 
@@ -1095,8 +995,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The long is converted to bytes using the current byte order. The position
      * is not changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 8}.
@@ -1107,7 +1006,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putLong(int index, long value);
 
@@ -1116,8 +1014,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * by 2.
      * <p>
      * The short is converted to bytes using the current byte order.
-     * </p>
-     * 
+     *
      * @param value
      *            the short to write.
      * @return this buffer.
@@ -1125,7 +1022,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if position is greater than {@code limit - 2}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putShort(short value);
 
@@ -1134,8 +1030,7 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * <p>
      * The short is converted to bytes using the current byte order. The
      * position is not changed.
-     * </p>
-     * 
+     *
      * @param index
      *            the index, must not be negative and equal or less than
      *            {@code limit - 2}.
@@ -1146,7 +1041,6 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer putShort(int index, short value);
 
@@ -1158,15 +1052,12 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * this buffer's current position. The new buffer's position will be 0,
      * limit will be its capacity, and its mark is cleared. The new buffer's
      * read-only property and byte order are the same as this buffer's.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a sliced buffer that shares its content with this buffer.
-     * @since Android 1.0
      */
     public abstract ByteBuffer slice();
 
@@ -1174,10 +1065,10 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * Returns a string representing the state of this byte buffer.
      * 
      * @return a string representing the state of this byte buffer.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append(getClass().getName());
         buf.append(", status: capacity="); //$NON-NLS-1$
         buf.append(capacity());

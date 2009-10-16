@@ -22,7 +22,6 @@ import org.apache.harmony.luni.platform.PlatformAddressFactory;
 import org.apache.harmony.nio.internal.DirectBuffer;
 import org.apache.harmony.nio.internal.nls.Messages;
 
-
 /**
  * DirectByteBuffer, ReadWriteDirectByteBuffer and ReadOnlyDirectByteBuffer
  * compose the implementation of platform memory based byte buffers.
@@ -58,13 +57,14 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
 
     /*
      * Constructs a new direct byte buffer of the given capacity on newly
-     * allocated OS memory.  The memory will have been zeroed.  When the
-     * instance is discarded the OS memory will be freed if it has not
-     * already been done so by an explicit call to #free().  Callers are
-     * encouraged to explicitly free the memory where possible.
+     * allocated OS memory. The memory will have been zeroed. When the instance
+     * is discarded the OS memory will be freed if it has not already been done
+     * so by an explicit call to #free(). Callers are encouraged to explicitly
+     * free the memory where possible.
      */
     DirectByteBuffer(int capacity) {
-        this(new SafeAddress(PlatformAddressFactory.alloc(capacity, (byte)0)), capacity, 0);
+        this(new SafeAddress(PlatformAddressFactory.alloc(capacity, (byte) 0)),
+                capacity, 0);
         safeAddress.address.autoFree();
     }
 
@@ -79,7 +79,7 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
             throw new IllegalArgumentException("slice out of range");
         }
         // END android-added
-        
+
         this.safeAddress = address;
         this.offset = offset;
     }
@@ -88,21 +88,24 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
      * Override ByteBuffer.get(byte[], int, int) to improve performance.
      * 
      * (non-Javadoc)
+     * 
      * @see java.nio.ByteBuffer#get(byte[], int, int)
      */
+    @Override
     public final ByteBuffer get(byte[] dest, int off, int len) {
         int length = dest.length;
-        if ((off < 0 ) || (len < 0) || (long)off + (long)len > length) {
+        if ((off < 0) || (len < 0) || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
         if (len > remaining()) {
             throw new BufferUnderflowException();
         }
-        getBaseAddress().getByteArray(offset+position, dest, off, len);
+        getBaseAddress().getByteArray(offset + position, dest, off, len);
         position += len;
         return this;
     }
-    
+
+    @Override
     public final byte get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -110,6 +113,7 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
         return getBaseAddress().getByte(offset + position++);
     }
 
+    @Override
     public final byte get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -117,6 +121,7 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
         return getBaseAddress().getByte(offset + index);
     }
 
+    @Override
     public final double getDouble() {
         int newPosition = position + 8;
         if (newPosition > limit) {
@@ -127,13 +132,15 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
         return result;
     }
 
+    @Override
     public final double getDouble(int index) {
-        if (index < 0 || (long)index + 8 > limit) {
+        if (index < 0 || (long) index + 8 > limit) {
             throw new IndexOutOfBoundsException();
         }
         return getBaseAddress().getDouble(offset + index, order);
     }
 
+    @Override
     public final float getFloat() {
         int newPosition = position + 4;
         if (newPosition > limit) {
@@ -144,13 +151,15 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
         return result;
     }
 
+    @Override
     public final float getFloat(int index) {
-        if (index < 0 || (long)index + 4 > limit) {
+        if (index < 0 || (long) index + 4 > limit) {
             throw new IndexOutOfBoundsException();
         }
         return getBaseAddress().getFloat(offset + index, order);
     }
 
+    @Override
     public final int getInt() {
         int newPosition = position + 4;
         if (newPosition > limit) {
@@ -161,13 +170,15 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
         return result;
     }
 
+    @Override
     public final int getInt(int index) {
-        if (index < 0 || (long)index + 4 > limit) {
+        if (index < 0 || (long) index + 4 > limit) {
             throw new IndexOutOfBoundsException();
         }
         return getBaseAddress().getInt(offset + index, order);
     }
 
+    @Override
     public final long getLong() {
         int newPosition = position + 8;
         if (newPosition > limit) {
@@ -178,13 +189,15 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
         return result;
     }
 
+    @Override
     public final long getLong(int index) {
-        if (index < 0 || (long)index + 8 > limit) {
+        if (index < 0 || (long) index + 8 > limit) {
             throw new IndexOutOfBoundsException();
         }
         return getBaseAddress().getLong(offset + index, order);
     }
 
+    @Override
     public final short getShort() {
         int newPosition = position + 2;
         if (newPosition > limit) {
@@ -195,13 +208,15 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
         return result;
     }
 
+    @Override
     public final short getShort(int index) {
-        if (index < 0 || (long)index + 2 > limit) {
+        if (index < 0 || (long) index + 2 > limit) {
             throw new IndexOutOfBoundsException();
         }
         return getBaseAddress().getShort(offset + index, order);
     }
 
+    @Override
     public final boolean isDirect() {
         return true;
     }
@@ -212,9 +227,9 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
 
     public final void addressValidityCheck() {
         if (!isAddressValid()) {
-            // nio.08=Cannot use the direct byte buffer after it has been explicitly freed.
-            throw new IllegalStateException(
-                    Messages.getString("nio.08"));  //$NON-NLS-1$
+            // nio.08=Cannot use the direct byte buffer after it has been
+            // explicitly freed.
+            throw new IllegalStateException(Messages.getString("nio.08")); //$NON-NLS-1$
         }
     }
 
@@ -271,23 +286,23 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
             safeAddress.address.free();
         }
     }
-    
+
+    @Override
     final protected byte[] protectedArray() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     final protected int protectedArrayOffset() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     final protected boolean protectedHasArray() {
         return false;
     }
 
-    // BEGIN android-added
-    // copied from newer version of harmony
     public final int getByteCapacity() {
         return capacity;
     }
-    // END android-added
 }

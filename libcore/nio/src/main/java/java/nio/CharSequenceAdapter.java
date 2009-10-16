@@ -44,18 +44,22 @@ final class CharSequenceAdapter extends CharBuffer {
         sequence = chseq;
     }
 
+    @Override
     public CharBuffer asReadOnlyBuffer() {
         return duplicate();
     }
 
+    @Override
     public CharBuffer compact() {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public CharBuffer duplicate() {
         return copy(this);
     }
 
+    @Override
     public char get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -63,6 +67,7 @@ final class CharSequenceAdapter extends CharBuffer {
         return sequence.charAt(position++);
     }
 
+    @Override
     public char get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -70,9 +75,10 @@ final class CharSequenceAdapter extends CharBuffer {
         return sequence.charAt(index);
     }
 
+    @Override
     public final CharBuffer get(char[] dest, int off, int len) {
         int length = dest.length;
-        if ((off < 0 ) || (len < 0) || (long)off + (long)len > length) {
+        if ((off < 0) || (len < 0) || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
         if (len > remaining()) {
@@ -84,66 +90,79 @@ final class CharSequenceAdapter extends CharBuffer {
         return this;
     }
 
+    @Override
     public boolean isDirect() {
         return false;
     }
 
+    @Override
     public boolean isReadOnly() {
         return true;
     }
 
+    @Override
     public ByteOrder order() {
         return ByteOrder.nativeOrder();
     }
 
+    @Override
     protected char[] protectedArray() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected int protectedArrayOffset() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     protected boolean protectedHasArray() {
         return false;
     }
 
+    @Override
     public CharBuffer put(char c) {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public CharBuffer put(int index, char c) {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public final CharBuffer put(char[] src, int off, int len) {
-        if ((off < 0 ) || (len < 0) || (long)off + (long)len > src.length) {
+        if ((off < 0) || (len < 0) || (long) off + (long) len > src.length) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         if (len > remaining()) {
             throw new BufferOverflowException();
         }
-        
+
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public CharBuffer put(String src, int start, int end) {
-        if ((start < 0 ) || (end < 0) || (long)start + (long)end > src.length()) {
+        if ((start < 0) || (end < 0)
+                || (long) start + (long) end > src.length()) {
             throw new IndexOutOfBoundsException();
         }
         throw new ReadOnlyBufferException();
-    }  
+    }
 
+    @Override
     public CharBuffer slice() {
         return new CharSequenceAdapter(sequence.subSequence(position, limit));
     }
 
+    @Override
     public CharSequence subSequence(int start, int end) {
         if (end < start || start < 0 || end > remaining()) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         CharSequenceAdapter result = copy(this);
         result.position = position + start;
         result.limit = position + end;

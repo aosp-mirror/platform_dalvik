@@ -31,6 +31,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  * Tests for AlreadyConnectedException
  */
 public class AlreadyConnectedExceptionTest extends TestCase {
+    
+    /**
+     * @tests {@link java.nio.channels.AlreadyConnectedException#AlreadyConnectedException()}
+     */
+    public void test_Constructor() {
+        AlreadyConnectedException e = new AlreadyConnectedException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
 
     /**
      * @tests serialization/deserialization compatibility.

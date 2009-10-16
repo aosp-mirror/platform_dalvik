@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * An {@code AlreadyConnectedException} is thrown when an attempt is made to
  * connect a SocketChannel that is already connected.
- * 
- * @since Android 1.0
  */
 public class AlreadyConnectedException extends IllegalStateException {
 
@@ -29,8 +26,6 @@ public class AlreadyConnectedException extends IllegalStateException {
 
     /**
      * Constructs an {@code AlreadyConnectedException}.
-     * 
-     * @since Android 1.0
      */
     public AlreadyConnectedException() {
         super();

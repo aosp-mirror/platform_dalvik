@@ -44,50 +44,62 @@ final class ReadOnlyShortArrayBuffer extends ShortArrayBuffer {
         super(capacity, backingArray, arrayOffset);
     }
 
+    @Override
     public ShortBuffer asReadOnlyBuffer() {
         return duplicate();
     }
 
+    @Override
     public ShortBuffer compact() {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public ShortBuffer duplicate() {
         return copy(this, mark);
     }
 
+    @Override
     public boolean isReadOnly() {
         return true;
     }
 
+    @Override
     protected short[] protectedArray() {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     protected int protectedArrayOffset() {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     protected boolean protectedHasArray() {
         return false;
     }
-    
+
+    @Override
     public ShortBuffer put(ShortBuffer buf) {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public ShortBuffer put(short c) {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public ShortBuffer put(int index, short c) {
         throw new ReadOnlyBufferException();
     }
 
+    @Override
     public final ShortBuffer put(short[] src, int off, int len) {
         throw new ReadOnlyBufferException();
     }
-    
+
+    @Override
     public ShortBuffer slice() {
         return new ReadOnlyShortArrayBuffer(remaining(), backingArray, offset
                 + position);

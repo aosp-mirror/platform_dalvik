@@ -32,24 +32,15 @@ import org.apache.harmony.nio.internal.IOUtil;
 
 /**
  * This class provides several utilities to get I/O streams from channels.
- * 
- * @since Android 1.0
  */
 public final class Channels {
 
-    // -------------------------------------------------------------------
-    // Constructor
-    // -------------------------------------------------------------------
     /*
      * Not intended to be instantiated.
      */
     private Channels() {
         super();
     }
-
-    // -------------------------------------------------------------------
-    // Public Methods
-    // -------------------------------------------------------------------
 
     /**
      * Returns an input stream on the given channel. The resulting stream has
@@ -67,7 +58,6 @@ public final class Channels {
      * @param channel
      *            the channel to be wrapped by an InputStream.
      * @return an InputStream that takes bytes from the given byte channel.
-     * @since Android 1.0
      */
     public static InputStream newInputStream(ReadableByteChannel channel) {
         return new ReadableByteChannelInputStream(channel);
@@ -88,7 +78,6 @@ public final class Channels {
      * @param channel
      *            the channel to be wrapped by an OutputStream.
      * @return an OutputStream that puts bytes onto the given byte channel.
-     * @since Android 1.0
      */
     public static OutputStream newOutputStream(WritableByteChannel channel) {
         return new WritableByteChannelOutputStream(channel);
@@ -106,7 +95,6 @@ public final class Channels {
      * @param inputStream
      *            the stream to be wrapped by a byte channel.
      * @return a byte channel that reads bytes from the input stream.
-     * @since Android 1.0
      */
     public static ReadableByteChannel newChannel(InputStream inputStream) {
         return new ReadableByteChannelImpl(inputStream);
@@ -121,11 +109,10 @@ public final class Channels {
      * well.</li>
      * <li>It is not buffered.</li>
      * </ul>
-     * 
+     *
      * @param outputStream
      *            the stream to be wrapped by a byte channel.
      * @return a byte channel that writes bytes to the output stream.
-     * @since Android 1.0
      */
     public static WritableByteChannel newChannel(OutputStream outputStream) {
         return new WritableByteChannelImpl(outputStream);
@@ -142,12 +129,10 @@ public final class Channels {
      *            The minimum size of the byte buffer, -1 means to use the
      *            default size.
      * @return the reader.
-     * @since Android 1.0
      */
     public static Reader newReader(ReadableByteChannel channel,
             CharsetDecoder decoder, int minBufferCapacity) {
-        return new ByteChannelReader(
-                new ReaderInputStream(channel), decoder,
+        return new ByteChannelReader(new ReaderInputStream(channel), decoder,
                 minBufferCapacity);
     }
 
@@ -162,7 +147,6 @@ public final class Channels {
      * @return the reader.
      * @throws java.nio.charset.UnsupportedCharsetException
      *             if the given charset name is not supported.
-     * @since Android 1.0
      */
     public static Reader newReader(ReadableByteChannel channel,
             String charsetName) {
@@ -181,7 +165,6 @@ public final class Channels {
      *            the minimum size of the byte buffer, -1 means to use the
      *            default size.
      * @return the writer.
-     * @since Android 1.0
      */
     public static Writer newWriter(WritableByteChannel channel,
             CharsetEncoder encoder, int minBufferCapacity) {
@@ -201,16 +184,12 @@ public final class Channels {
      * @return the writer.
      * @throws java.nio.charset.UnsupportedCharsetException
      *             if the given charset name is not supported.
-     * @since Android 1.0
      */
     public static Writer newWriter(WritableByteChannel channel,
             String charsetName) {
         return newWriter(channel, Charset.forName(charsetName).newEncoder(), -1);
     }
 
-    // -------------------------------------------------------------------
-    // share routine
-    // -------------------------------------------------------------------
     /*
      * wrap a byte array to a ByteBuffer
      */
@@ -223,10 +202,6 @@ public final class Channels {
         return buffer;
     }
 
-    // -------------------------------------------------------------------
-    // Wrapper classes
-    // -------------------------------------------------------------------
-
     private static class ChannelInputStream extends InputStream {
 
         protected ReadableByteChannel channel;
@@ -236,9 +211,6 @@ public final class Channels {
             channel = aChannel;
         }
 
-        /*
-         * @see java.io.InputStream#read()
-         */
         @Override
         public synchronized int read() throws IOException {
             byte[] oneByte = new byte[1];
@@ -250,9 +222,6 @@ public final class Channels {
             return -1;
         }
 
-        /*
-         * @see java.io.InputStream#close()
-         */
         @Override
         public synchronized void close() throws IOException {
             channel.close();
@@ -265,16 +234,10 @@ public final class Channels {
     private static class ReadableByteChannelInputStream extends
             ChannelInputStream {
 
-        /*
-         * @param someChannel
-         */
         public ReadableByteChannelInputStream(ReadableByteChannel aChannel) {
             super(aChannel);
         }
 
-        /*
-         * @see java.io.InputStream#read(byte[], int, int)
-         */
         @Override
         public synchronized int read(byte[] target, int offset, int length)
                 throws IOException {
@@ -301,16 +264,10 @@ public final class Channels {
      */
     private static class ReaderInputStream extends ChannelInputStream {
 
-        /*
-         * @param someChannel
-         */
         public ReaderInputStream(ReadableByteChannel aChannel) {
             super(aChannel);
         }
 
-        /*
-         * @see java.io.InputStream#read(byte[], int, int)
-         */
         @Override
         public synchronized int read(byte[] target, int offset, int length)
                 throws IOException {
@@ -333,26 +290,19 @@ public final class Channels {
 
         private WritableByteChannel channel;
 
-        /*
-         * @param someChannel
-         */
         public WritableByteChannelOutputStream(WritableByteChannel aChannel) {
             super();
             channel = aChannel;
         }
 
-        /*
-         * @see java.io.OutputStream#write(int)
-         */
+        @Override
         public synchronized void write(int oneByte) throws IOException {
             byte[] wrappedByte = new byte[1];
             wrappedByte[0] = (byte) oneByte;
             write(wrappedByte);
         }
 
-        /*
-         * @see java.io.OutputStream#write(byte[], int, int)
-         */
+        @Override
         public synchronized void write(byte[] source, int offset, int length)
                 throws IOException {
             // avoid int overflow, check null source
@@ -371,9 +321,7 @@ public final class Channels {
             channel.write(buffer);
         }
 
-        /*
-         * @see java.io.OutputStream#close()
-         */
+        @Override
         public synchronized void close() throws IOException {
             channel.close();
         }
@@ -391,9 +339,6 @@ public final class Channels {
             inputStream = aInputStream;
         }
 
-        /*
-         * @see java.nio.channels.ReadableByteChannel#read(java.nio.ByteBuffer)
-         */
         public synchronized int read(ByteBuffer target) throws IOException {
             if (!isOpen()) {
                 throw new ClosedChannelException();
@@ -413,9 +358,7 @@ public final class Channels {
             return readCount;
         }
 
-        /*
-         * @see java.nio.channels.spi.AbstractInterruptibleChannel#implCloseChannel()
-         */
+        @Override
         protected void implCloseChannel() throws IOException {
             inputStream.close();
         }
@@ -433,9 +376,6 @@ public final class Channels {
             outputStream = aOutputStream;
         }
 
-        /*
-         * @see java.nio.channels.WritableByteChannel#write(java.nio.ByteBuffer)
-         */
         public synchronized int write(ByteBuffer source) throws IOException {
             if (!isOpen()) {
                 throw new ClosedChannelException();
@@ -455,9 +395,7 @@ public final class Channels {
             return bytesRemain;
         }
 
-        /*
-         * @see java.nio.channels.spi.AbstractInterruptibleChannel#implCloseChannel()
-         */
+        @Override
         protected void implCloseChannel() throws IOException {
             outputStream.close();
         }
@@ -479,9 +417,6 @@ public final class Channels {
 
         CharBuffer chars;
 
-        /*
-         * @param inputStream @param dec @param minBufferCapacity
-         */
         public ByteChannelReader(InputStream aInputStream,
                 CharsetDecoder aDecoder, int minBufferCapacity) {
             super(aInputStream);
@@ -494,9 +429,7 @@ public final class Channels {
             chars.limit(0);
         }
 
-        /*
-         * @see java.io.Reader#close()
-         */
+        @Override
         public void close() throws IOException {
             synchronized (lock) {
                 decoder = null;
@@ -507,9 +440,7 @@ public final class Channels {
             }
         }
 
-        /*
-         * @see java.io.Reader#ready()
-         */
+        @Override
         public boolean ready() {
             synchronized (lock) {
                 if (null == inputStream) {
@@ -524,20 +455,16 @@ public final class Channels {
             }
         }
 
-        /*
-         * @see java.io.Reader#read()
-         */
+        @Override
         public int read() throws IOException {
-            return IOUtil.readInputStreamReader(inputStream,
-                    bytes, chars, decoder, lock);
+            return IOUtil.readInputStreamReader(inputStream, bytes, chars,
+                    decoder, lock);
         }
 
-        /*
-         * @see java.io.Reader#read(char[], int, int)
-         */
+        @Override
         public int read(char[] buf, int offset, int length) throws IOException {
-            return IOUtil.readInputStreamReader(buf, offset,
-                    length, inputStream, bytes, chars, decoder, lock);
+            return IOUtil.readInputStreamReader(buf, offset, length,
+                    inputStream, bytes, chars, decoder, lock);
         }
     }
 
@@ -555,9 +482,6 @@ public final class Channels {
 
         private ByteBuffer byteBuf;
 
-        /*
-         * @param outputStream @param enc @param minBufferCap
-         */
         public ByteChannelWriter(OutputStream aOutputStream,
                 CharsetEncoder aEncoder, int minBufferCap) {
             super(aOutputStream);
@@ -567,9 +491,7 @@ public final class Channels {
             encoder = aEncoder;
         }
 
-        /*
-         * @see java.io.Writer#close()
-         */
+        @Override
         public void close() throws IOException {
             synchronized (lock) {
                 if (encoder != null) {
@@ -582,37 +504,29 @@ public final class Channels {
             }
         }
 
-        /*
-         * @see java.io.Writer#flush()
-         */
+        @Override
         public void flush() throws IOException {
-            IOUtil.flushOutputStreamWriter(outputStream,
+            IOUtil
+                    .flushOutputStreamWriter(outputStream, byteBuf, encoder,
+                            lock);
+        }
+
+        @Override
+        public void write(char[] buf, int offset, int count) throws IOException {
+            IOUtil.writeOutputStreamWriter(buf, offset, count, outputStream,
                     byteBuf, encoder, lock);
         }
 
-        /*
-         * @see java.io.Writer#write(char[], int, int)
-         */
-        public void write(char[] buf, int offset, int count) throws IOException {
-            IOUtil.writeOutputStreamWriter(buf, offset, count,
-                    outputStream, byteBuf, encoder, lock);
-        }
-
-        /*
-         * @see java.io.Writer#write(int)
-         */
+        @Override
         public void write(int oneChar) throws IOException {
-            IOUtil.writeOutputStreamWriter(oneChar,
-                    outputStream, byteBuf, encoder, lock);
+            IOUtil.writeOutputStreamWriter(oneChar, outputStream, byteBuf,
+                    encoder, lock);
         }
 
-        /*
-         * @see java.io.Writer#write(java.lang.String, int, int)
-         */
+        @Override
         public void write(String str, int offset, int count) throws IOException {
-            IOUtil.writeOutputStreamWriter(str, offset, count,
-                    outputStream, byteBuf, encoder, lock);
+            IOUtil.writeOutputStreamWriter(str, offset, count, outputStream,
+                    byteBuf, encoder, lock);
         }
     }
-
 }

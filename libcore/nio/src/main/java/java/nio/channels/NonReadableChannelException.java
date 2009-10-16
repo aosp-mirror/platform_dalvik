@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * A {@code NonReadableChannelException} is thrown when attempting to read from
  * a channel that is not open for reading.
- * 
- * @since Android 1.0
  */
 public class NonReadableChannelException extends IllegalStateException {
 
@@ -29,8 +26,6 @@ public class NonReadableChannelException extends IllegalStateException {
 
     /**
      * Constructs a {@code NonReadableChannelException}.
-     * 
-     * @since Android 1.0
      */
     public NonReadableChannelException() {
         super();

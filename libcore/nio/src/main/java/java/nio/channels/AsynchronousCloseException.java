@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * An {@code AsynchronousCloseException} is thrown when the underlying channel
  * for an I/O operation is closed by another thread.
- * 
- * @since Android 1.0
  */
 public class AsynchronousCloseException extends ClosedChannelException {
 
@@ -29,11 +26,8 @@ public class AsynchronousCloseException extends ClosedChannelException {
 
     /**
      * Constructs an {@code AsynchronousCloseException}.
-     * 
-     * @since Android 1.0
      */
     public AsynchronousCloseException() {
         super();
     }
-
 }

@@ -15,7 +15,7 @@
  *  limitations under the License.
  */
 
-package java.nio; 
+package java.nio;
 
 /**
  * IntArrayBuffer, ReadWriteIntArrayBuffer and ReadOnlyIntArrayBuffer compose
@@ -49,6 +49,7 @@ abstract class IntArrayBuffer extends IntBuffer {
         this.offset = offset;
     }
 
+    @Override
     public final int get() {
         if (position == limit) {
             throw new BufferUnderflowException();
@@ -56,6 +57,7 @@ abstract class IntArrayBuffer extends IntBuffer {
         return backingArray[offset + position++];
     }
 
+    @Override
     public final int get(int index) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -63,23 +65,26 @@ abstract class IntArrayBuffer extends IntBuffer {
         return backingArray[offset + index];
     }
 
+    @Override
     public final IntBuffer get(int[] dest, int off, int len) {
         int length = dest.length;
-        if (off < 0 || len < 0 || (long)len + (long)off > length) {
+        if (off < 0 || len < 0 || (long) len + (long) off > length) {
             throw new IndexOutOfBoundsException();
-        }       
+        }
         if (len > remaining()) {
             throw new BufferUnderflowException();
         }
-        System.arraycopy(backingArray, offset+position, dest, off, len);
+        System.arraycopy(backingArray, offset + position, dest, off, len);
         position += len;
         return this;
     }
-    
+
+    @Override
     public final boolean isDirect() {
         return false;
     }
 
+    @Override
     public final ByteOrder order() {
         return ByteOrder.nativeOrder();
     }

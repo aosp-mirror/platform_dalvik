@@ -18,7 +18,6 @@
 package org.apache.harmony.nio.internal;
 
 // BEGIN android-note
-// Copied from a newer version of Harmony.
 // In this class the address length was changed from long to int.
 // END android-note
 
@@ -63,7 +62,7 @@ class DatagramChannelImpl extends DatagramChannel implements
     private static final int DEFAULT_TIMEOUT = 1;
 
     private static final int ERRCODE_SOCKET_NONBLOCKING_WOULD_BLOCK = -211;
-    
+
     private static final byte[] stubArray = new byte[0];
 
     // The fd to interact with native code
@@ -245,7 +244,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         }
         return retAddr;
     }
-    
+
     private SocketAddress receiveImpl(ByteBuffer target, boolean loop)
             throws IOException {
         SocketAddress retAddr = null;
@@ -256,7 +255,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             receivePacket = new DatagramPacket(target.array(), target
                     .position()
                     + target.arrayOffset(), target.remaining());
-        } else {        
+        } else {
             receivePacket = new DatagramPacket(new byte[target.remaining()],
                     target.remaining());
         }
@@ -285,7 +284,7 @@ class DatagramChannelImpl extends DatagramChannel implements
                 }
             }
             if (null != receivePacket && null != receivePacket.getAddress()) {
-                               
+
                 if (received > 0) {
                     if (target.hasArray()) {
                         target.position(oldposition + received);
@@ -300,7 +299,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         } while (loop);
         return retAddr;
     }
-    
+
     private SocketAddress receiveDirectImpl(ByteBuffer target, boolean loop)
             throws IOException {
         SocketAddress retAddr = null;
@@ -618,7 +617,7 @@ class DatagramChannelImpl extends DatagramChannel implements
                 begin();
                 int length = buf.remaining();
                 int start = buf.position();
-    
+
                 if (buf.isDirect()) {
                     int address = AddressUtil.getDirectBufferAddress(buf);
                     result = networkSystem.sendConnectedDatagramDirect(fd,

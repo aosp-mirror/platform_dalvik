@@ -21,6 +21,7 @@ import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
+import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -32,6 +33,7 @@ import java.nio.charset.CoderMalfunctionError;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
+import java.util.Arrays;
 
 import junit.framework.TestCase;
 @TestTargetClass(CharsetDecoder.class)
@@ -271,4 +273,51 @@ public class CharsetDecoderTest extends TestCase {
             return CoderResult.UNDERFLOW;
         }
     }
+
+
+    public void testInvalidDecoding() throws IOException {
+
+        byte[][] invalidSequences = new byte[][] {
+                // overlong NULL
+                { (byte) 0xC0, (byte) 0x80 },
+                // overlong ascii 'A'
+                { (byte) 0xC0, (byte) 0xC1 },
+                // overlong "/../"
+                { (byte) 0x2F, (byte) 0xC0, (byte) 0xAE, (byte) 0x2E, (byte) 0x2F },
+                // Invalid encoding 2r11111000 (sequence too long)
+                { (byte) 0xF8 },
+                // Invalid encoding 2r10000000 (sequence too short)
+                { (byte) 0x80 }
+        };
+
+        CharsetDecoder decoder = Charset.forName("UTF-8").newDecoder();
+        decoder.onMalformedInput(CodingErrorAction.REPORT);
+
+        /*
+         * When bytebuffer has a backing array...
+         */
+        for (byte[] bytes : invalidSequences) {
+            try {
+                decoder.decode(ByteBuffer.wrap(bytes));
+                fail("No exception thrown on " + Arrays.toString(bytes));
+            } catch (MalformedInputException e) {
+                // expected
+            }
+        }
+
+        /*
+         * When bytebuffer has _not_ got a backing array...
+         */
+        for (byte[] bytes : invalidSequences) {
+            try {
+                ByteBuffer bb = ByteBuffer.allocateDirect(8);
+                bb.put(bytes).flip();
+                decoder.decode(bb);
+                fail("No exception thrown on " + Arrays.toString(bytes));
+            } catch (MalformedInputException e) {
+                // expected
+            }
+        }
+    }
+
 }

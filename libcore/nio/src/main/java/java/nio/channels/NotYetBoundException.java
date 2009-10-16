@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * A {@code NotYetBoundException} is thrown if the server socket channel is not
  * bound before an I/O operation is made.
- * 
- * @since Android 1.0
  */
 public class NotYetBoundException extends IllegalStateException {
 
@@ -29,8 +26,6 @@ public class NotYetBoundException extends IllegalStateException {
 
     /**
      * Constructs a {@code NotYetBoundException}.
-     * 
-     * @since Android 1.0
      */
     public NotYetBoundException() {
         super();

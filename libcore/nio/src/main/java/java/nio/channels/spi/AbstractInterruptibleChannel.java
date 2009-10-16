@@ -24,6 +24,7 @@ import java.nio.channels.Channel;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.InterruptibleChannel;
 import java.security.AccessController;
+import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 
 /**
@@ -35,10 +36,7 @@ import java.security.PrivilegedExceptionAction;
  * indefinitely, then {@code end(boolean)} after completing the operation. The
  * argument to the {@code end} method should indicate if the I/O operation has
  * actually completed so that any change may be visible to the invoker.
- * </p>
- * 
- * @since Android 1.0
- */
+*/
 public abstract class AbstractInterruptibleChannel implements Channel,
         InterruptibleChannel {
 
@@ -56,7 +54,7 @@ public abstract class AbstractInterruptibleChannel implements Channel,
                         }
                     });
             setInterruptAction.setAccessible(true);
-        } catch (Exception e) {
+        } catch (PrivilegedActionException e) {
             // FIXME: be accommodate before VM actually provides
             // setInterruptAction method
             // throw new Error(e);
@@ -69,8 +67,6 @@ public abstract class AbstractInterruptibleChannel implements Channel,
 
     /**
      * Default constructor.
-     * 
-     * @since Android 1.0
      */
     protected AbstractInterruptibleChannel() {
         super();
@@ -82,7 +78,6 @@ public abstract class AbstractInterruptibleChannel implements Channel,
      * @return {@code true} if this channel is open, {@code false} if it is
      *         closed.
      * @see java.nio.channels.Channel#isOpen()
-     * @since Android 1.0
      */
     public synchronized final boolean isOpen() {
         return !closed;
@@ -95,16 +90,14 @@ public abstract class AbstractInterruptibleChannel implements Channel,
      * <p>
      * If an attempt is made to perform an operation on a closed channel then a
      * {@link java.nio.channels.ClosedChannelException} is thrown.
-     * </p>
      * <p>
      * If multiple threads attempt to simultaneously close a channel, then only
      * one thread will run the closure code and the others will be blocked until
      * the first one completes.
-     * </p>
-     * 
+     *
      * @throws IOException
      *             if a problem occurs while closing this channel.
-     * @since Android 1.0
+     * @see java.nio.channels.Channel#close()
      */
     public final void close() throws IOException {
         if (!closed) {
@@ -121,8 +114,6 @@ public abstract class AbstractInterruptibleChannel implements Channel,
      * Indicates the beginning of a code section that includes an I/O operation
      * that is potentially blocking. After this operation, the application
      * should invoke the corresponding {@code end(boolean)} method.
-     * 
-     * @since Android 1.0
      */
     protected final void begin() {
         // FIXME: be accommodate before VM actually provides
@@ -159,7 +150,6 @@ public abstract class AbstractInterruptibleChannel implements Channel,
      * @throws ClosedByInterruptException
      *             if another thread interrupts the calling thread while this
      *             method is executing.
-     * @since Android 1.0
      */
     protected final void end(boolean success) throws AsynchronousCloseException {
         // FIXME: be accommodate before VM actually provides
@@ -187,16 +177,13 @@ public abstract class AbstractInterruptibleChannel implements Channel,
      * Closes the channel with a guarantee that the channel is not currently
      * closed through another invocation of {@code close()} and that the method
      * is thread-safe.
-     * </p>
      * <p>
      * Any outstanding threads blocked on I/O operations on this channel must be
      * released with either a normal return code, or by throwing an
      * {@code AsynchronousCloseException}.
-     * </p>
      * 
      * @throws IOException
      *             if a problem occurs while closing the channel.
-     * @since Android 1.0
      */
     protected abstract void implCloseChannel() throws IOException;
 }

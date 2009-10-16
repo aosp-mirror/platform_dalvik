@@ -33,6 +33,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 public class AsynchronousCloseExceptionTest extends TestCase {
 
     /**
+     * @tests {@link java.nio.channels.AsynchronousCloseException#AsynchronousCloseException()}
+     */
+    public void test_Constructor() {
+        AsynchronousCloseException e = new AsynchronousCloseException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
+    
+    /**
      * @tests serialization/deserialization compatibility.
      */
     @TestTargets({

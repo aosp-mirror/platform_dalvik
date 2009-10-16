@@ -16,7 +16,6 @@
 
 package java.nio.channels;
 
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -28,8 +27,6 @@ import java.nio.ByteBuffer;
  * if a write is already in progress on the channel then subsequent writes will
  * block until the first write completes. It is undefined whether non-write
  * operations will block.
- * 
- * @since Android 1.0
  */
 public interface WritableByteChannel extends Channel {
 
@@ -40,17 +37,14 @@ public interface WritableByteChannel extends Channel {
      * <code>remaining()</code> number of bytes in the buffer when the method
      * invoked. The bytes will be written from the buffer starting at the
      * buffer's <code>position</code>.
-     * </p>
      * <p>
      * The call may block if other threads are also attempting to write on the
      * same channel.
-     * </p>
      * <p>
      * Upon completion, the buffer's <code>position()</code> is updated to the
      * end of the bytes that were written. The buffer's <code>limit()</code>
      * is unmodified.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the byte buffer containing the bytes to be written.
      * @return the number of bytes actually written.
@@ -65,7 +59,6 @@ public interface WritableByteChannel extends Channel {
      *             write.
      * @throws IOException
      *             another IO exception occurs, details are in the message.
-     * @since Android 1.0
      */
     public int write(ByteBuffer buffer) throws IOException;
 }

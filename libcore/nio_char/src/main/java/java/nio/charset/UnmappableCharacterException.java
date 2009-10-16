@@ -22,8 +22,6 @@ import org.apache.harmony.niochar.internal.nls.Messages;
 /**
  * An {@code UnmappableCharacterException} is thrown when an unmappable
  * character for the given charset is encountered.
- * 
- * @since Android 1.0
  */
 public class UnmappableCharacterException extends CharacterCodingException {
 
@@ -41,7 +39,6 @@ public class UnmappableCharacterException extends CharacterCodingException {
      * 
      * @param length
      *            the length of the unmappable character.
-     * @since Android 1.0
      */
     public UnmappableCharacterException(int length) {
         this.inputLength = length;
@@ -51,7 +48,6 @@ public class UnmappableCharacterException extends CharacterCodingException {
      * Gets the length of the unmappable character.
      * 
      * @return the length of the unmappable character.
-     * @since Android 1.0
      */
     public int getInputLength() {
         return this.inputLength;
@@ -61,8 +57,8 @@ public class UnmappableCharacterException extends CharacterCodingException {
      * Gets a message describing this exception.
      * 
      * @return a message describing this exception.
-     * @since Android 1.0
      */
+    @Override
     public String getMessage() {
         // niochar.0A=The unmappable character length is {0}.
         return Messages.getString("niochar.0A", this.inputLength); //$NON-NLS-1$

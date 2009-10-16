@@ -22,8 +22,6 @@ import java.io.IOException;
 /**
  * A {@code CharacterCodingException} is thrown when an encoding or decoding
  * error occurs.
- * 
- * @since Android 1.0
  */
 public class CharacterCodingException extends IOException {
 
@@ -35,8 +33,6 @@ public class CharacterCodingException extends IOException {
 
     /**
      * Constructs a new {@code CharacterCodingException}.
-     *
-     * @since Android 1.0
      */
     public CharacterCodingException() {
         super();

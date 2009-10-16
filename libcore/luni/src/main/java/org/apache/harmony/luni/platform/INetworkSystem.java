@@ -171,9 +171,42 @@ public interface INetworkSystem {
     public InetAddress getSocketLocalAddress(FileDescriptor aFD,
             boolean preferIPv6Addresses);
 
-    public int[] select(FileDescriptor[] readFDs,
-            FileDescriptor[] writeFDs, long timeout)
+    // BEGIN android-changed
+    //     copied from a newer version of Harmony
+    /**
+     * Select the given file descriptors for read and write operations.
+     *
+     * <p>The first {@code numReadable} file descriptors of {@code readFDs} will
+     * be selected for read-ready operations. The first {@code numWritable} file
+     * descriptors in {@code writeFDs} will be selected for write-ready
+     * operations. A file descriptor can appear in either or both and must not
+     * be null. If the file descriptor is closed during the select the behavior
+     * depends upon the underlying OS.
+     *
+     * @param readFDs
+     *            all sockets interested in read and accept
+     * @param writeFDs
+     *            all sockets interested in write and connect
+     * @param numReadable
+     *            the size of the subset of readFDs to read or accept.
+     * @param numWritable
+     *            the size of the subset of writeFDs to write or connect
+     * @param timeout
+     *            timeout in milliseconds
+     * @param flags
+     *            for output. Length must be at least {@code numReadable
+     *            + numWritable}. Upon returning, each element describes the
+     *            state of the descriptor in the corresponding read or write
+     *            array. See {@code SelectorImpl.READABLE} and {@code
+     *            SelectorImpl.WRITEABLE}
+     * @return true
+     *            unless selection timed out or was interrupted
+     * @throws SocketException
+     */
+    public boolean select(FileDescriptor[] readFDs, FileDescriptor[] writeFDs,
+            int numReadable, int numWritable, long timeout, int[] flags)
             throws SocketException;
+    // END android-changed
 
     /*
      * Query the IP stack for the local port to which this socket is bound.

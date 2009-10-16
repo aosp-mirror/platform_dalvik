@@ -15,20 +15,9 @@
  */
 package tests.api.java.nio.charset;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
-import junit.framework.TestCase;
-
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
-import java.nio.charset.CodingErrorAction;
-import java.util.Arrays;
 
 /**
  * Super class for concrete charset test suites.

@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * A {@code CancelledKeyException} is thrown when an invalid selection key is
  * used.
- * 
- * @since Android 1.0
  */
 public class CancelledKeyException extends IllegalStateException {
 
@@ -32,8 +29,6 @@ public class CancelledKeyException extends IllegalStateException {
 
     /**
      * Constructs a {@code CancelledKeyException}.
-     *
-     * @since Android 1.0
      */
     public CancelledKeyException() {
         super();

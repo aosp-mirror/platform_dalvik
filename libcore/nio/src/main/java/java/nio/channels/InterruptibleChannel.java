@@ -16,7 +16,6 @@
 
 package java.nio.channels;
 
-
 import java.io.IOException;
 
 /**
@@ -27,7 +26,6 @@ import java.io.IOException;
  * an I/O operation (the I/O thread) can be released by another thread calling
  * the channel's {@link #close()} method. The I/O thread will throw an
  * {@link AsynchronousCloseException} and the channel will be closed.
- * </p>
  * <p>
  * A channel that is interruptible permits a thread blocked on an I/O operation
  * (the I/O thread) to be interrupted by another thread (by invoking
@@ -36,8 +34,6 @@ import java.io.IOException;
  * its interrupted status set and the channel will be closed. If the I/O thread
  * attempts to make an I/O call with the interrupt status set the call will
  * immediately fail with a {@link ClosedByInterruptException}.
- * 
- * @since Android 1.0
  */
 public interface InterruptibleChannel extends Channel {
 
@@ -47,12 +43,9 @@ public interface InterruptibleChannel extends Channel {
      * Any threads that are blocked on I/O operations on this channel will be
      * interrupted with an {@link AsynchronousCloseException}. Otherwise, this
      * method behaves the same as defined in the {@code Channel} interface.
-     * </p>
      * 
      * @throws IOException
      *             if an I/O error occurs while closing the channel.
-     * @since Android 1.0
      */
     public void close() throws IOException;
-
 }

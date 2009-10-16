@@ -23,7 +23,6 @@ import java.io.IOException;
  * A buffer of chars.
  * <p>
  * A char buffer can be created in either one of the following ways:
- * </p>
  * <ul>
  * <li>{@link #allocate(int) Allocate} a new char array and create a buffer
  * based on it;</li>
@@ -34,11 +33,9 @@ import java.io.IOException;
  * <li>Use {@link java.nio.ByteBuffer#asCharBuffer() ByteBuffer.asCharBuffer}
  * to create a char buffer based on a byte buffer.</li>
  * </ul>
- * 
- * @since Android 1.0
  */
-public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer>,
-        CharSequence, Appendable, Readable {
+public abstract class CharBuffer extends Buffer implements
+        Comparable<CharBuffer>, CharSequence, Appendable, Readable {
 
     /**
      * Creates a char buffer based on a newly allocated char array.
@@ -48,7 +45,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * @return the created char buffer.
      * @throws IllegalArgumentException
      *             if {@code capacity} is less than zero.
-     * @since Android 1.0
      */
     public static CharBuffer allocate(int capacity) {
         if (capacity < 0) {
@@ -62,12 +58,10 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * <p>
      * Calling this method has the same effect as
      * {@code wrap(array, 0, array.length)}.
-     * </p>
-     * 
+     *
      * @param array
      *            the char array which the new buffer will be based on.
      * @return the created char buffer.
-     * @since Android 1.0
      */
     public static CharBuffer wrap(char[] array) {
         return wrap(array, 0, array.length);
@@ -78,8 +72,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * <p>
      * The new buffer's position will be {@code start}, limit will be
      * {@code start + len}, capacity will be the length of the array.
-     * </p>
-     * 
+     *
      * @param array
      *            the char array which the new buffer will be based on.
      * @param start
@@ -91,12 +84,10 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * @return the created char buffer.
      * @exception IndexOutOfBoundsException
      *                if either {@code start} or {@code len} is invalid.
-     * @since Android 1.0
      */
     public static CharBuffer wrap(char[] array, int start, int len) {
         int length = array.length;
-        if ((start < 0) || (len < 0)
-                || (long) start + (long) len > length) {
+        if ((start < 0) || (len < 0) || (long) start + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
 
@@ -112,12 +103,10 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * <p>
      * Calling this method has the same effect as
      * {@code wrap(chseq, 0, chseq.length())}.
-     * </p>
-     * 
+     *
      * @param chseq
      *            the char sequence which the new buffer will be based on.
      * @return the created char buffer.
-     * @since Android 1.0
      */
     public static CharBuffer wrap(CharSequence chseq) {
         return BufferFactory.newCharBuffer(chseq);
@@ -129,8 +118,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * The new buffer's position will be {@code start}, limit will be
      * {@code end}, capacity will be the length of the char sequence. The new
      * buffer is read-only.
-     * </p>
-     * 
+     *
      * @param chseq
      *            the char sequence which the new buffer will be based on.
      * @param start
@@ -142,7 +130,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * @return the created char buffer.
      * @exception IndexOutOfBoundsException
      *                if either {@code start} or {@code end} is invalid.
-     * @since Android 1.0
      */
     public static CharBuffer wrap(CharSequence chseq, int start, int end) {
         if (chseq == null) {
@@ -151,7 +138,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
         if (start < 0 || end < start || end > chseq.length()) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         CharBuffer result = BufferFactory.newCharBuffer(chseq);
         result.position = start;
         result.limit = end;
@@ -163,7 +150,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * 
      * @param capacity
      *            the capacity of the buffer.
-     * @since Android 1.0
      */
     CharBuffer(int capacity) {
         super(capacity);
@@ -180,7 +166,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if this buffer is based on an array, but it is read-only.
      * @exception UnsupportedOperationException
      *                if this buffer is not based on an array.
-     * @since Android 1.0
      */
     public final char[] array() {
         return protectedArray();
@@ -192,21 +177,19 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * <p>
      * The offset is the index of the array corresponds to the zero position of
      * the buffer.
-     * </p>
-     * 
+     *
      * @return the offset of the char array which this buffer is based on.
      * @exception ReadOnlyBufferException
      *                if this buffer is based on an array but it is read-only.
      * @exception UnsupportedOperationException
      *                if this buffer is not based on an array.
-     * @since Android 1.0
      */
     public final int arrayOffset() {
         return protectedArrayOffset();
     }
 
     // BEGIN android-added
-    @Override 
+    @Override
     Object _array() {
         if (hasArray()) {
             return array();
@@ -214,7 +197,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
         return null;
     }
 
-    @Override 
+    @Override
     int _arrayOffset() {
         if (hasArray()) {
             return arrayOffset();
@@ -229,15 +212,12 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * The returned buffer is guaranteed to be a new instance, even if this
      * buffer is read-only itself. The new buffer's position, limit, capacity
      * and mark are the same as this buffer's.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means this
      * buffer's change of content will be visible to the new buffer. The two
      * buffer's position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a read-only version of this buffer.
-     * @since Android 1.0
      */
     public abstract CharBuffer asReadOnlyBuffer();
 
@@ -253,7 +233,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *         current position) in the buffer.
      * @exception IndexOutOfBoundsException
      *                if the index is invalid.
-     * @since Android 1.0
      */
     public final char charAt(int index) {
         if (index < 0 || index >= remaining()) {
@@ -268,12 +247,10 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * The remaining chars will be moved to the head of the buffer,
      * starting from position zero. Then the position is set to
      * {@code remaining()}; the limit is set to capacity; the mark is cleared.
-     * </p>
-     * 
+     *
      * @return this buffer.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract CharBuffer compact();
 
@@ -288,7 +265,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *         greater than {@code otherBuffer}.
      * @exception ClassCastException
      *                if {@code otherBuffer} is not a char buffer.
-     * @since Android 1.0
      */
     public int compareTo(CharBuffer otherBuffer) {
         int compareRemaining = (remaining() < otherBuffer.remaining()) ? remaining()
@@ -315,15 +291,12 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * The duplicated buffer's initial position, limit, capacity and mark are
      * the same as this buffer's. The duplicated buffer's read-only property and
      * byte order are the same as this buffer's, too.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a duplicated buffer that shares its content with this buffer.
-     * @since Android 1.0
      */
     public abstract CharBuffer duplicate();
 
@@ -333,14 +306,13 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * If {@code other} is not a char buffer then {@code false} is returned. Two
      * char buffers are equal if and only if their remaining chars are exactly
      * the same. Position, limit, capacity and mark are not considered.
-     * </p>
-     * 
+     *
      * @param other
      *            the object to compare with this char buffer.
      * @return {@code true} if this char buffer is equal to {@code other},
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
+    @Override
     public boolean equals(Object other) {
         if (!(other instanceof CharBuffer)) {
             return false;
@@ -367,7 +339,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * @return the char at the current position.
      * @exception BufferUnderflowException
      *                if the position is equal or greater than limit.
-     * @since Android 1.0
      */
     public abstract char get();
 
@@ -377,14 +348,12 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * <p>
      * Calling this method has the same effect as
      * {@code get(dest, 0, dest.length)}.
-     * </p>
-     * 
+     *
      * @param dest
      *            the destination char array.
      * @return this buffer.
      * @exception BufferUnderflowException
      *                if {@code dest.length} is greater than {@code remaining()}.
-     * @since Android 1.0
      */
     public CharBuffer get(char[] dest) {
         return get(dest, 0, dest.length);
@@ -408,14 +377,13 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if either {@code off} or {@code len} is invalid.
      * @exception BufferUnderflowException
      *                if {@code len} is greater than {@code remaining()}.
-     * @since Android 1.0
      */
     public CharBuffer get(char[] dest, int off, int len) {
         int length = dest.length;
-        if ((off < 0 ) || (len < 0) || (long)off + (long)len > length) {
+        if ((off < 0) || (len < 0) || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         if (len > remaining()) {
             throw new BufferUnderflowException();
         }
@@ -433,16 +401,14 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * @return a char at the specified index.
      * @exception IndexOutOfBoundsException
      *                if index is invalid.
-     * @since Android 1.0
      */
     public abstract char get(int index);
 
     /**
      * Indicates whether this buffer is based on a char array and is read/write.
-     * 
+     *
      * @return {@code true} if this buffer is based on a byte array and provides
      *         read/write access, {@code false} otherwise.
-     * @since Android 1.0
      */
     public final boolean hasArray() {
         return protectedHasArray();
@@ -451,10 +417,10 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * Calculates this buffer's hash code from the remaining chars. The
      * position, limit, capacity and mark don't affect the hash code.
-     * 
+     *
      * @return the hash code calculated from the remaining chars.
-     * @since Android 1.0
      */
+    @Override
     public int hashCode() {
         int myPosition = position;
         int hash = 0;
@@ -471,10 +437,8 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * <p>
      * A char buffer is direct if it is based on a byte buffer and the byte
      * buffer is direct.
-     * </p>
-     * 
+     *
      * @return {@code true} if this buffer is direct, {@code false} otherwise.
-     * @since Android 1.0
      */
     public abstract boolean isDirect();
 
@@ -482,7 +446,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * Returns the number of remaining chars.
      * 
      * @return the number of remaining chars.
-     * @since Android 1.0
      */
     public final int length() {
         return remaining();
@@ -494,11 +457,9 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * <p>
      * If this buffer is not based on a byte buffer, then this always returns
      * the platform's native byte order.
-     * </p>
-     * 
+     *
      * @return the byte order used by this buffer when converting chars from/to
      *         bytes.
-     * @since Android 1.0
      */
     public abstract ByteOrder order();
 
@@ -534,7 +495,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if position is equal or greater than limit.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract CharBuffer put(char c);
 
@@ -544,8 +504,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * <p>
      * Calling this method has the same effect as
      * {@code put(src, 0, src.length)}.
-     * </p>
-     * 
+     *
      * @param src
      *            the source char array.
      * @return this buffer.
@@ -553,7 +512,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if {@code remaining()} is less than {@code src.length}.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public final CharBuffer put(char[] src) {
         return put(src, 0, src.length);
@@ -579,14 +537,13 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if either {@code off} or {@code len} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public CharBuffer put(char[] src, int off, int len) {
         int length = src.length;
-        if ((off < 0 ) || (len < 0) || (long)off + (long)len > length) {
+        if ((off < 0) || (len < 0) || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         if (len > remaining()) {
             throw new BufferOverflowException();
         }
@@ -611,7 +568,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if {@code src} is this buffer.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public CharBuffer put(CharBuffer src) {
         if (src == this) {
@@ -620,7 +576,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
         if (src.remaining() > remaining()) {
             throw new BufferOverflowException();
         }
-        
+
         char[] contents = new char[src.remaining()];
         src.get(contents);
         put(contents);
@@ -640,7 +596,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if index is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public abstract CharBuffer put(int index, char c);
 
@@ -650,8 +605,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * <p>
      * Calling this method has the same effect as
      * {@code put(str, 0, str.length())}.
-     * </p>
-     * 
+     *
      * @param str
      *            the string to write.
      * @return this buffer.
@@ -659,7 +613,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if {@code remaining()} is less than the length of string.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public final CharBuffer put(String str) {
         return put(str, 0, str.length());
@@ -684,14 +637,13 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if either {@code start} or {@code end} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
     public CharBuffer put(String str, int start, int end) {
         int length = str.length();
         if (start < 0 || end < start || end > length) {
             throw new IndexOutOfBoundsException();
         }
-        
+
         if (end - start > remaining()) {
             throw new BufferOverflowException();
         }
@@ -709,15 +661,12 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * The new buffer's position will be 0, limit will be its capacity, and its
      * mark is cleared. The new buffer's read-only property and byte order are
      * same as this buffer.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @return a sliced buffer that shares its content with this buffer.
-     * @since Android 1.0
      */
     public abstract CharBuffer slice();
 
@@ -729,13 +678,11 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * be {@code position() + end}, capacity will be the same as this buffer.
      * The new buffer's read-only property and byte order are the same as this
      * buffer.
-     * </p>
      * <p>
      * The new buffer shares its content with this buffer, which means either
      * buffer's change of content will be visible to the other. The two buffer's
      * position, limit and mark are independent.
-     * </p>
-     * 
+     *
      * @param start
      *            the start index of the sub-sequence, referenced from the
      *            current buffer position. Must not be less than zero and not
@@ -750,7 +697,6 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *         current remaining content.
      * @exception IndexOutOfBoundsException
      *                if either {@code start} or {@code end} is invalid.
-     * @since Android 1.0
      */
     public abstract CharSequence subSequence(int start, int end);
 
@@ -758,8 +704,8 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * Returns a string representing the current remaining chars of this buffer.
      * 
      * @return a string representing the current remaining chars of this buffer.
-     * @since Android 1.0
      */
+    @Override
     public String toString() {
         StringBuffer strbuf = new StringBuffer();
         for (int i = position; i < limit; i++) {
@@ -771,7 +717,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * Writes the given char to the current position and increases the position
      * by 1.
-     * 
+     *
      * @param c
      *            the char to write.
      * @return this buffer.
@@ -779,9 +725,8 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if position is equal or greater than limit.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
-    public CharBuffer append(char c){
+    public CharBuffer append(char c) {
         return put(c);
     }
 
@@ -791,10 +736,9 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * of the csq.
      * <p>
      * Calling this method has the same effect as {@code append(csq.toString())}.
-     * </p>
      * If the {@code CharSequence} is {@code null} the string "null" will be
      * written to the buffer.
-     * 
+     *
      * @param csq
      *            the {@code CharSequence} to write.
      * @return this buffer.
@@ -802,9 +746,8 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if {@code remaining()} is less than the length of csq.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
-    public CharBuffer append(CharSequence csq){
+    public CharBuffer append(CharSequence csq) {
         if (csq != null) {
             return put(csq.toString());
         }
@@ -814,7 +757,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
     /**
      * Writes chars of the given {@code CharSequence} to the current position of
      * this buffer, and increases the position by the number of chars written.
-     * 
+     *
      * @param csq
      *            the {@code CharSequence} to write.
      * @param start
@@ -830,9 +773,8 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *                if either {@code start} or {@code end} is invalid.
      * @exception ReadOnlyBufferException
      *                if no changes may be made to the contents of this buffer.
-     * @since Android 1.0
      */
-    public CharBuffer append(CharSequence csq, int start, int end){
+    public CharBuffer append(CharSequence csq, int start, int end) {
         if (csq == null) {
             csq = "null"; //$NON-NLS-1$
         }
@@ -848,7 +790,7 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      * number of chars that are copied is either the number of remaining chars
      * in this buffer or the number of remaining chars in {@code target},
      * whichever is smaller.
-     * 
+     *
      * @param target
      *            the target char buffer.
      * @throws IllegalArgumentException
@@ -859,19 +801,24 @@ public abstract class CharBuffer extends Buffer implements Comparable<CharBuffer
      *             if no changes may be made to the contents of {@code target}.
      * @return the number of chars copied or -1 if there are no chars left to be
      *         read from this buffer.
-     * @since Android 1.0
      */
     public int read(CharBuffer target) throws IOException {
-        if(target == this){
+        int remaining = remaining();
+        if (target == this) {
+            if (remaining == 0) {
+                return -1;
+            }
             throw new IllegalArgumentException();
         }
-        if (remaining() == 0) {
-            return target.remaining()==0?0:-1;
+        if (remaining == 0) {
+            return limit > 0 && target.remaining() == 0 ? 0 : -1;
         }
-        int result = Math.min(target.remaining(), remaining());
-        char[] chars = new char[result];
-        get(chars);
-        target.put(chars);
-        return result;
-    }    
+        remaining = Math.min(target.remaining(), remaining);
+        if (remaining > 0) {
+            char[] chars = new char[remaining];
+            get(chars);
+            target.put(chars);
+        }
+        return remaining;
+    }
 }

@@ -31,6 +31,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  */
 @TestTargetClass(IllegalSelectorException.class)
 public class IllegalSelectorExceptionTest extends TestCase {
+    
+    /**
+     * @tests {@link java.nio.channels.IllegalSelectorException#IllegalSelectorException()}
+     */
+    public void test_Constructor() {
+        IllegalSelectorException e = new IllegalSelectorException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
 
     /**
      * @tests serialization/deserialization compatibility.

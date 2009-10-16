@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * A {@code NotYetConnectedException} is thrown if the socket channel is not
  * connected before an I/O operation is invoked.
- * 
- * @since Android 1.0
  */
 public class NotYetConnectedException extends IllegalStateException {
 
@@ -29,11 +26,8 @@ public class NotYetConnectedException extends IllegalStateException {
 
     /**
      * Constructs a {@code NotYetConnectedException}.
-     * 
-     * @since Android 1.0
      */
     public NotYetConnectedException() {
         super();
     }
-
 }

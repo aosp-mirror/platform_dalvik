@@ -31,6 +31,16 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  */
 @TestTargetClass(NonWritableChannelException.class)
 public class NonWritableChannelExceptionTest extends TestCase {
+    
+    /**
+     * @tests {@link java.nio.channels.NonWritableChannelException#NonWritableChannelException()}
+     */
+    public void test_Constructor() {
+        NonWritableChannelException e = new NonWritableChannelException();
+        assertNull(e.getMessage());
+        assertNull(e.getLocalizedMessage());
+        assertNull(e.getCause());
+    }
 
     /**
      * @tests serialization/deserialization compatibility.

@@ -74,8 +74,6 @@ public class BufferOverflowExceptionTest extends TestCase {
         SerializationTest.verifyGolden(this, new BufferOverflowException());
     }
 
-    // BEGIN android-added
-    // copied from newer version of harmony
     /**
      *@tests {@link java.nio.BufferOverflowException#BufferOverflowException()}
      */
@@ -91,5 +89,4 @@ public class BufferOverflowExceptionTest extends TestCase {
         assertNull(exception.getLocalizedMessage());
         assertNull(exception.getCause());
     }
-    // END android-added
 }

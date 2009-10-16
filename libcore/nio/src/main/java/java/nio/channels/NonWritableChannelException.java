@@ -16,12 +16,9 @@
 
 package java.nio.channels;
 
-
 /**
  * A {@code NonWritableChannelException} is thrown when attempting to write to a
  * channel that is not open for writing.
- * 
- * @since Android 1.0
  */
 public class NonWritableChannelException extends IllegalStateException {
 
@@ -29,8 +26,6 @@ public class NonWritableChannelException extends IllegalStateException {
 
     /**
      * Constructs a {@code NonWritableChannelException}.
-     * 
-     * @since Android 1.0
      */
     public NonWritableChannelException() {
         super();

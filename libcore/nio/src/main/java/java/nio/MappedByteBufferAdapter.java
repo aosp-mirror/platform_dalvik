@@ -16,7 +16,6 @@
  */
 
 // BEGIN android-note
-// updated to a newer version of harmony
 // added some missing updates on position and limit
 // END android-note
 
@@ -25,8 +24,8 @@ package java.nio;
 import org.apache.harmony.luni.platform.PlatformAddress;
 import org.apache.harmony.nio.internal.DirectBuffer;
 
-
-final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBuffer {
+final class MappedByteBufferAdapter extends MappedByteBuffer implements
+        DirectBuffer {
 
     private static final int CHAR_SIZE = 2;
 
@@ -39,7 +38,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
     private static final int FLOAT_SIZE = 4;
 
     private static final int DOUBLE_SIZE = 8;
-    
+
     public MappedByteBufferAdapter(ByteBuffer buffer) {
         super(buffer);
     }
@@ -49,26 +48,32 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         super(addr, capa, offset, mode);
     }
 
+    @Override
     public CharBuffer asCharBuffer() {
         return this.wrapped.asCharBuffer();
     }
 
+    @Override
     public DoubleBuffer asDoubleBuffer() {
         return this.wrapped.asDoubleBuffer();
     }
 
+    @Override
     public FloatBuffer asFloatBuffer() {
         return this.wrapped.asFloatBuffer();
     }
 
+    @Override
     public IntBuffer asIntBuffer() {
         return this.wrapped.asIntBuffer();
     }
 
+    @Override
     public LongBuffer asLongBuffer() {
         return this.wrapped.asLongBuffer();
     }
 
+    @Override
     public ByteBuffer asReadOnlyBuffer() {
         MappedByteBufferAdapter buf = new MappedByteBufferAdapter(this.wrapped
                 .asReadOnlyBuffer());
@@ -78,10 +83,12 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return buf;
     }
 
+    @Override
     public ShortBuffer asShortBuffer() {
         return this.wrapped.asShortBuffer();
     }
 
+    @Override
     public ByteBuffer compact() {
         if (this.wrapped.isReadOnly()) {
             throw new ReadOnlyBufferException();
@@ -96,6 +103,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer duplicate() {
         MappedByteBufferAdapter buf = new MappedByteBufferAdapter(this.wrapped
                 .duplicate());
@@ -105,20 +113,23 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return buf;
     }
 
+    @Override
     public byte get() {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
-        byte result = this.wrapped.get(); 
+        byte result = this.wrapped.get();
         this.position++;
         return result;
     }
 
+    @Override
     public byte get(int index) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
         return this.wrapped.get(index);
     }
 
+    @Override
     public char getChar() {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -127,12 +138,14 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return result;
     }
 
+    @Override
     public char getChar(int index) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
         return this.wrapped.getChar(index);
     }
 
+    @Override
     public double getDouble() {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -141,6 +154,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return result;
     }
 
+    @Override
     public double getDouble(int index) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -155,6 +169,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         // END android-changed
     }
 
+    @Override
     public float getFloat() {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -163,12 +178,14 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return result;
     }
 
+    @Override
     public float getFloat(int index) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
         return this.wrapped.getFloat(index);
     }
 
+    @Override
     public int getInt() {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -177,12 +194,14 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return result;
     }
 
+    @Override
     public int getInt(int index) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
         return this.wrapped.getInt(index);
     }
 
+    @Override
     public long getLong() {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -191,12 +210,14 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return result;
     }
 
+    @Override
     public long getLong(int index) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
         return this.wrapped.getLong(index);
     }
 
+    @Override
     public short getShort() {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -205,25 +226,30 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return result;
     }
 
+    @Override
     public short getShort(int index) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
         return this.wrapped.getShort(index);
     }
 
+    @Override
     public boolean isDirect() {
         return true;
     }
 
+    @Override
     public boolean isReadOnly() {
         return this.wrapped.isReadOnly();
     }
 
+    @Override
     ByteBuffer orderImpl(ByteOrder byteOrder) {
         super.orderImpl(byteOrder);
         return this.wrapped.order(byteOrder);
     }
 
+    @Override
     public ByteBuffer put(byte b) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -232,6 +258,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer put(byte[] src, int off, int len) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -240,6 +267,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer put(int index, byte b) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -247,6 +275,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putChar(char value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -255,6 +284,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putChar(int index, char value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -262,6 +292,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putDouble(double value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -270,6 +301,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putDouble(int index, double value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -277,6 +309,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putFloat(float value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -285,6 +318,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putFloat(int index, float value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -292,6 +326,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putInt(int index, int value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -299,6 +334,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putInt(int value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -307,6 +343,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putLong(int index, long value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -314,6 +351,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putLong(long value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -322,6 +360,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putShort(int index, short value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -329,6 +368,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer putShort(short value) {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -337,6 +377,7 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return this;
     }
 
+    @Override
     public ByteBuffer slice() {
         this.wrapped.limit(this.limit);
         this.wrapped.position(this.position);
@@ -346,14 +387,17 @@ final class MappedByteBufferAdapter extends MappedByteBuffer implements DirectBu
         return result;
     }
 
+    @Override
     byte[] protectedArray() {
         return this.wrapped.protectedArray();
     }
 
+    @Override
     int protectedArrayOffset() {
         return this.wrapped.protectedArrayOffset();
     }
 
+    @Override
     boolean protectedHasArray() {
         return this.wrapped.protectedHasArray();
     }

@@ -65,17 +65,19 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
             int anOffset) {
         super(new SafeAddress(address), aCapacity, anOffset);
     }
-    
+
     // BEGIN android-added
     int getAddress() {
         return this.safeAddress.address.toInt();
     }
     // END android-added
-    
+
+    @Override
     public ByteBuffer asReadOnlyBuffer() {
         return ReadOnlyDirectByteBuffer.copy(this, mark);
     }
 
+    @Override
     public ByteBuffer compact() {
         PlatformAddress effectiveAddress = getEffectiveAddress();
         effectiveAddress.offsetBytes(position).moveTo(effectiveAddress,
@@ -86,14 +88,17 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
         return this;
     }
 
+    @Override
     public ByteBuffer duplicate() {
         return copy(this, mark);
     }
 
+    @Override
     public boolean isReadOnly() {
         return false;
     }
 
+    @Override
     public ByteBuffer put(byte value) {
         if (position == limit) {
             throw new BufferOverflowException();
@@ -102,6 +107,7 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
         return this;
     }
 
+    @Override
     public ByteBuffer put(int index, byte value) {
         if (index < 0 || index >= limit) {
             throw new IndexOutOfBoundsException();
@@ -117,29 +123,26 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
      * 
      * @see java.nio.ByteBuffer#put(byte[], int, int)
      */
+    @Override
     public ByteBuffer put(byte[] src, int off, int len) {
         int length = src.length;
-        if (off < 0 || len < 0 || (long)off + (long)len > length) {
+        if (off < 0 || len < 0 || (long) off + (long) len > length) {
             throw new IndexOutOfBoundsException();
         }
         if (len > remaining()) {
             throw new BufferOverflowException();
         }
-        if (isReadOnly()) {
-            throw new ReadOnlyBufferException();
-        }
-        getBaseAddress().setByteArray(offset + position, src, off,
-                len);
+        getBaseAddress().setByteArray(offset + position, src, off, len);
         position += len;
         return this;
     }
-    
+
     // BEGIN android-added
     /**
      * Writes <code>short</code>s in the given short array, starting from the
      * specified offset, to the current position and increase the position by
      * the number of <code>short</code>s written.
-     * 
+     *
      * @param src
      *            The source short array
      * @param off
@@ -179,7 +182,7 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
      * Writes <code>int</code>s in the given int array, starting from the
      * specified offset, to the current position and increase the position by
      * the number of <code>int</code>s written.
-     * 
+     *
      * @param src
      *            The source int array
      * @param off
@@ -215,7 +218,8 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
         return this;
     }
     // END android-added
-    
+
+    @Override
     public ByteBuffer putDouble(double value) {
         int newPosition = position + 8;
         if (newPosition > limit) {
@@ -226,14 +230,16 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
         return this;
     }
 
+    @Override
     public ByteBuffer putDouble(int index, double value) {
-        if (index < 0 || (long)index + 8 > limit) {
+        if (index < 0 || (long) index + 8 > limit) {
             throw new IndexOutOfBoundsException();
         }
         getBaseAddress().setDouble(offset + index, value, order);
         return this;
     }
 
+    @Override
     public ByteBuffer putFloat(float value) {
         int newPosition = position + 4;
         if (newPosition > limit) {
@@ -244,14 +250,16 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
         return this;
     }
 
+    @Override
     public ByteBuffer putFloat(int index, float value) {
-        if (index < 0 || (long)index + 4 > limit) {
+        if (index < 0 || (long) index + 4 > limit) {
             throw new IndexOutOfBoundsException();
         }
         getBaseAddress().setFloat(offset + index, value, order);
         return this;
     }
 
+    @Override
     public ByteBuffer putInt(int value) {
         int newPosition = position + 4;
         if (newPosition > limit) {
@@ -262,14 +270,16 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
         return this;
     }
 
+    @Override
     public ByteBuffer putInt(int index, int value) {
-        if (index < 0 || (long)index + 4 > limit) {
+        if (index < 0 || (long) index + 4 > limit) {
             throw new IndexOutOfBoundsException();
         }
         getBaseAddress().setInt(offset + index, value, order);
         return this;
     }
 
+    @Override
     public ByteBuffer putLong(long value) {
         int newPosition = position + 8;
         if (newPosition > limit) {
@@ -280,14 +290,16 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
         return this;
     }
 
+    @Override
     public ByteBuffer putLong(int index, long value) {
-        if (index < 0 || (long)index + 8 > limit) {
+        if (index < 0 || (long) index + 8 > limit) {
             throw new IndexOutOfBoundsException();
         }
         getBaseAddress().setLong(offset + index, value, order);
         return this;
     }
 
+    @Override
     public ByteBuffer putShort(short value) {
         int newPosition = position + 2;
         if (newPosition > limit) {
@@ -298,14 +310,16 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
         return this;
     }
 
+    @Override
     public ByteBuffer putShort(int index, short value) {
-        if (index < 0 || (long)index + 2 > limit) {
+        if (index < 0 || (long) index + 2 > limit) {
             throw new IndexOutOfBoundsException();
         }
         getBaseAddress().setShort(offset + index, value, order);
         return this;
     }
 
+    @Override
     public ByteBuffer slice() {
         ReadWriteDirectByteBuffer buf = new ReadWriteDirectByteBuffer(
                 safeAddress, remaining(), offset + position);

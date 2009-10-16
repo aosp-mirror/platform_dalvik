@@ -293,6 +293,17 @@ public abstract class DoubleBufferTest extends AbstractBufferTest {
         other.limit(5);
         assertTrue(buf.compareTo(other) > 0);
         assertTrue(other.compareTo(buf) < 0);
+
+        DoubleBuffer dbuffer1 = DoubleBuffer.wrap(new double[] { Double.NaN });
+        DoubleBuffer dbuffer2 = DoubleBuffer.wrap(new double[] { Double.NaN });
+        DoubleBuffer dbuffer3 = DoubleBuffer.wrap(new double[] { 42d });
+
+        assertEquals("Failed equal comparison with NaN entry", 0, dbuffer1
+                .compareTo(dbuffer2));
+        assertEquals("Failed greater than comparison with NaN entry", 1, dbuffer3
+                .compareTo(dbuffer1));
+        assertEquals("Failed greater than comparison with NaN entry", 1, dbuffer1
+                .compareTo(dbuffer3));
     }
 
     @TestTargetNew(

@@ -42,9 +42,6 @@ import org.apache.harmony.nio.internal.SelectorProviderImpl;
  * A provider instance can be retrieved through a system property or the
  * configuration file in a jar file; if no provide is available that way then
  * the system default provider is returned.
- * </p>
- * 
- * @since Android 1.0
  */
 public abstract class SelectorProvider extends Object {
 
@@ -55,8 +52,8 @@ public abstract class SelectorProvider extends Object {
     private static final String PROVIDER_IN_JAR_RESOURCE = "META-INF/services/java.nio.channels.spi.SelectorProvider"; //$NON-NLS-1$
 
     private static SelectorProvider provider = null;
-    
-    private static Channel inheritedChannel; 
+
+    private static Channel inheritedChannel;
 
     /**
      * Constructs a new {@code SelectorProvider}.
@@ -64,7 +61,6 @@ public abstract class SelectorProvider extends Object {
      * @throws SecurityException
      *             if there is a security manager installed that does not permit
      *             the runtime permission labeled "selectorProvider".
-     * @since Android 1.0
      */
     protected SelectorProvider() {
         super();
@@ -87,9 +83,8 @@ public abstract class SelectorProvider extends Object {
      * provider's class name; </li>
      * <li> otherwise, a system default provider will be returned.</li>
      * </ul>
-     * 
+     *
      * @return the provider.
-     * @since Android 1.0
      */
     synchronized public static SelectorProvider provider() {
         if (null == provider) {
@@ -115,8 +110,8 @@ public abstract class SelectorProvider extends Object {
     static SelectorProvider loadProviderByJar() {
         Enumeration<URL> enumeration = null;
 
-        ClassLoader classLoader = AccessController.doPrivileged(
-                new PrivilegedAction<ClassLoader>() {
+        ClassLoader classLoader = AccessController
+                .doPrivileged(new PrivilegedAction<ClassLoader>() {
                     public ClassLoader run() {
                         return ClassLoader.getSystemClassLoader();
                     }
@@ -153,40 +148,37 @@ public abstract class SelectorProvider extends Object {
                             .substring(0, siteComment);
                     if (0 < className.length()) {
                         return (SelectorProvider) classLoader.loadClass(
-                                className).newInstance();                  
+                                className).newInstance();
                     }
                 }
             } catch (Exception e) {
                 throw new Error(e);
-            // BEGIN android-added
-            // copied from a newer version of harmony
             } finally {
                 try {
                     br.close();
                 } catch (IOException ioe) {
                     // Ignore
                 }
-            // END android-added
             }
         }
         return null;
     }
 
     /*
-     * load by system property.
+     * Load by system property.
      */
     static SelectorProvider loadProviderByProperty() {
-        return AccessController.doPrivileged(
-                new PrivilegedAction<SelectorProvider>() {
+        return AccessController
+                .doPrivileged(new PrivilegedAction<SelectorProvider>() {
                     public SelectorProvider run() {
                         try {
-                            final String className =
-                                System.getProperty(PROVIDER_IN_SYSTEM_PROPERTY);
+                            final String className = System
+                                    .getProperty(PROVIDER_IN_SYSTEM_PROPERTY);
                             if (null != className) {
                                 Class<?> spClass = ClassLoader
                                         .getSystemClassLoader().loadClass(
                                                 className);
-                                return (SelectorProvider)spClass.newInstance();
+                                return (SelectorProvider) spClass.newInstance();
                             }
                             return null;
                         } catch (Exception e) {
@@ -202,7 +194,6 @@ public abstract class SelectorProvider extends Object {
      * @return the new channel.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract DatagramChannel openDatagramChannel() throws IOException;
 
@@ -212,7 +203,6 @@ public abstract class SelectorProvider extends Object {
      * @return the new pipe.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract Pipe openPipe() throws IOException;
 
@@ -222,7 +212,6 @@ public abstract class SelectorProvider extends Object {
      * @return the new selector.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract AbstractSelector openSelector() throws IOException;
 
@@ -232,7 +221,6 @@ public abstract class SelectorProvider extends Object {
      * @return the new channel.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract ServerSocketChannel openServerSocketChannel()
             throws IOException;
@@ -243,7 +231,6 @@ public abstract class SelectorProvider extends Object {
      * @return the new channel.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public abstract SocketChannel openSocketChannel() throws IOException;
 
@@ -257,7 +244,6 @@ public abstract class SelectorProvider extends Object {
      * @throws SecurityException
      *             if there is a security manager installed that does not permit
      *             the runtime permission labeled "selectorProvider".
-     * @since Android 1.0
      */
     public Channel inheritedChannel() throws IOException {
         // BEGIN android-added

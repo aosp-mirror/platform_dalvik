@@ -66,6 +66,12 @@ public class FileLockTest extends TestCase {
         mockLock = new MockFileLock(readWriteChannel, 10, 100, false);
     }
 
+	protected void tearDown() throws IOException {
+	    if (readWriteChannel != null) {
+	        readWriteChannel.close();
+	    }
+	}
+
     /**
      * @tests java.nio.channels.FileLock#FileLock(FileChannel, long, long,
      *        boolean)
