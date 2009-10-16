@@ -57,6 +57,7 @@ public class AllTests
         
         // Android-written test suites.
         suite.addTest(com.ibm.icu4jni.util.AllTests.suite());
+        suite.addTest(java.lang.AllTests.suite());
         suite.addTest(java.lang.reflect.AllTests.suite());
         suite.addTest(org.apache.harmony.luni.platform.AllTests.suite());
         suite.addTest(tests.api.org.apache.harmony.kernel.dalvik.AllTests.suite());

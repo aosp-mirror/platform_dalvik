@@ -229,7 +229,6 @@ createFloat1 (JNIEnv * env, U_64 * f, IDATA length, jint e)
   jfloat result;
 
   numBits = highestSetBitHighPrecision (f, length) + 1;
-  numBits -= lowestSetBitHighPrecision (f, length);
   if (numBits < 25 && e >= 0 && e < LOG5_OF_TWO_TO_THE_N)
     {
       return ((jfloat) LOW_I32_FROM_PTR (f)) * tenToTheE (e);
@@ -606,4 +605,3 @@ int register_org_apache_harmony_luni_util_fltparse(JNIEnv *env)
                "org/apache/harmony/luni/util/FloatingPointParser",
                 gMethods, NELEM(gMethods));
 }
-
