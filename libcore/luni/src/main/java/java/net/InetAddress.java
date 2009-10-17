@@ -303,22 +303,18 @@ public class InetAddress extends Object implements Serializable {
 
     // BEGIN android-added
     /**
-     * Convenience method to convert a byte array to a string, converting
-     * exceptions to runtime exceptions. This is used when passing in byte
-     * arrays that have been verified to be correct and is necessary because
-     * some methods, such as getHostName(), are not allowed to throw exceptions
-     * but are implemented using byteArrayToIpString(), which throws
-     * UnknownHostException. Exceptions should never occur when the address is
-     * valid, but they cannot be simply ignored because they could be due to
-     * runtime errors such as out-of-memory conditions.
+     * Returns the numeric string form of the given IP address.
      *
-     * @param ipaddress the byte array to convert
+     * @param ipAddress
+     *         the byte array to convert; length 4 for IPv4, 16 for IPv6.
+     * @throws IllegalArgumentException
+     *         if ipAddress is of length other than 4 or 16.
      */
-    private static String ipAddressToString(byte[] ipaddress) {
+    private static String ipAddressToString(byte[] ipAddress) {
         try {
-            return NETIMPL.byteArrayToIpString(ipaddress);
-        } catch(UnknownHostException e) {
-            throw new RuntimeException(e);
+            return NETIMPL.byteArrayToIpString(ipAddress);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("byte[] neither 4 nor 16 bytes", ex);
         }
     }
     // END android-added
