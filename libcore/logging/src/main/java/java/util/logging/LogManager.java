@@ -17,6 +17,14 @@
 
 package java.util.logging;
 
+// BEGIN android-note
+// this file contains cleaned up documentation and style for contribution
+// upstream.
+// javax.management support (MBeans) has been dropped.
+// END android-note
+
+import org.apache.harmony.logging.internal.nls.Messages;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.BufferedInputStream;
@@ -24,27 +32,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-// BEGIN android-removed
-//import java.lang.management.ManagementFactory;
-//import java.lang.reflect.Method;
-// END android-removed
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Properties;
-import java.util.Set;
 import java.util.StringTokenizer;
-
-// BEGIN android-removed
-//import javax.management.MBeanServer;
-//import javax.management.ObjectInstance;
-//import javax.management.ObjectName;
-// END android-removed
-
-import org.apache.harmony.logging.internal.nls.Messages;
 
 /**
  * {@code LogManager} is used to maintain configuration properties of the
@@ -126,20 +120,19 @@ import org.apache.harmony.logging.internal.nls.Messages;
  * the property file. The root logger's level can be defined by the property
  * named as ".level".
  * <p>
- * All methods on this type can be taken as being thread safe.
- *
+ * This class is thread safe. It is an error to synchronize on a
+ * {@code LogManager} while synchronized on a {@code Logger}.
  */
 public class LogManager {
 
-    // The line separator of the underlying OS
-    // Use privileged code to read the line.separator system property
+    /** The line separator of the underlying OS. */
     private static final String lineSeparator = getPrivilegedSystemProperty("line.separator"); //$NON-NLS-1$
 
-    // The shared logging permission
+    /** The shared logging permission. */
     private static final LoggingPermission perm = new LoggingPermission(
             "control", null); //$NON-NLS-1$
 
-    // the singleton instance
+    /** The singleton instance. */
     static LogManager manager;
 
     /**
@@ -192,10 +185,10 @@ public class LogManager {
     // FIXME: use weak reference to avoid heap memory leak
     private Hashtable<String, Logger> loggers;
 
-    // the configuration properties
+    /** The configuration properties */
     private Properties props;
 
-    // the property change listener
+    /** the property change listener */
     private PropertyChangeSupport listeners;
 
     static {
@@ -318,17 +311,17 @@ public class LogManager {
             parentName = parentName.substring(0, lastSeparator);
             parent = loggers.get(parentName);
             if (parent != null) {
-                logger.internalSetParent(parent);
+                setParent(logger, parent);
                 break;
             } else if (getProperty(parentName + ".level") != null || //$NON-NLS-1$
                     getProperty(parentName + ".handlers") != null) { //$NON-NLS-1$
                 parent = Logger.getLogger(parentName);
-                logger.internalSetParent(parent);
+                setParent(logger, parent);
                 break;
             }
         }
         if (parent == null && null != (parent = loggers.get(""))) { //$NON-NLS-1$
-            logger.internalSetParent(parent);
+            setParent(logger, parent);
         }
 
         // find children
@@ -348,7 +341,7 @@ public class LogManager {
                 });
                 if (null != oldParent) {
                     // -- remove from old parent as the parent has been changed
-                    oldParent.removeChild(child);
+                    oldParent.children.remove(child);
                 }
             }
         }
@@ -592,5 +585,67 @@ public class LogManager {
     public void removePropertyChangeListener(PropertyChangeListener l) {
         checkAccess();
         listeners.removePropertyChangeListener(l);
+    }
+
+    /**
+     * Returns a named logger associated with the supplied resource bundle.
+     *
+     * @param resourceBundleName the resource bundle to associate, or null for
+     *      no associated resource bundle.
+     */
+    synchronized Logger getOrCreate(String name, String resourceBundleName) {
+        Logger result = getLogger(name);
+        if (result == null) {
+            result = new Logger(name, resourceBundleName);
+            addLogger(result);
+        }
+        return result;
+    }
+
+
+    /**
+     * Sets the parent of this logger in the namespace. Callers must first
+     * {@link #checkAccess() check security}.
+     *
+     * @param newParent
+     *            the parent logger to set.
+     */
+    synchronized void setParent(Logger logger, Logger newParent) {
+        logger.parent = newParent;
+
+        if (logger.levelObjVal == null) {
+            setLevelRecursively(logger, null);
+        }
+        newParent.children.add(logger);
+    }
+
+    /**
+     * Sets the level on {@code logger} to {@code newLevel}. Any child loggers
+     * currently inheriting their level from {@code logger} will be updated
+     * recursively.
+     *
+     * @param newLevel the new minimum logging threshold. If null, the logger's
+     *      parent level will be used; or {@code Level.INFO} for loggers with no
+     *      parent.
+     */
+    synchronized void setLevelRecursively(Logger logger, Level newLevel) {
+        int previous = logger.levelIntVal;
+        logger.levelObjVal = newLevel;
+
+        if (newLevel == null) {
+            logger.levelIntVal = logger.parent != null
+                    ? logger.parent.levelIntVal
+                    : Level.INFO.intValue();
+        } else {
+            logger.levelIntVal = newLevel.intValue();
+        }
+
+        if (previous != logger.levelIntVal) {
+            for (Logger child : logger.children) {
+                if (child.levelObjVal == null) {
+                    setLevelRecursively(child, null);
+                }
+            }
+        }
     }
 }
