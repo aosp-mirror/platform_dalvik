@@ -17,7 +17,6 @@
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
@@ -29,6 +28,7 @@ import java.util.prefs.Preferences;
 import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
+import tests.util.PrefsTester;
 
 /**
  * 
@@ -36,7 +36,19 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 @TestTargetClass(PreferenceChangeEvent.class)
 public class PreferenceChangeEventTest extends TestCase {
 
+    private final PrefsTester prefsTester = new PrefsTester();
+
     PreferenceChangeEvent event;
+
+    @Override protected void setUp() throws Exception {
+        super.setUp();
+        prefsTester.setUp();
+    }
+
+    @Override protected void tearDown() throws Exception {
+        prefsTester.tearDown();
+        super.tearDown();
+    }
 
     @TestTargetNew(
         level = TestLevel.PARTIAL,
