@@ -25,6 +25,10 @@ tmp=/data/core-tests.tmp
 mkdir $tmp
 chmod 777 $tmp
   
-exec dalvikvm -Duser.language=en -Duser.region=US -Djava.io.tmpdir=$tmp \
+exec dalvikvm \
+     -Duser.language=en \
+     -Duser.region=US \
+     -Djava.io.tmpdir=$tmp \
+     -Djavax.net.ssl.trustStore=/system/etc/security/cacerts.bks \
      -classpath /system/framework/core-tests.jar \
      -Xmx64M com.google.coretests.Main "$@"
