@@ -55,11 +55,12 @@ public class CharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
 
     protected void setUp() throws Exception {
-        super.setUp();
-
         cs = new CharsetEncoderTest.MockCharset("mock", new String[0]);
         unibytes = new byte[] { 32, 98, 117, 102, 102, 101, 114 };
         decoder = cs.newDecoder();
+
+        // for this test's weird superclass, super.setUp() needs to be run last
+        super.setUp();
     }
 
 

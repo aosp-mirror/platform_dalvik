@@ -16,24 +16,17 @@
 
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import junit.framework.TestCase;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CharsetEncoder;
-import java.nio.charset.CoderResult;
 import java.nio.charset.IllegalCharsetNameException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
-
-import junit.framework.TestCase;
 @TestTargetClass(Charset.class)
 public class CharsetTest extends TestCase {
 
@@ -181,153 +174,4 @@ public class CharsetTest extends TestCase {
         Charset cs4 = Charset.forName("US-ASCII");
         assertSame(cs3, cs4);
     }
-    
-    /*
-     * test cached decoder
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "This test is quite useless for the rest it does, though.",
-        method = "Charset",
-        args = {java.lang.String.class, java.lang.String[].class}
-    )
-    public void test_DecodeLjava_nio_ByteBuffer() throws Exception{
-            MockCharsetForDecoder cs1 = new MockCharsetForDecoder("CachedCharset",null);
-            MockCharsetForDecoder cs2 = new MockCharsetForDecoder("CachedCharset",null);
-            ByteBuffer in = ByteBuffer.wrap(new byte[]{0x00});
-            cs1.decode(in);
-            in.flip();
-            cs2.decode(in);
-            in.flip();
-    }
-    /*
-     * Mock Charset for cached decoder test
-     */
-    static class MockCharsetForDecoder extends Charset{
-
-            public MockCharsetForDecoder(String canonicalName, String[] aliases){
-                    super(canonicalName, aliases);
-            }
-
-            public boolean contains(Charset charset) {
-                    return false;
-            }
-
-            public CharsetEncoder newEncoder() {
-                    return null;
-            }
-
-            public CharsetDecoder newDecoder() {
-                    return new MockCachedDecoder(this);
-            }
-
-
-    }
-    /*
-     * Mock decoder. Only one caller is permitted.
-     */
-    static class MockCachedDecoder extends CharsetDecoder {
-            static MockCachedDecoder caller = null;
-
-            public MockCachedDecoder(Charset cs) {
-                    super(cs, 1, 10);
-            }
-
-            /*
-             * Only one caller is permitted.
-             * If there's another caller, throw RuntimeException.
-             */
-            protected CoderResult decodeLoop(ByteBuffer in, CharBuffer out) {
-                    if(null == caller){
-                            caller = this;
-                    }else{
-                            if(caller != this){
-                                // Another instance
-                                fail("should use the same instance");
-                            }
-                    }
-                    return CoderResult.UNDERFLOW;
-            }
-    }
-
-    /*
-     * test cached encoder
-     */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "Functional test.",
-        method = "encode",
-        args = {java.nio.CharBuffer.class}
-    )
-    public void test_EncodeLjava_nio_CharBuffer() throws Exception {
-            MockCharsetForEncoder cs1 = new MockCharsetForEncoder("CachedCharset", null);
-            MockCharsetForEncoder cs2 = new MockCharsetForEncoder("CachedCharset", null);
-            CharBuffer in = CharBuffer.wrap("A");
-            cs1.encode(in);
-            in.flip();
-            cs2.encode(in);
-    }
-
-    /*
-     * Mock Charset for cached encoder test
-     */
-    static class MockCharsetForEncoder extends Charset {
-
-            public MockCharsetForEncoder(String canonicalName, String[] aliases) {
-                    super(canonicalName, aliases);
-            }
-
-            public boolean contains(Charset charset) {
-                    return false;
-            }
-
-            public CharsetDecoder newDecoder() {
-                    return new MockDecoderForEncoder(this);
-            }
-
-            public CharsetEncoder newEncoder() {
-                    return new MockCachedEncoder(this);
-            }
-    }
-
-    /*
-     * Mock encoder. Only one caller is permitted.
-     */
-    static class MockCachedEncoder extends CharsetEncoder {
-            static MockCachedEncoder caller = null;
-
-            public MockCachedEncoder(Charset cs) {
-                    super(cs, 1, 10);
-            }
-
-            /*
-             * Only one caller is permitted.
-             */
-            protected CoderResult encodeLoop(CharBuffer in, ByteBuffer out) {
-                    if (null == caller) {
-                            caller = this;
-                    } else {
-                            if (caller != this) {
-                                    // Another instance
-                                    fail("should use the same instance");
-                            }
-                    }
-                    return CoderResult.UNDERFLOW;
-            }
-    }
-
-    /*
-     * Mock decoder for MockCachedEncoder.
-     */
-    static class MockDecoderForEncoder extends CharsetDecoder {
-            public MockDecoderForEncoder(Charset cs) {
-                    super(cs, 1, 10);
-            }
-
-            protected CoderResult decodeLoop(ByteBuffer in, CharBuffer out) {
-                    in.position(in.limit());
-                    return CoderResult.UNDERFLOW;
-            }
-    }
-
 }
