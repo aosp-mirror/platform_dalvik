@@ -663,10 +663,10 @@ typedef struct PredictedChainingCell {
 #define PREDICTED_CHAIN_COUNTER_INIT     0
 
 /* Used when the callee is not compiled yet */
-#define PREDICTED_CHAIN_COUNTER_DELAY    16
+#define PREDICTED_CHAIN_COUNTER_DELAY    512
 
 /* Rechain after this many mis-predictions have happened */
-#define PREDICTED_CHAIN_COUNTER_RECHAIN  1024
+#define PREDICTED_CHAIN_COUNTER_RECHAIN  8192
 
 /* Used if the resolved callee is a native method */
 #define PREDICTED_CHAIN_COUNTER_AVOID    0x7fffffff

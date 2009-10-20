@@ -3218,7 +3218,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
         }
 /*
  * TODO:  When we move to using upper registers in Thumb2, make sure
- *        the register allocater is told that r9, r10, & r12 are killed
+ *        the register allocater is told that r8, r9, & r10 are killed
  *        here.
  */
         /*
@@ -3240,21 +3240,21 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
          * 0x426a9ad2 : blx_2   see above      --+     PREDICTED_CHAIN
          * 0x426a9ad4 : b       0x426a9b0c     --> off to the predicted chain
          * 0x426a9ad6 : b       0x426a9afe     --> punt to the interpreter
-         * 0x426a9ad8 : mov     r9, r1         --+
-         * 0x426a9ada : mov     r10, r2          |
-         * 0x426a9adc : mov     r12, r3          |
+         * 0x426a9ad8 : mov     r8, r1         --+
+         * 0x426a9ada : mov     r9, r2           |
+         * 0x426a9adc : mov     r10, r3          |
          * 0x426a9ade : mov     r0, r3           |
          * 0x426a9ae0 : mov     r1, #74          | dvmFindInterfaceMethodInCache
          * 0x426a9ae2 : ldr     r2, [pc, #76]    |
          * 0x426a9ae4 : ldr     r3, [pc, #68]    |
          * 0x426a9ae6 : ldr     r7, [pc, #64]    |
          * 0x426a9ae8 : blx     r7             --+
-         * 0x426a9aea : mov     r1, r9         --> r1 <- rechain count
+         * 0x426a9aea : mov     r1, r8         --> r1 <- rechain count
          * 0x426a9aec : cmp     r1, #0         --> compare against 0
          * 0x426a9aee : bgt     0x426a9af8     --> >=0? don't rechain
          * 0x426a9af0 : ldr     r7, [r6, #96]  --+
-         * 0x426a9af2 : mov     r2, r10          | dvmJitToPatchPredictedChain
-         * 0x426a9af4 : mov     r3, r12          |
+         * 0x426a9af2 : mov     r2, r9           | dvmJitToPatchPredictedChain
+         * 0x426a9af4 : mov     r3, r10          |
          * 0x426a9af6 : blx     r7             --+
          * 0x426a9af8 : add     r1, pc, #8     --> r1 <- &retChainingCell
          * 0x426a9afa : blx_1   0x426a9098     --+ TEMPLATE_INVOKE_METHOD_NO_OPT
@@ -3343,9 +3343,9 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              */
 
             /* Save count, &predictedChainCell, and class to high regs first */
-            opRegReg(cUnit, OP_MOV, r9, r1);
-            opRegReg(cUnit, OP_MOV, r10, r2);
-            opRegReg(cUnit, OP_MOV, r12, r3);
+            opRegReg(cUnit, OP_MOV, r8, r1);
+            opRegReg(cUnit, OP_MOV, r9, r2);
+            opRegReg(cUnit, OP_MOV, r10, r3);
 
             /* r0 now contains this->clazz */
             opRegReg(cUnit, OP_MOV, r0, r3);
@@ -3365,7 +3365,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 
             /* r0 = calleeMethod (returned from dvmFindInterfaceMethodInCache */
 
-            opRegReg(cUnit, OP_MOV, r1, r9);
+            opRegReg(cUnit, OP_MOV, r1, r8);
 
             /* Check if rechain limit is reached */
             opRegImm(cUnit, OP_CMP, r1, 0, rNone);
@@ -3375,8 +3375,8 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
                          jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
 
-            opRegReg(cUnit, OP_MOV, r2, r10);
-            opRegReg(cUnit, OP_MOV, r3, r12);
+            opRegReg(cUnit, OP_MOV, r2, r9);
+            opRegReg(cUnit, OP_MOV, r3, r10);
 
             /*
              * r0 = calleeMethod

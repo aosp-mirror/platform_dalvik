@@ -963,7 +963,7 @@ bool dvmJitResizeJitTable( unsigned int size )
     }
 
     /* Stop all other interpreting/jit'ng threads */
-    dvmSuspendAllThreads(SUSPEND_FOR_JIT);
+    dvmSuspendAllThreads(SUSPEND_FOR_TBL_RESIZE);
 
     pOldTable = gDvmJit.pJitEntryTable;
     oldSize = gDvmJit.jitTableSize;
@@ -1000,7 +1000,7 @@ bool dvmJitResizeJitTable( unsigned int size )
     free(pOldTable);
 
     /* Restart the world */
-    dvmResumeAllThreads(SUSPEND_FOR_JIT);
+    dvmResumeAllThreads(SUSPEND_FOR_TBL_RESIZE);
 
     return false;
 }

@@ -521,6 +521,10 @@ static const char* getSuspendCauseStr(SuspendCause why)
     case SUSPEND_FOR_DEBUG:         return "debug";
     case SUSPEND_FOR_DEBUG_EVENT:   return "debug-event";
     case SUSPEND_FOR_STACK_DUMP:    return "stack-dump";
+#if defined(WITH_JIT)
+    case SUSPEND_FOR_TBL_RESIZE:    return "table-resize";
+    case SUSPEND_FOR_IC_PATCH:      return "inline-cache-patch";
+#endif
     default:                        return "UNKNOWN";
     }
 }
@@ -559,6 +563,9 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
                  *
                  * Could be the debugger telling us to resume at roughly
                  * the same time we're posting an event.
+                 *
+                 * Could be two app threads both want to patch predicted
+                 * chaining cells around the same time.
                  */
                 LOGI("threadid=%d ODD: want thread-suspend lock (%s:%s),"
                      " it's held, no suspend pending\n",
