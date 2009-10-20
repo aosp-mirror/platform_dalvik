@@ -187,6 +187,7 @@ struct DvmGlobals {
     ClassObject* classJavaLangReflectMethodArray;
     ClassObject* classJavaLangReflectProxy;
     ClassObject* classJavaLangExceptionInInitializerError;
+    ClassObject* classJavaLangRefPhantomReference;
     ClassObject* classJavaLangRefReference;
     ClassObject* classJavaNioReadWriteDirectByteBuffer;
     ClassObject* classJavaSecurityAccessController;
@@ -279,6 +280,7 @@ struct DvmGlobals {
     /* constructor method pointers; no vtable involved, so use Method* */
     Method*     methJavaLangStackTraceElement_init;
     Method*     methJavaLangExceptionInInitializerError_init;
+    Method*     methJavaLangRefPhantomReference_init;
     Method*     methJavaLangReflectConstructor_init;
     Method*     methJavaLangReflectField_init;
     Method*     methJavaLangReflectMethod_init;
@@ -424,6 +426,9 @@ struct DvmGlobals {
      */
     ReferenceTable  jniPinRefTable;
     pthread_mutex_t jniPinRefLock;
+
+    /* special ReferenceQueue for JNI weak globals */
+    Object*     jniWeakGlobalRefQueue;
 
     /*
      * Native shared library table.
