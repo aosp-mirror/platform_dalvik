@@ -184,9 +184,9 @@ bool dvmCompilerSetupCodeCache(void)
     gDvmJit.templateSize = templateSize;
     gDvmJit.codeCacheByteUsed = templateSize;
 
-    /* Flush dcache and invalidate the icache to maintain coherence */
+    /* Only flush the part in the code cache that is being used now */
     cacheflush((intptr_t) gDvmJit.codeCache,
-               (intptr_t) gDvmJit.codeCache + CODE_CACHE_SIZE, 0);
+               (intptr_t) gDvmJit.codeCache + templateSize, 0);
     return true;
 }
 
