@@ -1246,13 +1246,22 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
         cell->counter = PREDICTED_CHAIN_COUNTER_DELAY;
         cacheflush((long) cell, (long) (cell+1), 0);
         COMPILER_TRACE_CHAINING(
-            LOGD("Jit Runtime: predicted chain %p to method %s delayed",
-                 cell, method->name));
+            LOGD("Jit Runtime: predicted chain %p to method %s%s delayed",
+                 cell, method->clazz->descriptor, method->name));
         goto done;
     }
 
+    /*
+     * Bump up the counter first just in case other mutator threads are in
+     * nearby territory to also attempt to rechain this cell. This is not
+     * done in a thread-safe way and doesn't need to be since the consequence
+     * of the race condition [rare] is two back-to-back suspend-all attempts,
+     * which will be handled correctly.
+     */
+    cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
+
     /* Stop the world */
-    dvmSuspendAllThreads(SUSPEND_FOR_JIT);
+    dvmSuspendAllThreads(SUSPEND_FOR_IC_PATCH);
 
     int baseAddr = (int) cell + 4;   // PC is cur_addr + 4
     int branchOffset = tgtAddr - baseAddr;
@@ -1266,12 +1275,16 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
     cell->branch = assembleBXPair(branchOffset);
     cell->clazz = clazz;
     cell->method = method;
+    /*
+     * Reset the counter again in case other mutator threads got invoked
+     * between the previous rest and dvmSuspendAllThreads call.
+     */
     cell->counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
 
     cacheflush((long) cell, (long) (cell+1), 0);
 
     /* All done - resume all other threads */
-    dvmResumeAllThreads(SUSPEND_FOR_JIT);
+    dvmResumeAllThreads(SUSPEND_FOR_IC_PATCH);
 #endif
 
 done:

@@ -275,7 +275,8 @@ typedef enum SuspendCause {
     SUSPEND_FOR_STACK_DUMP,
     SUSPEND_FOR_DEX_OPT,
 #if defined(WITH_JIT)
-    SUSPEND_FOR_JIT,
+    SUSPEND_FOR_TBL_RESIZE,
+    SUSPEND_FOR_IC_PATCH,
 #endif
 } SuspendCause;
 void dvmSuspendThread(Thread* thread);
