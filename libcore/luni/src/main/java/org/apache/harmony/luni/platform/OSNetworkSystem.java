@@ -109,13 +109,12 @@ final class OSNetworkSystem implements INetworkSystem {
 
     static native void socketBindImpl(FileDescriptor aFD, int port, InetAddress inetAddress) throws SocketException;
 
-    public int connect(FileDescriptor fd, int trafficClass,
+    // BEGIN android-changed (removed unused return value and useless native method)
+    public void connect(FileDescriptor fd, int trafficClass,
             InetAddress inetAddress, int port) throws IOException{
-        return connectSocketImpl(fd, trafficClass, inetAddress, port);
+        connectStreamWithTimeoutSocketImpl(fd, port, 0, trafficClass, inetAddress);
     }
-
-    static native int connectSocketImpl(FileDescriptor aFD,
-            int trafficClass, InetAddress inetAddress, int port);
+    // END android-changed
 
     public void connectDatagram(FileDescriptor fd, int port,
             int trafficClass, InetAddress inetAddress) throws SocketException {

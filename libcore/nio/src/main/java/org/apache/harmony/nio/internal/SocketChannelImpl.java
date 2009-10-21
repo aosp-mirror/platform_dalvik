@@ -269,7 +269,8 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         try {
             if (isBlocking()) {
                 begin();
-                result = networkSystem.connect(fd, trafficClass, normalAddr, port);
+                networkSystem.connect(fd, trafficClass, normalAddr, port);
+                result = CONNECT_SUCCESS; // Or we'd have thrown an exception.
             } else {
                 result = networkSystem.connectWithTimeout(fd, 0, trafficClass,
                         normalAddr, port, HY_SOCK_STEP_START, connectContext);

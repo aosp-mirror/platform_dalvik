@@ -74,8 +74,10 @@ public interface INetworkSystem {
     public void setNonBlocking(FileDescriptor aFD, boolean block)
             throws IOException;
 
-    public int connect(FileDescriptor aFD, int trafficClass,
+    // BEGIN android-changed (we always throw on error, the value returned was always 0)
+    public void connect(FileDescriptor aFD, int trafficClass,
             InetAddress inetAddress, int port) throws IOException;
+    // END android-changed
 
     // BEGIN android-changed
     public int connectWithTimeout(FileDescriptor aFD, int timeout,
