@@ -75,7 +75,9 @@ static void jniThrowOutOfMemoryError(JNIEnv* env) {
 }
 
 static void jniThrowSocketException(JNIEnv* env) {
-    jniThrowException(env, "java/net/SocketException", strerror(errno));
+    char buf[BUFSIZ];
+    jniThrowException(env, "java/net/SocketException",
+            jniStrError(errno, buf, sizeof(buf)));
 }
 
 // Creates an InetAddress[] of size 'addressCount' from the ifc_req structs
