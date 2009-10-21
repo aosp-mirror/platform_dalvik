@@ -20,13 +20,18 @@ package java.util.logging;
 // BEGIN android-note
 // this file contains cleaned up documentation and style for contribution
 // upstream
+// It also contains Android-specific optimizations that aren't appropriate for
+// general purpose platforms
 // END android-note
 
+import dalvik.system.DalvikLogHandler;
+import dalvik.system.DalvikLogging;
 import org.apache.harmony.logging.internal.nls.Messages;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -72,6 +77,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @see LogManager
  */
 public class Logger {
+
+    // BEGIN android-only
+    /** A handler for use when no handler optimization is possible. */
+    private static final DalvikLogHandler GENERAL_LOG_HANDLER = new DalvikLogHandler() {
+        public void publish(Logger source, String tag, Level level, String message) {
+            LogRecord record = new LogRecord(level, message);
+            record.setLoggerName(source.name);
+            source.setResourceBundle(record);
+            source.log(record);
+        }
+    };
+    // END android-only
 
     /** The global logger is provided as convenience for casual use. */
     public final static Logger global = new Logger("global", null); //$NON-NLS-1$
@@ -137,6 +154,83 @@ public class Logger {
      */
     final List<Logger> children = new ArrayList<Logger>();
 
+    // BEGIN android-only
+    /** the tag used for optimized logging. Derived from the logger name. */
+    private final String androidTag;
+
+    /** Handler delegate for either optimized or standard logging. */
+    private volatile DalvikLogHandler dalvikLogHandler = GENERAL_LOG_HANDLER;
+
+    /**
+     * We've optimized for the common case: logging to a single handler that
+     * implements {@link DalvikLogHandler}. This is how Android framework
+     * applications are configured by default.
+     *
+     * <p>This optimization has been measured to show a 2.75x improvement in
+     * throughput in the common case: 154ns vs. 56ns per message on a Cortex-A8.
+     * Direct use of {@code android.util.Log} takes 29ns per message.
+     *
+     * <p>Each time the handler configuration changes, either directly or
+     * indirectly, it's necessary to either turn on or off this optimization.
+     * When the optimization is off, {@link #dalvikLogHandler} is assigned to
+     * {@link #GENERAL_LOG_HANDLER} which can satisfy arbitrary configuration.
+     * When the optimization is possible, {@link #dalvikLogHandler} is assigned
+     * to the user's efficient implementation. In pratice this is usually the
+     * {@code com.android.internal.logging.AndroidHandler}.
+     */
+    void updateDalvikLogHandler() {
+        DalvikLogHandler newLogHandler = GENERAL_LOG_HANDLER;
+
+        Logger parent = this.parent;
+
+        if (getClass() != Logger.class) {
+            /*
+             * Do nothing. Subclasses aren't eligible for the optimization
+             * because they may override methods like getHandlers() or
+             * log(LogRecord).
+             */
+
+        } else if (parent == null) {
+            // we use an iterator rather than size()+get() for safe concurrency
+            Iterator<Handler> h = handlers.iterator();
+            if (h.hasNext()) {
+                Handler firstHandler = h.next();
+                if (!h.hasNext() && firstHandler instanceof DalvikLogHandler) {
+                    /*
+                     * At this point, we're eligible for the optimization. We've
+                     * satisfied these constraints:
+                     *   1. This is not a subclass of logger
+                     *   2. This is a root logger (no parent)
+                     *   3. There is exactly one handler installed
+                     *   4. That handler is a DalvikLogHandler
+                     */
+                    newLogHandler = (DalvikLogHandler) firstHandler;
+                }
+            }
+        } else if (handlers.isEmpty() && notifyParentHandlers) {
+            /*
+             * At this point, we're eligible for the optimization if our parent
+             * logger is eligible. We've satisfied these constraints:
+             *   1. This is not a subclass of logger
+             *   2. our parent exists
+             *   3. we have no handlers of our own
+             *   4. we notify our parent's handlers
+             */
+            newLogHandler = parent.dalvikLogHandler;
+        }
+
+        if (newLogHandler == this.dalvikLogHandler) {
+            return;
+        }
+
+        this.dalvikLogHandler = newLogHandler;
+
+        for (Logger logger : children) {
+            logger.updateDalvikLogHandler();
+        }
+    }
+    // END android-only
+
     /**
      * Constructs a {@code Logger} object with the supplied name and resource
      * bundle name; {@code notifiyParentHandlers} is set to {@code true}.
@@ -155,6 +249,10 @@ public class Logger {
     protected Logger(String name, String resourceBundleName) {
         this.name = name;
         initResourceBundle(resourceBundleName);
+        // BEGIN android-only
+        this.androidTag = DalvikLogging.loggerNameToTag(name);
+        updateDalvikLogHandler();
+        // END android-only
     }
 
     /**
@@ -349,6 +447,7 @@ public class Logger {
             LogManager.getLogManager().checkAccess();
         }
         this.handlers.add(handler);
+        updateDalvikLogHandler(); // android-only
     }
 
     /**
@@ -394,6 +493,8 @@ public class Logger {
                 handlers.add(handler);
             }
         }
+
+        updateDalvikLogHandler(); // android-only
     }
 
     /**
@@ -424,6 +525,7 @@ public class Logger {
             return;
         }
         this.handlers.remove(handler);
+        updateDalvikLogHandler(); // android-only
     }
 
     /**
@@ -509,6 +611,7 @@ public class Logger {
             LogManager.getLogManager().checkAccess();
         }
         this.notifyParentHandlers = notifyParentHandlers;
+        updateDalvikLogHandler(); // android-only
     }
 
     /**
@@ -875,10 +978,9 @@ public class Logger {
             return;
         }
 
-        LogRecord record = new LogRecord(logLevel, msg);
-        record.setLoggerName(this.name);
-        setResourceBundle(record);
-        log(record);
+        // BEGIN android-only
+        dalvikLogHandler.publish(this, androidTag, logLevel, msg);
+        // END android-only
     }
 
     /**
@@ -1296,5 +1398,7 @@ public class Logger {
             } catch (Exception ignored) {
             }
         }
+
+        updateDalvikLogHandler(); // android-only
     }
 }
