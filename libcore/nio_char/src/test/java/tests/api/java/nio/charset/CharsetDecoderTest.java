@@ -42,18 +42,6 @@ public class CharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
     protected static final double AVER_BYTES = 0.5;
 
-    // default charset
-    private static final Charset MOCKCS = new CharsetEncoderTest.MockCharset(
-            "mock", new String[0]);
-
-    Charset cs = MOCKCS;
-
-    // default decoder
-    protected static CharsetDecoder decoder;
-
-    String bom = "";
-
-
     protected void setUp() throws Exception {
         cs = new CharsetEncoderTest.MockCharset("mock", new String[0]);
         unibytes = new byte[] { 32, 98, 117, 102, 102, 101, 114 };
