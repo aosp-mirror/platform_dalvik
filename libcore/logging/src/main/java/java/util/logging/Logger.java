@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Loggers are used to log records to certain outputs, including file, console,
@@ -75,6 +76,14 @@ public class Logger {
     /** The global logger is provided as convenience for casual use. */
     public final static Logger global = new Logger("global", null); //$NON-NLS-1$
 
+    /**
+     * When converting the concurrent collection of handlers to an array, we
+     * always pass a zero-length array to avoid size miscalculations. Passing
+     * properly-sized arrays is non-atomic, and risks a null element in the
+     * result.
+     */
+    private static final Handler[] EMPTY_HANDLERS_ARRAY = new Handler[0];
+
     /** The name of this logger. */
     private volatile String name;
 
@@ -102,16 +111,16 @@ public class Logger {
      * The resource bundle used to localize logging messages. If null, no
      * localization will be performed.
      */
-    private String resBundleName;
+    private volatile String resourceBundleName;
 
     /** The loaded resource bundle according to the specified name. */
-    private ResourceBundle resBundle;
+    private volatile ResourceBundle resourceBundle;
 
     /**
-     * The handlers attached to this logger. Lazily initialized in {@link
-     * #initHandlers()}.
+     * The handlers attached to this logger. Eagerly initialized and
+     * concurrently modified.
      */
-    private List<Handler> handlers;
+    private final List<Handler> handlers = new CopyOnWriteArrayList<Handler>();
 
     /** True to notify the parent's handlers of each log message. */
     private boolean notifyParentHandlers = true;
@@ -127,10 +136,6 @@ public class Logger {
      * LogManager.getLogManager()}.
      */
     final List<Logger> children = new ArrayList<Logger>();
-
-    private LogManager manager;
-
-    private volatile boolean handlerInited;
 
     /**
      * Constructs a {@code Logger} object with the supplied name and resource
@@ -148,15 +153,8 @@ public class Logger {
      *             if the specified resource bundle can not be loaded.
      */
     protected Logger(String name, String resourceBundleName) {
-        // try to load the specified resource bundle first
-        if (resourceBundleName == null) {
-            this.resBundleName = null;
-            this.resBundle = null;
-        } else {
-            this.resBundle = loadResourceBundle(resourceBundleName);
-            this.resBundleName = resourceBundleName;
-        }
         this.name = name;
+        initResourceBundle(resourceBundleName);
     }
 
     /**
@@ -273,7 +271,7 @@ public class Logger {
      *      exists and is different from the resource bundle specified.
      */
     private synchronized void initResourceBundle(String resourceBundleName) {
-        String current = getResourceBundleName();
+        String current = this.resourceBundleName;
 
         if (current != null) {
             if (current.equals(resourceBundleName)) {
@@ -288,8 +286,8 @@ public class Logger {
         }
 
         if (resourceBundleName != null) {
-            this.resBundle = loadResourceBundle(resourceBundleName);
-            this.resBundleName = resourceBundleName;
+            this.resourceBundle = loadResourceBundle(resourceBundleName);
+            this.resourceBundleName = resourceBundleName;
         }
     }
 
@@ -350,63 +348,51 @@ public class Logger {
         if (this.isNamed) {
             LogManager.getLogManager().checkAccess();
         }
-        initHandlers();
-        synchronized (this) {
-            this.handlers.add(handler);
-        }
+        this.handlers.add(handler);
     }
 
     /**
-     * Initializes this logger's handlers using the log manager's properties.
+     * Set the logger's manager and initializes its configuration from the
+     * manager's properties.
      */
     @SuppressWarnings("nls")
-    private void initHandlers() {
-        if (handlerInited) {
-            return;
+    void setManager(LogManager manager) {
+        String levelProperty = manager.getProperty(name + ".level");
+        if (levelProperty != null) {
+            try {
+                manager.setLevelRecursively(Logger.this, Level.parse(levelProperty));
+            } catch (IllegalArgumentException invalidLevel) {
+                invalidLevel.printStackTrace();
+            }
         }
 
-        synchronized (this) {
-            if (handlerInited) {
-                return;
-            }
-
-            /*
-             * Force LogManager to be initialized, since its
-             * class init code performs necessary one-time setup.
-             */
-            LogManager.getLogManager();
-
-            if (handlers == null) {
-                handlers = new ArrayList<Handler>();
-            }
-            if (manager == null) {
-                return;
-            }
-
-            String handlerStr = manager.getProperty(
-                    "".equals(name) ? "handlers" : name + ".handlers");
-            if (handlerStr == null) {
-                return;
-            }
-            for (String handlerName : handlerStr.split(",|\\s")) {
+        String handlersPropertyName = "".equals(name) ? "handlers" : name + ".handlers";
+        String handlersProperty = manager.getProperty(handlersPropertyName);
+        if (handlersProperty != null) {
+            for (String handlerName : handlersProperty.split(",|\\s")) {
                 if (handlerName.equals("")) {
                     continue;
                 }
 
-                // deal with non-existing handler
+                final Handler handler;
                 try {
-                    Handler handler = (Handler) LogManager
-                            .getInstanceByClass(handlerName);
-                    handlers.add(handler);
+                    handler = (Handler) LogManager.getInstanceByClass(handlerName);
+                } catch (Exception invalidHandlerName) {
+                    invalidHandlerName.printStackTrace();
+                    continue;
+                }
+
+                try {
                     String level = manager.getProperty(handlerName + ".level");
                     if (level != null) {
                         handler.setLevel(Level.parse(level));
                     }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+                } catch (Exception invalidLevel) {
+                    invalidLevel.printStackTrace();
                 }
+
+                handlers.add(handler);
             }
-            handlerInited = true;
         }
     }
 
@@ -416,10 +402,7 @@ public class Logger {
      * @return an array of all the handlers associated with this logger.
      */
     public Handler[] getHandlers() {
-        initHandlers();
-        synchronized (this) {
-            return handlers.toArray(new Handler[handlers.size()]);
-        }
+        return handlers.toArray(EMPTY_HANDLERS_ARRAY);
     }
 
     /**
@@ -440,10 +423,7 @@ public class Logger {
         if (handler == null) {
             return;
         }
-        initHandlers();
-        synchronized (this) {
-            this.handlers.remove(handler);
-        }
+        this.handlers.remove(handler);
     }
 
     /**
@@ -485,9 +465,6 @@ public class Logger {
     /**
      * Sets the logging level for this logger. A {@code null} level indicates
      * that this logger will inherit its parent's level.
-     *
-     * <p>This method synchronizes on the global log manager, so it is an
-     * error to call this method while synchronized on any logger.
      *
      * @param newLevel
      *            the logging level to set.
@@ -583,7 +560,7 @@ public class Logger {
      * @return the loaded resource bundle used by this logger.
      */
     public ResourceBundle getResourceBundle() {
-        return this.resBundle;
+        return this.resourceBundle;
     }
 
     /**
@@ -594,7 +571,7 @@ public class Logger {
      * @return the name of the loaded resource bundle used by this logger.
      */
     public String getResourceBundleName() {
-        return this.resBundleName;
+        return this.resourceBundleName;
     }
 
     /**
@@ -626,28 +603,19 @@ public class Logger {
         return internalIsLoggable(l);
     }
 
-    /*
+    /**
      * Sets the resource bundle and its name for a supplied LogRecord object.
      * This method first tries to use this logger's resource bundle if any,
      * otherwise try to inherit from this logger's parent, recursively up the
-     * namespace. Synchronize to ensure the consistency between resource bundle
-     * and its name.
+     * namespace.
      */
     private void setResourceBundle(LogRecord record) {
-        if (this.resBundleName != null) {
-            record.setResourceBundle(this.resBundle);
-            record.setResourceBundleName(this.resBundleName);
-        } else {
-            Logger anyParent = this.parent;
-            // no need to synchronize here, because if resBundleName
-            // is not null, there is no chance to modify it
-            while (anyParent != null) {
-                if (anyParent.resBundleName != null) {
-                    record.setResourceBundle(anyParent.resBundle);
-                    record.setResourceBundleName(anyParent.resBundleName);
-                    return;
-                }
-                anyParent = anyParent.parent;
+        for (Logger p = this; p != null; p = p.parent) {
+            String resourceBundleName = p.resourceBundleName;
+            if (resourceBundleName != null) {
+                record.setResourceBundle(p.resourceBundle);
+                record.setResourceBundleName(resourceBundleName);
+                return;
             }
         }
     }
@@ -824,14 +792,7 @@ public class Logger {
      *            the message to log.
      */
     public void severe(String msg) {
-        if (!internalIsLoggable(Level.SEVERE)) {
-            return;
-        }
-
-        LogRecord record = new LogRecord(Level.SEVERE, msg);
-        record.setLoggerName(this.name);
-        setResourceBundle(record);
-        log(record);
+        log(Level.SEVERE, msg);
     }
 
     /**
@@ -842,14 +803,7 @@ public class Logger {
      *            the message to log.
      */
     public void warning(String msg) {
-        if (!internalIsLoggable(Level.WARNING)) {
-            return;
-        }
-
-        LogRecord record = new LogRecord(Level.WARNING, msg);
-        record.setLoggerName(this.name);
-        setResourceBundle(record);
-        log(record);
+        log(Level.WARNING, msg);
     }
 
     /**
@@ -860,14 +814,7 @@ public class Logger {
      *            the message to log.
      */
     public void info(String msg) {
-        if (!internalIsLoggable(Level.INFO)) {
-            return;
-        }
-
-        LogRecord record = new LogRecord(Level.INFO, msg);
-        record.setLoggerName(this.name);
-        setResourceBundle(record);
-        log(record);
+        log(Level.INFO, msg);
     }
 
     /**
@@ -878,14 +825,7 @@ public class Logger {
      *            the message to log.
      */
     public void config(String msg) {
-        if (!internalIsLoggable(Level.CONFIG)) {
-            return;
-        }
-
-        LogRecord record = new LogRecord(Level.CONFIG, msg);
-        record.setLoggerName(this.name);
-        setResourceBundle(record);
-        log(record);
+        log(Level.CONFIG, msg);
     }
 
     /**
@@ -896,14 +836,7 @@ public class Logger {
      *            the message to log.
      */
     public void fine(String msg) {
-        if (!internalIsLoggable(Level.FINE)) {
-            return;
-        }
-
-        LogRecord record = new LogRecord(Level.FINE, msg);
-        record.setLoggerName(this.name);
-        setResourceBundle(record);
-        log(record);
+        log(Level.FINE, msg);
     }
 
     /**
@@ -914,14 +847,7 @@ public class Logger {
      *            the message to log.
      */
     public void finer(String msg) {
-        if (!internalIsLoggable(Level.FINER)) {
-            return;
-        }
-
-        LogRecord record = new LogRecord(Level.FINER, msg);
-        record.setLoggerName(this.name);
-        setResourceBundle(record);
-        log(record);
+        log(Level.FINER, msg);
     }
 
     /**
@@ -932,14 +858,7 @@ public class Logger {
      *            the message to log.
      */
     public void finest(String msg) {
-        if (!internalIsLoggable(Level.FINEST)) {
-            return;
-        }
-
-        LogRecord record = new LogRecord(Level.FINEST, msg);
-        record.setLoggerName(this.name);
-        setResourceBundle(record);
-        log(record);
+        log(Level.FINEST, msg);
     }
 
     /**
@@ -1057,7 +976,7 @@ public class Logger {
         if (f != null && !f.isLoggable(record)) {
             return;
         }
-        initHandlers();
+
         /*
          * call the handlers of this logger, throw any exception that occurs
          */
@@ -1365,42 +1284,17 @@ public class Logger {
         }
     }
 
-    void setManager(LogManager manager) {
-        if (this.manager != manager) {
-            this.manager = manager;
-            handlerInited = false;
-        }
-        // init level here, but let handlers be for lazy loading
-        final String configuredLevel = manager.getProperty(name + ".level"); //$NON-NLS-1$
-        if (configuredLevel != null) {
-            try {
-                AccessController.doPrivileged(new PrivilegedAction<Object>() {
-                    public Object run() {
-                        setLevel(Level.parse(configuredLevel));
-                        return null;
-                    }
-                });
-            } catch (IllegalArgumentException e) {
-                // ignore
-            }
-        }
-    }
-
-    synchronized void reset() {
+    void reset() {
         levelObjVal = null;
         levelIntVal = Level.INFO.intValue();
-        if (handlers != null) {
-            for (Handler element : handlers) {
-                // close all handlers, when unknown exceptions happen,
-                // ignore them and go on
-                try {
-                    element.close();
-                } catch (Exception e) {
-                    // Ignored.
+
+        for (Handler handler : handlers) {
+            try {
+                if (handlers.remove(handler)) {
+                    handler.close();
                 }
+            } catch (Exception ignored) {
             }
-            handlers.clear();
         }
-        handlerInited = false;
     }
 }

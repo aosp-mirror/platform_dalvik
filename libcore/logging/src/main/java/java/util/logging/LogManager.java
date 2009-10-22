@@ -227,7 +227,7 @@ public class LogManager {
     /**
      * Default constructor. This is not public because there should be only one
      * {@code LogManager} instance, which can be get by
-     * {@code LogManager.getLogManager(}. This is protected so that
+     * {@code LogManager.getLogManager()}. This is protected so that
      * application can subclass the object.
      */
     protected LogManager() {
@@ -484,6 +484,12 @@ public class LogManager {
         reset();
         props.load(ins);
 
+        // update handlers for the root logger only
+        Logger root = loggers.get("");
+        if (root != null) {
+            root.setManager(this);
+        }
+
         // parse property "config" and apply setting
         String configs = props.getProperty("config"); //$NON-NLS-1$
         if (null != configs) {
@@ -537,7 +543,7 @@ public class LogManager {
      *             if security manager exists and it determines that caller does
      *             not have the required permissions to perform this action.
      */
-    public void reset() {
+    public synchronized void reset() {
         checkAccess();
         props = new Properties();
         Enumeration<String> names = getLoggerNames();
