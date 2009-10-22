@@ -1022,6 +1022,10 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_init(JNIEnv*
      * and undesirable.)
      */
     mode |= SSL_MODE_ENABLE_PARTIAL_WRITE;
+    mode |= SSL_MODE_SMALL_BUFFERS;  /* lazily allocate record buffers; usually saves
+                                      * 44k over the default */
+    mode |= SSL_MODE_HANDSHAKE_CUTTHROUGH;  /* enable sending of client data as soon as
+                                             * ClientCCS and ClientFinished are sent */
     SSL_CTX_set_mode(ssl_ctx, mode);
 
     if (privatekey != NULL) {
