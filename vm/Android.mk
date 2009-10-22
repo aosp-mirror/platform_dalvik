@@ -78,13 +78,19 @@ ifeq ($(WITH_HOST_DALVIK),true)
     LOCAL_WHOLE_STATIC_LIBRARIES += \
 	libdex liblog libcutils
 
-    # libffi is called libffi-host on the host and should be staticly
-    # linked. Similarly libnativehelper.
+    # The libffi from the source tree should never be used by host builds.
+    # The recommendation is that host builds should always either
+    # have sufficient custom code so that libffi isn't needed at all,
+    # or they should use the platform's provided libffi. So, if the common
+    # build rules decided to include it, axe it back out here.
     ifneq (,$(findstring libffi,$(LOCAL_SHARED_LIBRARIES)))
         LOCAL_SHARED_LIBRARIES := \
             $(patsubst libffi, ,$(LOCAL_SHARED_LIBRARIES))
-        LOCAL_STATIC_LIBRARIES += libffi-host
     endif
+
+    # The nativehelper library is called libnativehelper-host on the
+    # host and is static. So, if the common build rule decided to
+    # include it, rename it and switch what list it's in here.
     ifneq (,$(findstring libnativehelper,$(LOCAL_SHARED_LIBRARIES)))
         LOCAL_SHARED_LIBRARIES := \
             $(patsubst libnativehelper, ,$(LOCAL_SHARED_LIBRARIES))
