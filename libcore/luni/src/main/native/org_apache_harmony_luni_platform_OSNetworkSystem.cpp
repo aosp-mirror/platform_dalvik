@@ -1528,8 +1528,7 @@ static void osNetworkSystem_createDatagramSocketImpl(JNIEnv* env, jclass clazz,
 }
 
 static jint osNetworkSystem_readSocketDirectImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor, jint address, jint offset, jint count,
-        jint timeout) {
+        jobject fileDescriptor, jint address, jint count, jint timeout) {
     // LOGD("ENTER readSocketDirectImpl");
 
     int fd;
@@ -1537,59 +1536,45 @@ static jint osNetworkSystem_readSocketDirectImpl(JNIEnv* env, jclass clazz,
         return 0;
     }
 
-    int result = selectWait(fd, timeout, SELECT_READ_TYPE);
-    if (result < 0) {
-        return 0;
+    if (timeout != 0) {
+        int result = selectWait(fd, timeout * 1000, SELECT_READ_TYPE);
+        if (result < 0) {
+            return 0;
+        }
     }
 
-    const int localCount = (count < 65536) ? count : 65536;
-    jbyte* message =
-            reinterpret_cast<jbyte*>(static_cast<uintptr_t>(address + offset));
+    jbyte* dst = reinterpret_cast<jbyte*>(static_cast<uintptr_t>(address));
     ssize_t bytesReceived =
-            TEMP_FAILURE_RETRY(recv(fd, message, localCount, SOCKET_NOFLAGS));
+            TEMP_FAILURE_RETRY(recv(fd, dst, count, SOCKET_NOFLAGS));
     if (bytesReceived == 0) {
         return -1;
     } else if (bytesReceived == -1) {
-        throwSocketException(env, convertError(errno));
-        return 0;
+        if (errno == EWOULDBLOCK) {
+            // We were asked to read a non-blocking socket with no data
+            // available, so report "no data".
+            return 0;
+        } else {
+            throwSocketException(env, convertError(errno));
+            return 0;
+        }
     }
     return bytesReceived;
 }
 
 static jint osNetworkSystem_readSocketImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor, jbyteArray data, jint offset, jint count,
+        jobject fileDescriptor, jbyteArray byteArray, jint offset, jint count,
         jint timeout) {
     // LOGD("ENTER readSocketImpl");
 
-    jbyte *message;
-    int result, localCount;
-
-    jbyte internalBuffer[BUFFERSIZE];
-
-    localCount = (count < 65536) ? count : 65536;
-
-    if (localCount > BUFFERSIZE) {
-        message = (jbyte*)malloc(localCount * sizeof(jbyte));
-        if (message == NULL) {
-            jniThrowException(env, "java/lang/OutOfMemoryError",
-                    "couldn't allocate enough memory for readSocket");
-            return 0;
-        }
-    } else {
-        message = (jbyte *)internalBuffer;
+    jbyte* bytes = env->GetByteArrayElements(byteArray, NULL);
+    if (bytes == NULL) {
+        return -1;
     }
-
-    result = osNetworkSystem_readSocketDirectImpl(env, clazz, fileDescriptor,
-            (jint) message, 0, localCount, timeout);
-
-    if (result > 0) {
-        env->SetByteArrayRegion(data, offset, result, (jbyte *)message);
-    }
-
-    if (((jbyte *)message) != internalBuffer) {
-        free(( jbyte *)message);
-    }
-
+    jint address =
+            static_cast<jint>(reinterpret_cast<uintptr_t>(bytes + offset));
+    int result = osNetworkSystem_readSocketDirectImpl(env, clazz,
+            fileDescriptor, address, count, timeout);
+    env->ReleaseByteArrayElements(byteArray, bytes, 0);
     return result;
 }
 
@@ -2329,61 +2314,6 @@ static void osNetworkSystem_createServerStreamSocketImpl(JNIEnv* env,
 
     int value = 1;
     setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int));
-}
-
-/*
- * @param timeout in milliseconds.  If zero, block until data received
- */
-// TODO(enh): this has been removed upstream; allegedly the reason we didn't
-// take that change is because it caused some tests to fail. I should
-// investigate that.
-static jint osNetworkSystem_receiveStreamImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor, jbyteArray data, jint offset, jint count,
-        jint timeout) {
-    // LOGD("ENTER receiveStreamImpl");
-
-    int fd;
-    if (!jniGetFd(env, fileDescriptor, fd)) {
-        return 0;
-    }
-
-    // Cap read length to available buf size
-    int spaceAvailable = env->GetArrayLength(data) - offset;
-    int localCount = count < spaceAvailable? count : spaceAvailable;
-
-    jbyte* body = env->GetByteArrayElements(data, NULL);
-
-    // set timeout
-    timeval tv(toTimeval(timeout));
-    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&tv,
-               sizeof(struct timeval));
-
-    int result;
-    do {
-        result = recv(fd, body + offset, localCount, SOCKET_NOFLAGS);
-    } while (result < 0 && errno == EINTR);
-
-    env->ReleaseByteArrayElements(data, body, 0);
-
-    /*
-     * If no bytes are read, return -1 to signal 'endOfFile'
-     * to the Java input stream
-     */
-    if (0 < result) {
-        return result;
-    } else if (0 == result) {
-        return -1;
-    } else {
-        // If EAGAIN or EWOULDBLOCK, read timed out
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            jniThrowException(env, "java/net/SocketTimeoutException",
-                              netLookupErrorString(SOCKERR_TIMEOUT));
-        } else {
-            int err = convertError(errno);
-            throwSocketException(env, err);
-        }
-        return 0;
-    }
 }
 
 static jint osNetworkSystem_sendStreamImpl(JNIEnv* env, jclass clazz,
@@ -3334,7 +3264,7 @@ static JNINativeMethod gMethods[] = {
     { "createStreamSocketImpl",            "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createStreamSocketImpl             },
     { "createDatagramSocketImpl",          "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createDatagramSocketImpl           },
     { "readSocketImpl",                    "(Ljava/io/FileDescriptor;[BIII)I",                                         (void*) osNetworkSystem_readSocketImpl                     },
-    { "readSocketDirectImpl",              "(Ljava/io/FileDescriptor;IIII)I",                                          (void*) osNetworkSystem_readSocketDirectImpl               },
+    { "readSocketDirectImpl",              "(Ljava/io/FileDescriptor;III)I",                                           (void*) osNetworkSystem_readSocketDirectImpl               },
     { "writeSocketImpl",                   "(Ljava/io/FileDescriptor;[BII)I",                                          (void*) osNetworkSystem_writeSocketImpl                    },
     { "writeSocketDirectImpl",             "(Ljava/io/FileDescriptor;III)I",                                           (void*) osNetworkSystem_writeSocketDirectImpl              },
     { "setNonBlockingImpl",                "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_setNonBlockingImpl                 },
@@ -3358,7 +3288,6 @@ static JNINativeMethod gMethods[] = {
     { "sendConnectedDatagramImpl",         "(Ljava/io/FileDescriptor;[BIIZ)I",                                         (void*) osNetworkSystem_sendConnectedDatagramImpl          },
     { "sendConnectedDatagramDirectImpl",   "(Ljava/io/FileDescriptor;IIIZ)I",                                          (void*) osNetworkSystem_sendConnectedDatagramDirectImpl    },
     { "createServerStreamSocketImpl",      "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createServerStreamSocketImpl       },
-    { "receiveStreamImpl",                 "(Ljava/io/FileDescriptor;[BIII)I",                                         (void*) osNetworkSystem_receiveStreamImpl                  },
     { "sendStreamImpl",                    "(Ljava/io/FileDescriptor;[BII)I",                                          (void*) osNetworkSystem_sendStreamImpl                     },
     { "shutdownInputImpl",                 "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownInputImpl                  },
     { "shutdownOutputImpl",                "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownOutputImpl                 },

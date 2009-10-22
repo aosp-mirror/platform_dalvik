@@ -57,7 +57,7 @@ public interface INetworkSystem {
     public int read(FileDescriptor aFD, byte[] data, int offset, int count,
             int timeout) throws IOException;
 
-    public int readDirect(FileDescriptor aFD, int address, int offset, int count,
+    public int readDirect(FileDescriptor aFD, int address, int count,
             int timeout) throws IOException;
 
     public int write(FileDescriptor fd, byte[] data, int offset, int count)
@@ -125,13 +125,6 @@ public interface INetworkSystem {
 
     public void connectDatagram(FileDescriptor aFD, int port, int trafficClass,
             InetAddress inetAddress) throws SocketException;
-
-    /**
-     * @deprecated Use {@link #read(FileDescriptor, byte[], int, int, int)}
-     */
-    @Deprecated
-    public int receiveStream(FileDescriptor aFD, byte[] data, int offset,
-            int count, int timeout) throws IOException;
 
     // BEGIN android-added
     public int sendStream(FileDescriptor fd, byte[] data, int offset, int count)

@@ -454,9 +454,9 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                 int length = target.remaining();
                 if (target.isDirect()) {
                     // BEGIN android-changed
-                    // changed address from long to int; split address and offset paramters
+                    // changed address from long to int
                     int address = AddressUtil.getDirectBufferAddress(target);
-                    readCount = networkSystem.readDirect(fd, address, offset,
+                    readCount = networkSystem.readDirect(fd, address + offset,
                             length, (isBlocking() ? TIMEOUT_BLOCK
                                     : TIMEOUT_NONBLOCK));
                     // END android-changed
