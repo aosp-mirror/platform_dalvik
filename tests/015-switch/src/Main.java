@@ -44,9 +44,14 @@ public class Main {
             default: System.out.print("nuts\n"); break;
         }
         switch (a) {
+            case 0x12345678: System.out.print("CORRECT (large2)\n"); break;
+            case 0x12345700: System.out.print("large+many\n"); break;
+            default: System.out.print("nuts\n"); break;
+        }
+        switch (a) {
             case 57: System.out.print("fifty-seven!\n"); break;
             case -6: System.out.print("neg six!\n"); break;
-            case 0x12345678: System.out.print("CORRECT (large)\n"); break;
+            case 0x12345678: System.out.print("CORRECT (large3)\n"); break;
             case 22: System.out.print("twenty-two!\n"); break;
             case 3: System.out.print("three!\n"); break;
             default: System.out.print("huh?\n"); break;
@@ -68,5 +73,34 @@ public class Main {
         switch (a) {
             default: System.out.print("CORRECT (default only)\n"); break;
         }
+
+        a = -10;
+        switch (a) {
+            case -10: System.out.print("CORRECT big sparse / first\n"); break;
+            case -5: System.out.print("neg five\n"); break;
+            case 0: System.out.print("zero\n"); break;
+            case 5: System.out.print("five\n"); break;
+            case 10: System.out.print("ten\n"); break;
+            case 15: System.out.print("fifteen\n"); break;
+            case 20: System.out.print("twenty\n"); break;
+            case 50: System.out.print("fifty\n"); break;
+            case 100: System.out.print("hundred\n"); break;
+            default: System.out.print("blah!\n"); break;
+        }
+
+        a = 100;
+        switch (a) {
+            case -10: System.out.print("neg ten\n"); break;
+            case -5: System.out.print("neg five\n"); break;
+            case 0: System.out.print("zero\n"); break;
+            case 5: System.out.print("five\n"); break;
+            case 10: System.out.print("ten\n"); break;
+            case 15: System.out.print("fifteen\n"); break;
+            case 20: System.out.print("twenty\n"); break;
+            case 50: System.out.print("fifty\n"); break;
+            case 100: System.out.print("CORRECT big sparse / last\n"); break;
+            default: System.out.print("blah!\n"); break;
+        }
     }
 }
+

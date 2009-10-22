@@ -458,7 +458,6 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
     u2 ident, size;
     const s4* keys;
     const s4* entries;
-    int i;
 
     /*
      * Sparse switch data format:
@@ -493,20 +492,23 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
     assert(((u4)entries & 0x3) == 0);
 
     /*
-     * Run through the list of keys, which are guaranteed to
+     * Binary-search through the array of keys, which are guaranteed to
      * be sorted low-to-high.
-     *
-     * Most tables have 3-4 entries.  Few have more than 10.  A binary
-     * search here is probably not useful.
      */
-    for (i = 0; i < size; i++) {
-        s4 k = s4FromSwitchData(&keys[i]);
-        if (k == testVal) {
+    int lo = 0;
+    int hi = size - 1;
+    while (lo <= hi) {
+        int mid = (lo + hi) >> 1;
+
+        s4 foundVal = s4FromSwitchData(&keys[mid]);
+        if (testVal < foundVal) {
+            hi = mid - 1;
+        } else if (testVal > foundVal) {
+            lo = mid + 1;
+        } else {
             LOGVV("Value %d found in entry %d (goto 0x%02x)\n",
-                testVal, i, s4FromSwitchData(&entries[i]));
-            return s4FromSwitchData(&entries[i]);
-        } else if (k > testVal) {
-            break;
+                testVal, mid, s4FromSwitchData(&entries[mid]));
+            return s4FromSwitchData(&entries[mid]);
         }
     }
 
