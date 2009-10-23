@@ -339,7 +339,3 @@ ifeq ($(MTERP_ARCH_KNOWN),false)
   LOCAL_CFLAGS += -DdvmAsmInstructionStart=0 -DdvmAsmInstructionEnd=0 \
 	-DdvmAsmSisterStart=0 -DdvmAsmSisterEnd=0 -DDVM_NO_ASM_INTERP=1
 endif
-
-LOCAL_SHARED_LIBRARIES += \
-	libnativehelper \
-	libz

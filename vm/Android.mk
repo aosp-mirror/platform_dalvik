@@ -40,12 +40,12 @@ dvm_simulator := $(TARGET_SIMULATOR)
 
 include $(LOCAL_PATH)/Dvm.mk
 
-# liblog and libcutils are shared in this case.
+# Whether libraries are static or shared differs between host and
+# target builds, so that's mostly pulled out here and in the equivalent
+# section below.
 LOCAL_SHARED_LIBRARIES += \
-	liblog libcutils
+	liblog libcutils libnativehelper libz
 
-# libdex is static in this case. (That is, on device, we only include
-# whatever we specifically need from it directly in libdvm.)
 LOCAL_STATIC_LIBRARIES += libdex
 
 LOCAL_MODULE := libdvm
@@ -69,14 +69,15 @@ ifeq ($(WITH_HOST_DALVIK),true)
 
     include $(LOCAL_PATH)/Dvm.mk
 
-    # And we need to include all of liblog, libcutils, and libdex:
-    # The result itself is a static library, and LOCAL_STATIC_LIBRARIES
-    # doesn't actually cause any code from the specified libraries to
-    # be included. No I'm not entirely sure what LOCAL_STATIC_LIBRARIES
-    # is even supposed to mean in this context, but it is in fact
-    # meaningfully used in other parts of the build.
+    # We need to include all of these libraries. The end result of this
+    # section is a static library, but LOCAL_STATIC_LIBRARIES doesn't
+    # actually cause any code from the specified libraries to be included,
+    # whereas LOCAL_WHOLE_STATIC_LIBRARIES does. No, I (danfuzz) am not
+    # entirely sure what LOCAL_STATIC_LIBRARIES is even supposed to mean
+    # in this context, but it is in (apparently) meaningfully used in
+    # other parts of the build.
     LOCAL_WHOLE_STATIC_LIBRARIES += \
-	libdex liblog libcutils
+	libnativehelper-host libdex liblog libcutils
 
     # The libffi from the source tree should never be used by host builds.
     # The recommendation is that host builds should always either
@@ -86,15 +87,6 @@ ifeq ($(WITH_HOST_DALVIK),true)
     ifneq (,$(findstring libffi,$(LOCAL_SHARED_LIBRARIES)))
         LOCAL_SHARED_LIBRARIES := \
             $(patsubst libffi, ,$(LOCAL_SHARED_LIBRARIES))
-    endif
-
-    # The nativehelper library is called libnativehelper-host on the
-    # host and is static. So, if the common build rule decided to
-    # include it, rename it and switch what list it's in here.
-    ifneq (,$(findstring libnativehelper,$(LOCAL_SHARED_LIBRARIES)))
-        LOCAL_SHARED_LIBRARIES := \
-            $(patsubst libnativehelper, ,$(LOCAL_SHARED_LIBRARIES))
-        LOCAL_STATIC_LIBRARIES += libnativehelper-host
     endif
 
     LOCAL_MODULE := libdvm-host
