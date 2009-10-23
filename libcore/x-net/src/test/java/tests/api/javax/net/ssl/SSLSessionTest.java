@@ -34,6 +34,7 @@ import tests.support.Support_PortManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
@@ -699,14 +700,15 @@ public class SSLSessionTest extends TestCase {
     boolean notFinished = true;
     SSLSession clientSession = null;
     SSLContext clientSslContext = null;
+    String testData = "PING";
     
     private String PASSWORD = "android";
 
     String cipherSuite = (useBKS ? cipherSuiteBKS : cipherSuiteJKS);
 
     /** 
-     * Implements a test SSL socket server. It wait for a connection on a given
-     * port, requests client authentication (if specified), and read 256 bytes
+     * Implements a test SSL socket server. It waits for a connection on a given
+     * port, requests client authentication (if specified), and reads
      * from the socket. 
      */
     class TestServer implements Runnable {
@@ -789,7 +791,7 @@ public class SSLSessionTest extends TestCase {
 
     /** 
      * Implements a test SSL socket client. It open a connection to localhost on
-     * a given port and writes 256 bytes to the socket. 
+     * a given port and writes to the socket. 
      */
     class TestClient implements Runnable {
         
@@ -822,6 +824,9 @@ public class SSLSessionTest extends TestCase {
                 SSLSocket socket = (SSLSocket)clientSslContext.getSocketFactory().createSocket();
 
                 socket.connect(new InetSocketAddress(port));
+                OutputStream ostream = socket.getOutputStream();
+                ostream.write(testData.getBytes());
+                ostream.flush();
 
                 clientSession = socket.getSession();
                 while (notFinished) {
