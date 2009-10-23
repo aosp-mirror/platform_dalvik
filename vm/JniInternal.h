@@ -201,6 +201,12 @@ DalvikJniReturnType dvmGetArgInfoReturnType(int jniArgInfo);
  */
 void dvmReleaseJniMonitors(Thread* self);
 
+/*
+ * Dump the contents of the JNI reference tables to the log file.
+ *
+ * The local ref tables associated with other threads are not included.
+ */
+void dvmDumpJniReferenceTables(void);
 
 /*
  * This mask is applied to weak global reference values returned to

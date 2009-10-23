@@ -213,7 +213,7 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr)
     int i;
 
     if (count == 0) {
-        LOGW("Reference table has no entries\n");
+        LOGW("%s reference table has no entries\n", descr);
         return;
     }
     assert(count > 0);
