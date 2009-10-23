@@ -1123,6 +1123,27 @@ bail:
 }
 
 /*
+ * Dump the contents of the JNI reference tables to the log file.
+ *
+ * We only dump the local refs associated with the current thread.
+ */
+void dvmDumpJniReferenceTables(void)
+{
+    Thread* self = dvmThreadSelf();
+    JNIEnv* env = self->jniEnv;
+    ReferenceTable* pLocalRefs = getLocalRefTable(env);
+
+#ifdef USE_INDIRECT_REF
+    dvmDumpIndirectRefTable(pLocalRefs, "JNI local");
+    dvmDumpIndirectRefTable(&gDvm.jniGlobalRefTable, "JNI global");
+#else
+    dvmDumpReferenceTable(pLocalRefs, "JNI local");
+    dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
+#endif
+    dvmDumpReferenceTable(&gDvm.jniPinRefTable, "JNI pinned array");
+}
+
+/*
  * GC helper function to mark all JNI global references.
  *
  * We're currently handling the "pin" table here too.

@@ -699,6 +699,23 @@ bail:
 }
 
 /*
+ * static void dumpReferenceTables()
+ */
+static void Dalvik_dalvik_system_VMDebug_dumpReferenceTables(const u4* args,
+    JValue* pResult)
+{
+    UNUSED_PARAMETER(args);
+    UNUSED_PARAMETER(pResult);
+
+    LOGI("--- reference table dump ---\n");
+    dvmDumpJniReferenceTables();
+    // could dump thread's internalLocalRefTable, probably not useful
+    // ditto for thread's jniMonitorRefTable
+    LOGI("---\n");
+    RETURN_VOID();
+}
+
+/*
  * static void crash()
  *
  * Dump the current thread's interpreted stack and abort the VM.  Useful
@@ -765,6 +782,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_dumpHprofData },
     { "cacheRegisterMap",           "(Ljava/lang/String;)Z",
         Dalvik_dalvik_system_VMDebug_cacheRegisterMap },
+    { "dumpReferenceTables",        "()V",
+        Dalvik_dalvik_system_VMDebug_dumpReferenceTables },
     { "crash",                      "()V",
         Dalvik_dalvik_system_VMDebug_crash },
     { NULL, NULL, NULL },
