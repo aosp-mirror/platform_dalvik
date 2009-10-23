@@ -608,18 +608,17 @@ final class OSMemory implements IMemorySystem {
      */
     public native void setAddress(int address, int value);
 
-    /*
-         * Memory mapped file
-         */
-    private native int mmapImpl(int fileDescriptor, long alignment,
-            long size, int mapMode);
+    // BEGIN android-changed: more error checking, rename 'alignment' to 'offset'.
+    private native int mmapImpl(int fd, long offset, long size, int mapMode);
 
-    public int mmap(int fileDescriptor, long alignment, long size,
-            int mapMode) throws IOException {
-        // No need to check mmapImpl return as it throws IOException in error cases
-        int address = mmapImpl(fileDescriptor, alignment, size, mapMode);
-        return address;
+    public int mmap(int fd, long offset, long size, int mapMode) throws IOException {
+        // Check just those errors mmap(2) won't detect.
+        if (offset < 0 || size < 0 || offset > Integer.MAX_VALUE || size > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("offset=" + offset + " size=" + size);
+        }
+        return mmapImpl(fd, offset, size, mapMode);
     }
+    // END android-changed
 
     private native void unmapImpl(int addr, long size);
 

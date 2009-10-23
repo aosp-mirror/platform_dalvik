@@ -515,7 +515,7 @@ public interface IMemorySystem {
      *
      * @param fileDescriptor
      *            a handle to the file that is to be memory mapped.
-     * @param alignment
+     * @param offset
      *            the offset in the file where the mapping should begin.
      * @param size
      *            the number of bytes that are requested to map.
@@ -528,8 +528,10 @@ public interface IMemorySystem {
      * @throws IOException
      *             if an exception occurs mapping the file into memory.
      */
-    public int mmap(int fileDescriptor, long alignment, long size,  int mapMode)
+    // BEGIN android-changed: rename 'alignment' to 'offset'.
+    public int mmap(int fileDescriptor, long offset, long size, int mapMode)
             throws IOException;
+    // END android-changed
 
     /**
      * TODO: JavaDoc
