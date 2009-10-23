@@ -501,72 +501,14 @@ public class SocketTest extends SocketTestCase {
         args = {}
     )
     public void test_getInputStream() throws IOException {
-        System.setSecurityManager(null);
-        
-        // Test for method java.io.InputStream java.net.Socket.getInputStream()
-        int sport = startServer("SServer getInputStream");
-        int portNumber = Support_PortManager.getNextPort();
-        s = new Socket(InetAddress.getLocalHost(), sport, null, portNumber);
-        (t = new SServer()).start();
-        java.io.InputStream is = s.getInputStream();
+        // Simple fetch test
+        ServerSocket server = new ServerSocket(0);
+        Socket client = new Socket(InetAddress.getLocalHost(), server.getLocalPort());
+        InputStream is = client.getInputStream();
         assertNotNull("Failed to get stream", is);
-        s.setSoTimeout(6000);
-        is.read();
-        s.close();
-        assertEquals("Invalid after close", -1, is.read());
-
-        interrupted = false;
-        int portNum = Support_PortManager.getNextPort();
-        final ServerSocket ss = new ServerSocket(portNum);
-        Socket sock = new Socket(InetAddress.getLocalHost(), portNum);
-        Runnable runnable = new Runnable() {
-            public void run() {
-                try {
-                    Socket as = ss.accept();
-                    ss.close();
-                    as.setSoTimeout(12000);
-                    InputStream in = as.getInputStream();
-                    in.read();
-                    in.close();
-                } catch (InterruptedIOException e) {
-                    interrupted = true;
-                } catch (IOException e) {
-                }
-            }
-        };
-        Thread thread = new Thread(runnable, "Socket.getInputStream");
-        thread.start();
-        try {
-            do {
-                Thread.sleep(200);
-            } while (!thread.isAlive());
-        } catch (InterruptedException e) {
-        }
-        try {
-            Thread.sleep(200);
-        } catch (InterruptedException e) {
-        }
-        sock.close();
-        try {
-            sock.getInputStream();
-            fail("IOException was not thrown.");
-        } catch(IOException ioe) {
-            //expected
-        }
-        int c = 0;
-        do {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-            }
-            if (interrupted) {
-                fail("read interrupted");
-            }
-            if (++c > 4) {
-                fail("read call did not exit");
-            }
-        } while (thread.isAlive());
-
+        is.close();
+        client.close();
+        server.close();
     }
 
     /**

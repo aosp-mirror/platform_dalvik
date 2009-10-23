@@ -68,6 +68,7 @@ public class AllTests {
         suite.addTestSuite(SocketPermissionTest.class);
         suite.addTestSuite(SocketTest.class);
         suite.addTestSuite(SocketTimeoutExceptionTest.class);
+        suite.addTestSuite(UnixSocketTest.class);
         suite.addTestSuite(URISyntaxExceptionTest.class);
         suite.addTestSuite(URITest.class);
         suite.addTestSuite(URLClassLoaderTest.class);

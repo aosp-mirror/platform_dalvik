@@ -375,6 +375,12 @@ final class OSNetworkSystem implements INetworkSystem {
      */
     public int read(FileDescriptor fd, byte[] data, int offset, int count,
             int timeout) throws IOException {
+        // BEGIN android-added safety!
+        if (offset < 0 || count < 0 || offset > data.length - count) {
+            throw new IllegalArgumentException("data.length=" + data.length + " offset=" + offset +
+                    " count=" + count);
+        }
+        // END android-added
         return readSocketImpl(fd, data, offset, count, timeout);
     }
 
@@ -399,12 +405,12 @@ final class OSNetworkSystem implements INetworkSystem {
      * @throws IOException
      *             if an underlying socket exception occurred
      */
-    public int readDirect(FileDescriptor fd, int address, int offset, int count,
+    public int readDirect(FileDescriptor fd, int address, int count,
             int timeout) throws IOException {
-        return readSocketDirectImpl(fd, address, offset, count, timeout);
+        return readSocketDirectImpl(fd, address, count, timeout);
     }
 
-    static native int readSocketDirectImpl(FileDescriptor aFD, int address, int offset, int count,
+    static native int readSocketDirectImpl(FileDescriptor aFD, int address, int count,
             int timeout) throws IOException;
 
     /**
@@ -451,34 +457,6 @@ final class OSNetworkSystem implements INetworkSystem {
     static native int receiveDatagramDirectImpl(FileDescriptor aFD,
             DatagramPacket packet, int address, int offset, int length,
             int receiveTimeout, boolean peek) throws IOException;
-
-    /**
-     * Receive at most <code>count</code> bytes into the buffer
-     * <code>data</code> at the <code>offset</code> on the socket.
-     *
-     * @param aFD
-     *            the socket FileDescriptor
-     * @param data
-     *            the receive buffer
-     * @param offset
-     *            the offset into the buffer
-     * @param count
-     *            the max number of bytes to receive
-     * @param timeout
-     *            the max time the read operation should block waiting for data
-     * @return the actual number of bytes read
-     * @throws IOException
-     * @throws SocketException
-     *             if an error occurs while reading
-     * @deprecated use {@link #read(FileDescriptor, byte[], int, int, int)}
-     */
-    public int receiveStream(FileDescriptor aFD, byte[] data,
-            int offset, int count, int timeout) throws IOException {
-        return receiveStreamImpl(aFD, data, offset, count, timeout);
-    }
-
-    static native int receiveStreamImpl(FileDescriptor aFD, byte[] data,
-            int offset, int count, int timeout) throws IOException;
 
     // BEGIN android-added
     /**

@@ -560,10 +560,7 @@ public class PlainSocketImpl extends SocketImpl {
         if (shutdownInput) {
             return -1;
         }
-        // BEGIN android-changed
-        // call receiveStream() instead of read()
-        int read = netImpl.receiveStream(fd, buffer, offset, count, receiveTimeout);
-        // END android-changed
+        int read = netImpl.read(fd, buffer, offset, count, receiveTimeout);
         // Return of zero bytes for a blocking socket means a timeout occurred
         if (read == 0) {
             throw new SocketTimeoutException();

@@ -1584,7 +1584,7 @@ public class DatagramSocketTest extends SocketTestCase {
         
         try {
             new java.net.DatagramSocket(isa);
-            fail("SocketException was thrown.");
+            fail("SocketException was not thrown.");
         } catch(SocketException se) {
             //expected
         }
