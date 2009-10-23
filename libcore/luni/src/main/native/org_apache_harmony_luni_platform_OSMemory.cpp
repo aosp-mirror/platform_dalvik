@@ -34,12 +34,9 @@ static struct {
     jobject runtimeInstance;
 } gIDCache;
 
-#undef MMAP_READ_ONLY
-#define MMAP_READ_ONLY 1L
-#undef MMAP_READ_WRITE
-#define MMAP_READ_WRITE 2L
-#undef MMAP_WRITE_COPY
-#define MMAP_WRITE_COPY 4L
+static const int MMAP_READ_ONLY = 1;
+static const int MMAP_READ_WRITE = 2;
+static const int MMAP_WRITE_COPY = 4;
 
 /*
  * Class:     org_apache_harmony_luni_platform_OSMemory
@@ -429,36 +426,33 @@ static void harmony_nio_setAddress(JNIEnv *_env, jobject _this, jint pointer,
  * Method:    mmapImpl
  * Signature: (IJJI)I
  */
-static jint harmony_nio_mmapImpl(JNIEnv *_env, jobject _this, jint fd, 
-        jlong alignment, jlong size, jint mmode) {
-    void *mapAddress = NULL;
+static jint harmony_nio_mmapImpl(JNIEnv* env, jobject, jint fd, 
+        jlong offset, jlong size, jint mapMode) {
     int prot, flags;
-          
-    // Convert from Java mapping mode to port library mapping mode.
-    switch (mmode) {
-      case MMAP_READ_ONLY:
-              prot = PROT_READ;
-              flags = MAP_SHARED;
-              break;
-      case MMAP_READ_WRITE:
-              prot = PROT_READ|PROT_WRITE;
-              flags = MAP_SHARED;
-              break;
-      case MMAP_WRITE_COPY:
-              prot = PROT_READ|PROT_WRITE;
-              flags = MAP_PRIVATE;
-              break;
-      default:
-              return -1;
-    }
-
-    mapAddress = mmap(0, (size_t)(size&0x7fffffff), prot, flags,fd,
-            (off_t)(alignment&0x7fffffff));
-    if (mapAddress == MAP_FAILED) {
+    switch (mapMode) {
+    case MMAP_READ_ONLY:
+        prot = PROT_READ;
+        flags = MAP_SHARED;
+        break;
+    case MMAP_READ_WRITE:
+        prot = PROT_READ|PROT_WRITE;
+        flags = MAP_SHARED;
+        break;
+    case MMAP_WRITE_COPY:
+        prot = PROT_READ|PROT_WRITE;
+        flags = MAP_PRIVATE;
+        break;
+    default:
+        jniThrowIOException(env, EINVAL);
+        LOGE("bad mapMode %i", mapMode);
         return -1;
     }
-    
-    return (jint) mapAddress;
+
+    void* mapAddress = mmap(0, size, prot, flags, fd, offset);
+    if (mapAddress == MAP_FAILED) {
+        jniThrowIOException(env, errno);
+    }
+    return reinterpret_cast<uintptr_t>(mapAddress);
 }
 
 /*
@@ -494,15 +488,6 @@ static jint harmony_nio_loadImpl(JNIEnv *_env, jobject _this, jint address,
     return -1;
 }
 
-int getPageSize() {
-    static int page_size = 0;
-    if(page_size==0)
-    {
-        page_size=getpagesize();
-    }
-    return page_size;
-}
-
 /*
  * Class:     org_apache_harmony_luni_platform_OSMemory
  * Method:    isLoadedImpl
@@ -511,18 +496,16 @@ int getPageSize() {
 static jboolean harmony_nio_isLoadedImpl(JNIEnv *_env, jobject _this, 
         jint address, jlong size) {
 
+    static int page_size = getpagesize();
     jboolean result = 0;
     jint m_addr = (jint)address;
-    int page_size = getPageSize();
-    unsigned char* vec = NULL;
-    int page_count = 0;
     
     int align_offset = m_addr%page_size;// addr should align with the boundary of a page.
     m_addr -= align_offset;
     size   += align_offset;
-    page_count = (size+page_size-1)/page_size;
+    int page_count = (size+page_size-1)/page_size;
     
-    vec = (unsigned char *) malloc(page_count*sizeof(char));
+    unsigned char* vec = (unsigned char *) malloc(page_count*sizeof(char));
     
     if (mincore((void *)m_addr, size, (MINCORE_POINTER_TYPE) vec)==0) {
         // or else there is error about the mincore and return false;
