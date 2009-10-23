@@ -22,6 +22,7 @@ import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import tests.util.TestEnvironment;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -1207,8 +1208,14 @@ public class SystemTest extends junit.framework.TestCase {
 
     @Override
     protected void setUp() {
+        TestEnvironment.reset();
         flag = false;
         ranFinalize = false;
+    }
+
+    @Override protected void tearDown() throws Exception {
+        TestEnvironment.reset();
+        super.tearDown();
     }
 
     protected SystemTest createInstance() {

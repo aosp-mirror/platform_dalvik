@@ -295,7 +295,7 @@ public class LogRecordTest extends TestCase {
         assertNull(lr.getSourceClassName());
 
         // find class and method who called logger
-        Logger logger = Logger.global;
+        Logger logger = Logger.getLogger("testGetSourceDefaultValue");
         MockHandler handler = new MockHandler();
         logger.addHandler(handler);
         logger.log(Level.SEVERE, MSG);

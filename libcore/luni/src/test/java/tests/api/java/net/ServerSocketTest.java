@@ -45,6 +45,7 @@ import java.util.Properties;
 
 import tests.support.Support_Configuration;
 import tests.support.Support_PortManager;
+import tests.util.TestEnvironment;
 
 @TestTargetClass(value = ServerSocket.class) 
 public class ServerSocketTest extends SocketTestCase {
@@ -1289,7 +1290,7 @@ public class ServerSocketTest extends SocketTestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
-
+        TestEnvironment.reset();
         try {
             if (s != null)
                 s.close();

@@ -36,6 +36,7 @@ import java.net.URLConnection;
 import tests.support.Support_Configuration;
 import tests.support.resource.Support_Resources;
 import junit.framework.TestCase;
+import tests.util.TestEnvironment;
 
 /*
  * This test is designed for collecting all the testcases which needs a proxy
@@ -46,6 +47,12 @@ import junit.framework.TestCase;
 
 @TestTargetClass(Proxy.class) 
 public class ExcludedProxyTest extends TestCase {
+
+    @Override protected void setUp() throws Exception {
+        super.setUp();
+        TestEnvironment.reset();
+    }
+
     /**
      * @tests java.net.HttpURLConnection#usingProxy()
      */

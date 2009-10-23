@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 
 import org.apache.harmony.security.tests.support.SecurityChecker;
 import org.apache.harmony.security.tests.support.TestUtils;
+import tests.util.TestEnvironment;
 
 import java.io.File;
 import java.io.FilePermission;
@@ -58,6 +59,11 @@ public class PolicyTest extends TestCase {
 
     public static void main(String[] args) {
         junit.textui.TestRunner.run(PolicyTest.class);
+    }
+
+    @Override protected void tearDown() throws Exception {
+        TestEnvironment.reset();
+        super.tearDown();
     }
 
     /**

@@ -31,6 +31,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import tests.api.javax.xml.parsers.SAXParserFactoryTest.MyHandler;
+import tests.util.TestEnvironment;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -57,6 +58,7 @@ public class DocumentBuilderFactoryTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
+        TestEnvironment.reset();
         dbf = DocumentBuilderFactory.newInstance();
 
         cdataElements = new ArrayList<String>();

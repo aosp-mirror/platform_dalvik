@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import tests.support.resource.Support_Resources;
+import tests.util.TestEnvironment;
 
 @TestTargetClass(Runtime.class) 
 public class RuntimeTest extends junit.framework.TestCase {
@@ -70,6 +71,11 @@ public class RuntimeTest extends junit.framework.TestCase {
 
     protected RuntimeTest createInstance() {
         return new RuntimeTest("FT");
+    }
+
+    @Override protected void tearDown() throws Exception {
+        TestEnvironment.reset();
+        super.tearDown();
     }
 
     /**
@@ -864,7 +870,6 @@ public class RuntimeTest extends junit.framework.TestCase {
         byte[] expected = {72, 0, 101, 0, 97, 0, 114, 0, 116, 0, 32, 0, 60, 47};
         byte[] returned = new byte[expected.length];
 
-        String oldEncoding = System.getProperty("file.encoding");
         System.setProperty("file.encoding", "UTF-16LE");
 
         try {
@@ -883,8 +888,6 @@ public class RuntimeTest extends junit.framework.TestCase {
                     Arrays.equals(expected, returned));
         } catch (UnsupportedEncodingException e) {
             fail("UnsupportedEncodingException was thrown.");
-        } finally {
-            System.setProperty("file.encoding", oldEncoding);
         }
     }
  
