@@ -51,19 +51,10 @@ static int androidSystemPropertiesFd = -1;
 #define WAIT_STATUS_STRANGE_ERRNO (-3) // observed an undocumented errno
 
 /** Closes a file descriptor. */
-static int closeNow(int fd) {
-    int result;
-    do {
-        result = close(fd);
-    } while (result == -1 && errno == EINTR);
-    return result;
-}
-
-/** Closes a file descriptor. */
 static void java_lang_ProcessManager_close(JNIEnv* env,
-        jclass clazz, jobject javaDescriptor) {
-    int fd = (*env)->GetIntField(env, javaDescriptor, descriptorField);
-    if (closeNow(fd) == -1) {
+        jclass, jobject javaDescriptor) {
+    int fd = env->GetIntField(javaDescriptor, descriptorField);
+    if (TEMP_FAILURE_RETRY(close(fd)) == -1) {
         jniThrowIOException(env, errno);
     }
 }
@@ -143,9 +134,8 @@ static void java_lang_ProcessManager_watchChildren(JNIEnv* env, jobject o) {
             }
         }
 
-        (*env)->CallVoidMethod(env, o, onExitMethod, pid, status);
-
-        if ((*env)->ExceptionOccurred(env)) {
+        env->CallVoidMethod(o, onExitMethod, pid, status);
+        if (env->ExceptionOccurred()) {
             /*
              * The callback threw, so break out of the loop and return,
              * letting the exception percolate up.
@@ -157,11 +147,11 @@ static void java_lang_ProcessManager_watchChildren(JNIEnv* env, jobject o) {
 
 /** Close all open fds > 2 (i.e. everything but stdin/out/err), != skipFd. */
 static void closeNonStandardFds(int skipFd) {
+    // TODO: rather than close all these non-open files, we could look in /proc/self/fd.
     struct rlimit rlimit;
     getrlimit(RLIMIT_NOFILE, &rlimit);
-
-    int fd;
-    for (fd = 3; fd < rlimit.rlim_max; fd++) {
+    const int max_fd = rlimit.rlim_max;
+    for (int fd = 3; fd < max_fd; ++fd) {
         if (fd != skipFd
 #ifdef ANDROID
                 && fd != androidSystemPropertiesFd
@@ -306,15 +296,14 @@ static char** convertStrings(JNIEnv* env, jobjectArray javaArray) {
     }
 
     char** array = NULL;
-    jsize length = (*env)->GetArrayLength(env, javaArray);
+    jsize length = env->GetArrayLength(javaArray);
     array = (char**) malloc(sizeof(char*) * (length + 1));
     array[length] = 0;
     jsize index;
     for (index = 0; index < length; index++) {
-        jstring javaEntry = (jstring) (*env)->GetObjectArrayElement(
-                env, javaArray, index);
-        char* entry = (char*) (*env)->GetStringUTFChars(
-                env, javaEntry, NULL);
+        jstring javaEntry =
+                (jstring) env->GetObjectArrayElement(javaArray, index);
+        char* entry = (char*) env->GetStringUTFChars(javaEntry, NULL);
         array[index] = entry;
     }
 
@@ -327,12 +316,12 @@ static void freeStrings(JNIEnv* env, jobjectArray javaArray, char** array) {
         return;
     }
 
-    jsize length = (*env)->GetArrayLength(env, javaArray);
+    jsize length = env->GetArrayLength(javaArray);
     jsize index;
     for (index = 0; index < length; index++) {
-        jstring javaEntry = (jstring) (*env)->GetObjectArrayElement(
-                env, javaArray, index);
-        (*env)->ReleaseStringUTFChars(env, javaEntry, array[index]);
+        jstring javaEntry =
+                (jstring) env->GetObjectArrayElement(javaArray, index);
+        env->ReleaseStringUTFChars(javaEntry, array[index]);
     }
 
     free(array);
@@ -352,8 +341,7 @@ static pid_t java_lang_ProcessManager_exec(
     // Extract working directory string.
     const char* workingDirectory = NULL;
     if (javaWorkingDirectory != NULL) {
-        workingDirectory = (const char*) (*env)->GetStringUTFChars(
-                env, javaWorkingDirectory, NULL);
+        workingDirectory = env->GetStringUTFChars(javaWorkingDirectory, NULL);
     }
 
     // Convert environment array.
@@ -364,22 +352,21 @@ static pid_t java_lang_ProcessManager_exec(
             inDescriptor, outDescriptor, errDescriptor);
 
     // Temporarily clear exception so we can clean up.
-    jthrowable exception = (*env)->ExceptionOccurred(env);
-    (*env)->ExceptionClear(env);
+    jthrowable exception = env->ExceptionOccurred();
+    env->ExceptionClear();
 
     freeStrings(env, javaEnvironment, environment);
 
     // Clean up working directory string.
     if (javaWorkingDirectory != NULL) {
-        (*env)->ReleaseStringUTFChars(
-                env, javaWorkingDirectory, workingDirectory);
+        env->ReleaseStringUTFChars(javaWorkingDirectory, workingDirectory);
     }
 
     freeStrings(env, javaCommands, commands);
 
     // Re-throw exception if present.
     if (exception != NULL) {
-        if ((*env)->Throw(env, exception) < 0) {
+        if (env->Throw(exception) < 0) {
             LOGE("Error rethrowing exception!");
         }
     }
@@ -399,18 +386,16 @@ static void java_lang_ProcessManager_staticInitialize(JNIEnv* env,
     }
 #endif
 
-    onExitMethod = (*env)->GetMethodID(env, clazz, "onExit", "(II)V");
+    onExitMethod = env->GetMethodID(clazz, "onExit", "(II)V");
     if (onExitMethod == NULL) {
         return;
     }
 
-    jclass fileDescriptorClass
-            = (*env)->FindClass(env, "java/io/FileDescriptor");
+    jclass fileDescriptorClass = env->FindClass("java/io/FileDescriptor");
     if (fileDescriptorClass == NULL) {
         return;
     }
-    descriptorField = (*env)->GetFieldID(env, fileDescriptorClass,
-            "descriptor", "I");
+    descriptorField = env->GetFieldID(fileDescriptorClass, "descriptor", "I");
     if (descriptorField == NULL) {
         return;
     }

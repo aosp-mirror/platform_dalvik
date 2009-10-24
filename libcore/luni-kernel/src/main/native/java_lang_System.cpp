@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 
 #include <stdlib.h>
@@ -26,20 +27,16 @@
  * (Calling it plain "getenv" might confuse GDB if you try to put a breakpoint
  * on the libc version.)
  */
-static jstring java_getEnvByName(JNIEnv* env, jclass clazz, jstring nameStr)
-{
+static jstring java_getEnvByName(JNIEnv* env, jclass, jstring nameStr) {
     jstring valueStr = NULL;
 
     if (nameStr != NULL) {
-        const char* name;
-        const char* val;
-
-        name = (*env)->GetStringUTFChars(env, nameStr, NULL);
-        val = getenv(name);
-        if (val != NULL)
-            valueStr = (*env)->NewStringUTF(env, val);
-
-        (*env)->ReleaseStringUTFChars(env, nameStr, name);
+        const char* name = env->GetStringUTFChars(nameStr, NULL);
+        const char* val = getenv(name);
+        if (val != NULL) {
+            valueStr = env->NewStringUTF(val);
+        }
+        env->ReleaseStringUTFChars(nameStr, name);
     } else {
         jniThrowException(env, "java/lang/NullPointerException", NULL);
     }
@@ -58,13 +55,12 @@ extern char** environ;
  * (Calling it plain "getenv" might confuse GDB if you try to put a breakpoint
  * on the libc version.)
  */
-static jstring java_getEnvByIndex(JNIEnv* env, jclass clazz, jint index)
-{
+static jstring java_getEnvByIndex(JNIEnv* env, jclass, jint index) {
     jstring valueStr = NULL;
 
     char* entry = environ[index];
     if (entry != NULL) {
-        valueStr = (*env)->NewStringUTF(env, entry);
+        valueStr = env->NewStringUTF(entry);
     }
 
     return valueStr;
@@ -76,16 +72,16 @@ static jstring java_getEnvByIndex(JNIEnv* env, jclass clazz, jint index)
  * Sets a field via JNI. Used for the standard streams, which are r/o
  * otherwise.
  */
-static void java_setFieldImpl(JNIEnv* env, jclass clazz, jstring name, jstring sig, jobject object)
-{
-    const char* fieldName = (*env)->GetStringUTFChars(env, name, NULL);
-    const char* fieldSig = (*env)->GetStringUTFChars(env, sig, NULL);
+static void java_setFieldImpl(JNIEnv* env, jclass clazz,
+        jstring name, jstring sig, jobject object) {
+    const char* fieldName = env->GetStringUTFChars(name, NULL);
+    const char* fieldSig = env->GetStringUTFChars(sig, NULL);
 
-    jfieldID fieldID = (*env)->GetStaticFieldID(env, clazz, fieldName, fieldSig);
-    (*env)->SetStaticObjectField(env, clazz, fieldID, object);
+    jfieldID fieldID = env->GetStaticFieldID(clazz, fieldName, fieldSig);
+    env->SetStaticObjectField(clazz, fieldID, object);
     
-    (*env)->ReleaseStringUTFChars(env, name, fieldName);
-    (*env)->ReleaseStringUTFChars(env, sig, fieldSig);
+    env->ReleaseStringUTFChars(name, fieldName);
+    env->ReleaseStringUTFChars(sig, fieldSig);
 }
 
 /*
@@ -93,14 +89,12 @@ static void java_setFieldImpl(JNIEnv* env, jclass clazz, jstring name, jstring s
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "getEnvByName",   "(Ljava/lang/String;)Ljava/lang/String;",  java_getEnvByName  },
-    { "getEnvByIndex",  "(I)Ljava/lang/String;",                   java_getEnvByIndex },
-    { "setFieldImpl",   "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V", java_setFieldImpl  },
+    { "getEnvByName",   "(Ljava/lang/String;)Ljava/lang/String;",                    (void*) java_getEnvByName  },
+    { "getEnvByIndex",  "(I)Ljava/lang/String;",                                     (void*) java_getEnvByIndex },
+    { "setFieldImpl",   "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V", (void*) java_setFieldImpl },
 };
 
-int register_java_lang_System(JNIEnv* env)
-{
-	return jniRegisterNativeMethods(env, "java/lang/System",
-                gMethods, NELEM(gMethods));
+int register_java_lang_System(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "java/lang/System",
+            gMethods, NELEM(gMethods));
 }
-

@@ -3,8 +3,8 @@
 # or BUILD_*_LIBRARY.
 
 LOCAL_SRC_FILES := \
-	java_lang_ProcessManager.c \
-	java_lang_System.c
+	java_lang_ProcessManager.cpp \
+	java_lang_System.cpp
 
 LOCAL_C_INCLUDES +=
 
