@@ -484,7 +484,8 @@ public class LogManager {
         reset();
         props.load(ins);
 
-        // update handlers for the root logger only
+        // The RI treats the root logger as special. For compatibility, always
+        // update the root logger's handlers.
         Logger root = loggers.get("");
         if (root != null) {
             root.setManager(this);
@@ -623,6 +624,7 @@ public class LogManager {
             setLevelRecursively(logger, null);
         }
         newParent.children.add(logger);
+        logger.updateDalvikLogHandler(); // android-only
     }
 
     /**
