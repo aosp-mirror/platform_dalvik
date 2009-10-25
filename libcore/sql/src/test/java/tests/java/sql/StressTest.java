@@ -16,8 +16,8 @@
 
 package tests.java.sql;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import tests.support.DatabaseCreator;
@@ -220,6 +219,7 @@ public class StressTest extends TestCase {
             clazz = Driver.class,
             args = {String.class, Properties.class}
     )
+    @BrokenTest("2191557 ReferenceTable overflow")
     public void testInsertOfManyRowsUsingManyThreads() {
         Logger.global.info("java.sql stress test: multiple threads and many operations.");
 
