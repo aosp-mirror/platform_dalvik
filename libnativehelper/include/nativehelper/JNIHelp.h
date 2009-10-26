@@ -25,6 +25,7 @@
 
 #include "jni.h"
 #include "utils/Log.h"
+#include <unistd.h>
 
 #ifndef NELEM
 # define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
@@ -118,6 +119,21 @@ inline void jniSetFileDescriptorOfFD(JNIEnv* env, jobject fileDescriptor,
 {
     return jniSetFileDescriptorOfFD(&env->functions, fileDescriptor, value);
 }
+#endif
+
+/*
+ * TEMP_FAILURE_RETRY is defined by some, but not all, versions of
+ * <unistd.h>. (Alas, it is not as standard as we'd hoped!) So, if it's
+ * not already defined, then define it here.
+ */
+#ifndef TEMP_FAILURE_RETRY
+/* Used to retry syscalls that can return EINTR. */
+#define TEMP_FAILURE_RETRY(exp) ({         \
+    typeof (exp) _rc;                      \
+    do {                                   \
+        _rc = (exp);                       \
+    } while (_rc == -1 && errno == EINTR); \
+    _rc; })
 #endif
 
 #endif /*_NATIVEHELPER_JNIHELP_H*/
