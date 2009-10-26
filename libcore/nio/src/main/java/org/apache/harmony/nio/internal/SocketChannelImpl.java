@@ -50,7 +50,7 @@ import org.apache.harmony.luni.net.PlainSocketImpl;
 import org.apache.harmony.luni.platform.FileDescriptorHandler;
 import org.apache.harmony.luni.platform.INetworkSystem;
 import org.apache.harmony.luni.platform.Platform;
-import org.apache.harmony.luni.util.ErrorCodeException;
+//import org.apache.harmony.luni.util.ErrorCodeException; android-removed
 import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.nio.AddressUtil;
 import org.apache.harmony.nio.internal.nls.Messages;
@@ -62,7 +62,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
 
     private static final int EOF = -1;
 
-    private static final int ERRCODE_SOCKET_NONBLOCKING_WOULD_BLOCK = -211;
+    // android-removed: private static final int ERRCODE_SOCKET_NONBLOCKING_WOULD_BLOCK = -211;
 
     // The singleton to do the native network operation.
     static final INetworkSystem networkSystem = Platform.getNetworkSystem();
@@ -569,14 +569,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                     writeCount = networkSystem.write(fd, array, 0, length);
                 }
                 source.position(pos + writeCount);
-            } catch (SocketException e) {
-                if (e.getCause() instanceof ErrorCodeException) {
-                    if (ERRCODE_SOCKET_NONBLOCKING_WOULD_BLOCK == ((ErrorCodeException) e
-                            .getCause()).getErrorCode()) {
-                        return writeCount;
-                    }
-                }
-                throw e;
+                // android-removed: bogus catch (SocketException e) and use of ErrorCodeException.
             } finally {
                 if (isBlocking()) {
                     end(writeCount >= 0);

@@ -577,9 +577,6 @@ public class PlainSocketImpl extends SocketImpl {
             return netImpl.sendDatagram2(fd, buffer, offset, count, port,
                     address);
         }
-        // BEGIN android-changed
-        // call sendStream() instead of write()
-        return netImpl.sendStream(fd, buffer, offset, count);
-        // END android-changed
+        return netImpl.write(fd, buffer, offset, count);
     }
 }

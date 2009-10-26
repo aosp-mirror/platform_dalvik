@@ -45,7 +45,7 @@ import org.apache.harmony.luni.net.PlainDatagramSocketImpl;
 import org.apache.harmony.luni.platform.FileDescriptorHandler;
 import org.apache.harmony.luni.platform.INetworkSystem;
 import org.apache.harmony.luni.platform.Platform;
-import org.apache.harmony.luni.util.ErrorCodeException;
+//import org.apache.harmony.luni.util.ErrorCodeException; android-removed
 import org.apache.harmony.nio.AddressUtil;
 
 /*
@@ -61,7 +61,7 @@ class DatagramChannelImpl extends DatagramChannel implements
     // default timeout used to nonblocking mode.
     private static final int DEFAULT_TIMEOUT = 1;
 
-    private static final int ERRCODE_SOCKET_NONBLOCKING_WOULD_BLOCK = -211;
+    // android-removed: private static final int ERRCODE_SOCKET_NONBLOCKING_WOULD_BLOCK = -211;
 
     private static final byte[] stubArray = new byte[0];
 
@@ -629,14 +629,7 @@ class DatagramChannelImpl extends DatagramChannel implements
                             .array(), start, length, isBound);
                 }
                 return result;
-            } catch (SocketException e) {
-                if (e.getCause() instanceof ErrorCodeException) {
-                    if (ERRCODE_SOCKET_NONBLOCKING_WOULD_BLOCK == ((ErrorCodeException) e
-                            .getCause()).getErrorCode()) {
-                        return result;
-                    }
-                }
-                throw e;
+                // android-removed: bogus catch (SocketException e) and use of ErrorCodeException.
             } finally {
                 end(result > 0);
             }

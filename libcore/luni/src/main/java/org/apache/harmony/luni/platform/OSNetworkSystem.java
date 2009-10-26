@@ -458,29 +458,8 @@ final class OSNetworkSystem implements INetworkSystem {
             DatagramPacket packet, int address, int offset, int length,
             int receiveTimeout, boolean peek) throws IOException;
 
-    // BEGIN android-added
     /**
-     * Send <code>count</code> bytes from the buffer <code>data</code> at
-     * the <code>offset</code>, on the socket.
-     *
-     * @param fd
-     *
-     * @param data the send buffer @param offset the offset into the buffer
-     * @param count the number of bytes to receive @return int the actual number
-     * of bytes sent @throws IOException @exception SocketException if an error
-     * occurs while writing
-     */
-    public int sendStream(FileDescriptor fd, byte[] data, int offset, int count)
-            throws IOException {
-        return sendStreamImpl(fd, data, offset, count);
-    }
-
-    static native int sendStreamImpl(FileDescriptor fd, byte[] data,
-            int offset, int count) throws IOException;
-    // END android-added
-
-    /**
-     * Recieve data on the connected socket into the specified buffer. The
+     * Receive data on the connected socket into the specified buffer. The
      * packet fields <code>data</code> and <code>length</code> are passed in
      * addition to <code>packet</code> to eliminate the JNI field access calls.
      *

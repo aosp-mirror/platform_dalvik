@@ -1550,9 +1550,9 @@ static jint osNetworkSystem_readSocketDirectImpl(JNIEnv* env, jclass clazz,
     if (bytesReceived == 0) {
         return -1;
     } else if (bytesReceived == -1) {
-        if (errno == EWOULDBLOCK) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // We were asked to read a non-blocking socket with no data
-            // available, so report "no data".
+            // available, so report "no bytes read".
             return 0;
         } else {
             throwSocketException(env, convertError(errno));
@@ -1587,86 +1587,38 @@ static jint osNetworkSystem_writeSocketDirectImpl(JNIEnv* env, jclass clazz,
         return 0;
     }
 
-    int handle;
-    if (!jniGetFd(env, fileDescriptor, handle)) {
+    int fd;
+    if (!jniGetFd(env, fileDescriptor, fd)) {
         return 0;
     }
 
     jbyte* message = reinterpret_cast<jbyte*>(static_cast<uintptr_t>(address + offset));
-    int result = send(handle, message, count, SOCKET_NOFLAGS);
-    if (result < 0) {
-        int err = convertError(errno);
-
-        if (SOCKERR_WOULDBLOCK == err){
-            jclass socketExClass,errorCodeExClass;
-            jmethodID errorCodeExConstructor, socketExConstructor,socketExCauseMethod;
-            jobject errorCodeEx, socketEx;
-            const char* errorMessage = netLookupErrorString(err);
-            jstring errorMessageString = env->NewStringUTF(errorMessage);
-
-            errorCodeExClass = env->FindClass("org/apache/harmony/luni/util/ErrorCodeException");
-            if (!errorCodeExClass){
-                return 0;
-            }
-            errorCodeExConstructor = env->GetMethodID(errorCodeExClass,"<init>","(I)V");
-            if (!errorCodeExConstructor){
-                return 0;
-            }
-            errorCodeEx = env->NewObject(errorCodeExClass,errorCodeExConstructor,err);
-
-            socketExClass = env->FindClass("java/net/SocketException");
-            if (!socketExClass) {
-                return 0;
-            }
-            socketExConstructor = env->GetMethodID(socketExClass,"<init>","(Ljava/lang/String;)V");
-            if (!socketExConstructor) {
-                return 0;
-            }
-            socketEx = env->NewObject(socketExClass, socketExConstructor, errorMessageString);
-            socketExCauseMethod = env->GetMethodID(socketExClass,"initCause","(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
-            env->CallObjectMethod(socketEx,socketExCauseMethod,errorCodeEx);
-            env->Throw((jthrowable)socketEx);
+    int bytesSent = send(fd, message, count, SOCKET_NOFLAGS);
+    if (bytesSent == -1) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            // We were asked to write to a non-blocking socket, but were told
+            // it would block, so report "no bytes written".
+            return 0;
+        } else {
+            throwSocketException(env, convertError(errno));
             return 0;
         }
-        throwSocketException(env, err);
-        return 0;
     }
-
-    return result;
+    return bytesSent;
 }
 
 static jint osNetworkSystem_writeSocketImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor, jbyteArray data, jint offset, jint count) {
+        jobject fileDescriptor, jbyteArray byteArray, jint offset, jint count) {
     // LOGD("ENTER writeSocketImpl");
 
-    jbyte *message;
-    int sent = 0;
-    jint result = 0;
-
-/* TODO: ARRAY PINNING */
-#define INTERNAL_SEND_BUFFER_MAX 512
-    jbyte internalBuffer[INTERNAL_SEND_BUFFER_MAX];
-
-    if (count > INTERNAL_SEND_BUFFER_MAX) {
-        message = (jbyte*)malloc(count * sizeof( jbyte));
-        if (message == NULL) {
-            jniThrowException(env, "java/lang/OutOfMemoryError",
-                    "couldn't allocate enough memory for writeSocket");
-            return 0;
-        }
-    } else {
-        message = (jbyte *)internalBuffer;
+    jbyte* bytes = env->GetByteArrayElements(byteArray, NULL);
+    if (bytes == NULL) {
+        return -1;
     }
-
-    env->GetByteArrayRegion(data, offset, count, message);
-
-    result = osNetworkSystem_writeSocketDirectImpl(env, clazz, fileDescriptor,
-            (jint) message, 0, count);
-
-    if (( jbyte *)message != internalBuffer) {
-        free(( jbyte *)message);
-    }
-#undef INTERNAL_SEND_BUFFER_MAX
+    jint address = static_cast<jint>(reinterpret_cast<uintptr_t>(bytes));
+    int result = osNetworkSystem_writeSocketDirectImpl(env, clazz,
+            fileDescriptor, address, offset, count);
+    env->ReleaseByteArrayElements(byteArray, bytes, 0);
     return result;
 }
 
@@ -2315,41 +2267,6 @@ static void osNetworkSystem_createServerStreamSocketImpl(JNIEnv* env,
 
     int value = 1;
     setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int));
-}
-
-static jint osNetworkSystem_sendStreamImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor, jbyteArray data, jint offset, jint count) {
-    // LOGD("ENTER sendStreamImpl");
-
-    int fd;
-    if (!jniGetFd(env, fileDescriptor, fd)) {
-        return 0;
-    }
-
-    // Cap write length to available buf size
-    int spaceAvailable = env->GetArrayLength(data) - offset;
-    if (count > spaceAvailable) count = spaceAvailable;
-
-    int sent = 0;
-    jbyte* message = env->GetByteArrayElements(data, NULL);
-    while (sent < count) {
-        // LOGD("before select %d", count);
-        selectWait(fd, SEND_RETRY_TIME, SELECT_WRITE_TYPE);
-        int result = send(fd, message + offset + sent, count - sent,
-                SOCKET_NOFLAGS);
-        if (result == -1) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                // LOGD("write blocked %d", sent);
-                continue;
-            }
-            throwSocketException(env, convertError(errno));
-            env->ReleaseByteArrayElements(data, message, 0);
-            return 0;
-        }
-        sent += result;
-    }
-    env->ReleaseByteArrayElements(data, message, 0);
-    return sent;
 }
 
 static void doShutdown(JNIEnv* env, jobject fileDescriptor, int how) {
@@ -3289,7 +3206,6 @@ static JNINativeMethod gMethods[] = {
     { "sendConnectedDatagramImpl",         "(Ljava/io/FileDescriptor;[BIIZ)I",                                         (void*) osNetworkSystem_sendConnectedDatagramImpl          },
     { "sendConnectedDatagramDirectImpl",   "(Ljava/io/FileDescriptor;IIIZ)I",                                          (void*) osNetworkSystem_sendConnectedDatagramDirectImpl    },
     { "createServerStreamSocketImpl",      "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createServerStreamSocketImpl       },
-    { "sendStreamImpl",                    "(Ljava/io/FileDescriptor;[BII)I",                                          (void*) osNetworkSystem_sendStreamImpl                     },
     { "shutdownInputImpl",                 "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownInputImpl                  },
     { "shutdownOutputImpl",                "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownOutputImpl                 },
     { "sendDatagramImpl2",                 "(Ljava/io/FileDescriptor;[BIIILjava/net/InetAddress;)I",                   (void*) osNetworkSystem_sendDatagramImpl2                  },

@@ -126,11 +126,6 @@ public interface INetworkSystem {
     public void connectDatagram(FileDescriptor aFD, int port, int trafficClass,
             InetAddress inetAddress) throws SocketException;
 
-    // BEGIN android-added
-    public int sendStream(FileDescriptor fd, byte[] data, int offset, int count)
-            throws IOException;
-    // END android-added
-
     public void shutdownInput(FileDescriptor descriptor) throws IOException;
 
     public void shutdownOutput(FileDescriptor descriptor) throws IOException;
