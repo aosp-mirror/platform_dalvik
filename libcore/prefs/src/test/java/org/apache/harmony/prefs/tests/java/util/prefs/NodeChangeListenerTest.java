@@ -16,25 +16,21 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import junit.framework.TestCase;
+import tests.util.TestEnvironment;
 
 import java.util.prefs.NodeChangeEvent;
 import java.util.prefs.NodeChangeListener;
 import java.util.prefs.Preferences;
-
-import junit.framework.TestCase;
-import tests.util.PrefsTester;
 
 /**
  * 
  */
 @TestTargetClass(NodeChangeListener.class)
 public class NodeChangeListenerTest extends TestCase {
-
-    private final PrefsTester prefsTester = new PrefsTester();
 
     NodeChangeListener l;
 
@@ -44,7 +40,7 @@ public class NodeChangeListenerTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        prefsTester.setUp();
+        TestEnvironment.reset();
         l = new NodeChangeListenerImpl();
     }
 
@@ -53,7 +49,6 @@ public class NodeChangeListenerTest extends TestCase {
      */
     @Override
     protected void tearDown() throws Exception {
-        prefsTester.tearDown();
         super.tearDown();
     }
 

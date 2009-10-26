@@ -39,6 +39,7 @@ import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import static tests.support.Support_Exec.javaProcessBuilder;
 import static tests.support.Support_Exec.execAndGetOutput;
+import tests.util.TestEnvironment;
 
 @TestTargetClass(File.class) 
 public class FileTest extends junit.framework.TestCase {
@@ -97,7 +98,6 @@ public class FileTest extends junit.framework.TestCase {
     public void test_ConstructorLjava_io_FileLjava_lang_String() throws Exception {
         String error;
         String dirName = System.getProperty("java.io.tmpdir");
-        String oldUserDir = System.getProperty("user.dir");
         System.setProperty("user.dir", dirName);
         
         File d = new File(dirName);
@@ -127,8 +127,6 @@ public class FileTest extends junit.framework.TestCase {
         d = new File(s, "/abc");
         assertEquals("Test 4: Incorrect file created;", 
                 f.getAbsolutePath(), d.getAbsolutePath());
-        
-        System.setProperty("user.dir", oldUserDir);
     }
 
     /**
@@ -173,7 +171,6 @@ public class FileTest extends junit.framework.TestCase {
         String fileName = "input.tst";
 
         String userDir = System.getProperty("java.io.tmpdir");
-        String oldUserDir = System.getProperty("user.dir");
         System.setProperty("user.dir", userDir);
         
         File f = new File(dirName, fileName);
@@ -206,8 +203,6 @@ public class FileTest extends junit.framework.TestCase {
                 .getAbsolutePath());
         assertEquals("Test3: Created Incorrect File", "/abc", f
                 .getAbsolutePath());
-
-        System.setProperty("user.dir", oldUserDir);
     }
 
     /**
@@ -931,7 +926,6 @@ public class FileTest extends junit.framework.TestCase {
         String expected;
         String error;
         String tmpDir = System.getProperty("java.io.tmpdir");
-        String oldUserDir = System.getProperty("user.dir");
         System.setProperty("user.dir", tmpDir);
         try {
             String base = new File(tmpDir).getCanonicalPath();
@@ -978,8 +972,6 @@ public class FileTest extends junit.framework.TestCase {
 
         } catch (IOException e) {
             fail("Unexpected IOException During Test : " + e.getMessage());
-        } finally {
-            System.setProperty("user.dir", oldUserDir);
         }
     }
 
@@ -1094,7 +1086,6 @@ public class FileTest extends junit.framework.TestCase {
         args = {}
     )    
     public void test_getPath() {
-        String oldUserDir = System.getProperty("java.io.tmpdir");
         System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
         String base = System.getProperty("user.dir");
         String fname;
@@ -1120,7 +1111,6 @@ public class FileTest extends junit.framework.TestCase {
         f2.delete();
         f3.delete();
         f4.delete();
-        System.setProperty("user.dir", oldUserDir);
     }
 
     /**
@@ -2503,6 +2493,9 @@ public class FileTest extends junit.framework.TestCase {
      * is called before a test is executed.
      */
     protected void setUp() throws Exception {
+        super.setUp();
+        TestEnvironment.reset();
+
         // Make sure that system properties are set correctly
         String userDir = System.getProperty("java.io.tmpdir");
         if (userDir == null)
@@ -2534,6 +2527,8 @@ public class FileTest extends junit.framework.TestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
+        TestEnvironment.reset();
+
         if (tempFile.exists() && !tempFile.delete())
             System.out
                     .println("FileTest.tearDown() failed, could not delete file!");

@@ -25,6 +25,7 @@ import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import junit.framework.TestCase;
+import tests.util.TestEnvironment;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -99,19 +100,6 @@ public class HttpsURLConnectionTest extends TestCase {
     // Proxy authentication required response code
     private static final int AUTHENTICATION_REQUIRED_CODE = 407;
 
-    // fields keeping the system values of corresponding properties
-    private static String systemKeyStoreType;
-
-    private static String systemKeyStore;
-
-    private static String systemKeyStorePassword;
-
-    private static String systemTrustStoreType;
-
-    private static String systemTrustStore;
-
-    private static String systemTrustStorePassword;
-    
     private static File store;
     
     static {
@@ -136,19 +124,14 @@ public class HttpsURLConnectionTest extends TestCase {
         // set up the properties defining the default values needed by SSL stuff
         setUpStoreProperties();
 
-        try {
-            SSLSocketFactory defaultSSLSF = HttpsURLConnection
-                    .getDefaultSSLSocketFactory();
-            ServerSocket ss = new ServerSocket(0);
-            Socket s = defaultSSLSF
-                    .createSocket("localhost", ss.getLocalPort());
-            ss.accept();
-            s.close();
-            ss.close();
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
-        }
+        SSLSocketFactory defaultSSLSF = HttpsURLConnection
+                .getDefaultSSLSocketFactory();
+        ServerSocket ss = new ServerSocket(0);
+        Socket s = defaultSSLSF
+                .createSocket("localhost", ss.getLocalPort());
+        ss.accept();
+        s.close();
+        ss.close();
     }
 
     /**
@@ -171,33 +154,28 @@ public class HttpsURLConnectionTest extends TestCase {
         // set up the properties defining the default values needed by SSL stuff
         setUpStoreProperties();
 
-        try {
-            // create the SSL server socket acting as a server
-            SSLContext ctx = getContext();
-            ServerSocket ss = ctx.getServerSocketFactory()
-                    .createServerSocket(0);
+        // create the SSL server socket acting as a server
+        SSLContext ctx = getContext();
+        ServerSocket ss = ctx.getServerSocketFactory()
+                .createServerSocket(0);
 
-            // create the HostnameVerifier to check hostname verification
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+        // create the HostnameVerifier to check hostname verification
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
 
-            // create url connection to be tested
-            URL url = new URL("https://localhost:" + ss.getLocalPort());
-            HttpsURLConnection connection = (HttpsURLConnection) url
-                    .openConnection();
+        // create url connection to be tested
+        URL url = new URL("https://localhost:" + ss.getLocalPort());
+        HttpsURLConnection connection = (HttpsURLConnection) url
+                .openConnection();
 
-            // perform the interaction between the peers
-            SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
+        // perform the interaction between the peers
+        SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
 
-            // check the connection state
-            checkConnectionStateParameters(connection, peerSocket);
+        // check the connection state
+        checkConnectionStateParameters(connection, peerSocket);
 
-            // should silently exit
-            connection.connect();
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
-        }
+        // should silently exit
+        connection.connect();
     }
 
     /**
@@ -231,37 +209,32 @@ public class HttpsURLConnectionTest extends TestCase {
         // set up the properties defining the default values needed by SSL stuff
         setUpStoreProperties();
 
+        // create the SSL server socket acting as a server
+        SSLContext ctx = getContext();
+        ServerSocket ss = ctx.getServerSocketFactory()
+                .createServerSocket(0);
+
+        // create the HostnameVerifier to check hostname verification
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+
+        // create url connection to be tested
+        URL url = new URL("https://localhost:" + ss.getLocalPort());
+        HttpsURLConnection connection = (HttpsURLConnection) url
+                .openConnection();
+
         try {
-            // create the SSL server socket acting as a server
-            SSLContext ctx = getContext();
-            ServerSocket ss = ctx.getServerSocketFactory()
-                    .createServerSocket(0);
-
-            // create the HostnameVerifier to check hostname verification
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
-
-            // create url connection to be tested
-            URL url = new URL("https://localhost:" + ss.getLocalPort());
-            HttpsURLConnection connection = (HttpsURLConnection) url
-                    .openConnection();
-
-            try {
-                doInteraction(connection, ss, NOT_FOUND_CODE);
-                fail("Expected exception was not thrown.");
-            } catch (FileNotFoundException e) {
-                if (DO_LOG) {
-                    System.out.println("Expected exception was thrown: "
-                            + e.getMessage());
-                }
+            doInteraction(connection, ss, NOT_FOUND_CODE);
+            fail("Expected exception was not thrown.");
+        } catch (FileNotFoundException e) {
+            if (DO_LOG) {
+                System.out.println("Expected exception was thrown: "
+                        + e.getMessage());
             }
-
-            // should silently exit
-            connection.connect();
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
         }
+
+        // should silently exit
+        connection.connect();
     }
 
     /**
@@ -458,39 +431,34 @@ public class HttpsURLConnectionTest extends TestCase {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
-        try {
-            // create the SSLServerSocket which will be used by server side
-            SSLServerSocket ss = (SSLServerSocket) getContext()
-                    .getServerSocketFactory().createServerSocket(0);
+        // create the SSLServerSocket which will be used by server side
+        SSLServerSocket ss = (SSLServerSocket) getContext()
+                .getServerSocketFactory().createServerSocket(0);
 
-            // create the HostnameVerifier to check that Hostname verification
-            // is done
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+        // create the HostnameVerifier to check that Hostname verification
+        // is done
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
 
-            // create HttpsURLConnection to be tested
-            URL url = new URL("https://localhost:" + ss.getLocalPort());
-            HttpsURLConnection connection = (HttpsURLConnection) url
-                    .openConnection();
+        // create HttpsURLConnection to be tested
+        URL url = new URL("https://localhost:" + ss.getLocalPort());
+        HttpsURLConnection connection = (HttpsURLConnection) url
+                .openConnection();
 
-            TestHostnameVerifier hnv_late = new TestHostnameVerifier();
-            // replace default verifier
-            connection.setHostnameVerifier(hnv_late);
+        TestHostnameVerifier hnv_late = new TestHostnameVerifier();
+        // replace default verifier
+        connection.setHostnameVerifier(hnv_late);
 
-            // perform the interaction between the peers and check the results
-            SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
-            assertTrue("Hostname verification was not done", hnv_late.verified);
-            assertFalse(
-                    "Hostname verification should not be done by this verifier",
-                    hnv.verified);
-            checkConnectionStateParameters(connection, peerSocket);
+        // perform the interaction between the peers and check the results
+        SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
+        assertTrue("Hostname verification was not done", hnv_late.verified);
+        assertFalse(
+                "Hostname verification should not be done by this verifier",
+                hnv.verified);
+        checkConnectionStateParameters(connection, peerSocket);
 
-            // should silently exit
-            connection.connect();
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
-        }
+        // should silently exit
+        connection.connect();
     }
 
     /**
@@ -509,32 +477,27 @@ public class HttpsURLConnectionTest extends TestCase {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
-        try {
-            // create the SSLServerSocket which will be used by server side
-            SSLServerSocket ss = (SSLServerSocket) getContext()
-                    .getServerSocketFactory().createServerSocket(0);
+        // create the SSLServerSocket which will be used by server side
+        SSLServerSocket ss = (SSLServerSocket) getContext()
+                .getServerSocketFactory().createServerSocket(0);
 
-            // create the HostnameVerifier to check that Hostname verification
-            // is done
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+        // create the HostnameVerifier to check that Hostname verification
+        // is done
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
 
-            // create HttpsURLConnection to be tested
-            URL url = new URL("https://localhost:" + ss.getLocalPort());
-            HttpsURLConnection connection = (HttpsURLConnection) url
-                    .openConnection();
-            connection.setDoOutput(true);
+        // create HttpsURLConnection to be tested
+        URL url = new URL("https://localhost:" + ss.getLocalPort());
+        HttpsURLConnection connection = (HttpsURLConnection) url
+                .openConnection();
+        connection.setDoOutput(true);
 
-            // perform the interaction between the peers and check the results
-            SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
-            checkConnectionStateParameters(connection, peerSocket);
+        // perform the interaction between the peers and check the results
+        SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
+        checkConnectionStateParameters(connection, peerSocket);
 
-            // should silently exit
-            connection.connect();
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
-        }
+        // should silently exit
+        connection.connect();
     }
 
     /**
@@ -566,32 +529,27 @@ public class HttpsURLConnectionTest extends TestCase {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
-        try {
-            // create the SSLServerSocket which will be used by server side
-            ServerSocket ss = new ServerSocket(0);
+        // create the SSLServerSocket which will be used by server side
+        ServerSocket ss = new ServerSocket(0);
 
-            // create the HostnameVerifier to check that Hostname verification
-            // is done
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+        // create the HostnameVerifier to check that Hostname verification
+        // is done
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
 
-            // create HttpsURLConnection to be tested
-            URL url = new URL("https://requested.host:55556/requested.data");
-            HttpsURLConnection connection = (HttpsURLConnection) url
-                    .openConnection(new Proxy(Proxy.Type.HTTP,
-                            new InetSocketAddress("localhost", ss
-                                    .getLocalPort())));
+        // create HttpsURLConnection to be tested
+        URL url = new URL("https://requested.host:55556/requested.data");
+        HttpsURLConnection connection = (HttpsURLConnection) url
+                .openConnection(new Proxy(Proxy.Type.HTTP,
+                        new InetSocketAddress("localhost", ss
+                                .getLocalPort())));
 
-            // perform the interaction between the peers and check the results
-            SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
-            checkConnectionStateParameters(connection, peerSocket);
+        // perform the interaction between the peers and check the results
+        SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
+        checkConnectionStateParameters(connection, peerSocket);
 
-            // should silently exit
-            connection.connect();
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
-        }
+        // should silently exit
+        connection.connect();
     }
 
     /**
@@ -624,40 +582,35 @@ public class HttpsURLConnectionTest extends TestCase {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
-        try {
-            // create the SSLServerSocket which will be used by server side
-            ServerSocket ss = new ServerSocket(0);
+        // create the SSLServerSocket which will be used by server side
+        ServerSocket ss = new ServerSocket(0);
 
-            // create the HostnameVerifier to check that Hostname verification
-            // is done
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+        // create the HostnameVerifier to check that Hostname verification
+        // is done
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
 
-            Authenticator.setDefault(new Authenticator() {
+        Authenticator.setDefault(new Authenticator() {
 
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication("user", "password"
-                            .toCharArray());
-                }
-            });
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("user", "password"
+                        .toCharArray());
+            }
+        });
 
-            // create HttpsURLConnection to be tested
-            URL url = new URL("https://requested.host:55555/requested.data");
-            HttpsURLConnection connection = (HttpsURLConnection) url
-                    .openConnection(new Proxy(Proxy.Type.HTTP,
-                            new InetSocketAddress("localhost", ss
-                                    .getLocalPort())));
+        // create HttpsURLConnection to be tested
+        URL url = new URL("https://requested.host:55555/requested.data");
+        HttpsURLConnection connection = (HttpsURLConnection) url
+                .openConnection(new Proxy(Proxy.Type.HTTP,
+                        new InetSocketAddress("localhost", ss
+                                .getLocalPort())));
 
-            // perform the interaction between the peers and check the results
-            SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
-            checkConnectionStateParameters(connection, peerSocket);
+        // perform the interaction between the peers and check the results
+        SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
+        checkConnectionStateParameters(connection, peerSocket);
 
-            // should silently exit
-            connection.connect();
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
-        }
+        // should silently exit
+        connection.connect();
     }
 
     /**
@@ -692,40 +645,35 @@ public class HttpsURLConnectionTest extends TestCase {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
-        try {
-            // create the SSLServerSocket which will be used by server side
-            ServerSocket ss = new ServerSocket(0);
+        // create the SSLServerSocket which will be used by server side
+        ServerSocket ss = new ServerSocket(0);
 
-            // create the HostnameVerifier to check that Hostname verification
-            // is done
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+        // create the HostnameVerifier to check that Hostname verification
+        // is done
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
 
-            // create HttpsURLConnection to be tested
-            URL url = new URL("https://requested.host:55555/requested.data");
-            HttpsURLConnection connection = (HttpsURLConnection) url
-                    .openConnection(new Proxy(Proxy.Type.HTTP,
-                            new InetSocketAddress("localhost", ss
-                                    .getLocalPort())));
+        // create HttpsURLConnection to be tested
+        URL url = new URL("https://requested.host:55555/requested.data");
+        HttpsURLConnection connection = (HttpsURLConnection) url
+                .openConnection(new Proxy(Proxy.Type.HTTP,
+                        new InetSocketAddress("localhost", ss
+                                .getLocalPort())));
 
-            // perform the interaction between the peers and check the results
-            SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
-            checkConnectionStateParameters(connection, peerSocket);
+        // perform the interaction between the peers and check the results
+        SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss);
+        checkConnectionStateParameters(connection, peerSocket);
 
-            // create another SSLServerSocket which will be used by server side
-            ss = new ServerSocket(0);
+        // create another SSLServerSocket which will be used by server side
+        ss = new ServerSocket(0);
 
-            connection = (HttpsURLConnection) url.openConnection(new Proxy(
-                    Proxy.Type.HTTP, new InetSocketAddress("localhost", ss
-                            .getLocalPort())));
+        connection = (HttpsURLConnection) url.openConnection(new Proxy(
+                Proxy.Type.HTTP, new InetSocketAddress("localhost", ss
+                        .getLocalPort())));
 
-            // perform the interaction between the peers and check the results
-            peerSocket = (SSLSocket) doInteraction(connection, ss);
-            checkConnectionStateParameters(connection, peerSocket);
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
-        }
+        // perform the interaction between the peers and check the results
+        peerSocket = (SSLSocket) doInteraction(connection, ss);
+        checkConnectionStateParameters(connection, peerSocket);
     }
 
     /**
@@ -765,39 +713,34 @@ public class HttpsURLConnectionTest extends TestCase {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
-        try {
-            // create the SSLServerSocket which will be used by server side
-            ServerSocket ss = new ServerSocket(0);
+        // create the SSLServerSocket which will be used by server side
+        ServerSocket ss = new ServerSocket(0);
 
-            // create the HostnameVerifier to check that Hostname verification
-            // is done
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+        // create the HostnameVerifier to check that Hostname verification
+        // is done
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
 
-            Authenticator.setDefault(new Authenticator() {
+        Authenticator.setDefault(new Authenticator() {
 
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication("user", "password"
-                            .toCharArray());
-                }
-            });
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("user", "password"
+                        .toCharArray());
+            }
+        });
 
-            // create HttpsURLConnection to be tested
-            URL url = new URL("https://requested.host:55554/requested.data");
-            HttpsURLConnection connection = (HttpsURLConnection) url
-                    .openConnection(new Proxy(Proxy.Type.HTTP,
-                            new InetSocketAddress("localhost", ss
-                                    .getLocalPort())));
-            connection.setDoOutput(true);
+        // create HttpsURLConnection to be tested
+        URL url = new URL("https://requested.host:55554/requested.data");
+        HttpsURLConnection connection = (HttpsURLConnection) url
+                .openConnection(new Proxy(Proxy.Type.HTTP,
+                        new InetSocketAddress("localhost", ss
+                                .getLocalPort())));
+        connection.setDoOutput(true);
 
-            // perform the interaction between the peers and check the results
-            SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss,
-                    OK_CODE, true);
-            checkConnectionStateParameters(connection, peerSocket);
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
-        }
+        // perform the interaction between the peers and check the results
+        SSLSocket peerSocket = (SSLSocket) doInteraction(connection, ss,
+                OK_CODE, true);
+        checkConnectionStateParameters(connection, peerSocket);
     }
 
     /**
@@ -830,36 +773,31 @@ public class HttpsURLConnectionTest extends TestCase {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
+        // create the SSLServerSocket which will be used by server side
+        ServerSocket ss = new ServerSocket(0);
+
+        // create the HostnameVerifier to check that Hostname verification
+        // is done
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+
+        // create HttpsURLConnection to be tested
+        URL url = new URL("https://requested.host:55555/requested.data");
+        HttpURLConnection connection = (HttpURLConnection) url
+                .openConnection(new Proxy(Proxy.Type.HTTP,
+                        new InetSocketAddress("localhost", ss
+                                .getLocalPort())));
+
+        // perform the interaction between the peers and check the results
         try {
-            // create the SSLServerSocket which will be used by server side
-            ServerSocket ss = new ServerSocket(0);
-
-            // create the HostnameVerifier to check that Hostname verification
-            // is done
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
-
-            // create HttpsURLConnection to be tested
-            URL url = new URL("https://requested.host:55555/requested.data");
-            HttpURLConnection connection = (HttpURLConnection) url
-                    .openConnection(new Proxy(Proxy.Type.HTTP,
-                            new InetSocketAddress("localhost", ss
-                                    .getLocalPort())));
-
-            // perform the interaction between the peers and check the results
-            try {
-                doInteraction(connection, ss, AUTHENTICATION_REQUIRED_CODE,
-                        true);
-            } catch (IOException e) {
-                // SSL Tunnelling failed
-                if (DO_LOG) {
-                    System.out.println("Got expected IOException: "
-                            + e.getMessage());
-                }
+            doInteraction(connection, ss, AUTHENTICATION_REQUIRED_CODE,
+                    true);
+        } catch (IOException e) {
+            // SSL Tunnelling failed
+            if (DO_LOG) {
+                System.out.println("Got expected IOException: "
+                        + e.getMessage());
             }
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
         }
     }
 
@@ -893,34 +831,29 @@ public class HttpsURLConnectionTest extends TestCase {
         // setting up the properties pointing to the key/trust stores
         setUpStoreProperties();
 
+        // create the SSLServerSocket which will be used by server side
+        ServerSocket ss = new ServerSocket(0);
+
+        // create the HostnameVerifier to check that Hostname verification
+        // is done
+        TestHostnameVerifier hnv = new TestHostnameVerifier();
+        HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+
+        // create HttpsURLConnection to be tested
+        URL url = new URL("https://localhost:" + ss.getLocalPort());
+        HttpURLConnection connection = (HttpURLConnection) url
+                .openConnection(new Proxy(Proxy.Type.HTTP,
+                        new InetSocketAddress("localhost", ss
+                                .getLocalPort())));
+
         try {
-            // create the SSLServerSocket which will be used by server side
-            ServerSocket ss = new ServerSocket(0);
-
-            // create the HostnameVerifier to check that Hostname verification
-            // is done
-            TestHostnameVerifier hnv = new TestHostnameVerifier();
-            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
-
-            // create HttpsURLConnection to be tested
-            URL url = new URL("https://localhost:" + ss.getLocalPort());
-            HttpURLConnection connection = (HttpURLConnection) url
-                    .openConnection(new Proxy(Proxy.Type.HTTP,
-                            new InetSocketAddress("localhost", ss
-                                    .getLocalPort())));
-
-            try {
-                doInteraction(connection, ss, NOT_FOUND_CODE); // NOT FOUND
-                fail("Expected exception was not thrown.");
-            } catch (FileNotFoundException e) {
-                if (DO_LOG) {
-                    System.out.println("Expected exception was thrown: "
-                            + e.getMessage());
-                }
+            doInteraction(connection, ss, NOT_FOUND_CODE); // NOT FOUND
+            fail("Expected exception was not thrown.");
+        } catch (FileNotFoundException e) {
+            if (DO_LOG) {
+                System.out.println("Expected exception was thrown: "
+                        + e.getMessage());
             }
-        } finally {
-            // roll the properties back to system values
-            tearDownStoreProperties();
         }
     }
 
@@ -932,6 +865,9 @@ public class HttpsURLConnectionTest extends TestCase {
      * Log the name of the test case to be executed.
      */
     public void setUp() throws Exception {
+        super.setUp();
+        TestEnvironment.reset();
+
         if (DO_LOG) {
             System.out.println();
             System.out.println("------------------------");
@@ -959,6 +895,7 @@ public class HttpsURLConnectionTest extends TestCase {
     }
 
     public void tearDown() {
+        TestEnvironment.reset();
         if (store != null) {
             store.delete();
         }
@@ -1042,17 +979,6 @@ public class HttpsURLConnectionTest extends TestCase {
     private static void setUpStoreProperties() throws Exception {
         String type = KeyStore.getDefaultType();
 
-        systemKeyStoreType = System.getProperty("javax.net.ssl.keyStoreType");
-        systemKeyStore = System.getProperty("javax.net.ssl.keyStore");
-        systemKeyStorePassword = System
-                .getProperty("javax.net.ssl.keyStorePassword");
-
-        systemTrustStoreType = System
-                .getProperty("javax.net.ssl.trustStoreType");
-        systemTrustStore = System.getProperty("javax.net.ssl.trustStore");
-        systemTrustStorePassword = System
-                .getProperty("javax.net.ssl.trustStorePassword");
-
         System.setProperty("javax.net.ssl.keyStoreType", type);
         System.setProperty("javax.net.ssl.keyStore", getKeyStoreFileName());
         System.setProperty("javax.net.ssl.keyStorePassword", KS_PASSWORD);
@@ -1060,48 +986,6 @@ public class HttpsURLConnectionTest extends TestCase {
         System.setProperty("javax.net.ssl.trustStoreType", type);
         System.setProperty("javax.net.ssl.trustStore", getKeyStoreFileName());
         System.setProperty("javax.net.ssl.trustStorePassword", KS_PASSWORD);
-    }
-
-    /**
-     * Rolls back the values of system properties.
-     */
-    private static void tearDownStoreProperties() {
-        if (systemKeyStoreType == null) {
-            System.clearProperty("javax.net.ssl.keyStoreType");
-        } else {
-            System
-                    .setProperty("javax.net.ssl.keyStoreType",
-                            systemKeyStoreType);
-        }
-        if (systemKeyStore == null) {
-            System.clearProperty("javax.net.ssl.keyStore");
-        } else {
-            System.setProperty("javax.net.ssl.keyStore", systemKeyStore);
-        }
-        if (systemKeyStorePassword == null) {
-            System.clearProperty("javax.net.ssl.keyStorePassword");
-        } else {
-            System.setProperty("javax.net.ssl.keyStorePassword",
-                    systemKeyStorePassword);
-        }
-
-        if (systemTrustStoreType == null) {
-            System.clearProperty("javax.net.ssl.trustStoreType");
-        } else {
-            System.setProperty("javax.net.ssl.trustStoreType",
-                    systemTrustStoreType);
-        }
-        if (systemTrustStore == null) {
-            System.clearProperty("javax.net.ssl.trustStore");
-        } else {
-            System.setProperty("javax.net.ssl.trustStore", systemTrustStore);
-        }
-        if (systemTrustStorePassword == null) {
-            System.clearProperty("javax.net.ssl.trustStorePassword");
-        } else {
-            System.setProperty("javax.net.ssl.trustStorePassword",
-                    systemTrustStorePassword);
-        }
     }
 
     /**

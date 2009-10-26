@@ -41,6 +41,7 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
+import tests.util.TestEnvironment;
 
 @TestTargetClass(SAXParserFactory.class) 
 public class SAXParserFactoryTest extends TestCase {
@@ -66,7 +67,9 @@ public class SAXParserFactoryTest extends TestCase {
     }
 
     public void tearDown() throws Exception {
+        TestEnvironment.reset();
         is1.close();
+        super.tearDown();
     }
 
     @TestTargetNew(
@@ -175,12 +178,9 @@ public class SAXParserFactoryTest extends TestCase {
         args = {}
     )
     public void test_newInstance() {
-        String className = null;
         try {
             SAXParserFactory dtf = SAXParserFactory.newInstance();
             assertNotNull("New Instance of DatatypeFactory is null", dtf);
-
-            className = System.getProperty("javax.xml.parsers.SAXParserFactory");
 
             System.setProperty("javax.xml.parsers.SAXParserFactory",
             "org.apache.harmony.xml.parsers.SAXParserFactoryImpl");
@@ -205,13 +205,6 @@ public class SAXParserFactoryTest extends TestCase {
             }
         } catch (IOException ioe) {
             fail("Unexpected exception " + ioe.toString());
-        } finally {
-            if (className == null) {
-                System.clearProperty("javax.xml.parsers.SAXParserFactory");
-            } else {
-                System.setProperty("javax.xml.parsers.SAXParserFactory",
-                        className);
-            }
         }
     }
 

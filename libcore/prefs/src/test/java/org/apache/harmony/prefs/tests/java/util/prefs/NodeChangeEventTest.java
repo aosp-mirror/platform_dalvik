@@ -16,10 +16,12 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import junit.framework.TestCase;
+import org.apache.harmony.testframework.serialization.SerializationTest;
+import tests.util.TestEnvironment;
 
 import java.io.NotSerializableException;
 import java.util.prefs.AbstractPreferences;
@@ -27,28 +29,20 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.NodeChangeEvent;
 import java.util.prefs.Preferences;
 
-import junit.framework.TestCase;
-
-import org.apache.harmony.testframework.serialization.SerializationTest;
-import tests.util.PrefsTester;
-
 /**
  * 
  */
 @TestTargetClass(NodeChangeEvent.class)
 public class NodeChangeEventTest extends TestCase {
 
-    private final PrefsTester prefsTester = new PrefsTester();
-
     NodeChangeEvent event;
 
     protected void setUp() throws Exception {
         super.setUp();
-        prefsTester.setUp();
+        TestEnvironment.reset();
     }
 
     protected void tearDown() throws Exception {
-        prefsTester.tearDown();
         super.tearDown();
     }
 

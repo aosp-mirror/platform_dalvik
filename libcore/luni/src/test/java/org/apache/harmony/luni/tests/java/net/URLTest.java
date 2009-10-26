@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 import tests.support.Support_Configuration;
 import tests.support.Support_PortManager;
 import tests.support.resource.Support_Resources;
+import tests.util.TestEnvironment;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -60,6 +61,17 @@ import java.util.List;
 public class URLTest extends TestCase {
    
     private static final String helloWorldString = "Hello World";
+
+    @Override protected void setUp() throws Exception {
+        super.setUp();
+        TestEnvironment.reset();
+    }
+
+    @Override protected void tearDown() throws Exception {
+        TestEnvironment.reset();
+        super.tearDown();
+    }
+
     /**
      * @tests java.net.URL#getHost()
      */
@@ -137,19 +149,12 @@ public class URLTest extends TestCase {
     public void test_java_protocol_handler_pkgs_prop() throws MalformedURLException {
         // Regression test for Harmony-3094
         final String HANDLER_PKGS = "java.protocol.handler.pkgs";
-        String pkgs = System.getProperty(HANDLER_PKGS);
         System.setProperty(HANDLER_PKGS, "fake|org.apache.harmony.luni.tests.java.net");
 
         try {
             new URL("test_protocol", "", "fake.jar");
         } catch (MalformedURLException e) {
             // expected
-        } finally {
-            if (pkgs == null) {
-                System.clearProperty(HANDLER_PKGS);
-            } else {
-                System.setProperty(HANDLER_PKGS, pkgs);
-            }
         }
     }
     

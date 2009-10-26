@@ -49,6 +49,7 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
+import tests.util.TestEnvironment;
 
 
 /**
@@ -63,6 +64,11 @@ public class SSLEngineTest extends TestCase {
 
     public static void main(String[] args) {
         junit.textui.TestRunner.run(SSLEngineTest.class);
+    }
+
+    @Override protected void setUp() throws Exception {
+        super.setUp();
+        TestEnvironment.reset();
     }
 
     /**

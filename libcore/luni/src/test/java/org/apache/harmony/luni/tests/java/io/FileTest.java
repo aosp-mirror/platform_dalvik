@@ -25,9 +25,20 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import tests.util.TestEnvironment;
 
 @TestTargetClass(File.class)
 public class FileTest extends TestCase {
+
+    @Override protected void setUp() throws Exception {
+        super.setUp();
+        TestEnvironment.reset();
+    }
+
+    @Override protected void tearDown() throws Exception {
+        TestEnvironment.reset();
+        super.tearDown();
+    }
 
     /**
      * @tests java.io.File#File(java.io.File, java.lang.String)

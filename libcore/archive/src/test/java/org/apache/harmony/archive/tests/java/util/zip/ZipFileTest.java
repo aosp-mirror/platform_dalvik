@@ -23,6 +23,7 @@ import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import tests.support.Support_PlatformFile;
 import tests.support.resource.Support_Resources;
+import tests.util.TestEnvironment;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -142,7 +143,6 @@ public class ZipFileTest extends junit.framework.TestCase {
         args = {java.lang.String.class}
     )
     public void test_ConstructorLjava_lang_String() throws IOException {
-        String oldUserDir = System.getProperty("user.dir");
         System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
 
         zfile.close(); // about to reopen the same temp file
@@ -167,7 +167,6 @@ public class ZipFileTest extends junit.framework.TestCase {
             // expected
         } finally {
             System.setSecurityManager(oldSm);
-            System.setProperty("user.dir", oldUserDir);
         }
     }
 
@@ -583,6 +582,7 @@ public class ZipFileTest extends junit.framework.TestCase {
      */
     @Override
     protected void tearDown() {
+        TestEnvironment.reset();
         try {
             if (zfile != null) {
                 // Note zfile is a user-defined zip file used by other tests and

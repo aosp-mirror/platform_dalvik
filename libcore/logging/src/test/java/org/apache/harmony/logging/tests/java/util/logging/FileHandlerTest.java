@@ -50,6 +50,7 @@ import junit.framework.TestCase;
 
 import org.apache.harmony.logging.tests.java.util.logging.HandlerTest.NullOutputStream;
 import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
+import tests.util.TestEnvironment;
 
 /**
  */
@@ -62,18 +63,11 @@ public class FileHandlerTest extends TestCase {
 
     final static String className = FileHandlerTest.class.getName();
 
-    final static StringWriter writer = new StringWriter();
-
-    final static SecurityManager securityManager = new MockLogSecurityManager();
-
     final static String SEP = File.separator;
 
-    private String oldHomePath = System.getProperty("user.home");
-    
-    // The HOMEPATH can't be used in android.
-    final static String HOMEPATH = System.getProperty("java.io.tmpdir") + SEP + "home";
+    String HOMEPATH;
 
-    final static String TEMPPATH = System.getProperty("java.io.tmpdir");
+    String TEMPPATH;
 
     private final PrintStream err = System.err;
 
@@ -88,6 +82,7 @@ public class FileHandlerTest extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
+        TestEnvironment.reset();
         manager.reset();
         
         //initProp
@@ -106,19 +101,10 @@ public class FileHandlerTest extends TestCase {
         props.put("java.util.logging.FileHandler.append", "true");
         props.put("java.util.logging.FileHandler.pattern",
                         "%t/log/java%u.test");
-        
-        File home = new File(HOMEPATH);
-        if (!home.exists()) {
-            home.mkdirs();
-        } else if (!home.isDirectory()) {
-            home.delete();
-            home.mkdirs();
-        }
-        if(!home.isDirectory()) {
-            fail("unable to create temp path");
-        }
-        System.setProperty("user.home", HOMEPATH);
-        
+
+        HOMEPATH = System.getProperty("user.home");
+        TEMPPATH = System.getProperty("java.io.tmpdir");
+
         File file = new File(TEMPPATH + SEP + "log");
         file.mkdir();
         manager.readConfiguration(EnvironmentHelper
@@ -140,8 +126,7 @@ public class FileHandlerTest extends TestCase {
         }
         reset(TEMPPATH + SEP + "log", "");
         System.setErr(err);
-        System.setProperty("user.home", oldHomePath);
-        new File(HOMEPATH).delete();
+        TestEnvironment.reset();
         super.tearDown();
     }
 
@@ -634,8 +619,6 @@ public class FileHandlerTest extends TestCase {
         assertFileContent(TEMPPATH, "testLimitCount0.0",
                 new LogRecord[] { rs[9] }, handler.getFormatter());
 
-        String oldUserDir = System.getProperty("user.dir");
-        System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
         FileHandler h1 = null;
         FileHandler h2 = null;
         try {
@@ -656,7 +639,6 @@ public class FileHandlerTest extends TestCase {
             } catch (Exception e) {
             }
             reset("log", "");
-            System.setProperty("user.dir", oldUserDir);
         }
     }
     @TestTargets({
@@ -999,14 +981,6 @@ public class FileHandlerTest extends TestCase {
             new FileHandler("%t/java%u", -1, -1);
             fail("should throw IllegalArgumentException");
         } catch (IllegalArgumentException e) {
-        }
-        
-        // always parse special pattern
-        System.setProperty("user.home", "home");
-        try {
-            h1 = new FileHandler("%t/%h.txt");
-        } catch (Exception e) {
-            fail("Unexpected exception " + e.toString());
         }
     }
 

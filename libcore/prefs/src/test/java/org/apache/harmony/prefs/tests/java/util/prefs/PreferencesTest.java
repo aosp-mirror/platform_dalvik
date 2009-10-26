@@ -21,11 +21,10 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
-
 import junit.framework.TestCase;
+import tests.util.TestEnvironment;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,15 +38,11 @@ import java.util.prefs.NodeChangeListener;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
 
-import tests.util.PrefsTester;
-
 /**
  * 
  */
 @TestTargetClass(Preferences.class)
 public class PreferencesTest extends TestCase {
-
-    private final PrefsTester prefsTester = new PrefsTester();
 
     MockSecurityManager manager = new MockSecurityManager();
 
@@ -82,7 +77,7 @@ public class PreferencesTest extends TestCase {
                 "<!DOCTYPE preferences SYSTEM \"http://java.sun.com/dtd/preferences.dtd\"><preferences><root type=\"user\"><map></map></root></preferences>"
                         .getBytes("UTF-8"));
         stream = new MockInputStream(in);
-        prefsTester.setUp();
+        TestEnvironment.reset();
     }
 
     /*
@@ -91,7 +86,6 @@ public class PreferencesTest extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         stream.close();
-        prefsTester.tearDown();
         super.tearDown();
     }
 

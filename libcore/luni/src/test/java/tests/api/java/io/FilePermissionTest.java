@@ -17,28 +17,34 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import tests.util.TestEnvironment;
+
 import java.io.File;
 import java.io.FilePermission;
 import java.security.PermissionCollection;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
 @TestTargetClass(FilePermission.class) 
 public class FilePermissionTest extends junit.framework.TestCase {
 
-    FilePermission readAllFiles = new FilePermission("<<ALL FILES>>", "read");
+    FilePermission readAllFiles;
+    FilePermission alsoReadAllFiles;
+    FilePermission allInCurrent;
+    FilePermission readInCurrent;
+    FilePermission readInFile;
 
-    FilePermission alsoReadAllFiles = new FilePermission("<<ALL FILES>>",
-            "read");
+    @Override protected void setUp() throws Exception {
+        super.setUp();
+        TestEnvironment.reset();
 
-    FilePermission allInCurrent = new FilePermission("*",
-            "read, write, execute,delete");
-
-    FilePermission readInCurrent = new FilePermission("*", "read");
-
-    FilePermission readInFile = new FilePermission("aFile.file", "read");
+        readAllFiles = new FilePermission("<<ALL FILES>>", "read");
+        alsoReadAllFiles = new FilePermission("<<ALL FILES>>", "read");
+        allInCurrent = new FilePermission("*", "read, write, execute,delete");
+        readInCurrent = new FilePermission("*", "read");
+        readInFile = new FilePermission("aFile.file", "read");
+    }
 
     /**
      * @tests java.io.FilePermission#FilePermission(java.lang.String,
@@ -58,9 +64,9 @@ public class FilePermissionTest extends junit.framework.TestCase {
                 "write");
         assertEquals("action given to the constructor did not correspond - constructor failed",
                 "write", constructFile.getActions());
-        assertTrue(
-                "name given to the construcotr did not correspond - construcotr failed",
-                constructFile.getName() == "test constructor");
+        assertEquals(
+                "name given to the constructor did not correspond - constructor failed",
+                "test constructor", constructFile.getName());
 
         // Regression test for HARMONY-1050
         try {
@@ -243,19 +249,5 @@ public class FilePermissionTest extends junit.framework.TestCase {
                 "two filePermission instances with same permission name returned same hashCode",
                 readInCurrent.hashCode() != allInCurrent.hashCode());
 
-    }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
     }
 }

@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Properties;
 
 import junit.framework.TestCase;
+import tests.util.TestEnvironment;
 
 @TestTargetClass(ProxySelector.class) 
 public class ProxySelectorTest extends TestCase {
@@ -76,11 +77,6 @@ public class ProxySelectorTest extends TestCase {
 
         }
     }
-
-    /*
-     * Original system properties must be restored after running each test case.
-     */
-    private Properties orignalSystemProperties;
 
     /**
      * @tests java.net.ProxySelector#getDefault()
@@ -722,16 +718,14 @@ public class ProxySelectorTest extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        // save original system properties
-        orignalSystemProperties = (Properties) System.getProperties().clone();
+        TestEnvironment.reset();
     }
 
     /*
      * @see junit.framework.TestCase#tearDown()
      */
     protected void tearDown() throws Exception {
-        // restore orignal system properties
-        System.setProperties(orignalSystemProperties);
+        TestEnvironment.reset();
         super.tearDown();
     }
 }

@@ -42,6 +42,7 @@ import tests.api.org.xml.sax.support.MockResolver;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import tests.util.TestEnvironment;
 
 @SuppressWarnings("deprecation")
 @TestTargetClass(XMLReaderAdapter.class)
@@ -68,11 +69,17 @@ public class XMLReaderAdapterTest extends TestCase {
 
     @Override
     public void setUp() {
+        TestEnvironment.reset();
         adapter.setDocumentHandler(handler);
         adapter.setDTDHandler(handler);
         adapter.setErrorHandler(handler);
     }
-    
+
+    @Override protected void tearDown() throws Exception {
+        TestEnvironment.reset();
+        super.tearDown();
+    }
+
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         method = "XMLReaderAdapter",

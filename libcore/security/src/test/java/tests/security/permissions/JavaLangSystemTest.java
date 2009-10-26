@@ -22,6 +22,7 @@ import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+import tests.util.TestEnvironment;
 
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -46,6 +47,7 @@ public class JavaLangSystemTest extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
+        TestEnvironment.reset();
         System.setSecurityManager(old);
         super.tearDown();
     }

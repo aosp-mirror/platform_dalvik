@@ -17,33 +17,29 @@
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
 import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
+import junit.framework.TestCase;
+import tests.util.TestEnvironment;
 
 import java.io.FilePermission;
 import java.security.Permission;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import junit.framework.TestCase;
-import tests.util.PrefsTester;
-
 @TestTargetClass(java.util.prefs.Preferences.class)
 public class FilePreferencesImplTest extends TestCase {
-
-    private final PrefsTester prefsTester = new PrefsTester();
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        prefsTester.setUp();
+        TestEnvironment.reset();
     }
 
     @Override
     protected void tearDown() throws Exception {
-        prefsTester.tearDown();
         super.tearDown();
     }
 

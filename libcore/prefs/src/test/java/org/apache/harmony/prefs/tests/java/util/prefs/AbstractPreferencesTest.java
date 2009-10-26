@@ -16,12 +16,12 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
-
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import junit.framework.TestCase;
+import tests.util.TestEnvironment;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,12 +35,8 @@ import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
 
-import tests.util.PrefsTester;
-
 @TestTargetClass(AbstractPreferences.class)
 public class AbstractPreferencesTest extends TestCase {
-
-    private final PrefsTester prefsTester = new PrefsTester();
 
     AbstractPreferences pref;
 
@@ -55,7 +51,7 @@ public class AbstractPreferencesTest extends TestCase {
     
     protected void setUp() throws Exception {
         super.setUp();
-        prefsTester.setUp();
+        TestEnvironment.reset();
 
         root = (AbstractPreferences) Preferences.userRoot();
         parent = (AbstractPreferences) Preferences.userNodeForPackage(this.getClass());
@@ -64,7 +60,6 @@ public class AbstractPreferencesTest extends TestCase {
     }
 
     protected void tearDown() throws Exception {
-        prefsTester.tearDown();
         super.tearDown();
     }
 

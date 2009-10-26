@@ -45,6 +45,7 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
+import tests.util.TestEnvironment;
 
 /**
  * 
@@ -107,6 +108,7 @@ public class LogManagerTest extends TestCase {
      */
     @Override
     protected void tearDown() throws Exception {
+        TestEnvironment.reset();
         super.tearDown();
         handler = null;
     }
@@ -1194,24 +1196,17 @@ public class LogManagerTest extends TestCase {
         args = {}
     )
     public void testValidConfigClass() throws Exception {
-        String oldProperty = System.getProperty("java.util.logging.config.class");
-        try {
-            //            System.setProperty("java.util.logging.config.class", "org.apache.harmony.logging.tests.java.util.logging.LogManagerTest$ConfigClass");
-            System.setProperty("java.util.logging.config.class", this.getClass().getName()
-                    + "$ConfigClass");
-            assertNull(manager.getLogger("testConfigClass.foo"));
+        //            System.setProperty("java.util.logging.config.class", "org.apache.harmony.logging.tests.java.util.logging.LogManagerTest$ConfigClass");
+        System.setProperty("java.util.logging.config.class", this.getClass().getName()
+                + "$ConfigClass");
+        assertNull(manager.getLogger("testConfigClass.foo"));
 
-            manager.readConfiguration();
-            assertNull(manager.getLogger("testConfigClass.foo"));
-            Logger l = Logger.getLogger("testConfigClass.foo.child");
-            assertSame(Level.FINEST, manager.getLogger("").getLevel());
-            assertEquals(0, manager.getLogger("").getHandlers().length);
-            assertEquals("testConfigClass.foo", l.getParent().getName());
-        } finally {
-            if (oldProperty != null) {
-                System.setProperty("java.util.logging.config.class", oldProperty);
-            }
-        }
+        manager.readConfiguration();
+        assertNull(manager.getLogger("testConfigClass.foo"));
+        Logger l = Logger.getLogger("testConfigClass.foo.child");
+        assertSame(Level.FINEST, manager.getLogger("").getLevel());
+        assertEquals(0, manager.getLogger("").getHandlers().length);
+        assertEquals("testConfigClass.foo", l.getParent().getName());
     }
 
     /*

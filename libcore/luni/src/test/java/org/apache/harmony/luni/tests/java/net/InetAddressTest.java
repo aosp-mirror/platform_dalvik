@@ -39,6 +39,7 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
 import tests.support.Support_Configuration;
+import tests.util.TestEnvironment;
 
 @TestTargetClass(InetAddress.class) 
 public class InetAddressTest extends junit.framework.TestCase {
@@ -48,6 +49,16 @@ public class InetAddressTest extends junit.framework.TestCase {
     protected static boolean threadedTestSucceeded;
 
     protected static String threadedTestErrorString;
+
+    @Override protected void setUp() throws Exception {
+        super.setUp();
+        TestEnvironment.reset();
+    }
+
+    @Override protected void tearDown() throws Exception {
+        TestEnvironment.reset();
+        super.tearDown();
+    }
 
     /**
      * This class is used to test inet_ntoa, gethostbyaddr and gethostbyname
@@ -391,60 +402,47 @@ public class InetAddressTest extends junit.framework.TestCase {
         }
 
         // Make sure there is no caching
-        String originalPropertyValue = System
-                .getProperty("networkaddress.cache.ttl");
         System.setProperty("networkaddress.cache.ttl", "0");
 
         // Test for threadsafety
-        try {
-            InetAddress lookup1 = InetAddress
-                    .getByName(Support_Configuration.InetTestAddress);
-            assertTrue(lookup1 + " expected "
-                    + Support_Configuration.InetTestIP,
-                    Support_Configuration.InetTestIP.equals(lookup1
-                            .getHostAddress()));
-            InetAddress lookup2 = InetAddress
-                    .getByName(Support_Configuration.InetTestAddress2);
-            assertTrue(lookup2 + " expected "
-                    + Support_Configuration.InetTestIP2,
-                    Support_Configuration.InetTestIP2.equals(lookup2
-                            .getHostAddress()));
-            threadsafeTestThread thread1 = new threadsafeTestThread("1",
-                    lookup1.getHostName(), lookup1, 0);
-            threadsafeTestThread thread2 = new threadsafeTestThread("2",
-                    lookup2.getHostName(), lookup2, 0);
-            threadsafeTestThread thread3 = new threadsafeTestThread("3",
-                    lookup1.getHostAddress(), lookup1, 1);
-            threadsafeTestThread thread4 = new threadsafeTestThread("4",
-                    lookup2.getHostAddress(), lookup2, 1);
+        InetAddress lookup1 = InetAddress
+                .getByName(Support_Configuration.InetTestAddress);
+        assertTrue(lookup1 + " expected "
+                + Support_Configuration.InetTestIP,
+                Support_Configuration.InetTestIP.equals(lookup1
+                        .getHostAddress()));
+        InetAddress lookup2 = InetAddress
+                .getByName(Support_Configuration.InetTestAddress2);
+        assertTrue(lookup2 + " expected "
+                + Support_Configuration.InetTestIP2,
+                Support_Configuration.InetTestIP2.equals(lookup2
+                        .getHostAddress()));
+        threadsafeTestThread thread1 = new threadsafeTestThread("1",
+                lookup1.getHostName(), lookup1, 0);
+        threadsafeTestThread thread2 = new threadsafeTestThread("2",
+                lookup2.getHostName(), lookup2, 0);
+        threadsafeTestThread thread3 = new threadsafeTestThread("3",
+                lookup1.getHostAddress(), lookup1, 1);
+        threadsafeTestThread thread4 = new threadsafeTestThread("4",
+                lookup2.getHostAddress(), lookup2, 1);
 
-            // initialize the flags
-            threadedTestSucceeded = true;
-            synchronized (someoneDone) {
-                thread1.start();
-                thread2.start();
-                thread3.start();
-                thread4.start();
-            }
-            thread1.join();
-            thread2.join();
-            thread3.join();
-            thread4.join();
-            /* FIXME: comment the assertion below because it is platform/configuration dependent
-             * Please refer to HARMONY-1664 (https://issues.apache.org/jira/browse/HARMONY-1664)
-             * for details
-             */
-//            assertTrue(threadedTestErrorString, threadedTestSucceeded);
-        } finally {
-            // restore the old value of the property
-            if (originalPropertyValue == null)
-                // setting the property to -1 has the same effect as having the
-                // property be null
-                System.setProperty("networkaddress.cache.ttl", "-1");
-            else
-                System.setProperty("networkaddress.cache.ttl",
-                        originalPropertyValue);
+        // initialize the flags
+        threadedTestSucceeded = true;
+        synchronized (someoneDone) {
+            thread1.start();
+            thread2.start();
+            thread3.start();
+            thread4.start();
         }
+        thread1.join();
+        thread2.join();
+        thread3.join();
+        thread4.join();
+        /* FIXME: comment the assertion below because it is platform/configuration dependent
+        * Please refer to HARMONY-1664 (https://issues.apache.org/jira/browse/HARMONY-1664)
+        * for details
+        */
+//            assertTrue(threadedTestErrorString, threadedTestSucceeded);
     }
 
     /**
