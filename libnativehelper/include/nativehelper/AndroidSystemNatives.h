@@ -59,7 +59,6 @@ int register_java_lang_System(JNIEnv* env);
 int register_org_apache_harmony_luni_platform_OSFileSystem(JNIEnv* env);
 int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv* env);
 int register_org_apache_harmony_luni_platform_OSNetworkSystem(JNIEnv* env);
-int register_org_apache_harmony_nio_AddressUtil(JNIEnv* env);
 int register_org_apache_harmony_text_BidiWrapper(JNIEnv *env);
 
 int register_org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl(JNIEnv *env);
