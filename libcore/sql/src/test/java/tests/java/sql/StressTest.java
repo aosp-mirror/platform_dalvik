@@ -219,7 +219,6 @@ public class StressTest extends TestCase {
             clazz = Driver.class,
             args = {String.class, Properties.class}
     )
-    @BrokenTest("2191557 ReferenceTable overflow")
     public void testInsertOfManyRowsUsingManyThreads() {
         Logger.global.info("java.sql stress test: multiple threads and many operations.");
 

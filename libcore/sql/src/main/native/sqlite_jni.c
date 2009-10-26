@@ -320,6 +320,10 @@ trans2iso(JNIEnv *env, int haveutf, jstring enc, jstring src,
     if (haveutf) {
         const jsize utfLength = (*env)->GetStringUTFLength(env, src);
         dest->result = dest->tofree = malloc(utfLength + 1);
+        if (!dest->tofree) {
+            throwoom(env, "string translation failed");
+            return dest->result;
+        }
         (*env)->GetStringUTFRegion(env, src, 0, utfLength, dest->result);
         return dest->result;
     }
@@ -399,6 +403,7 @@ busyhandler(void *udata, const char *table, int count)
 					    "(Ljava/lang/String;I)Z");
 
 	if (mid == 0) {
+	    (*env)->DeleteLocalRef(env, cls);
 	    return ret;
 	}
 	trans2utf(env, h->haveutf, h->enc, table, &tabstr);
@@ -406,6 +411,7 @@ busyhandler(void *udata, const char *table, int count)
 					(jint) count)
 	      != JNI_FALSE;
 	(*env)->DeleteLocalRef(env, tabstr.jstr);
+	(*env)->DeleteLocalRef(env, cls);
     }
     return ret;
 }
@@ -425,10 +431,12 @@ busyhandler3(void *udata, int count)
 					    "(Ljava/lang/String;I)Z");
 
 	if (mid == 0) {
+	    (*env)->DeleteLocalRef(env, cls);
 	    return ret;
 	}
 	ret = (*env)->CallBooleanMethod(env, h->bh, mid, 0, (jint) count)
 	    != JNI_FALSE;
+	(*env)->DeleteLocalRef(env, cls);
     }
     return ret;
 }
@@ -446,9 +454,11 @@ progresshandler(void *udata)
 	jmethodID mid = (*env)->GetMethodID(env, cls, "progress", "()Z");
 
 	if (mid == 0) {
+	    (*env)->DeleteLocalRef(env, cls);
 	    return ret;
 	}
 	ret = (*env)->CallBooleanMethod(env, h->ph, mid) != JNI_TRUE;
+	(*env)->DeleteLocalRef(env, cls);
     }
     return ret;
 }
@@ -1591,6 +1601,7 @@ call_common(sqlite_func *sf, int isstep, int nargs, const char **args)
 	int i;
 
 	if (mid == 0) {
+	    (*env)->DeleteLocalRef(env, cls);
 	    return;
 	}
 	arr = (*env)->NewObjectArray(env, nargs, C_java_lang_String, 0);
@@ -1639,6 +1650,7 @@ call_final(sqlite_func *sf)
 	jmethodID mid = (*env)->GetMethodID(env, cls, "last_step",
 					    "(LSQLite/FunctionContext;)V");
 	if (mid == 0) {
+	    (*env)->DeleteLocalRef(env, cls);
 	    return;
 	}
 	f->sf = sf;
@@ -1665,6 +1677,7 @@ call3_common(sqlite3_context *sf, int isstep, int nargs, sqlite3_value **args)
 	int i;
 
 	if (mid == 0) {
+	    (*env)->DeleteLocalRef(env, cls);
 	    return;
 	}
 	arr = (*env)->NewObjectArray(env, nargs, C_java_lang_String, 0);
@@ -1714,6 +1727,7 @@ call3_final(sqlite3_context *sf)
 	jmethodID mid = (*env)->GetMethodID(env, cls, "last_step",
 					    "(LSQLite/FunctionContext;)V");
 	if (mid == 0) {
+	    (*env)->DeleteLocalRef(env, cls);
 	    return;
 	}
 	f->sf = sf;
