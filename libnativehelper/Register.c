@@ -52,8 +52,6 @@ int jniRegisterSystemMethods(JNIEnv* env)
         goto bail;
     if (register_org_apache_harmony_luni_platform_OSNetworkSystem(env) != 0)
         goto bail;
-    if (register_org_apache_harmony_nio_AddressUtil(env) != 0)
-        goto bail;
     if (register_org_apache_harmony_luni_util_fltparse(env) != 0)
         goto bail;
     if (register_org_apache_harmony_luni_util_NumberConvert(env) != 0)
@@ -132,4 +130,3 @@ bail:
     (*env)->PopLocalFrame(env, NULL);
     return result;
 }
-

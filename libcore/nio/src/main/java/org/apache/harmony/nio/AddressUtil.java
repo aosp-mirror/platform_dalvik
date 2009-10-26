@@ -58,33 +58,8 @@ public class AddressUtil {
         return ((DirectBuffer) buf).getEffectiveAddress().toInt();
     }
 
-    /**
-     * Gets the address of native resource held by the given channel, if it has
-     * any.
-     * 
-     * For network related channel, including {@link SocketChannel},
-     * {@link ServerSocketChannel} and {@link DatagramChannel}, this method
-     * returns the Socket handle (long) in Linux, and returns a SOCKET
-     * (UINT_PTR) in windows.
-     * 
-     * For {@link FileChannel}, this method returns the native file descriptor.
-     * 
-     * For other channels, this method return 0, which means unsupported
-     * operation.
-     * 
-     * @param channel
-     *            the given channel which may holds a native resource address
-     * @return the address of native resource held by the given channel, if any,
-     *         otherwise return 0
-     */
-    public static int getChannelAddress(Channel channel){
-        if (channel instanceof FileDescriptorHandler) {
-            return getFDAddress(((FileDescriptorHandler) channel).getFD());
-        } else if (channel instanceof FileChannelImpl) {
-            return ((FileChannelImpl) channel).getHandle();
-        }
-        return 0;
-    }
-
-    private static native int getFDAddress(FileDescriptor fd);
+    // BEGIN android-removed: dead code (the native side of which was scary!)
+    //public static int getChannelAddress(Channel channel);
+    //private static native int getFDAddress(FileDescriptor fd);
+    // END android-removed
 }
