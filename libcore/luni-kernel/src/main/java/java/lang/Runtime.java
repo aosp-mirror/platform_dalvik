@@ -190,39 +190,11 @@ public class Runtime {
      *             execution.
      * @see SecurityManager#checkExec
      * @since Android 1.0
-     */    
-    public Process exec(String[] progArray, String[] envp, File directory)
-            throws java.io.IOException {
-        
-        // Sanity checks
-        if (progArray == null) {
-            throw new NullPointerException();
-        } else if (progArray.length == 0) {
-            throw new IndexOutOfBoundsException();
-        } else {
-            for (int i = 0; i < progArray.length; i++) {
-                if (progArray[i] == null) {
-                    throw new NullPointerException();
-                }
-            }
-        }
-        
-        if (envp != null) {
-            for (int i = 0; i < envp.length; i++) {
-                if (envp[i] == null) {
-                    throw new NullPointerException();
-                }
-            }
-        }
-        
-        // Security checks
-        SecurityManager smgr = System.getSecurityManager();
-        if (smgr != null) {
-            smgr.checkExec(progArray[0]);
-        }
-        
-        // Delegate the execution
-        return ProcessManager.getInstance().exec(progArray, envp, directory);
+     */
+    public Process exec(String[] progArray, String[] envp, File directory) throws IOException {
+        // BEGIN android-changed: push responsibility for argument checking into ProcessManager
+        return ProcessManager.getInstance().exec(progArray, envp, directory, false);
+        // END android-changed
     }
 
     /**

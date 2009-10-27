@@ -181,7 +181,8 @@ static void closePipes(int pipes[], int skipFd) {
 /** Executes a command in a child process. */
 static pid_t executeProcess(JNIEnv* env, char** commands, char** environment,
         const char* workingDirectory, jobject inDescriptor,
-        jobject outDescriptor, jobject errDescriptor) {
+        jobject outDescriptor, jobject errDescriptor,
+        jboolean redirectErrorStream) {
     int i, result, error;
 
     // Create 4 pipes: stdin, stdout, stderr, and an exec() status pipe.
@@ -222,7 +223,11 @@ static pid_t executeProcess(JNIEnv* env, char** commands, char** environment,
         // Replace stdin, out, and err with pipes.
         dup2(stdinIn, 0);
         dup2(stdoutOut, 1);
-        dup2(stderrOut, 2);
+        if (redirectErrorStream) {
+            dup2(stdoutOut, 2);
+        } else {
+            dup2(stderrOut, 2);
+        }
 
         // Close all but statusOut. This saves some work in the next step.
         closePipes(pipes, statusOut);
@@ -333,7 +338,8 @@ static void freeStrings(JNIEnv* env, jobjectArray javaArray, char** array) {
 static pid_t java_lang_ProcessManager_exec(
         JNIEnv* env, jclass clazz, jobjectArray javaCommands,
         jobjectArray javaEnvironment, jstring javaWorkingDirectory,
-        jobject inDescriptor, jobject outDescriptor, jobject errDescriptor) {
+        jobject inDescriptor, jobject outDescriptor, jobject errDescriptor,
+        jboolean redirectErrorStream) {
 
     // Copy commands into char*[].
     char** commands = convertStrings(env, javaCommands);
@@ -349,7 +355,7 @@ static pid_t java_lang_ProcessManager_exec(
 
     pid_t result = executeProcess(
             env, commands, environment, workingDirectory, 
-            inDescriptor, outDescriptor, errDescriptor);
+            inDescriptor, outDescriptor, errDescriptor, redirectErrorStream);
 
     // Temporarily clear exception so we can clean up.
     jthrowable exception = env->ExceptionOccurred();
@@ -402,15 +408,12 @@ static void java_lang_ProcessManager_staticInitialize(JNIEnv* env,
 }
 
 static JNINativeMethod methods[] = {
-    { "kill", "(I)V", (void*) java_lang_ProcessManager_kill },
-    { "watchChildren", "()V", (void*) java_lang_ProcessManager_watchChildren },
-    { "exec", "([Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;"
-        "Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;"
-        "Ljava/io/FileDescriptor;)I", (void*) java_lang_ProcessManager_exec },
-    { "staticInitialize", "()V",
-        (void*) java_lang_ProcessManager_staticInitialize },
-    { "close", "(Ljava/io/FileDescriptor;)V",
-        (void*) java_lang_ProcessManager_close },
+    { "close",            "(Ljava/io/FileDescriptor;)V", (void*) java_lang_ProcessManager_close },
+    { "kill",             "(I)V",                        (void*) java_lang_ProcessManager_kill },
+    { "staticInitialize", "()V",                         (void*) java_lang_ProcessManager_staticInitialize },
+    { "watchChildren",    "()V",                         (void*) java_lang_ProcessManager_watchChildren },
+    { "exec",             "([Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;Z)I",
+                                                         (void*) java_lang_ProcessManager_exec },
 };
 
 int register_java_lang_ProcessManager(JNIEnv* env) {

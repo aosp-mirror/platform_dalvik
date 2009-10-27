@@ -169,15 +169,45 @@ final class ProcessManager {
      * Executes a native process. Fills in in, out, and err and returns the
      * new process ID upon success.
      */
-    static native int exec(String[] commands, String[] environment,
+    static native int exec(String[] command, String[] environment,
             String workingDirectory, FileDescriptor in, FileDescriptor out,
-            FileDescriptor err) throws IOException;
+            FileDescriptor err, boolean redirectErrorStream) throws IOException;
 
     /**
      * Executes a process and returns an object representing it.
      */
-    Process exec(String[] commands, String[] environment,
-            File workingDirectory) throws IOException {
+    Process exec(String[] taintedCommand, String[] taintedEnvironment, File workingDirectory,
+            boolean redirectErrorStream) throws IOException {
+        // Make sure we throw the same exceptions as the RI.
+        if (taintedCommand == null) {
+            throw new NullPointerException();
+        }
+        if (taintedCommand.length == 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        // Handle security and safety by copying mutable inputs and checking them.
+        String[] command = taintedCommand.clone();
+        String[] environment = taintedEnvironment != null ? taintedEnvironment.clone() : null;
+        SecurityManager securityManager = System.getSecurityManager();
+        if (securityManager != null) {
+            securityManager.checkExec(command[0]);
+        }
+        // Check we're not passing null Strings to the native exec.
+        for (String arg : command) {
+            if (arg == null) {
+                throw new NullPointerException();
+            }
+        }
+        // The environment is allowed to be null or empty, but no element may be null.
+        if (environment != null) {
+            for (String env : environment) {
+                if (env == null) {
+                    throw new NullPointerException();
+                }
+            }
+        }
+
         FileDescriptor in = new FileDescriptor();
         FileDescriptor out = new FileDescriptor();
         FileDescriptor err = new FileDescriptor();
@@ -191,10 +221,10 @@ final class ProcessManager {
         synchronized (processReferences) {
             int pid;
             try {
-                pid = exec(commands, environment, workingPath, in, out, err);
+                pid = exec(command, environment, workingPath, in, out, err, redirectErrorStream);
             } catch (IOException e) {
                 IOException wrapper = new IOException("Error running exec()." 
-                        + " Commands: " + Arrays.toString(commands)
+                        + " Command: " + Arrays.toString(command)
                         + " Working Directory: " + workingDirectory
                         + " Environment: " + Arrays.toString(environment));
                 wrapper.initCause(e);

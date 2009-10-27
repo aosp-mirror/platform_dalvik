@@ -191,24 +191,15 @@ public final class ProcessBuilder {
      *             if an I/O error happens.
      */
     public Process start() throws IOException {
-        if (command.isEmpty()) {
-            throw new IndexOutOfBoundsException();
-        }
-        String[] cmdArray = new String[command.size()];
-        for (int i = 0; i < cmdArray.length; i++) {
-            if ((cmdArray[i] = command.get(i)) == null) {
-                throw new NullPointerException();
-            }
-        }
+        // BEGIN android-changed: push responsibility for argument checking into ProcessManager
+        String[] cmdArray = command.toArray(new String[command.size()]);
         String[] envArray = new String[environment.size()];
         int i = 0;
         for (Map.Entry<String, String> entry : environment.entrySet()) {
             envArray[i++] = entry.getKey() + "=" + entry.getValue(); //$NON-NLS-1$
         }
-        Process process = Runtime.getRuntime().exec(cmdArray, envArray,
-                directory);
-        // TODO implement support for redirectErrorStream
-        return process;
+        return ProcessManager.getInstance().exec(cmdArray, envArray, directory, redirectErrorStream);
+        // END android-changed
     }
 
     private static List<String> toList(String[] strings) {
