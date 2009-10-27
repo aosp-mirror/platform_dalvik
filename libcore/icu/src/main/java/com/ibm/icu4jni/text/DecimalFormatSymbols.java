@@ -24,7 +24,7 @@ import java.util.Currency;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-public class DecimalFormatSymbols {
+public class DecimalFormatSymbols implements Cloneable {
     
     private int addr;
     

@@ -122,7 +122,7 @@ public final class CollationKey implements Comparable
   {
     if (m_hash_ == 0)
     {
-      if (m_bytes_ != null || m_bytes_.length != 0) 
+      if (m_bytes_ != null && m_bytes_.length != 0)
       {                        
         int len = m_bytes_.length;
         int inc = ((len - 32) / 32) + 1;  

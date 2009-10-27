@@ -252,6 +252,7 @@ public class XmlPullParserFactory {
     public static XmlPullParserFactory newInstance (String classNames, Class context)
         throws XmlPullParserException {
 
+        /*
         if (context == null) {
             //NOTE: make sure context uses the same class loader as API classes
             //      this is the best we can do without having access to context classloader in J2ME
@@ -259,7 +260,6 @@ public class XmlPullParserFactory {
             context = referenceContextClass;
         }
 
-        /*
         String  classNamesLocation = null;
 
         if (classNames == null || classNames.length() == 0 || "DEFAULT".equals(classNames)) {
@@ -345,5 +345,3 @@ public class XmlPullParserFactory {
         return factory;
     }
 }
-
-

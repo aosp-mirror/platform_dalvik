@@ -22,10 +22,10 @@ import java.util.Locale;
 
 public abstract class BreakIterator implements Cloneable
 {
-    protected static int BI_CHAR_INSTANCE = 1;
-    protected static int BI_WORD_INSTANCE = 2;
-    protected static int BI_LINE_INSTANCE = 3;
-    protected static int BI_SENT_INSTANCE = 4;
+    protected static final int BI_CHAR_INSTANCE = 1;
+    protected static final int BI_WORD_INSTANCE = 2;
+    protected static final int BI_LINE_INSTANCE = 3;
+    protected static final int BI_SENT_INSTANCE = 4;
     
     protected int type = 0;
     
