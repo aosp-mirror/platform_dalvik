@@ -837,6 +837,16 @@ public class LogManagerTest extends TestCase {
         assertNull(m.getProperty("java.util.logging.FileHandler.pattern"));
     }
 
+    public void testReadConfiguration() throws SecurityException,
+            IOException {
+
+        MockConfigLogManager lm = new MockConfigLogManager();
+        assertFalse(lm.isCalled);
+
+        lm.readConfiguration();
+        assertTrue(lm.isCalled);
+    }
+
     private static void checkProperty(LogManager m) {
         // assertEquals(m.getProperty(".level"), "INFO");
         assertEquals(m.getProperty("java.util.logging.FileHandler.limit"), "50000");
@@ -1361,6 +1371,15 @@ public class LogManagerTest extends TestCase {
     }
 
     public static class MockLogManager extends LogManager {
+    }
+
+	public static class MockConfigLogManager extends LogManager {
+        public boolean isCalled = false;
+
+        public void readConfiguration(InputStream ins) throws IOException {
+            isCalled = true;
+            super.readConfiguration(ins);
+        }
     }
 
     public static class MockHandler extends Handler {

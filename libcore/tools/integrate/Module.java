@@ -48,6 +48,8 @@ class Module {
                         "crypto/src/test/java")
                 .build());
 
+        valuesMutable.put("logging", new Module.Builder(svnRoot, "logging").build());
+
         valuesMutable.put("regex", new Module.Builder(svnRoot, "regex").build());
 
         valuesMutable.put("security", new Module.Builder(svnRoot, "security")
