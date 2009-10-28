@@ -23,6 +23,7 @@ public class AllTests {
     public static final Test suite() {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite();
         suite.addTestSuite(java.lang.FloatTest.class);
+        suite.addTestSuite(java.lang.ProcessBuilderTest.class);
         return suite;
     }
 }
