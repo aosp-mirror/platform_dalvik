@@ -403,7 +403,7 @@ static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
 static void scanInstanceFields(const DataObject *obj, ClassObject *clazz,
         GcMarkContext *ctx)
 {
-    if (false && clazz->refOffsets != CLASS_WALK_SUPER) {
+    if (clazz->refOffsets != CLASS_WALK_SUPER) {
         unsigned int refOffsets = clazz->refOffsets;
         while (refOffsets != 0) {
             const int rshift = CLZ(refOffsets);
