@@ -27,7 +27,7 @@ public class Main
     public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Running all tests...");
-            TestRunner.run(AllTests.suite());
+            CoreTestRunner.main(new String[] { "tests.AllTests" });
         } else if ("--stats".equals(args[0])) {
             // Delegate to new stats test runner
             String[] args2 = new String[args.length - 1];
