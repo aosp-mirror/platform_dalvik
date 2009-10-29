@@ -23,7 +23,7 @@ import java.util.Properties;
 /**
  * Utility methods for manipulating {@link TestDescription} instances.
  */
-public class TestDescriptions {
+class TestDescriptions {
 
     /**
      * The subpath of a platform implementation under which tests live. Used to
@@ -39,28 +39,7 @@ public class TestDescriptions {
         Properties result = new Properties();
         result.setProperty(TestRunner.CLASS_NAME, testDescription.getName());
         result.setProperty(TestRunner.QUALIFIED_NAME, qualifiedName(testDescription));
-        result.setProperty(TestRunner.TITLE, testDescription.getTitle());
-        result.setProperty(TestRunner.KEYWORDS, join(testDescription.getKeywords()));
-        result.setProperty(TestRunner.DIR, testDescription.getDir().toString());
-        result.setProperty(TestRunner.SOURCES, join(testDescription.getSources()));
         return result;
-    }
-
-    /**
-     * Concatenates the objects using ", " as a delimiter.
-     */
-    private static String join(Object[] objects) {
-        if (objects.length == 0) {
-            return "";
-        }
-
-        StringBuilder result = new StringBuilder(16 * objects.length);
-        result.append(objects[0]);
-        for (int i = 1; i < objects.length; i++) {
-            result.append(", ");
-            result.append(objects[i]);
-        }
-        return result.toString();
     }
 
     /**

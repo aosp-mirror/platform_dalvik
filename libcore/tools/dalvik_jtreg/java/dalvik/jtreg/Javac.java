@@ -22,20 +22,25 @@ import java.util.List;
 /**
  * A javac command.
  */
-class Javac {
+final class Javac {
 
     private final Command.Builder builder = new Command.Builder();
 
     Javac() {
-        builder.args("javac");
+        builder.args("javac", "-Xmaxerrs", "1");
     }
 
-    public Javac classPath(File... path) {
+    public Javac bootClasspath(File... path) {
+        builder.args("-bootclasspath", Command.path(path));
+        return this;
+    }
+
+    public Javac classpath(File... path) {
         builder.args("-classpath", Command.path(path));
         return this;
     }
 
-    public Javac sourcePath(File... path) {
+    public Javac sourcepath(File... path) {
         builder.args("-sourcepath", Command.path(path));
         return this;
     }
@@ -47,7 +52,6 @@ class Javac {
 
     public List<String> compile(File... files) {
         return builder.args(Command.objectsToStrings(files))
-                .permitNonZeroExitStatus()
                 .execute();
     }
 }

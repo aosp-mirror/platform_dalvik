@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * An out of process executable.
  */
-class Command {
+final class Command {
 
     private final List<String> args;
     private final boolean permitNonZeroExitStatus;

@@ -17,18 +17,33 @@
 package dalvik.jtreg;
 
 import java.io.File;
+import java.util.List;
 
 /**
- * A dx command.
+ * A dalvikvm command.
  */
-final class Dx {
+final class Dalvikvm {
 
-    public void dex(String output, File... inputs) {
-        new Command.Builder()
-                .args("dx")
-                .args("--dex")
-                .args("--output=" + output)
-                .args(Command.objectsToStrings(inputs))
-                .execute();
+    private final Command.Builder builder = new Command.Builder();
+
+    public Dalvikvm() {
+        builder.args("adb", "shell", "dalvikvm");
+    }
+
+    Dalvikvm classpath(File... files) {
+        builder.args("-classpath");
+        builder.args(Command.path(files));
+        return this;
+    }
+
+    List<String> exec(String classname, String... args) {
+        builder.args(classname);
+        builder.args(args);
+        return builder.execute();
+    }
+
+    public Dalvikvm args(String... args) {
+        builder.args(args);
+        return this;
     }
 }
