@@ -51,8 +51,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <sys/sendfile.h>
 #include <sys/uio.h>
+
+#if HAVE_SYS_SENDFILE_H
+#include <sys/sendfile.h>
+#else
+#include <sys/socket.h>
+#include <sys/types.h>
+#endif
 
 static void convertToPlatform(char *path) {
     char *pathIndex;

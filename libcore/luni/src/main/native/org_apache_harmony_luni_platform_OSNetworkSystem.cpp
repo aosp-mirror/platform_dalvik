@@ -44,7 +44,11 @@
 
 // Temporary hack to build on systems that don't have up-to-date libc headers.
 #ifndef IPV6_TCLASS
-#define IPV6_TCLASS 67
+#ifdef __linux__
+#define IPV6_TCLASS 67 // Linux
+#else
+#define IPV6_TCLASS -1 // BSD(-like); TODO: Something better than this!
+#endif
 #endif
 
 /**
@@ -1139,10 +1143,10 @@ static const char *sockoptLevelToString(int level) {
     switch(level) {
         case SOL_SOCKET:
             return "SOL_SOCKET";
-        case SOL_IP:
-            return "SOL_IP";
-        case SOL_IPV6:
-            return "SOL_IPV6";
+        case IPPROTO_IP:
+            return "IPPROTO_IP";
+        case IPPROTO_IPV6:
+            return "IPPROTO_IPV6";
         default:
             return "SOL_???";
     }
@@ -1171,11 +1175,11 @@ static int getOrSetSocketOption(int action, int socket, int ipv4Option,
     switch (family) {
         case AF_INET:
             option = ipv4Option;
-            protocol = SOL_IP;
+            protocol = IPPROTO_IP;
             break;
         case AF_INET6:
             option = ipv6Option;
-            protocol = SOL_IPV6;
+            protocol = IPPROTO_IPV6;
             break;
         default:
             // TODO(enh): throw Java exceptions from this method instead of just
@@ -1227,13 +1231,13 @@ static int interfaceIndexFromMulticastSocket(int socket) {
         // IP_MULTICAST_IF returns a pointer to a struct ip_mreqn.
         struct ip_mreqn tempRequest;
         socklen_t requestLength = sizeof(tempRequest);
-        result = getsockopt(socket, SOL_IP, IP_MULTICAST_IF, &tempRequest,
+        result = getsockopt(socket, IPPROTO_IP, IP_MULTICAST_IF, &tempRequest,
             &requestLength);
         interfaceIndex = tempRequest.imr_ifindex;
     } else if (family == AF_INET6) {
         // IPV6_MULTICAST_IF returns a pointer to an integer.
         socklen_t requestLength = sizeof(interfaceIndex);
-        result = getsockopt(socket, SOL_IPV6, IPV6_MULTICAST_IF,
+        result = getsockopt(socket, IPPROTO_IPV6, IPV6_MULTICAST_IF,
                 &interfaceIndex, &requestLength);
     } else {
         errno = EAFNOSUPPORT;
@@ -1310,7 +1314,7 @@ static void mcastAddDropMembership (JNIEnv * env, int handle, jobject optVal,
         struct sockaddr_in *sin = (struct sockaddr_in *) &sockaddrP;
         multicastRequest.imr_multiaddr = sin->sin_addr;
 
-        result = setsockopt(handle, SOL_IP, setSockOptVal,
+        result = setsockopt(handle, IPPROTO_IP, setSockOptVal,
                             &multicastRequest, length);
         if (0 != result) {
             jniThrowSocketException(env, errno);
@@ -1362,7 +1366,7 @@ static void mcastAddDropMembership (JNIEnv * env, int handle, jobject optVal,
                         ((struct sockaddr_in *) &sockaddrP)->sin_addr;
                 ipv4Request.imr_ifindex = interfaceIndex;
                 multicastRequest = &ipv4Request;
-                level = SOL_IP;
+                level = IPPROTO_IP;
                 break;
             case AF_INET6:
                 // setSockOptVal is passed in by the caller and may be IPv4-only
@@ -1378,7 +1382,7 @@ static void mcastAddDropMembership (JNIEnv * env, int handle, jobject optVal,
                         ((struct sockaddr_in6 *) &sockaddrP)->sin6_addr;
                 ipv6Request.ipv6mr_interface = interfaceIndex;
                 multicastRequest = &ipv6Request;
-                level = SOL_IPV6;
+                level = IPPROTO_IPV6;
                 break;
            default:
                 jniThrowSocketException(env, EAFNOSUPPORT);
@@ -2511,7 +2515,8 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
             if ((anOption >> 16) & BROKEN_MULTICAST_IF) {
                 return NULL;
             }
-            result = getsockopt(handle, SOL_IP, IP_MULTICAST_IF, &sockVal, &sockSize);
+            result = getsockopt(handle, IPPROTO_IP, IP_MULTICAST_IF,
+                &sockVal, &sockSize);
             if (result == -1) {
                 jniThrowSocketException(env, errno);
                 return NULL;
@@ -2534,14 +2539,14 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
             switch (addressFamily) {
                 case AF_INET:
                     optionLength = sizeof(multicastRequest);
-                    result = getsockopt(handle, SOL_IP, IP_MULTICAST_IF,
+                    result = getsockopt(handle, IPPROTO_IP, IP_MULTICAST_IF,
                                         &multicastRequest, &optionLength);
                     if (result == 0)
                         interfaceIndex = multicastRequest.imr_ifindex;
                     break;
                 case AF_INET6:
                     optionLength = sizeof(interfaceIndex);
-                    result = getsockopt(handle, SOL_IPV6, IPV6_MULTICAST_IF,
+                    result = getsockopt(handle, IPPROTO_IPV6, IPV6_MULTICAST_IF,
                                         &interfaceIndex, &optionLength);
                     break;
                 default:
@@ -2740,7 +2745,7 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
             memset(&mcast_req, 0, sizeof(mcast_req));
             struct sockaddr_in *sin = (struct sockaddr_in *) &sockVal;
             mcast_req.imr_address = sin->sin_addr;
-            result = setsockopt(handle, SOL_IP, IP_MULTICAST_IF,
+            result = setsockopt(handle, IPPROTO_IP, IP_MULTICAST_IF,
                                 &mcast_req, sizeof(mcast_req));
             if (0 != result) {
                 jniThrowSocketException(env, errno);

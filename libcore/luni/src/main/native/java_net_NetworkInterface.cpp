@@ -20,7 +20,6 @@
 #include "jni.h"
 
 #include <errno.h>
-#include <net/if.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +27,8 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+#include <net/if.h> // Note: Can't appear before <sys/socket.h> on OS X.
 
 // A smart pointer that closes the given fd on going out of scope.
 // TODO: make this generally available.
