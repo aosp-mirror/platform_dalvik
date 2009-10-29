@@ -302,6 +302,11 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 #define INST_INST(_inst)    ((_inst) & 0xff)
 
 /*
+ * Replace the opcode (used when handling breakpoints).  _opcode is a u1.
+ */
+#define INST_REPLACE_OP(_inst, _opcode) (((_inst) & 0xff00) | _opcode)
+
+/*
  * Extract the "vA, vB" 4-bit registers from the instruction word (_inst is u2).
  */
 #define INST_A(_inst)       (((_inst) >> 8) & 0x0f)
@@ -448,6 +453,8 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  *
  * Assumes the existence of "const u2* pc" and (for threaded operation)
  * "u2 inst".
+ *
+ * TODO: remove "switch" version.
  */
 #ifdef THREADED_INTERP
 # define H(_op)             &&op_##_op
@@ -460,9 +467,13 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         if (CHECK_JIT()) GOTO_bail_switch();                                \
         goto *handlerTable[INST_INST(inst)];                                \
     }
+# define FINISH_BKPT(_opcode) {                                             \
+        goto *handlerTable[_opcode];                                        \
+    }
 #else
 # define HANDLE_OPCODE(_op) case _op:
 # define FINISH(_offset)    { ADJUST_PC(_offset); break; }
+# define FINISH_BKPT(opcode) { > not implemented < }
 #endif
 
 #define OP_END
@@ -1170,26 +1181,6 @@ GOTO_TARGET_DECL(exceptionThrown);
 /* code in here is only included in portable-debug interpreter */
 
 /*
- * Determine if an address is "interesting" to the debugger.  This allows
- * us to avoid scanning the entire event list before every instruction.
- *
- * The "debugBreakAddr" table is global and not synchronized.
- */
-static bool isInterestingAddr(const u2* pc)
-{
-    const u2** ptr = gDvm.debugBreakAddr;
-    int i;
-
-    for (i = 0; i < MAX_BREAKPOINTS; i++, ptr++) {
-        if (*ptr == pc) {
-            LOGV("BKP: hit on %p\n", pc);
-            return true;
-        }
-    }
-    return false;
-}
-
-/*
  * Update the debugger on interesting events, such as hitting a breakpoint
  * or a single-step point.  This is called from the top of the interpreter
  * loop, before the current instruction is processed.
@@ -1235,14 +1226,10 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      *
      * Depending on the "mods" associated with event(s) on this address,
      * we may or may not actually send a message to the debugger.
-     *
-     * Checking method->debugBreakpointCount is slower on the device than
-     * just scanning the table (!).  We could probably work something out
-     * where we just check it on method entry/exit and remember the result,
-     * but that's more fragile and requires passing more stuff around.
      */
 #ifdef WITH_DEBUGGER
-    if (method->debugBreakpointCount > 0 && isInterestingAddr(pc)) {
+    if (INST_INST(*pc) == OP_BREAKPOINT) {
+        LOGV("+++ breakpoint hit at %p\n", pc);
         eventFlags |= DBG_BREAKPOINT;
     }
 #endif
@@ -3164,8 +3151,35 @@ OP_END
 HANDLE_OPCODE(OP_UNUSED_EB)
 OP_END
 
-/* File: c/OP_UNUSED_EC.c */
-HANDLE_OPCODE(OP_UNUSED_EC)
+/* File: c/OP_BREAKPOINT.c */
+HANDLE_OPCODE(OP_BREAKPOINT)
+#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)
+    {
+        /*
+         * Restart this instruction with the original opcode.  We do
+         * this by simply jumping to the handler.
+         *
+         * It's probably not necessary to update "inst", but we do it
+         * for the sake of anything that needs to do disambiguation in a
+         * common handler with INST_INST.
+         *
+         * The breakpoint itself is handled over in updateDebugger(),
+         * because we need to detect other events (method entry, single
+         * step) and report them in the same event packet, and we're not
+         * yet handling those through breakpoint instructions.  By the
+         * time we get here, the breakpoint has already been handled and
+         * the thread resumed.
+         */
+        u1 originalOpCode = dvmGetOriginalOpCode(pc);
+        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)\n", originalOpCode, inst,
+            INST_REPLACE_OP(inst, originalOpCode));
+        inst = INST_REPLACE_OP(inst, originalOpCode);
+        FINISH_BKPT(originalOpCode);
+    }
+#else
+    LOGE("Breakpoint hit in non-debug interpreter\n");
+    dvmAbort();
+#endif
 OP_END
 
 /* File: c/OP_THROW_VERIFICATION_ERROR.c */

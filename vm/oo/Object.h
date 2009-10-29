@@ -553,9 +553,6 @@ struct Method {
 #ifdef WITH_PROFILER
     bool            inProfile;
 #endif
-#ifdef WITH_DEBUGGER
-    short           debugBreakpointCount;
-#endif
 };
 
 /*

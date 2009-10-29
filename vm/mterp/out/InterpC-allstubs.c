@@ -302,6 +302,11 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 #define INST_INST(_inst)    ((_inst) & 0xff)
 
 /*
+ * Replace the opcode (used when handling breakpoints).  _opcode is a u1.
+ */
+#define INST_REPLACE_OP(_inst, _opcode) (((_inst) & 0xff00) | _opcode)
+
+/*
  * Extract the "vA, vB" 4-bit registers from the instruction word (_inst is u2).
  */
 #define INST_A(_inst)       (((_inst) >> 8) & 0x0f)
@@ -2783,8 +2788,35 @@ OP_END
 HANDLE_OPCODE(OP_UNUSED_EB)
 OP_END
 
-/* File: c/OP_UNUSED_EC.c */
-HANDLE_OPCODE(OP_UNUSED_EC)
+/* File: c/OP_BREAKPOINT.c */
+HANDLE_OPCODE(OP_BREAKPOINT)
+#if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)
+    {
+        /*
+         * Restart this instruction with the original opcode.  We do
+         * this by simply jumping to the handler.
+         *
+         * It's probably not necessary to update "inst", but we do it
+         * for the sake of anything that needs to do disambiguation in a
+         * common handler with INST_INST.
+         *
+         * The breakpoint itself is handled over in updateDebugger(),
+         * because we need to detect other events (method entry, single
+         * step) and report them in the same event packet, and we're not
+         * yet handling those through breakpoint instructions.  By the
+         * time we get here, the breakpoint has already been handled and
+         * the thread resumed.
+         */
+        u1 originalOpCode = dvmGetOriginalOpCode(pc);
+        LOGV("+++ break 0x%02x (0x%04x -> 0x%04x)\n", originalOpCode, inst,
+            INST_REPLACE_OP(inst, originalOpCode));
+        inst = INST_REPLACE_OP(inst, originalOpCode);
+        FINISH_BKPT(originalOpCode);
+    }
+#else
+    LOGE("Breakpoint hit in non-debug interpreter\n");
+    dvmAbort();
+#endif
 OP_END
 
 /* File: c/OP_THROW_VERIFICATION_ERROR.c */

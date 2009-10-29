@@ -97,6 +97,9 @@ same time.
  */
 bool dvmDebuggerStartup(void)
 {
+    if (!dvmBreakpointStartup())
+        return false;
+
     gDvm.dbgRegistry = dvmHashTableCreate(1000, NULL);
     return (gDvm.dbgRegistry != NULL);
 }
@@ -108,6 +111,7 @@ void dvmDebuggerShutdown(void)
 {
     dvmHashTableFree(gDvm.dbgRegistry);
     gDvm.dbgRegistry = NULL;
+    dvmBreakpointShutdown();
 }
 
 

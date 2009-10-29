@@ -34,8 +34,9 @@
 
 #define MAX_BREAKPOINTS 20      /* used for a debugger optimization */
 
-// fwd
-typedef struct GcHeap GcHeap;   /* heap internal structure */
+/* private structures */
+typedef struct GcHeap GcHeap;
+typedef struct BreakpointSet BreakpointSet;
 
 /*
  * One of these for each -ea/-da/-esa/-dsa on the command line.
@@ -528,12 +529,9 @@ struct DvmGlobals {
     HashTable*  dbgRegistry;
 
     /*
-     * Breakpoint optimization table.  This is global and NOT explicitly
-     * synchronized, but all operations that modify the table are made
-     * from relatively-synchronized functions.  False-positives are
-     * possible, false-negatives (i.e. missing a breakpoint) should not be.
+     * Debugger breakpoint table.
      */
-    const u2*   debugBreakAddr[MAX_BREAKPOINTS];
+    BreakpointSet*  breakpointSet;
 
     /*
      * Single-step control struct.  We currently only allow one thread to

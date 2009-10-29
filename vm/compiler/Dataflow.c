@@ -737,7 +737,7 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     // EB OP_UNUSED_EB
     DF_NOP,
 
-    // EC OP_UNUSED_EC
+    // EC OP_BREAKPOINT
     DF_NOP,
 
     // ED OP_THROW_VERIFICATION_ERROR

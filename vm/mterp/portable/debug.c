@@ -1,26 +1,6 @@
 /* code in here is only included in portable-debug interpreter */
 
 /*
- * Determine if an address is "interesting" to the debugger.  This allows
- * us to avoid scanning the entire event list before every instruction.
- *
- * The "debugBreakAddr" table is global and not synchronized.
- */
-static bool isInterestingAddr(const u2* pc)
-{
-    const u2** ptr = gDvm.debugBreakAddr;
-    int i;
-
-    for (i = 0; i < MAX_BREAKPOINTS; i++, ptr++) {
-        if (*ptr == pc) {
-            LOGV("BKP: hit on %p\n", pc);
-            return true;
-        }
-    }
-    return false;
-}
-
-/*
  * Update the debugger on interesting events, such as hitting a breakpoint
  * or a single-step point.  This is called from the top of the interpreter
  * loop, before the current instruction is processed.
@@ -66,14 +46,10 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      *
      * Depending on the "mods" associated with event(s) on this address,
      * we may or may not actually send a message to the debugger.
-     *
-     * Checking method->debugBreakpointCount is slower on the device than
-     * just scanning the table (!).  We could probably work something out
-     * where we just check it on method entry/exit and remember the result,
-     * but that's more fragile and requires passing more stuff around.
      */
 #ifdef WITH_DEBUGGER
-    if (method->debugBreakpointCount > 0 && isInterestingAddr(pc)) {
+    if (INST_INST(*pc) == OP_BREAKPOINT) {
+        LOGV("+++ breakpoint hit at %p\n", pc);
         eventFlags |= DBG_BREAKPOINT;
     }
 #endif

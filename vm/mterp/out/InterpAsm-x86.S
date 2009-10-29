@@ -5797,8 +5797,8 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EC: /* 0xec */
-/* File: x86/OP_UNUSED_EC.S */
+.L_OP_BREAKPOINT: /* 0xec */
+/* File: x86/OP_BREAKPOINT.S */
 /* File: x86/unused.S */
     jmp     common_abort
 

@@ -155,7 +155,7 @@ int sysLoadFileInShmem(int fd, MemMapping* pMap)
 
 /*
  * Map a file (from fd's current offset) into a shared, read-only memory
- * segment.  The file offset must be a multiple of the page size.
+ * segment.  The file offset must be a multiple of the system page size.
  *
  * On success, returns 0 and fills out "pMap".  On failure, returns a nonzero
  * value and does not disturb "pMap".
@@ -172,10 +172,24 @@ int sysMapFileInShmem(int fd, MemMapping* pMap)
     if (getFileStartAndLength(fd, &start, &length) < 0)
         return -1;
 
-    memPtr = mmap(NULL, length, PROT_READ, MAP_FILE | MAP_SHARED, fd, start);
+    /*
+     * This was originally (PROT_READ, MAP_SHARED), but we want to be able
+     * to make local edits for verification errors and debugger breakpoints.
+     * So we map it read-write and private, but use mprotect to mark the
+     * pages read-only.  This should yield identical results so long as the
+     * pages are left read-only.
+     */
+    memPtr = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE,
+            fd, start);
     if (memPtr == MAP_FAILED) {
-        LOGW("mmap(%d, R, FILE|SHARED, %d, %d) failed: %s\n", (int) length,
+        LOGW("mmap(%d, R/W, FILE|PRIVATE, %d, %d) failed: %s\n", (int) length,
             fd, (int) start, strerror(errno));
+        return -1;
+    }
+    if (mprotect(memPtr, length, PROT_READ) < 0) {
+        LOGW("mprotect(%p, %d, PROT_READ) failed: %s\n",
+            memPtr, length, strerror(errno));
+        (void) munmap(memPtr, length);
         return -1;
     }
 
@@ -267,6 +281,45 @@ int sysMapFileSegmentInShmem(int fd, off_t start, long length,
     LOGE("sysMapFileSegmentInShmem not implemented.\n");
     return -1;
 #endif
+}
+
+/*
+ * Change the access rights on one or more pages to read-only or read-write.
+ *
+ * Returns 0 on success.
+ */
+int sysChangeMapAccess(void* addr, size_t length, int wantReadWrite,
+    MemMapping* pMap)
+{
+    /*
+     * Verify that "addr" is part of this mapping file.
+     */
+    if (addr < pMap->baseAddr ||
+        (u1*)addr >= (u1*)pMap->baseAddr + pMap->baseLength)
+    {
+        LOGE("Attempted to change %p; map is %p - %p\n",
+            addr, pMap->baseAddr, (u1*)pMap->baseAddr + pMap->baseLength);
+        return -1;
+    }
+
+    /*
+     * Align "addr" to a page boundary and adjust "length" appropriately.
+     * (The address must be page-aligned, the length doesn't need to be,
+     * but we do need to ensure we cover the same range.)
+     */
+    u1* alignAddr = (u1*) ((int) addr & ~(SYSTEM_PAGE_SIZE-1));
+    size_t alignLength = length + ((u1*) addr - alignAddr);
+
+    //LOGI("%p/%zd --> %p/%zd\n", addr, length, alignAddr, alignLength);
+    int prot = wantReadWrite ? (PROT_READ|PROT_WRITE) : (PROT_READ);
+    if (mprotect(alignAddr, alignLength, prot) != 0) {
+        int err = errno;
+        LOGW("mprotect (%p,%zd,%d) failed: %s\n",
+            alignAddr, alignLength, prot, strerror(errno));
+        return (errno != 0) ? errno : -1;
+    }
+
+    return 0;
 }
 
 /*

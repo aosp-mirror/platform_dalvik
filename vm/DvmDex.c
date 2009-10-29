@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * VM-specific state associated with a DEX file.
  */
 #include "Dalvik.h"
+
 
 /*
  * Create auxillary data structures.
@@ -215,5 +217,75 @@ void dvmDexFileFree(DvmDex* pDvmDex)
 
     sysReleaseShmem(&pDvmDex->memMap);
     free(pDvmDex);
+}
+
+
+/*
+ * Change the byte at the specified address to a new value.  If the location
+ * already has the new value, do nothing.
+ *
+ * This requires changing the access permissions to read-write, updating
+ * the value, and then resetting the permissions.
+ *
+ * This does not make any synchronization guarantees.  It's important for the
+ * caller(s) to work out mutual exclusion, at least on a page granularity,
+ * to avoid a race where one threads sets read-write, another thread sets
+ * read-only, and then the first thread does a write.
+ *
+ * TODO: if we're back to the original state of the page, use
+ * madvise(MADV_DONTNEED) to release the private/dirty copy.
+ *
+ * Returns "true" on success.
+ */
+bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
+{
+    if (*addr == newVal) {
+        LOGV("+++ byte at %p is already 0x%02x\n", addr, newVal);
+        return true;
+    }
+
+    LOGV("+++ change byte at %p from 0x%02x to 0x%02x\n", addr, *addr, newVal);
+    if (sysChangeMapAccess(addr, 1, true, &pDvmDex->memMap) < 0) {
+        LOGE("access change failed\n");
+        return false;
+    }
+
+    *addr = newVal;
+
+    if (sysChangeMapAccess(addr, 1, false, &pDvmDex->memMap) < 0) {
+        LOGW("WARNING: unable to restore read-only access on mapping\n");
+        /* not fatal, keep going */
+    }
+
+    return true;
+}
+
+/*
+ * Change the 2-byte value at the specified address to a new value.  If the
+ * location already has the new value, do nothing.
+ *
+ * Otherwise works like dvmDexChangeDex1.
+ */
+bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
+{
+    if (*addr == newVal) {
+        LOGV("+++ value at %p is already 0x%04x\n", addr, newVal);
+        return true;
+    }
+
+    LOGV("+++ change 2byte at %p from 0x%04x to 0x%04x\n", addr, *addr, newVal);
+    if (sysChangeMapAccess(addr, 2, true, &pDvmDex->memMap) < 0) {
+        LOGE("access change failed\n");
+        return false;
+    }
+
+    *addr = newVal;
+
+    if (sysChangeMapAccess(addr, 2, false, &pDvmDex->memMap) < 0) {
+        LOGW("WARNING: unable to restore read-only access on mapping\n");
+        /* not fatal, keep going */
+    }
+
+    return true;
 }
 

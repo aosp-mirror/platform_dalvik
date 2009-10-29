@@ -22,7 +22,6 @@
 /*
  * If this is set, we create additional data structures and make many
  * additional mprotect() calls.
- * (this breaks the debugger because the debugBreakpointCount cannot be updated)
  */
 #define ENFORCE_READ_ONLY   false
 

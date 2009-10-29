@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * The VM wraps some additional data structures around the DexFile.  These
  * are defined here.
@@ -79,6 +80,21 @@ int dvmDexFileOpenPartial(const void* addr, int len, DvmDex** ppDvmDex);
  * Free a DvmDex structure, along with any associated structures.
  */
 void dvmDexFileFree(DvmDex* pDvmDex);
+
+
+/*
+ * Change the 1- or 2-byte value at the specified address to a new value.  If
+ * the location already has the new value, do nothing.
+ *
+ * This does not make any synchronization guarantees.  The caller must
+ * ensure exclusivity vs. other callers.
+ *
+ * For the 2-byte call, the pointer should have 16-bit alignment.
+ *
+ * Returns "true" on success.
+ */
+bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal);
+bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal);
 
 
 #if DVM_RESOLVER_CACHE == DVM_RC_DISABLED

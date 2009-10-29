@@ -2926,6 +2926,9 @@ static void verifyFilledNewArrayRegs(const Method* meth,
  * receive a "nop".  The instruction's length will be left unchanged
  * in "insnFlags".
  *
+ * The verifier explicitly locks out breakpoint activity, so there should
+ * be no clashes with the debugger.
+ *
  * IMPORTANT: this may replace meth->insns with a pointer to a new copy of
  * the instructions.
  *
@@ -2939,7 +2942,7 @@ static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
     u2 oldInsn = *oldInsns;
     bool result = false;
 
-    dvmMakeCodeReadWrite(meth);
+    //dvmMakeCodeReadWrite(meth);
 
     //LOGD("  was 0x%04x\n", oldInsn);
     u2* newInsns = (u2*) meth->insns + insnIdx;
@@ -3018,7 +3021,8 @@ static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
         /* nothing to do */
         break;
     case 3:
-        newInsns[2] = OP_NOP;
+        dvmDexChangeDex2(meth->clazz->pDvmDex, newInsns+2, OP_NOP);
+        //newInsns[2] = OP_NOP;
         break;
     default:
         /* whoops */
@@ -3028,13 +3032,15 @@ static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
     }
 
     /* encode the opcode, with the failure code in the high byte */
-    newInsns[0] = OP_THROW_VERIFICATION_ERROR |
+    u2 newVal = OP_THROW_VERIFICATION_ERROR |
         (failure << 8) | (refType << (8 + kVerifyErrorRefTypeShift));
+    //newInsns[0] = newVal;
+    dvmDexChangeDex2(meth->clazz->pDvmDex, newInsns, newVal);
 
     result = true;
 
 bail:
-    dvmMakeCodeReadOnly(meth);
+    //dvmMakeCodeReadOnly(meth);
     return result;
 }
 
@@ -5420,7 +5426,7 @@ sput_1nr_common:
         failure = VERIFY_ERROR_GENERIC;
         break;
 
-    /* these should never appear */
+    /* these should never appear during verification */
     case OP_UNUSED_3E:
     case OP_UNUSED_3F:
     case OP_UNUSED_40:
@@ -5439,7 +5445,7 @@ sput_1nr_common:
     case OP_UNUSED_E9:
     case OP_UNUSED_EA:
     case OP_UNUSED_EB:
-    case OP_UNUSED_EC:
+    case OP_BREAKPOINT:
     case OP_UNUSED_EF:
     case OP_UNUSED_F1:
     case OP_UNUSED_FC:

@@ -35,16 +35,322 @@
  * ===========================================================================
  */
 
+// fwd
+static BreakpointSet* dvmBreakpointSetAlloc(void);
+static void dvmBreakpointSetFree(BreakpointSet* pSet);
+
 /*
- * Initialize the breakpoint address lookup table when the debugger attaches.
+ * Initialize global breakpoint structures.
+ */
+bool dvmBreakpointStartup(void)
+{
+#ifdef WITH_DEBUGGER
+    gDvm.breakpointSet = dvmBreakpointSetAlloc();
+    return (gDvm.breakpointSet != NULL);
+#else
+    return true;
+#endif
+}
+
+/*
+ * Free resources.
+ */
+void dvmBreakpointShutdown(void)
+{
+#ifdef WITH_DEBUGGER
+    dvmBreakpointSetFree(gDvm.breakpointSet);
+#endif
+}
+
+
+#ifdef WITH_DEBUGGER
+/*
+ * This represents a breakpoint inserted in the instruction stream.
  *
- * This shouldn't be necessary -- the global area is initially zeroed out,
- * and the events should be cleaning up after themselves.
+ * The debugger may ask us to create the same breakpoint multiple times.
+ * We only remove the breakpoint when the last instance is cleared.
+ */
+typedef struct {
+    u2*         addr;                   /* absolute memory address */
+    u1          originalOpCode;         /* original 8-bit opcode value */
+    int         setCount;               /* #of times this breakpoint was set */
+} Breakpoint;
+
+/*
+ * Set of breakpoints.
+ */
+struct BreakpointSet {
+    /* grab lock before reading or writing anything else in here */
+    pthread_mutex_t lock;
+
+    /* vector of breakpoint structures */
+    int         alloc;
+    int         count;
+    Breakpoint* breakpoints;
+};
+
+/*
+ * Initialize a BreakpointSet.  Initially empty.
+ */
+static BreakpointSet* dvmBreakpointSetAlloc(void)
+{
+    BreakpointSet* pSet = (BreakpointSet*) calloc(1, sizeof(*pSet));
+
+    dvmInitMutex(&pSet->lock);
+    /* leave the rest zeroed -- will alloc on first use */
+
+    return pSet;
+}
+
+/*
+ * Free storage associated with a BreakpointSet.
+ */
+static void dvmBreakpointSetFree(BreakpointSet* pSet)
+{
+    if (pSet == NULL)
+        return;
+
+    free(pSet->breakpoints);
+    free(pSet);
+}
+
+/*
+ * Lock the breakpoint set.
+ */
+static void dvmBreakpointSetLock(BreakpointSet* pSet)
+{
+    dvmLockMutex(&pSet->lock);
+}
+
+/*
+ * Unlock the breakpoint set.
+ */
+static void dvmBreakpointSetUnlock(BreakpointSet* pSet)
+{
+    dvmUnlockMutex(&pSet->lock);
+}
+
+/*
+ * Return the #of breakpoints.
+ */
+static int dvmBreakpointSetCount(const BreakpointSet* pSet)
+{
+    return pSet->count;
+}
+
+/*
+ * See if we already have an entry for this address.
+ *
+ * The BreakpointSet's lock must be acquired before calling here.
+ *
+ * Returns the index of the breakpoint entry, or -1 if not found.
+ */
+static int dvmBreakpointSetFind(const BreakpointSet* pSet, const u2* addr)
+{
+    int i;
+
+    for (i = 0; i < pSet->count; i++) {
+        Breakpoint* pBreak = &pSet->breakpoints[i];
+        if (pBreak->addr == addr)
+            return i;
+    }
+
+    return -1;
+}
+
+/*
+ * Retrieve the opcode that was originally at the specified location.
+ *
+ * The BreakpointSet's lock must be acquired before calling here.
+ *
+ * Returns "true" with the opcode in *pOrig on success.
+ */
+static bool dvmBreakpointSetOriginalOpCode(const BreakpointSet* pSet,
+    const u2* addr, u1* pOrig)
+{
+    int idx = dvmBreakpointSetFind(pSet, addr);
+    if (idx < 0)
+        return false;
+
+    *pOrig = pSet->breakpoints[idx].originalOpCode;
+    return true;
+}
+
+/*
+ * Add a breakpoint at a specific address.  If the address is already
+ * present in the table, this just increments the count.
+ *
+ * For a new entry, this will extract and preserve the current opcode from
+ * the instruction stream, and replace it with a breakpoint opcode.
+ *
+ * The BreakpointSet's lock must be acquired before calling here.
+ *
+ * Returns "true" on success.
+ */
+static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
+    unsigned int instrOffset)
+{
+    const int kBreakpointGrowth = 10;
+    const u2* addr = method->insns + instrOffset;
+    int idx = dvmBreakpointSetFind(pSet, addr);
+    Breakpoint* pBreak;
+
+    if (idx < 0) {
+        if (pSet->count == pSet->alloc) {
+            int newSize = pSet->alloc + kBreakpointGrowth;
+            Breakpoint* newVec;
+
+            LOGV("+++ increasing breakpoint set size to %d\n", newSize);
+
+            /* pSet->breakpoints will be NULL on first entry */
+            newVec = realloc(pSet->breakpoints, newSize * sizeof(Breakpoint));
+            if (newVec == NULL)
+                return false;
+
+            pSet->breakpoints = newVec;
+            pSet->alloc = newSize;
+        }
+
+        pBreak = &pSet->breakpoints[pSet->count++];
+        pBreak->addr = (u2*)addr;
+        pBreak->originalOpCode = *(u1*)addr;
+        pBreak->setCount = 1;
+
+        /*
+         * Change the opcode.  We must ensure that the BreakpointSet
+         * updates happen before we change the opcode.
+         */
+        MEM_BARRIER();
+        assert(*(u1*)addr != OP_BREAKPOINT);
+        dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr, OP_BREAKPOINT);
+    } else {
+        pBreak = &pSet->breakpoints[idx];
+        pBreak->setCount++;
+
+        /* verify instruction stream has break op */
+        assert(*(u1*)addr == OP_BREAKPOINT);
+    }
+
+    return true;
+}
+
+/*
+ * Remove one instance of the specified breakpoint.  When the count
+ * reaches zero, the entry is removed from the table, and the original
+ * opcode is restored.
+ *
+ * The BreakpointSet's lock must be acquired before calling here.
+ */
+static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
+    unsigned int instrOffset)
+{
+    const u2* addr = method->insns + instrOffset;
+    int idx = dvmBreakpointSetFind(pSet, addr);
+
+    if (idx < 0) {
+        /* breakpoint not found in set -- unexpected */
+        if (*(u1*)addr == OP_BREAKPOINT) {
+            LOGE("Unable to restore breakpoint opcode (%s.%s +%u)\n",
+                method->clazz->descriptor, method->name, instrOffset);
+            dvmAbort();
+        } else {
+            LOGW("Breakpoint was already restored? (%s.%s +%u)\n",
+                method->clazz->descriptor, method->name, instrOffset);
+        }
+    } else {
+        Breakpoint* pBreak = &pSet->breakpoints[idx];
+        if (pBreak->setCount == 1) {
+            /*
+             * Must restore opcode before removing set entry.
+             */
+            dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr,
+                pBreak->originalOpCode);
+            MEM_BARRIER();
+
+            if (idx != pSet->count-1) {
+                /* shift down */
+                memmove(&pSet->breakpoints[idx], &pSet->breakpoints[idx+1],
+                    (pSet->count-1 - idx) * sizeof(pSet->breakpoints[0]));
+            }
+            pSet->count--;
+            pSet->breakpoints[pSet->count].addr = (u2*) 0xdecadead; // debug
+        } else {
+            pBreak->setCount--;
+            assert(pBreak->setCount > 0);
+        }
+    }
+}
+
+/*
+ * Restore the original opcode on any breakpoints that are in the specified
+ * method.  The breakpoints are NOT removed from the set.
+ *
+ * The BreakpointSet's lock must be acquired before calling here.
+ */
+static void dvmBreakpointSetUndo(BreakpointSet* pSet, Method* method)
+{
+    const u2* start = method->insns;
+    const u2* end = method->insns + dvmGetMethodInsnsSize(method);
+
+    int i;
+    for (i = 0; i < pSet->count; i++) {
+        Breakpoint* pBreak = &pSet->breakpoints[i];
+        if (pBreak->addr >= start && pBreak->addr < end) {
+            LOGV("UNDO %s.%s [%d]\n",
+                method->clazz->descriptor, method->name, i);
+            dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)pBreak->addr,
+                pBreak->originalOpCode);
+        }
+    }
+}
+
+/*
+ * Put the breakpoint opcode back into the instruction stream, and check
+ * to see if the original opcode has changed.
+ *
+ * The BreakpointSet's lock must be acquired before calling here.
+ */
+static void dvmBreakpointSetRedo(BreakpointSet* pSet, Method* method)
+{
+    const u2* start = method->insns;
+    const u2* end = method->insns + dvmGetMethodInsnsSize(method);
+
+    int i;
+    for (i = 0; i < pSet->count; i++) {
+        Breakpoint* pBreak = &pSet->breakpoints[i];
+        if (pBreak->addr >= start && pBreak->addr < end) {
+            LOGV("REDO %s.%s [%d]\n",
+                method->clazz->descriptor, method->name, i);
+            u1 currentOpCode = *(u1*)pBreak->addr;
+            if (pBreak->originalOpCode != currentOpCode) {
+                /* verifier can drop in a throw-verification-error */
+                LOGD("NOTE: updating originalOpCode from 0x%02x to 0x%02x\n",
+                    pBreak->originalOpCode, currentOpCode);
+                pBreak->originalOpCode = currentOpCode;
+            }
+            dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)pBreak->addr,
+                OP_BREAKPOINT);
+        }
+    }
+}
+
+#endif /*WITH_DEBUGGER*/
+
+
+/*
+ * Do any debugger-attach-time initialization.
  */
 void dvmInitBreakpoints(void)
 {
 #ifdef WITH_DEBUGGER
-    memset(gDvm.debugBreakAddr, 0, sizeof(gDvm.debugBreakAddr));
+    /* quick sanity check */
+    BreakpointSet* pSet = gDvm.breakpointSet;
+    dvmBreakpointSetLock(pSet);
+    if (dvmBreakpointSetCount(pSet) != 0) {
+        LOGW("WARNING: %d leftover breakpoints\n", dvmBreakpointSetCount(pSet));
+        /* generally not good, but we can keep going */
+    }
+    dvmBreakpointSetUnlock(pSet);
 #else
     assert(false);
 #endif
@@ -64,29 +370,13 @@ void dvmInitBreakpoints(void)
  *
  * "addr" is the absolute address of the breakpoint bytecode.
  */
-void dvmAddBreakAddr(Method* method, int instrOffset)
+void dvmAddBreakAddr(Method* method, unsigned int instrOffset)
 {
 #ifdef WITH_DEBUGGER
-    const u2* addr = method->insns + instrOffset;
-    const u2** ptr = gDvm.debugBreakAddr;
-    int i;
-
-    LOGV("BKP: add %p %s.%s (%s:%d)\n",
-        addr, method->clazz->descriptor, method->name,
-        dvmGetMethodSourceFile(method), dvmLineNumFromPC(method, instrOffset));
-
-    method->debugBreakpointCount++;
-    for (i = 0; i < MAX_BREAKPOINTS; i++, ptr++) {
-        if (*ptr == NULL) {
-            *ptr = addr;
-            break;
-        }
-    }
-    if (i == MAX_BREAKPOINTS) {
-        /* no room; size is too small or we're not cleaning up properly */
-        LOGE("ERROR: max breakpoints exceeded\n");
-        assert(false);
-    }
+    BreakpointSet* pSet = gDvm.breakpointSet;
+    dvmBreakpointSetLock(pSet);
+    dvmBreakpointSetAdd(pSet, method, instrOffset);
+    dvmBreakpointSetUnlock(pSet);
 #else
     assert(false);
 #endif
@@ -102,34 +392,71 @@ void dvmAddBreakAddr(Method* method, int instrOffset)
  * synchronized, so it should not be possible for two threads to be
  * updating breakpoints at the same time.
  */
-void dvmClearBreakAddr(Method* method, int instrOffset)
+void dvmClearBreakAddr(Method* method, unsigned int instrOffset)
 {
 #ifdef WITH_DEBUGGER
-    const u2* addr = method->insns + instrOffset;
-    const u2** ptr = gDvm.debugBreakAddr;
-    int i;
+    BreakpointSet* pSet = gDvm.breakpointSet;
+    dvmBreakpointSetLock(pSet);
+    dvmBreakpointSetRemove(pSet, method, instrOffset);
+    dvmBreakpointSetUnlock(pSet);
 
-    LOGV("BKP: clear %p %s.%s (%s:%d)\n",
-        addr, method->clazz->descriptor, method->name,
-        dvmGetMethodSourceFile(method), dvmLineNumFromPC(method, instrOffset));
-
-    method->debugBreakpointCount--;
-    assert(method->debugBreakpointCount >= 0);
-    for (i = 0; i < MAX_BREAKPOINTS; i++, ptr++) {
-        if (*ptr == addr) {
-            *ptr = NULL;
-            break;
-        }
-    }
-    if (i == MAX_BREAKPOINTS) {
-        /* didn't find it */
-        LOGE("ERROR: breakpoint on %p not found\n", addr);
-        assert(false);
-    }
 #else
     assert(false);
 #endif
 }
+
+#ifdef WITH_DEBUGGER
+/*
+ * Get the original opcode from under a breakpoint.
+ */
+u1 dvmGetOriginalOpCode(const u2* addr)
+{
+    BreakpointSet* pSet = gDvm.breakpointSet;
+    u1 orig = 0;
+
+    dvmBreakpointSetLock(pSet);
+    if (!dvmBreakpointSetOriginalOpCode(pSet, addr, &orig)) {
+        orig = *(u1*)addr;
+        if (orig == OP_BREAKPOINT) {
+            LOGE("GLITCH: can't find breakpoint, opcode is still set\n");
+            dvmAbort();
+        }
+    }
+    dvmBreakpointSetUnlock(pSet);
+
+    return orig;
+}
+
+/*
+ * Temporarily "undo" any breakpoints set in a specific method.  Used
+ * during verification.
+ *
+ * Locks the breakpoint set, and leaves it locked.
+ */
+void dvmUndoBreakpoints(Method* method)
+{
+    BreakpointSet* pSet = gDvm.breakpointSet;
+
+    dvmBreakpointSetLock(pSet);
+    dvmBreakpointSetUndo(pSet, method);
+    /* lock remains held */
+}
+
+/*
+ * "Redo" the breakpoints cleared by a previous "undo", re-inserting the
+ * breakpoint opcodes and updating the "original opcode" values.
+ *
+ * Unlocks the breakpoint set, which must be held by a previous "undo".
+ */
+void dvmRedoBreakpoints(Method* method)
+{
+    BreakpointSet* pSet = gDvm.breakpointSet;
+
+    /* lock already held */
+    dvmBreakpointSetRedo(pSet, method);
+    dvmBreakpointSetUnlock(pSet);
+}
+#endif
 
 /*
  * Add a single step event.  Currently this is a global item.

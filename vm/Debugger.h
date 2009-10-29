@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Dalvik-specific side of debugger support.  (The JDWP code is intended to
  * be relatively generic.)
@@ -32,7 +33,7 @@ struct Method;
 struct Thread;
 
 /*
- * used by StepControl to track a set of addresses associated with
+ * Used by StepControl to track a set of addresses associated with
  * a single line.
  */
 typedef struct AddressSet {

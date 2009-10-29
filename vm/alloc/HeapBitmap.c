@@ -23,11 +23,8 @@
 
 #define HB_ASHMEM_NAME "dalvik-heap-bitmap"
 
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
 #define ALIGN_UP_TO_PAGE_SIZE(p) \
-    (((size_t)(p) + (PAGE_SIZE - 1)) & ~(PAGE_SIZE - 1))
+    (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
 
 #define LIKELY(exp)     (__builtin_expect((exp) != 0, true))
 #define UNLIKELY(exp)   (__builtin_expect((exp) != 0, false))

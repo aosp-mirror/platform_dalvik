@@ -1135,6 +1135,13 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     if (!gDvm.reduceSignals)
         blockSignals();
 
+    /* verify system page size */
+    if (sysconf(_SC_PAGESIZE) != SYSTEM_PAGE_SIZE) {
+        LOGE("ERROR: expected page size %d, got %d\n",
+            SYSTEM_PAGE_SIZE, (int) sysconf(_SC_PAGESIZE));
+        goto fail;
+    }
+
     /* mterp setup */
     LOGV("Using executionMode %d\n", gDvm.executionMode);
     dvmCheckAsmConstants();

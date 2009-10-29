@@ -32,13 +32,10 @@ extern void dlmalloc_walk_free_pages(void(*)(void*, void*, void*), void*);
 static void snapIdealFootprint(void);
 static void setIdealFootprint(size_t max);
 
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
 #define ALIGN_UP_TO_PAGE_SIZE(p) \
-    (((size_t)(p) + (PAGE_SIZE - 1)) & ~(PAGE_SIZE - 1))
+    (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
 #define ALIGN_DOWN_TO_PAGE_SIZE(p) \
-    ((size_t)(p) & ~(PAGE_SIZE - 1))
+    ((size_t)(p) & ~(SYSTEM_PAGE_SIZE - 1))
 
 #define HEAP_UTILIZATION_MAX        1024
 #define DEFAULT_HEAP_UTILIZATION    512     // Range 1..HEAP_UTILIZATION_MAX
@@ -1286,7 +1283,7 @@ static void releasePagesInRange(void *start, void *end, void *nbytes)
     * We also align the end address.
     */
     start = (void *)ALIGN_UP_TO_PAGE_SIZE(start);
-    end = (void *)((size_t)end & ~(PAGE_SIZE - 1));
+    end = (void *)((size_t)end & ~(SYSTEM_PAGE_SIZE - 1));
     if (start < end) {
         size_t length = (char *)end - (char *)start;
         madvise(start, length, MADV_DONTNEED);

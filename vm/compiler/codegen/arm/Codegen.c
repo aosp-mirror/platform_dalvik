@@ -2316,7 +2316,7 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
     if (((dalvikOpCode >= OP_UNUSED_3E) && (dalvikOpCode <= OP_UNUSED_43)) ||
-        ((dalvikOpCode >= OP_UNUSED_E3) && (dalvikOpCode <= OP_UNUSED_EC))) {
+        ((dalvikOpCode >= OP_UNUSED_E3) && (dalvikOpCode <= OP_UNUSED_EB))) {
         LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpCode);
         return true;
     }

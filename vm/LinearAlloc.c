@@ -79,11 +79,6 @@ guard the pages on debug builds.  Handy when tracking down corruption.
 #define LENGTHFLAG_RW      0x40000000
 #define LENGTHFLAG_MASK    (~(LENGTHFLAG_FREE|LENGTHFLAG_RW))
 
-/* in case limits.h doesn't have it; must be a power of 2 */
-#ifndef PAGESIZE
-# define PAGESIZE           4096
-#endif
-
 
 /* fwd */
 static void checkAllFree(Object* classLoader);
@@ -130,7 +125,8 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
      * chunk of data will be properly aligned.
      */
     assert(BLOCK_ALIGN >= HEADER_EXTRA);
-    pHdr->curOffset = pHdr->firstOffset = (BLOCK_ALIGN-HEADER_EXTRA) + PAGESIZE;
+    pHdr->curOffset = pHdr->firstOffset =
+        (BLOCK_ALIGN-HEADER_EXTRA) + SYSTEM_PAGE_SIZE;
     pHdr->mapLength = DEFAULT_MAX_LENGTH;
 
 #ifdef USE_ASHMEM
@@ -168,7 +164,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
 #endif /*USE_ASHMEM*/
 
     /* region expected to begin on a page boundary */
-    assert(((int) pHdr->mapAddr & (PAGESIZE-1)) == 0);
+    assert(((int) pHdr->mapAddr & (SYSTEM_PAGE_SIZE-1)) == 0);
 
     /* the system should initialize newly-mapped memory to zero */
     assert(*(u4*) (pHdr->mapAddr + pHdr->curOffset) == 0);
@@ -195,7 +191,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
         free(pHdr);
         return NULL;
     }
-    if (mprotect(pHdr->mapAddr + PAGESIZE, PAGESIZE,
+    if (mprotect(pHdr->mapAddr + SYSTEM_PAGE_SIZE, SYSTEM_PAGE_SIZE,
             ENFORCE_READ_ONLY ? PROT_READ : PROT_READ|PROT_WRITE) != 0)
     {
         LOGW("LinearAlloc init mprotect #2 failed: %s\n", strerror(errno));
@@ -205,7 +201,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
 
     if (ENFORCE_READ_ONLY) {
         /* allocate the per-page ref count */
-        int numPages = (pHdr->mapLength+PAGESIZE-1) / PAGESIZE;
+        int numPages = (pHdr->mapLength+SYSTEM_PAGE_SIZE-1) / SYSTEM_PAGE_SIZE;
         pHdr->writeRefCount = calloc(numPages, sizeof(short));
         if (pHdr->writeRefCount == NULL) {
             free(pHdr);
@@ -332,7 +328,7 @@ void* dvmLinearAlloc(Object* classLoader, size_t size)
      * See if we are starting on or have crossed into a new page.  If so,
      * call mprotect on the page(s) we're about to write to.  We have to
      * page-align the start address, but don't have to make the length a
-     * PAGESIZE multiple (but we do it anyway).
+     * SYSTEM_PAGE_SIZE multiple (but we do it anyway).
      *
      * Note that "startOffset" is not the last *allocated* byte, but rather
      * the offset of the first *unallocated* byte (which we are about to
@@ -341,9 +337,9 @@ void* dvmLinearAlloc(Object* classLoader, size_t size)
      * If ENFORCE_READ_ONLY is enabled, we have to call mprotect even if
      * we've written to this page before, because it might be read-only.
      */
-    lastGoodOff = (startOffset-1) & ~(PAGESIZE-1);
-    firstWriteOff = startOffset & ~(PAGESIZE-1);
-    lastWriteOff = (nextOffset-1) & ~(PAGESIZE-1);
+    lastGoodOff = (startOffset-1) & ~(SYSTEM_PAGE_SIZE-1);
+    firstWriteOff = startOffset & ~(SYSTEM_PAGE_SIZE-1);
+    lastWriteOff = (nextOffset-1) & ~(SYSTEM_PAGE_SIZE-1);
     LOGVV("---  lastGood=0x%04x firstWrite=0x%04x lastWrite=0x%04x\n",
         lastGoodOff, firstWriteOff, lastWriteOff);
     if (lastGoodOff != lastWriteOff || ENFORCE_READ_ONLY) {
@@ -351,7 +347,7 @@ void* dvmLinearAlloc(Object* classLoader, size_t size)
 
         start = firstWriteOff;
         assert(start <= nextOffset);
-        len = (lastWriteOff - firstWriteOff) + PAGESIZE;
+        len = (lastWriteOff - firstWriteOff) + SYSTEM_PAGE_SIZE;
 
         LOGVV("---    calling mprotect(start=%d len=%d RW)\n", start, len);
         cc = mprotect(pHdr->mapAddr + start, len, PROT_READ | PROT_WRITE);
@@ -367,8 +363,8 @@ void* dvmLinearAlloc(Object* classLoader, size_t size)
     if (ENFORCE_READ_ONLY) {
         int i, start, end;
 
-        start = firstWriteOff / PAGESIZE;
-        end = lastWriteOff / PAGESIZE;
+        start = firstWriteOff / SYSTEM_PAGE_SIZE;
+        end = lastWriteOff / SYSTEM_PAGE_SIZE;
 
         LOGVV("---  marking pages %d-%d RW (alloc %d at %p)\n",
             start, end, size, pHdr->mapAddr + startOffset + HEADER_EXTRA);
@@ -465,8 +461,8 @@ static void updatePages(Object* classLoader, void* mem, int direction)
     u4 len = *pLen & LENGTHFLAG_MASK;
     int firstPage, lastPage;
 
-    firstPage = ((u1*)pLen - (u1*)pHdr->mapAddr) / PAGESIZE;
-    lastPage = ((u1*)mem - (u1*)pHdr->mapAddr + (len-1)) / PAGESIZE;
+    firstPage = ((u1*)pLen - (u1*)pHdr->mapAddr) / SYSTEM_PAGE_SIZE;
+    lastPage = ((u1*)mem - (u1*)pHdr->mapAddr + (len-1)) / SYSTEM_PAGE_SIZE;
     LOGVV("--- updating pages %d-%d (%d)\n", firstPage, lastPage, direction);
 
     int i, cc;
@@ -496,7 +492,8 @@ static void updatePages(Object* classLoader, void* mem, int direction)
             pHdr->writeRefCount[i]--;
             if (pHdr->writeRefCount[i] == 0) {
                 LOGVV("---  prot page %d RO\n", i);
-                cc = mprotect(pHdr->mapAddr + PAGESIZE * i, PAGESIZE, PROT_READ);
+                cc = mprotect(pHdr->mapAddr + SYSTEM_PAGE_SIZE * i,
+                        SYSTEM_PAGE_SIZE, PROT_READ);
                 assert(cc == 0);
             }
         } else {
@@ -509,8 +506,8 @@ static void updatePages(Object* classLoader, void* mem, int direction)
             }
             if (pHdr->writeRefCount[i] == 0) {
                 LOGVV("---  prot page %d RW\n", i);
-                cc = mprotect(pHdr->mapAddr + PAGESIZE * i, PAGESIZE,
-                        PROT_READ | PROT_WRITE);
+                cc = mprotect(pHdr->mapAddr + SYSTEM_PAGE_SIZE * i,
+                        SYSTEM_PAGE_SIZE, PROT_READ | PROT_WRITE);
                 assert(cc == 0);
             }
             pHdr->writeRefCount[i]++;
@@ -616,7 +613,7 @@ void dvmLinearAllocDump(Object* classLoader)
                     & ~(BLOCK_ALIGN-1));
 
         LOGI("  %p (%3d): %clen=%d%s\n", pHdr->mapAddr + off + HEADER_EXTRA,
-            (int) ((off + HEADER_EXTRA) / PAGESIZE),
+            (int) ((off + HEADER_EXTRA) / SYSTEM_PAGE_SIZE),
             (rawLen & LENGTHFLAG_FREE) != 0 ? '*' : ' ',
             rawLen & LENGTHFLAG_MASK,
             (rawLen & LENGTHFLAG_RW) != 0 ? " [RW]" : "");
@@ -627,7 +624,7 @@ void dvmLinearAllocDump(Object* classLoader)
     if (ENFORCE_READ_ONLY) {
         LOGI("writeRefCount map:\n");
 
-        int numPages = (pHdr->mapLength+PAGESIZE-1) / PAGESIZE;
+        int numPages = (pHdr->mapLength+SYSTEM_PAGE_SIZE-1) / SYSTEM_PAGE_SIZE;
         int zstart = 0;
         int i;
 

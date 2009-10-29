@@ -33,9 +33,6 @@
 
 #ifdef HAVE_ANDROID_OS
 # define UPDATE_MAGIC_PAGE      1
-# ifndef PAGESIZE
-#  define PAGESIZE              4096
-# endif
 #endif
 
 /*
@@ -183,7 +180,7 @@ bool dvmProfilingStartup(void)
     if (fd < 0) {
         LOGV("Unable to open /dev/qemu_trace\n");
     } else {
-        gDvm.emulatorTracePage = mmap(0, PAGESIZE, PROT_READ|PROT_WRITE,
+        gDvm.emulatorTracePage = mmap(0, SYSTEM_PAGE_SIZE, PROT_READ|PROT_WRITE,
                                       MAP_SHARED, fd, 0);
         close(fd);
         if (gDvm.emulatorTracePage == MAP_FAILED) {
@@ -207,7 +204,7 @@ void dvmProfilingShutdown(void)
 {
 #ifdef UPDATE_MAGIC_PAGE
     if (gDvm.emulatorTracePage != NULL)
-        munmap(gDvm.emulatorTracePage, PAGESIZE);
+        munmap(gDvm.emulatorTracePage, SYSTEM_PAGE_SIZE);
 #endif
     free(gDvm.executedInstrCounts);
 }

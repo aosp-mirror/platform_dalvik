@@ -302,6 +302,11 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 #define INST_INST(_inst)    ((_inst) & 0xff)
 
 /*
+ * Replace the opcode (used when handling breakpoints).  _opcode is a u1.
+ */
+#define INST_REPLACE_OP(_inst, _opcode) (((_inst) & 0xff00) | _opcode)
+
+/*
  * Extract the "vA, vB" 4-bit registers from the instruction word (_inst is u2).
  */
 #define INST_A(_inst)       (((_inst) >> 8) & 0x0f)

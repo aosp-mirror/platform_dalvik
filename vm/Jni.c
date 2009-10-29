@@ -441,6 +441,7 @@ void dvmJniShutdown(void)
 #else
     dvmClearReferenceTable(&gDvm.jniGlobalRefTable);
 #endif
+    dvmClearReferenceTable(&gDvm.jniPinRefTable);
 }
 
 

@@ -2117,6 +2117,7 @@ static void loadMethodFromDex(ClassObject* clazz, const DexMethod* pDexMethod,
     }
 }
 
+#if 0       /* replaced with private/read-write mapping */
 /*
  * We usually map bytecode directly out of the DEX file, which is mapped
  * shared read-only.  If we want to be able to modify it, we have to make
@@ -2164,6 +2165,7 @@ void dvmMakeCodeReadOnly(Method* meth)
     LOGV("+++ marking %p read-only\n", methodDexCode);
     dvmLinearReadOnly(meth->clazz->classLoader, methodDexCode);
 }
+#endif
 
 
 /*

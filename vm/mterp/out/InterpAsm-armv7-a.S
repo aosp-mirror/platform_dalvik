@@ -7222,8 +7222,8 @@ dalvik_inst:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EC: /* 0xec */
-/* File: armv5te/OP_UNUSED_EC.S */
+.L_OP_BREAKPOINT: /* 0xec */
+/* File: armv5te/OP_BREAKPOINT.S */
 /* File: armv5te/unused.S */
     bl      common_abort
 

@@ -3034,7 +3034,7 @@ sget_1nr_common:
     case OP_UNUSED_E9:
     case OP_UNUSED_EA:
     case OP_UNUSED_EB:
-    case OP_UNUSED_EC:
+    case OP_BREAKPOINT:
     case OP_UNUSED_ED:
     case OP_UNUSED_EF:
     case OP_UNUSED_F1:

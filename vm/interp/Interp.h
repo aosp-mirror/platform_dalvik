@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Dalvik interpreter public definitions.
  */
@@ -34,12 +35,41 @@ void dvmInterpret(Thread* thread, const Method* method, JValue* pResult);
 void dvmThrowVerificationError(const Method* method, int kind, int ref);
 
 /*
- * Breakpoint optimization table.
+ * One-time initialization and shutdown.
+ */
+bool dvmBreakpointStartup(void);
+void dvmBreakpointShutdown(void);
+
+/*
+ * Breakpoint implementation.
  */
 void dvmInitBreakpoints();
-void dvmAddBreakAddr(Method* method, int instrOffset);
-void dvmClearBreakAddr(Method* method, int instrOffset);
+void dvmAddBreakAddr(Method* method, unsigned int instrOffset);
+void dvmClearBreakAddr(Method* method, unsigned int instrOffset);
 bool dvmAddSingleStep(Thread* thread, int size, int depth);
 void dvmClearSingleStep(Thread* thread);
+
+#ifdef WITH_DEBUGGER
+/*
+ * Recover the opcode that was replaced by a breakpoint.
+ */
+u1 dvmGetOriginalOpCode(const u2* addr);
+
+/*
+ * Temporarily "undo" any breakpoints set in a specific method.  Used
+ * during verification.
+ *
+ * Locks the breakpoint set, and leaves it locked.
+ */
+void dvmUndoBreakpoints(Method* method);
+
+/*
+ * "Redo" the breakpoints cleared by a previous "undo", re-inserting the
+ * breakpoint opcodes and updating the "original opcode" values.
+ *
+ * Unlocks the breakpoint set, which must be held by a previous "undo".
+ */
+void dvmRedoBreakpoints(Method* method);
+#endif
 
 #endif /*_DALVIK_INTERP_INTERP*/

@@ -68,11 +68,8 @@
 #define LOGV_SWEEP(...) LOGVV_GC("SWEEP: " __VA_ARGS__)
 #define LOGV_REF(...)   LOGVV_GC("REF: " __VA_ARGS__)
 
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
 #define ALIGN_UP_TO_PAGE_SIZE(p) \
-    (((size_t)(p) + (PAGE_SIZE - 1)) & ~(PAGE_SIZE - 1))
+    (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
 
 /* Do not cast the result of this to a boolean; the only set bit
  * may be > 1<<8.

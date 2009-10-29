@@ -306,7 +306,7 @@ InstructionWidth* dexCreateInstrWidthTable(void)
             width = -3;
             break;
 
-        /* these should never appear */
+        /* these should never appear when scanning bytecode */
         case OP_UNUSED_3E:
         case OP_UNUSED_3F:
         case OP_UNUSED_40:
@@ -325,7 +325,7 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_UNUSED_E9:
         case OP_UNUSED_EA:
         case OP_UNUSED_EB:
-        case OP_UNUSED_EC:
+        case OP_BREAKPOINT:
         case OP_UNUSED_EF:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
@@ -635,7 +635,7 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
             flags = kInstrCanContinue | kInstrCanThrow | kInstrInvoke;
             break;
 
-        /* these should never appear */
+        /* these should never appear when scanning code */
         case OP_UNUSED_3E:
         case OP_UNUSED_3F:
         case OP_UNUSED_40:
@@ -654,7 +654,7 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_UNUSED_E9:
         case OP_UNUSED_EA:
         case OP_UNUSED_EB:
-        case OP_UNUSED_EC:
+        case OP_BREAKPOINT:
         case OP_UNUSED_EF:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
@@ -989,7 +989,7 @@ InstructionFormat* dexCreateInstrFormatTable(void)
             fmt = kFmt35c;
             break;
 
-        /* these should never appear */
+        /* these should never appear when scanning code */
         case OP_UNUSED_3E:
         case OP_UNUSED_3F:
         case OP_UNUSED_40:
@@ -1008,7 +1008,7 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_UNUSED_E9:
         case OP_UNUSED_EA:
         case OP_UNUSED_EB:
-        case OP_UNUSED_EC:
+        case OP_BREAKPOINT:
         case OP_UNUSED_EF:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
