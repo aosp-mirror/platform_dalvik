@@ -654,6 +654,18 @@ extern struct DvmGlobals gDvm;
 #if defined(WITH_JIT)
 
 /*
+ * Exiting the compiled code w/o chaining will incur overhead to look up the
+ * target in the code cache which is extra work only when JIT is enabled. So
+ * we want to monitor it closely to make sure we don't have performance bugs.
+ */
+typedef enum NoChainExits {
+    kInlineCacheMiss = 0,
+    kCallsiteInterpreted,
+    kSwitchOverflow,
+    kNoChainExitLast,
+} NoChainExits;
+
+/*
  * JIT-specific global state
  */
 struct DvmJitGlobals {
@@ -711,7 +723,7 @@ struct DvmJitGlobals {
     int                compilerMaxQueued;
     int                addrLookupsFound;
     int                addrLookupsNotFound;
-    int                noChainExit;
+    int                noChainExit[kNoChainExitLast];
     int                normalExit;
     int                puntExit;
     int                translationChains;

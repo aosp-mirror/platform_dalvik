@@ -3285,6 +3285,135 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
     return false;
 }
 
+/*
+ * Find the matching case.
+ *
+ * return values:
+ * r0 (low 32-bit): pc of the chaining cell corresponding to the resolved case,
+ *    including default which is placed at MIN(size, MAX_CHAINED_SWITCH_CASES).
+ * r1 (high 32-bit): the branch offset of the matching case (only for indexes
+ *    above MAX_CHAINED_SWITCH_CASES).
+ *
+ * Instructions around the call are:
+ *
+ * mov r2, pc
+ * blx &findPackedSwitchIndex
+ * mov pc, r0
+ * .align4
+ * chaining cell for case 0 [8 bytes]
+ * chaining cell for case 1 [8 bytes]
+ *               :
+ * chaining cell for case MIN(size, MAX_CHAINED_SWITCH_CASES)-1 [8 bytes]
+ * chaining cell for case default [8 bytes]
+ * noChain exit
+ */
+s8 findPackedSwitchIndex(const u2* switchData, int testVal, int pc)
+{
+    int size;
+    int firstKey;
+    const int *entries;
+    int index;
+    int jumpIndex;
+    int caseDPCOffset = 0;
+    /* In Thumb mode pc is 4 ahead of the "mov r2, pc" instruction */
+    int chainingPC = (pc + 4) & ~3;
+
+    /*
+     * Packed switch data format:
+     *  ushort ident = 0x0100   magic value
+     *  ushort size             number of entries in the table
+     *  int first_key           first (and lowest) switch case value
+     *  int targets[size]       branch targets, relative to switch opcode
+     *
+     * Total size is (4+size*2) 16-bit code units.
+     */
+    size = switchData[1];
+    assert(size > 0);
+
+    firstKey = switchData[2];
+    firstKey |= switchData[3] << 16;
+
+
+    /* The entries are guaranteed to be aligned on a 32-bit boundary;
+     * we can treat them as a native int array.
+     */
+    entries = (const int*) &switchData[4];
+    assert(((u4)entries & 0x3) == 0);
+
+    index = testVal - firstKey;
+
+    /* Jump to the default cell */
+    if (index < 0 || index >= size) {
+        jumpIndex = MIN(size, MAX_CHAINED_SWITCH_CASES);
+    /* Jump to the non-chaining exit point */
+    } else if (index >= MAX_CHAINED_SWITCH_CASES) {
+        jumpIndex = MAX_CHAINED_SWITCH_CASES + 1;
+        caseDPCOffset = entries[index];
+    /* Jump to the inline chaining cell */
+    } else {
+        jumpIndex = index;
+    }
+
+    chainingPC += jumpIndex * 8;
+    return (((s8) caseDPCOffset) << 32) | (u8) chainingPC;
+}
+
+/* See comments for findPackedSwitchIndex */
+s8 findSparseSwitchIndex(const u2* switchData, int testVal, int pc)
+{
+    int size;
+    const int *keys;
+    const int *entries;
+    int chainingPC = (pc + 4) & ~3;
+    int i;
+
+    /*
+     * Sparse switch data format:
+     *  ushort ident = 0x0200   magic value
+     *  ushort size             number of entries in the table; > 0
+     *  int keys[size]          keys, sorted low-to-high; 32-bit aligned
+     *  int targets[size]       branch targets, relative to switch opcode
+     *
+     * Total size is (2+size*4) 16-bit code units.
+     */
+
+    size = switchData[1];
+    assert(size > 0);
+
+    /* The keys are guaranteed to be aligned on a 32-bit boundary;
+     * we can treat them as a native int array.
+     */
+    keys = (const int*) &switchData[2];
+    assert(((u4)keys & 0x3) == 0);
+
+    /* The entries are guaranteed to be aligned on a 32-bit boundary;
+     * we can treat them as a native int array.
+     */
+    entries = keys + size;
+    assert(((u4)entries & 0x3) == 0);
+
+    /*
+     * Run through the list of keys, which are guaranteed to
+     * be sorted low-to-high.
+     *
+     * Most tables have 3-4 entries.  Few have more than 10.  A binary
+     * search here is probably not useful.
+     */
+    for (i = 0; i < size; i++) {
+        int k = keys[i];
+        if (k == testVal) {
+            /* MAX_CHAINED_SWITCH_CASES + 1 is the start of the overflow case */
+            int jumpIndex = (i < MAX_CHAINED_SWITCH_CASES) ?
+                           i : MAX_CHAINED_SWITCH_CASES + 1;
+            chainingPC += jumpIndex * 8;
+            return (((s8) entries[i]) << 32) | (u8) chainingPC;
+        } else if (k > testVal) {
+            break;
+        }
+    }
+    return chainingPC + MIN(size, MAX_CHAINED_SWITCH_CASES) * 8;
+}
+
 static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
@@ -3296,8 +3425,8 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             genExportPC(cUnit, mir);
             loadValueDirectFixed(cUnit, rlSrc, r0);
             loadConstant(cUnit, r2, (int)dvmInterpHandleFillArrayData);
-            loadConstant(cUnit, r1, (mir->dalvikInsn.vB << 1) +
-                 (int) (cUnit->method->insns + mir->offset));
+            loadConstant(cUnit, r1,
+               (int) (cUnit->method->insns + mir->offset + mir->dalvikInsn.vB));
             opReg(cUnit, kOpBlx, r2);
             clobberCallRegs(cUnit);
             /* generate a branch over if successful */
@@ -3312,11 +3441,9 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             break;
         }
         /*
-         * TODO
-         * - Add a 1 to 3-entry per-location cache here to completely
-         *   bypass the dvmInterpHandle[Packed/Sparse]Switch call w/ chaining
-         * - Use out-of-line handlers for both of these.  These ops
-         *   handle their own register allocation.
+         * Compute the goto target of up to
+         * MIN(switchSize, MAX_CHAINED_SWITCH_CASES) + 1 chaining cells.
+         * See the comment before findPackedSwitchIndex for the code layout.
          */
         case OP_PACKED_SWITCH:
         case OP_SPARSE_SWITCH: {
@@ -3324,23 +3451,24 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             flushAllRegs(cUnit);   /* Send everything to home location */
             loadValueDirectFixed(cUnit, rlSrc, r1);
             lockAllTemps(cUnit);
-            // Exit to the interpreter, setting up r4PC
+            const u2 *switchData =
+                cUnit->method->insns + mir->offset + mir->dalvikInsn.vB;
+            u2 size = switchData[1];
+
             if (dalvikOpCode == OP_PACKED_SWITCH) {
-                loadConstant(cUnit, r4PC, (int)dvmInterpHandlePackedSwitch);
+                loadConstant(cUnit, r4PC, (int)findPackedSwitchIndex);
             } else {
-                loadConstant(cUnit, r4PC, (int)dvmInterpHandleSparseSwitch);
+                loadConstant(cUnit, r4PC, (int)findSparseSwitchIndex);
             }
-            loadConstant(cUnit, r0, (mir->dalvikInsn.vB << 1) +
-                 (int) (cUnit->method->insns + mir->offset));
+            /* r0 <- Addr of the switch data */
+            loadConstant(cUnit, r0,
+               (int) (cUnit->method->insns + mir->offset + mir->dalvikInsn.vB));
+            /* r2 <- pc of the instruction following the blx */
+            opRegReg(cUnit, kOpMov, r2, rpc);
             opReg(cUnit, kOpBlx, r4PC);
             clobberCallRegs(cUnit);
-            loadConstant(cUnit, r1, (int)(cUnit->method->insns + mir->offset));
-            loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
-                         jitToInterpEntries.dvmJitToInterpNoChain), r2);
-            opRegReg(cUnit, kOpAdd, r0, r0);
-            opRegRegReg(cUnit, kOpAdd, r4PC, r0, r1);
-            opReg(cUnit, kOpBlx, r2);
-            clobberCallRegs(cUnit);
+            /* pc <- computed goto target */
+            opRegReg(cUnit, kOpMov, rpc, r0);
             break;
         }
         default:
@@ -4530,6 +4658,22 @@ gen_fallthrough:
                     break;
             }
         }
+    }
+
+    /*
+     * Generate the branch to the dvmJitToInterpNoChain entry point at the end
+     * of all chaining cells for the overflow cases.
+     */
+    if (cUnit->switchOverflowPad) {
+        loadConstant(cUnit, r0, (int) cUnit->switchOverflowPad);
+        loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
+                     jitToInterpEntries.dvmJitToInterpNoChain), r2);
+        opRegReg(cUnit, kOpAdd, r1, r1);
+        opRegRegReg(cUnit, kOpAdd, r4PC, r0, r1);
+#if defined(EXIT_STATS)
+        loadConstant(cUnit, r0, kSwitchOverflow);
+#endif
+        opReg(cUnit, kOpBlx, r2);
     }
 
     dvmCompilerApplyGlobalOptimizations(cUnit);

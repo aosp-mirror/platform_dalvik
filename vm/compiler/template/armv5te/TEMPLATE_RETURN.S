@@ -23,21 +23,24 @@
 #else
     blxeq   lr                          @ punt to interpreter and compare state
 #endif
-    ldr     r0, .LdvmJitToInterpNoChain @ defined in footer.S
+    ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
     mov     rFP, r10                    @ publish new FP
     ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
     ldr     r8, [r8]                    @ r8<- suspendCount
 
     str     r2, [rGLUE, #offGlue_method]@ glue->method = newSave->method
-    ldr     r1, [r10, #offClassObject_pDvmDex] @ r1<- method->clazz->pDvmDex
+    ldr     r0, [r10, #offClassObject_pDvmDex] @ r0<- method->clazz->pDvmDex
     str     rFP, [r3, #offThread_curFrame] @ self->curFrame = fp
     add     rPC, rPC, #6                @ publish new rPC (advance 6 bytes)
-    str     r1, [rGLUE, #offGlue_methodClassDex]
+    str     r0, [rGLUE, #offGlue_methodClassDex]
     cmp     r8, #0                      @ check the suspendCount
     movne   r9, #0                      @ clear the chaining cell address
     cmp     r9, #0                      @ chaining cell exists?
     blxne   r9                          @ jump to the chaining cell
-    mov     pc, r0                      @ callsite is interpreted
+#if defined(EXIT_STATS)
+    mov     r0, #kCallsiteInterpreted
+#endif
+    mov     pc, r1                      @ callsite is interpreted
 1:
     stmia   rGLUE, {rPC, rFP}           @ SAVE_PC_FP_TO_GLUE()
     ldr     r2, .LdvmMterpStdBail       @ defined in footer.S

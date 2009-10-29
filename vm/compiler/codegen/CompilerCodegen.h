@@ -19,6 +19,9 @@
 
 #include "compiler/CompilerIR.h"
 
+/* Maximal number of switch cases to have inline chains */
+#define MAX_CHAINED_SWITCH_CASES 64
+
 /* Work unit is architecture dependent */
 bool dvmCompilerDoWork(CompilerWorkOrder *work);
 

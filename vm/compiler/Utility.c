@@ -69,7 +69,7 @@ retry:
         if (size > ARENA_DEFAULT_SIZE) {
             LOGE("Requesting %d bytes which exceed the maximal size allowed\n",
                  size);
-            return NULL;
+            dvmAbort();
         }
         /* Time to allocate a new arena */
         ArenaMemBlock *newArena = (ArenaMemBlock *)

@@ -506,8 +506,48 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             cUnit.hasLoop = true;
         }
 
+        if (lastInsn->dalvikInsn.opCode == OP_PACKED_SWITCH ||
+            lastInsn->dalvikInsn.opCode == OP_SPARSE_SWITCH) {
+            int i;
+            const u2 *switchData = desc->method->insns + lastInsn->offset +
+                             lastInsn->dalvikInsn.vB;
+            int size = switchData[1];
+            int maxChains = MIN(size, MAX_CHAINED_SWITCH_CASES);
+
+            /*
+             * Generate the landing pad for cases whose ranks are higher than
+             * MAX_CHAINED_SWITCH_CASES. The code will re-enter the interpreter
+             * through the NoChain point.
+             */
+            if (maxChains != size) {
+                cUnit.switchOverflowPad =
+                    desc->method->insns + lastInsn->offset;
+            }
+
+            s4 *targets = (s4 *) (switchData + 2 +
+                    (lastInsn->dalvikInsn.opCode == OP_PACKED_SWITCH ?
+                     2 : size * 2));
+
+            /* One chaining cell for the first MAX_CHAINED_SWITCH_CASES cases */
+            for (i = 0; i < maxChains; i++) {
+                BasicBlock *caseChain = dvmCompilerNewBB(kChainingCellNormal);
+                lastBB->next = caseChain;
+                lastBB = caseChain;
+
+                caseChain->startOffset = lastInsn->offset + targets[i];
+                caseChain->id = numBlocks++;
+            }
+
+            /* One more chaining cell for the default case */
+            BasicBlock *caseChain = dvmCompilerNewBB(kChainingCellNormal);
+            lastBB->next = caseChain;
+            lastBB = caseChain;
+
+            caseChain->startOffset = lastInsn->offset + lastInsn->width;
+            caseChain->id = numBlocks++;
         /* Fallthrough block not included in the trace */
-        if (!isUnconditionalBranch(lastInsn) && curBB->fallThrough == NULL) {
+        } else if (!isUnconditionalBranch(lastInsn) &&
+                   curBB->fallThrough == NULL) {
             /*
              * If the chaining cell is after an invoke or
              * instruction that cannot change the control flow, request a hot

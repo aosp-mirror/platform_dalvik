@@ -419,21 +419,21 @@ void dvmJitStopTranslationRequests()
 
 #if defined(EXIT_STATS)
 /* Convenience function to increment counter from assembly code */
-void dvmBumpNoChain()
+void dvmBumpNoChain(int from)
 {
-    gDvm.jitNoChainExit++;
+    gDvmJit.noChainExit[from]++;
 }
 
 /* Convenience function to increment counter from assembly code */
 void dvmBumpNormal()
 {
-    gDvm.jitNormalExit++;
+    gDvmJit.normalExit++;
 }
 
 /* Convenience function to increment counter from assembly code */
 void dvmBumpPunt(int from)
 {
-    gDvm.jitPuntExit++;
+    gDvmJit.puntExit++;
 }
 #endif
 
@@ -461,9 +461,14 @@ void dvmJitStats()
          gDvmJit.threshold, gDvmJit.blockingMode ? "Blocking" : "Non-blocking");
 #if defined(EXIT_STATS)
         LOGD(
-         "JIT: Lookups: %d hits, %d misses; %d NoChain, %d normal, %d punt",
+         "JIT: Lookups: %d hits, %d misses; %d normal, %d punt",
          gDvmJit.addrLookupsFound, gDvmJit.addrLookupsNotFound,
-         gDvmJit.noChainExit, gDvmJit.normalExit, gDvmJit.puntExit);
+         gDvmJit.normalExit, gDvmJit.puntExit);
+        LOGD(
+         "JIT: noChainExit: %d IC miss, %d interp callsite, %d switch overflow",
+         gDvmJit.noChainExit[kInlineCacheMiss],
+         gDvmJit.noChainExit[kCallsiteInterpreted],
+         gDvmJit.noChainExit[kSwitchOverflow]);
 #endif
         LOGD("JIT: %d Translation chains", gDvmJit.translationChains);
 #if defined(INVOKE_STATS)
@@ -543,6 +548,19 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             if (lastPC == NULL) break;
             /* Grow the trace around the last PC if jitState is kJitTSelect */
             dexDecodeInstruction(gDvm.instrFormat, lastPC, &decInsn);
+
+            /*
+             * Treat {PACKED,SPARSE}_SWITCH as trace-ending instructions due
+             * to the amount of space it takes to generate the chaining
+             * cells.
+             */
+            if (interpState->totalTraceLen != 0 &&
+                (decInsn.opCode == OP_PACKED_SWITCH ||
+                 decInsn.opCode == OP_SPARSE_SWITCH)) {
+                interpState->jitState = kJitTSelectEnd;
+                break;
+            }
+
 #if defined(SHOW_TRACE)
             LOGD("TraceGen: adding %s",getOpcodeName(decInsn.opCode));
 #endif

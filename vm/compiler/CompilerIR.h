@@ -171,6 +171,12 @@ typedef struct CompilationUnit {
     /* Map SSA names to location */
     RegLocation *regLocation;
     int sequenceNumber;
+
+    /*
+     * Set to the Dalvik PC of the switch instruction if it has more than
+     * MAX_CHAINED_SWITCH_CASES cases.
+     */
+    const u2 *switchOverflowPad;
 } CompilationUnit;
 
 BasicBlock *dvmCompilerNewBB(BBType blockType);

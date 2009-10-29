@@ -17,7 +17,8 @@
 #ifndef _DALVIK_VM_COMPILER_UTILITY
 #define _DALVIK_VM_COMPILER_UTILITY
 
-#define ARENA_DEFAULT_SIZE 4096
+/* Each arena page has some overhead, so take a few bytes off 8k */
+#define ARENA_DEFAULT_SIZE 8100
 
 /* Allocate the initial memory block for arena-based allocation */
 bool dvmCompilerHeapInit(void);
