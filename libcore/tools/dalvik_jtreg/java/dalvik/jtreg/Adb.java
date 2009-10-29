@@ -19,16 +19,17 @@ package dalvik.jtreg;
 import java.io.File;
 
 /**
- * A dx command.
+ * An adb command.
  */
-final class Dx {
+final class Adb {
 
-    public void dex(String output, File... inputs) {
-        new Command.Builder()
-                .args("dx")
-                .args("--dex")
-                .args("--output=" + output)
-                .args(Command.objectsToStrings(inputs))
+    public void mkdir(File name) {
+        new Command("adb", "shell", "mkdir", name.toString())
+                .execute();
+    }
+
+    public void push(File local, File remote) {
+        new Command("adb", "push", local.toString(), remote.toString())
                 .execute();
     }
 }

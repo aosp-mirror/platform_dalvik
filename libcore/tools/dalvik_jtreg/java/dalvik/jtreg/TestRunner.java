@@ -25,7 +25,7 @@ import java.util.Properties;
 /**
  * Runs a jtreg test that was prepared with {@link TestToDex}.
  */
-public class TestRunner {
+public final class TestRunner {
 
     /**
      * The name of the test properties file within the {@code .jar} file.
@@ -44,49 +44,20 @@ public class TestRunner {
      */
     static final String QUALIFIED_NAME = "qualifiedName";
 
-    /**
-     * Property identifier for the test's title, such as {@code Some exponent
-     * over/undeflow tests for the pow method}.
-     */
-    static final String TITLE = "title";
-
-    /**
-     * Property identifier for the comma-separated list of keywords, such as
-     * { "bug4916097" }.
-     */
-    static final String KEYWORDS = "keywords";
-
-    /**
-     * Property identifier for the test's source directory, such as {@code
-     * platform_v6/jdk/test/java/math/BigDecimal}.
-     */
-    static final String DIR = "dir";
-
-    /**
-     * The comma-separated source files, such as { "PowTests.java" }.
-     */
-    static final String SOURCES = "sources";
-
     private String className;
     private String qualifiedName;
-    private String title;
-    private String keywords;
-    private String dir;
 
     private Method main;
 
     public void test(String[] args)
             throws InvocationTargetException, IllegalAccessException {
-        System.err.println("Executing " + qualifiedName);
+        System.out.println("Executing " + qualifiedName);
         try {
             main.invoke(null, new Object[] { args });
-            System.err.println("SUCCESS.");
+            System.out.println("SUCCESS");
         } catch (Throwable failure) {
             failure.printStackTrace();
-            System.err.println("FAILURE!");
-            System.err.println("  " + title);
-            System.err.println("  " + keywords);
-            System.err.println("  " + dir);
+            System.out.println("FAILURE");
         }
     }
 
@@ -106,9 +77,6 @@ public class TestRunner {
 
         className = properties.getProperty(CLASS_NAME);
         qualifiedName = properties.getProperty(QUALIFIED_NAME);
-        title = properties.getProperty(TITLE);
-        keywords = properties.getProperty(KEYWORDS);
-        dir = properties.getProperty(DIR);
 
         if (className == null || qualifiedName == null) {
             throw new RuntimeException(TEST_PROPERTIES_FILE + " missing required values!");
@@ -125,13 +93,11 @@ public class TestRunner {
     }
 
     public static void main(String[] args) throws Exception {
-        // Usage: TestRunner [test args]
+        // Usage: TestRunner [optional test args]...
 
         TestRunner testRunner = new TestRunner();
         testRunner.loadProperties();
         testRunner.prepareTest();
         testRunner.test(args);
-
-        // TODO: report the results out as an XML file in JUnit format
     }
 }

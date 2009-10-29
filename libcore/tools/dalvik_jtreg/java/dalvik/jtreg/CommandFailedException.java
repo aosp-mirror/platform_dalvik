@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Thrown when an out of process executable does not return normally.
  */
-public class CommandFailedException extends RuntimeException {
+class CommandFailedException extends RuntimeException {
 
     private final List<String> args;
     private final List<String> outputLines;
