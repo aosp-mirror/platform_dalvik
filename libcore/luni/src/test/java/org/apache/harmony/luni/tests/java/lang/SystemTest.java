@@ -1081,10 +1081,9 @@ public class SystemTest extends junit.framework.TestCase {
         method = "load",
         args = {java.lang.String.class}
     )
-    @AndroidOnly("No x86 version of this library")
     public void test_load() {
         try {
-            new TestLibrary().checkString();
+            Runtime.getRuntime().load("nonExistentLibrary");
             fail("UnsatisfiedLinkError was not thrown.");
         } catch(UnsatisfiedLinkError  e) {
             //expected
@@ -1118,7 +1117,7 @@ public class SystemTest extends junit.framework.TestCase {
         SecurityManager oldSm = System.getSecurityManager();
         System.setSecurityManager(sm);
         try {
-            System.load("libTestLibrary.so");
+            System.load("/nonExistentLibrary.so");
             fail("SecurityException should be thrown.");
         } catch (SecurityException e) {
             // expected
@@ -1162,7 +1161,7 @@ public class SystemTest extends junit.framework.TestCase {
          SecurityManager oldSm = System.getSecurityManager();
          System.setSecurityManager(sm);
          try {
-             System.loadLibrary("libTestLibrary.so");
+             System.loadLibrary("nonExistentLibrary.so");
              fail("SecurityException should be thrown.");
          } catch (SecurityException e) {
              // expected
