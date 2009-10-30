@@ -371,7 +371,7 @@ typedef enum ArmOpCode {
     kThumbOrr,           /* orr     [0100001100] rm[5..3] rd[2..0] */
     kThumbPop,           /* pop     [1011110] r[8..8] rl[7..0] */
     kThumbPush,          /* push    [1011010] r[8..8] rl[7..0] */
-    kThumbRorR,          /* ror     [0100000111] rs[5..3] rd[2..0] */
+    kThumbRorRR,         /* ror     [0100000111] rs[5..3] rd[2..0] */
     kThumbSbc,           /* sbc     [0100000110] rm[5..3] rd[2..0] */
     kThumbStmia,         /* stmia   [11000] rn[10..8] reglist [7.. 0] */
     kThumbStrRRI5,       /* str(1)  [01100] imm_5[10..6] rn[5..3] rd[2..0] */
