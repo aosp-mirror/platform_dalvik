@@ -17,6 +17,11 @@
 
 package java.io;
 
+// BEGIN android-note
+// lots of tidying up of implementation, including renaming fields and changing
+// the implementation of read(char[], int, int)
+// END android-note
+
 import org.apache.harmony.luni.util.Msg;
 
 // BEGIN android-added
@@ -44,15 +49,35 @@ public class BufferedReader extends Reader {
 
     private Reader in;
 
+    /**
+     * The characters that can be read and refilled in bulk. We maintain three
+     * indices into this buffer:<pre>
+     *     { X X X X X X X X X X X X - - }
+     *           ^     ^             ^
+     *           |     |             |
+     *         mark   pos           end</pre>
+     * Pos points to the next readable character. End is one greater than the
+     * last readable character. When {@code pos == end}, the buffer is empty and
+     * must be {@link #fillBuf() filled} before characters can be read.
+     *
+     * <p>Mark is the value pos will be set to on calls to {@link #reset}. Its
+     * value is in the range {@code [0...pos]}. If the mark is {@code -1}, the
+     * buffer cannot be reset.
+     *
+     * <p>MarkLimit limits the distance between the mark and the pos. When this
+     * limit is exceeded, {@link #reset} is permitted (but not required) to
+     * throw an exception. For shorter distances, {@link #reset} shall not throw
+     * (unless the reader is closed).
+     */
     private char[] buf;
 
-    private int marklimit = -1;
-
-    private int count;
-
-    private int markpos = -1;
-
     private int pos;
+
+    private int end;
+
+    private int mark = -1;
+
+    private int markLimit = -1;
 
     /**
      * Constructs a new BufferedReader on the Reader {@code in}. The
@@ -66,7 +91,7 @@ public class BufferedReader extends Reader {
         this.in = in;
         buf = new char[8192];
 
-        // BEGIN android-added
+        // BEGIN android-only
         /*
          * For Android, we want to discourage the use of this
          * constructor (with its arguably too-large default), so we
@@ -79,7 +104,7 @@ public class BufferedReader extends Reader {
                 "Default buffer size used in BufferedReader " +
                 "constructor. It would be " +
                 "better to be explicit if an 8k-char buffer is required.");
-        // END android-added
+        // END android-only
     }
 
     /**
@@ -120,36 +145,50 @@ public class BufferedReader extends Reader {
         }
     }
 
-    private int fillbuf() throws IOException {
-        if (markpos == -1 || (pos - markpos >= marklimit)) {
-            /* Mark position not set or exceeded readlimit */
+    /**
+     * Populates the buffer with data. It is an error to call this method when
+     * the buffer still contains data; ie. if {@code pos < end}.
+     *
+     * @return the number of bytes read into the buffer, or -1 if the end of the
+     *      source stream has been reached.
+     */
+    private int fillBuf() throws IOException {
+        // assert(pos == end);
+
+        if (mark == -1 || (pos - mark >= markLimit)) {
+            /* mark isn't set or has exceeded its limit. use the whole buffer */
             int result = in.read(buf, 0, buf.length);
             if (result > 0) {
-                markpos = -1;
+                mark = -1;
                 pos = 0;
-                count = result == -1 ? 0 : result;
+                end = result;
             }
             return result;
         }
-        if (markpos == 0 && marklimit > buf.length) {
-            /* Increase buffer size to accommodate the readlimit */
+
+        if (mark == 0 && markLimit > buf.length) {
+            /* the only way to make room when mark=0 is by growing the buffer */
             int newLength = buf.length * 2;
-            if (newLength > marklimit) {
-                newLength = marklimit;
+            if (newLength > markLimit) {
+                newLength = markLimit;
             }
             char[] newbuf = new char[newLength];
             System.arraycopy(buf, 0, newbuf, 0, buf.length);
             buf = newbuf;
-        } else if (markpos > 0) {
-            System.arraycopy(buf, markpos, buf, 0, buf.length - markpos);
+        } else if (mark > 0) {
+            /* make room by shifting the buffered data to left mark positions */
+            System.arraycopy(buf, mark, buf, 0, buf.length - mark);
+            pos -= mark;
+            end -= mark;
+            mark = 0;
         }
 
         /* Set the new position and mark position */
-        pos -= markpos;
-        count = markpos = 0;
-        int charsread = in.read(buf, pos, buf.length - pos);
-        count = charsread == -1 ? pos : pos + charsread;
-        return charsread;
+        int count = in.read(buf, pos, buf.length - pos);
+        if (count != -1) {
+            end += count;
+        }
+        return count;
     }
 
     /**
@@ -163,32 +202,32 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Sets a mark position in this reader. The parameter {@code readlimit}
+     * Sets a mark position in this reader. The parameter {@code markLimit}
      * indicates how many characters can be read before the mark is invalidated.
      * Calling {@code reset()} will reposition the reader back to the marked
-     * position if {@code readlimit} has not been surpassed.
+     * position if {@code markLimit} has not been surpassed.
      * 
-     * @param readlimit
+     * @param markLimit
      *            the number of characters that can be read before the mark is
      *            invalidated.
      * @throws IllegalArgumentException
-     *             if {@code readlimit < 0}.
+     *             if {@code markLimit < 0}.
      * @throws IOException
      *             if an error occurs while setting a mark in this reader.
      * @see #markSupported()
      * @see #reset()
      */
     @Override
-    public void mark(int readlimit) throws IOException {
-        if (readlimit < 0) {
+    public void mark(int markLimit) throws IOException {
+        if (markLimit < 0) {
             throw new IllegalArgumentException();
         }
         synchronized (lock) {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K005b")); //$NON-NLS-1$
             }
-            marklimit = readlimit;
-            markpos = pos;
+            this.markLimit = markLimit;
+            mark = pos;
         }
     }
 
@@ -224,10 +263,9 @@ public class BufferedReader extends Reader {
                 throw new IOException(Msg.getString("K005b")); //$NON-NLS-1$
             }
             /* Are there buffered characters available? */
-            if (pos < count || fillbuf() != -1) {
+            if (pos < end || fillBuf() != -1) {
                 return buf[pos++];
             }
-            markpos = -1;
             return -1;
         }
     }
@@ -276,52 +314,59 @@ public class BufferedReader extends Reader {
                 throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
             }
             // END android-changed
-            if (length == 0) {
-                return 0;
-            }
-            int required;
-            if (pos < count) {
-                /* There are bytes available in the buffer. */
-                int copylength = count - pos >= length ? length : count - pos;
-                System.arraycopy(buf, pos, buffer, offset, copylength);
-                pos += copylength;
-                if (copylength == length || !in.ready()) {
-                    return copylength;
+
+            int outstanding = length;
+            while (outstanding > 0) {
+
+                /*
+                 * If there are bytes in the buffer, grab those first.
+                 */
+                int available = end - pos;
+                if (available > 0) {
+                    int count = available >= outstanding ? outstanding : available;
+                    System.arraycopy(buf, pos, buffer, offset, count);
+                    pos += count;
+                    offset += count;
+                    outstanding -= count;
                 }
-                offset += copylength;
-                required = length - copylength;
-            } else {
-                required = length;
+
+                /*
+                 * Before attempting to read from the underlying stream, make
+                 * sure we really, really want to. We won't bother if we're
+                 * done, or if we've already got some bytes and reading from the
+                 * underlying stream would block.
+                 */
+                if (outstanding == 0 || (outstanding < length && !in.ready())) {
+                    break;
+                }
+
+                // assert(pos == end);
+
+                /*
+                 * If we're unmarked and the requested size is greater than our
+                 * buffer, read the bytes directly into the caller's buffer. We
+                 * don't read into smaller buffers because that could result in
+                 * a many reads.
+                 */
+                if ((mark == -1 || (pos - mark >= markLimit))
+                        && outstanding >= buf.length) {
+                    int count = in.read(buffer, offset, outstanding);
+                    if (count > 0) {
+                        offset += count;
+                        outstanding -= count;
+                        mark = -1;
+                    }
+
+                    break; // assume the source stream gave us all that it could
+                }
+
+                if (fillBuf() == -1) {
+                    break; // source is exhausted
+                }
             }
 
-            while (true) {
-                int read;
-                /*
-                 * If we're not marked and the required size is greater than the
-                 * buffer, simply read the bytes directly bypassing the buffer.
-                 */
-                if (markpos == -1 && required >= buf.length) {
-                    read = in.read(buffer, offset, required);
-                    if (read == -1) {
-                        return required == length ? -1 : length - required;
-                    }
-                } else {
-                    if (fillbuf() == -1) {
-                        return required == length ? -1 : length - required;
-                    }
-                    read = count - pos >= required ? required : count - pos;
-                    System.arraycopy(buf, pos, buffer, offset, read);
-                    pos += read;
-                }
-                required -= read;
-                if (required == 0) {
-                    return length;
-                }
-                if (!in.ready()) {
-                    return length - required;
-                }
-                offset += read;
-            }
+            int count = length - outstanding;
+            return (count > 0 || count == length) ? count : -1;
         }
     }
 
@@ -341,11 +386,11 @@ public class BufferedReader extends Reader {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K005b")); //$NON-NLS-1$
             }
-            /* Are there buffered characters available? */
-            if ((pos >= count) && (fillbuf() == -1)) {
+            /* has the underlying stream been exhausted? */
+            if (pos == end && fillBuf() == -1) {
                 return null;
             }
-            for (int charPos = pos; charPos < count; charPos++) {
+            for (int charPos = pos; charPos < end; charPos++) {
                 char ch = buf[charPos];
                 // BEGIN android-note
                 // a switch statement may be more efficient
@@ -360,7 +405,7 @@ public class BufferedReader extends Reader {
                 } else if (ch == '\r') {
                     String res = new String(buf, pos, charPos - pos);
                     pos = charPos + 1;
-                    if (((pos < count) || (fillbuf() != -1))
+                    if (((pos < end) || (fillBuf() != -1))
                             && (buf[pos] == '\n')) {
                         pos++;
                     }
@@ -372,30 +417,28 @@ public class BufferedReader extends Reader {
             StringBuilder result = new StringBuilder(80);
             /* Typical Line Length */
 
-            result.append(buf, pos, count - pos);
-            pos = count;
+            result.append(buf, pos, end - pos);
             while (true) {
+                pos = end;
+
                 /* Are there buffered characters available? */
-                if (pos >= count) {
-                    if (eol == '\n') {
-                        return result.toString();
-                    }
-                    // attempt to fill buffer
-                    if (fillbuf() == -1) {
-                        // characters or null.
-                        return result.length() > 0 || eol != '\0' ? result
-                                .toString() : null;
-                    }
+                if (eol == '\n') {
+                    return result.toString();
                 }
-                for (int charPos = pos; charPos < count; charPos++) {
-                    // BEGIN android-note
-                    // use a local variable for buf[charPos] and a switch statement
-                    // END android-note
+                // attempt to fill buffer
+                if (fillBuf() == -1) {
+                    // characters or null.
+                    return result.length() > 0 || eol != '\0'
+                            ? result.toString()
+                            : null;
+                }
+                for (int charPos = pos; charPos < end; charPos++) {
+                    char c = buf[charPos];
                     if (eol == '\0') {
-                        if ((buf[charPos] == '\n' || buf[charPos] == '\r')) {
-                            eol = buf[charPos];
+                        if ((c == '\n' || c == '\r')) {
+                            eol = c;
                         }
-                    } else if (eol == '\r' && (buf[charPos] == '\n')) {
+                    } else if (eol == '\r' && c == '\n') {
                         if (charPos > pos) {
                             result.append(buf, pos, charPos - pos - 1);
                         }
@@ -410,11 +453,10 @@ public class BufferedReader extends Reader {
                     }
                 }
                 if (eol == '\0') {
-                    result.append(buf, pos, count - pos);
+                    result.append(buf, pos, end - pos);
                 } else {
-                    result.append(buf, pos, count - pos - 1);
+                    result.append(buf, pos, end - pos - 1);
                 }
-                pos = count;
             }
         }
 
@@ -437,7 +479,7 @@ public class BufferedReader extends Reader {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K005b")); //$NON-NLS-1$
             }
-            return ((count - pos) > 0) || in.ready();
+            return ((end - pos) > 0) || in.ready();
         }
     }
 
@@ -457,17 +499,17 @@ public class BufferedReader extends Reader {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K005b")); //$NON-NLS-1$
             }
-            if (markpos == -1) {
+            if (mark == -1) {
                 throw new IOException(Msg.getString("K005c")); //$NON-NLS-1$
             }
-            pos = markpos;
+            pos = mark;
         }
     }
 
     /**
      * Skips {@code amount} characters in this reader. Subsequent
      * {@code read()}s will not return these characters unless {@code reset()}
-     * is used. Skipping characters may invalidate a mark if {@code readlimit}
+     * is used. Skipping characters may invalidate a mark if {@code markLimit}
      * is surpassed.
      * 
      * @param amount
@@ -493,24 +535,24 @@ public class BufferedReader extends Reader {
             if (amount < 1) {
                 return 0;
             }
-            if (count - pos >= amount) {
+            if (end - pos >= amount) {
                 pos += amount;
                 return amount;
             }
 
-            long read = count - pos;
-            pos = count;
+            long read = end - pos;
+            pos = end;
             while (read < amount) {
-                if (fillbuf() == -1) {
+                if (fillBuf() == -1) {
                     return read;
                 }
-                if (count - pos >= amount - read) {
+                if (end - pos >= amount - read) {
                     pos += amount - read;
                     return amount;
                 }
                 // Couldn't get all the characters, skip what we read
-                read += (count - pos);
-                pos = count;
+                read += (end - pos);
+                pos = end;
             }
             return amount;
         }
