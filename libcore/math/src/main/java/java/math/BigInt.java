@@ -234,9 +234,9 @@ class BigInt
         else if (val < 0) NativeBN.BN_set_negative(this.bignum, 1);
     }
 
-
-    public boolean twosCompFitsIntoBytes(int byteCnt) {
-        return NativeBN.twosCompFitsIntoBytes(this.bignum, byteCnt);
+    public boolean twosCompFitsIntoBytes(int desiredByteCount) {
+        int actualByteCount = (NativeBN.bitLength(this.bignum) + 7) / 8;
+        return actualByteCount <= desiredByteCount;
     }
 
     public int bitLength() {
