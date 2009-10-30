@@ -486,6 +486,7 @@ void dvmJitStats()
 void dvmJitShutdown(void)
 {
     /* Shutdown the compiler thread */
+
     dvmCompilerShutdown();
 
     dvmCompilerDumpStats();

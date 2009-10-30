@@ -19,8 +19,8 @@
  * variant-specific code.
  */
 
-#define USE_IN_CACHE_HANDLER 1
-
+static void loadValueAddress(CompilationUnit *cUnit, RegLocation rlSrc,
+                             int rDest);
 /*
  * Determine the initial instruction set to be used for this trace.
  * Later components may decide to change this.
@@ -36,7 +36,6 @@ JitInstructionSetType dvmCompilerInstructionSet(CompilationUnit *cUnit)
  */
 static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
 {
-#if USE_IN_CACHE_HANDLER
     /*
      * NOTE - In practice BLX only needs one operand, but since the assembler
      * may abort itself and retry due to other out-of-range conditions we
@@ -45,32 +44,13 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
      * we fake BLX_1 is a two operand instruction and the absolute target
      * address is stored in operand[1].
      */
-    newLIR2(cUnit, THUMB_BLX_1,
+    clobberHandlerRegs(cUnit);
+    newLIR2(cUnit, kThumbBlx1,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-    newLIR2(cUnit, THUMB_BLX_2,
+    newLIR2(cUnit, kThumbBlx2,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-#else
-    /*
-     * In case we want to access the statically compiled handlers for
-     * debugging purposes, define USE_IN_CACHE_HANDLER to 0
-     */
-    void *templatePtr;
-
-#define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();
-#include "../../../template/armv5te-vfp/TemplateOpList.h"
-#undef JIT_TEMPLATE
-    switch (opCode) {
-#define JIT_TEMPLATE(X) \
-        case TEMPLATE_##X: { templatePtr = dvmCompiler_TEMPLATE_##X; break; }
-#include "../../../template/armv5te-vfp/TemplateOpList.h"
-#undef JIT_TEMPLATE
-        default: templatePtr = NULL;
-    }
-    loadConstant(cUnit, r7, (int) templatePtr);
-    newLIR1(cUnit, THUMB_BLX_R, r7);
-#endif
 }
 
 /* Architecture-specific initializations and checks go here */
@@ -112,21 +92,44 @@ static bool compilerArchVariantInit(void)
     return true;
 }
 
+/* First, flush any registers associated with this value */
+static void loadValueAddress(CompilationUnit *cUnit, RegLocation rlSrc,
+                             int rDest)
+{
+     rlSrc = rlSrc.wide ? updateLocWide(cUnit, rlSrc) : updateLoc(cUnit, rlSrc);
+     if (rlSrc.location == kLocPhysReg) {
+         if (rlSrc.wide) {
+             flushRegWide(cUnit, rlSrc.lowReg, rlSrc.highReg);
+         } else {
+             flushReg(cUnit, rlSrc.lowReg);
+         }
+     }
+     opRegRegImm(cUnit, kOpAdd, rDest, rFP,
+                 sReg2vReg(cUnit, rlSrc.sRegLow) << 2);
+}
+
 static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
-    int offset = offsetof(InterpState, retval);
-    OpCode opCode = mir->dalvikInsn.opCode;
-    int vSrc = mir->dalvikInsn.arg[0];
-    loadValueAddress(cUnit, vSrc, r2);
+    RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+    RegLocation rlResult = LOC_C_RETURN_WIDE;
+    RegLocation rlDest = LOC_DALVIK_RETURN_VAL_WIDE;
+    loadValueAddress(cUnit, rlSrc, r2);
     genDispatchToHandler(cUnit, TEMPLATE_SQRT_DOUBLE_VFP);
-    newLIR3(cUnit, THUMB_STR_RRI5, r0, rGLUE, offset >> 2);
-    newLIR3(cUnit, THUMB_STR_RRI5, r1, rGLUE, (offset >> 2) + 1);
-    resetRegisterScoreboard(cUnit);
+    storeValueWide(cUnit, rlDest, rlResult);
     return false;
 }
 
-static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
-                                int vSrc1, int vSrc2)
+/*
+ * TUNING: On some implementations, it is quicker to pass addresses
+ * to the handlers rather than load the operands into core registers
+ * and then move the values to FP regs in the handlers.  Other implementations
+ * may prefer passing data in registers (and the latter approach would
+ * yeild cleaner register handling - avoiding the requirement that operands
+ * be flushed to memory prior to the call).
+ */
+static bool handleArithOpFloat(CompilationUnit *cUnit, MIR *mir,
+                               RegLocation rlDest, RegLocation rlSrc1,
+                               RegLocation rlSrc2)
 {
     TemplateOpCode opCode;
 
@@ -154,28 +157,31 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir, int vDest,
         case OP_REM_FLOAT_2ADDR:
         case OP_REM_FLOAT:
         case OP_NEG_FLOAT: {
-            return genArithOpFloatPortable(cUnit, mir, vDest,
-                                                      vSrc1, vSrc2);
+            return handleArithOpFloatPortable(cUnit, mir, rlDest,
+                                              rlSrc1, rlSrc2);
         }
         default:
             return true;
     }
-    loadValueAddress(cUnit, vDest, r0);
-    loadValueAddress(cUnit, vSrc1, r1);
-    loadValueAddress(cUnit, vSrc2, r2);
+    loadValueAddress(cUnit, rlDest, r0);
+    clobberReg(cUnit, r0);
+    loadValueAddress(cUnit, rlSrc1, r1);
+    clobberReg(cUnit, r1);
+    loadValueAddress(cUnit, rlSrc2, r2);
     genDispatchToHandler(cUnit, opCode);
+    rlDest = updateLoc(cUnit, rlDest);
+    if (rlDest.location == kLocPhysReg) {
+        clobberReg(cUnit, rlDest.lowReg);
+    }
     return false;
 }
 
-static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
-                             int vSrc1, int vSrc2)
+static bool handleArithOpDouble(CompilationUnit *cUnit, MIR *mir,
+                                RegLocation rlDest, RegLocation rlSrc1,
+                                RegLocation rlSrc2)
 {
     TemplateOpCode opCode;
 
-    /*
-     * Don't attempt to optimize register usage since these opcodes call out to
-     * the handlers.
-     */
     switch (mir->dalvikInsn.opCode) {
         case OP_ADD_DOUBLE_2ADDR:
         case OP_ADD_DOUBLE:
@@ -196,74 +202,114 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir, int vDest,
         case OP_REM_DOUBLE_2ADDR:
         case OP_REM_DOUBLE:
         case OP_NEG_DOUBLE: {
-            return genArithOpDoublePortable(cUnit, mir, vDest,
-                                                       vSrc1, vSrc2);
+            return handleArithOpDoublePortable(cUnit, mir, rlDest, rlSrc1,
+                                               rlSrc2);
         }
         default:
             return true;
     }
-    loadValueAddress(cUnit, vDest, r0);
-    loadValueAddress(cUnit, vSrc1, r1);
-    loadValueAddress(cUnit, vSrc2, r2);
+    loadValueAddress(cUnit, rlDest, r0);
+    clobberReg(cUnit, r0);
+    loadValueAddress(cUnit, rlSrc1, r1);
+    clobberReg(cUnit, r1);
+    loadValueAddress(cUnit, rlSrc2, r2);
     genDispatchToHandler(cUnit, opCode);
+    rlDest = updateLocWide(cUnit, rlDest);
+    if (rlDest.location == kLocPhysReg) {
+        clobberReg(cUnit, rlDest.lowReg);
+        clobberReg(cUnit, rlDest.highReg);
+    }
     return false;
 }
 
-static bool genConversion(CompilationUnit *cUnit, MIR *mir)
+static bool handleConversion(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode opCode = mir->dalvikInsn.opCode;
-    int vSrc1Dest = mir->dalvikInsn.vA;
-    int vSrc2 = mir->dalvikInsn.vB;
+    bool longSrc = false;
+    bool longDest = false;
+    RegLocation rlSrc;
+    RegLocation rlDest;
     TemplateOpCode template;
-
     switch (opCode) {
         case OP_INT_TO_FLOAT:
+            longSrc = false;
+            longDest = false;
             template = TEMPLATE_INT_TO_FLOAT_VFP;
             break;
         case OP_FLOAT_TO_INT:
+            longSrc = false;
+            longDest = false;
             template = TEMPLATE_FLOAT_TO_INT_VFP;
             break;
         case OP_DOUBLE_TO_FLOAT:
+            longSrc = true;
+            longDest = false;
             template = TEMPLATE_DOUBLE_TO_FLOAT_VFP;
             break;
         case OP_FLOAT_TO_DOUBLE:
+            longSrc = false;
+            longDest = true;
             template = TEMPLATE_FLOAT_TO_DOUBLE_VFP;
             break;
         case OP_INT_TO_DOUBLE:
+            longSrc = false;
+            longDest = true;
             template = TEMPLATE_INT_TO_DOUBLE_VFP;
             break;
         case OP_DOUBLE_TO_INT:
+            longSrc = true;
+            longDest = false;
             template = TEMPLATE_DOUBLE_TO_INT_VFP;
             break;
+        case OP_LONG_TO_DOUBLE:
         case OP_FLOAT_TO_LONG:
         case OP_LONG_TO_FLOAT:
         case OP_DOUBLE_TO_LONG:
-        case OP_LONG_TO_DOUBLE:
-            return genConversionPortable(cUnit, mir);
+            return handleConversionPortable(cUnit, mir);
         default:
             return true;
     }
-    loadValueAddress(cUnit, vSrc1Dest, r0);
-    loadValueAddress(cUnit, vSrc2, r1);
+
+    if (longSrc) {
+        rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+    } else {
+        rlSrc = getSrcLoc(cUnit, mir, 0);
+    }
+
+    if (longDest) {
+        rlDest = getDestLocWide(cUnit, mir, 0, 1);
+    } else {
+        rlDest = getDestLoc(cUnit, mir, 0);
+    }
+    loadValueAddress(cUnit, rlDest, r0);
+    clobberReg(cUnit, r0);
+    loadValueAddress(cUnit, rlSrc, r1);
     genDispatchToHandler(cUnit, template);
+    if (rlDest.wide) {
+        rlDest = updateLocWide(cUnit, rlDest);
+        clobberReg(cUnit, rlDest.highReg);
+    } else {
+        rlDest = updateLoc(cUnit, rlDest);
+    }
+    clobberReg(cUnit, rlDest.lowReg);
     return false;
 }
 
-static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
-                    int vSrc2)
+static bool handleCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
+                        RegLocation rlSrc1, RegLocation rlSrc2)
 {
     TemplateOpCode template;
+    RegLocation rlResult = getReturnLoc(cUnit);
+    bool wide = true;
 
-    /*
-     * Don't attempt to optimize register usage since these opcodes call out to
-     * the handlers.
-     */
     switch(mir->dalvikInsn.opCode) {
         case OP_CMPL_FLOAT:
             template = TEMPLATE_CMPL_FLOAT_VFP;
+            wide = false;
             break;
         case OP_CMPG_FLOAT:
             template = TEMPLATE_CMPG_FLOAT_VFP;
+            wide = false;
             break;
         case OP_CMPL_DOUBLE:
             template = TEMPLATE_CMPL_DOUBLE_VFP;
@@ -274,9 +320,10 @@ static bool genCmpX(CompilationUnit *cUnit, MIR *mir, int vDest, int vSrc1,
         default:
             return true;
     }
-    loadValueAddress(cUnit, vSrc1, r0);
-    loadValueAddress(cUnit, vSrc2, r1);
+    loadValueAddress(cUnit, rlSrc1, r0);
+    clobberReg(cUnit, r0);
+    loadValueAddress(cUnit, rlSrc2, r1);
     genDispatchToHandler(cUnit, template);
-    storeValue(cUnit, r0, vDest, r1);
+    storeValue(cUnit, rlDest, rlResult);
     return false;
 }

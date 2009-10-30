@@ -24,6 +24,7 @@
 
 #include "armv5te/ArchVariant.h"
 
+#include "RallocUtil.c"
 #include "ThumbUtil.c"
 #include "Codegen.c"
 #include "armv5te/ArchVariant.c"

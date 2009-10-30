@@ -1026,6 +1026,52 @@ dvmCompiler_TEMPLATE_THROW_EXCEPTION_COMMON:
      */
     b       .LhandleException
 
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_SAVE_STATE
+dvmCompiler_TEMPLATE_SAVE_STATE:
+/* File: armv5te-vfp/TEMPLATE_SAVE_STATE.S */
+    /*
+     * This handler performs a register save for selfVerification mode.
+     * On entry:
+     *    Top of stack + 4: r7 value to save
+     *    Top of stack + 0: r0 value to save
+     *    r0 - offset from rGLUE to the beginning of the heapArgSpace record
+     *    r7 - the value of regMap
+     *
+     * The handler must save regMap, r0-r12 and then return with r0-r12
+     * with their original values (note that this means r0 and r7 must take
+     * the values on the stack - not the ones in those registers on entry.
+     * Finally, the two registers previously pushed must be popped.
+     */
+    add     r0, r0, rGLUE               @ pointer to heapArgSpace
+    stmia   r0!, {r7}                   @ save regMap
+    ldr     r7, [r13, #0]               @ recover r0 value
+    stmia   r0!, {r7}                   @ save r0
+    ldr     r7, [r13, #4]               @ recover r7 value
+    stmia   r0!, {r1-r12}
+    add     r0, #12                     @ move to start of FP save regio
+    vstmia  r0, {d0-d15}
+    pop     {r0, r7}                    @ recover r0, r7
+    bx      lr
+
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_RESTORE_STATE
+dvmCompiler_TEMPLATE_RESTORE_STATE:
+/* File: armv5te-vfp/TEMPLATE_RESTORE_STATE.S */
+    /*
+     * This handler restores state following a selfVerification memory access.
+     * On entry:
+     *    r0 - offset from rGLUE to the 1st element of the coreRegs save array.
+     */
+    add     r0, r0, rGLUE               @ pointer to heapArgSpace.coreRegs[0]
+    add     r0, #64                     @ pointer to heapArgSpace.fpRegs[0]
+    vldmia  r0, {d0-d15}
+    sub     r0, #64                     @ pointer to heapArgSpace.coreRegs[0]
+    ldmia   r0, {r0-r12}
+    bx      lr
+
     .size   dvmCompilerTemplateStart, .-dvmCompilerTemplateStart
 /* File: armv5te/footer.S */
 /*

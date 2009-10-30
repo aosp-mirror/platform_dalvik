@@ -118,28 +118,28 @@ static void buildInsnString(char *fmt, ArmLIR *lir, char* buf,
                        break;
                    case 'c':
                        switch (operand) {
-                           case ARM_COND_EQ:
+                           case kArmCondEq:
                                strcpy(tbuf, "eq");
                                break;
-                           case ARM_COND_NE:
+                           case kArmCondNe:
                                strcpy(tbuf, "ne");
                                break;
-                           case ARM_COND_LT:
+                           case kArmCondLt:
                                strcpy(tbuf, "lt");
                                break;
-                           case ARM_COND_GE:
+                           case kArmCondGe:
                                strcpy(tbuf, "ge");
                                break;
-                           case ARM_COND_GT:
+                           case kArmCondGt:
                                strcpy(tbuf, "gt");
                                break;
-                           case ARM_COND_LE:
+                           case kArmCondLe:
                                strcpy(tbuf, "le");
                                break;
-                           case ARM_COND_CS:
+                           case kArmCondCs:
                                strcpy(tbuf, "cs");
                                break;
-                           case ARM_COND_MI:
+                           case kArmCondMi:
                                strcpy(tbuf, "mi");
                                break;
                            default:
@@ -244,57 +244,57 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
 
     /* Handle pseudo-ops individually, and all regular insns as a group */
     switch(lir->opCode) {
-        case ARM_PSEUDO_BARRIER:
+        case kArmPseudoBarrier:
             LOGD("-------- BARRIER");
             break;
-        case ARM_PSEUDO_EXTENDED_MIR:
+        case kArmPseudoExtended:
             /* intentional fallthrough */
-        case ARM_PSEUDO_SSA_REP:
+        case kArmPseudoSSARep:
             DUMP_SSA_REP(LOGD("-------- %s\n", (char *) dest));
             break;
-        case ARM_PSEUDO_TARGET_LABEL:
+        case kArmPseudoTargetLabel:
             break;
-        case ARM_PSEUDO_CHAINING_CELL_BACKWARD_BRANCH:
+        case ARM_PSEUDO_kChainingCellBackwardBranch:
             LOGD("-------- chaining cell (backward branch): 0x%04x\n", dest);
             break;
-        case ARM_PSEUDO_CHAINING_CELL_NORMAL:
+        case ARM_PSEUDO_kChainingCellNormal:
             LOGD("-------- chaining cell (normal): 0x%04x\n", dest);
             break;
-        case ARM_PSEUDO_CHAINING_CELL_HOT:
+        case ARM_PSEUDO_kChainingCellHot:
             LOGD("-------- chaining cell (hot): 0x%04x\n", dest);
             break;
-        case ARM_PSEUDO_CHAINING_CELL_INVOKE_PREDICTED:
+        case ARM_PSEUDO_kChainingCellInvokePredicted:
             LOGD("-------- chaining cell (predicted)\n");
             break;
-        case ARM_PSEUDO_CHAINING_CELL_INVOKE_SINGLETON:
+        case ARM_PSEUDO_kChainingCellInvokeSingleton:
             LOGD("-------- chaining cell (invoke singleton): %s/%p\n",
                  ((Method *)dest)->name,
                  ((Method *)dest)->insns);
             break;
-        case ARM_PSEUDO_ENTRY_BLOCK:
+        case ARM_PSEUDO_kEntryBlock:
             LOGD("-------- entry offset: 0x%04x\n", dest);
             break;
-        case ARM_PSEUDO_DALVIK_BYTECODE_BOUNDARY:
+        case ARM_PSEUDO_kDalvikByteCode_BOUNDARY:
             LOGD("-------- dalvik offset: 0x%04x @ %s\n", dest,
                  (char *) lir->operands[1]);
             break;
-        case ARM_PSEUDO_EXIT_BLOCK:
+        case ARM_PSEUDO_kExitBlock:
             LOGD("-------- exit offset: 0x%04x\n", dest);
             break;
-        case ARM_PSEUDO_ALIGN4:
+        case kArmPseudoPseudoAlign4:
             LOGD("%p (%04x): .align4\n", baseAddr + offset, offset);
             break;
-        case ARM_PSEUDO_PC_RECONSTRUCTION_CELL:
+        case ARM_PSEUDO_kPCReconstruction_CELL:
             LOGD("-------- reconstruct dalvik PC : 0x%04x @ +0x%04x\n", dest,
                  lir->operands[1]);
             break;
-        case ARM_PSEUDO_PC_RECONSTRUCTION_BLOCK_LABEL:
+        case ARM_PSEUDO_kPCReconstruction_BLOCK_LABEL:
             /* Do nothing */
             break;
-        case ARM_PSEUDO_EH_BLOCK_LABEL:
+        case kArmPseudoEHBlockLabel:
             LOGD("Exception_Handling:\n");
             break;
-        case ARM_PSEUDO_NORMAL_BLOCK_LABEL:
+        case kArmPseudoNormalBlockLabel:
             LOGD("L%#06x:\n", dest);
             break;
         default:

@@ -1,6 +1,6 @@
 %default { "naninst":"mvn     r0, #0" }
     /*
-     * For the JIT: incoming arguments in r0, r1
+     * For the JIT: incoming arguments in r0-r1, r2-r3
      *              result in r0
      *
      * Compare two floating-point values.  Puts 0, 1, or -1 into the
@@ -33,24 +33,24 @@
      * for: cmpl-float, cmpg-float
      */
     /* op vAA, vBB, vCC */
-    mov     r4, lr                      @ save return address
     mov     r9, r0                      @ Save copies - we may need to redo
     mov     r10, r1
+    mov     r11, lr                     @ save return address
     LDR_PC_LR ".L__aeabi_cfcmple"       @ cmp <=: C clear if <, Z set if eq
     bhi     .L${opcode}_gt_or_nan       @ C set and Z clear, disambiguate
     mvncc   r0, #0                      @ (less than) r0<- -1
     moveq   r0, #0                      @ (equal) r0<- 0, trumps less than
-    bx      r4
+    bx      r11
     @ Test for NaN with a second comparison.  EABI forbids testing bit
     @ patterns, and we can't represent 0x7fc00000 in immediate form, so
     @ make the library call.
 .L${opcode}_gt_or_nan:
-    mov     r1, r9                      @ reverse order
-    mov     r0, r10
+    mov     r0, r10                     @ restore in reverse order
+    mov     r1, r9
     LDR_PC_LR ".L__aeabi_cfcmple"       @ r0<- Z set if eq, C clear if <
     movcc   r0, #1                      @ (greater than) r1<- 1
-    bxcc    r4
+    bxcc    r11
     $naninst                            @ r1<- 1 or -1 for NaN
-    bx      r4
+    bx      r11
 
 

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "Dalvik.h"
 #include "interp/InterpDefs.h"
 #include "libdex/OpCode.h"
@@ -24,6 +23,7 @@
 
 #include "armv7-a/ArchVariant.h"
 
+#include "RallocUtil.c"
 #include "Thumb2Util.c"
 #include "Codegen.c"
 #include "armv7-a/ArchVariant.c"
