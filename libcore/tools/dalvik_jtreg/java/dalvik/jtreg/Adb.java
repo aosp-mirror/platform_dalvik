@@ -32,4 +32,9 @@ final class Adb {
         new Command("adb", "push", local.toString(), remote.toString())
                 .execute();
     }
+
+    public void forwardTcp(int localPort, int devicePort) {
+        new Command("adb", "forward", "tcp:" + localPort, "tcp:" + devicePort)
+                .execute();
+    }
 }

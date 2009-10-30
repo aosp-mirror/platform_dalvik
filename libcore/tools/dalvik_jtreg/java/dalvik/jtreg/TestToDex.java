@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -46,6 +47,8 @@ final class TestToDex {
             = new File(DALVIK_JTREG_HOME + "/lib/jtreg.jar");
     private static final File TEST_RUNNER_JAVA
             = new File(DALVIK_JTREG_HOME + "/java/dalvik/jtreg/TestRunner.java");
+
+    private static final Logger logger = Logger.getLogger(TestToDex.class.getName());
 
     private final Pattern JAVA_TEST_PATTERN = Pattern.compile("\\/(\\w)+\\.java$");
 
@@ -115,7 +118,7 @@ final class TestToDex {
      * behind the scenes.
      */
     List<TestDescription> findTests(File directoryToScan) throws Exception {
-        System.out.print("Scanning " + directoryToScan + "...");
+        logger.info("Scanning " + directoryToScan + " for tests.");
         File workDirectory = new File(temp, "JTwork");
         workDirectory.mkdirs();
 
@@ -134,7 +137,7 @@ final class TestToDex {
             TestResult testResult = (TestResult) i.next();
             result.add(testResult.getDescription());
         }
-        System.out.println("done. Found " + result.size() + " tests.");
+        logger.info("Found " + result.size() + " tests.");
         return result;
     }
 }
