@@ -104,21 +104,13 @@ ClassObject* dvmFindArrayClassForElement(ClassObject* elemClassObj)
 
     assert(elemClassObj != NULL);
 
-    if (elemClassObj->arrayClass != NULL) {
-        arrayClass = elemClassObj->arrayClass;
-        LOGVV("using cached '%s' class for '%s'\n",
-            arrayClass->descriptor, elemClassObj->descriptor);
-    } else {
-        /* Simply prepend "[" to the descriptor. */
-        int nameLen = strlen(elemClassObj->descriptor);
-        char className[nameLen + 2];
+    /* Simply prepend "[" to the descriptor. */
+    int nameLen = strlen(elemClassObj->descriptor);
+    char className[nameLen + 2];
 
-        className[0] = '[';
-        memcpy(className+1, elemClassObj->descriptor, nameLen+1);
-        arrayClass = dvmFindArrayClass(className, elemClassObj->classLoader);
-        if (arrayClass != NULL)
-            elemClassObj->arrayClass = arrayClass;
-    }
+    className[0] = '[';
+    memcpy(className+1, elemClassObj->descriptor, nameLen+1);
+    arrayClass = dvmFindArrayClass(className, elemClassObj->classLoader);
 
     return arrayClass;
 }
@@ -708,4 +700,3 @@ void dvmGcScanPrimitiveClasses()
         dvmMarkObject((Object *)gDvm.primitiveClass[i]);    // may be NULL
     }
 }
-

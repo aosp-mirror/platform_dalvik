@@ -378,9 +378,6 @@ struct ClassObject {
        (for String[][][], this will be String) */
     ClassObject*    elementClass;
 
-    /* class object representing an array of this class; set on first use */
-    ClassObject*    arrayClass;
-
     /* arrays only: number of dimensions, e.g. int[][] is 2 */
     int             arrayDim;
 
