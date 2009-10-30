@@ -86,9 +86,6 @@ public class NativeBN {
     public static native void BN_set_negative(int b, int n);
     // void BN_set_negative(BIGNUM *b, int n);
 
-
-    public static native boolean twosCompFitsIntoBytes(int a, int byteCnt);
-
     public static native int bitLength(int a);
 
     public static native boolean BN_is_bit_set(int a, int n);

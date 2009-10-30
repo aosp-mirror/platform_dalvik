@@ -469,60 +469,6 @@ static void NativeBN_BN_set_negative(JNIEnv* env, jclass cls, BIGNUM* b, int n) 
     BN_set_negative(b, n);
 }
 
-
-/**
- * public static native int twosCompFitsIntoBytes(int, int)
- */
-static jboolean NativeBN_twosCompFitsIntoBytes(JNIEnv* env, jclass cls, BIGNUM* a, int byteCnt) {
-// byteCnt IN {1, 2, 4, 8, 12, 16, ... (k * 4)}
-// We rely on: (BN_BITS2 == 32), i.e. BN_ULONG is unsigned int and has 4 bytes:
-//
-// LOGD("NativeBN_twosCompFitsIntoBytes");
-    if (!oneValidHandle(env, a)) return FALSE;
-    bn_check_top(a);
-    int intLen = a->top;
-    BN_ULONG* d = a->d;
-    BN_ULONG msd; // most significant digit
-    switch (byteCnt) {
-    case 1:
-        if (intLen > 1) return FALSE;
-        else if (intLen == 0) return TRUE;
-        msd = d[0];
-        if (a->neg) msd--;
-        return ((msd & 0XFFFFFF80) == 0);
-    case 2:
-        if (intLen > 1) return FALSE;
-        else if (intLen == 0) return TRUE;
-        msd = d[0];
-        if (a->neg) msd--;
-        return ((msd & 0XFFFF8000) == 0);
-    case 4:
-        if (intLen > 1) return FALSE;
-        else if (intLen == 0) return TRUE;
-        msd = d[0];
-        if (a->neg) msd--;
-        return ((msd & 0X80000000) == 0);
-    case 8:
-        if (intLen > 2) return FALSE;
-        else if (intLen == 0) return TRUE;
-        msd = d[1];
-        if ((a->neg) && (d[0]) == 0) msd--;
-        return ((msd & 0X80000000) == 0);
-    default:
-        if (intLen > byteCnt / 4) return FALSE;
-        else if (intLen == 0) return TRUE;
-        int i = intLen - 1;
-        msd = d[i];
-        if (a->neg) {
-            // Handle negative values correctly:
-            // i.e. decrement the msd if all other digits are 0:
-            do { i--; } while (!((i < 0) || (d[i] != 0)));
-            if (i < 0) msd--; // Only if all lower significant digits are 0 we decrement the most significant one.
-        }
-        return ((msd & 0X80000000) == 0);
-    }
-}
-
 /**
  * public static native int bitLength(int)
  */
@@ -545,15 +491,6 @@ static int NativeBN_bitLength(JNIEnv* env, jclass cls, BIGNUM* a) {
         }
         return (intLen - 1) * 32 + BN_num_bits_word(msd);
 }
-
-/**
- * public static native int BN_num_bits(int)
- */
-// static int NativeBN_BN_num_bits(JNIEnv* env, jclass cls, BIGNUM* a) {
-// LOGD("NativeBN_BN_num_bits");
-//     if (!oneValidHandle(env, a)) return FALSE;
-//     return BN_num_bits(a);
-// }
 
 /**
  * public static native boolean BN_is_bit_set(int, int)
@@ -808,9 +745,7 @@ static JNINativeMethod METHODS[] = {
    { "bn2litEndInts", "(I[I)[I", (void*)NativeBN_bn2litEndInts },
    { "sign", "(I)I", (void*)NativeBN_sign },
    { "BN_set_negative", "(II)V", (void*)NativeBN_BN_set_negative },
-   { "twosCompFitsIntoBytes", "(II)Z", (void*)NativeBN_twosCompFitsIntoBytes },
    { "bitLength", "(I)I", (void*)NativeBN_bitLength },
-//   { "BN_num_bits", "(I)I", (void*)NativeBN_BN_num_bits },
    { "BN_is_bit_set", "(II)Z", (void*)NativeBN_BN_is_bit_set },
    { "modifyBit", "(III)Z", (void*)NativeBN_modifyBit },
    { "BN_lshift", "(III)Z", (void*)NativeBN_BN_lshift },
@@ -832,19 +767,6 @@ static JNINativeMethod METHODS[] = {
    { "BN_is_prime_ex", "(IIII)Z", (void*)NativeBN_BN_is_prime_ex }
 };
 
-/*
- * Peforms the actual registration of the native methods.
- * Also looks up the fields that belong to the class (if
- * any) and stores the field IDs.
- */
 int register_org_openssl_NativeBN(JNIEnv* env) {
-/*
-   jclass clazz;
-
-   clazz = (*env)->FindClass(env, "org/openssl/NativeBN");
-   if (clazz == NULL) {
-       return -1;
-   }
-*/
    return jniRegisterNativeMethods(env, "org/openssl/NativeBN", METHODS, NELEM(METHODS));
 }
