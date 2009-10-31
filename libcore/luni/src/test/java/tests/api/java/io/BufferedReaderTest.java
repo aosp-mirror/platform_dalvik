@@ -24,12 +24,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PipedReader;
 import java.io.Reader;
+import java.io.StringReader;
 
 import tests.support.Support_ASimpleReader;
 import tests.support.Support_StringReader;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+import tests.support.ThrowingReader;
 
 @TestTargetClass(BufferedReader.class) 
 public class BufferedReaderTest extends junit.framework.TestCase {
@@ -500,6 +502,33 @@ public class BufferedReaderTest extends junit.framework.TestCase {
         }
         // Avoid IOException in tearDown().
         ssr.throwExceptionOnNextUse = false;
+    }
+
+    public void testReadZeroLengthArray() throws IOException {
+        br = new BufferedReader(new Support_StringReader("ABCDEF"));
+        br.read();
+        br.read();
+        assertEquals(0, br.read(new char[6], 3, 0));
+    }
+
+    public void testSourceThrowsWithMark() throws IOException {
+        br = new BufferedReader(new ThrowingReader(
+                new StringReader("ABCDEFGHI"), 4));
+
+        br.read();
+        br.read();
+        br.mark(10);
+        br.read();
+        br.read();
+
+        try {
+            br.read();
+            fail();
+        } catch (IOException fromThrowingReader) {
+        }
+
+        assertEquals('E', br.read());
+        assertEquals('F', br.read());
     }
 
     /**
