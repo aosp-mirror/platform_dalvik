@@ -74,6 +74,7 @@ static void jniThrowOutOfMemoryError(JNIEnv* env) {
     jniThrowException(env, "java/lang/OutOfMemoryError", "native heap");
 }
 
+// TODO(enh): move to JNIHelp.h
 static void jniThrowSocketException(JNIEnv* env) {
     char buf[BUFSIZ];
     jniThrowException(env, "java/net/SocketException",

@@ -342,7 +342,9 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
 
     @Override
     public void setTimeToLive(int ttl) throws java.io.IOException {
-        setOption(IP_MULTICAST_TTL, Byte.valueOf((byte) (ttl & 0xFF)));
+        // BEGIN android-changed: native code wants an int anyway
+        setOption(IP_MULTICAST_TTL, Integer.valueOf(ttl));
+        // END android-changed
         if ((netImpl.getSocketFlags() & MULTICAST_TTL) != 0) {
             this.ttl = ttl;
         }
@@ -350,10 +352,9 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
 
     @Override
     public void setTTL(byte ttl) throws java.io.IOException {
-        setOption(IP_MULTICAST_TTL, Byte.valueOf(ttl));
-        if ((netImpl.getSocketFlags() & MULTICAST_TTL) != 0) {
-            this.ttl = ttl;
-        }
+        // BEGIN android-changed: remove duplication
+        setTimeToLive(ttl);
+        // END android-changed
     }
 
     @Override
