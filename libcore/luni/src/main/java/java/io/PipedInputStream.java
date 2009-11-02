@@ -15,6 +15,13 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// We've made several changes including:
+//  - delayed buffer creation until pipe connection
+//  - throw an IOException when a pipe is closed during a write
+//  - improved consistency with PipedReader
+// END android-note
+
 package java.io;
 
 import org.apache.harmony.luni.util.Msg;
@@ -28,9 +35,11 @@ import org.apache.harmony.luni.util.Msg;
  */
 public class PipedInputStream extends InputStream {
 
-    private Thread lastReader, lastWriter;
+    private Thread lastReader;
 
-    private boolean isClosed = false;
+    private Thread lastWriter;
+
+    private boolean isClosed;
 
     /**
      * The circular buffer through which data is passed. Data is read from the
@@ -60,7 +69,7 @@ public class PipedInputStream extends InputStream {
     /**
      * The index in {@code buffer} where the next byte will be read.
      */
-    protected int out = 0;
+    protected int out;
 
     /**
      * The size of the default pipe in bytes.
@@ -70,16 +79,14 @@ public class PipedInputStream extends InputStream {
     /**
      * Indicates if this pipe is connected.
      */
-    boolean isConnected = false;
+    boolean isConnected;
 
     /**
      * Constructs a new unconnected {@code PipedInputStream}. The resulting
      * stream must be connected to a {@link PipedOutputStream} before data may
      * be read from it.
      */
-    public PipedInputStream() {
-        /* empty */
-    }
+    public PipedInputStream() {}
 
     /**
      * Constructs a new {@code PipedInputStream} connected to the
@@ -120,14 +127,9 @@ public class PipedInputStream extends InputStream {
      *             if an error occurs while closing this stream.
      */
     @Override
-    public void close() throws IOException {
-        synchronized (this) {
-            /* No exception thrown if already closed */
-            if (buffer != null) {
-                /* Release buffer to indicate closed. */
-                buffer = null;
-            }
-        }
+    public synchronized void close() throws IOException {
+        buffer = null;
+        notifyAll();
     }
 
     /**
@@ -142,6 +144,20 @@ public class PipedInputStream extends InputStream {
      */
     public void connect(PipedOutputStream src) throws IOException {
         src.connect(this);
+    }
+
+    /**
+     * Establishes the connection to the PipedOutputStream.
+     *
+     * @throws IOException
+     *             If this Reader is already connected.
+     */
+    synchronized void establishConnection() throws IOException {
+        if (isConnected) {
+            throw new IOException(Msg.getString("K007a")); //$NON-NLS-1$
+        }
+        buffer = new byte[PipedInputStream.PIPE_SIZE];
+        isConnected = true;
     }
 
     /**
@@ -408,20 +424,21 @@ public class PipedInputStream extends InputStream {
         } catch (InterruptedException e) {
             throw new InterruptedIOException();
         }
-        if (buffer != null) {
-            if (in == -1) {
-                in = 0;
-            }
-            buffer[in++] = (byte) oneByte;
-            if (in == buffer.length) {
-                in = 0;
-            }
-
-            // BEGIN android-added
-            // let blocked readers read the newly available data
-            notifyAll();
-            // END android-added
+        if (buffer == null) {
+            throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
         }
+        if (in == -1) {
+            in = 0;
+        }
+        buffer[in++] = (byte) oneByte;
+        if (in == buffer.length) {
+            in = 0;
+        }
+
+        // BEGIN android-added
+        // let blocked readers read the newly available data
+        notifyAll();
+        // END android-added
     }
 
     synchronized void done() {
