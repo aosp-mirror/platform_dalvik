@@ -401,7 +401,6 @@ public class LogManager {
      *             not have the required permissions to perform this action.
      */
     public void readConfiguration() throws IOException {
-        checkAccess();
         // check config class
         String configClassName = System
                 .getProperty("java.util.logging.config.class"); //$NON-NLS-1$
@@ -436,7 +435,7 @@ public class LogManager {
                                     "logging.properties"), 8192);
                 }
                 // END android-added
-                readConfigurationImpl(input);
+                readConfiguration(input);
             } finally {
                 if (input != null) {
                     try {

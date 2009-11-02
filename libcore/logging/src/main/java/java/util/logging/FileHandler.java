@@ -571,7 +571,7 @@ public class FileHandler extends StreamHandler {
      *            the log record to publish.
      */
     @Override
-    public void publish(LogRecord record) {
+    public synchronized void publish(LogRecord record) {
         super.publish(record);
         flush();
         if (limit > 0 && output.getLength() >= limit) {
