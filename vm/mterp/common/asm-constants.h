@@ -229,6 +229,12 @@ MTERP_OFFSET(offArrayObject_contents,   ArrayObject, contents, 16)
 MTERP_OFFSET(offArrayObject_contents,   ArrayObject, contents, 12)
 #endif
 
+/* String fields */
+MTERP_CONSTANT(STRING_FIELDOFF_VALUE,     8)
+MTERP_CONSTANT(STRING_FIELDOFF_HASHCODE, 12)
+MTERP_CONSTANT(STRING_FIELDOFF_OFFSET,   16)
+MTERP_CONSTANT(STRING_FIELDOFF_COUNT,    20)
+
 /* ClassObject fields */
 MTERP_OFFSET(offClassObject_descriptor, ClassObject, descriptor, 24)
 MTERP_OFFSET(offClassObject_accessFlags, ClassObject, accessFlags, 32)
