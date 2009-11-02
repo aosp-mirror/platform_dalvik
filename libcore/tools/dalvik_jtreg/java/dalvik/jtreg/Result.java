@@ -16,19 +16,18 @@
 
 package dalvik.jtreg;
 
-import java.io.File;
-
 /**
- * A dx command.
+ * A test run result.
  */
-final class Dx {
+public enum Result {
 
-    public void dex(String output, File... inputs) {
-        new Command.Builder()
-                .args("dx")
-                .args("--dex")
-                .args("--output=" + output)
-                .args(Strings.objectsToStrings(inputs))
-                .execute();
-    }
+    /**
+     * A test that cannot be run by this harness, such as a shell script.
+     */
+    UNSUPPORTED,
+
+    COMPILE_FAILED,
+    EXEC_FAILED,
+    ERROR,
+    SUCCESS
 }

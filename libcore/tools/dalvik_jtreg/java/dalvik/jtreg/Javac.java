@@ -51,7 +51,7 @@ final class Javac {
     }
 
     public List<String> compile(File... files) {
-        return builder.args(Command.objectsToStrings(files))
+        return builder.args(Strings.objectsToStrings(files))
                 .execute();
     }
 }

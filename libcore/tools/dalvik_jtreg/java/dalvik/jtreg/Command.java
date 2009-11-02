@@ -47,21 +47,7 @@ final class Command {
     }
 
     static String path(Object[] objects) {
-        StringBuilder result = new StringBuilder();
-        result.append(objects[0]);
-        for (int i = 1; i < objects.length; i++) {
-            result.append(":").append(objects[i]);
-        }
-        return result.toString();
-    }
-
-    static String[] objectsToStrings(Object[] objects) {
-        String[] result = new String[objects.length];
-        int i = 0;
-        for (Object o : objects) {
-            result[i++] = o.toString();
-        }
-        return result;
+        return Strings.join(objects, ":");
     }
 
     static class Builder {
