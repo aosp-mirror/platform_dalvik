@@ -15,6 +15,12 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// We've made several changes including:
+//  - avoid shallow concurrency problems
+//  - improved consistency with PipedWriter
+// END android-note
+
 package java.io;
 
 import org.apache.harmony.luni.util.Msg;
@@ -67,8 +73,9 @@ public class PipedOutputStream extends OutputStream {
     @Override
     public void close() throws IOException {
         // Is the pipe connected?
-        if (dest != null) {
-            dest.done();
+        PipedInputStream stream = dest;
+        if (stream != null) {
+            stream.done();
             dest = null;
         }
     }
@@ -83,18 +90,17 @@ public class PipedOutputStream extends OutputStream {
      *             if either stream is already connected.
      */
     public void connect(PipedInputStream stream) throws IOException {
-        if (null == stream) {
+        if (stream == null) {
             throw new NullPointerException();
         }
-        if (this.dest != null) {
-            throw new IOException(Msg.getString("K0079")); //$NON-NLS-1$
-        }
         synchronized (stream) {
+            if (this.dest != null) {
+                throw new IOException(Msg.getString("K0079")); //$NON-NLS-1$
+            }
             if (stream.isConnected) {
                 throw new IOException(Msg.getString("K007a")); //$NON-NLS-1$
             }
-            stream.buffer = new byte[PipedInputStream.PIPE_SIZE];
-            stream.isConnected = true;
+            stream.establishConnection();
             this.dest = stream;
         }
     }
@@ -108,10 +114,13 @@ public class PipedOutputStream extends OutputStream {
      */
     @Override
     public void flush() throws IOException {
-        if (dest != null) {
-            synchronized (dest) {
-                dest.notifyAll();
-            }
+        PipedInputStream stream = dest;
+        if (stream == null) {
+            return;
+        }
+
+        synchronized (stream) {
+            stream.notifyAll();
         }
     }
 
@@ -145,13 +154,6 @@ public class PipedOutputStream extends OutputStream {
      */
     @Override
     public void write(byte[] buffer, int offset, int count) throws IOException {
-        // BEGIN android-note
-        // changed array notation to be consistent with the rest of harmony
-        // END android-note
-        if (dest == null) {
-            // K007b=Pipe Not Connected
-            throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
-        }
         super.write(buffer, offset, count);
     }
 
@@ -177,9 +179,11 @@ public class PipedOutputStream extends OutputStream {
      */
     @Override
     public void write(int oneByte) throws IOException {
-        if (dest == null) {
+        PipedInputStream stream = dest;
+        if (stream == null) {
+            // K007b=Pipe Not Connected
             throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
         }
-        dest.receive(oneByte);
+        stream.receive(oneByte);
     }
 }

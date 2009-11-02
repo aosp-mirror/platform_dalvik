@@ -17,6 +17,13 @@
 
 package java.io;
 
+// BEGIN android-note
+// We've made several changes including:
+//  - throw an IOException when a pipe is closed during a write
+//  - fix shallow concurrency problems, always lock on 'this'
+//  - improved consistency with PipedInputStream
+// END android-note
+
 import org.apache.harmony.luni.util.Msg;
 
 /**
@@ -35,13 +42,27 @@ public class PipedReader extends Reader {
     private boolean isClosed;
 
     /**
-     * The circular buffer through which data is passed.
+     * The circular buffer through which data is passed. Data is read from the
+     * range {@code [out, in)} and written to the range {@code [in, out)}.
+     * Data in the buffer is either sequential: <pre>
+     *     { - - - X X X X X X X - - - - - }
+     *             ^             ^
+     *             |             |
+     *            out           in</pre>
+     * ...or wrapped around the buffer's end: <pre>
+     *     { X X X X - - - - - - - - X X X }
+     *               ^               ^
+     *               |               |
+     *              in              out</pre>
+     * When the buffer is empty, {@code in == -1}. Reading when the buffer is
+     * empty will block until data is available. When the buffer is full,
+     * {@code in == out}. Writing when the buffer is full will block until free
+     * space is available.
      */
-    private char data[];
+    private char[] buffer;
 
     /**
-     * The index in {@code buffer} where the next character will be
-     * written.
+     * The index in {@code buffer} where the next character will be written.
      */
     private int in = -1;
 
@@ -58,18 +79,14 @@ public class PipedReader extends Reader {
     /**
      * Indicates if this pipe is connected
      */
-    private boolean isConnected;
+    boolean isConnected;
 
     /**
      * Constructs a new unconnected {@code PipedReader}. The resulting reader
      * must be connected to a {@code PipedWriter} before data may be read from
      * it.
-     *
-     * @see PipedWriter
      */
-    public PipedReader() {
-        data = new char[PIPE_SIZE];
-    }
+    public PipedReader() {}
 
     /**
      * Constructs a new {@code PipedReader} connected to the {@link PipedWriter}
@@ -82,7 +99,6 @@ public class PipedReader extends Reader {
      *             if {@code out} is already connected.
      */
     public PipedReader(PipedWriter out) throws IOException {
-        this();
         connect(out);
     }
 
@@ -94,14 +110,9 @@ public class PipedReader extends Reader {
      *             if an error occurs while closing this reader.
      */
     @Override
-    public void close() throws IOException {
-        synchronized (lock) {
-            /* No exception thrown if already closed */
-            if (data != null) {
-                /* Release buffer to indicate closed. */
-                data = null;
-            }
-        }
+    public synchronized void close() throws IOException {
+        buffer = null;
+        notifyAll();
     }
 
     /**
@@ -115,9 +126,7 @@ public class PipedReader extends Reader {
      *             src} is already connected.
      */
     public void connect(PipedWriter src) throws IOException {
-        synchronized (lock) {
-            src.connect(this);
-        }
+        src.connect(this);
     }
 
     /**
@@ -126,16 +135,12 @@ public class PipedReader extends Reader {
      * @throws IOException
      *             If this Reader is already connected.
      */
-    void establishConnection() throws IOException {
-        synchronized (lock) {
-            if (data == null) {
-                throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
-            }
-            if (isConnected) {
-                throw new IOException(Msg.getString("K007a")); //$NON-NLS-1$
-            }
-            isConnected = true;
+    synchronized void establishConnection() throws IOException {
+        if (isConnected) {
+            throw new IOException(Msg.getString("K007a")); //$NON-NLS-1$
         }
+        buffer = new char[PIPE_SIZE];
+        isConnected = true;
     }
 
     /**
@@ -192,95 +197,93 @@ public class PipedReader extends Reader {
      *             alive.
      */
     @Override
-    public int read(char[] buffer, int offset, int count) throws IOException {
-        synchronized (lock) {
-            if (!isConnected) {
-                throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
-            }
-            if (data == null) {
-                throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
-            }
-            // avoid int overflow
-            // BEGIN android-changed
-            // Exception priorities (in case of multiple errors) differ from
-            // RI, but are spec-compliant.
-            // made implicit null check explicit,
-            // used (offset | count) < 0 instead of (offset < 0) || (count < 0)
-            // to safe one operation
-            if (buffer == null) {
-                throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
-            }
-            if ((offset | count) < 0 || count > buffer.length - offset) {
-                throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
-            }
-            // END android-changed
-            if (count == 0) {
-                return 0;
-            }
-            /**
-             * Set the last thread to be reading on this PipedReader. If
-             * lastReader dies while someone is waiting to write an IOException
-             * of "Pipe broken" will be thrown in receive()
-             */
-            lastReader = Thread.currentThread();
-            try {
-                boolean first = true;
-                while (in == -1) {
-                    // Are we at end of stream?
-                    if (isClosed) {
-                        return -1;
-                    }
-                    if (!first && lastWriter != null && !lastWriter.isAlive()) {
-                        throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
-                    }
-                    first = false;
-                    // Notify callers of receive()
-                    lock.notifyAll();
-                    lock.wait(1000);
+    public synchronized int read(char[] buffer, int offset, int count) throws IOException {
+        if (!isConnected) {
+            throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
+        }
+        if (this.buffer == null) {
+            throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
+        }
+        // avoid int overflow
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // made implicit null check explicit,
+        // used (offset | count) < 0 instead of (offset < 0) || (count < 0)
+        // to safe one operation
+        if (buffer == null) {
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        }
+        if ((offset | count) < 0 || count > buffer.length - offset) {
+            throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        }
+        // END android-changed
+        if (count == 0) {
+            return 0;
+        }
+        /**
+         * Set the last thread to be reading on this PipedReader. If
+         * lastReader dies while someone is waiting to write an IOException
+         * of "Pipe broken" will be thrown in receive()
+         */
+        lastReader = Thread.currentThread();
+        try {
+            boolean first = true;
+            while (in == -1) {
+                // Are we at end of stream?
+                if (isClosed) {
+                    return -1;
                 }
-            } catch (InterruptedException e) {
-                throw new InterruptedIOException();
-            }
-
-            int copyLength = 0;
-            /* Copy chars from out to end of buffer first */
-            if (out >= in) {
-                copyLength = count > data.length - out ? data.length - out
-                        : count;
-                System.arraycopy(data, out, buffer, offset, copyLength);
-                out += copyLength;
-                if (out == data.length) {
-                    out = 0;
+                if (!first && lastWriter != null && !lastWriter.isAlive()) {
+                    throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
                 }
-                if (out == in) {
-                    // empty buffer
-                    in = -1;
-                    out = 0;
-                }
+                first = false;
+                // Notify callers of receive()
+                notifyAll();
+                wait(1000);
             }
+        } catch (InterruptedException e) {
+            throw new InterruptedIOException();
+        }
 
-            /*
-             * Did the read fully succeed in the previous copy or is the buffer
-             * empty?
-             */
-            if (copyLength == count || in == -1) {
-                return copyLength;
-            }
-
-            int charsCopied = copyLength;
-            /* Copy bytes from 0 to the number of available bytes */
-            copyLength = in - out > count - copyLength ? count - copyLength
-                    : in - out;
-            System.arraycopy(data, out, buffer, offset + charsCopied,
-                    copyLength);
+        int copyLength = 0;
+        /* Copy chars from out to end of buffer first */
+        if (out >= in) {
+            copyLength = count > this.buffer.length - out ? this.buffer.length - out
+                    : count;
+            System.arraycopy(this.buffer, out, buffer, offset, copyLength);
             out += copyLength;
+            if (out == this.buffer.length) {
+                out = 0;
+            }
             if (out == in) {
                 // empty buffer
                 in = -1;
                 out = 0;
             }
-            return charsCopied + copyLength;
         }
+
+        /*
+         * Did the read fully succeed in the previous copy or is the buffer
+         * empty?
+         */
+        if (copyLength == count || in == -1) {
+            return copyLength;
+        }
+
+        int charsCopied = copyLength;
+        /* Copy bytes from 0 to the number of available bytes */
+        copyLength = in - out > count - copyLength ? count - copyLength
+                : in - out;
+        System.arraycopy(this.buffer, out, buffer, offset + charsCopied,
+                copyLength);
+        out += copyLength;
+        if (out == in) {
+            // empty buffer
+            in = -1;
+            out = 0;
+        }
+        return charsCopied + copyLength;
     }
 
     /**
@@ -298,16 +301,14 @@ public class PipedReader extends Reader {
      * @see #read(char[], int, int)
      */
     @Override
-    public boolean ready() throws IOException {
-        synchronized (lock) {
-            if (!isConnected) {
-                throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
-            }
-            if (data == null) {
-                throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
-            }
-            return in != -1;
+    public synchronized boolean ready() throws IOException {
+        if (!isConnected) {
+            throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
         }
+        if (buffer == null) {
+            throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
+        }
+        return in != -1;
     }
 
     /**
@@ -324,43 +325,41 @@ public class PipedReader extends Reader {
      *             If the stream is already closed or another IOException
      *             occurs.
      */
-    void receive(char oneChar) throws IOException {
-        synchronized (lock) {
-            if (data == null) {
-                throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
-            }
-            if (lastReader != null && !lastReader.isAlive()) {
-                throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
-            }
-            /*
-             * Set the last thread to be writing on this PipedWriter. If
-             * lastWriter dies while someone is waiting to read an IOException
-             * of "Pipe broken" will be thrown in read()
-             */
-            lastWriter = Thread.currentThread();
-            try {
-                while (data != null && out == in) {
-                    lock.notifyAll();
-                    // BEGIN android-changed
-                    lock.wait(1000);
-                    // END android-changed
-                    if (lastReader != null && !lastReader.isAlive()) {
-                        throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
-                    }
+    synchronized void receive(char oneChar) throws IOException {
+        if (buffer == null) {
+            throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
+        }
+        if (lastReader != null && !lastReader.isAlive()) {
+            throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
+        }
+        /*
+        * Set the last thread to be writing on this PipedWriter. If
+        * lastWriter dies while someone is waiting to read an IOException
+        * of "Pipe broken" will be thrown in read()
+        */
+        lastWriter = Thread.currentThread();
+        try {
+            while (buffer != null && out == in) {
+                notifyAll();
+                // BEGIN android-changed
+                wait(1000);
+                // END android-changed
+                if (lastReader != null && !lastReader.isAlive()) {
+                    throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
                 }
-            } catch (InterruptedException e) {
-                throw new InterruptedIOException();
             }
-            if (data != null) {
-                if (in == -1) {
-                    in = 0;
-                }
-                data[in++] = oneChar;
-                if (in == data.length) {
-                    in = 0;
-                }
-                return;
-            }
+        } catch (InterruptedException e) {
+            throw new InterruptedIOException();
+        }
+        if (buffer == null) {
+            throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
+        }
+        if (in == -1) {
+            in = 0;
+        }
+        buffer[in++] = oneChar;
+        if (in == buffer.length) {
+            in = 0;
         }
     }
 
@@ -382,80 +381,73 @@ public class PipedReader extends Reader {
      *             If the stream is already closed or another IOException
      *             occurs.
      */
-    void receive(char[] chars, int offset, int count) throws IOException {
-        synchronized (lock) {
-            if (data == null) {
+    synchronized void receive(char[] chars, int offset, int count) throws IOException {
+        if (chars == null) {
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        }
+        if ((offset | count) < 0 || count > chars.length - offset) {
+            throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        }
+        if (buffer == null) {
+            throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
+        }
+        if (lastReader != null && !lastReader.isAlive()) {
+            throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
+        }
+        /**
+         * Set the last thread to be writing on this PipedWriter. If
+         * lastWriter dies while someone is waiting to read an IOException
+         * of "Pipe broken" will be thrown in read()
+         */
+        lastWriter = Thread.currentThread();
+        while (count > 0) {
+            try {
+                while (buffer != null && out == in) {
+                    notifyAll();
+                    // BEGIN android-changed
+                    wait(1000);
+                    // END android-changed
+                    if (lastReader != null && !lastReader.isAlive()) {
+                        throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
+                    }
+                }
+            } catch (InterruptedException e) {
+                throw new InterruptedIOException();
+            }
+            if (buffer == null) {
                 throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
             }
-            if (lastReader != null && !lastReader.isAlive()) {
-                throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
+            if (in == -1) {
+                in = 0;
             }
-            /**
-             * Set the last thread to be writing on this PipedWriter. If
-             * lastWriter dies while someone is waiting to read an IOException
-             * of "Pipe broken" will be thrown in read()
-             */
-            lastWriter = Thread.currentThread();
-            while (count > 0) {
-                try {
-                    while (data != null && out == in) {
-                        lock.notifyAll();
-                        // BEGIN android-changed
-                        lock.wait(1000);
-                        // END android-changed
-                        if (lastReader != null && !lastReader.isAlive()) {
-                            throw new IOException(Msg.getString("K0076")); //$NON-NLS-1$
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    throw new InterruptedIOException();
+            if (in >= out) {
+                int length = buffer.length - in;
+                if (count < length) {
+                    length = count;
                 }
-                if (data == null) {
-                    break;
-                }
-                if (in == -1) {
+                System.arraycopy(chars, offset, buffer, in, length);
+                offset += length;
+                count -= length;
+                in += length;
+                if (in == buffer.length) {
                     in = 0;
                 }
-                if (in >= out) {
-                    int length = data.length - in;
-                    if (count < length) {
-                        length = count;
-                    }
-                    System.arraycopy(chars, offset, data, in, length);
-                    offset += length;
-                    count -= length;
-                    in += length;
-                    if (in == data.length) {
-                        in = 0;
-                    }
-                }
-                if (count > 0 && in != out) {
-                    int length = out - in;
-                    if (count < length) {
-                        length = count;
-                    }
-                    System.arraycopy(chars, offset, data, in, length);
-                    offset += length;
-                    count -= length;
-                    in += length;
-                }
             }
-            if (count == 0) {
-                return;
+            if (count > 0 && in != out) {
+                int length = out - in;
+                if (count < length) {
+                    length = count;
+                }
+                System.arraycopy(chars, offset, buffer, in, length);
+                offset += length;
+                count -= length;
+                in += length;
             }
         }
     }
 
-    void done() {
-        synchronized (lock) {
-            isClosed = true;
-            lock.notifyAll();
-        }
-    }
-
-    void flush() {
-        synchronized (lock) {
-            lock.notifyAll();
-        }
+    synchronized void done() {
+        isClosed = true;
+        notifyAll();
     }
 }

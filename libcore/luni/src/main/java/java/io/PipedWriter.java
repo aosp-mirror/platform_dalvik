@@ -15,6 +15,14 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// We've made several changes including:
+//  - move checks into the synchronized method in PipedReader
+//  - reply on PipedReader's isClosed field (rather than having 2 flags)
+//  - avoid shallow concurrency problems
+//  - improved consistency with PipedOutputStream
+// END android-note
+
 package java.io;
 
 import org.apache.harmony.luni.util.Msg;
@@ -31,8 +39,6 @@ public class PipedWriter extends Writer {
      * The destination PipedReader
      */
     private PipedReader dest;
-
-    private boolean closed;
 
     /**
      * Constructs a new unconnected {@code PipedWriter}. The resulting writer
@@ -70,13 +76,10 @@ public class PipedWriter extends Writer {
      */
     @Override
     public void close() throws IOException {
-        synchronized (lock) {
-            /* Is the pipe connected? */
-            if (dest != null) {
-                dest.done();
-                dest = null;
-            }
-            closed = true;
+        PipedReader reader = dest;
+        if (reader != null) {
+            reader.done();
+            dest = null;
         }
     }
 
@@ -84,22 +87,26 @@ public class PipedWriter extends Writer {
      * Connects this {@code PipedWriter} to a {@link PipedReader}. Any data
      * written to this writer becomes readable in the reader.
      *
-     * @param stream
+     * @param reader
      *            the reader to connect to.
      * @throws IOException
      *             if this writer is closed or already connected, or if {@code
-     *             stream} is already connected.
+     *             reader} is already connected.
      */
-    public void connect(PipedReader stream) throws IOException {
-        synchronized (lock) {
+    public void connect(PipedReader reader) throws IOException {
+        if (reader == null) {
+            throw new NullPointerException();
+        }
+        synchronized (reader) {
             if (this.dest != null) {
                 throw new IOException(Msg.getString("K0079")); //$NON-NLS-1$
             }
-            if (closed) {
+            if (reader.isConnected) {
                 throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
             }
-            stream.establishConnection();
-            this.dest = stream;
+            reader.establishConnection();
+            this.lock = reader;
+            this.dest = reader;
         }
     }
 
@@ -112,8 +119,13 @@ public class PipedWriter extends Writer {
      */
     @Override
     public void flush() throws IOException {
-        if (dest != null) {
-            dest.flush();
+        PipedReader reader = dest;
+        if (reader == null) {
+            return;
+        }
+
+        synchronized (reader) {
+            reader.notifyAll();
         }
     }
 
@@ -150,32 +162,12 @@ public class PipedWriter extends Writer {
      */
     @Override
     public void write(char[] buffer, int offset, int count) throws IOException {
-        // BEGIN android-note
-        // changed array notation to be consistent with the rest of harmony
-        // END android-note
-        synchronized (lock) {
-            if (closed) {
-                throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
-            }
-            if (dest == null) {
-                throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
-            }
-            if (buffer == null) {
-                throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
-            }
-
-            // avoid int overflow
-            // BEGIN android-changed
-            // Exception priorities (in case of multiple errors) differ from
-            // RI, but are spec-compliant.
-            // removed redundant check, used (offset | count) < 0
-            // instead of (offset < 0) || (count < 0) to safe one operation
-            if ((offset | count) < 0 || count > buffer.length - offset) {
-                throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
-            }
-            // END android-changed
-            dest.receive(buffer, offset, count);
+        PipedReader reader = dest;
+        if (reader == null) {
+            // K007b=Pipe Not Connected
+            throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
         }
+        reader.receive(buffer, offset, count);
     }
 
     /**
@@ -200,14 +192,11 @@ public class PipedWriter extends Writer {
      */
     @Override
     public void write(int c) throws IOException {
-        synchronized (lock) {
-            if (closed) {
-                throw new IOException(Msg.getString("K0078")); //$NON-NLS-1$
-            }
-            if (dest == null) {
-                throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
-            }
-            dest.receive((char) c);
+        PipedReader reader = dest;
+        if (reader == null) {
+            // K007b=Pipe Not Connected
+            throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
         }
+        reader.receive((char) c);
     }
 }
