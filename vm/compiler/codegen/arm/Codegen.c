@@ -1440,6 +1440,7 @@ bool handleArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
         default:
             return true;
     }
+    flushAllRegs(cUnit);   /* Send everything to home location */
     loadValueDirectFixed(cUnit, rlSrc1, r0);
     loadValueDirectFixed(cUnit, rlSrc2, r1);
     loadConstant(cUnit, r2, (int)funct);
@@ -1492,6 +1493,7 @@ bool handleArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
         default:
             return true;
     }
+    flushAllRegs(cUnit);   /* Send everything to home location */
     loadConstant(cUnit, rlr, (int)funct);
     loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
     loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
@@ -1584,6 +1586,7 @@ static bool handleArithOpLong(CompilationUnit *cUnit, MIR *mir,
         genLong3Addr(cUnit, firstOp, secondOp, rlDest, rlSrc1, rlSrc2);
     } else {
         // Adjust return regs in to handle case of rem returning r2/r3
+        flushAllRegs(cUnit);   /* Send everything to home location */
         loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
         loadConstant(cUnit, rlr, (int) callTgt);
         loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
@@ -1694,6 +1697,7 @@ static bool handleArithOpInt(CompilationUnit *cUnit, MIR *mir,
         storeValue(cUnit, rlDest, rlResult);
     } else {
         RegLocation rlResult;
+        flushAllRegs(cUnit);   /* Send everything to home location */
         loadValueDirectFixed(cUnit, rlSrc2, r1);
         loadConstant(cUnit, r2, (int) callTgt);
         loadValueDirectFixed(cUnit, rlSrc1, r0);
@@ -1828,6 +1832,7 @@ static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
      */
     RegLocation rlSrc;
     RegLocation rlDest;
+    flushAllRegs(cUnit);   /* Send everything to home location */
     if (srcSize == 1) {
         rlSrc = getSrcLoc(cUnit, mir, 0);
         loadValueDirectFixed(cUnit, rlSrc, r0);
@@ -2240,6 +2245,7 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
 
 static void handleMonitorPortable(CompilationUnit *cUnit, MIR *mir)
 {
+    flushAllRegs(cUnit);   /* Send everything to home location */
     genExportPC(cUnit, mir);
     RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
     loadValueDirectFixed(cUnit, rlSrc, r1);
@@ -2513,6 +2519,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
              * with.  However, Alloc might throw, so we need to genExportPC()
              */
             assert((classPtr->accessFlags & (ACC_INTERFACE|ACC_ABSTRACT)) == 0);
+            flushAllRegs(cUnit);   /* Send everything to home location */
             genExportPC(cUnit, mir);
             loadConstant(cUnit, r2, (int)dvmAllocObject);
             loadConstant(cUnit, r0, (int) classPtr);
@@ -2545,6 +2552,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
              */
             ClassObject *classPtr =
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
+            flushAllRegs(cUnit);   /* Send everything to home location */
             loadConstant(cUnit, r1, (int) classPtr );
             rlSrc = getSrcLoc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
@@ -2925,6 +2933,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
                 genInterpSingleStep(cUnit, mir);
                 return false;
             }
+            flushAllRegs(cUnit);   /* Send everything to home location */
             loadValueDirectFixed(cUnit, rlSrc, r0);
             clobberReg(cUnit, r0);
             if ((dalvikOpCode == OP_DIV_INT_LIT8) ||
@@ -2984,6 +2993,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             void *classPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vC]);
             assert(classPtr != NULL);
+            flushAllRegs(cUnit);   /* Send everything to home location */
             genExportPC(cUnit, mir);
             loadValueDirectFixed(cUnit, rlSrc, r1);   /* Len */
             loadConstant(cUnit, r0, (int) classPtr );
@@ -3023,6 +3033,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             ClassObject *classPtr =
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vC]);
             assert(classPtr != NULL);
+            flushAllRegs(cUnit);   /* Send everything to home location */
             loadValueDirectFixed(cUnit, rlSrc, r0);  /* Ref */
             loadConstant(cUnit, r2, (int) classPtr );
 //TUNING: compare to 0 primative to allow use of CB[N]Z
@@ -3281,14 +3292,23 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
         case OP_FILL_ARRAY_DATA: {
             RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
             // Making a call - use explicit registers
+            flushAllRegs(cUnit);   /* Send everything to home location */
             genExportPC(cUnit, mir);
             loadValueDirectFixed(cUnit, rlSrc, r0);
-            loadConstant(cUnit, r3, (int)dvmInterpHandleFillArrayData);
+            loadConstant(cUnit, r2, (int)dvmInterpHandleFillArrayData);
             loadConstant(cUnit, r1, (mir->dalvikInsn.vB << 1) +
                  (int) (cUnit->method->insns + mir->offset));
             opReg(cUnit, kOpBlx, r2);
             clobberCallRegs(cUnit);
-            genZeroCheck(cUnit, r0, mir->offset, NULL);
+            /* generate a branch over if successful */
+            opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
+            ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+            loadConstant(cUnit, r0,
+                         (int) (cUnit->method->insns + mir->offset));
+            genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
+            ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+            target->defMask = ENCODE_ALL;
+            branchOver->generic.target = (LIR *) target;
             break;
         }
         /*
@@ -3301,6 +3321,7 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
         case OP_PACKED_SWITCH:
         case OP_SPARSE_SWITCH: {
             RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+            flushAllRegs(cUnit);   /* Send everything to home location */
             loadValueDirectFixed(cUnit, rlSrc, r1);
             lockAllTemps(cUnit);
             // Exit to the interpreter, setting up r4PC
@@ -3681,6 +3702,62 @@ static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
 }
 
 /*
+ * This operation is complex enough that we'll do it partly inline
+ * and partly with a handler.  NOTE: the handler uses hardcoded
+ * values for string object offsets and must be revisitied if the
+ * layout changes.
+ */
+static bool genInlinedCompareTo(CompilationUnit *cUnit, MIR *mir)
+{
+#if defined(USE_GLOBAL_STRING_DEFS)
+    return false;
+#else
+    ArmLIR *rollback;
+    RegLocation rlThis = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlComp = getSrcLoc(cUnit, mir, 1);
+
+    loadValueDirectFixed(cUnit, rlThis, r0);
+    loadValueDirectFixed(cUnit, rlComp, r1);
+    /* Test objects for NULL */
+    rollback = genNullCheck(cUnit, rlThis.sRegLow, r0, mir->offset, NULL);
+    genNullCheck(cUnit, rlComp.sRegLow, r1, mir->offset, rollback);
+    /*
+     * TUNING: we could check for object pointer equality before invoking
+     * handler. Unclear whether the gain would be worth the added code size
+     * expansion.
+     */
+    genDispatchToHandler(cUnit, TEMPLATE_STRING_COMPARETO);
+    storeValue(cUnit, inlinedTarget(cUnit, mir, false), getReturnLoc(cUnit));
+    return true;
+#endif
+}
+
+static bool genInlinedIndexOf(CompilationUnit *cUnit, MIR *mir, bool singleI)
+{
+#if defined(USE_GLOBAL_STRING_DEFS)
+    return false;
+#else
+    RegLocation rlThis = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlChar = getSrcLoc(cUnit, mir, 1);
+
+    loadValueDirectFixed(cUnit, rlThis, r0);
+    loadValueDirectFixed(cUnit, rlChar, r1);
+    if (!singleI) {
+        RegLocation rlStart = getSrcLoc(cUnit, mir, 2);
+        loadValueDirectFixed(cUnit, rlStart, r2);
+    } else {
+        loadConstant(cUnit, r2, 0);
+    }
+    /* Test objects for NULL */
+    genNullCheck(cUnit, rlThis.sRegLow, r0, mir->offset, NULL);
+    genDispatchToHandler(cUnit, TEMPLATE_STRING_INDEXOF);
+    storeValue(cUnit, inlinedTarget(cUnit, mir, false), getReturnLoc(cUnit));
+    return true;
+#endif
+}
+
+
+/*
  * NOTE: We assume here that the special native inline routines
  * are side-effect free.  By making this assumption, we can safely
  * re-execute the routine from the interpreter if it decides it
@@ -3717,9 +3794,6 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
                         return false;
                     else
                         break;   /* Handle with C routine */
-                case INLINE_MATH_COS:
-                case INLINE_MATH_SIN:
-                        break;   /* Handle with C routine */
                 case INLINE_MATH_ABS_FLOAT:
                     if (genInlinedAbsFloat(cUnit, mir))
                         return false;
@@ -3731,13 +3805,28 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
                     else
                         break;
                 case INLINE_STRING_COMPARETO:
-                case INLINE_STRING_EQUALS:
+                    if (genInlinedCompareTo(cUnit, mir))
+                        return false;
+                    else
+                        break;
                 case INLINE_STRING_INDEXOF_I:
+                    if (genInlinedIndexOf(cUnit, mir, true /* I */))
+                        return false;
+                    else
+                        break;
                 case INLINE_STRING_INDEXOF_II:
-                    break;
+                    if (genInlinedIndexOf(cUnit, mir, false /* I */))
+                        return false;
+                    else
+                        break;
+                case INLINE_STRING_EQUALS:
+                case INLINE_MATH_COS:
+                case INLINE_MATH_SIN:
+                    break;   /* Handle with C routine */
                 default:
                     dvmAbort();
             }
+            flushAllRegs(cUnit);   /* Send everything to home location */
             clobberCallRegs(cUnit);
             clobberReg(cUnit, r4PC);
             clobberReg(cUnit, r7);

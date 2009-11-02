@@ -1072,6 +1072,211 @@ dvmCompiler_TEMPLATE_RESTORE_STATE:
     ldmia   r0, {r0-r12}
     bx      lr
 
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_STRING_COMPARETO
+dvmCompiler_TEMPLATE_STRING_COMPARETO:
+/* File: armv5te/TEMPLATE_STRING_COMPARETO.S */
+    /*
+     * String's compareTo.
+     *
+     * Requires r0/r1 to have been previously checked for null.  Will
+     * return negative if this's string is < comp, 0 if they are the
+     * same and positive if >.
+     *
+     * IMPORTANT NOTE:
+     *
+     * This code relies on hard-coded offsets for string objects, and must be
+     * kept in sync with definitions in UtfString.h.  See asm-constants.h
+     *
+     * On entry:
+     *    r0:   this object pointer
+     *    r1:   comp object pointer
+     *
+     */
+
+    mov    r2, r0         @ this to r2, opening up r0 for return value
+    subs   r0, r2, r1     @ Same?
+    bxeq   lr
+
+    ldr    r4, [r2, #STRING_FIELDOFF_OFFSET]
+    ldr    r9, [r1, #STRING_FIELDOFF_OFFSET]
+    ldr    r7, [r2, #STRING_FIELDOFF_COUNT]
+    ldr    r10, [r1, #STRING_FIELDOFF_COUNT]
+    ldr    r2, [r2, #STRING_FIELDOFF_VALUE]
+    ldr    r1, [r1, #STRING_FIELDOFF_VALUE]
+
+    /*
+     * At this point, we have:
+     *    value:  r2/r1
+     *    offset: r4/r9
+     *    count:  r7/r10
+     * We're going to compute
+     *    r11 <- countDiff
+     *    r10 <- minCount
+     */
+     subs  r11, r7, r10
+     movls r10, r7
+
+     /* Now, build pointers to the string data */
+     add   r2, r2, r4, lsl #1
+     add   r1, r1, r9, lsl #1
+     /*
+      * Note: data pointers point to previous element so we can use pre-index
+      * mode with base writeback.
+      */
+     add   r2, #16-2   @ offset to contents[-1]
+     add   r1, #16-2   @ offset to contents[-1]
+
+     /*
+      * At this point we have:
+      *   r2: *this string data
+      *   r1: *comp string data
+      *   r10: iteration count for comparison
+      *   r11: value to return if the first part of the string is equal
+      *   r0: reserved for result
+      *   r3, r4, r7, r8, r9, r12 available for loading string data
+      */
+
+    cmp   r10, #3
+    blt   do_remainder
+loopback_triple:
+    ldrh  r3, [r2, #2]!
+    ldrh  r4, [r1, #2]!
+    ldrh  r7, [r2, #2]!
+    ldrh  r8, [r1, #2]!
+    ldrh  r9, [r2, #2]!
+    ldrh  r12,[r1, #2]!
+    subs  r0, r3, r4
+    subeqs  r0, r7, r8
+    subeqs  r0, r9, r12
+    bxne  lr
+    subs  r10, #3
+    bgt   loopback_triple
+
+do_remainder:
+    cmp   r10, #0
+    beq   returnDiff
+
+loopback_single:
+    ldrh  r3, [r2, #2]!
+    ldrh  r4, [r1, #2]!
+    subs  r0, r3, r4
+    bxne  lr
+    subs  r10, #1
+    bne     loopback_single
+
+returnDiff:
+    mov   r0, r11
+    bx    lr
+
+
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_STRING_INDEXOF
+dvmCompiler_TEMPLATE_STRING_INDEXOF:
+/* File: armv5te/TEMPLATE_STRING_INDEXOF.S */
+    /*
+     * String's indexOf.
+     *
+     * Requires r0 to have been previously checked for null.  Will
+     * return index of match of r1 in r0.
+     *
+     * IMPORTANT NOTE:
+     *
+     * This code relies on hard-coded offsets for string objects, and must be
+     * kept in sync wth definitions in UtfString.h  See asm-constants.h
+     *
+     * On entry:
+     *    r0:   string object pointer
+     *    r1:   char to match
+     *    r2:   Starting offset in string data
+     */
+
+    ldr    r7, [r0, #STRING_FIELDOFF_OFFSET]
+    ldr    r8, [r0, #STRING_FIELDOFF_COUNT]
+    ldr    r0, [r0, #STRING_FIELDOFF_VALUE]
+
+    /*
+     * At this point, we have:
+     *    value:  r0
+     *    offset: r7
+     *    count:  r8
+     */
+
+     /* Clamp start to [0..count] */
+     cmp   r2, #0
+     movlt r2, #0
+     cmp   r2, r8
+     movgt r2, r0
+
+     /* Fold start & offset, and set data pointer to contents[-1] */
+     add   r2, r7
+     add   r0, r0, r2, lsl #1
+     add   r0, #16-2   @ offset to contents[-1]
+     add   r2, r0, #2  @ remember true start of data
+
+     /*
+      * At this point we have:
+      *   r0: *next[-1] char to test
+      *   r2: *start
+      *   r1: char to compare
+      *   r8: max count
+      *   r3, r4, r7, r9, r12 available for loading string data
+      */
+
+    /* Unroll x 4 */
+
+    cmp   r8, #4
+    blt   do_rest
+loopback_quad:
+    ldrh  r3, [r0, #2]!
+    ldrh  r4, [r0, #2]!
+    ldrh  r7, [r0, #2]!
+    ldrh  r9, [r0, #2]!
+    cmp   r3, r1
+    beq   match_0
+    cmp   r4, r1
+    beq   match_1
+    cmp   r7, r1
+    beq   match_2
+    cmp   r9, r1
+    beq   match_3
+    subs  r8, #4
+    bgt   loopback_quad
+
+do_rest:
+    cmp   r8, #0
+    beq   no_match
+
+loopback_indexof:
+    ldrh  r3, [r0, #2]!
+    cmp   r3, r1
+    beq   match_3
+    subs  r8, #1
+    bne     loopback_indexof
+
+no_match:
+    mov   r0, #-1
+    bx    lr
+
+match_0:
+    sub   r0, #6
+    sub   r0, r2
+    bx    lr
+match_1:
+    sub   r0, #4
+    sub   r0, r2
+    bx    lr
+match_2:
+    sub   r0, #2
+    sub   r0, r2
+    bx    lr
+match_3:
+    sub   r0, r2
+    bx    lr
+
+
     .size   dvmCompilerTemplateStart, .-dvmCompilerTemplateStart
 /* File: armv5te/footer.S */
 /*
