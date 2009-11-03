@@ -289,11 +289,7 @@ final class OSNetworkSystem implements INetworkSystem {
     static native Object getSocketOptionImpl(FileDescriptor aFD, int opt)
             throws SocketException;
 
-    public Channel inheritedChannel() {
-        return inheritedChannelImpl();
-    }
-
-    native Channel inheritedChannelImpl();
+    public native Channel inheritedChannel();
 
     // BEGIN android-removed
     // public boolean isReachableByICMP(final InetAddress dest,
