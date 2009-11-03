@@ -148,7 +148,6 @@ public class GregorianCalendarTest extends junit.framework.TestCase {
         method = "GregorianCalendar",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_ConstructorLjava_util_Locale() {
         // Test for method java.util.GregorianCalendar(java.util.Locale)
         Date date = new Date();
