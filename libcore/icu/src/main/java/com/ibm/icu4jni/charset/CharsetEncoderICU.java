@@ -328,9 +328,11 @@ public final class CharsetEncoderICU extends CharsetEncoder {
     //------------------------------------------
     private final int getArray(ByteBuffer out) {
         if(out.hasArray()){
+            // BEGIN android-changed: take arrayOffset into account
             output = out.array();
-            outEnd = out.limit();
-            return out.position();
+            outEnd = out.arrayOffset() + out.limit();
+            return out.arrayOffset() + out.position();
+            // END android-changed
         }else{
             outEnd = out.remaining();
             // BEGIN android-added
@@ -348,9 +350,11 @@ public final class CharsetEncoderICU extends CharsetEncoder {
 
     private final int getArray(CharBuffer in) {
         if(in.hasArray()){
+            // BEGIN android-changed: take arrayOffset into account
             input = in.array();
-            inEnd = in.limit();
-            return in.position()+savedInputHeldLen;/*exclude the number fo bytes held in previous conversion*/
+            inEnd = in.arrayOffset() + in.limit();
+            return in.arrayOffset() + in.position() + savedInputHeldLen;/*exclude the number fo bytes held in previous conversion*/
+            // END android-changed
         }else{
             inEnd = in.remaining();
             // BEGIN android-added
@@ -378,7 +382,9 @@ public final class CharsetEncoderICU extends CharsetEncoder {
             // array backing the buffer directly and wrote to 
             // it, so just just set the position and return.
             // This is done to avoid the creation of temp array.
-            out.position(out.position() + data[OUTPUT_OFFSET] );
+            // BEGIN android-changed: take arrayOffset into account
+            out.position(out.position() + data[OUTPUT_OFFSET] - out.arrayOffset());
+            // END android-changed
         } else {
             out.put(output, 0, data[OUTPUT_OFFSET]);
         }
