@@ -1830,7 +1830,6 @@ public class DecimalFormatTest extends TestCase {
         method = "formatToCharacterIterator",
         args = {java.lang.Object.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatToCharacterIteratorLjava_lang_Object() {
 
         try {
@@ -2461,7 +2460,6 @@ public class DecimalFormatTest extends TestCase {
         method = "!SerializationGolden",
         args = {}
     )
-    @KnownFailure("a regression. This didn't fail before")
     public void test_serializationHarmonyRICompatible() throws Exception {
         NumberFormat nf = NumberFormat.getInstance(Locale.FRANCE);
 

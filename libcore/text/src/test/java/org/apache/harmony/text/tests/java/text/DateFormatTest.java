@@ -182,7 +182,6 @@ public class DateFormatTest extends junit.framework.TestCase {
         method = "getAvailableLocales",
         args = {}
     )
-    @KnownFailure("German locales were removed last minute in cupcake")
     public void test_getAvailableLocales() {
         Locale[] locales = DateFormat.getAvailableLocales();
         assertTrue("No locales", locales.length > 0);

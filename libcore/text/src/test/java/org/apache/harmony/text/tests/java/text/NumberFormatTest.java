@@ -143,7 +143,6 @@ public class NumberFormatTest extends TestCase {
         method = "getIntegerInstance",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getIntegerInstanceLjava_util_Locale()
             throws ParseException {
         // Test for method java.text.NumberFormat
@@ -319,7 +318,6 @@ public class NumberFormatTest extends TestCase {
         method = "parseObject",
         args = {java.lang.String.class, java.text.ParsePosition.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_parseObjectLjava_lang_StringLjava_text_ParsePosition() {
         // regression test for HARMONY-1003
         assertNull(NumberFormat.getInstance().parseObject("0",
@@ -452,7 +450,6 @@ public class NumberFormatTest extends TestCase {
         method = "format",
         args = {double.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLdouble() {
         // BEGIN android-changed
         NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
@@ -492,7 +489,6 @@ public class NumberFormatTest extends TestCase {
         method = "format",
         args = {long.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLlong() {
         // BEGIN android-changed
         NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
@@ -591,7 +587,6 @@ public class NumberFormatTest extends TestCase {
         method = "getCurrencyInstance",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getCurrencyInstanceLjava_util_Locale() {
         // BEGIN android-changed
         Locale usLocale = Locale.US;
@@ -693,7 +688,6 @@ public class NumberFormatTest extends TestCase {
         method = "getInstance",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getInstanceLjava_util_Locale() {
         // BEGIN android-changed
         Locale.setDefault(Locale.US);
@@ -770,7 +764,6 @@ public class NumberFormatTest extends TestCase {
         method = "getNumberInstance",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getNumberInstanceLjava_util_Locale() {
         // BEGIN android-changed
         Locale.setDefault(Locale.US);
@@ -849,7 +842,6 @@ public class NumberFormatTest extends TestCase {
         method = "getPercentInstance",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getPercentInstanceLjava_util_Locale() {
         Locale.setDefault(Locale.US);
         NumberFormat format = NumberFormat.getPercentInstance(new Locale("cs",
@@ -1061,7 +1053,6 @@ public class NumberFormatTest extends TestCase {
         method = "setGroupingUsed",
         args = {boolean.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_setGroupingUsed() {
         NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
         nf1.setGroupingUsed(false);

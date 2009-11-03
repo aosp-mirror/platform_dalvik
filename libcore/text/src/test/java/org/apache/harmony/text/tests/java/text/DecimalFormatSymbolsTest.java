@@ -146,7 +146,6 @@ public class DecimalFormatSymbolsTest extends TestCase {
         method = "getCurrency",
         args = {}
     )
-    @KnownFailure("some locales were removed last minute in cupcake")
     public void test_getCurrency() {
         Currency currency = Currency.getInstance("USD");
         assertEquals("Returned incorrect currency",

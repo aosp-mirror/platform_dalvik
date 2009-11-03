@@ -1107,7 +1107,6 @@ public class PrintWriterTest extends junit.framework.TestCase {
         method = "format",
         args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
         PrintWriter tobj;
 
@@ -1219,7 +1218,6 @@ public class PrintWriterTest extends junit.framework.TestCase {
         method = "printf",
         args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_printfLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
         PrintWriter tobj;
 
