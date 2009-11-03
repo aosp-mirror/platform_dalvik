@@ -26,6 +26,7 @@ mkdir $tmp
 chmod 777 $tmp
   
 exec dalvikvm \
+     -Duser.name=root \
      -Duser.language=en \
      -Duser.region=US \
      -Djava.io.tmpdir=$tmp \
