@@ -30,6 +30,18 @@
 
 #include <net/if.h> // Note: Can't appear before <sys/socket.h> on OS X.
 
+// There are several ways that an interface index might be referenced
+// out of an ifreq struct, depending on the platform.
+#if defined(ifr_ifindex)
+// Linux: No need to do anything.
+#elif defined(ifr_index)
+#define ifr_ifindex ifr_index // BSD
+#elif defined(ifr_intval)
+#define ifr_ifindex ifr_intval // OS X
+#else
+#error "Unknown how to refer to an interface index on this platform."
+#endif
+
 // A smart pointer that closes the given fd on going out of scope.
 // TODO: make this generally available.
 class scoped_fd {
