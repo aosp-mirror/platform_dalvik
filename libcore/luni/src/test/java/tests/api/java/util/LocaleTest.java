@@ -258,7 +258,6 @@ public class LocaleTest extends junit.framework.TestCase {
         method = "getDisplayCountry",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayCountryLjava_util_Locale() {
         // Test for method java.lang.String
         // java.util.Locale.getDisplayCountry(java.util.Locale)
@@ -296,7 +295,6 @@ public class LocaleTest extends junit.framework.TestCase {
         method = "getDisplayLanguage",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayLanguageLjava_util_Locale() {
         // Test for method java.lang.String
         // java.util.Locale.getDisplayLanguage(java.util.Locale)
@@ -329,7 +327,6 @@ public class LocaleTest extends junit.framework.TestCase {
         method = "getDisplayName",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayNameLjava_util_Locale() {
         // Test for method java.lang.String
         // java.util.Locale.getDisplayName(java.util.Locale)
@@ -646,5 +643,3 @@ public class LocaleTest extends junit.framework.TestCase {
         Locale.setDefault(defaultLocale);
     }
 }
-
-

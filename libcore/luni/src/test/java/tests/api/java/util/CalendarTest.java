@@ -900,7 +900,6 @@ public class CalendarTest extends junit.framework.TestCase {
             args = {}
         )
     })
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getFirstDayOfWeek() {
         Calendar cal = Calendar.getInstance();
 
@@ -917,7 +916,6 @@ public class CalendarTest extends junit.framework.TestCase {
         method = "getInstance",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getInstanceLjava_util_Locale() {
         Calendar cal1 = Calendar.getInstance(Locale.FRANCE);
         Locale.setDefault(Locale.FRANCE);
@@ -946,7 +944,6 @@ public class CalendarTest extends junit.framework.TestCase {
         method = "getInstance",
         args = {java.util.TimeZone.class, java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getInstanceLjava_util_TimeZoneLjava_util_Locale() {
         Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT-6"), Locale.FRANCE);
         Locale.setDefault(Locale.FRANCE);
@@ -965,7 +962,6 @@ public class CalendarTest extends junit.framework.TestCase {
         method = "getMinimalDaysInFirstWeek",
         args = {}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getMinimalDaysInFirstWeek() {
         Calendar cal = Calendar.getInstance();
         assertTrue(cal.getMinimalDaysInFirstWeek()==1);
@@ -1011,7 +1007,6 @@ public class CalendarTest extends junit.framework.TestCase {
         method = "hashCode",
         args = {}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hashCode() {
         Calendar cal1 = Calendar.getInstance();
         Locale.setDefault(Locale.FRANCE);
