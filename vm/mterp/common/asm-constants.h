@@ -235,6 +235,7 @@ MTERP_CONSTANT(STRING_FIELDOFF_HASHCODE, 12)
 MTERP_CONSTANT(STRING_FIELDOFF_OFFSET,   16)
 MTERP_CONSTANT(STRING_FIELDOFF_COUNT,    20)
 
+#if defined(WITH_JIT)
 /*
  * Reasons for the non-chaining interpreter entry points
  * Enums defined in vm/Globals.h
@@ -242,6 +243,7 @@ MTERP_CONSTANT(STRING_FIELDOFF_COUNT,    20)
 MTERP_CONSTANT(kInlineCacheMiss,        0)
 MTERP_CONSTANT(kCallsiteInterpreted,    1)
 MTERP_CONSTANT(kSwitchOverflow,         2)
+#endif
 
 /* ClassObject fields */
 MTERP_OFFSET(offClassObject_descriptor, ClassObject, descriptor, 24)
