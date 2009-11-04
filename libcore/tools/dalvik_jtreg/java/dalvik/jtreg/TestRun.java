@@ -59,7 +59,7 @@ public final class TestRun {
      * Initializes the on-device base directory from which the test program
      * shall be executed, and the dex file containing that program.
      */
-    public void initInstalledFiles(File base, File deviceDex) {
+    public void setInstalledFiles(File base, File deviceDex) {
         if (this.base != null) {
             throw new IllegalStateException();
         }
@@ -90,11 +90,11 @@ public final class TestRun {
         return deviceDex;
     }
 
-    public void initResult(Result result, Exception e) {
-        initResult(result, throwableToLines(e));
+    public void setResult(Result result, Throwable e) {
+        setResult(result, throwableToLines(e));
     }
 
-    public void initResult(Result result, List<String> outputLines) {
+    public void setResult(Result result, List<String> outputLines) {
         if (this.result != null) {
             throw new IllegalStateException();
         }
