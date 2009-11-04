@@ -1481,6 +1481,8 @@ u4* dvmJitUnchain(void* codeAddr)
                     break;
 #endif
                 default:
+                    targetOffset = 0; // make gcc happy
+                    LOGE("Unexpected chaining type: %d", i);
                     dvmAbort();
             }
             COMPILER_TRACE_CHAINING(
