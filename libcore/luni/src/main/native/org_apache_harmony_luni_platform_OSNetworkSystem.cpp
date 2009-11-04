@@ -51,6 +51,25 @@
 #endif
 #endif
 
+/*
+ * The contents of a struct in6_addr are fairly uniform across
+ * platforms, but the member names and convenience macros to access
+ * its embedded union are not. The following definition has been
+ * checked for correctness on OS X and FreeBSD, but it may not work on
+ * other platforms.
+ */
+#ifndef s6_addr32
+#define s6_addr32 __u6_addr.__u6_addr32
+#endif
+
+/*
+ * TODO: The multicast code is highly platform-dependent, and for now
+ * we just punt on anything but Linux.
+ */
+#ifdef __linux__
+#define ENABLE_MULTICAST
+#endif
+
 /**
  * @name Socket Errors
  * Error codes for socket operations
@@ -1213,6 +1232,7 @@ static int getOrSetSocketOption(int action, int socket, int ipv4Option,
     return ret;
 }
 
+#ifdef ENABLE_MULTICAST
 /*
  * Find the interface index that was set for this socket by the IP_MULTICAST_IF
  * or IPV6_MULTICAST_IF socket option.
@@ -1271,7 +1291,7 @@ static int interfaceIndexFromMulticastSocket(int socket) {
  *
  * @exception SocketException if an error occurs during the call
  */
-static void mcastAddDropMembership (JNIEnv * env, int handle, jobject optVal,
+static void mcastAddDropMembership(JNIEnv *env, int handle, jobject optVal,
         int ignoreIF, int setSockOptVal) {
     struct sockaddr_storage sockaddrP;
     int result;
@@ -1398,6 +1418,7 @@ static void mcastAddDropMembership (JNIEnv * env, int handle, jobject optVal,
         }
     }
 }
+#endif // def ENABLE_MULTICAST
 
 static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
         jboolean jcl_supports_ipv6) {
@@ -2348,7 +2369,7 @@ static bool initFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set* fdS
     return true;
 }
 
-static bool translateFdSet(JNIEnv* env, jobjectArray fdArray, jint count, const fd_set& fdSet, jint* flagArray, size_t offset, jint op) {
+static bool translateFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set& fdSet, jint* flagArray, size_t offset, jint op) {
     for (int i = 0; i < count; ++i) {
         jobject fileDescriptor = env->GetObjectArrayElement(fdArray, i);
         if (fileDescriptor == NULL) {
@@ -2357,7 +2378,12 @@ static bool translateFdSet(JNIEnv* env, jobjectArray fdArray, jint count, const 
         
         const int fd = jniGetFDFromFileDescriptor(env, fileDescriptor);
         const bool valid = fd >= 0 && fd < 1024;
-        
+
+        /*
+         * Note: On Linux, FD_ISSET() is sane and takes a (const fd_set *)
+         * but the argument isn't const on all platforms, even though
+         * the function doesn't ever modify the argument.
+         */
         if (valid && FD_ISSET(fd, &fdSet)) {
             flagArray[i + offset] = op;
         } else {
@@ -2486,6 +2512,7 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
             }
             return newJavaLangInteger(env, intValue);
         }
+
         case JAVASOCKOPT_TCP_NODELAY: {
             if ((anOption >> 16) & BROKEN_TCP_NODELAY) {
                 return NULL;
@@ -2497,6 +2524,83 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
             }
             return newJavaLangBoolean(env, intValue);
         }
+
+        case JAVASOCKOPT_SO_SNDBUF: {
+            result = getsockopt(handle, SOL_SOCKET, SO_SNDBUF, &intValue, &intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return NULL;
+            }
+            return newJavaLangInteger(env, intValue);
+        }
+
+        case JAVASOCKOPT_SO_RCVBUF: {
+            result = getsockopt(handle, SOL_SOCKET, SO_RCVBUF, &intValue, &intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return NULL;
+            }
+            return newJavaLangInteger(env, intValue);
+        }
+
+        case JAVASOCKOPT_SO_BROADCAST: {
+            result = getsockopt(handle, SOL_SOCKET, SO_BROADCAST, &intValue, &intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return NULL;
+            }
+            return newJavaLangBoolean(env, intValue);
+        }
+
+        case JAVASOCKOPT_SO_REUSEADDR: {
+            result = getsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &intValue, &intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return NULL;
+            }
+            return newJavaLangBoolean(env, intValue);
+        }
+
+        case JAVASOCKOPT_SO_KEEPALIVE: {
+            result = getsockopt(handle, SOL_SOCKET, SO_KEEPALIVE, &intValue, &intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return NULL;
+            }
+            return newJavaLangBoolean(env, intValue);
+        }
+
+        case JAVASOCKOPT_SO_OOBINLINE: {
+            result = getsockopt(handle, SOL_SOCKET, SO_OOBINLINE, &intValue, &intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return NULL;
+            }
+            return newJavaLangBoolean(env, intValue);
+        }
+
+        case JAVASOCKOPT_IP_TOS: {
+            result = getOrSetSocketOption(SOCKOPT_GET, handle, IP_TOS,
+                                          IPV6_TCLASS, &intValue, &intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return NULL;
+            }
+            return newJavaLangInteger(env, intValue);
+        }
+
+        case JAVASOCKOPT_SO_RCVTIMEOUT: {
+            struct timeval timeout;
+            socklen_t size = sizeof(timeout);
+            result = getsockopt(handle, SOL_SOCKET, SO_RCVTIMEO, &timeout, &size);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return NULL;
+            }
+            return newJavaLangInteger(env, toMs(timeout));
+        }
+
+#ifdef ENABLE_MULTICAST
         case JAVASOCKOPT_MCAST_TTL: {
             if ((anOption >> 16) & BROKEN_MULTICAST_TTL) {
                 return newJavaLangByte(env, 0);
@@ -2511,6 +2615,7 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
             }
             return newJavaLangByte(env, (jbyte)(intValue & 0xFF));
         }
+
         case JAVASOCKOPT_IP_MULTICAST_IF: {
             if ((anOption >> 16) & BROKEN_MULTICAST_IF) {
                 return NULL;
@@ -2528,6 +2633,7 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
             }
             return socketAddressToInetAddress(env, &sockVal);
         }
+
         case JAVASOCKOPT_IP_MULTICAST_IF2: {
             if ((anOption >> 16) & BROKEN_MULTICAST_IF) {
                 return NULL;
@@ -2560,54 +2666,7 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
             }
             return newJavaLangInteger(env, interfaceIndex);
         }
-        case JAVASOCKOPT_SO_SNDBUF: {
-            result = getsockopt(handle, SOL_SOCKET, SO_SNDBUF, &intValue, &intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return NULL;
-            }
-            return newJavaLangInteger(env, intValue);
-        }
-        case JAVASOCKOPT_SO_RCVBUF: {
-            result = getsockopt(handle, SOL_SOCKET, SO_RCVBUF, &intValue, &intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return NULL;
-            }
-            return newJavaLangInteger(env, intValue);
-        }
-        case JAVASOCKOPT_SO_BROADCAST: {
-            result = getsockopt(handle, SOL_SOCKET, SO_BROADCAST, &intValue, &intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return NULL;
-            }
-            return newJavaLangBoolean(env, intValue);
-        }
-        case JAVASOCKOPT_SO_REUSEADDR: {
-            result = getsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &intValue, &intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return NULL;
-            }
-            return newJavaLangBoolean(env, intValue);
-        }
-        case JAVASOCKOPT_SO_KEEPALIVE: {
-            result = getsockopt(handle, SOL_SOCKET, SO_KEEPALIVE, &intValue, &intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return NULL;
-            }
-            return newJavaLangBoolean(env, intValue);
-        }
-        case JAVASOCKOPT_SO_OOBINLINE: {
-            result = getsockopt(handle, SOL_SOCKET, SO_OOBINLINE, &intValue, &intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return NULL;
-            }
-            return newJavaLangBoolean(env, intValue);
-        }
+
         case JAVASOCKOPT_IP_MULTICAST_LOOP: {
             result = getOrSetSocketOption(SOCKOPT_GET, handle,
                                           IP_MULTICAST_LOOP,
@@ -2619,25 +2678,16 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
             }
             return newJavaLangBoolean(env, intValue);
         }
-        case JAVASOCKOPT_IP_TOS: {
-            result = getOrSetSocketOption(SOCKOPT_GET, handle, IP_TOS,
-                                          IPV6_TCLASS, &intValue, &intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return NULL;
-            }
-            return newJavaLangInteger(env, intValue);
+#else
+        case JAVASOCKOPT_MCAST_TTL:
+        case JAVASOCKOPT_IP_MULTICAST_IF:
+        case JAVASOCKOPT_IP_MULTICAST_IF2:
+        case JAVASOCKOPT_IP_MULTICAST_LOOP: {
+            jniThrowSocketException(env, EAFNOSUPPORT);
+            return NULL;
         }
-        case JAVASOCKOPT_SO_RCVTIMEOUT: {
-            struct timeval timeout;
-            socklen_t size = sizeof(timeout);
-            result = getsockopt(handle, SOL_SOCKET, SO_RCVTIMEO, &timeout, &size);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return NULL;
-            }
-            return newJavaLangInteger(env, toMs(timeout));
-        }
+#endif // def ENABLE_MULTICAST
+
         default: {
             jniThrowSocketException(env, ENOPROTOOPT);
             return NULL;
@@ -2705,6 +2755,91 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
             break;
         }
 
+        case JAVASOCKOPT_SO_SNDBUF: {
+            result = setsockopt(handle, SOL_SOCKET, SO_SNDBUF, &intVal, intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return;
+            }
+            break;
+        }
+
+        case JAVASOCKOPT_SO_RCVBUF: {
+            result = setsockopt(handle, SOL_SOCKET, SO_RCVBUF, &intVal, intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return;
+            }
+            break;
+        }
+
+        case JAVASOCKOPT_SO_BROADCAST: {
+            result = setsockopt(handle, SOL_SOCKET, SO_BROADCAST, &intVal, intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return;
+            }
+            break;
+        }
+
+        case JAVASOCKOPT_SO_REUSEADDR: {
+            result = setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &intVal, intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return;
+            }
+            break;
+        }
+        case JAVASOCKOPT_SO_KEEPALIVE: {
+            result = setsockopt(handle, SOL_SOCKET, SO_KEEPALIVE, &intVal, intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return;
+            }
+            break;
+        }
+
+        case JAVASOCKOPT_SO_OOBINLINE: {
+            result = setsockopt(handle, SOL_SOCKET, SO_OOBINLINE, &intVal, intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return;
+            }
+            break;
+        }
+
+        case JAVASOCKOPT_IP_TOS: {
+            result = getOrSetSocketOption(SOCKOPT_SET, handle, IP_TOS,
+                                          IPV6_TCLASS, &intVal, &intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return;
+            }
+            break;
+        }
+
+        case JAVASOCKOPT_REUSEADDR_AND_REUSEPORT: {
+            // SO_REUSEPORT doesn't need to get set on this System
+            result = setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &intVal, intSize);
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return;
+            }
+            break;
+        }
+
+        case JAVASOCKOPT_SO_RCVTIMEOUT: {
+            timeval timeout(toTimeval(intVal));
+            result = setsockopt(handle, SOL_SOCKET, SO_RCVTIMEO, &timeout,
+                    sizeof(struct timeval));
+            if (0 != result) {
+                jniThrowSocketException(env, errno);
+                return;
+            }
+            break;
+        }
+
+#ifdef ENABLE_MULTICAST
         case JAVASOCKOPT_MCAST_TTL: {
             if ((anOption >> 16) & BROKEN_MULTICAST_TTL) {
                 return;
@@ -2790,59 +2925,6 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
             break;
         }
 
-        case JAVASOCKOPT_SO_SNDBUF: {
-            result = setsockopt(handle, SOL_SOCKET, SO_SNDBUF, &intVal, intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return;
-            }
-            break;
-        }
-
-        case JAVASOCKOPT_SO_RCVBUF: {
-            result = setsockopt(handle, SOL_SOCKET, SO_RCVBUF, &intVal, intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return;
-            }
-            break;
-        }
-
-        case JAVASOCKOPT_SO_BROADCAST: {
-            result = setsockopt(handle, SOL_SOCKET, SO_BROADCAST, &intVal, intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return;
-            }
-            break;
-        }
-
-        case JAVASOCKOPT_SO_REUSEADDR: {
-            result = setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &intVal, intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return;
-            }
-            break;
-        }
-        case JAVASOCKOPT_SO_KEEPALIVE: {
-            result = setsockopt(handle, SOL_SOCKET, SO_KEEPALIVE, &intVal, intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return;
-            }
-            break;
-        }
-
-        case JAVASOCKOPT_SO_OOBINLINE: {
-            result = setsockopt(handle, SOL_SOCKET, SO_OOBINLINE, &intVal, intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return;
-            }
-            break;
-        }
-
         case JAVASOCKOPT_IP_MULTICAST_LOOP: {
             result = getOrSetSocketOption(SOCKOPT_SET, handle,
                                           IP_MULTICAST_LOOP,
@@ -2854,37 +2936,17 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
             }
             break;
         }
-
-        case JAVASOCKOPT_IP_TOS: {
-            result = getOrSetSocketOption(SOCKOPT_SET, handle, IP_TOS,
-                                          IPV6_TCLASS, &intVal, &intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return;
-            }
-            break;
+#else
+        case JAVASOCKOPT_MCAST_TTL:
+        case JAVASOCKOPT_MCAST_ADD_MEMBERSHIP:
+        case JAVASOCKOPT_MCAST_DROP_MEMBERSHIP:
+        case JAVASOCKOPT_IP_MULTICAST_IF:
+        case JAVASOCKOPT_IP_MULTICAST_IF2:
+        case JAVASOCKOPT_IP_MULTICAST_LOOP: {
+            jniThrowSocketException(env, EAFNOSUPPORT);
+            return;
         }
-
-        case JAVASOCKOPT_REUSEADDR_AND_REUSEPORT: {
-            // SO_REUSEPORT doesn't need to get set on this System
-            result = setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &intVal, intSize);
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return;
-            }
-            break;
-        }
-
-        case JAVASOCKOPT_SO_RCVTIMEOUT: {
-            timeval timeout(toTimeval(intVal));
-            result = setsockopt(handle, SOL_SOCKET, SO_RCVTIMEO, &timeout,
-                    sizeof(struct timeval));
-            if (0 != result) {
-                jniThrowSocketException(env, errno);
-                return;
-            }
-            break;
-        }
+#endif // def ENABLE_MULTICAST
 
         default: {
             jniThrowSocketException(env, ENOPROTOOPT);
