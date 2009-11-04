@@ -167,29 +167,6 @@ static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImp
 }
 
 /**
- * Loads the ciphers suites that are enabled in the OpenSSL server
- * and returns them in a string array.
- */
-static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_getenabledciphersuites(JNIEnv* env,
-        jobject object)
-{
-    SSL_CTX* ssl_ctx =
-            reinterpret_cast<SSL_CTX*>(env->GetIntField(object, field_ssl_ctx));
-    return makeCipherList(env, ssl_ctx);
-}
-
-/**
- * Sets the ciphers suites that are enabled in the OpenSSL server.
- */
-static void org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_setenabledciphersuites(JNIEnv* env,
-        jobject object, jstring controlString)
-{
-    SSL_CTX* ssl_ctx =
-            reinterpret_cast<SSL_CTX*>(env->GetIntField(object, field_ssl_ctx));
-    setEnabledCipherSuites(env, controlString, ssl_ctx);
-}
-
-/**
  * Sets  the client's credentials and the depth of theirs verification.
  */
 static void org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_nativesetclientauth(JNIEnv* env,
@@ -218,8 +195,6 @@ static JNINativeMethod sMethods[] =
     {"nativeinit", "(Ljava/lang/String;Ljava/lang/String;[B)V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_init},
     {"nativesetenabledprotocols", "(J)V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_setenabledprotocols},
     {"nativegetsupportedciphersuites", "()[Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_getsupportedciphersuites},
-    {"nativegetenabledciphersuites", "()[Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_getenabledciphersuites},
-    {"nativesetenabledciphersuites", "(Ljava/lang/String;)V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_setenabledciphersuites},
     {"nativesetclientauth", "(I)V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_nativesetclientauth},
     {"nativefree", "()V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl_nativefree}
 };
@@ -229,20 +204,15 @@ static JNINativeMethod sMethods[] =
  */
 extern "C" int register_org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl(JNIEnv* env)
 {
-    int ret;
-    jclass clazz;
-
-    clazz = env->FindClass("org/apache/harmony/xnet/provider/jsse/OpenSSLServerSocketImpl");
-
+    jclass clazz = env->FindClass("org/apache/harmony/xnet/provider/jsse/OpenSSLServerSocketImpl");
     if (clazz == NULL) {
         LOGE("Can't find org/apache/harmony/xnet/provider/jsse/OpenSSLServerSocketImpl");
         return -1;
     }
 
-    ret = jniRegisterNativeMethods(env, "org/apache/harmony/xnet/provider/jsse/OpenSSLServerSocketImpl",
+    int rc = jniRegisterNativeMethods(env, "org/apache/harmony/xnet/provider/jsse/OpenSSLServerSocketImpl",
             sMethods, NELEM(sMethods));
-
-    if (ret >= 0) {
+    if (rc >= 0) {
         // Note: do these after the registration of native methods, because 
         // there is a static method "initstatic" that's called when the
         // OpenSSLServerSocketImpl class is first loaded, and that required
@@ -253,5 +223,5 @@ extern "C" int register_org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocke
             return -1;
         }
     }
-    return ret;
+    return rc;
 }
