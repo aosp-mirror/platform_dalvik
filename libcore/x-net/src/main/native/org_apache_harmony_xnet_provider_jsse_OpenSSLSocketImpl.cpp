@@ -1423,22 +1423,22 @@ static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_gets
  * Loads the ciphers suites that are enabled in the OpenSSL client
  * and returns them in a string array.
  */
-static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_getenabledciphersuites(JNIEnv* env,
-        jobject object)
+static jobjectArray OpenSSLSocketImpl_nativeGetEnabledCipherSuites(JNIEnv* env,
+        jclass, jint ssl_ctx_address)
 {
     SSL_CTX* ssl_ctx =
-            reinterpret_cast<SSL_CTX*>(env->GetIntField(object, field_ssl_ctx));
+            reinterpret_cast<SSL_CTX*>(static_cast<uintptr_t>(ssl_ctx_address));
     return makeCipherList(env, ssl_ctx);
 }
 
 /**
  * Sets the ciphers suites that are enabled in the OpenSSL client.
  */
-static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_setenabledciphersuites(JNIEnv* env, jobject object,
-        jstring controlString)
+static void OpenSSLSocketImpl_nativeSetEnabledCipherSuites(JNIEnv* env, jclass,
+        jint ssl_ctx_address, jstring controlString)
 {
     SSL_CTX* ssl_ctx =
-            reinterpret_cast<SSL_CTX*>(env->GetIntField(object, field_ssl_ctx));
+            reinterpret_cast<SSL_CTX*>(static_cast<uintptr_t>(ssl_ctx_address));
     setEnabledCipherSuites(env, controlString, ssl_ctx);
 }
 
@@ -1831,8 +1831,8 @@ static JNINativeMethod sMethods[] =
     {"nativeaccept", "(Ljava/net/Socket;IZ)V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_accept},
     {"nativesetenabledprotocols", "(J)V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_setenabledprotocols},
     {"nativegetsupportedciphersuites", "()[Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_getsupportedciphersuites},
-    {"nativegetenabledciphersuites", "()[Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_getenabledciphersuites},
-    {"nativesetenabledciphersuites", "(Ljava/lang/String;)V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_setenabledciphersuites},
+    {"nativeGetEnabledCipherSuites", "(I)[Ljava/lang/String;", (void*) OpenSSLSocketImpl_nativeGetEnabledCipherSuites},
+    {"nativeSetEnabledCipherSuites", "(ILjava/lang/String;)V", (void*) OpenSSLSocketImpl_nativeSetEnabledCipherSuites},
     {"nativecipherauthenticationmethod", "()Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_cipherauthenticationmethod},
     {"nativeinterrupt", "()V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_interrupt},
     {"nativeclose", "()V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_close},
@@ -1845,63 +1845,51 @@ static JNINativeMethod sMethods[] =
  */
 extern "C" int register_org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl(JNIEnv* env)
 {
-    int ret;
-    jclass clazz;
-
-    clazz = env->FindClass("org/apache/harmony/xnet/provider/jsse/OpenSSLSocketImpl");
-
+    jclass clazz = env->FindClass("org/apache/harmony/xnet/provider/jsse/OpenSSLSocketImpl");
     if (clazz == NULL) {
         LOGE("Can't find org/apache/harmony/xnet/provider/jsse/OpenSSLSocketImpl");
         return -1;
     }
 
     jclass socketClass = env->FindClass("java/net/Socket");
-
     if (socketClass == NULL) {
         LOGE("Can't find class java.net.Socket");
         return -1;
     }
 
     field_mImpl = env->GetFieldID(socketClass, "impl", "Ljava/net/SocketImpl;");
-
     if (field_mImpl == NULL) {
         LOGE("Can't find field impl in class java.net.Socket");
         return -1;
     }
 
     jclass socketImplClass = env->FindClass("java/net/SocketImpl");
-
-    if(socketImplClass == NULL) {
+    if (socketImplClass == NULL) {
         LOGE("Can't find class java.net.SocketImpl");
         return -1;
     }
 
     field_mFD = env->GetFieldID(socketImplClass, "fd", "Ljava/io/FileDescriptor;");
-
     if (field_mFD == NULL) {
         LOGE("Can't find field fd in java.net.SocketImpl");
         return -1;
     }
 
     jclass fdclazz = env->FindClass("java/io/FileDescriptor");
-
-    if (fdclazz == NULL)
-    {
+    if (fdclazz == NULL) {
         LOGE("Can't find java/io/FileDescriptor");
         return -1;
     }
 
     field_descriptor = env->GetFieldID(fdclazz, "descriptor", "I");
-
     if (field_descriptor == NULL) {
         LOGE("Can't find FileDescriptor.descriptor");
         return -1;
     }
 
-    ret = jniRegisterNativeMethods(env, "org/apache/harmony/xnet/provider/jsse/OpenSSLSocketImpl",
+    int rc = jniRegisterNativeMethods(env, "org/apache/harmony/xnet/provider/jsse/OpenSSLSocketImpl",
             sMethods, NELEM(sMethods));
-
-    if (ret >= 0) {
+    if (rc >= 0) {
         // Note: do these after the registration of native methods, because 
         // there is a static method "initstatic" that's called when the
         // OpenSSLSocketImpl class is first loaded, and that required
@@ -1924,5 +1912,5 @@ extern "C" int register_org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl(
             return -1;
         }
     }
-    return ret;
+    return rc;
 }
