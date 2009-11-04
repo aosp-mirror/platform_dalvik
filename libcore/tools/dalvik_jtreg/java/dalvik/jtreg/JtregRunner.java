@@ -20,6 +20,7 @@ import com.sun.javatest.TestDescription;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -57,6 +58,7 @@ public final class JtregRunner {
     private Integer debugPort;
     private Set<File> expectationDirs = new LinkedHashSet<File>();
     private long timeoutSeconds = 10 * 60; // default is ten minutes
+    private File xmlReportsDirectory;
 
     private File deviceTestRunner;
 
@@ -78,17 +80,14 @@ public final class JtregRunner {
         // threads helps for packages that contain many unsupported tests
         ExecutorService builders = Executors.newFixedThreadPool(8);
         for (final TestDescription testDescription : tests) {
-            builders.submit(new Runnable() {
-                public void run() {
-                    try {
-                        String qualifiedName = TestDescriptions.qualifiedName(testDescription);
-                        ExpectedResult expectedResult = ExpectedResult.forRun(expectationDirs, qualifiedName);
-                        TestRun testRun = new TestRun(qualifiedName, testDescription, expectedResult);
-                        buildAndInstall(testRun);
-                        readyToRun.put(testRun);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+            builders.submit(new Callable<Void>() {
+                public Void call() throws Exception {
+                    String qualifiedName = TestDescriptions.qualifiedName(testDescription);
+                    ExpectedResult expectedResult = ExpectedResult.forRun(expectationDirs, qualifiedName);
+                    TestRun testRun = new TestRun(qualifiedName, testDescription, expectedResult);
+                    buildAndInstall(testRun);
+                    readyToRun.put(testRun);
+                    return null;
                 }
             });
         }
@@ -98,8 +97,10 @@ public final class JtregRunner {
 
         int unsupportedTests = 0;
 
+        List<TestRun> runs = new ArrayList<TestRun>(tests.size());
         while (!builders.isTerminated() || !readyToRun.isEmpty()) {
             TestRun testRun = readyToRun.take();
+            runs.add(testRun);
 
             if (testRun.getResult() == Result.UNSUPPORTED) {
                 logger.fine("skipping " + testRun.getQualifiedName());
@@ -116,6 +117,12 @@ public final class JtregRunner {
 
         if (unsupportedTests > 0) {
             logger.info("Skipped " + unsupportedTests + " unsupported tests.");
+        }
+
+        if (xmlReportsDirectory != null) {
+            logger.info("Printing XML Reports... ");
+            int numFiles = new XmlReportPrinter().generateReports(xmlReportsDirectory, runs);
+            logger.info(numFiles + " XML files written.");
         }
     }
 
@@ -253,16 +260,21 @@ public final class JtregRunner {
         }
     }
 
+    private void shutdown() {
+        adb.rm(deviceTemp);
+        outputReaders.shutdown();
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            System.out.println("Usage: JTRegRunner [options]... <android_jar> <directoryWithTests>");
+            System.out.println("Usage: JTRegRunner [options]... <android jar> <tests directory>");
             System.out.println();
-            System.out.println("  android_jar: the API jar file to compile against. Usually");
+            System.out.println("  <android jar>: the API jar file to compile against. Usually");
             System.out.println("      this is <SDK>/platforms/android-<X.X>/android.jar where");
             System.out.println("      <SDK> is the path to an Android SDK path and <X.X> is a");
             System.out.println("      release version like 1.5.");
             System.out.println();
-            System.out.println("  directoryWithTests: a directory to scan for test cases;");
+            System.out.println("  <tests directory>: a directory to scan for test cases;");
             System.out.println("      typically this is 'platform_v6/jdk/test' if 'platform_v6'");
             System.out.println("      contains the sources of a platform implementation.");
             System.out.println();
@@ -276,8 +288,11 @@ public final class JtregRunner {
             System.out.println("      looking for test expectations. The directory should include");
             System.out.println("      <test>.expected files describing expected results.");
             System.out.println();
-            System.out.println("  --timeoutSeconds <seconds>: maximum execution time of each test");
-            System.out.println("      before the runner aborts it.");
+            System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
+            System.out.println("      test before the runner aborts it.");
+            System.out.println();
+            System.out.println("  --xml-reports-directory <path>: directory to emit JUnit-style");
+            System.out.println("      XML test results.");
             System.out.println();
             System.out.println("  --verbose: turn on verbose output");
             System.out.println();
@@ -302,12 +317,6 @@ public final class JtregRunner {
             if ("--debug".equals(args[i])) {
                 jtregRunner.debugPort = Integer.valueOf(args[++i]);
 
-            } else if ("--timeoutSeconds".equals(args[i])) {
-                jtregRunner.timeoutSeconds = Long.valueOf(args[++i]);
-
-            } else if ("--verbose".equals(args[i])) {
-                Logger.getLogger("dalvik.jtreg").setLevel(Level.FINE);
-
             } else if ("--expectations".equals(args[i])) {
                 File expectationDir = new File(args[++i]);
                 if (!expectationDir.isDirectory()) {
@@ -315,12 +324,26 @@ public final class JtregRunner {
                 }
                 jtregRunner.expectationDirs.add(expectationDir);
 
+            } else if ("--timeout-seconds".equals(args[i])) {
+                jtregRunner.timeoutSeconds = Long.valueOf(args[++i]);
+
+            } else if ("--verbose".equals(args[i])) {
+                Logger.getLogger("dalvik.jtreg").setLevel(Level.FINE);
+
+            } else if ("--xml-reports-directory".equals(args[i])) {
+                jtregRunner.xmlReportsDirectory = new File(args[++i]);
+                if (!jtregRunner.xmlReportsDirectory.isDirectory()) {
+                    throw new RuntimeException("Invalid XML reports directory: "
+                            + jtregRunner.xmlReportsDirectory);
+                }
+
             } else {
                 throw new RuntimeException("Unrecognized option: " + args[i]);
             }
         }
 
         jtregRunner.buildAndRunAllTests();
+        jtregRunner.shutdown();
     }
 
     private static void prepareLogging() {

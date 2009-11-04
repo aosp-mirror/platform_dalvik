@@ -16,9 +16,10 @@ LOCAL_SRC_FILES := \
         java/dalvik/jtreg/TestDescriptions.java \
         java/dalvik/jtreg/TestRunner.java \
         java/dalvik/jtreg/TestToDex.java \
+        java/dalvik/jtreg/XmlReportPrinter.java \
 
 LOCAL_MODULE:= dalvik_jtreg
-LOCAL_STATIC_JAVA_LIBRARIES := javatest jh jtreg
+LOCAL_STATIC_JAVA_LIBRARIES := javatest jh jtreg kxml2-2.3.0
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
