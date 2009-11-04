@@ -44,23 +44,22 @@ class TestDescriptions {
 
     /**
      * Returns a fully qualified name of the form {@code
-     * java_lang_Math_PowTests} from the given test description. The returned
+     * java.lang.Math.PowTests} from the given test description. The returned
      * name is appropriate for use in a filename.
      */
     static String qualifiedName(TestDescription testDescription) {
-        StringBuilder result = new StringBuilder();
+        return className(testDescription) + "." + escape(testDescription.getName());
+    }
 
+    /**
+     * Returns the name of the class under test, such as {@code java.lang.Math}.
+     */
+    static String className(TestDescription testDescription) {
         String dir = testDescription.getDir().toString();
         int separatorIndex = dir.indexOf(TEST_ROOT);
-        if (separatorIndex != -1) {
-            result.append(escape(dir.substring(separatorIndex + TEST_ROOT.length())));
-        } else {
-            result.append(escape(dir));
-        }
-
-        result.append(".");
-        result.append(escape(testDescription.getName()));
-        return result.toString();
+        return separatorIndex != -1
+                ? escape(dir.substring(separatorIndex + TEST_ROOT.length()))
+                : escape(dir);
     }
 
     /**

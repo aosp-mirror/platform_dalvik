@@ -24,8 +24,11 @@ import java.io.File;
 final class Adb {
 
     public void mkdir(File name) {
-        new Command("adb", "shell", "mkdir", name.toString())
-                .execute();
+        new Command("adb", "shell", "mkdir", name.toString()).execute();
+    }
+
+    public void rm(File name) {
+        new Command("adb", "shell", "rm", "-r", name.toString()).execute();
     }
 
     public void push(File local, File remote) {
