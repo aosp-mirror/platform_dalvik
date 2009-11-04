@@ -3837,10 +3837,6 @@ static bool handleFmt35ms_3rms(CompilationUnit *cUnit, MIR *mir,
  */
 static bool genInlinedCompareTo(CompilationUnit *cUnit, MIR *mir)
 {
-#if 1
-    //Back out temporarily
-    return false;
-#endif
 #if defined(USE_GLOBAL_STRING_DEFS)
     return false;
 #else
@@ -3866,10 +3862,6 @@ static bool genInlinedCompareTo(CompilationUnit *cUnit, MIR *mir)
 
 static bool genInlinedIndexOf(CompilationUnit *cUnit, MIR *mir, bool singleI)
 {
-#if 1
-    //Back out temporarily
-    return false;
-#endif
 #if defined(USE_GLOBAL_STRING_DEFS)
     return false;
 #else
