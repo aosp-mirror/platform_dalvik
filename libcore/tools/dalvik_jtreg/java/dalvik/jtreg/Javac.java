@@ -31,17 +31,17 @@ final class Javac {
     }
 
     public Javac bootClasspath(File... path) {
-        builder.args("-bootclasspath", Command.path(path));
+        builder.args("-bootclasspath", Command.path((Object[]) path));
         return this;
     }
 
     public Javac classpath(File... path) {
-        builder.args("-classpath", Command.path(path));
+        builder.args("-classpath", Command.path((Object[]) path));
         return this;
     }
 
     public Javac sourcepath(File... path) {
-        builder.args("-sourcepath", Command.path(path));
+        builder.args("-sourcepath", Command.path((Object[]) path));
         return this;
     }
 

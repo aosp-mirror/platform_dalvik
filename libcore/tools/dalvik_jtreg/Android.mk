@@ -7,12 +7,12 @@ LOCAL_SRC_FILES := \
         java/dalvik/jtreg/Command.java \
         java/dalvik/jtreg/CommandFailedException.java \
         java/dalvik/jtreg/Dx.java \
-        java/dalvik/jtreg/Dalvikvm.java \
         java/dalvik/jtreg/ExpectedResult.java \
         java/dalvik/jtreg/Javac.java \
         java/dalvik/jtreg/JtregRunner.java \
-        java/dalvik/jtreg/Run.java \
+        java/dalvik/jtreg/Result.java \
         java/dalvik/jtreg/Strings.java \
+        java/dalvik/jtreg/TestRun.java \
         java/dalvik/jtreg/TestDescriptions.java \
         java/dalvik/jtreg/TestRunner.java \
         java/dalvik/jtreg/TestToDex.java \

@@ -27,8 +27,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
@@ -49,9 +52,11 @@ public final class JtregRunner {
     private final Adb adb = new Adb();
     private final File directoryToScan;
     private final TestToDex testToDex;
+    private final ExecutorService outputReaders = Executors.newFixedThreadPool(1);
 
     private Integer debugPort;
     private Set<File> expectationDirs = new LinkedHashSet<File>();
+    private long timeoutSeconds = 10 * 60; // default is ten minutes
 
     private File deviceTestRunner;
 
@@ -146,21 +151,21 @@ public final class JtregRunner {
         try {
             dex = testToDex.dexify(testDescription);
             if (dex == null) {
-                testRun.initResult(Result.UNSUPPORTED, Collections.<String>emptyList());
+                testRun.setResult(Result.UNSUPPORTED, Collections.<String>emptyList());
                 return;
             }
         } catch (CommandFailedException e) {
-            testRun.initResult(Result.COMPILE_FAILED, e.getOutputLines());
+            testRun.setResult(Result.COMPILE_FAILED, e.getOutputLines());
             return;
         } catch (IOException e) {
-            testRun.initResult(Result.ERROR, e);
+            testRun.setResult(Result.ERROR, e);
             return;
         }
 
         logger.fine("installing " + testRun.getQualifiedName());
         adb.push(testDescription.getDir(), base);
         adb.push(dex, deviceTemp);
-        testRun.initInstalledFiles(base, new File(deviceTemp, dex.getName()));
+        testRun.setInstalledFiles(base, new File(deviceTemp, dex.getName()));
     }
 
     /**
@@ -171,25 +176,47 @@ public final class JtregRunner {
             throw new IllegalArgumentException();
         }
 
-        logger.fine("running " + testRun.getQualifiedName());
-        Dalvikvm vm = new Dalvikvm()
-                .classpath(testRun.getDeviceDex(), deviceTestRunner)
-                .args("-Duser.dir=" + testRun.getBase());
+        Command.Builder builder = new Command.Builder();
+        builder.args("adb", "shell", "dalvikvm");
+        builder.args("-classpath", Command.path(testRun.getDeviceDex(), deviceTestRunner));
+        builder.args("-Duser.dir=" + testRun.getBase());
         if (debugPort != null) {
-            vm.args("-Xrunjdwp:transport=dt_socket,address="
+            builder.args("-Xrunjdwp:transport=dt_socket,address="
                     + debugPort + ",server=y,suspend=y");
         }
-        List<String> output = vm.exec("dalvik.jtreg.TestRunner");
+        builder.args("dalvik.jtreg.TestRunner");
+        final Command command = builder.build();
 
-        if (output.isEmpty()) {
-            testRun.initResult(Result.ERROR,
-                    Collections.singletonList("No output returned!"));
+        try {
+            command.start();
+
+            // run on a different thread to allow a timeout
+            List<String> output = outputReaders.submit(new Callable<List<String>>() {
+                public List<String> call() throws Exception {
+                    return command.gatherOutput();
+                }
+            }).get(timeoutSeconds, TimeUnit.SECONDS);
+
+            if (output.isEmpty()) {
+                testRun.setResult(Result.ERROR,
+                        Collections.singletonList("No output returned!"));
+                return;
+            }
+
+            Result result = "SUCCESS".equals(output.get(output.size() - 1))
+                    ? Result.SUCCESS
+                    : Result.EXEC_FAILED;
+            testRun.setResult(result, output.subList(0, output.size() - 1));
+        } catch (TimeoutException e) {
+            testRun.setResult(Result.EXEC_TIMEOUT, e);
+        } catch (Exception e) {
+            testRun.setResult(Result.ERROR,
+                    Collections.singletonList("Exceeded timeout! (" + timeoutSeconds + "s)"));
+        } finally {
+            if (command.isStarted()) {
+                command.getProcess().destroy(); // to release the output reader
+            }
         }
-
-        Result result = "SUCCESS".equals(output.get(output.size() - 1))
-                ? Result.SUCCESS
-                : Result.EXEC_FAILED;
-        testRun.initResult(result, output.subList(0, output.size() - 1));
     }
 
     private void printResult(TestRun testRun) {
@@ -249,6 +276,9 @@ public final class JtregRunner {
             System.out.println("      looking for test expectations. The directory should include");
             System.out.println("      <test>.expected files describing expected results.");
             System.out.println();
+            System.out.println("  --timeoutSeconds <seconds>: maximum execution time of each test");
+            System.out.println("      before the runner aborts it.");
+            System.out.println();
             System.out.println("  --verbose: turn on verbose output");
             System.out.println();
             return;
@@ -271,6 +301,9 @@ public final class JtregRunner {
         for (int i = 0; i < args.length - 2; i++) {
             if ("--debug".equals(args[i])) {
                 jtregRunner.debugPort = Integer.valueOf(args[++i]);
+
+            } else if ("--timeoutSeconds".equals(args[i])) {
+                jtregRunner.timeoutSeconds = Long.valueOf(args[++i]);
 
             } else if ("--verbose".equals(args[i])) {
                 Logger.getLogger("dalvik.jtreg").setLevel(Level.FINE);
@@ -298,6 +331,7 @@ public final class JtregRunner {
                 return r.getMessage() + "\n";
             }
         });
+        Logger logger = Logger.getLogger("dalvik.jtreg");
         logger.addHandler(handler);
         logger.setUseParentHandlers(false);
     }

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * An out of process executable.
@@ -31,6 +32,7 @@ final class Command {
 
     private final List<String> args;
     private final boolean permitNonZeroExitStatus;
+    private Process process;
 
     Command(String... args) {
         this(Arrays.asList(args));
@@ -46,8 +48,67 @@ final class Command {
         this.permitNonZeroExitStatus = builder.permitNonZeroExitStatus;
     }
 
-    static String path(Object[] objects) {
+    static String path(Object... objects) {
         return Strings.join(objects, ":");
+    }
+
+    public synchronized void start() throws IOException {
+        if (isStarted()) {
+            throw new IllegalStateException("Already started!");
+        }
+
+        process = new ProcessBuilder()
+                .command(args)
+                .redirectErrorStream(true)
+                .start();
+    }
+
+    public boolean isStarted() {
+        return process != null;
+    }
+
+    public Process getProcess() {
+        if (!isStarted()) {
+            throw new IllegalStateException("Not started!");
+        }
+
+        return process;
+    }
+
+    public synchronized List<String> gatherOutput()
+            throws IOException, InterruptedException {
+        if (!isStarted()) {
+            throw new IllegalStateException("Not started!");
+        }
+
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(process.getInputStream()));
+        List<String> outputLines = new ArrayList<String>();
+        String outputLine;
+        while ((outputLine = in.readLine()) != null) {
+            outputLines.add(outputLine);
+        }
+
+        if (process.waitFor() != 0 && !permitNonZeroExitStatus) {
+            StringBuilder message = new StringBuilder();
+            for (String line : outputLines) {
+                message.append("\n").append(line);
+            }
+            throw new CommandFailedException(args, outputLines);
+        }
+
+        return outputLines;
+    }
+
+    public synchronized List<String> execute() {
+        try {
+            start();
+            return gatherOutput();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to execute process: " + args, e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while executing process: " + args, e);
+        }
     }
 
     static class Builder {
@@ -76,35 +137,4 @@ final class Command {
             return build().execute();
         }
     }
-
-    public List<String> execute() {
-        try {
-            Process process = new ProcessBuilder()
-                    .command(args)
-                    .redirectErrorStream(true)
-                    .start();
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            List<String> outputLines = new ArrayList<String>();
-            String outputLine;
-            while ((outputLine = in.readLine()) != null) {
-                outputLines.add(outputLine);
-            }
-
-            if (process.waitFor() != 0 && !permitNonZeroExitStatus) {
-                StringBuilder message = new StringBuilder();
-                for (String line : outputLines) {
-                    message.append("\n").append(line);
-                }
-                throw new CommandFailedException(args, outputLines);
-            }
-
-            return outputLines;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to execute process: " + args, e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while executing process: " + args, e);
-        }
-    }
-
 }

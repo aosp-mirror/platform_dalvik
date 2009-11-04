@@ -28,6 +28,7 @@ public enum Result {
 
     COMPILE_FAILED,
     EXEC_FAILED,
+    EXEC_TIMEOUT,
     ERROR,
     SUCCESS
 }
