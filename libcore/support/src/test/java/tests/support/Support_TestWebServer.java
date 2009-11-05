@@ -39,21 +39,12 @@ public class Support_TestWebServer implements Support_HttpConstants {
     /* The ANDROID_LOG_TAG */
     private final static String LOGTAG = "httpsv";
 
-    /* Where worker threads stand idle */
-    Vector threads = new Vector();
-
     /** maps the recently requested URLs to the full request snapshot */
     private final Map<String, Request> pathToRequest
             = new ConcurrentHashMap<String, Request>();
 
-    /* List of all active worker threads */
-    Vector activeThreads = new Vector();
-
     /* timeout on client connections */
     int timeout = 0;
-
-    /* max # worker threads */
-    int workers = 5;
 
     /* Default port for this server to listen on */
     final static int DEFAULT_PORT = 8080;
@@ -283,19 +274,7 @@ public class Support_TestWebServer implements Support_HttpConstants {
                         running = false;
                     }
 
-                    Worker w = null;
-                    synchronized (threads) {
-                        if (threads.isEmpty()) {
-                            Worker ws = new Worker();
-                            ws.setSocket(s);
-                            activeThreads.addElement(ws);
-                            (new Thread(ws, "additional worker")).start();
-                        } else {
-                            w = (Worker) threads.elementAt(0);
-                            threads.removeElementAt(0);
-                            w.setSocket(s);
-                        }
-                    }
+                    new Thread(new Worker(s), "additional worker").start();
                 }
             } catch (SocketException e) {
                 log("SocketException in AcceptThread: probably closed during accept");
@@ -316,14 +295,6 @@ public class Support_TestWebServer implements Support_HttpConstants {
                    therefore the acceptLimit functionality has been added
                    to circumvent this limitation */
                 ss.close();
-
-                // Stop worker threads from continuing
-                for (Enumeration e = activeThreads.elements(); e.hasMoreElements();) {
-                    Worker w = (Worker)e.nextElement();
-                    w.close();
-                }
-                activeThreads.clear();
-
             } catch (IOException e) {
                 /* We are shutting down the server, so we expect
                  * things to die. Don't propagate.
@@ -393,75 +364,20 @@ public class Support_TestWebServer implements Support_HttpConstants {
         /* Indicates whether current request has any data content */
         private boolean hasContent = false;
 
-        boolean running = false;
-
         /* Request headers are stored here */
         private Map<String, String> headers = new LinkedHashMap<String, String>();
 
         /* Create a new worker thread */
-        Worker() {
-            buf = new byte[BUF_SIZE];
-            s = null;
-        }
-
-        /**
-         * Called by the AcceptThread to unblock this Worker to process
-         * a request.
-         * @param s The socket on which the connection has been made
-         */
-        synchronized void setSocket(Socket s) {
+        Worker(Socket s) {
+            this.buf = new byte[BUF_SIZE];
             this.s = s;
-            notify();
         }
 
-        /**
-         * Called by the accept thread when it's closing. Potentially unblocks
-         * the worker thread to terminate properly
-         */
-        synchronized void close() {
-            running = false;
-            notify();
-        }
-
-        /**
-         * Main worker thread. This will wait until a request has
-         * been identified by the accept thread upon which it will
-         * service the thread.
-         */
         public synchronized void run() {
-            running = true;
-            while(running) {
-                if (s == null) {
-                    /* nothing to do */
-                    try {
-                        log(this+" Moving to wait state");
-                        wait();
-                    } catch (InterruptedException e) {
-                        /* should not happen */
-                        continue;
-                    }
-                    if (!running) break;
-                }
-                try {
-                    handleClient();
-                } catch (Exception e) {
-                    log("Exception during handleClient in the TestWebServer: "
-                            + e.getMessage());
-                }
-                /* go back in wait queue if there's fewer
-                 * than numHandler connections.
-                 */
-                s = null;
-                Vector pool = threads;
-                synchronized (pool) {
-                    if (pool.size() >= workers) {
-                        /* too many threads, exit this one */
-                        activeThreads.remove(this);
-                        return;
-                    } else {
-                        pool.addElement(this);
-                    }
-                }
+            try {
+                handleClient();
+            } catch (Exception e) {
+                log("Exception during handleClient in the TestWebServer: " + e.getMessage());
             }
             log(this+" terminated");
         }
