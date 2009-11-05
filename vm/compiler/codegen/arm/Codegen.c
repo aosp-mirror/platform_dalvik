@@ -2245,12 +2245,13 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
 
 static void handleMonitorPortable(CompilationUnit *cUnit, MIR *mir)
 {
+    bool isEnter = (mir->dalvikInsn.opCode == OP_MONITOR_ENTER);
     flushAllRegs(cUnit);   /* Send everything to home location */
     genExportPC(cUnit, mir);
     RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
     loadValueDirectFixed(cUnit, rlSrc, r1);
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0);
-    if (mir->dalvikInsn.opCode == OP_MONITOR_ENTER) {
+    if (isEnter) {
         loadConstant(cUnit, r2, (int)dvmLockObject);
     } else {
         loadConstant(cUnit, r2, (int)dvmUnlockObject);
@@ -2258,6 +2259,21 @@ static void handleMonitorPortable(CompilationUnit *cUnit, MIR *mir)
     genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
     /* Do the call */
     opReg(cUnit, kOpBlx, r2);
+#if defined(WITH_DEADLOCK_PREDICTION)
+    if (isEnter) {
+        loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0);
+        loadWordDisp(cUnit, r0, offsetof(Thread, exception), r1);
+        opRegImm(cUnit, kOpCmp, r1, 0);
+        ArmLIR *branchOver = opCondBranch(cUnit, kArmCondEq);
+        loadConstant(cUnit, r0,
+                     (int) (cUnit->method->insns + mir->offset));
+        genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
+        /* noreturn */
+        ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+        target->defMask = ENCODE_ALL;
+        branchOver->generic.target = (LIR *) target;
+    }
+#endif
     clobberCallRegs(cUnit);
 }
 
