@@ -30,28 +30,50 @@ LOCAL_PATH:= $(call my-dir)
 # Build for the target (device).
 #
 
-include $(CLEAR_VARS)
+# Build the installed version (libdvm.so) first
+include $(LOCAL_PATH)/ReconfigureDvm.mk
 
-# Variables used in the included Dvm.mk.
-dvm_os := $(TARGET_OS)
-dvm_arch := $(TARGET_ARCH)
-dvm_arch_variant := $(TARGET_ARCH_VARIANT)
-dvm_simulator := $(TARGET_SIMULATOR)
-
-include $(LOCAL_PATH)/Dvm.mk
-
-# Whether libraries are static or shared differs between host and
-# target builds, so that's mostly pulled out here and in the equivalent
-# section below.
-LOCAL_SHARED_LIBRARIES += \
-	liblog libcutils libnativehelper libz
-
-LOCAL_STATIC_LIBRARIES += libdex
-
+# Overwrite default settings
+ifeq ($(TARGET_SIMULATOR),false)
+    LOCAL_PRELINK_MODULE := true
+endif
+LOCAL_MODULE_TAGS := user
 LOCAL_MODULE := libdvm
-
 include $(BUILD_SHARED_LIBRARY)
 
+# If WITH_JIT is configured, build multiple versions of libdvm.so to facilitate
+# correctness/performance bugs triage
+ifeq ($(WITH_JIT),true)
+
+    # Derivation #1
+    # Enable assert and JIT tuning
+    include $(LOCAL_PATH)/ReconfigureDvm.mk
+
+    # Enable asserion and JIT-tuning
+    LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
+				    -DWITH_JIT_TUNING -DEXIT_STATS
+    LOCAL_MODULE := libdvm_assert
+    include $(BUILD_SHARED_LIBRARY)
+
+    # Derivation #2
+    # Enable assert and self-verification
+    include $(LOCAL_PATH)/ReconfigureDvm.mk
+
+    # Enable asserion and JIT self-verification
+    LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
+					-DWITH_SELF_VERIFICATION
+    LOCAL_MODULE := libdvm_sv
+    include $(BUILD_SHARED_LIBRARY)
+
+    # Devivation #3
+    # Compile out the JIT
+    WITH_JIT := false
+    include $(LOCAL_PATH)/ReconfigureDvm.mk
+
+    LOCAL_MODULE := libdvm_interp
+    include $(BUILD_SHARED_LIBRARY)
+
+endif
 
 #
 # Build for the host.
