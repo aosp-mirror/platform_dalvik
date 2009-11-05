@@ -514,22 +514,17 @@ final class OSNetworkSystem implements INetworkSystem {
 
         assert validateFDs(readFDs, writeFDs, numReadable, numWritable) : "Invalid file descriptor arrays"; //$NON-NLS-1$
 
-        // handle timeout in native
-        int result = selectImpl(readFDs, writeFDs, numReadable, numWritable, flags, timeout);
-        if (result >= 0) {
-            return true;
-        }
-        if (result == ERRORCODE_SOCKET_TIMEOUT ||
-                result == ERRORCODE_SOCKET_INTERRUPTED) {
-            return false;
-        }
-        throw new SocketException();
+        // BEGIN android-changed: handle errors in native code
+        return selectImpl(readFDs, writeFDs, numReadable, numWritable, flags, timeout);
+        // END android-changed
     }
     // END android-changed
 
-    static native int selectImpl(FileDescriptor[] readfd,
+    // BEGIN android-changed: return type (we throw in native code, with descriptive errors)
+    static native boolean selectImpl(FileDescriptor[] readfd,
             FileDescriptor[] writefd, int cread, int cwirte, int[] flags,
             long timeout);
+    // END android-changed
 
     /**
      * Send the <code>data</code> to the address and port to which the was

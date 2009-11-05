@@ -122,8 +122,6 @@
 #define JAVASOCKOPT_IP_TOS 3
 #define JAVASOCKOPT_SO_REUSEADDR 4
 #define JAVASOCKOPT_SO_KEEPALIVE 8
-#define JAVASOCKOPT_MCAST_TIME_TO_LIVE 10 /* Currently unused */
-#define JAVASOCKOPT_SO_BINDADDR 15
 #define JAVASOCKOPT_IP_MULTICAST_IF 16
 #define JAVASOCKOPT_MCAST_TTL 17
 #define JAVASOCKOPT_IP_MULTICAST_LOOP 18
@@ -153,18 +151,8 @@
 #define SOCKET_OP_NONE 0
 #define SOCKET_OP_READ 1
 #define SOCKET_OP_WRITE 2
-#define SOCKET_READ_WRITE 3
-
-#define SOCKET_MSG_PEEK 1
-#define SOCKET_MSG_OOB 2
 
 #define SOCKET_NOFLAGS 0
-
-#undef BUFFERSIZE
-#define BUFFERSIZE 2048
-
-// wait for 500000 usec = 0.5 second
-#define SEND_RETRY_TIME 500000
 
 // Local constants for getOrSetSocketOption
 #define SOCKOPT_GET 1
@@ -219,10 +207,23 @@ static void throwSocketException(JNIEnv *env, int errorCode) {
 }
 
 // TODO(enh): move to JNIHelp.h
-static void jniThrowSocketException(JNIEnv* env, int error) {
+static void jniThrowExceptionWithErrno(JNIEnv* env,
+        const char* exceptionClassName, int error) {
     char buf[BUFSIZ];
-    jniThrowException(env, "java/net/SocketException",
+    jniThrowException(env, exceptionClassName,
             jniStrError(error, buf, sizeof(buf)));
+}
+
+static void jniThrowBindException(JNIEnv* env, int error) {
+    jniThrowExceptionWithErrno(env, "java/net/BindException", error);
+}
+
+static void jniThrowSocketException(JNIEnv* env, int error) {
+    jniThrowExceptionWithErrno(env, "java/net/SocketException", error);
+}
+
+static void jniThrowSocketTimeoutException(JNIEnv* env, int error) {
+    jniThrowExceptionWithErrno(env, "java/net/SocketTimeoutException", error);
 }
 
 // TODO(enh): move to JNIHelp.h
@@ -801,12 +802,24 @@ static int convertError(int errorCode) {
     }
 }
 
-static int sockSelect(int nfds, fd_set *readfds, fd_set *writefds,
-        fd_set *exceptfds, struct timeval *timeout) {
+static int selectWait(int fd, int uSecTime) {
+    timeval tv;
+    timeval* tvp;
+    if (uSecTime >= 0) {
+        /* Use a timeout if uSecTime >= 0 */
+        memset(&tv, 0, sizeof(tv));
+        tv.tv_usec = uSecTime;
+        tvp = &tv;
+    } else {
+        /* Infinite timeout if uSecTime < 0 */
+        tvp = NULL;
+    }
 
-    int result = select(nfds, readfds, writefds, exceptfds, timeout);
-
-    if (result < 0) {
+    fd_set readFds;
+    FD_ZERO(&readFds);
+    FD_SET(fd, &readFds);
+    int result = select(fd + 1, &readFds, NULL, NULL, tvp);
+    if (result == -1) {
         if (errno == EINTR) {
             result = SOCKERR_INTERRUPTED;
         } else {
@@ -818,38 +831,8 @@ static int sockSelect(int nfds, fd_set *readfds, fd_set *writefds,
     return result;
 }
 
-#define SELECT_READ_TYPE 0
-#define SELECT_WRITE_TYPE 1
-
-static int selectWait(int handle, int uSecTime, int type) {
-    fd_set fdset;
-    struct timeval time, *timePtr;
-    int result = 0;
-    int size = handle + 1;
-
-    FD_ZERO(&fdset);
-    FD_SET(handle, &fdset);
-
-    if (0 <= uSecTime) {
-        /* Use a timeout if uSecTime >= 0 */
-        memset(&time, 0, sizeof(time));
-        time.tv_usec = uSecTime;
-        timePtr = &time;
-    } else {
-        /* Infinite timeout if uSecTime < 0 */
-        timePtr = NULL;
-    }
-
-    if (type == SELECT_READ_TYPE) {
-        result = sockSelect(size, &fdset, NULL, NULL, timePtr);
-    } else {
-        result = sockSelect(size, NULL, &fdset, NULL, timePtr);
-    }
-    return result;
-}
-
 // Returns 0 on success, not obviously meaningful negative values on error.
-static int pollSelectWait(JNIEnv *env, jobject fileDescriptor, int timeout, int type) {
+static int pollSelectWait(JNIEnv *env, jobject fileDescriptor, int timeout) {
     /* now try reading the socket for the timeout.
      * if timeout is 0 try forever until the sockets gets ready or until an
      * exception occurs.
@@ -884,7 +867,7 @@ static int pollSelectWait(JNIEnv *env, jobject fileDescriptor, int timeout, int 
                 pollTimeoutUSec = timeLeft <= 0 ? 0 : (timeLeft * 1000);
             }
 
-            result = selectWait(handle, pollTimeoutUSec, type);
+            result = selectWait(handle, pollTimeoutUSec);
 
             /*
              * because we are polling at a time smaller than timeout
@@ -902,8 +885,7 @@ static int pollSelectWait(JNIEnv *env, jobject fileDescriptor, int timeout, int 
                      * effectively what has happened, even if we happen to
                      * have been interrupted.
                      */
-                    jniThrowException(env, "java/net/SocketTimeoutException",
-                            netLookupErrorString(convertError(ETIMEDOUT)));
+                    jniThrowSocketTimeoutException(env, ETIMEDOUT);
                 } else {
                     continue; // try again
                 }
@@ -915,7 +897,7 @@ static int pollSelectWait(JNIEnv *env, jobject fileDescriptor, int timeout, int 
 
         } else { /* polling with no timeout (why would you do this?)*/
 
-            result = selectWait(handle, pollTimeoutUSec, type);
+            result = selectWait(handle, pollTimeoutUSec);
 
             /*
              *  if interrupted (or a timeout) just retry
@@ -1494,7 +1476,7 @@ static jint osNetworkSystem_readSocketDirectImpl(JNIEnv* env, jclass clazz,
     }
 
     if (timeout != 0) {
-        int result = selectWait(fd, timeout * 1000, SELECT_READ_TYPE);
+        int result = selectWait(fd, timeout * 1000);
         if (result < 0) {
             return 0;
         }
@@ -1743,9 +1725,7 @@ static void osNetworkSystem_connectStreamWithTimeoutSocketImpl(JNIEnv* env,
                 if (remainingTimeout <= 0) {
                     sockConnectWithTimeout(handle, address, 0,
                             SOCKET_STEP_DONE, context);
-                    jniThrowException(env,
-                            "java/net/SocketTimeoutException",
-                            netLookupErrorString(result));
+                    jniThrowSocketTimeoutException(env, ENOTCONN);
                     goto bail;
                 }
             } else {
@@ -1797,10 +1777,7 @@ static void osNetworkSystem_socketBindImpl(JNIEnv* env, jclass clazz,
     const sockaddr* realAddress = convertIpv4ToMapped(fd, &socketAddress, &tmp, false);
     int rc = TEMP_FAILURE_RETRY(bind(fd, realAddress, sizeof(sockaddr_storage)));
     if (rc == -1) {
-        char buf[BUFSIZ];
-        jniThrowException(env, "java/net/BindException",
-                jniStrError(errno, buf, sizeof(buf)));
-        return;
+        jniThrowBindException(env, errno);
     }
 }
 
@@ -1831,7 +1808,7 @@ static jint osNetworkSystem_availableStreamImpl(JNIEnv* env, jclass clazz,
 
     int result;
     do {
-        result = selectWait(handle, 1, SELECT_READ_TYPE);
+        result = selectWait(handle, 1);
 
         if (SOCKERR_TIMEOUT == result) {
             // The read operation timed out, so answer 0 bytes available
@@ -1844,8 +1821,8 @@ static jint osNetworkSystem_availableStreamImpl(JNIEnv* env, jclass clazz,
         }
     } while (SOCKERR_INTERRUPTED == result);
 
-    char message[BUFFERSIZE];
-    result = recv(handle, (jbyte *) message, BUFFERSIZE, MSG_PEEK);
+    char message[2048];
+    result = recv(handle, (jbyte *) message, sizeof(message), MSG_PEEK);
 
     if (0 > result) {
         jniThrowSocketException(env, errno);
@@ -1864,7 +1841,7 @@ static void osNetworkSystem_acceptSocketImpl(JNIEnv* env, jclass,
         return;
     }
 
-    int rc = pollSelectWait(env, serverFileDescriptor, timeout, SELECT_READ_TYPE);
+    int rc = pollSelectWait(env, serverFileDescriptor, timeout);
     if (rc < 0) {
         return;
     }
@@ -1979,7 +1956,7 @@ static jint osNetworkSystem_peekDatagramImpl(JNIEnv* env, jclass clazz,
         jobject fileDescriptor, jobject sender, jint receiveTimeout) {
     // LOGD("ENTER peekDatagramImpl");
 
-    int result = pollSelectWait(env, fileDescriptor, receiveTimeout, SELECT_READ_TYPE);
+    int result = pollSelectWait(env, fileDescriptor, receiveTimeout);
     if (result < 0) {
         return 0;
     }
@@ -2014,7 +1991,7 @@ static jint osNetworkSystem_receiveDatagramDirectImpl(JNIEnv* env, jclass clazz,
         jint length, jint receiveTimeout, jboolean peek) {
     // LOGD("ENTER receiveDatagramDirectImpl");
 
-    int result = pollSelectWait(env, fileDescriptor, receiveTimeout, SELECT_READ_TYPE);
+    int result = pollSelectWait(env, fileDescriptor, receiveTimeout);
     if (result < 0) {
         return 0;
     }
@@ -2083,7 +2060,7 @@ static jint osNetworkSystem_recvConnectedDatagramDirectImpl(JNIEnv* env,
         jint receiveTimeout, jboolean peek) {
     // LOGD("ENTER receiveConnectedDatagramDirectImpl");
 
-    int result = pollSelectWait(env, fileDescriptor, receiveTimeout, SELECT_READ_TYPE);
+    int result = pollSelectWait(env, fileDescriptor, receiveTimeout);
     if (result < 0) {
         return 0;
     }
@@ -2340,7 +2317,7 @@ static bool translateFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set
     return true;
 }
 
-static jint osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
+static jboolean osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
         jobjectArray readFDArray, jobjectArray writeFDArray, jint countReadC,
         jint countWriteC, jintArray outFlags, jlong timeoutMs) {
     // LOGD("ENTER selectImpl");
@@ -2366,20 +2343,29 @@ static jint osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
     }
     
     // Perform the select.
-    int result = sockSelect(maxFd + 1, &readFds, &writeFds, NULL, tvp);
-    if (result < 0) {
-        return result;
+    int result = select(maxFd + 1, &readFds, &writeFds, NULL, tvp);
+    if (result == 0) {
+        // Timeout.
+        return JNI_FALSE;
+    } else if (result == -1) {
+        // Error.
+        if (errno == EINTR) {
+            return JNI_FALSE;
+        } else {
+            jniThrowSocketException(env, errno);
+            return JNI_FALSE;
+        }
     }
     
     // Translate the result into the int[] we're supposed to fill in.
     jint* flagArray = env->GetIntArrayElements(outFlags, NULL);
     if (flagArray == NULL) {
-        return -1;
+        return JNI_FALSE;
     }
     bool okay = translateFdSet(env, readFDArray, countReadC, readFds, flagArray, 0, SOCKET_OP_READ) &&
                 translateFdSet(env, writeFDArray, countWriteC, writeFds, flagArray, countReadC, SOCKET_OP_WRITE);
     env->ReleaseIntArrayElements(outFlags, flagArray, 0);
-    return okay ? 0 : -1;
+    return okay;
 }
 
 static jobject osNetworkSystem_getSocketLocalAddressImpl(JNIEnv* env,
@@ -2963,7 +2949,7 @@ static JNINativeMethod gMethods[] = {
     { "shutdownInputImpl",                 "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownInputImpl                  },
     { "shutdownOutputImpl",                "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownOutputImpl                 },
     { "sendDatagramImpl2",                 "(Ljava/io/FileDescriptor;[BIIILjava/net/InetAddress;)I",                   (void*) osNetworkSystem_sendDatagramImpl2                  },
-    { "selectImpl",                        "([Ljava/io/FileDescriptor;[Ljava/io/FileDescriptor;II[IJ)I",               (void*) osNetworkSystem_selectImpl                         },
+    { "selectImpl",                        "([Ljava/io/FileDescriptor;[Ljava/io/FileDescriptor;II[IJ)Z",               (void*) osNetworkSystem_selectImpl                         },
     { "getSocketLocalAddressImpl",         "(Ljava/io/FileDescriptor;Z)Ljava/net/InetAddress;",                        (void*) osNetworkSystem_getSocketLocalAddressImpl          },
     { "getSocketLocalPortImpl",            "(Ljava/io/FileDescriptor;Z)I",                                             (void*) osNetworkSystem_getSocketLocalPortImpl             },
     { "getSocketOptionImpl",               "(Ljava/io/FileDescriptor;I)Ljava/lang/Object;",                            (void*) osNetworkSystem_getSocketOptionImpl                },
