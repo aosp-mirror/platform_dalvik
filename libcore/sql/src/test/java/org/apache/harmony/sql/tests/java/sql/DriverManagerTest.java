@@ -714,6 +714,7 @@ public class DriverManagerTest extends TestCase {
     /**
      * Regression for HARMONY-4303
      */
+    @KnownFailure(value="bug 2002061")
     public void test_initClass() throws Exception {
         String[] arg = new String[1];
         arg[0] = "org/apache/harmony/sql/tests/java/sql/TestMainForDriver";

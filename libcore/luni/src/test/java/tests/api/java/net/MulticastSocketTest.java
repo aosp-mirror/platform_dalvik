@@ -536,6 +536,7 @@ public class MulticastSocketTest extends SocketTestCase {
         method = "joinGroup",
         args = {java.net.SocketAddress.class, java.net.NetworkInterface.class}
     )
+    @KnownFailure(value="bug 2155705")
     public void test_joinGroupLjava_net_SocketAddressLjava_net_NetworkInterface() 
                                     throws IOException, InterruptedException {
         // security manager that allows us to check that we only return the
@@ -832,6 +833,7 @@ public class MulticastSocketTest extends SocketTestCase {
         method = "leaveGroup",
         args = {java.net.SocketAddress.class, java.net.NetworkInterface.class}
     )
+    @KnownFailure(value="bug 2155705")
     public void test_leaveGroupLjava_net_SocketAddressLjava_net_NetworkInterface() {
         // security manager that allows us to check that we only return the
         // addresses that we should

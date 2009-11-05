@@ -2667,6 +2667,7 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
+    @KnownFailure(value="bug 2188225")
     public void test_writeObject_Proxy()
             throws ClassNotFoundException, IOException {
 
