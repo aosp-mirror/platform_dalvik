@@ -52,17 +52,6 @@
 #endif
 
 /*
- * The contents of a struct in6_addr are fairly uniform across
- * platforms, but the member names and convenience macros to access
- * its embedded union are not. The following definition has been
- * checked for correctness on OS X and FreeBSD, but it may not work on
- * other platforms.
- */
-#ifndef s6_addr32
-#define s6_addr32 __u6_addr.__u6_addr32
-#endif
-
-/*
  * TODO: The multicast code is highly platform-dependent, and for now
  * we just punt on anything but Linux.
  */
@@ -307,19 +296,20 @@ static int getSocketAddressPort(struct sockaddr_storage *address) {
 }
 
 /**
- * Checks whether a socket address structure contains an IPv4-mapped address.
- *
- * @param address the socket address structure to check
- * @return true if address contains an IPv4-mapped address, false otherwise.
+ * Obtain the socket address family from an existing socket.
+ * 
+ * @param socket the file descriptor of the socket to examine
+ * @return an integer, the address family of the socket
  */
-static bool isMappedAddress(sockaddr *address) {
-    if (! address || address->sa_family != AF_INET6) {
-        return false;
+static int getSocketAddressFamily(int socket) {
+    sockaddr_storage ss;
+    socklen_t namelen = sizeof(ss);
+    int ret = getsockname(socket, (sockaddr*) &ss, &namelen);
+    if (ret != 0) {
+        return AF_UNSPEC;
+    } else {
+        return ss.ss_family;
     }
-    in6_addr addr = ((sockaddr_in6 *) address)->sin6_addr;
-    return (addr.s6_addr32[0] == 0 &&
-            addr.s6_addr32[1] == 0 &&
-            addr.s6_addr32[2] == htonl(0xffff));
 }
 
 jobject byteArrayToInetAddress(JNIEnv* env, jbyteArray byteArray) {
@@ -345,36 +335,32 @@ jobject socketAddressToInetAddress(JNIEnv* env, sockaddr_storage* sockAddress) {
 }
 
 /**
- * Converts an IPv4-mapped IPv6 address to an IPv4 address. Performs no error
- * checking.
- *
- * @param address the address to convert. Must contain an IPv4-mapped address.
- * @param outputAddress the converted address. Will contain an IPv4 address.
- */
-static void convertMappedToIpv4(sockaddr_in6 *sin6, sockaddr_in *sin) {
-  memset(sin, 0, sizeof(*sin));
-  sin->sin_family = AF_INET;
-  sin->sin_addr.s_addr = sin6->sin6_addr.s6_addr32[3];
-  sin->sin_port = sin6->sin6_port;
-}
-
-/**
- * Converts an IPv4 address to an IPv4-mapped IPv6 address. Performs no error
- * checking.
- *
- * @param address the address to convert. Must contain an IPv4 address.
- * @param outputAddress the converted address. Will contain an IPv6 address.
+ * Converts an IPv4 address to an IPv4-mapped IPv6 address if fd is an IPv6
+ * socket.
+ * @param fd the socket.
+ * @param sin_ss the address.
+ * @param sin6_ss scratch space where we can store the mapped address if necessary.
  * @param mapUnspecified if true, convert 0.0.0.0 to ::ffff:0:0; if false, to ::
+ * @return either sin_ss or sin6_ss, depending on which the caller should use.
  */
-static void convertIpv4ToMapped(struct sockaddr_in *sin,
-        struct sockaddr_in6 *sin6, bool mapUnspecified) {
-  memset(sin6, 0, sizeof(*sin6));
-  sin6->sin6_family = AF_INET6;
-  sin6->sin6_addr.s6_addr32[3] = sin->sin_addr.s_addr;
-  if (sin->sin_addr.s_addr != 0  || mapUnspecified) {
-      sin6->sin6_addr.s6_addr32[2] = htonl(0xffff);
-  }
-  sin6->sin6_port = sin->sin_port;
+static const sockaddr* convertIpv4ToMapped(int fd,
+        const sockaddr_storage* sin_ss, sockaddr_storage* sin6_ss, bool mapUnspecified) {
+    // We need to map if we have an IPv4 address but an IPv6 socket.
+    bool needsMapping = (sin_ss->ss_family == AF_INET && getSocketAddressFamily(fd) == AF_INET6);
+    if (!needsMapping) {
+        return reinterpret_cast<const sockaddr*>(sin_ss);
+    }
+    // Map the IPv4 address in sin_ss into an IPv6 address in sin6_ss.
+    const sockaddr_in* sin = reinterpret_cast<const sockaddr_in*>(sin_ss);
+    sockaddr_in6* sin6 = reinterpret_cast<sockaddr_in6*>(sin6_ss);
+    memset(sin6, 0, sizeof(*sin6));
+    sin6->sin6_family = AF_INET6;
+    sin6->sin6_port = sin->sin_port;
+    if (sin->sin_addr.s_addr != 0 || mapUnspecified) {
+        memset(&(sin6->sin6_addr.s6_addr[10]), 0xff, 2);
+    }
+    memcpy(&sin6->sin6_addr.s6_addr[12], &sin->sin_addr.s_addr, 4);
+    return reinterpret_cast<const sockaddr*>(sin6_ss);
 }
 
 /**
@@ -460,7 +446,6 @@ static jstring osNetworkSystem_byteArrayToIpString(JNIEnv* env, jclass,
         jniThrowBadAddressFamily(env);
         return NULL;
     }
-    // TODO: inet_ntop?
     char ipString[INET6_ADDRSTRLEN];
     int rc = getnameinfo(reinterpret_cast<sockaddr*>(&ss), sa_size,
             ipString, sizeof(ipString), NULL, 0, NI_NUMERICHOST);
@@ -515,27 +500,34 @@ static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv* env, jclass,
     memset(&hints, 0, sizeof(hints));
     hints.ai_flags = AI_NUMERICHOST;
 
-    sockaddr_in sin;
-    addrinfo *res = NULL;
+    sockaddr_storage ss;
+    memset(&ss, 0, sizeof(ss));
+    
+    addrinfo* res = NULL;
     int ret = getaddrinfo(ipString, NULL, &hints, &res);
     if (ret == 0 && res) {
-        // Convert mapped addresses to IPv4 addresses if necessary.
-        if (res->ai_family == AF_INET6 && isMappedAddress(res->ai_addr)) {
-            convertMappedToIpv4((sockaddr_in6 *) res->ai_addr, &sin);
-            result = socketAddressToByteArray(env, (sockaddr_storage *) &sin);
+        // Convert IPv4-mapped addresses to IPv4 addresses.
+        // The RI states "Java will never return an IPv4-mapped address".
+        sockaddr_in6* sin6 = reinterpret_cast<sockaddr_in6*>(res->ai_addr);
+        if (res->ai_family == AF_INET6 && IN6_IS_ADDR_V4MAPPED(&sin6->sin6_addr)) {
+            sockaddr_in* sin = reinterpret_cast<sockaddr_in*>(&ss);
+            sin->sin_family = AF_INET;
+            sin->sin_port = sin6->sin6_port;
+            memcpy(&sin->sin_addr.s_addr, &sin6->sin6_addr.s6_addr[12], 4);
+            result = socketAddressToByteArray(env, &ss);
         } else {
-            result = socketAddressToByteArray(env,
-                    (sockaddr_storage *) res->ai_addr);
+            result = socketAddressToByteArray(env, reinterpret_cast<sockaddr_storage*>(res->ai_addr));
         }
     } else {
         // For backwards compatibility, deal with address formats that
         // getaddrinfo does not support. For example, 1.2.3, 1.3, and even 3 are
         // valid IPv4 addresses according to the Java API. If getaddrinfo fails,
         // try to use inet_aton.
-        if (inet_aton(ipString, &sin.sin_addr)) {
-            sin.sin_port = 0;
-            sin.sin_family = AF_INET;
-            result = socketAddressToByteArray(env, (sockaddr_storage *) &sin);
+        sockaddr_in* sin = reinterpret_cast<sockaddr_in*>(&ss);
+        if (inet_aton(ipString, &sin->sin_addr)) {
+            sin->sin_family = AF_INET;
+            sin->sin_port = 0;
+            result = socketAddressToByteArray(env, &ss);
         }
     }
 
@@ -943,65 +935,16 @@ static int pollSelectWait(JNIEnv *env, jobject fileDescriptor, int timeout, int 
 }
 
 /**
- * Obtain the socket address family from an existing socket.
- *
- * @param socket the filedescriptor of the socket to examine
- *
- * @return an integer, the address family of the socket
- */
-static int getSocketAddressFamily(int socket) {
-  sockaddr_storage ss;
-  socklen_t namelen = sizeof(ss);
-  int ret = getsockname(socket, (sockaddr*) &ss, &namelen);
-  if (ret != 0) {
-    return AF_UNSPEC;
-  } else {
-    return ss.ss_family;
-  }
-}
-
-/**
  * Wrapper for connect() that converts IPv4 addresses to IPv4-mapped IPv6
  * addresses if necessary.
  *
  * @param socket the file descriptor of the socket to connect
  * @param socketAddress the address to connect to
  */
-static int doConnect(int socket, sockaddr_storage *socketAddress) {
-    sockaddr_storage mappedAddress;
-    sockaddr_storage *realAddress;
-    if (socketAddress->ss_family == AF_INET &&
-        getSocketAddressFamily(socket) == AF_INET6) {
-        convertIpv4ToMapped((sockaddr_in *) socketAddress,
-                (sockaddr_in6 *) &mappedAddress, true);
-        realAddress = &mappedAddress;
-    } else {
-        realAddress = socketAddress;
-    }
-    return TEMP_FAILURE_RETRY(connect(socket,
-            reinterpret_cast<sockaddr*>(realAddress), sizeof(sockaddr_storage)));
-}
-
-/**
- * Wrapper for bind() that converts IPv4 addresses to IPv4-mapped IPv6
- * addresses if necessary.
- *
- * @param socket the filedescriptor of the socket to connect
- * @param socketAddress the address to connect to
- */
-static int doBind(int socket, sockaddr_storage *socketAddress) {
-    sockaddr_storage mappedAddress;
-    sockaddr_storage *realAddress;
-    if (socketAddress->ss_family == AF_INET &&
-        getSocketAddressFamily(socket) == AF_INET6) {
-        convertIpv4ToMapped((sockaddr_in *) socketAddress,
-                (sockaddr_in6 *) &mappedAddress, false);
-        realAddress = &mappedAddress;
-    } else {
-        realAddress = socketAddress;
-    }
-    return TEMP_FAILURE_RETRY(bind(socket,
-            reinterpret_cast<sockaddr*>(realAddress), sizeof(sockaddr_storage)));
+static int doConnect(int fd, const sockaddr_storage* socketAddress) {
+    sockaddr_storage tmp;
+    const sockaddr* realAddress = convertIpv4ToMapped(fd, socketAddress, &tmp, true);
+    return TEMP_FAILURE_RETRY(connect(fd, realAddress, sizeof(sockaddr_storage)));
 }
 
 /**
@@ -1840,20 +1783,23 @@ static void osNetworkSystem_socketBindImpl(JNIEnv* env, jclass clazz,
         jobject fileDescriptor, jint port, jobject inetAddress) {
     // LOGD("ENTER socketBindImpl");
 
-    sockaddr_storage sockaddress;
-    if (!inetAddressToSocketAddress(env, inetAddress, port, &sockaddress)) {
+    sockaddr_storage socketAddress;
+    if (!inetAddressToSocketAddress(env, inetAddress, port, &socketAddress)) {
         return;
     }
 
-    int handle;
-    if (!jniGetFd(env, fileDescriptor, handle)) {
+    int fd;
+    if (!jniGetFd(env, fileDescriptor, fd)) {
         return;
     }
 
-    int ret = doBind(handle, &sockaddress);
-    if (ret < 0) {
+    sockaddr_storage tmp;
+    const sockaddr* realAddress = convertIpv4ToMapped(fd, &socketAddress, &tmp, false);
+    int rc = TEMP_FAILURE_RETRY(bind(fd, realAddress, sizeof(sockaddr_storage)));
+    if (rc == -1) {
+        char buf[BUFSIZ];
         jniThrowException(env, "java/net/BindException",
-                netLookupErrorString(convertError(errno)));
+                jniStrError(errno, buf, sizeof(buf)));
         return;
     }
 }
@@ -2369,6 +2315,12 @@ static bool initFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set* fdS
     return true;
 }
 
+/*
+ * Note: fdSet has to be non-const because although on Linux FD_ISSET() is sane
+ * and takes a const fd_set*, it takes fd_set* on Mac OS. POSIX is not on our
+ * side here:
+ *   http://www.opengroup.org/onlinepubs/000095399/functions/select.html
+ */
 static bool translateFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set& fdSet, jint* flagArray, size_t offset, jint op) {
     for (int i = 0; i < count; ++i) {
         jobject fileDescriptor = env->GetObjectArrayElement(fdArray, i);
@@ -2379,11 +2331,6 @@ static bool translateFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set
         const int fd = jniGetFDFromFileDescriptor(env, fileDescriptor);
         const bool valid = fd >= 0 && fd < 1024;
 
-        /*
-         * Note: On Linux, FD_ISSET() is sane and takes a (const fd_set *)
-         * but the argument isn't const on all platforms, even though
-         * the function doesn't ever modify the argument.
-         */
         if (valid && FD_ISSET(fd, &fdSet)) {
             flagArray[i + offset] = op;
         } else {
@@ -2683,7 +2630,7 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
         case JAVASOCKOPT_IP_MULTICAST_IF:
         case JAVASOCKOPT_IP_MULTICAST_IF2:
         case JAVASOCKOPT_IP_MULTICAST_LOOP: {
-            jniThrowSocketException(env, EAFNOSUPPORT);
+            jniThrowException(env, "java/lang/UnsupportedOperationException", NULL);
             return NULL;
         }
 #endif // def ENABLE_MULTICAST
@@ -2943,7 +2890,7 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
         case JAVASOCKOPT_IP_MULTICAST_IF:
         case JAVASOCKOPT_IP_MULTICAST_IF2:
         case JAVASOCKOPT_IP_MULTICAST_LOOP: {
-            jniThrowSocketException(env, EAFNOSUPPORT);
+            jniThrowException(env, "java/lang/UnsupportedOperationException", NULL);
             return;
         }
 #endif // def ENABLE_MULTICAST
