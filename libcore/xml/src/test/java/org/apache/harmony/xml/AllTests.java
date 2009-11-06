@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,15 @@
  * limitations under the License.
  */
 
-package tests.xml;
+package org.apache.harmony.xml;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class AllTests {
-
     public static Test suite() {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite();
-
-        suite.addTestSuite(SimpleParserTest.class);
-        suite.addTestSuite(SimpleBuilderTest.class);
-        suite.addTestSuite(NodeTests.class);
-        
-        //suite.addTest(tests.org.w3c.dom.AllTests.suite());
-        suite.addTest(tests.api.javax.xml.parsers.AllTests.suite());
-
-        suite.addTest(tests.api.org.xml.sax.AllTests.suite());
-        suite.addTest(tests.api.org.w3c.dom.AllTests.suite());
-        suite.addTest(tests.org.w3c.dom.AllTests.suite());
-        suite.addTest(org.apache.harmony.xml.AllTests.suite());
-        suite.addTest(org.kxml2.io.AllTests.suite());
-
+        suite.addTestSuite(ExpatParserTest.class);
         return suite;
     }
 
