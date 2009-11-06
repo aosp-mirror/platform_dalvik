@@ -187,11 +187,19 @@ public class XmlReportPrinter {
                     serializer.attribute(ns, ATTR_MESSAGE, title);
                 }
                 serializer.attribute(ns, ATTR_TYPE, testRun.getResult().toString());
-                serializer.text(Strings.join(testRun.getOutputLines(), "\n"));
+                String text = sanitize(Strings.join(testRun.getOutputLines(), "\n"));
+                serializer.text(text);
                 serializer.endTag(ns, result);
             }
 
             serializer.endTag(ns, TESTCASE);
+        }
+
+        /**
+         * Returns the text in a format that is safe for use in an XML document.
+         */
+        private String sanitize(String text) {
+            return text.replace("\0", "<\\0>");
         }
     }
 }
