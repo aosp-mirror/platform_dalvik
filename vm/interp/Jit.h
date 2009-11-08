@@ -64,7 +64,8 @@ typedef struct ShadowSpace {
 void* dvmSelfVerificationShadowSpaceAlloc(Thread* self);
 void dvmSelfVerificationShadowSpaceFree(Thread* self);
 void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
-                                   InterpState* interpState);
+                                   InterpState* interpState,
+                                   int targetTrace);
 void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
                                       SelfVerificationState exitPoint);
 #endif

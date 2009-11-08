@@ -54,6 +54,12 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
 }
 
+void *dvmCompilerGetInterpretTemplate()
+{
+    return (void*) ((int)gDvmJit.codeCache +
+                    templateEntryOffsets[TEMPLATE_INTERPRET]);
+}
+
 /* Architecture-specific initializations and checks go here */
 static bool compilerArchVariantInit(void)
 {

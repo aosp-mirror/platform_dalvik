@@ -85,6 +85,9 @@ unspecified registers or condition codes.
 #define SAVEAREA_FROM_FP(_reg, _fpreg) \
     sub     _reg, _fpreg, #sizeofStackSaveArea
 
+#define EXPORT_PC() \
+    str     rPC, [rFP, #(-sizeofStackSaveArea + offStackSaveArea_currentPc)]
+
 /*
  * This is a #include, not a %include, because we want the C pre-processor
  * to expand the macros into assembler assignment statements.

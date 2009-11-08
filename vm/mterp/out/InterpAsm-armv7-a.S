@@ -8950,19 +8950,19 @@ dvmJitToInterpSingleStep:
 
     .global dvmJitToTraceSelect
 dvmJitToTraceSelect:
-    ldr    r0,[r14, #-1]                @ pass our target PC
+    ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
     b      dvmJitSelfVerificationEnd    @ doesn't return
 
     .global dvmJitToBackwardBranch
 dvmJitToBackwardBranch:
-    ldr    r0,[r14, #-1]                @ pass our target PC
+    ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSBackwardBranch       @ r2<- interpreter entry point
     b      dvmJitSelfVerificationEnd    @ doesn't return
 
     .global dvmJitToInterpNormal
 dvmJitToInterpNormal:
-    ldr    r0,[r14, #-1]                @ pass our target PC
+    ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSNormal               @ r2<- interpreter entry point
     b      dvmJitSelfVerificationEnd    @ doesn't return
 
@@ -9022,14 +9022,16 @@ dvmJitToInterpSingleStep:
  */
     .global dvmJitToTraceSelect
 dvmJitToTraceSelect:
-    ldr    rPC,[r14, #-1]           @ get our target PC
-    add    rINST,r14,#-5            @ save start of chain branch
+    ldr    rPC,[lr, #-1]           @ get our target PC
+    add    rINST,lr,#-5            @ save start of chain branch
     mov    r0,rPC
     bl     dvmJitGetCodeAddr        @ Is there a translation?
     cmp    r0,#0
     beq    2f
     mov    r1,rINST
     bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
+    mov    r1, rPC                  @ arg1 of translation may need this
+    mov    lr, #0                   @ in case target is HANDLER_INTERPRET
     cmp    r0,#0                    @ successful chain?
     bxne   r0                       @ continue native execution
     b      toInterpreter            @ didn't chain - resume with interpreter
@@ -9060,8 +9062,8 @@ dvmJitToTraceSelect:
  */
     .global dvmJitToInterpNormal
 dvmJitToInterpNormal:
-    ldr    rPC,[r14, #-1]           @ get our target PC
-    add    rINST,r14,#-5            @ save start of chain branch
+    ldr    rPC,[lr, #-1]           @ get our target PC
+    add    rINST,lr,#-5            @ save start of chain branch
 #ifdef EXIT_STATS
     bl     dvmBumpNormal
 #endif
@@ -9071,6 +9073,8 @@ dvmJitToInterpNormal:
     beq    toInterpreter            @ go if not, otherwise do chain
     mov    r1,rINST
     bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
+    mov    r1, rPC                  @ arg1 of translation may need this
+    mov    lr, #0                   @  in case target is HANDLER_INTERPRET
     cmp    r0,#0                    @ successful chain?
     bxne   r0                       @ continue native execution
     b      toInterpreter            @ didn't chain - resume with interpreter
@@ -9086,6 +9090,8 @@ dvmJitToInterpNoChain:
 #endif
     mov    r0,rPC
     bl     dvmJitGetCodeAddr        @ Is there a translation?
+    mov    r1, rPC                  @ arg1 of translation may need this
+    mov    lr, #0                   @  in case target is HANDLER_INTERPRET
     cmp    r0,#0
     bxne   r0                       @ continue native execution if so
 #endif
@@ -9134,13 +9140,27 @@ common_updateProfile:
     EXPORT_PC()
     mov     r0,rPC
     bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
+    mov    r1, rPC                      @ arg1 of translation may need this
+    mov    lr, #0                       @  in case target is HANDLER_INTERPRET
     cmp     r0,#0
-    beq     common_selectTrace
 #if !defined(WITH_SELF_VERIFICATION)
     bxne    r0                          @ jump to the translation
 #else
-    bne     dvmJitSelfVerificationStart @ set up self verification
+    beq     common_selectTrace
+    /*
+     * At this point, we have a target translation.  However, if
+     * that translation is actually the interpret-only pseudo-translation
+     * we want to treat it the same as no translation.
+     */
+    mov     r10, r0                      @ save target
+    bl      dvmCompilerGetInterpretTemplate
+    cmp     r0, r10                      @ special case?
+    bne     dvmJitSelfVerificationStart  @ set up self verification
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+    /* no return */
 #endif
+
 common_selectTrace:
     mov     r2,#kJitTSelectRequest      @ ask for trace selection
     str     r2,[rGLUE,#offGlue_jitState]
@@ -9153,12 +9173,13 @@ common_selectTrace:
 /*
  * Save PC and registers to shadow memory for self verification mode
  * before jumping to native translation.
+ * On entry, r10 contains the address of the target translation.
  */
 dvmJitSelfVerificationStart:
-    mov     r10, r0                     @ r10 <- dvmJitGetCodeAddr(rPC)
     mov     r0,rPC                      @ r0<- program counter
     mov     r1,rFP                      @ r1<- frame pointer
     mov     r2,rGLUE                    @ r2<- InterpState pointer
+    mov     r3,r10                      @ r3<- target translation
     bl      dvmSelfVerificationSaveState @ save registers to shadow space
     ldr     rFP,[r0,#offShadowSpace_shadowFP] @ rFP<- fp in shadow space
     add     rGLUE,r0,#offShadowSpace_interpState @ rGLUE<- rGLUE in shadow space

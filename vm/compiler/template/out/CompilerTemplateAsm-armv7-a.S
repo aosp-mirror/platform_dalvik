@@ -92,6 +92,9 @@ unspecified registers or condition codes.
 #define SAVEAREA_FROM_FP(_reg, _fpreg) \
     sub     _reg, _fpreg, #sizeofStackSaveArea
 
+#define EXPORT_PC() \
+    str     rPC, [rFP, #(-sizeofStackSaveArea + offStackSaveArea_currentPc)]
+
 /*
  * This is a #include, not a %include, because we want the C pre-processor
  * to expand the macros into assembler assignment statements.
@@ -1295,6 +1298,35 @@ match_3:
     asr   r0, r0, #1
     bx    lr
 
+
+/* ------------------------------ */
+    .balign 4
+    .global dvmCompiler_TEMPLATE_INTERPRET
+dvmCompiler_TEMPLATE_INTERPRET:
+/* File: armv5te/TEMPLATE_INTERPRET.S */
+    /*
+     * This handler transfers control to the interpeter without performing
+     * any lookups.  It may be called either as part of a normal chaining
+     * operation, or from the transition code in header.S.  We distinquish
+     * the two cases by looking at the link register.  If called from a
+     * translation chain, it will point to the chaining Dalvik PC + 1.
+     * On entry:
+     *    lr - if NULL:
+     *        r1 - the Dalvik PC to begin interpretation.
+     *    else
+     *        [lr, #-1] contains Dalvik PC to begin interpretation
+     *    rGLUE - pointer to interpState
+     *    rFP - Dalvik frame pointer
+     */
+    cmp     lr, #0
+    ldrne   r1,[lr, #-1]
+    ldr     r2, .LinterpPunt
+    mov     r0, r1                       @ set Dalvik PC
+    bx      r2
+    @ doesn't return
+
+.LinterpPunt:
+    .word   dvmJitToInterpPunt
 
     .size   dvmCompilerTemplateStart, .-dvmCompilerTemplateStart
 /* File: armv5te/footer.S */
