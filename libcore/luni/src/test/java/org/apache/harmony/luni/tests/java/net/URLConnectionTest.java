@@ -17,6 +17,7 @@
 package org.apache.harmony.luni.tests.java.net;
 
 import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -459,6 +460,7 @@ public class URLConnectionTest extends TestCase {
         }
     }
 
+    @KnownFailure(value="bug 2002061")
     public void testHttpPostHeaders() throws IOException {
         String path = "/" + Math.random();
         HttpURLConnection connection = (HttpURLConnection)

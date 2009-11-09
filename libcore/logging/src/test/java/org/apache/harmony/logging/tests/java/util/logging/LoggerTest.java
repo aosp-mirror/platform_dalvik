@@ -37,6 +37,7 @@ import junit.framework.TestCase;
 import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
 
 import tests.util.CallVerificationStack;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.SideEffect;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
@@ -4639,6 +4640,7 @@ public class LoggerTest extends TestCase {
         method = "initHandler",
         args = {}
     )
+    @KnownFailure(value="bug 2002061O")
     public void test_initHandler() throws Exception {
         File logProps = new File(LOGGING_CONFIG_FILE);
         LogManager lm = LogManager.getLogManager();
