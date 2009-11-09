@@ -61,9 +61,10 @@ ifeq ($(WITH_HOST_DALVIK),true)
         libdvm-host
 
     ifeq ($(HOST_OS)-$(HOST_ARCH),darwin-x86)
-        # OSX comes with libffi, libssl, and libz, so there is no need
-        # to build any of them.
-        LOCAL_LDLIBS := -lffi -lssl -lz
+        # OS X comes with all these libraries, so there is no need
+        # to build any of them. Note: OpenSSL consists of libssl
+        # and libcrypto.
+        LOCAL_LDLIBS := -lffi -lssl -lcrypto -lz -lsqlite3
     else
         # In this case, include libssl and libz, but libffi isn't listed:
         # The recommendation is that host builds should always either
