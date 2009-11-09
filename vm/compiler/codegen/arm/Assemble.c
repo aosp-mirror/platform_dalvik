@@ -1259,16 +1259,28 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
         info->codeAddress = (char*)info->codeAddress + 1;
 }
 
-static u4 assembleBXPair(int branchOffset)
+/*
+ * Returns the skeleton bit pattern associated with an opcode.  All
+ * variable fields are zeroed.
+ */
+static u4 getSkeleton(ArmOpCode op)
+{
+    return EncodingMap[op].skeleton;
+}
+
+static u4 assembleChainingBranch(int branchOffset, bool thumbTarget)
 {
     u4 thumb1, thumb2;
 
-    if ((branchOffset < -2048) | (branchOffset > 2046)) {
-        thumb1 =  (0xf000 | ((branchOffset>>12) & 0x7ff));
-        thumb2 =  (0xf800 | ((branchOffset>> 1) & 0x7ff));
+    if (!thumbTarget) {
+        thumb1 =  (getSkeleton(kThumbBlx1) | ((branchOffset>>12) & 0x7ff));
+        thumb2 =  (getSkeleton(kThumbBlx2) | ((branchOffset>> 1) & 0x7ff));
+    } else if ((branchOffset < -2048) | (branchOffset > 2046)) {
+        thumb1 =  (getSkeleton(kThumbBl1) | ((branchOffset>>12) & 0x7ff));
+        thumb2 =  (getSkeleton(kThumbBl2) | ((branchOffset>> 1) & 0x7ff));
     } else {
-        thumb1 =  (0xe000 | ((branchOffset>> 1) & 0x7ff));
-        thumb2 =  0x4300;  /* nop -> or r0, r0 */
+        thumb1 =  (getSkeleton(kThumbBUncond) | ((branchOffset>> 1) & 0x7ff));
+        thumb2 =  getSkeleton(kThumbOrr);  /* nop -> or r0, r0 */
     }
 
     return thumb2<<16 | thumb1;
@@ -1278,7 +1290,8 @@ static u4 assembleBXPair(int branchOffset)
  * Perform translation chain operation.
  * For ARM, we'll use a pair of thumb instructions to generate
  * an unconditional chaining branch of up to 4MB in distance.
- * Use a BL, though we don't really need the link.  The format is
+ * Use a BL, because the generic "interpret" translation needs
+ * the link register to find the dalvik pc of teh target.
  *     111HHooooooooooo
  * Where HH is 10 for the 1st inst, and 11 for the second and
  * the "o" field is each instruction's 11-bit contribution to the
@@ -1291,6 +1304,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
     int baseAddr = (u4) branchAddr + 4;
     int branchOffset = (int) tgtAddr - baseAddr;
     u4 newInst;
+    bool thumbTarget;
 
     if (gDvm.sumThreadSuspendCount == 0) {
         assert((branchOffset >= -(1<<22)) && (branchOffset <= ((1<<22)-2)));
@@ -1301,7 +1315,16 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
             LOGD("Jit Runtime: chaining 0x%x to 0x%x\n",
                  (int) branchAddr, (int) tgtAddr & -2));
 
-        newInst = assembleBXPair(branchOffset);
+        /*
+         * NOTE: normally, all translations are Thumb[2] mode, with
+         * a single exception: the default TEMPLATE_INTERPRET
+         * pseudo-translation.  If the need ever arises to
+         * mix Arm & Thumb[2] translations, the following code should be
+         * generalized.
+         */
+        thumbTarget = (tgtAddr != gDvmJit.interpretTemplate);
+
+        newInst = assembleChainingBranch(branchOffset, thumbTarget);
 
         *branchAddr = newInst;
         cacheflush((long)branchAddr, (long)branchAddr + 4, 0);
@@ -1354,7 +1377,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
      * Compilation not made yet for the callee. Reset the counter to a small
      * value and come back to check soon.
      */
-    if (tgtAddr == 0) {
+    if ((tgtAddr == 0) || ((void*)tgtAddr == gDvmJit.interpretTemplate)) {
         /*
          * Wait for a few invocations (currently set to be 16) before trying
          * to setup the chain again.
@@ -1388,7 +1411,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
              clazz->descriptor,
              method->name));
 
-    cell->branch = assembleBXPair(branchOffset);
+    cell->branch = assembleChainingBranch(branchOffset, true);
     cell->clazz = clazz;
     cell->method = method;
     /*
@@ -1517,7 +1540,9 @@ void dvmJitUnchainAll()
         dvmLockMutex(&gDvmJit.tableLock);
         for (i = 0; i < gDvmJit.jitTableSize; i++) {
             if (gDvmJit.pJitEntryTable[i].dPC &&
-                   gDvmJit.pJitEntryTable[i].codeAddress) {
+                   gDvmJit.pJitEntryTable[i].codeAddress &&
+                   (gDvmJit.pJitEntryTable[i].codeAddress !=
+                    gDvmJit.interpretTemplate)) {
                 u4* lastAddress;
                 lastAddress =
                       dvmJitUnchain(gDvmJit.pJitEntryTable[i].codeAddress);
@@ -1571,6 +1596,10 @@ static int dumpTraceProfile(JitEntry *p)
 
     if (p->codeAddress == NULL) {
         LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
+        return 0;
+    }
+    if (p->codeAddress == gDvmJit.interpretTemplate) {
+        LOGD("TRACEPROFILE 0x%08x 0 INTERPRET_ONLY  0 0", (int)traceBase);
         return 0;
     }
 

@@ -60,7 +60,7 @@ void dvmSelfVerificationShadowSpaceFree(Thread* self)
  * Return a pointer to the shadow space for JIT to use.
  */
 void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
-                                   InterpState* interpState)
+                                   InterpState* interpState, int targetTrace)
 {
     Thread *self = dvmThreadSelf();
     ShadowSpace *shadowSpace = self->shadowSpace;
@@ -444,13 +444,17 @@ void dvmJitStats()
     int hit;
     int not_hit;
     int chains;
+    int stubs;
     if (gDvmJit.pJitEntryTable) {
-        for (i=0, chains=hit=not_hit=0;
+        for (i=0, stubs=chains=hit=not_hit=0;
              i < (int) gDvmJit.jitTableSize;
              i++) {
-            if (gDvmJit.pJitEntryTable[i].dPC != 0)
+            if (gDvmJit.pJitEntryTable[i].dPC != 0) {
                 hit++;
-            else
+                if (gDvmJit.pJitEntryTable[i].codeAddress ==
+                      gDvmJit.interpretTemplate)
+                    stubs++;
+            } else
                 not_hit++;
             if (gDvmJit.pJitEntryTable[i].u.info.chain != gDvmJit.jitTableSize)
                 chains++;
@@ -470,7 +474,8 @@ void dvmJitStats()
          gDvmJit.noChainExit[kCallsiteInterpreted],
          gDvmJit.noChainExit[kSwitchOverflow]);
 #endif
-        LOGD("JIT: %d Translation chains", gDvmJit.translationChains);
+        LOGD("JIT: %d Translation chains, %d interp stubs",
+             gDvmJit.translationChains, stubs);
 #if defined(INVOKE_STATS)
         LOGD("JIT: Invoke: %d chainable, %d pred. chain, %d native, "
              "%d return",
@@ -645,6 +650,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
 #endif
                 dvmCompilerWorkEnqueue(
                        interpState->currTraceHead,kWorkOrderTrace,desc);
+                interpState->jitTraceInProgress = NULL;
                 if (gDvmJit.blockingMode) {
                     dvmCompilerDrainQueue();
                 }
@@ -815,7 +821,10 @@ JitEntry *dvmJitLookupAndAdd(const u2* dPC)
             }
         }
         if (gDvmJit.pJitEntryTable[idx].dPC == NULL) {
-           /* Allocate the slot */
+            /*
+             * Initialize codeAddress and allocate the slot.  Must
+             * happen in this order (ince dPC is set, the entry is live.
+             */
             gDvmJit.pJitEntryTable[idx].dPC = dPC;
             gDvmJit.jitTableEntriesUsed++;
         } else {
@@ -828,7 +837,7 @@ JitEntry *dvmJitLookupAndAdd(const u2* dPC)
 }
 /*
  * Register the translated code pointer into the JitTable.
- * NOTE: Once a codeAddress field transitions from NULL to
+ * NOTE: Once a codeAddress field transitions from initial state to
  * JIT'd code, it must not be altered without first halting all
  * threads.  This routine should only be called by the compiler
  * thread.
@@ -860,6 +869,15 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 {
     bool res = false;         /* Assume success */
     int i;
+    /*
+     * If previous trace-building attempt failed, force it's head to be
+     * interpret-only.
+     */
+    if (interpState->jitTraceInProgress) {
+        JitEntry *slot = dvmJitLookupAndAdd(interpState->jitTraceInProgress);
+        slot->codeAddress = gDvmJit.interpretTemplate;
+        interpState->jitTraceInProgress = NULL;
+    }
     if (gDvmJit.pJitEntryTable != NULL) {
         /* Two-level filtering scheme */
         for (i=0; i< JIT_TRACE_THRESH_FILTER_SIZE; i++) {
@@ -880,8 +898,8 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
          * If the compiler is backlogged, or if a debugger or profiler is
          * active, cancel any JIT actions
          */
-        if ( res || (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater) ||
-              gDvm.debuggerActive || self->suspendCount
+        if (res || (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater)
+            || gDvm.debuggerActive || self->suspendCount
 #if defined(WITH_PROFILER)
                  || gDvm.activeProfilers
 #endif
@@ -920,6 +938,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
             case kJitTSelectRequest:
                  interpState->jitState = kJitTSelect;
                  interpState->currTraceHead = interpState->pc;
+                 interpState->jitTraceInProgress = interpState->pc;
                  interpState->currTraceRun = 0;
                  interpState->totalTraceLen = 0;
                  interpState->currRunHead = interpState->pc;

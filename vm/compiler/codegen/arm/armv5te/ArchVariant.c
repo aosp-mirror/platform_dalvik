@@ -90,6 +90,12 @@ static bool compilerArchVariantInit(void)
     return true;
 }
 
+void *dvmCompilerGetInterpretTemplate()
+{
+    return (void*) ((int)gDvmJit.codeCache +
+                    templateEntryOffsets[TEMPLATE_INTERPRET]);
+}
+
 static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
     return false;   /* punt to C handler */
