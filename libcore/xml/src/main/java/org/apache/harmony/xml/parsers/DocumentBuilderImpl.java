@@ -27,6 +27,7 @@ import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.Text;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -260,14 +261,14 @@ class DocumentBuilderImpl extends DocumentBuilder {
                  * whitespace at all.
                  */
                 if (!ignoreElementContentWhitespace) {
-                    node.appendChild(document.createTextNode(parser.getText()));
+                    appendText(document, node, parser.getText());
                 }
             } else if (token == XmlPullParser.TEXT) {
                 /*
                  * Found a piece of text. That's the easiest case. We simply
                  * take it and create a corresponding node.
                  */
-                node.appendChild(document.createTextNode(parser.getText()));
+                appendText(document, node, parser.getText());
             } else if (token == XmlPullParser.CDSECT) {
                 /*
                  * Found a CDATA section. That's also trivial. We simply
@@ -288,7 +289,7 @@ class DocumentBuilderImpl extends DocumentBuilder {
 
                 String replacement = resolveStandardEntity(entity);
                 if (replacement != null) {
-                    node.appendChild(document.createTextNode(replacement));
+                    appendText(document, node, replacement);
                 } else {
                     node.appendChild(document.createEntityReference(entity));
                 }
@@ -373,6 +374,22 @@ class DocumentBuilderImpl extends DocumentBuilder {
         }
     }
 
+    private void appendText(Document document, Node node, String text) {
+        // Ignore empty runs.
+        if (text.length() == 0) {
+            return;
+        }
+        // Merge with any previous text node if possible.
+        Node lastChild = node.getLastChild();
+        if (lastChild != null && lastChild.getNodeType() == Node.TEXT_NODE) {
+            Text textNode = (Text) lastChild;
+            textNode.setData(textNode.getNodeValue() + text);
+            return;
+        }
+        // Okay, we really do need a new text node
+        node.appendChild(document.createTextNode(text));
+    }
+
     @Override
     public void setEntityResolver(EntityResolver resolver) {
         entityResolver = resolver;
@@ -411,14 +428,21 @@ class DocumentBuilderImpl extends DocumentBuilder {
     }
 
     /**
-     * Resolves one of the five standard XML entities.
+     * Resolves predefined XML character or entity references.
      * 
-     * @param entity The name of the entity to resolve, not including
+     * @param entity The reference to resolve, not including
      *               the ampersand or the semicolon.
      * 
      * @return The proper replacement, or null, if the entity is unknown.
      */
     private String resolveStandardEntity(String entity) {
+        // Character references, section 4.1 of the XML specification.
+        if (entity.startsWith("#x")) {
+            return resolveCharacterReference(entity.substring(2), 16);
+        } else if (entity.startsWith("#")) {
+            return resolveCharacterReference(entity.substring(1), 10);
+        }
+        // Predefined entities, section 4.6 of the XML specification.
         if ("lt".equals(entity)) {
             return "<";
         } else if ("gt".equals(entity)) {
@@ -430,6 +454,18 @@ class DocumentBuilderImpl extends DocumentBuilder {
         } else if ("quot".equals(entity)) {
             return "\"";
         } else {
+            return null;
+        }
+    }
+
+    private String resolveCharacterReference(String value, int base) {
+        try {
+            int ch = Integer.parseInt(value, base);
+            if (ch < 0 || ch > Character.MAX_VALUE) {
+                return null;
+            }
+            return Character.toString((char) ch);
+        } catch (NumberFormatException ex) {
             return null;
         }
     }
