@@ -114,8 +114,8 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xjitop:hexopvalue[-endvalue]"
                        "[,hexopvalue[-endvalue]]*\n");
     dvmFprintf(stderr, "  -Xincludeselectedmethod\n");
-    dvmFprintf(stderr, "  -Xthreshold:decimalvalue\n");
-    dvmFprintf(stderr, "  -Xblocking\n");
+    dvmFprintf(stderr, "  -Xjitthreshold:decimalvalue\n");
+    dvmFprintf(stderr, "  -Xjitblocking\n");
     dvmFprintf(stderr, "  -Xjitmethod:signture[,signature]* "
                        "(eg Ljava/lang/String\\;replace)\n");
     dvmFprintf(stderr, "  -Xjitverbose\n");
@@ -899,10 +899,10 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             processXjitop(argv[i]);
         } else if (strncmp(argv[i], "-Xjitmethod", 11) == 0) {
             processXjitmethod(argv[i]);
-        } else if (strncmp(argv[i], "-Xblocking", 10) == 0) {
+        } else if (strncmp(argv[i], "-Xjitblocking", 13) == 0) {
           gDvmJit.blockingMode = true;
-        } else if (strncmp(argv[i], "-Xthreshold:", 12) == 0) {
-          gDvmJit.threshold = atoi(argv[i] + 12);
+        } else if (strncmp(argv[i], "-Xjitthreshold:", 15) == 0) {
+          gDvmJit.threshold = atoi(argv[i] + 15);
         } else if (strncmp(argv[i], "-Xincludeselectedop", 19) == 0) {
           gDvmJit.includeSelectedOp = true;
         } else if (strncmp(argv[i], "-Xincludeselectedmethod", 23) == 0) {

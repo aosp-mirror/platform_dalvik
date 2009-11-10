@@ -209,7 +209,7 @@ common_updateProfile:
  * is already a native translation in place (and, if so,
  * jump to it now).
  */
-    mov     r1,#255
+    GET_JIT_THRESHOLD(r1)
     strb    r1,[r0,r3,lsr #23] @ reset counter
     EXPORT_PC()
     mov     r0,rPC

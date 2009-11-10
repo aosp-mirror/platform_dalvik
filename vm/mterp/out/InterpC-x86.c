@@ -1720,6 +1720,10 @@ GOTO_TARGET(returnFromMethod)
         if (dvmIsBreakFrame(fp)) {
             /* bail without popping the method frame from stack */
             LOGVV("+++ returned into break frame\n");
+#if defined(WITH_JIT)
+            /* Let the Jit know the return is terminating normally */
+            CHECK_JIT();
+#endif
             GOTO_bail();
         }
 
@@ -1766,9 +1770,7 @@ GOTO_TARGET(exceptionThrown)
 
 #if defined(WITH_JIT)
         // Something threw during trace selection - abort the current trace
-        if (interpState->jitState == kJitTSelect) {
-            interpState->jitState = kJitTSelectEnd;
-        }
+        dvmJitAbortTraceSelect(interpState);
 #endif
         /*
          * We save off the exception and clear the exception status.  While
@@ -2079,6 +2081,11 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 
             ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
                 methodToCall->name, methodToCall->shorty);
+
+#if defined(WITH_JIT)
+            /* Allow the Jit to end any pending trace building */
+            CHECK_JIT();
+#endif
 
             /*
              * Jump through native call bridge.  Because we leave no

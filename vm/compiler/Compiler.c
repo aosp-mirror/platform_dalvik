@@ -96,11 +96,13 @@ done:
 /* Block until queue length is 0 */
 void dvmCompilerDrainQueue(void)
 {
+    int oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
     dvmLockMutex(&gDvmJit.compilerLock);
     while (workQueueLength() != 0 && !gDvmJit.haltCompilerThread) {
         pthread_cond_wait(&gDvmJit.compilerQueueEmpty, &gDvmJit.compilerLock);
     }
     dvmUnlockMutex(&gDvmJit.compilerLock);
+    dvmChangeStatus(NULL, oldStatus);
 }
 
 static void *compilerThreadStart(void *arg)
@@ -135,11 +137,12 @@ static void *compilerThreadStart(void *arg)
                 if (gDvmJit.haltCompilerThread) {
                     LOGD("Compiler shutdown in progress - discarding request");
                 } else {
-                    /* Compilation is successful */
-                    if (dvmCompilerDoWork(&work)) {
-                        dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
-                                          work.result.instructionSet);
+                    /* If compilation failed, use interpret-template */
+                    if (!dvmCompilerDoWork(&work)) {
+                        work.result.codeAddress = gDvmJit.interpretTemplate;
                     }
+                    dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
+                                      work.result.instructionSet);
                 }
                 free(work.info);
                 dvmLockMutex(&gDvmJit.compilerLock);

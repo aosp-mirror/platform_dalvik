@@ -348,6 +348,12 @@ int dvmJitStartup(void)
     unsigned int i;
     bool res = true;  /* Assume success */
 
+#if defined(WITH_SELF_VERIFICATION)
+    // Force JIT into blocking, translate everything mode
+    gDvmJit.threshold = 1;
+    gDvmJit.blockingMode = true;
+#endif
+
     // Create the compiler thread and setup miscellaneous chores */
     res &= dvmCompilerStartup();
 
@@ -380,7 +386,7 @@ int dvmJitStartup(void)
             res = false;
             goto done;
         }
-        memset(pJitProfTable,0,JIT_PROF_SIZE);
+        memset(pJitProfTable,gDvmJit.threshold,JIT_PROF_SIZE);
         for (i=0; i < gDvmJit.jitTableSize; i++) {
            pJitTable[i].u.info.chain = gDvmJit.jitTableSize;
         }
@@ -514,6 +520,32 @@ void dvmJitShutdown(void)
     }
 }
 
+void setTraceConstruction(JitEntry *slot, bool value)
+{
+
+    JitEntryInfoUnion oldValue;
+    JitEntryInfoUnion newValue;
+    do {
+        oldValue = slot->u;
+        newValue = oldValue;
+        newValue.info.traceConstruction = value;
+    } while (!ATOMIC_CMP_SWAP( &slot->u.infoWord,
+             oldValue.infoWord, newValue.infoWord));
+}
+
+void resetTracehead(InterpState* interpState, JitEntry *slot)
+{
+    slot->codeAddress = gDvmJit.interpretTemplate;
+    setTraceConstruction(slot, false);
+}
+
+/* Clean up any pending trace builds */
+void dvmJitAbortTraceSelect(InterpState* interpState)
+{
+    if (interpState->jitState == kJitTSelect)
+        interpState->jitState = kJitTSelectAbort;
+}
+
 /*
  * Adds to the current trace request one instruction at a time, just
  * before that instruction is interpreted.  This is the primary trace
@@ -539,6 +571,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                           || gDvm.activeProfilers
 #endif
             );
+
     /* Prepare to handle last PC and stage the current PC */
     const u2 *lastPC = interpState->lastPC;
     interpState->lastPC = pc;
@@ -625,6 +658,8 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
         case kJitTSelectEnd:
             {
                 if (interpState->totalTraceLen == 0) {
+                    /* Bad trace - mark as untranslatable */
+                    dvmJitAbortTraceSelect(interpState);
                     switchInterp = !debugOrProfile;
                     break;
                 }
@@ -635,6 +670,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                     LOGE("Out of memory in trace selection");
                     dvmJitStopTranslationRequests();
                     interpState->jitState = kJitTSelectAbort;
+                    dvmJitAbortTraceSelect(interpState);
                     switchInterp = !debugOrProfile;
                     break;
                 }
@@ -650,7 +686,8 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
 #endif
                 dvmCompilerWorkEnqueue(
                        interpState->currTraceHead,kWorkOrderTrace,desc);
-                interpState->jitTraceInProgress = NULL;
+                setTraceConstruction(
+                     dvmJitLookupAndAdd(interpState->currTraceHead), false);
                 if (gDvmJit.blockingMode) {
                     dvmCompilerDrainQueue();
                 }
@@ -668,6 +705,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
 #if defined(SHOW_TRACE)
             LOGD("TraceGen:  trace abort");
 #endif
+            dvmJitAbortTraceSelect(interpState);
             interpState->jitState = kJitNormal;
             switchInterp = !debugOrProfile;
             break;
@@ -864,7 +902,6 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set) {
  * otherwise.  NOTE: may be called even when trace selection is not being
  * requested
  */
-
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 {
     bool res = false;         /* Assume success */
@@ -873,11 +910,6 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
      * If previous trace-building attempt failed, force it's head to be
      * interpret-only.
      */
-    if (interpState->jitTraceInProgress) {
-        JitEntry *slot = dvmJitLookupAndAdd(interpState->jitTraceInProgress);
-        slot->codeAddress = gDvmJit.interpretTemplate;
-        interpState->jitTraceInProgress = NULL;
-    }
     if (gDvmJit.pJitEntryTable != NULL) {
         /* Two-level filtering scheme */
         for (i=0; i< JIT_TRACE_THRESH_FILTER_SIZE; i++) {
@@ -894,6 +926,10 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
             interpState->threshFilter[i] = interpState->pc;
             res = true;
         }
+
+        /* If stress mode (threshold==1), always translate */
+        res &= (gDvmJit.threshold != 1);
+
         /*
          * If the compiler is backlogged, or if a debugger or profiler is
          * active, cancel any JIT actions
@@ -919,26 +955,38 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                 interpState->jitState = kJitTSelectAbort;
                 LOGD("JIT: JitTable full, disabling profiling");
                 dvmJitStopTranslationRequests();
-            } else if (slot->u.info.traceRequested) {
-                /* Trace already requested - revert to interpreter */
+            } else if (slot->u.info.traceConstruction) {
+                /*
+                 * Trace already request in progress, but most likely it
+                 * aborted without cleaning up.  Assume the worst and
+                 * mark trace head as untranslatable.  If we're wrong,
+                 * the compiler thread will correct the entry when the
+                 * translation is completed.  The downside here is that
+                 * some existing translation may chain to the interpret-only
+                 * template instead of the real translation during this
+                 * window.  Performance, but not correctness, issue.
+                 */
+                interpState->jitState = kJitTSelectAbort;
+                resetTracehead(interpState, slot);
+            } else if (slot->codeAddress) {
+                 /* Nothing to do here - just return */
                 interpState->jitState = kJitTSelectAbort;
             } else {
-                /* Mark request */
-                JitEntryInfoUnion oldValue;
-                JitEntryInfoUnion newValue;
-                do {
-                    oldValue = slot->u;
-                    newValue = oldValue;
-                    newValue.info.traceRequested = true;
-                } while (!ATOMIC_CMP_SWAP( &slot->u.infoWord,
-                         oldValue.infoWord, newValue.infoWord));
+                /*
+                 * Mark request.  Note, we are not guaranteed exclusivity
+                 * here.  A window exists for another thread to be
+                 * attempting to build this same trace.  Rather than
+                 * bear the cost of locking, we'll just allow that to
+                 * happen.  The compiler thread, if it chooses, can
+                 * discard redundant requests.
+                 */
+                setTraceConstruction(slot, true);
             }
         }
         switch (interpState->jitState) {
             case kJitTSelectRequest:
                  interpState->jitState = kJitTSelect;
                  interpState->currTraceHead = interpState->pc;
-                 interpState->jitTraceInProgress = interpState->pc;
                  interpState->currTraceRun = 0;
                  interpState->totalTraceLen = 0;
                  interpState->currRunHead = interpState->pc;

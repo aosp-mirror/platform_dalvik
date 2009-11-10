@@ -150,7 +150,7 @@ typedef struct InterpState {
     JitState           jitState;
     void*              jitResume;
     u2*                jitResumePC;
-    const u2*          jitTraceInProgress;
+    int                jitThreshold;
 #endif
 
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
