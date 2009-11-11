@@ -17,19 +17,18 @@
 package tests.api.java.util;
 
 import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestTargetClass;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import tests.support.Support_UnmodifiableCollectionTest;
 
-@TestTargetClass(Arrays.class) 
+@TestTargetClass(Arrays.class)
 public class ArraysTest extends junit.framework.TestCase {
 
     public static class ReversedIntegerComparator implements Comparator {
@@ -63,7 +62,7 @@ public class ArraysTest extends junit.framework.TestCase {
     Object[] objectArray;
 
     short[] shortArray;
-    
+
     /**
      * @tests java.util.Arrays#asList(java.lang.Object[])
      */
@@ -487,21 +486,21 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill short array correctly", d[i] == val);
-        
+
         try {
             Arrays.fill(d, 10, 0, val);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, -10, 0, val);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch (ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, 10, d.length+1, val);
             fail("ArrayIndexOutOfBoundsException expected");
@@ -546,21 +545,21 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill char array correctly", d[i] == val);
-        
+
         try {
             Arrays.fill(d, 10, 0, val);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, -10, 0, val);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch (ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, 10, d.length+1, val);
             fail("ArrayIndexOutOfBoundsException expected");
@@ -606,21 +605,21 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill int array correctly", d[i] == val);
-        
+
         try {
             Arrays.fill(d, 10, 0, val);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, -10, 0, val);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch (ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, 10, d.length+1, val);
             fail("ArrayIndexOutOfBoundsException expected");
@@ -666,21 +665,21 @@ public class ArraysTest extends junit.framework.TestCase {
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill long array correctly",
                     d[i] == Long.MAX_VALUE);
-        
+
         try {
             Arrays.fill(d, 10, 0, Long.MIN_VALUE);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, -10, 0, Long.MAX_VALUE);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch (ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, 10, d.length+1, Long.MAX_VALUE);
             fail("ArrayIndexOutOfBoundsException expected");
@@ -725,21 +724,21 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill float array correctly", d[i] == val);
-        
+
         try {
             Arrays.fill(d, 10, 0, val);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, -10, 0, val);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch (ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, 10, d.length+1, val);
             fail("ArrayIndexOutOfBoundsException expected");
@@ -786,21 +785,21 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill double array correctly", d[i] == val);
-        
+
         try {
             Arrays.fill(d, 10, 0, val);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, -10, 0, val);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch (ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, 10, d.length+1, val);
             fail("ArrayIndexOutOfBoundsException expected");
@@ -846,21 +845,21 @@ public class ArraysTest extends junit.framework.TestCase {
             assertTrue("Filled elements not in range", !(d[i] == val));
         for (int i = 400; i < d.length; i++)
             assertTrue("Failed to fill boolean array correctly", d[i] == val);
-        
+
         try {
             Arrays.fill(d, 10, 0, val);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, -10, 0, val);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch (ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, 10, d.length+1, val);
             fail("ArrayIndexOutOfBoundsException expected");
@@ -913,21 +912,21 @@ public class ArraysTest extends junit.framework.TestCase {
         for (int i = 400; i < d.length; i++)
             assertNull("Failed to fill Object array correctly with nulls",
                     d[i]);
-        
+
         try {
             Arrays.fill(d, 10, 0, val);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, -10, 0, val);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch (ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.fill(d, 10, d.length+1, val);
             fail("ArrayIndexOutOfBoundsException expected");
@@ -1212,7 +1211,7 @@ public class ArraysTest extends junit.framework.TestCase {
             fail("ArrayIndexOutOfBoundsException expected (2)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         //exception order testing
         try {
             Arrays.sort(new byte[1], startIndex + 1, startIndex);
@@ -1284,7 +1283,7 @@ public class ArraysTest extends junit.framework.TestCase {
             fail("ArrayIndexOutOfBoundsException expected (1)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         try {
             Arrays.sort(reversedArray, startIndex, reversedArray.length + 1);
             fail("ArrayIndexOutOfBoundsException expected (2)");
@@ -1391,7 +1390,7 @@ public class ArraysTest extends junit.framework.TestCase {
             fail("ArrayIndexOutOfBoundsException expected (2)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         //exception order testing
         try {
             Arrays.sort(new double[1], startIndex + 1, startIndex);
@@ -1486,13 +1485,13 @@ public class ArraysTest extends junit.framework.TestCase {
             fail("ArrayIndexOutOfBoundsException expected (1)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         try {
             Arrays.sort(reversedArray, startIndex, reversedArray.length + 1);
             fail("ArrayIndexOutOfBoundsException expected (2)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         //exception order testing
         try {
             Arrays.sort(new float[1], startIndex + 1, startIndex);
@@ -1563,13 +1562,13 @@ public class ArraysTest extends junit.framework.TestCase {
             fail("ArrayIndexOutOfBoundsException expected (1)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         try {
             Arrays.sort(reversedArray, startIndex, reversedArray.length + 1);
             fail("ArrayIndexOutOfBoundsException expected (2)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         //exception order testing
         try {
             Arrays.sort(new int[1], startIndex + 1, startIndex);
@@ -1647,7 +1646,7 @@ public class ArraysTest extends junit.framework.TestCase {
             fail("ArrayIndexOutOfBoundsException expected (2)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         //exception order testing
         try {
             Arrays.sort(new long[1], startIndex + 1, startIndex);
@@ -1677,7 +1676,7 @@ public class ArraysTest extends junit.framework.TestCase {
 
         Arrays.fill(reversedArray, 0, reversedArray.length/2, "String");
         Arrays.fill(reversedArray, reversedArray.length/2, reversedArray.length, new Integer(1));
-        
+
         try {
             Arrays.sort(reversedArray);
             fail("ClassCastException expected");
@@ -1724,7 +1723,7 @@ public class ArraysTest extends junit.framework.TestCase {
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException ignore) {
         }
-        
+
         try {
             Arrays.sort(reversedArray, -1, startIndex);
             fail("ArrayIndexOutOfBoundsException expected (1)");
@@ -1736,7 +1735,7 @@ public class ArraysTest extends junit.framework.TestCase {
             fail("ArrayIndexOutOfBoundsException expected (2)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         //exception order testing
         try {
             Arrays.sort(new Object[1], startIndex + 1, startIndex);
@@ -1746,7 +1745,7 @@ public class ArraysTest extends junit.framework.TestCase {
 
         Arrays.fill(reversedArray, 0, reversedArray.length/2, "String");
         Arrays.fill(reversedArray, reversedArray.length/2, reversedArray.length, new Integer(1));
-        
+
         try {
             Arrays.sort(reversedArray, reversedArray.length/4, 3*reversedArray.length/4);
             fail("ClassCastException expected");
@@ -1790,7 +1789,7 @@ public class ArraysTest extends junit.framework.TestCase {
 
         Arrays.fill(originalArray, 0, originalArray.length/2, "String");
         Arrays.fill(originalArray, originalArray.length/2, originalArray.length, new Integer(1));
-        
+
         try {
             Arrays.sort(originalArray, startIndex, endIndex, comp);
             fail("ClassCastException expected");
@@ -1799,21 +1798,21 @@ public class ArraysTest extends junit.framework.TestCase {
         }
 
         Arrays.sort(originalArray, endIndex, originalArray.length, comp);
-        
+
         try {
             Arrays.sort(originalArray, endIndex, originalArray.length + 1, comp);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch(ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.sort(originalArray, -1, startIndex, comp);
             fail("ArrayIndexOutOfBoundsException expected");
         } catch(ArrayIndexOutOfBoundsException e) {
             //expected
         }
-        
+
         try {
             Arrays.sort(originalArray, originalArray.length, endIndex, comp);
             fail("IllegalArgumentException expected");
@@ -1844,7 +1843,7 @@ public class ArraysTest extends junit.framework.TestCase {
 
         Arrays.fill(objectArray, 0, objectArray.length/2, "String");
         Arrays.fill(objectArray, objectArray.length/2, objectArray.length, new Integer(1));
-        
+
         try {
             Arrays.sort(objectArray, comp);
             fail("ClassCastException expected");
@@ -1902,26 +1901,26 @@ public class ArraysTest extends junit.framework.TestCase {
         for (int counter = endIndex; counter < arraySize; counter++)
             assertTrue("Array modified outside of bounds",
                     reversedArray[counter] == originalReversedArray[counter]);
-    
+
         //exception testing
         try {
             Arrays.sort(reversedArray, startIndex + 1, startIndex);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException ignore) {
         }
-        
+
         try {
             Arrays.sort(reversedArray, -1, startIndex);
             fail("ArrayIndexOutOfBoundsException expected (1)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         try {
             Arrays.sort(reversedArray, startIndex, reversedArray.length + 1);
             fail("ArrayIndexOutOfBoundsException expected (2)");
         } catch (ArrayIndexOutOfBoundsException ignore) {
         }
-        
+
         //exception order testing
         try {
             Arrays.sort(new short[1], startIndex + 1, startIndex);
@@ -2144,9 +2143,452 @@ public class ArraysTest extends junit.framework.TestCase {
             // Expected
         }
     }
-    
+
+    // Lenghts of arrays to test in test_sort;
+    private static final int[] LENGTHS = { 0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 100, 1000, 10000 };
+
     /**
-     * @tests java.util.Arrays#deepEquals(Object[], Object[])      
+     * @tests java.util.Arrays#sort()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Agressive test of the sort methods for *all* primitive array types",
+        method = "sort"
+    )
+    public void test_sort() {
+        for (int len : LENGTHS) {
+            PrimitiveTypeArrayBuilder.reset();
+            int[] golden = new int[len];
+            for (int m = 1; m < 2 * len; m *= 2) {
+                for (PrimitiveTypeArrayBuilder builder : PrimitiveTypeArrayBuilder.values()) {
+                    builder.build(golden, m);
+                    int[] test = golden.clone();
+
+                    for (PrimitiveTypeConverter converter : PrimitiveTypeConverter.values()) {
+                        Object convertedGolden = converter.convert(golden);
+                        Object convertedTest = converter.convert(test);
+                        sort(convertedTest);
+                        checkSorted(convertedTest);
+                        assertEquals(checkSum(convertedGolden), checkSum(convertedTest));
+                    }
+                }
+            }
+        }
+    }
+
+    private void sort(Object array) {
+        if (array instanceof int[]) {
+            Arrays.sort((int[]) array);
+        }
+        else if (array instanceof long[]) {
+            Arrays.sort((long[]) array);
+        } else if (array instanceof short[]) {
+            Arrays.sort((short[]) array);
+        } else if (array instanceof byte[]) {
+            Arrays.sort((byte[]) array);
+        } else if (array instanceof char[]) {
+            Arrays.sort((char[]) array);
+        } else if (array instanceof float[]) {
+            Arrays.sort((float[]) array);
+        } else if (array instanceof double[]) {
+            Arrays.sort((double[]) array);
+        } else {
+            fail("Unknow type of array: " + array.getClass());
+        }
+    }
+
+    private void checkSorted(Object array) {
+        if (array instanceof int[]) {
+            checkSorted((int[]) array);
+        } else if (array instanceof long[]) {
+            checkSorted((long[]) array);
+        } else if (array instanceof short[]) {
+            checkSorted((short[]) array);
+        } else if (array instanceof byte[]) {
+            checkSorted((byte[]) array);
+        } else if (array instanceof char[]) {
+            checkSorted((char[]) array);
+        } else if (array instanceof float[]) {
+            checkSorted((float[]) array);
+        } else if (array instanceof double[]) {
+            checkSorted((double[]) array);
+        } else {
+            fail("Unknow type of array: " + array.getClass());
+        }
+    }
+
+    private void checkSorted(int[] a) {
+        for (int i = 0; i < a.length - 1; i++) {
+            if (a[i] > a[i + 1]) {
+                orderFail(i, "" + a[i], "" + a[i + 1]);
+            }
+        }
+    }
+
+    private void checkSorted(long[] a) {
+        for (int i = 0; i < a.length - 1; i++) {
+            if (a[i] > a[i + 1]) {
+                orderFail(i, "" + a[i], "" + a[i + 1]);
+            }
+        }
+    }
+
+    private void checkSorted(short[] a) {
+        for (int i = 0; i < a.length - 1; i++) {
+            if (a[i] > a[i + 1]) {
+                orderFail(i, "" + a[i], "" + a[i + 1]);
+            }
+        }
+    }
+
+    private void checkSorted(byte[] a) {
+        for (int i = 0; i < a.length - 1; i++) {
+            if (a[i] > a[i + 1]) {
+                orderFail(i, "" + a[i], "" + a[i + 1]);
+            }
+        }
+    }
+
+    private void checkSorted(char[] a) {
+        for (int i = 0; i < a.length - 1; i++) {
+            if (a[i] > a[i + 1]) {
+                orderFail(i, "" + a[i], "" + a[i + 1]);
+            }
+        }
+    }
+
+    private void checkSorted(float[] a) {
+        for (int i = 0; i < a.length - 1; i++) {
+            if (a[i] > a[i + 1]) {
+                orderFail(i, "" + a[i], "" + a[i + 1]);
+            }
+        }
+    }
+
+    private void checkSorted(double[] a) {
+        for (int i = 0; i < a.length - 1; i++) {
+            if (a[i] > a[i + 1]) {
+                orderFail(i, "" + a[i], "" + a[i + 1]);
+            }
+        }
+    }
+
+
+    private void orderFail(int index, String value1, String value2) {
+        fail("Array is not sorted at " + index + "-th position: " + value1 + " and " + value2);
+    }
+
+    private int checkSum(Object array) {
+        if (array instanceof int[]) {
+            return checkSum((int[]) array);
+        } else if (array instanceof long[]) {
+            return checkSum((long[]) array);
+        } else if (array instanceof short[]) {
+            return checkSum((short[]) array);
+        } else if (array instanceof byte[]) {
+            return checkSum((byte[]) array);
+        } else if (array instanceof char[]) {
+            return checkSum((char[]) array);
+        } else if (array instanceof float[]) {
+            return checkSum((float[]) array);
+        } else if (array instanceof double[]) {
+            return checkSum((double[]) array);
+        } else {
+            fail("Unknow type of array: " + array.getClass());
+        }
+        throw new AssertionError(); // Needed to shut up compiler
+    }
+
+    private int checkSum(int[] a) {
+        int checkSum = 0;
+
+        for (int e : a) {
+            checkSum ^= e; // xor
+        }
+        return checkSum;
+    }
+
+    private int checkSum(long[] a) {
+        long checkSum = 0;
+
+        for (long e : a) {
+            checkSum ^= e; // xor
+        }
+        return (int) checkSum;
+    }
+
+    private int checkSum(short[] a) {
+        short checkSum = 0;
+
+        for (short e : a) {
+            checkSum ^= e; // xor
+        }
+        return (int) checkSum;
+    }
+
+    private int checkSum(byte[] a) {
+        byte checkSum = 0;
+
+        for (byte e : a) {
+            checkSum ^= e; // xor
+        }
+        return (int) checkSum;
+    }
+
+    private int checkSum(char[] a) {
+        char checkSum = 0;
+
+        for (char e : a) {
+            checkSum ^= e; // xor
+        }
+        return (int) checkSum;
+    }
+
+    private int checkSum(float[] a) {
+        int checkSum = 0;
+
+        for (float e : a) {
+            checkSum ^= (int) e; // xor
+        }
+        return checkSum;
+    }
+
+    private int checkSum(double[] a) {
+        int checkSum = 0;
+
+        for (double e : a) {
+            checkSum ^= (int) e; // xor
+        }
+        return checkSum;
+    }
+
+    private enum PrimitiveTypeArrayBuilder {
+
+        RANDOM {
+            void build(int[] a, int m) {
+                for (int i = 0; i < a.length; i++) {
+                    a[i] = ourRandom.nextInt();
+                }
+            }
+        },
+
+        ASCENDING {
+            void build(int[] a, int m) {
+                for (int i = 0; i < a.length; i++) {
+                    a[i] = m + i;
+                }
+            }
+        },
+
+        DESCENDING {
+            void build(int[] a, int m) {
+                for (int i = 0; i < a.length; i++) {
+                    a[i] = a.length - m - i;
+                }
+            }
+        },
+
+        ALL_EQUAL {
+            void build(int[] a, int m) {
+                for (int i = 0; i < a.length; i++) {
+                    a[i] = m;
+                }
+            }
+        },
+
+        SAW {
+            void build(int[] a, int m) {
+                int incCount = 1;
+                int decCount = a.length;
+                int i = 0;
+                int period = m;
+                m--;
+
+                while (true) {
+                    for (int k = 1; k <= period; k++) {
+                        if (i >= a.length) {
+                            return;
+                        }
+                        a[i++] = incCount++;
+                    }
+                    period += m;
+
+                    for (int k = 1; k <= period; k++) {
+                        if (i >= a.length) {
+                            return;
+                        }
+                        a[i++] = decCount--;
+                    }
+                    period += m;
+                }
+            }
+        },
+
+        REPEATED {
+            void build(int[] a, int m) {
+                for (int i = 0; i < a.length; i++) {
+                    a[i] = i % m;
+                }
+            }
+        },
+
+        DUPLICATED {
+            void build(int[] a, int m) {
+                for (int i = 0; i < a.length; i++) {
+                    a[i] = ourRandom.nextInt(m);
+                }
+            }
+        },
+
+        ORGAN_PIPES {
+            void build(int[] a, int m) {
+                int middle = a.length / (m + 1);
+
+                for (int i = 0; i < middle; i++) {
+                    a[i] = i;
+                }
+                for (int i = middle; i < a.length ; i++) {
+                    a[i] = a.length - i - 1;
+                }
+            }
+        },
+
+        STAGGER {
+            void build(int[] a, int m) {
+                for (int i = 0; i < a.length; i++) {
+                    a[i] = (i * m + i) % a.length;
+                }
+            }
+        },
+
+        PLATEAU {
+            void build(int[] a, int m) {
+                for (int i = 0; i < a.length; i++) {
+                    a[i] =  Math.min(i, m);
+                }
+            }
+        },
+
+        SHUFFLE {
+            void build(int[] a, int m) {
+                for (int i = 0; i < a.length; i++) {
+                    a[i] = ourRandom.nextBoolean() ? (ourFirst += 2) : (ourSecond += 2);
+                }
+            }
+        };
+
+        abstract void build(int[] a, int m);
+
+        static void reset() {
+            ourRandom = new Random(666);
+            ourFirst = 0;
+            ourSecond = 0;
+        }
+
+        @Override
+        public String toString() {
+            String name = name();
+
+            for (int i = name.length(); i < 12; i++) {
+                name += " " ;
+            }
+            return name;
+        }
+
+        private static int ourFirst;
+        private static int ourSecond;
+        private static Random ourRandom = new Random(666);
+    }
+
+    private enum PrimitiveTypeConverter {
+
+        INT {
+            Object convert(int[] a) {
+                return a;
+            }
+        },
+
+        LONG {
+            Object convert(int[] a) {
+                long[] b = new long[a.length];
+
+                for (int i = 0; i < a.length; i++) {
+                    b[i] = (int) a[i];
+                }
+                return b;
+            }
+        },
+
+        BYTE {
+            Object convert(int[] a) {
+                byte[] b = new byte[a.length];
+
+                for (int i = 0; i < a.length; i++) {
+                    b[i] = (byte) a[i];
+                }
+                return b;
+            }
+        },
+
+        SHORT {
+            Object convert(int[] a) {
+                short[] b = new short[a.length];
+
+                for (int i = 0; i < a.length; i++) {
+                    b[i] = (short) a[i];
+                }
+                return b;
+            }
+        },
+
+        CHAR {
+            Object convert(int[] a) {
+                char[] b = new char[a.length];
+
+                for (int i = 0; i < a.length; i++) {
+                    b[i] = (char) a[i];
+                }
+                return b;
+            }
+        },
+
+        FLOAT {
+            Object convert(int[] a) {
+                float[] b = new float[a.length];
+
+                for (int i = 0; i < a.length; i++) {
+                    b[i] = (float) a[i];
+                }
+                return b;
+            }
+        },
+
+        DOUBLE {
+            Object convert(int[] a) {
+                double[] b = new double[a.length];
+
+                for (int i = 0; i < a.length; i++) {
+                    b[i] = (double) a[i];
+                }
+                return b;
+            }
+        };
+
+        abstract Object convert(int[] a);
+
+        public String toString() {
+            String name = name();
+
+            for (int i = name.length(); i < 9; i++) {
+                name += " " ;
+            }
+            return name;
+        }
+    }
+
+
+    /**
+     * @tests java.util.Arrays#deepEquals(Object[], Object[])
      */
     @TestTargetNew(
         level = TestLevel.COMPLETE,
@@ -2159,22 +2601,22 @@ public class ArraysTest extends junit.framework.TestCase {
        short [] a2 = {0, 1};
        Object [] a3 = {new Integer(1), a2};
        int [] a4 = {6, 5, 4};
-       
+
        int [] b1 = {1, 2, 3};
        short [] b2 = {0, 1};
        Object [] b3 = {new Integer(1), b2};
-       
+
        Object a [] = {a1, a2, a3};
        Object b [] = {b1, b2, b3};
-       
+
        assertFalse(Arrays.equals(a, b));
        assertTrue(Arrays.deepEquals(a,b));
-       
+
        a[2] = a4;
-       
+
        assertFalse(Arrays.deepEquals(a, b));
     }
-    
+
     /**
      * @tests java.util.Arrays#deepHashCode(Object[])
      */
@@ -2188,20 +2630,20 @@ public class ArraysTest extends junit.framework.TestCase {
         int [] a1 = {1, 2, 3};
         short [] a2 = {0, 1};
         Object [] a3 = {new Integer(1), a2};
-        
+
         int [] b1 = {1, 2, 3};
         short [] b2 = {0, 1};
         Object [] b3 = {new Integer(1), b2};
-        
+
         Object a [] = {a1, a2, a3};
         Object b [] = {b1, b2, b3};
-       
+
         int deep_hash_a = Arrays.deepHashCode(a);
         int deep_hash_b = Arrays.deepHashCode(b);
-        
+
         assertEquals(deep_hash_a, deep_hash_b);
      }
-    
+
     /**
      * @tests java.util.Arrays#hashCode(boolean[] a)
      */
@@ -2214,8 +2656,8 @@ public class ArraysTest extends junit.framework.TestCase {
     public void test_hashCode$LZ() {
         int listHashCode;
         int arrayHashCode;
-        
-        boolean [] boolArr = {true, false, false, true, false};    
+
+        boolean [] boolArr = {true, false, false, true, false};
         List listOfBoolean = new LinkedList();
         for (int i = 0; i < boolArr.length; i++) {
             listOfBoolean.add(new Boolean(boolArr[i]));
@@ -2224,7 +2666,7 @@ public class ArraysTest extends junit.framework.TestCase {
         arrayHashCode = Arrays.hashCode(boolArr);
         assertEquals(listHashCode, arrayHashCode);
     }
-    
+
     /**
      * @tests java.util.Arrays#hashCode(int[] a)
      */
@@ -2237,21 +2679,21 @@ public class ArraysTest extends junit.framework.TestCase {
     public void test_hashCode$LI() {
         int listHashCode;
         int arrayHashCode;
-        
-        int [] intArr = {10, 5, 134, 7, 19};    
+
+        int [] intArr = {10, 5, 134, 7, 19};
         List listOfInteger = new LinkedList();
-         
+
         for (int i = 0; i < intArr.length; i++) {
-            listOfInteger.add(new Integer(intArr[i]));           
-        }               
+            listOfInteger.add(new Integer(intArr[i]));
+        }
         listHashCode = listOfInteger.hashCode();
-        arrayHashCode = Arrays.hashCode(intArr);       
+        arrayHashCode = Arrays.hashCode(intArr);
         assertEquals(listHashCode, arrayHashCode);
-        
-        int [] intArr2 = {10, 5, 134, 7, 19};                
+
+        int [] intArr2 = {10, 5, 134, 7, 19};
         assertEquals(Arrays.hashCode(intArr2), Arrays.hashCode(intArr));
     }
-    
+
     /**
      * @tests java.util.Arrays#hashCode(char[] a)
      */
@@ -2264,8 +2706,8 @@ public class ArraysTest extends junit.framework.TestCase {
     public void test_hashCode$LC() {
         int listHashCode;
         int arrayHashCode;
-        
-        char [] charArr = {'a', 'g', 'x', 'c', 'm'};    
+
+        char [] charArr = {'a', 'g', 'x', 'c', 'm'};
         List listOfCharacter = new LinkedList();
         for (int i = 0; i < charArr.length; i++) {
             listOfCharacter.add(new Character(charArr[i]));
@@ -2274,7 +2716,7 @@ public class ArraysTest extends junit.framework.TestCase {
         arrayHashCode = Arrays.hashCode(charArr);
         assertEquals(listHashCode, arrayHashCode);
     }
-    
+
     /**
      * @tests java.util.Arrays#hashCode(byte[] a)
      */
@@ -2287,8 +2729,8 @@ public class ArraysTest extends junit.framework.TestCase {
     public void test_hashCode$LB() {
         int listHashCode;
         int arrayHashCode;
-        
-        byte [] byteArr = {5, 9, 7, 6, 17};    
+
+        byte [] byteArr = {5, 9, 7, 6, 17};
         List listOfByte = new LinkedList();
         for (int i = 0; i < byteArr.length; i++) {
             listOfByte.add(new Byte(byteArr[i]));
@@ -2297,7 +2739,7 @@ public class ArraysTest extends junit.framework.TestCase {
         arrayHashCode = Arrays.hashCode(byteArr);
         assertEquals(listHashCode, arrayHashCode);
     }
-    
+
     /**
      * @tests java.util.Arrays#hashCode(long[] a)
      */
@@ -2310,9 +2752,9 @@ public class ArraysTest extends junit.framework.TestCase {
     public void test_hashCode$LJ() {
         int listHashCode;
         int arrayHashCode;
-        
+
         long [] longArr = {67890234512l, 97587236923425l, 257421912912l,
-                6754268100l, 5};    
+                6754268100l, 5};
         List listOfLong = new LinkedList();
         for (int i = 0; i < longArr.length; i++) {
             listOfLong.add(new Long(longArr[i]));
@@ -2321,7 +2763,7 @@ public class ArraysTest extends junit.framework.TestCase {
         arrayHashCode = Arrays.hashCode(longArr);
         assertEquals(listHashCode, arrayHashCode);
     }
-    
+
     /**
      * @tests java.util.Arrays#hashCode(float[] a)
      */
@@ -2334,8 +2776,8 @@ public class ArraysTest extends junit.framework.TestCase {
     public void test_hashCode$LF() {
         int listHashCode;
         int arrayHashCode;
-        
-        float [] floatArr = {0.13497f, 0.268934f, 12e-5f, -3e+2f, 10e-4f};    
+
+        float [] floatArr = {0.13497f, 0.268934f, 12e-5f, -3e+2f, 10e-4f};
         List listOfFloat = new LinkedList();
         for (int i = 0; i < floatArr.length; i++) {
             listOfFloat.add(new Float(floatArr[i]));
@@ -2343,11 +2785,11 @@ public class ArraysTest extends junit.framework.TestCase {
         listHashCode = listOfFloat.hashCode();
         arrayHashCode = Arrays.hashCode(floatArr);
         assertEquals(listHashCode, arrayHashCode);
-           
+
         float [] floatArr2 = {0.13497f, 0.268934f, 12e-5f, -3e+2f, 10e-4f};
         assertEquals(Arrays.hashCode(floatArr2), Arrays.hashCode(floatArr));
     }
-    
+
     /**
      * @tests java.util.Arrays#hashCode(double[] a)
      */
@@ -2360,8 +2802,8 @@ public class ArraysTest extends junit.framework.TestCase {
     public void test_hashCode$LD() {
         int listHashCode;
         int arrayHashCode;
-        
-        double [] doubleArr = {0.134945657, 0.0038754, 11e-150, -30e-300, 10e-4};    
+
+        double [] doubleArr = {0.134945657, 0.0038754, 11e-150, -30e-300, 10e-4};
         List listOfDouble = new LinkedList();
         for (int i = 0; i < doubleArr.length; i++) {
             listOfDouble.add(new Double(doubleArr[i]));
@@ -2370,7 +2812,7 @@ public class ArraysTest extends junit.framework.TestCase {
         arrayHashCode = Arrays.hashCode(doubleArr);
         assertEquals(listHashCode, arrayHashCode);
     }
-    
+
     /**
      * @tests java.util.Arrays#hashCode(short[] a)
      */
@@ -2383,8 +2825,8 @@ public class ArraysTest extends junit.framework.TestCase {
     public void test_hashCode$LS() {
         int listHashCode;
         int arrayHashCode;
-        
-        short [] shortArr = {35, 13, 45, 2, 91};    
+
+        short [] shortArr = {35, 13, 45, 2, 91};
         List listOfShort = new LinkedList();
         for (int i = 0; i < shortArr.length; i++) {
             listOfShort.add(new Short(shortArr[i]));
@@ -2393,7 +2835,7 @@ public class ArraysTest extends junit.framework.TestCase {
         arrayHashCode = Arrays.hashCode(shortArr);
         assertEquals(listHashCode, arrayHashCode);
     }
-    
+
     /**
      * @tests java.util.Arrays#hashCode(Object[] a)
      */
@@ -2406,7 +2848,7 @@ public class ArraysTest extends junit.framework.TestCase {
     public void test_hashCode$Ljava_lang_Object() {
         int listHashCode;
         int arrayHashCode;
-        
+
         Object[] objectArr = {new Integer(1), new Float(10e-12f), null};
         List listOfObject= new LinkedList();
         for (int i = 0; i < objectArr.length; i++) {
@@ -2416,7 +2858,7 @@ public class ArraysTest extends junit.framework.TestCase {
         arrayHashCode = Arrays.hashCode(objectArr);
         assertEquals(listHashCode, arrayHashCode);
     }
-    
+
     /**
      * Sets up the fixture, for example, open a network connection. This method
      * is called before a test is executed.
@@ -2451,7 +2893,7 @@ public class ArraysTest extends junit.framework.TestCase {
             booleanArray[counter + 1] = true;
         }
     }
-    
+
     /**
      * Tears down the fixture, for example, close a network connection. This
      * method is called after a test is executed.
