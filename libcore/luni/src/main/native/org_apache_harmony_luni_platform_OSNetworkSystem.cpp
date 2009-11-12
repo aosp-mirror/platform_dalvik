@@ -485,15 +485,20 @@ static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv* env, jclass,
         return NULL;
     }
 
-    char ipString[INET6_ADDRSTRLEN];
-    int stringLength = env->GetStringUTFLength(javaString);
-    env->GetStringUTFRegion(javaString, 0, stringLength, ipString);
+    // We need to reserve two extra bytes for the possible '[' and ']'.
+    char ipString[INET6_ADDRSTRLEN + 2];
+    size_t byteCount = env->GetStringUTFLength(javaString);
+    if (byteCount + 1 > sizeof(ipString)) {
+        jniThrowException(env, "java/lang/IllegalArgumentException", "string too long");
+        return NULL;
+    }
+    env->GetStringUTFRegion(javaString, 0, env->GetStringLength(javaString), ipString);
 
     // Accept IPv6 addresses (only) in square brackets for compatibility.
-    if (ipString[0] == '[' && ipString[stringLength - 1] == ']' &&
+    if (ipString[0] == '[' && ipString[byteCount - 1] == ']' &&
             index(ipString, ':') != NULL) {
-        memmove(ipString, ipString + 1, stringLength - 2);
-        ipString[stringLength - 2] = '\0';
+        memmove(ipString, ipString + 1, byteCount - 2);
+        ipString[byteCount - 2] = '\0';
     }
 
     jbyteArray result = NULL;
