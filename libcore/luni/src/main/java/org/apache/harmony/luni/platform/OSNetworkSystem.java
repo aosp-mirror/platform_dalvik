@@ -46,7 +46,7 @@ final class OSNetworkSystem implements INetworkSystem {
 
     private static final int INETADDR_REACHABLE = 0;
 
-    private static boolean isNetworkInited = false;
+    // private static boolean isNetworkInited = false; android-removed
 
     private static OSNetworkSystem singleton = new OSNetworkSystem();
 
@@ -310,14 +310,10 @@ final class OSNetworkSystem implements INetworkSystem {
     static native void listenStreamSocketImpl(FileDescriptor aFD, int backlog)
             throws SocketException;
 
-    public void oneTimeInitialization(boolean jcl_supports_ipv6) {
-        if (!isNetworkInited) {
-            oneTimeInitializationImpl(jcl_supports_ipv6);
-            isNetworkInited = true;
-        }
-    }
-
-    native void oneTimeInitializationImpl (boolean jcl_supports_ipv6);
+    // BEGIN android-removed: we do this statically, when we start the VM.
+    // public void oneTimeInitialization(boolean jcl_supports_ipv6);
+    // native void oneTimeInitializationImpl(boolean jcl_supports_ipv6);
+    // END android-removed
 
     /**
      * Peek on the socket, update <code>sender</code> address and answer the

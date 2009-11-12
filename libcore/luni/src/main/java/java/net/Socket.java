@@ -78,9 +78,11 @@ public class Socket {
         return logger;
     }
 
-    static {
-        Platform.getNetworkSystem().oneTimeInitialization(true);
-    }
+    // BEGIN android-removed: we do this statically, when we start the VM.
+    // static {
+    //     Platform.getNetworkSystem().oneTimeInitialization(true);
+    // }
+    // END android-removed
 
     /**
      * Creates a new unconnected socket. When a SocketImplFactory is defined it

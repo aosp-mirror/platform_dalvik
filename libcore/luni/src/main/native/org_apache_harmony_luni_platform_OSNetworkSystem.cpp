@@ -1350,10 +1350,7 @@ static void mcastAddDropMembership(JNIEnv *env, int handle, jobject optVal,
 }
 #endif // def ENABLE_MULTICAST
 
-static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
-        jboolean jcl_supports_ipv6) {
-    // LOGD("ENTER oneTimeInitializationImpl of OSNetworkSystem");
-
+static bool initCachedFields(JNIEnv* env) {
     memset(&gCachedFields, 0, sizeof(gCachedFields));
     struct CachedFields *c = &gCachedFields;
 
@@ -1373,7 +1370,7 @@ static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
     for (unsigned i = 0; i < sizeof(classes) / sizeof(classes[0]); i++) {
         classInfo c = classes[i];
         jclass tempClass = env->FindClass(c.name);
-        if (tempClass == NULL) return;
+        if (tempClass == NULL) return false;
         *c.clazz = (jclass) env->NewGlobalRef(tempClass);
     }
 
@@ -1398,7 +1395,7 @@ static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
         } else {
             *m.method = env->GetMethodID(m.clazz, m.name, m.signature);
         }
-        if (*m.method == NULL) return;
+        if (*m.method == NULL) return false;
     }
 
     struct fieldInfo {
@@ -1422,8 +1419,9 @@ static void osNetworkSystem_oneTimeInitializationImpl(JNIEnv* env, jobject obj,
     for (unsigned i = 0; i < sizeof(fields) / sizeof(fields[0]); i++) {
         fieldInfo f = fields[i];
         *f.field = env->GetFieldID(f.clazz, f.name, f.type);
-        if (*f.field == NULL) return;
+        if (*f.field == NULL) return false;
     }
+    return true;
 }
 
 /**
@@ -2923,7 +2921,6 @@ static jobject osNetworkSystem_inheritedChannel(JNIEnv* env, jobject obj) {
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "oneTimeInitializationImpl",         "(Z)V",                                                                     (void*) osNetworkSystem_oneTimeInitializationImpl          },
     { "createStreamSocketImpl",            "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createStreamSocketImpl             },
     { "createDatagramSocketImpl",          "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createDatagramSocketImpl           },
     { "readSocketImpl",                    "(Ljava/io/FileDescriptor;[BIII)I",                                         (void*) osNetworkSystem_readSocketImpl                     },
@@ -2968,7 +2965,7 @@ static JNINativeMethod gMethods[] = {
 };
 
 int register_org_apache_harmony_luni_platform_OSNetworkSystem(JNIEnv* env) {
-    return jniRegisterNativeMethods(env,
+    return initCachedFields(env) && jniRegisterNativeMethods(env,
             "org/apache/harmony/luni/platform/OSNetworkSystem",
             gMethods,
             NELEM(gMethods));

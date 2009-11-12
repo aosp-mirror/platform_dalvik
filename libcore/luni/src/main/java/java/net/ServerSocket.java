@@ -42,9 +42,11 @@ public class ServerSocket {
 
     private boolean isClosed;
 
-    static {
-        Platform.getNetworkSystem().oneTimeInitialization(true);
-    }
+    // BEGIN android-removed: we do this statically, when we start the VM.
+    // static {
+    //    Platform.getNetworkSystem().oneTimeInitialization(true);
+    // }
+    // END android-removed
 
     /**
      * Constructs a new {@code ServerSocket} instance which is not bound to any

@@ -260,5 +260,7 @@ public interface INetworkSystem {
 
     public Channel inheritedChannel();
 
-    public void oneTimeInitialization(boolean jcl_supports_ipv6);
+    // BEGIN android-removed: we do this statically, when we start the VM.
+    // public void oneTimeInitialization(boolean jcl_supports_ipv6);
+    // END android-removed
 }

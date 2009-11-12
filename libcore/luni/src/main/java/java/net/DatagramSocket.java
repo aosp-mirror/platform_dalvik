@@ -51,9 +51,11 @@ public class DatagramSocket {
     private static class Lock {
     }
 
-    static {
-        Platform.getNetworkSystem().oneTimeInitialization(true);
-    }
+    // BEGIN android-removed: we do this statically, when we start the VM.
+    // static {
+    //     Platform.getNetworkSystem().oneTimeInitialization(true);
+    // }
+    // END android-removed
 
     private Object lock = new Lock();
 
