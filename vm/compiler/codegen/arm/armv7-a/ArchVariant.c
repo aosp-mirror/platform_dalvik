@@ -323,6 +323,7 @@ static bool handleCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
     if (isDouble) {
         rlSrc1 = loadValueWide(cUnit, rlSrc1, kFPReg);
         rlSrc2 = loadValueWide(cUnit, rlSrc2, kFPReg);
+        clobberSReg(cUnit, rlDest.sRegLow);
         rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
         loadConstant(cUnit, rlResult.lowReg, defaultResult);
         newLIR2(cUnit, kThumb2Vcmpd, S2D(rlSrc1.lowReg, r1Src2.highReg),
@@ -330,6 +331,7 @@ static bool handleCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
     } else {
         rlSrc1 = loadValue(cUnit, rlSrc1, kFPReg);
         rlSrc2 = loadValue(cUnit, rlSrc2, kFPReg);
+        clobberSReg(cUnit, rlDest.sRegLow);
         rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
         loadConstant(cUnit, rlResult.lowReg, defaultResult);
         newLIR2(cUnit, kThumb2Vcmps, rlSrc1.lowReg, rlSrc2.lowReg);

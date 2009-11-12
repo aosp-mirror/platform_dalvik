@@ -89,13 +89,13 @@ static inline u4 dvmJitHash( const u2* p ) {
  */
 
 typedef struct JitEntryInfo {
-    unsigned int           traceRequested:1;   /* already requested a translation */
+    unsigned int           traceConstruction:1;   /* build underway? */
     unsigned int           isMethodEntry:1;
     unsigned int           inlineCandidate:1;
     unsigned int           profileEnabled:1;
     JitInstructionSetType  instructionSet:4;
     unsigned int           unused:8;
-    u2                     chain;              /* Index of next in chain */
+    u2                     chain;                 /* Index of next in chain */
 } JitEntryInfo;
 
 typedef union JitEntryInfoUnion {
@@ -122,6 +122,8 @@ struct JitEntry *dvmFindJitEntry(const u2* pc);
 s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set);
+void dvmJitAbortTraceSelect(InterpState* interpState);
+JitEntry *dvmJitLookupAndAdd(const u2* dPC);
 
 
 #endif /*_DALVIK_INTERP_JIT*/

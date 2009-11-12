@@ -83,6 +83,7 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     glue->pSelfSuspendCount = &self->suspendCount;
 #if defined(WITH_JIT)
     glue->pJitProfTable = gDvmJit.pProfTable;
+    glue->jitThreshold = gDvmJit.threshold;
 #endif
 #if defined(WITH_DEBUGGER)
     glue->pDebuggerActive = &gDvm.debuggerActive;
