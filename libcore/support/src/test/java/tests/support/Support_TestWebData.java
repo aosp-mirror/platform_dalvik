@@ -21,61 +21,32 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 /**
  * Represents test data used by the Request API tests
  */
 public class Support_TestWebData {
-
-  /*
-   * Simple Html body
-   * <html>
-   * <body>
-   * <h1>Hello World!</h1>
-   * </body>
-   * </html>
-   */
-  public final static byte[] test1 = {
-    (byte)0x3c, (byte)0x68, (byte)0x74, (byte)0x6d,
-    (byte)0x6c, (byte)0x3e, (byte)0x0a, (byte)0x3c,
-    (byte)0x62, (byte)0x6f, (byte)0x64, (byte)0x79,
-    (byte)0x3e, (byte)0x0a, (byte)0x3c, (byte)0x68,
-    (byte)0x31, (byte)0x3e, (byte)0x48, (byte)0x65,
-    (byte)0x6c, (byte)0x6c, (byte)0x6f, (byte)0x20,
-    (byte)0x57, (byte)0x6f, (byte)0x72, (byte)0x6c,
-    (byte)0x64, (byte)0x21, (byte)0x3c, (byte)0x2f,
-    (byte)0x68, (byte)0x31, (byte)0x3e, (byte)0x0a,
-    (byte)0x3c, (byte)0x2f, (byte)0x62, (byte)0x6f,
-    (byte)0x64, (byte)0x79, (byte)0x3e, (byte)0x0a,
-    (byte)0x3c, (byte)0x2f, (byte)0x68, (byte)0x74,
-    (byte)0x6d, (byte)0x6c, (byte)0x3e, (byte)0x0a
-  };
-
-  /*
-   * Simple Html body
-   * <html>
-   * <body>
-   * <h1>Hello World!</h1>
-   * </body>
-   * </html>
-   */
-  public final static byte[] test2 = {
-    (byte)0x3c, (byte)0x68, (byte)0x74, (byte)0x6d,
-    (byte)0x6c, (byte)0x3e, (byte)0x0a, (byte)0x3c,
-    (byte)0x62, (byte)0x6f, (byte)0x64, (byte)0x79,
-    (byte)0x3e, (byte)0x0a, (byte)0x3c, (byte)0x68,
-    (byte)0x31, (byte)0x3e, (byte)0x48, (byte)0x65,
-    (byte)0x6c, (byte)0x6c, (byte)0x6f, (byte)0x20,
-    (byte)0x57, (byte)0x6f, (byte)0x72, (byte)0x6c,
-    (byte)0x64, (byte)0x21, (byte)0x3c, (byte)0x2f,
-    (byte)0x68, (byte)0x31, (byte)0x3e, (byte)0x0a,
-    (byte)0x3c, (byte)0x2f, (byte)0x62, (byte)0x6f,
-    (byte)0x64, (byte)0x79, (byte)0x3e, (byte)0x0a,
-    (byte)0x3c, (byte)0x2f, (byte)0x68, (byte)0x74,
-    (byte)0x6d, (byte)0x6c, (byte)0x3e, (byte)0x0a
-  };
-
+  public final static byte[] test1 = utfBytes();
+  public final static byte[] test2 = newBinaryFile(8192);
+  
+  private static byte[] utfBytes() {
+    try {
+      return "<html>\n<body>\n<h1>Hello World!</h1>\n</body>\n</html>\n".getBytes("UTF-8");
+    } catch (UnsupportedEncodingException ex) {
+      throw new AssertionError();
+    }
+  }
+  
+  private static byte[] newBinaryFile(int byteCount) {
+    byte[] result = new byte[byteCount];
+    for (int i = 0; i < result.length; ++i) {
+      result[i] = (byte) i;
+    }
+    return result;
+  }
+  
   // string for test request post body
   public final static String postContent = "user=111";
   
@@ -89,8 +60,8 @@ public class Support_TestWebData {
    * List of static test cases for use with test server
    */
   public static Support_TestWebData[] testParams = {
-    new Support_TestWebData(52, 14000000, "test1", "text/html", false, 0),
-    new Support_TestWebData(52, 14000002, "test2", "unknown/unknown", false,
+    new Support_TestWebData(test1.length, 14000000, "test1", "text/html", false, 0),
+    new Support_TestWebData(test2.length, 14000002, "test2", "unknown/unknown", false,
             new Date().getTime() + 100000)
   };
 

@@ -23,6 +23,7 @@ public class AllTests {
     public static final Test suite() {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite();
         suite.addTestSuite(java.net.SocketTest.class);
+        suite.addTestSuite(java.net.URLConnectionTest.class);
         return suite;
     }
 }

@@ -79,6 +79,7 @@ public class Support_TestWebServer implements Support_HttpConstants {
 
     /* If set, this will cause response data to be sent in 'chunked' format */
     boolean chunked = false;
+    int maxChunkSize = 1024;
 
     /* If set, this will indicate a new redirection host */
     String redirectHost = null;
@@ -185,6 +186,14 @@ public class Support_TestWebServer implements Support_HttpConstants {
      */
     public void setChunked(boolean value) {
         chunked = value;
+    }
+
+    /**
+     * Sets the maximum byte count of any chunk if the server is using
+     * the "chunked" transfer encoding.
+     */
+    public void setMaxChunkSize(int maxChunkSize) {
+        this.maxChunkSize = maxChunkSize;
     }
 
     /**
@@ -718,9 +727,9 @@ public class Support_TestWebServer implements Support_HttpConstants {
         }
 
         // Print bytes to log and output stream
-        void psWrite(PrintStream ps, byte[] bytes, int len) throws IOException {
+        void psWrite(PrintStream ps, byte[] bytes, int offset, int count) throws IOException {
             log(new String(bytes));
-            ps.write(bytes, 0, len);
+            ps.write(bytes, offset, count);
         }
 
         // Print CRLF to log and output stream
@@ -856,39 +865,33 @@ public class Support_TestWebServer implements Support_HttpConstants {
          * @param ps The PrintStream to write to
          */
         void sendFile(PrintStream ps) throws IOException {
-            // For now just make a chunk with the whole of the test data
-            // It might be worth making this multiple chunks for large
-            // test data to test multiple chunks.
             if (testNum == -1) {
                 if (!Support_TestWebData.test0DataAvailable) {
-                    log("testdata was not initilaized");
+                    log("test data was not initialized");
                     return;
                 }
-                int dataSize = Support_TestWebData.test0Data.length;
-                if (chunked) {
-                    psPrint(ps, Integer.toHexString(dataSize));
-                    psWriteEOL(ps);
-                    psWrite(ps, Support_TestWebData.test0Data, dataSize);
-                    psWriteEOL(ps);
-                    psPrint(ps, "0");
-                    psWriteEOL(ps);
-                    psWriteEOL(ps);
-                } else {
-                    psWrite(ps, Support_TestWebData.test0Data, dataSize);
-                }
+                sendFile(ps, Support_TestWebData.test0Data);
             } else {
-                int dataSize = Support_TestWebData.tests[testNum].length;
-                if (chunked) {
-                    psPrint(ps, Integer.toHexString(dataSize));
+                sendFile(ps, Support_TestWebData.tests[testNum]);
+            }
+        }
+
+        void sendFile(PrintStream ps, byte[] bytes) throws IOException {
+            if (chunked) {
+                int offset = 0;
+                while (offset < bytes.length) {
+                    int chunkSize = Math.min(bytes.length - offset, maxChunkSize);
+                    psPrint(ps, Integer.toHexString(chunkSize));
                     psWriteEOL(ps);
-                    psWrite(ps, Support_TestWebData.tests[testNum], dataSize);
+                    psWrite(ps, bytes, offset, chunkSize);
                     psWriteEOL(ps);
-                    psPrint(ps, "0");
-                    psWriteEOL(ps);
-                    psWriteEOL(ps);
-                } else {
-                    psWrite(ps, Support_TestWebData.tests[testNum], dataSize);
+                    offset += chunkSize;
                 }
+                psPrint(ps, "0");
+                psWriteEOL(ps);
+                psWriteEOL(ps);
+            } else {
+                psWrite(ps, bytes, 0, bytes.length);
             }
         }
     }
