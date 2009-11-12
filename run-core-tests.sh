@@ -72,6 +72,7 @@ cp -R libcore/xml/src/test/resources/* ${datadir}/xml_source
 cd $datadir
 exec $valgrind $exe \
      -Duser.language=en -Duser.region=US -Djava.io.tmpdir=$datadir \
+     -Djavax.net.ssl.trustStore=$base/system/etc/security/cacerts.bks \
      -Xmx512M -Xss32K \
      -Xbootclasspath:$bpath -classpath $cpath $debug_opts \
      com.google.coretests.Main "$@"
