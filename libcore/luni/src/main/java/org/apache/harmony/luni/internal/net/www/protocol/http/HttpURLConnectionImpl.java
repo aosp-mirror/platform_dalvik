@@ -349,12 +349,13 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             if (atEnd) {
                 return;
             }
+            skipOutstandingChunks();
             // END android-added
 
             // BEGIN android-note
             // Removed "!atEnd" below because of the check added above.
             // END android-note
-            if(available() > 0) {
+            if (available() > 0) {
                 disconnect(true);
             } else {
                 disconnect(false);
@@ -365,6 +366,21 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                 cacheRequest.abort();
             }
         }
+
+        // BEGIN android-added
+        // If we're asked to close a stream with unread chunks, we need to skip them.
+        // Otherwise the next caller on this connection will receive that data.
+        // See: http://code.google.com/p/android/issues/detail?id=2939
+        private void skipOutstandingChunks() throws IOException {
+            while (!atEnd) {
+                while (bytesRemaining > 0) {
+                    long skipped = is.skip(bytesRemaining);
+                    bytesRemaining -= skipped;
+                }
+                readChunkSize();
+            }
+        }
+        // END android-added
 
         @Override
         public int available() throws IOException {
