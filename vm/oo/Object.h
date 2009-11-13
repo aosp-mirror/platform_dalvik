@@ -288,7 +288,7 @@ struct StringObject {
  *
  * We don't currently store the size of each element.  Usually it's implied
  * by the instruction.  If necessary, the width can be derived from
- * the first char of obj->clazz->name.
+ * the first char of obj->clazz->descriptor.
  */
 struct ArrayObject {
     Object          obj;                /* MUST be first item */

@@ -3322,8 +3322,16 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         else
             dvmPrintDebugMessage(target, "  | monitors held: <none>\n");
         while (lod != NULL) {
-            dvmPrintDebugMessage(target, "  >  %p[%d] (%s)\n",
-                lod->obj, lod->recursionCount, lod->obj->clazz->descriptor);
+            Object* obj = lod->obj;
+            if (obj->clazz == gDvm.classJavaLangClass) {
+                ClassObject* clazz = (ClassObject*) obj;
+                dvmPrintDebugMessage(target, "  >  %p[%d] (%s object for class %s)\n",
+                    obj, lod->recursionCount, obj->clazz->descriptor,
+                    clazz->descriptor);
+            } else {
+                dvmPrintDebugMessage(target, "  >  %p[%d] (%s)\n",
+                    obj, lod->recursionCount, obj->clazz->descriptor);
+            }
             lod = lod->next;
         }
     }
