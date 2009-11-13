@@ -1,0 +1,5 @@
+# The RI avoids blocking calls when '\r' is the last character. We don't
+# bother since that adds complexity to every other read call, and '\r' as the
+# last character will be diminishingly rare anyway.
+result=EXEC_FAILED
+pattern=.*java.lang.RuntimeException: Read past limit.*
